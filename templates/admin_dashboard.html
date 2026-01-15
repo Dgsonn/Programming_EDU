@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel | Programming Edu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        admin: {
+                            sidebar: '#0f172a', /* Deep Slate */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans h-screen flex overflow-hidden dark:bg-slate-900 text-slate-600 dark:text-slate-400 transition-colors duration-300">
+
+    <!-- 1. SIDEBAR -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl z-50 dark:bg-slate-950 border-r border-slate-800 dark:border-slate-800">
+        <!-- Brand -->
+        <div class="h-16 flex items-center px-6 border-b border-white/5 bg-slate-900/50">
+            <i class="fa-solid fa-shield-halved text-blue-500 mr-3 text-xl"></i>
+            <span class="font-bold text-lg tracking-wide text-gray-100">ADMIN CP</span>
+        </div>
+
+        <!-- Menu -->
+        <nav class="flex-1 py-6 px-3 space-y-1">
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-blue-600/90 text-white shadow-md transition-all hover:bg-blue-600">
+                <i class="fa-solid fa-chart-line w-6"></i> Tổng quan
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                <i class="fa-solid fa-users w-6"></i> Người dùng
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                <i class="fa-solid fa-book w-6"></i> Khóa học
+            </a>
+            <div class="mt-6 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hệ thống</div>
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                <i class="fa-solid fa-gear w-6"></i> Cài đặt
+            </a>
+        </nav>
+        
+        <!-- Admin Info -->
+        <div class="p-4 border-t border-white/5 bg-slate-900/50">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-xs text-white">
+                    AD
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-200">Administrator</div>
+                    <div class="text-xs text-green-400">● Online</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 relative dark:bg-slate-900 transition-colors duration-300">
+        <!-- Header -->
+        <header class="bg-white/80 backdrop-blur border-b border-gray-200 h-16 flex items-center justify-between px-8 sticky top-0 z-40 shadow-sm dark:bg-slate-800/80 dark:border-slate-700 transition-colors duration-300">
+            <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">Dashboard Overview</h1>
+            <div class="flex items-center gap-4">
+                <button class="p-2 text-slate-400 hover:text-blue-600 transition dark:text-slate-400 dark:hover:text-blue-400"><i class="fa-solid fa-bell"></i></button>
+                <a href="/admin/logout" class="text-sm font-bold text-red-500 hover:text-red-700 border border-red-200 px-3 py-1 rounded hover:bg-red-50 transition dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
+                </a>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-7xl mx-auto space-y-8">
+            
+            <!-- THÔNG BÁO FLASH MESSAGE -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="space-y-2">
+                        {% for category, message in messages %}
+                            <div class="flex items-center p-4 text-sm rounded-lg border shadow-sm {{ 'bg-green-50 text-green-700 border-green-200' if category == 'success' else 'bg-red-50 text-red-700 border-red-200' }}" role="alert">
+                                <i class="fa-solid {{ 'fa-circle-check' if category == 'success' else 'fa-circle-exclamation' }} mr-2 text-lg"></i>
+                                <span class="font-medium">{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- STATS CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition dark:bg-slate-800 dark:border-slate-700 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">Tổng người dùng</p>
+                            <h3 class="text-3xl font-bold text-slate-800 dark:text-gray-100">{{ stats.users }}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl group-hover:bg-blue-600 group-hover:text-white transition dark:bg-blue-900/20 dark:text-blue-400 dark:group-hover:bg-blue-600 dark:group-hover:text-white">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition dark:bg-slate-800 dark:border-slate-700 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">Khóa học active</p>
+                            <h3 class="text-3xl font-bold text-slate-800 dark:text-gray-100">{{ stats.courses }}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-xl group-hover:bg-green-600 group-hover:text-white transition dark:bg-green-900/20 dark:text-green-400 dark:group-hover:bg-green-600 dark:group-hover:text-white">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition dark:bg-slate-800 dark:border-slate-700 group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">Tương tác bài học</p>
+                            <h3 class="text-3xl font-bold text-slate-800 dark:text-gray-100">{{ stats.interactions }}</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-xl group-hover:bg-purple-600 group-hover:text-white transition dark:bg-purple-900/20 dark:text-purple-400 dark:group-hover:bg-purple-600 dark:group-hover:text-white">
+                            <i class="fa-solid fa-chart-simple"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE: DANH SÁCH NGƯỜI DÙNG -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800 dark:border-slate-700">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-200">Danh sách người dùng</h3>
+                    <button class="text-xs font-bold bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50 text-slate-600 transition dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-600 dark:hover:text-white">
+                        <i class="fa-solid fa-file-excel mr-1"></i> Xuất Excel
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left dark:text-slate-300">
+                        <thead class="text-xs text-slate-500 uppercase bg-gray-50 border-b dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">ID</th>
+                                <th class="px-6 py-3 font-semibold">Username</th>
+                                <th class="px-6 py-3 font-semibold">Vai trò (Role)</th>
+                                <th class="px-6 py-3 font-semibold">Trình độ (Level)</th>
+                                <th class="px-6 py-3 font-semibold">XP</th>
+                                <th class="px-6 py-3 font-semibold text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                            {% for u in users %}
+                            <tr class="bg-white hover:bg-gray-50 transition dark:bg-slate-800 dark:hover:bg-slate-700/50">
+                                <td class="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">#{{ u.id }}</td>
+                                
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs {{ 'bg-red-50 text-red-600' if u.username == 'admin' else 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' }}">
+                                            {{ u.username[0]|upper }}
+                                        </div>
+                                        <span class="font-bold {% if u.username == 'admin' %}text-red-600{% else %}text-slate-700 dark:text-slate-200{% endif %}">
+                                            {{ u.username }}
+                                            {% if u.username == 'admin' %}<i class="fa-solid fa-crown text-yellow-500 ml-1 text-xs"></i>{% endif %}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if u.role %}
+                                        <span class="bg-blue-50 text-blue-700 border border-blue-100 text-xs font-bold px-2.5 py-0.5 rounded capitalize dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50">{{ u.role }}</span>
+                                    {% else %}
+                                        <span class="text-slate-400 italic text-xs">Chưa chọn</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if u.level == 'beginner' %}
+                                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-bold px-2.5 py-0.5 rounded uppercase dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/50">Newbie</span>
+                                    {% elif u.level == 'expert' or u.level == 'advanced' %}
+                                        <span class="bg-purple-50 text-purple-700 border border-purple-100 text-xs font-bold px-2.5 py-0.5 rounded uppercase dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-900/50">Pro</span>
+                                    {% else %}
+                                        <span class="text-slate-500 text-xs capitalize dark:text-slate-400">{{ u.level or '-' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 font-bold text-yellow-600 dark:text-yellow-500">{{ u.xp }} XP</td>
+                                <td class="px-6 py-4 text-right">
+                                    {% if u.username != 'admin' %}
+                                        <div class="flex items-center justify-end gap-2">
+                                            <!-- Nút Sửa -->
+                                            <button onclick="openEditModal('{{ u.id }}', '{{ u.username }}', '{{ u.role }}', '{{ u.level }}', '{{ u.xp }}')" 
+                                                    class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition dark:text-blue-400 dark:hover:bg-blue-900/30" title="Sửa">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                            </button>
+                                            
+                                            <!-- Nút Xóa -->
+                                            <form action="/admin/user/delete/{{ u.id }}" method="POST" class="inline" onsubmit="return confirm('CẢNH BÁO: xóa user {{ u.username }}?');">
+                                                <button type="submit" class="p-1.5 text-red-600 hover:bg-red-50 rounded transition dark:text-red-400 dark:hover:bg-red-900/30" title="Xóa">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-xs text-slate-300 italic cursor-not-allowed dark:text-slate-600"><i class="fa-solid fa-lock"></i></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABLE: DANH SÁCH KHÓA HỌC -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 dark:bg-slate-800 dark:border-slate-700">
+                    <h3 class="font-bold text-slate-800 dark:text-slate-200">Quản lý khóa học</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left dark:text-slate-300">
+                        <thead class="text-xs text-slate-500 uppercase bg-gray-50 border-b dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-400">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold">ID</th>
+                                <th class="px-6 py-3 font-semibold">Tên khóa học</th>
+                                <th class="px-6 py-3 font-semibold">Tags</th>
+                                <th class="px-6 py-3 font-semibold">Số bài học</th>
+                                <th class="px-6 py-3 font-semibold text-right">Hành động</th>
+                            </tr>
+                        </thead>
+                       <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+                            {% for c in courses %}
+                            <tr class="bg-white hover:bg-gray-50 transition dark:bg-slate-800 dark:hover:bg-slate-700/50">
+                                <td class="px-6 py-4 text-slate-500 dark:text-slate-500">#{{ c.id }}</td>
+                                <td class="px-6 py-4 font-bold text-slate-700 flex items-center gap-2 dark:text-slate-200">
+                                    <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center dark:bg-slate-700 text-slate-500 dark:text-slate-300">
+                                        <i class="fa-solid {{ c.icon }}"></i>
+                                    </div>
+                                    {{ c.title }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded font-medium border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600">{{ c.tags or 'General' }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ c.lessons|length }} bài học</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 px-3 py-1 rounded hover:bg-blue-50 transition dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30">Chi tiết</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- === MODAL EDIT USER (TAILWIND STYLE) === -->
+    <div id="editModal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex justify-center items-center backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100 dark:bg-slate-800 dark:border dark:border-slate-700">
+            <!-- Modal Header -->
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center dark:bg-slate-900/50 dark:border-slate-700">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Chỉnh sửa User</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <form id="editForm" method="POST" class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Username</label>
+                    <input type="text" id="modalUsername" disabled class="w-full bg-slate-100 border border-slate-300 rounded-lg px-3 py-2 text-slate-500 font-bold cursor-not-allowed focus:outline-none dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Vai trò</label>
+                        <select name="role" id="modalRole" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Trình độ</label>
+                        <select name="level" id="modalLevel" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">XP Points</label>
+                    <input type="number" name="xp" id="modalXP" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-slate-700 font-medium hover:bg-gray-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600">Hủy</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-md transition">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === FLOATING DARK MODE BUTTON === -->
+    <button onclick="toggleTheme()" class="fixed bottom-6 right-6 z-50 bg-white/90 backdrop-blur dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xl rounded-full px-4 py-3 flex items-center gap-2 cursor-pointer hover:scale-105 transition-all font-bold group">
+        <i id="theme-floating-icon" class="fa-solid fa-moon text-xl group-hover:rotate-12 transition-transform"></i>
+        <span class="text-sm">Theme</span>
+    </button>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- THEME LOGIC ---
+        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            updateThemeIcon(true);
+        } else {
+            document.documentElement.classList.remove('dark');
+            updateThemeIcon(false);
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                updateThemeIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                updateThemeIcon(true);
+            }
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('theme-floating-icon');
+            if (icon) {
+                if (isDark) {
+                    icon.className = 'fa-solid fa-sun text-xl text-yellow-500 group-hover:rotate-12 transition-transform';
+                } else {
+                    icon.className = 'fa-solid fa-moon text-xl text-blue-600 group-hover:rotate-12 transition-transform';
+                }
+            }
+        }
+
+        function openEditModal(id, username, role, level, xp) {
+            // 1. Fill Data
+            document.getElementById('modalUsername').value = username;
+            document.getElementById('modalRole').value = role || 'student';
+            document.getElementById('modalLevel').value = level || 'beginner';
+            document.getElementById('modalXP').value = xp;
+
+            // 2. Set Form Action
+            document.getElementById('editForm').action = "/admin/user/edit/" + id;
+
+            // 3. Show Modal
+            const modal = document.getElementById('editModal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('hidden');
+        }
+
+        // Close on Click Outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeEditModal();
+            }
+        }
+    </script>
+</body>
+</html>

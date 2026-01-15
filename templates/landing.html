@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programming Edu</title>
+    
+    <!-- Gọi file CSS từ thư mục static/css/ -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Favicon (đã có sẵn trong code cũ) -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    
+    <!-- CSS bổ sung để đảm bảo thẻ <a> hiển thị giống nút bấm -->
+    <style>
+        a.btn-primary, a.btn-black, a.btn-text {
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER SECTION -->
+    <header>
+        <div class="logo-container">
+            <div class="logo" style="display: flex; align-items: center;">
+                <!-- SỬA 1: Thay icon bằng file logo.png -->
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Programming Edu Logo" style="height: 50px; margin-right: 15px;">
+                
+                <span>PROGRAMMING<br><small>EDU</small></span>
+            </div>
+        </div>
+
+        <div class="center-nav">
+            <nav class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Courses</a>
+                <a href="#">Mentors</a>
+                <a href="#">About</a>
+            </nav>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search courses...">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+
+        <div class="auth-buttons">
+            <a href="/auth?mode=login" class="btn-text">Sign In</a>
+            <a href="/auth?mode=register" class="btn-primary">Get Started</a>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Get world class <br> courses from world <br> class mentors</h1>
+            <p>Get quality courses with us with the best price. Now you can get the best course from us. We have top mentors around the globe.</p>
+            
+            <div class="hero-actions">
+                <a href="/auth?mode=register" class="btn-black">Get Started</a>
+                <button class="btn-outline"><i class="far fa-play-circle"></i> How it works?</button>
+            </div>
+        </div>
+
+        <!-- Phần ảnh minh họa -->
+        <div class="hero-image-placeholder" id="heroImageArea">
+            
+            <!-- SỬA 2: Thêm file edu.jpg vào đây -->
+            <img src="{{ url_for('static', filename='img/edu.jpg') }}" alt="Education Hero Image" style="width:100%; height:100%; object-fit:cover; border-radius: 30px;">
+
+            <!-- Các Badge nổi bên trên ảnh -->
+            <div class="badge badge-purple">
+                <strong>110K</strong>
+                <span>Active Students</span>
+            </div>
+
+            <div class="badge badge-yellow">
+                <strong>100+</strong>
+                <span>Top Class Mentors</span>
+                <div class="mini-avatars">
+                    <span>👨‍💻</span><span>👩‍💻</span><span>👨‍🏫</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features">
+        <div class="section-header">
+            <div class="yellow-line"></div>
+            <h2>Our Features & Benefits</h2>
+        </div>
+
+        <div class="feature-cards-container">
+            <div class="card">
+                <div class="icon-box icon-yellow">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Best Instructors</h3>
+                    <p>We have highly skilled & highly experienced instructors around the globe.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="icon-box icon-green">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="card-content">
+                    <h3>1 to 1 Support</h3>
+                    <p>We give our students best support always & all time 24/7.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

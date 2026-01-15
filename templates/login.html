@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth System - Consolas</title>
+    <!-- LIÊN KẾT ĐẾN FILE CSS MỚI TẠO -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <!-- Thêm icon FontAwesome cho nút Home -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+</head>
+<body>
+    <!-- Checkbox Theme -->
+    <input type="checkbox" id="theme-switch" checked>
+
+    <div class="wrapper">
+        <!-- Nút Quay về trang chủ -->
+        <a href="/" class="home-link" title="Back to Home"><i class="fa-solid fa-house"></i></a>
+
+        <label for="theme-switch" class="theme-btn" title="Switch Theme">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+            <span class="theme-text">Theme</span>
+        </label>
+
+        <div class="main">  
+            <!-- Checkbox điều khiển trượt -->
+            <input type="checkbox" id="chk" aria-hidden="true">
+
+            <!-- === FORM ĐĂNG KÝ (SIGN UP) === -->
+            <div class="signup">
+                <form onsubmit="event.preventDefault(); handleRegister();">
+                    <label for="chk" aria-hidden="true">Register</label>
+                    
+                    <div class="input-group">
+                        <!-- THÊM ID: reg-user -->
+                        <input type="text" id="reg-user" placeholder="Username" required>
+                    </div>
+                    <div class="input-group">
+                        <!-- Trường Email chỉ để làm cảnh cho đẹp layout, backend hiện tại chưa lưu -->
+                        <input type="email" id="reg-email" placeholder="E-mail" required>
+                    </div>
+                    <div class="input-group">
+                        <!-- THÊM ID: reg-pass -->
+                        <input type="password" id="reg-pass" placeholder="Password" required>
+                    </div>
+                    <!-- THÊM onclick -->
+                    <button type="submit">Sign up</button>
+                </form>
+            </div>
+
+            <!-- === FORM ĐĂNG NHẬP (LOGIN) === -->
+            <div class="login">
+                <form onsubmit="event.preventDefault(); handleLogin();">
+                    <label for="chk" aria-hidden="true">Login</label>
+                    
+                    <div class="spacer"></div>
+                    
+                    <div class="input-group">
+                        <!-- THÊM ID: login-user -->
+                        <input type="text" id="login-user" placeholder="Username" required>
+                    </div>
+                    <div class="input-group">
+                        <!-- THÊM ID: login-pass -->
+                        <input type="password" id="login-pass" placeholder="Password" required>
+                    </div>
+                    <!-- THÊM onclick -->
+                    <button type="submit">Login</button>
+                    
+                    <p class="switch-text">Don't have an account? Click "Register" above.</p>
+                    
+                    <!-- Khu vực hiển thị thông báo lỗi -->
+                    <div id="auth-msg"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- === JAVASCRIPT KẾT NỐI BACKEND (QUAN TRỌNG) === -->
+    <script>
+        // Hàm hiển thị thông báo
+        function showMessage(text, type) {
+            const msg = document.getElementById('auth-msg');
+            msg.innerText = text;
+            msg.className = type === 'success' ? 'msg-success' : 'msg-error';
+        }
+
+        // 1. XỬ LÝ ĐĂNG NHẬP
+        async function handleLogin() {
+            const username = document.getElementById('login-user').value;
+            const password = document.getElementById('login-pass').value;
+
+            if(!username || !password) return showMessage('Missing info!', 'error');
+
+            showMessage('Checking...', 'success');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    showMessage('Success! Redirecting...', 'success');
+                    // Chuyển hướng theo Backend chỉ định (Admin/Onboarding/Dashboard)
+                    setTimeout(() => window.location.href = data.redirect, 1000);
+                } else {
+                    showMessage(data.msg, 'error');
+                }
+            } catch(e) { showMessage('Server Error!', 'error'); }
+        }
+
+        // 2. XỬ LÝ ĐĂNG KÝ
+        async function handleRegister() {
+            const username = document.getElementById('reg-user').value;
+            const password = document.getElementById('reg-pass').value;
+            // Email hiện tại backend chưa xử lý, nhưng cứ để đây nếu cần sau này
+            
+            if(!username || !password) return alert('Please fill in Username and Password');
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    alert('Registration Successful! Redirecting...');
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Error: ' + data.msg);
+                }
+            } catch(e) { alert('Server Connection Error'); }
+        }
+
+        // --- ĐOẠN CODE QUAN TRỌNG ĐỂ XỬ LÝ CHUYỂN TAB ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Lấy tham số ?mode=... từ đường dẫn
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            
+            // 2. Lấy cái checkbox điều khiển việc trượt
+            const checkbox = document.getElementById('chk');
+
+        if (mode === 'register') {
+           checkbox.checked = false; // Đảo ngược lại
+        } 
+        else {
+          checkbox.checked = true;  // Đảo ngược lại
+        }
+    });
+    </script>
+</body>
+</html>

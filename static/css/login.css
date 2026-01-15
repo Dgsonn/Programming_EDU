@@ -1,0 +1,240 @@
+/* --- 1. THIẾT LẬP MÀU SẮC (VARIABLES) --- */
+:root {
+    /* Mặc định là DARK MODE (Tối) */
+    --bg-body: #0f0f0f;
+    --bg-main: #1f1f1f; /* Màu nền của thẻ form */
+    --bg-login: #111111; /* Màu nền phần trượt login */
+    --text-color: #fff;
+    --input-bg: #e0dede;
+    --input-text: #333;
+    --accent-color: #a87ff0; /* Tím */
+    --accent-hover: #8e5ce6;
+    --shadow: rgba(0,0,0,0.5);
+    --error-color: #ff4444;
+    --success-color: #00C851;
+}
+
+/* --- 2. CẤU HÌNH CƠ BẢN --- */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Consolas', 'Courier New', monospace;
+    overflow: hidden; /* Ngăn cuộn trang */
+}
+
+/* Ẩn cả 2 checkbox logic đi */
+#chk, #theme-switch {
+    display: none;
+}
+
+/* Wrapper bao quanh để đổi màu nền toàn trang */
+.wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--bg-body);
+    transition: background-color 0.5s ease;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Nút đổi theme nằm ở dưới cùng */
+.theme-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    background: var(--bg-main);
+    color: var(--text-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Khoảng cách giữa icon và chữ */
+}
+
+.theme-text {
+    font-size: 14px;
+}
+.theme-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+/* Khung Form Chính */
+.main {
+    width: 350px;
+    height: 520px;
+    background: var(--bg-main);
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 5px 20px 50px var(--shadow);
+    position: relative;
+    transition: background 0.5s ease;
+}
+
+/* --- 3. LOGIC GIAO DIỆN --- */
+
+/* Form Register (Nằm dưới) */
+.signup {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.signup label {
+    color: var(--accent-color);
+    font-size: 2.3em;
+    justify-content: center;
+    display: flex;
+    margin: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .5s ease-in-out;
+}
+
+.signup .input-group {
+    width: 60%;
+    margin: 15px auto;
+}
+
+/* Input chung cho cả 2 form */
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid transparent;
+    outline: none;
+    border-radius: 5px;
+    font-family: 'Consolas';
+    box-sizing: border-box;
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+input:focus {
+    border-color: var(--accent-color);
+}
+
+/* Button chung */
+button {
+    width: 60%;
+    height: 40px;
+    margin: 10px auto;
+    justify-content: center;
+    display: block;
+    color: #fff;
+    background: var(--accent-color);
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: 20px;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    transition: .2s ease-in;
+    cursor: pointer;
+    font-family: 'Consolas';
+}
+
+button:hover {
+    background: var(--accent-hover);
+    transform: scale(1.02);
+}
+
+/* Form Login (Nằm đè lên trên) */
+.login {
+    height: 480px;
+    background: var(--bg-login);
+    border-radius: 60% / 10%;
+    transform: translateY(-180px);
+    transition: .8s ease-in-out, background 0.5s;
+}
+
+.login label {
+    color: var(--accent-color);
+    transform: scale(.6);
+    font-size: 2.3em;
+    margin: 0; 
+    font-weight: bold;
+    cursor: pointer;
+    transition: .5s ease-in-out;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px; 
+}
+
+.spacer { height: 60px; }
+.login .input-group { width: 60%; margin: 20px auto; }
+
+.switch-text {
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.7;
+    font-size: 11px;
+    margin-top: 15px;
+    padding: 0 20px;
+}
+
+/* Thông báo lỗi/thành công */
+#auth-msg {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 20px;
+    font-weight: bold;
+}
+.msg-error { color: var(--error-color); }
+.msg-success { color: var(--success-color); }
+
+/* Nút Home */
+.home-link {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 20px;
+    opacity: 0.5;
+    transition: 0.3s;
+    z-index: 100;
+}
+.home-link:hover { opacity: 1; color: var(--accent-color); }
+
+/* --- 4. LOGIC TRƯỢT LOGIN/REGISTER --- */
+#chk:checked ~ .login {
+    transform: translateY(-520px);
+}
+#chk:checked ~ .login label {
+    transform: scale(1);
+}
+#chk:checked ~ .signup label {
+    transform: scale(.6);
+}
+
+/* --- 5. LOGIC CHUYỂN ĐỔI THEME (LIGHT MODE) --- */
+#theme-switch:checked ~ .wrapper {
+    --bg-body: #e0e0e0;
+    --bg-main: #ffffff;
+    --bg-login: #f0f2f5;
+    --text-color: #333333;
+    --input-bg: #fff;
+    --input-text: #000;
+    --accent-color: #2d55ff;
+    --accent-hover: #1a3ecc;
+    --shadow: rgba(0,0,0,0.15);
+}
+
+#theme-switch:checked ~ .wrapper input {
+    border: 1px solid #ccc;
+}
+#theme-switch:checked ~ .wrapper input:focus {
+    border-color: var(--accent-color);
+}

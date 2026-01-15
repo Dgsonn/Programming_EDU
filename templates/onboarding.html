@@ -1,0 +1,93 @@
+<!-- templates/onboarding.html -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng bạn</title>
+    <!-- CSS giữ nguyên như bạn gửi -->
+    <style>
+        .onboarding-container { max-width: 600px; margin: 50px auto; text-align: center; font-family: sans-serif; }
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s; }
+        .options { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .option-card { padding: 15px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: left; }
+        .option-card:hover { border-color: #007bff; background-color: #f0f8ff; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #007bff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="onboarding-container">
+    <div style="background: #eee; height: 5px; width: 100%; margin-bottom: 30px; border-radius: 5px;">
+        <div id="progress-bar" style="background: #007bff; height: 100%; width: 0%; transition: width 0.3s;"></div>
+    </div>
+
+    <div id="step-1" class="step active">
+        <h2>Bạn hiện là ai?</h2>
+        <div class="options">
+            <div class="option-card" onclick="nextStep(1, 'role', 'student')">🎓 Học sinh / Sinh viên</div>
+            <div class="option-card" onclick="nextStep(1, 'role', 'professional')">💼 Người đi làm</div>
+            <div class="option-card" onclick="nextStep(1, 'role', 'other')">☕ Học vì đam mê</div>
+        </div>
+    </div>
+
+    <div id="step-2" class="step">
+        <h2>Trình độ hiện tại?</h2>
+        <div class="options">
+            <div class="option-card" onclick="nextStep(2, 'level', 'beginner')">🌱 Mới bắt đầu</div>
+            <div class="option-card" onclick="nextStep(2, 'level', 'intermediate')">🌿 Đã biết cơ bản</div>
+            <div class="option-card" onclick="nextStep(2, 'level', 'advanced')">🌳 Đã có kinh nghiệm</div>
+        </div>
+    </div>
+
+    <div id="step-loading" class="step">
+        <div class="loader"></div>
+        <h3 id="loading-text">Đang phân tích câu trả lời...</h3>
+    </div>
+</div>
+
+<script>
+    const userAnswers = {};
+
+    function nextStep(currentStepId, key, value) {
+        userAnswers[key] = value;
+        document.getElementById(`step-${currentStepId}`).classList.remove('active');
+        const nextId = currentStepId + 1;
+        const nextElement = document.getElementById(`step-${nextId}`);
+        document.getElementById('progress-bar').style.width = (currentStepId * 50) + '%';
+
+        if (nextElement) {
+            nextElement.classList.add('active');
+        } else {
+            finishOnboarding();
+        }
+    }
+
+    function finishOnboarding() {
+        document.getElementById('step-loading').classList.add('active');
+        
+        setTimeout(() => { document.getElementById('loading-text').innerText = "Đang thiết kế lộ trình..."; }, 1500);
+        setTimeout(() => { document.getElementById('loading-text').innerText = "Đang cá nhân hóa..."; }, 3000);
+
+        setTimeout(() => {
+            fetch('/api/save-onboarding', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userAnswers)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    // QUAN TRỌNG: Chuyển về trang chủ (/)
+                    // Vì app.py đã xử lý: Nếu có role rồi thì "/" chính là Dashboard
+                    window.location.href = "/"; 
+                }
+            });
+        }, 4000);
+    }
+</script>
+</body>
+</html>

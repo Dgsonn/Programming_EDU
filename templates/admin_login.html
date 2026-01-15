@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Access Control</title>
+    
+    <!-- FontAwesome cho Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Poppins cho hiện đại -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+
+    <style>
+        /* --- 1. CẤU HÌNH CHUNG --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #0f0c29;
+            background-image: linear-gradient(315deg, #0f0c29 0%, #302b63 74%, #24243e 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* --- 2. CARD ADMIN (KHUNG CHÍNH) --- */
+        .admin-card {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.05); /* Hiệu ứng kính mờ */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Logo hoặc Icon phía trên */
+        .logo-area {
+            font-size: 50px;
+            color: #a87ff0; /* Màu tím chủ đạo */
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+        }
+
+        /* --- 3. INPUT FORM --- */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px; /* Chừa chỗ cho icon */
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px; /* Bo tròn hình viên thuốc */
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: #a87ff0;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 10px rgba(168, 127, 240, 0.3);
+        }
+
+        .input-group input:focus + i {
+            color: #a87ff0;
+        }
+
+        /* --- 4. BUTTON --- */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #a87ff0, #8e5ce6);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(142, 92, 230, 0.4);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(142, 92, 230, 0.6);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* --- 5. FLASH MESSAGE (LỖI) --- */
+        .alert-error {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* --- 6. FOOTER LINKS --- */
+        .footer-link {
+            display: block;
+            margin-top: 25px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .footer-link:hover {
+            color: #fff;
+        }
+
+        /* Decoration circles (Hiệu ứng nền) */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+        }
+        .circle-1 {
+            width: 200px;
+            height: 200px;
+            background: #a87ff0;
+            top: -50px;
+            left: -50px;
+            opacity: 0.4;
+        }
+        .circle-2 {
+            width: 150px;
+            height: 150px;
+            background: #24243e;
+            bottom: -30px;
+            right: -30px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Trang trí nền -->
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+
+    <div class="admin-card">
+        <!-- Icon/Logo -->
+        <div class="logo-area">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        
+        <h2 class="title">Admin Portal</h2>
+        <p class="subtitle">Đăng nhập hệ thống quản trị</p>
+
+        <!-- Thông báo lỗi -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert-error">
+                    <i class="fas fa-exclamation-circle"></i> {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form -->
+        <form action="/admin/login" method="POST">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="Username" required autofocus autocomplete="off">
+                <i class="fas fa-user"></i>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="password" placeholder="Password" required>
+                <i class="fas fa-lock"></i>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                ACCESS SYSTEM <i class="fas fa-arrow-right" style="margin-left: 5px; font-size:12px;"></i>
+            </button>
+        </form>
+
+        <a href="/" class="footer-link">
+            <i class="fas fa-chevron-left"></i> Quay về trang chủ
+        </a>
+    </div>
+
+</body>
+</html>
