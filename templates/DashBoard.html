@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | Programming Edu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brilliant: {
+                            bg: '#f7f7f5',       /* Màu nền xám nhạt đặc trưng của Brilliant */
+                            card: '#ffffff',     /* Card màu trắng */
+                            text: '#222222',     /* Chữ đen dịu */
+                            sub: '#666666',      /* Chữ phụ màu xám */
+                            blue: '#007bff',     /* Màu xanh điểm nhấn */
+                            border: '#e5e5e5'    /* Viền nhạt */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+    body { background-color: #f7f7f5; color: #222; }
+    .dark body { background-color: #111827; color: #f3f4f6; }
+    .course-card { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .course-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.1); }
+
+    /* --- THÊM ĐOẠN NÀY --- */
+    .custom-logo {
+        height: 100px !important; /* Chỉnh số này to nhỏ tùy ý (Ví dụ: 80px, 100px) */
+        width: auto;
+        object-fit: contain;
+    }
+
+    /* Riêng trên điện thoại thì cho bé lại chút kẻo vỡ giao diện */
+    @media (max-width: 768px) {
+        .custom-logo {
+            height: 50px !important;
+        }
+    }
+</style>
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden font-sans text-brilliant-text">
+
+    <!-- 1. SIDEBAR (TRÁI) - Phong cách tối giản -->
+    <aside class="w-64 bg-white border-r border-brilliant-border flex flex-col hidden md:flex z-50 dark:bg-gray-900 dark:border-gray-700">
+        <!-- Logo Area -->
+        <!-- Logo Area -->
+<!-- Tôi sửa h-20 thành h-auto py-4 để chiều cao tự giãn theo logo -->
+<div class="h-auto py-4 flex items-center px-6"> 
+    <img src="{{ url_for('static', filename='img/logo.png') }}" 
+         alt="Logo" 
+         class="custom-logo mr-3"> <!-- Đã xóa h-10 và thêm custom-logo -->
+         
+    <span class="font-bold text-xl tracking-tight dark:text-white">Pro<span class="text-blue-600">Edu</span></span>
+</div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 text-sm font-bold rounded-xl bg-gray-100 text-black transition-colors dark:bg-gray-800 dark:text-white">
+                <i class="fa-solid fa-house w-6 text-lg"></i> Trang chủ
+            </a>
+            <a href="/forum" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+                <i class="fa-solid fa-comments w-6 text-lg"></i> Diễn đàn
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+                <i class="fa-solid fa-book-open w-6 text-lg"></i> Các khóa học
+            </a>
+            <a href="#" onclick="showTab('profile'); return false;" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+                <i class="fa-solid fa-user w-6 text-lg"></i> Hồ sơ cá nhân
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+                <i class="fa-solid fa-trophy w-6 text-lg"></i> Bảng xếp hạng
+            </a>
+        </nav>
+
+        <!-- User Footer -->
+        <div class="p-4 border-t border-gray-100 dark:border-gray-700">
+            <div onclick="showTab('profile')" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer" title="Xem hồ sơ">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
+                    {{ user.username[0]|upper }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold truncate dark:text-white">{{ user.username }}</div>
+                    <div class="text-xs text-blue-600 font-bold dark:text-blue-400 group-hover:underline">Xem hồ sơ</div>
+                </div>
+                <a href="/logout" onclick="event.stopPropagation()" class="text-gray-400 hover:text-red-500" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN CONTENT (PHẢI) -->
+    <main class="flex-1 overflow-y-auto bg-[#f7f7f5] relative dark:bg-gray-900">
+        
+        <!-- Header Mobile -->
+        <header class="md:hidden h-16 bg-white border-b flex items-center justify-between px-4 sticky top-0 z-40 dark:bg-gray-900 dark:border-gray-700">
+            <div class="flex items-center">
+                 <img src="{{ url_for('static', filename='img/logo.png') }}" class="h-12 w-auto mr-2">
+            </div>
+            
+            <a href="/logout" class="text-gray-500"><i class="fa-solid fa-bars text-xl"></i></a>
+        </header>
+
+        <div class="max-w-5xl mx-auto p-6 md:p-10">
+            
+            <!-- Greeting -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-black dark:text-white">Trung tâm bảo mật 🛡️</h1>
+                    <p class="text-gray-500 dark:text-gray-400">Chọn một chủ đề để bắt đầu học hoặc kiểm tra an toàn.</p>
+                </div>
+            </div>
+
+            <!-- THANH ĐIỀU HƯỚNG TAB (JS sẽ xử lý click ở đây) -->
+            <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit mb-8 dark:bg-gray-800 dark:border-gray-700">
+                <button id="tab-learn" onclick="showTab('learn')" class="px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 bg-gray-900 text-white transition-all dark:bg-blue-600">
+                    <i class="fa-solid fa-graduation-cap"></i> Học tập
+                </button>
+                <button id="tab-check" onclick="showTab('check')" class="px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all dark:text-gray-400 dark:hover:text-white">
+                    <i class="fa-solid fa-shield-virus"></i> Kiểm tra An toàn
+                </button>
+                <button id="tab-profile" onclick="showTab('profile')" class="px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all dark:text-gray-400 dark:hover:text-white">
+                    <i class="fa-solid fa-user"></i> Hồ sơ
+                </button>
+            </div>
+
+            <!-- === VIEW: HỌC TẬP (LEARN) === -->
+            <div id="view-learn">
+                <!-- Grid danh sách chủ đề (JS sẽ render vào đây) -->
+                <div id="topic-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- JS sẽ điền nội dung vào đây -->
+                </div>
+
+                <!-- Giao diện khi chọn bài học (Ẩn mặc định) -->
+                <div id="mode-select" class="hidden flex-col items-center justify-center py-10 text-center space-y-6">
+                    <h2 id="selected-topic-title" class="text-2xl font-bold text-gray-800 dark:text-white">Topic Name</h2>
+                    <div class="flex gap-4">
+                        <button onclick="startLesson()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                            <i class="fa-solid fa-book-open mr-2"></i> Đọc bài học
+                        </button>
+                        <button onclick="startQuiz()" class="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition">
+                            <i class="fa-solid fa-puzzle-piece mr-2"></i> Làm trắc nghiệm
+                        </button>
+                    </div>
+                    <button onclick="resetLearn()" class="text-gray-500 underline text-sm dark:text-gray-400">Quay lại danh sách</button>
+                </div>
+
+                <!-- Nội dung Bài học (Ẩn mặc định) -->
+                <div id="lesson-content" class="hidden bg-white p-8 rounded-2xl border border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="lesson-heading" class="text-2xl font-bold text-gray-900 dark:text-white">Tiêu đề bài học</h2>
+                        <button onclick="resetLearn()" class="text-gray-400 hover:text-black dark:hover:text-white"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div id="lesson-body" class="space-y-6 text-gray-700 leading-relaxed dark:text-gray-300"></div>
+                </div>
+
+                <!-- Nội dung Trắc nghiệm (Ẩn mặc định) -->
+                <div id="quiz-content" class="hidden space-y-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 id="quiz-heading" class="text-xl font-bold text-gray-900 dark:text-white">Câu hỏi</h2>
+                        <button onclick="resetLearn()" class="text-gray-400 hover:text-black dark:hover:text-white"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div id="quiz-body" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- === VIEW: KIỂM TRA (CHECK) === -->
+            <div id="view-check" class="hidden">
+                <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-2xl mx-auto dark:bg-gray-800 dark:border-gray-700">
+                    <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Công cụ rà soát bảo mật</h2>
+                    <p class="text-gray-500 mb-6 text-sm dark:text-gray-400">Nhập đoạn mã hoặc đường dẫn để AI phân tích rủi ro.</p>
+                    
+                    <div id="check-form" class="space-y-4">
+                        <textarea id="check-input" rows="4" class="w-full p-4 rounded-xl border border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none transition dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:bg-gray-600" placeholder="Nhập URL hoặc đoạn mã cần kiểm tra..."></textarea>
+                        <button onclick="runCheck()" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition">
+                            <i class="fa-solid fa-magnifying-glass mr-2"></i> Quét ngay
+                        </button>
+                    </div>
+
+                    <!-- Kết quả kiểm tra -->
+                    <div id="check-result" class="hidden mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase font-bold dark:text-gray-400">Mức độ rủi ro</div>
+                                <div id="risk-level" class="text-2xl font-bold dark:text-white">SAFE</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-gray-500 uppercase font-bold dark:text-gray-400">Điểm an toàn</div>
+                                <div id="risk-score" class="text-2xl font-bold dark:text-white">95/100</div>
+                            </div>
+                        </div>
+                        <p id="risk-summary" class="text-gray-700 mb-4 bg-gray-50 p-3 rounded-lg dark:text-gray-300 dark:bg-gray-700"></p>
+                        <div id="risk-findings" class="space-y-3"></div>
+                        <button onclick="resetCheck()" class="mt-6 w-full py-2 text-gray-500 font-bold border border-gray-200 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">Quét lại</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === VIEW: HỒ SƠ (PROFILE) - MỚI === -->
+            <div id="view-profile" class="hidden">
+                 <!-- Profile Header -->
+                <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm border border-gray-200 flex flex-col md:flex-row items-center gap-8 dark:bg-gray-800 dark:border-gray-700">
+                    <div class="relative">
+                        <div class="w-32 h-32 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-5xl ring-4 ring-white shadow-lg">
+                            {{ user.username[0]|upper }}
+                        </div>
+                        <div class="absolute bottom-0 right-0 bg-green-500 w-8 h-8 rounded-full border-4 border-white"></div>
+                    </div>
+                    
+                    <div class="flex-1 text-center md:text-left">
+                        <h1 class="text-3xl font-extrabold mb-2 dark:text-white">{{ user.username }}</h1>
+                        <div class="flex flex-wrap gap-3 justify-center md:justify-start mb-4">
+                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium dark:bg-gray-700 dark:text-gray-300">
+                                <i class="fa-regular fa-calendar-alt mr-2"></i>Tham gia: {{ user.joined_at.strftime('%m/%Y') if user.joined_at else 'N/A' }}
+                            </span>
+                            <span class="px-3 py-1 rounded-full bg-{{ current_badge.color.split('-')[1] }}-100 {{ current_badge.color }} text-sm font-bold border border-{{ current_badge.color.split('-')[1] }}-200">
+                                <i class="fa-solid {{ current_badge.icon }} mr-2"></i>{{ current_badge.name }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats Box -->
+                    <div class="grid grid-cols-3 gap-6 text-center bg-gray-50 p-6 rounded-xl border border-gray-100 dark:bg-gray-900 dark:border-gray-700">
+                        <div>
+                            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ user.streak }}</div>
+                            <div class="text-xs text-gray-500 uppercase font-semibold">Ngày Streak</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-blue-600">{{ user.xp }}</div>
+                            <div class="text-xs text-gray-500 uppercase font-semibold">Total XP</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-orange-500">{{ time_display }}</div>
+                            <div class="text-xs text-gray-500 uppercase font-semibold">Thời gian học</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <!-- Left Column: Badges -->
+                    <div class="md:col-span-1 space-y-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
+                                <i class="fa-solid fa-medal text-yellow-500"></i> Huy hiệu của tôi
+                            </h3>
+                            <div class="space-y-4">
+                                {% for badge in badges %}
+                                <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
+                                    <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center {{ badge.color }} dark:bg-gray-800">
+                                        <i class="fa-solid {{ badge.icon }} text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-sm dark:text-white">{{ badge.name }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ badge.desc }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if not badges %}
+                                <p class="text-sm text-gray-400 italic">Hãy học tập để mở khóa huy hiệu!</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Course Progress -->
+                    <div class="md:col-span-2">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                            <h3 class="font-bold text-lg mb-6 flex items-center gap-2 dark:text-white">
+                                <i class="fa-solid fa-chart-line text-blue-600"></i> Tiến độ các khóa học
+                            </h3>
+                            
+                            <div class="space-y-6">
+                                {% for item in courses_data %}
+                                <div class="p-4 rounded-xl border border-gray-100 hover:border-blue-200 transition bg-white shadow-sm group dark:bg-gray-900 dark:border-gray-700">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 group-hover:bg-blue-600 group-hover:text-white transition dark:bg-gray-800 dark:text-gray-300">
+                                                <i class="fa-solid {{ item.course.icon }}"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-gray-800 dark:text-white">{{ item.course.title }}</h4>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                    <i class="fa-regular fa-clock mr-1"></i> Đã học: {{ item.time }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="text-xl font-bold {{ 'text-green-500' if item.percent == 100 else 'text-blue-600' }}">
+                                            {{ item.percent }}%
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Progress Bar -->
+                                    <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
+                                        <div class="h-full {{ 'bg-green-500' if item.percent == 100 else 'bg-blue-600' }} rounded-full transition-all duration-500" style="width: {{ item.percent }}%"></div>
+                                    </div>
+                                    <div class="text-right mt-1">
+                                        <small class="text-gray-400 text-xs">Truy cập lần cuối: {{ item.last_accessed.strftime('%d/%m/%Y') if item.last_accessed else 'Chưa học' }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                {% if not courses_data %}
+                                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                    <p>Bạn chưa tham gia khóa học nào.</p>
+                                    <button onclick="showTab('learn')" class="text-blue-600 font-bold hover:underline mt-2 inline-block">Khám phá ngay</button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner (Dùng chung) -->
+            <div id="loading" class="hidden flex-col items-center justify-center py-20">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                <p class="text-gray-500 animate-pulse">Đang xử lý dữ liệu...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- === FLOATING DARK MODE BUTTON === -->
+    <button onclick="toggleTheme()" class="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 shadow-xl rounded-full px-4 py-3 flex items-center gap-2 cursor-pointer hover:scale-105 transition-all font-bold group">
+        <i id="theme-floating-icon" class="fa-solid fa-moon text-xl group-hover:rotate-12 transition-transform"></i>
+        <span class="text-sm">Theme</span>
+    </button>
+
+    <!-- QUAN TRỌNG: Link file JS -->
+    <script>
+        // Check theme onLoad
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            updateThemeIcon(true);
+        } else {
+            document.documentElement.classList.remove('dark');
+            updateThemeIcon(false);
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                updateThemeIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                updateThemeIcon(true);
+            }
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('theme-floating-icon');
+            if (icon) {
+                if (isDark) {
+                    icon.className = 'fa-solid fa-sun text-xl text-yellow-400 group-hover:rotate-12 transition-transform';
+                } else {
+                    icon.className = 'fa-solid fa-moon text-xl text-blue-600 group-hover:rotate-12 transition-transform';
+                }
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

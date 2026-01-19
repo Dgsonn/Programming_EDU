@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Learning Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f0f4f8; font-family: sans-serif; }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .btn-option:hover { border-color: #3b82f6; background-color: #eff6ff; }
+        .btn-option.selected { border-color: #2563eb; background-color: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body class="flex flex-col h-screen bg-gray-50">
+
+    <!-- Header -->
+    <div class="bg-white p-4 border-b flex justify-between items-center shadow-sm z-10">
+        <a href="/" class="text-gray-500 hover:text-black transition"><i class="fa-solid fa-xmark text-xl"></i></a>
+        
+        <!-- Thanh tiến độ -->
+        <div class="flex-1 mx-6 bg-gray-200 h-2.5 rounded-full overflow-hidden">
+            <div id="progress-bar" class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        
+        <div class="flex items-center text-yellow-500 font-bold gap-1">
+            <i class="fa-solid fa-bolt"></i> <span id="xp-display">XP</span>
+        </div>
+    </div>
+
+    <!-- Nội dung chính (Thay đổi động) -->
+    <div class="flex-1 overflow-y-auto flex justify-center">
+        <div id="interaction-area" class="w-full max-w-2xl p-6 md:p-10">
+            <!-- JS sẽ vẽ câu hỏi vào đây -->
+            <div class="text-center text-gray-500 mt-10">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+                <p>Đang tải bài học...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Controller -->
+    <div class="bg-white p-4 border-t shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+        <div class="max-w-2xl mx-auto">
+            <!-- Khu vực thông báo đúng/sai -->
+            <div id="feedback-area" class="hidden mb-4 p-4 rounded-xl text-sm border-l-4"></div>
+            
+            <!-- Các nút bấm -->
+            <button id="btn-submit" onclick="submitStep()" class="w-full bg-black text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition transform active:scale-95">
+                Kiểm tra
+            </button>
+            <button id="btn-next" onclick="nextStep()" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 transition transform active:scale-95 hidden shadow-lg shadow-green-500/30">
+                Tiếp tục
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu lấy từ Backend (Python truyền sang biến initial_data)
+        const interactions = {{ initial_data | safe }};
+        let currentStep = 0;
+        let selectedAnswer = null;
+
+        function renderStep() {
+            if (currentStep >= interactions.length) {
+                alert("Chúc mừng! Bạn đã hoàn thành bài học.");
+                window.location.href = '/'; 
+                return;
+            }
+
+            const data = interactions[currentStep];
+            const area = document.getElementById('interaction-area');
+            const content = data.content;
+            
+            // Reset UI
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('btn-submit').classList.remove('hidden');
+            document.getElementById('btn-next').classList.add('hidden');
+            selectedAnswer = null;
+            area.innerHTML = ''; 
+
+            // Cập nhật Progress
+            document.getElementById('progress-bar').style.width = ((currentStep / interactions.length) * 100) + '%';
+
+            // --- RENDER THEO TYPE ---
+            
+            // 1. Dạng TEXT (Lý thuyết)
+            if (data.type === 'text') {
+                area.innerHTML = `
+                    <div class="slide-in">
+                        <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-800">${content.heading}</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed">${content.body}</p>
+                        ${content.image ? `<img src="${content.image}" class="mt-6 rounded-lg w-full object-cover shadow-md">` : ''}
+                    </div>
+                `;
+                document.getElementById('btn-submit').innerText = "Đã hiểu";
+            }
+
+            // 2. Dạng TRẮC NGHIỆM (Multiple Choice)
+            else if (data.type === 'multiple_choice') {
+                let optionsHtml = '';
+                content.options.forEach((opt, idx) => {
+                    optionsHtml += `
+                        <div onclick="selectOption(${idx}, this)" class="btn-option border-2 border-gray-200 bg-white rounded-xl p-4 mb-3 cursor-pointer font-medium text-gray-700 transition flex items-center shadow-sm">
+                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center option-circle"></div>
+                            ${opt}
+                        </div>
+                    `;
+                });
+                area.innerHTML = `
+                    <div class="slide-in">
+                        <h2 class="text-xl md:text-2xl font-bold mb-6 text-gray-800">${content.question}</h2>
+                        <div class="space-y-2">${optionsHtml}</div>
+                    </div>
+                `;
+                document.getElementById('btn-submit').innerText = "Kiểm tra";
+            }
+
+            // 3. Dạng NHẬP SỐ (Input Number)
+            else if (data.type === 'input_number') {
+                area.innerHTML = `
+                    <div class="slide-in">
+                        <h2 class="text-xl md:text-2xl font-bold mb-6 text-gray-800">${content.question}</h2>
+                        <input type="number" id="num-input" class="w-full border-2 border-gray-300 p-4 rounded-xl text-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition" placeholder="${content.placeholder || 'Nhập số vào đây...'}">
+                    </div>
+                `;
+                document.getElementById('btn-submit').innerText = "Gửi đáp án";
+            }
+        }
+
+        // Helper cho trắc nghiệm
+        function selectOption(idx, el) {
+            document.querySelectorAll('.btn-option').forEach(e => {
+                e.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
+                e.querySelector('.option-circle').classList.remove('border-blue-500', 'bg-blue-500');
+            });
+            el.classList.add('selected', 'border-blue-500', 'bg-blue-50');
+            el.querySelector('.option-circle').classList.add('border-blue-500', 'bg-blue-500');
+            selectedAnswer = idx;
+        }
+
+        async function submitStep() {
+            const data = interactions[currentStep];
+
+            // Nếu là dạng Text, chỉ cần next
+            if (data.type === 'text') {
+                nextStep();
+                return;
+            }
+
+            // Lấy đáp án tùy theo type
+            let answerToSend = selectedAnswer;
+            if (data.type === 'input_number') {
+                answerToSend = document.getElementById('num-input').value;
+            }
+
+            if (answerToSend === null || answerToSend === '') {
+                // Rung nút để nhắc nhở
+                const btn = document.getElementById('btn-submit');
+                btn.classList.add('animate-bounce');
+                setTimeout(() => btn.classList.remove('animate-bounce'), 500);
+                return;
+            }
+
+            // Gửi lên Backend kiểm tra
+            try {
+                const res = await fetch('/api/submit_answer', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ interaction_id: data.id, answer: answerToSend })
+                });
+                const result = await res.json();
+
+                // Hiển thị kết quả
+                const fb = document.getElementById('feedback-area');
+                fb.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-500', 'bg-green-50', 'text-green-700', 'border-green-500');
+                
+                if (result.correct) {
+                    fb.classList.add('bg-green-50', 'text-green-700', 'border-green-500');
+                    fb.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <div class="bg-green-100 p-2 rounded-full"><i class="fa-solid fa-check text-green-600"></i></div>
+                            <div>
+                                <strong class="text-lg">Chính xác!</strong>
+                                <p class="mt-1">${result.explanation}</p>
+                            </div>
+                        </div>`;
+                    
+                    // Phát âm thanh nếu muốn (Option)
+                    // new Audio('/static/correct.mp3').play().catch(e=>{});
+
+                    document.getElementById('btn-submit').classList.add('hidden');
+                    document.getElementById('btn-next').classList.remove('hidden');
+                } else {
+                    fb.classList.add('bg-red-50', 'text-red-700', 'border-red-500');
+                    fb.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <div class="bg-red-100 p-2 rounded-full"><i class="fa-solid fa-xmark text-red-600"></i></div>
+                            <div>
+                                <strong class="text-lg">Chưa đúng rồi.</strong>
+                                <p class="mt-1">Đừng lo, hãy thử suy nghĩ kỹ hơn xem.</p>
+                            </div>
+                        </div>`;
+                }
+            } catch(e) {
+                alert("Lỗi kết nối server!");
+            }
+        }
+
+        function nextStep() {
+            currentStep++;
+            renderStep();
+        }
+
+        // Start
+        renderStep();
+
+        // Time Tracking
+        const courseId = {{ lesson.course_id }};
+        setInterval(async () => {
+            try {
+                await fetch('/profile/api/update_time', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ course_id: courseId, minutes: 1 })
+                });
+            } catch (e) { console.error(e); }
+        }, 60000); 
+    </script>
+</body>
+</html>

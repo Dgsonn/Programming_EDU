@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard VN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { mono: ['"JetBrains Mono"', 'monospace'], sans: ['Inter', 'sans-serif'] },
+                    colors: { cyber: { black: '#0a0a0a', green: '#00ff41', red: '#ff2a2a', blue: '#00f0ff', gray: '#1f1f1f' } },
+                    animation: { 'scan': 'scan 2s linear infinite' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #e0e0e0; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00ff41; }
+        .hidden { display: none !important; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-cyber-green selection:text-black">
+
+    <!-- HEADER (Giữ nguyên) -->
+    <header class="border-b border-gray-800 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 flex items-center justify-center border border-cyber-green rounded bg-green-900/20 shadow-[0_0_10px_rgba(0,255,65,0.3)]">
+                    <i class="fa-solid fa-shield-halved text-cyber-green text-sm"></i>
+                </div>
+                <h1 class="text-xl font-bold font-mono tracking-tight text-white">
+                    Cyber<span class="text-cyber-green">Guard</span><span class="text-gray-500 text-xs ml-1">VN</span>
+                </h1>
+            </div>
+            <nav class="flex gap-2 bg-gray-900/50 p-1 rounded-lg border border-gray-800">
+                <button onclick="showTab('learn')" id="tab-learn" class="px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 bg-gray-800 text-cyber-green transition-all">
+                    <i class="fa-solid fa-graduation-cap"></i> Học Tập
+                </button>
+                <button onclick="showTab('check')" id="tab-check" class="px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 text-gray-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-radar"></i> Kiểm Tra
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 container mx-auto px-4 py-8 relative">
+        <!-- Background Effects -->
+        <div class="fixed top-20 left-10 w-64 h-64 bg-green-500/5 rounded-full blur-[100px] -z-10"></div>
+        <div class="fixed bottom-20 right-10 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] -z-10"></div>
+
+        <!-- === PHẦN 1: LEARN (HỌC TẬP) === -->
+        <div id="view-learn" class="h-full flex flex-col">
+            <!-- Danh sách chủ đề -->
+            <div id="topic-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
+                <!-- Javascript sẽ điền chủ đề vào đây -->
+            </div>
+
+            <!-- Chọn chế độ (Lý thuyết / Trắc nghiệm) -->
+            <div id="mode-select" class="hidden flex-col items-center justify-center h-full space-y-8 mt-10 animate-fade-in">
+                <h2 class="text-3xl font-bold text-white font-mono">Chủ đề: <span id="selected-topic-title" class="text-cyber-green"></span></h2>
+                <div class="flex gap-6">
+                    <button onclick="startLesson()" class="px-8 py-4 bg-[#111] border border-cyber-green text-cyber-green font-mono font-bold hover:bg-cyber-green hover:text-black transition-all">
+                        <i class="fa-solid fa-book-open mr-2"></i> Học Lý Thuyết
+                    </button>
+                    <button onclick="startQuiz()" class="px-8 py-4 bg-[#111] border border-cyber-blue text-cyber-blue font-mono font-bold hover:bg-cyber-blue hover:text-black transition-all">
+                        <i class="fa-solid fa-puzzle-piece mr-2"></i> Trắc Nghiệm
+                    </button>
+                </div>
+                <button onclick="resetLearn()" class="text-gray-500 hover:text-white">Quay lại</button>
+            </div>
+
+            <!-- Hiển thị nội dung bài học -->
+            <div id="lesson-content" class="hidden bg-cyber-gray border border-gray-700 rounded-lg p-8 shadow-2xl animate-fade-in">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                    <h2 id="lesson-heading" class="text-3xl font-bold text-cyber-green font-mono"></h2>
+                    <button onclick="resetLearn()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div id="lesson-body" class="space-y-6 text-gray-300"></div>
+            </div>
+
+            <!-- Hiển thị trắc nghiệm -->
+            <div id="quiz-content" class="hidden max-w-3xl mx-auto animate-fade-in">
+                <div class="flex justify-between mb-6">
+                    <h2 id="quiz-heading" class="text-2xl font-bold text-cyber-blue font-mono"></h2>
+                    <button onclick="resetLearn()" class="text-gray-400 hover:text-white">Thoát</button>
+                </div>
+                <div id="quiz-body" class="space-y-6"></div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="hidden flex-col items-center justify-center mt-20">
+                <div class="w-12 h-12 border-4 border-cyber-green border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-cyber-green font-mono animate-pulse">Đang kết nối AI Server...</p>
+            </div>
+        </div>
+
+        <!-- === PHẦN 2: CHECK (KIỂM TRA) === -->
+        <div id="view-check" class="hidden h-full max-w-4xl mx-auto flex flex-col">
+            <!-- Form nhập code -->
+            <div id="check-form" class="animate-fade-in">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold text-cyber-red font-mono"><i class="fa-solid fa-shield-virus mr-2"></i> Kiểm Tra Rủi Ro</h2>
+                    <p class="text-gray-400 mt-2">Nhập code hoặc log hệ thống để quét lỗ hổng.</p>
+                </div>
+                <div class="bg-black border border-gray-700 rounded-lg p-1 relative shadow-lg">
+                    <div class="h-8 bg-gray-900 border-b border-gray-700 flex items-center px-3 gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <textarea id="check-input" class="w-full h-40 bg-transparent text-gray-300 font-mono p-4 focus:outline-none resize-none" placeholder="// Paste code here..."></textarea>
+                </div>
+                <button onclick="runCheck()" class="mt-6 float-right bg-cyber-red text-black font-bold font-mono px-8 py-3 rounded hover:bg-white transition-all">
+                    <i class="fa-solid fa-microchip mr-2"></i> PHÂN TÍCH
+                </button>
+            </div>
+
+            <!-- Kết quả Check -->
+            <div id="check-result" class="hidden animate-fade-in">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                    <h2 class="text-2xl font-bold font-mono text-white">Kết quả: <span id="risk-level"></span></h2>
+                    <button onclick="resetCheck()" class="text-gray-400 hover:text-white border border-gray-700 px-3 py-1 rounded">Quét lại</button>
+                </div>
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gray-900 rounded p-6 text-center border border-gray-800">
+                        <div id="risk-score" class="text-5xl font-bold font-mono mb-1"></div>
+                        <div class="text-gray-500 text-sm uppercase">Điểm an toàn</div>
+                    </div>
+                    <div class="col-span-2 bg-gray-900 rounded p-6 border border-gray-800">
+                        <h3 class="text-gray-300 font-bold mb-2 font-mono">TÓM TẮT</h3>
+                        <p id="risk-summary" class="text-gray-400"></p>
+                    </div>
+                </div>
+                <div id="risk-findings" class="space-y-4"></div>
+            </div>
+        </div>
+    </main>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

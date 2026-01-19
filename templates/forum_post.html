@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }} | Diễn đàn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f7f7f5; color: #222; }
+    </style>
+</head>
+<body class="bg-[#f7f7f5] min-h-screen font-sans">
+    
+    <!-- Simple Header similar to others -->
+    <header class="bg-white border-b sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="/forum" class="text-gray-500 hover:text-black transition">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại
+                </a>
+                <span class="h-6 w-px bg-gray-200"></span>
+                <span class="font-bold text-lg">Chi tiết thảo luận</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                    {{ user.username[0]|upper }}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 md:p-10">
+        
+        <!-- Post Content -->
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 mb-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">
+                    {{ post.author.username[0]|upper }}
+                </div>
+                <div>
+                    <div class="font-bold text-lg">{{ post.author.username }}</div>
+                    <div class="text-gray-400 text-sm">Đăng ngày {{ post.created_at.strftime('%d/%m/%Y lúc %H:%M') }}</div>
+                </div>
+            </div>
+
+            <h1 class="text-3xl font-extrabold mb-6 text-gray-900">{{ post.title }}</h1>
+            
+            <div class="prose max-w-none text-gray-800 mb-8 whitespace-pre-line leading-relaxed text-lg">
+                {{ post.content }}
+            </div>
+
+            <!-- Reaction Buttons -->
+            <div class="flex gap-3 border-t pt-6">
+                {% set like_count = post.reactions|selectattr("reaction_type", "equalto", "like")|list|length %}
+                {% set love_count = post.reactions|selectattr("reaction_type", "equalto", "love")|list|length %}
+                
+                {% set user_reaction = post.reactions|selectattr("user_id", "equalto", user.id)|first %}
+                {% set my_type = user_reaction.reaction_type if user_reaction else '' %}
+
+                <button onclick="reactPost({{ post.id }}, 'like')" 
+                        class="flex items-center gap-2 px-4 py-2 rounded-full transition font-medium {{ 'text-blue-600 bg-blue-50 ring-1 ring-blue-200' if my_type == 'like' else 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}" 
+                        id="btn-like">
+                    <i class="fa-solid fa-thumbs-up"></i> 
+                    <span id="count-like">{{ like_count }}</span>
+                </button>
+
+                <button onclick="reactPost({{ post.id }}, 'love')" 
+                        class="flex items-center gap-2 px-4 py-2 rounded-full transition font-medium {{ 'text-pink-600 bg-pink-50 ring-1 ring-pink-200' if my_type == 'love' else 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}" 
+                        id="btn-love">
+                    <i class="fa-solid fa-heart"></i> 
+                    <span id="count-love">{{ love_count }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
+            <h3 class="text-xl font-bold mb-8 flex items-center gap-2">
+                <i class="fa-regular fa-comments"></i> Bình luận ({{ post.comments|length }})
+            </h3>
+            
+            <!-- List Comments -->
+            <div class="space-y-6 mb-10">
+                {% for comment in post.comments %}
+                <div class="flex gap-4 group">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex-shrink-0 flex items-center justify-center font-bold text-sm">
+                        {{ comment.author.username[0]|upper }}
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-gray-50 p-4 rounded-2xl rounded-tl-none inline-block max-w-full">
+                            <div class="flex items-center justify-between gap-4 mb-1">
+                                <span class="font-bold text-sm text-gray-900">{{ comment.author.username }}</span>
+                            </div>
+                            <p class="text-gray-800">{{ comment.content }}</p>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1 ml-2">{{ comment.created_at.strftime('%H:%M %d/%m') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if not post.comments %}
+                <p class="text-gray-400 italic text-center py-4">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+                {% endif %}
+            </div>
+
+            <!-- Add Comment Form -->
+            <div class="flex gap-4 items-start border-t pt-6 sticky bottom-0 bg-white">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex-shrink-0 flex items-center justify-center font-bold text-sm">
+                    {{ user.username[0]|upper }}
+                </div>
+                <div class="flex-1">
+                    <textarea id="commentContent" rows="3" class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none placeholder-gray-400" placeholder="Viết bình luận của bạn..."></textarea>
+                    <div class="flex justify-end mt-2">
+                        <button onclick="addComment({{ post.id }})" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">
+                            Gửi bình luận <i class="fa-solid fa-paper-plane ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        async function addComment(postId) {
+            const content = document.getElementById('commentContent').value;
+            if (!content.trim()) return;
+
+            try {
+                const res = await fetch(`/forum/post/${postId}/comment`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({content})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.msg);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function reactPost(postId, type) {
+            try {
+                const res = await fetch(`/forum/post/${postId}/react`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({type})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Update counts
+                    document.getElementById('count-like').innerText = data.counts.like;
+                    document.getElementById('count-love').innerText = data.counts.love;
+
+                    // Update styles
+                    const btnLike = document.getElementById('btn-like');
+                    const btnLove = document.getElementById('btn-love');
+
+                    // Reset classes
+                    const activeClassLike = ['text-blue-600', 'bg-blue-50', 'ring-1', 'ring-blue-200'];
+                    const activeClassLove = ['text-pink-600', 'bg-pink-50', 'ring-1', 'ring-pink-200'];
+                    const inactiveClass = ['bg-gray-100', 'text-gray-600', 'hover:bg-gray-200'];
+
+                    btnLike.className = 'flex items-center gap-2 px-4 py-2 rounded-full transition font-medium ';
+                    btnLove.className = 'flex items-center gap-2 px-4 py-2 rounded-full transition font-medium ';
+
+                    if (data.action === 'removed') {
+                         btnLike.classList.add(...inactiveClass);
+                         btnLove.classList.add(...inactiveClass);
+                    } else {
+                        // Check which one was clicked/active
+                         if (type === 'like') {
+                            btnLike.classList.add(...activeClassLike);
+                            btnLove.classList.add(...inactiveClass);
+                         } else {
+                            btnLove.classList.add(...activeClassLove);
+                            btnLike.classList.add(...inactiveClass);
+                         }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

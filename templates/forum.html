@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Diễn đàn | Programming Edu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brilliant: {
+                            bg: '#f7f7f5',
+                            card: '#ffffff',
+                            text: '#222222',
+                            sub: '#666666',
+                            blue: '#007bff',
+                            border: '#e5e5e5'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f7f7f5; color: #222; }
+        .dark body { background-color: #111827; color: #f3f4f6; }
+        .custom-logo { height: 80px !important; width: auto; object-fit: contain; }
+        @media (max-width: 768px) { .custom-logo { height: 50px !important; } }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden font-sans text-brilliant-text">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-brilliant-border flex flex-col hidden md:flex z-50 dark:bg-gray-900 dark:border-gray-700">
+        <div class="h-auto py-4 flex items-center px-6"> 
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="custom-logo mr-3">
+            <span class="font-bold text-xl tracking-tight dark:text-white">Pro<span class="text-blue-600">Edu</span></span>
+        </div>
+
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+                <i class="fa-solid fa-house w-6 text-lg"></i> Trang chủ
+            </a>
+            <a href="/forum" class="flex items-center px-4 py-3 text-sm font-bold rounded-xl bg-gray-100 text-black transition-colors dark:bg-gray-800 dark:text-white">
+                <i class="fa-solid fa-comments w-6 text-lg"></i> Diễn đàn
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+                <i class="fa-solid fa-book-open w-6 text-lg"></i> Các khóa học
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
+                    {{ user.username[0]|upper }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold truncate dark:text-white">{{ user.username }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Học viên</div>
+                </div>
+                <a href="/logout" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-right-from-bracket"></i></a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto bg-[#f7f7f5] relative dark:bg-gray-900">
+        
+        <!-- Header Mobile -->
+        <header class="md:hidden h-16 bg-white border-b flex items-center justify-between px-4 sticky top-0 z-40 dark:bg-gray-900 dark:border-gray-700">
+            <div class="flex items-center">
+                 <img src="{{ url_for('static', filename='img/logo.png') }}" class="h-12 w-auto mr-2">
+            </div>
+            <a href="/logout" class="text-gray-500"><i class="fa-solid fa-bars text-xl"></i></a>
+        </header>
+
+        <div class="max-w-4xl mx-auto p-6 md:p-10">
+            <div class="flex justify-between items-end mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-black dark:text-white">Diễn đàn thảo luận 💬</h1>
+                    <p class="text-gray-500 dark:text-gray-400">Nơi trao đổi, hỏi đáp và chia sẻ kiến thức.</p>
+                </div>
+                <button onclick="document.getElementById('createPostModal').classList.remove('hidden')" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Đặt câu hỏi
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                {% if posts %}
+                    {% for post in posts %}
+                    <div class="group bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-200 transition-all cursor-pointer dark:bg-gray-800 dark:border-gray-700" onclick="window.location.href='/forum/post/{{ post.id }}'">
+                        
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs ring-2 ring-white">
+                                {{ post.author.username[0]|upper }}
+                            </div>
+                            <div>
+                                <span class="font-bold text-sm text-gray-900 dark:text-white">{{ post.author.username }}</span>
+                                <span class="text-gray-400 text-xs mx-1">•</span>
+                                <span class="text-gray-400 text-xs">{{ post.created_at.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-bold mb-2 text-gray-800 group-hover:text-blue-600 transition-colors dark:text-white">{{ post.title }}</h3>
+                        <p class="text-gray-600 line-clamp-2 text-sm mb-4 dark:text-gray-300">{{ post.content }}</p>
+
+                        <div class="flex items-center gap-6 text-gray-500 text-sm border-t pt-3 border-gray-100 dark:border-gray-700">
+                            <!-- Hiển thị tổng số like -->
+                            {% set like_count = post.reactions|selectattr("reaction_type", "equalto", "like")|list|length %}
+                            {% set love_count = post.reactions|selectattr("reaction_type", "equalto", "love")|list|length %}
+                            
+                            <span class="flex items-center gap-2 hover:text-red-500 transition">
+                                <i class="fa-regular fa-heart"></i> {{ like_count + love_count }}
+                            </span>
+                            <span class="flex items-center gap-2 hover:text-blue-500 transition">
+                                <i class="fa-regular fa-comment-dots"></i> {{ post.comments|length }} trả lời
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-20">
+                        <div class="text-6xl mb-4">📭</div>
+                        <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300">Chưa có bài viết nào</h3>
+                        <p class="text-gray-500">Hãy là người đầu tiên đặt câu hỏi!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Create Post -->
+    <div id="createPostModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl transform transition-all scale-100 dark:bg-gray-800">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Đặt câu hỏi mới</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Tiêu đề</label>
+                    <input type="text" id="postTitle" placeholder="Tóm tắt câu hỏi của bạn..." class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nội dung chi tiết</label>
+                    <textarea id="postContent" rows="5" placeholder="Mô tả chi tiết vấn đề bạn gặp phải..." class="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8">
+                <button onclick="document.getElementById('createPostModal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition dark:text-gray-300 dark:hover:bg-gray-700">Hủy</button>
+                <button onclick="createPost()" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">Đăng câu hỏi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function createPost() {
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            
+            if (!title || !content) {
+                alert('Vui lòng nhập đầy đủ thông tin');
+                return;
+            }
+
+            try {
+                const res = await fetch('/forum/create_post', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({title, content})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.msg || 'Có lỗi xảy ra');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Có lỗi kết nối');
+            }
+        }
+    </script>
+</body>
+</html>
