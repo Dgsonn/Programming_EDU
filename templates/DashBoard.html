@@ -1,377 +1,650 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="light">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard | Programming Edu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        brilliant: {
-                            bg: '#f7f7f5',       /* Màu nền xám nhạt đặc trưng của Brilliant */
-                            card: '#ffffff',     /* Card màu trắng */
-                            text: '#222222',     /* Chữ đen dịu */
-                            sub: '#666666',      /* Chữ phụ màu xám */
-                            blue: '#007bff',     /* Màu xanh điểm nhấn */
-                            border: '#e5e5e5'    /* Viền nhạt */
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-    body { background-color: #f7f7f5; color: #222; }
-    .dark body { background-color: #111827; color: #f3f4f6; }
-    .course-card { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-    .course-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.1); }
+<meta charset="UTF-8">
+<title>ProEdu · {{ user.username }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    /* --- THÊM ĐOẠN NÀY --- */
-    .custom-logo {
-        height: 100px !important; /* Chỉnh số này to nhỏ tùy ý (Ví dụ: 80px, 100px) */
-        width: auto;
-        object-fit: contain;
-    }
+<style>
+/* --- GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN --- */
+:root {
+  --bg:#F8F7F4; --surface:#FFFFFF; --surface2:#F2F0EB;
+  --border:#E8E5DE; --text:#1A1917; --text-sub:#6B6760; --text-muted:#A09C94;
+  --indigo:#4338CA; --indigo-light:#EEF2FF; --indigo-mid:#818CF8;
+  --green:#16A34A; --green-light:#DCFCE7;
+  --orange:#EA580C; --orange-light:#FFF7ED;
+  --red:#DC2626; --red-light:#FEF2F2;
+  --yellow:#D97706; --yellow-light:#FFFBEB;
+  --r-sm:8px; --r-md:14px; --r-lg:20px; --r-xl:28px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-sm:0 4px 12px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);
+  --sh-md:0 8px 24px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.05);
+  --font:'Plus Jakarta Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --t:.22s cubic-bezier(.4,0,.2,1);
+  --sw:260px;
+}
+.dark {
+  --bg:#0F0F0F; --surface:#1A1A1A; --surface2:#242424;
+  --border:#2E2E2E; --text:#F5F4F1; --text-sub:#8A8680; --text-muted:#555250;
+  --indigo-light:#1E1B4B; --green-light:#052E16;
+  --orange-light:#431407; --red-light:#450A0A; --yellow-light:#1C1108;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;transition:background var(--t),color var(--t);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.hidden{display:none!important}
 
-    /* Riêng trên điện thoại thì cho bé lại chút kẻo vỡ giao diện */
-    @media (max-width: 768px) {
-        .custom-logo {
-            height: 50px !important;
-        }
-    }
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sw);background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:50;transition:background var(--t),border-color var(--t)}
+.s-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1.5px solid var(--border)}
+.logo-mark{width:36px;height:36px;background:var(--indigo);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(67,56,202,.35);flex-shrink:0}
+.logo-mark i{color:#fff;font-size:15px}
+.logo-text{font-size:1.1rem;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.logo-text span{color:var(--indigo)}
+
+.s-stats{display:flex;gap:0;margin:12px 12px 0;background:var(--bg);border-radius:var(--r-md);border:1.5px solid var(--border);overflow:hidden}
+.s-stat{flex:1;padding:10px 8px;text-align:center;border-right:1.5px solid var(--border)}
+.s-stat:last-child{border-right:none}
+.s-stat .v{font-size:.88rem;font-weight:800;display:block}
+.s-stat .l{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);display:block;margin-top:1px}
+.s-stat.streak .v{color:var(--orange)}
+.s-stat.xp .v{color:var(--indigo)}
+.s-stat.lvl .v{color:var(--green)}
+
+.xp-wrap{padding:10px 12px 12px}
+.xp-lbl{display:flex;justify-content:space-between;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:5px}
+.xp-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#6366F1,#818CF8);border-radius:99px;transition:width 1s ease;animation:xpgl 2.5s ease-in-out infinite}
+@keyframes xpgl{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.4)}50%{box-shadow:0 0 8px 2px rgba(99,102,241,.25)}}
+
+.s-nav{flex:1;padding:6px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);padding:6px 10px 3px;margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);font-size:.85rem;font-weight:600;color:var(--text-sub);cursor:pointer;transition:all var(--t);border:1.5px solid transparent;text-decoration:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--indigo-light);color:var(--indigo);border-color:rgba(99,102,241,.18)}
+.nav-ic{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem;background:var(--surface2);transition:all var(--t);flex-shrink:0}
+.nav-item.active .nav-ic{background:var(--indigo);color:#fff}
+.nav-badge{margin-left:auto;background:var(--orange);color:#fff;font-size:.58rem;font-weight:800;padding:1px 6px;border-radius:99px}
+
+.s-user{padding:10px;border-top:1.5px solid var(--border)}
+.u-card{display:flex;align-items:center;gap:9px;padding:9px;border-radius:var(--r-sm);cursor:pointer;transition:background var(--t)}
+.u-card:hover{background:var(--surface2)}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;flex-shrink:0;position:relative}
+.av-dot{position:absolute;bottom:0;right:0;width:9px;height:9px;background:#22C55E;border:2px solid var(--surface);border-radius:50%}
+.u-name{font-size:.82rem;font-weight:700;color:var(--text)}
+.u-role{font-size:.68rem;color:var(--indigo);font-weight:600}
+.logout{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.82rem;padding:4px 6px;border-radius:6px;transition:all var(--t)}
+.logout:hover{color:var(--red);background:var(--red-light)}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg)}
+.topbar{position:sticky;top:0;z-index:40;padding:12px 28px;background:rgba(248,247,244,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:background var(--t),border-color var(--t)}
+.dark .topbar{background:rgba(15,15,15,.9)}
+.tb-title{font-size:1rem;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.tb-right{display:flex;align-items:center;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);cursor:pointer;color:var(--text-sub);display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:all var(--t);position:relative}
+.icon-btn:hover{background:var(--surface);transform:scale(1.06)}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--orange);border-radius:50%;border:2px solid var(--bg)}
+
+/* ── PAGE ── */
+.page{padding:28px 32px;max-width:1040px;width:100%;margin:0 auto}
+
+/* Tab */
+.tab-nav{display:inline-flex;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);padding:4px;gap:2px;margin-bottom:26px;box-shadow:var(--sh-xs)}
+.tab-btn{padding:8px 18px;border-radius:10px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--text-sub);display:flex;align-items:center;gap:6px;transition:all var(--t);font-family:var(--font)}
+.tab-btn:hover{color:var(--text);background:var(--surface2)}
+.tab-btn.active{background:var(--indigo);color:#fff;box-shadow:0 4px 14px rgba(67,56,202,.28)}
+
+/* Section header */
+.sh h1{font-size:1.6rem;font-weight:900;color:var(--text);letter-spacing:-.03em;line-height:1.2}
+.sh p{color:var(--text-sub);font-size:.875rem;margin-top:4px}
+.sh{margin-bottom:20px}
+
+/* Streak banner */
+.streak-banner{background:linear-gradient(135deg,#EA580C 0%,#F97316 60%,#FB923C 100%);border-radius:var(--r-lg);padding:16px 22px;display:flex;align-items:center;gap:14px;margin-bottom:26px;box-shadow:0 8px 24px rgba(234,88,12,.22);position:relative;overflow:hidden}
+.streak-banner::before{content:'';position:absolute;right:-15px;top:-15px;width:90px;height:90px;background:rgba(255,255,255,.10);border-radius:50%}
+.streak-banner::after{content:'';position:absolute;right:28px;bottom:-25px;width:60px;height:60px;background:rgba(255,255,255,.07);border-radius:50%}
+.fire{font-size:2rem;animation:fw 1.5s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(255,200,0,.5))}
+@keyframes fw{0%,100%{transform:rotate(-4deg) scale(1)}50%{transform:rotate(4deg) scale(1.07)}}
+.si .t{font-size:1rem;font-weight:800;color:#fff}
+.si .s{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:500;margin-top:2px}
+.sd{margin-left:auto;text-align:right}
+.sd .n{font-size:2rem;font-weight:900;color:#fff;line-height:1}
+.sd .l{font-size:.65rem;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.06em}
+
+/* Topic grid */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.tc{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;cursor:pointer;transition:all var(--t);position:relative;overflow:hidden}
+.tc:hover{border-color:var(--indigo-mid);transform:translateY(-3px);box-shadow:var(--sh-md),0 0 0 3px rgba(99,102,241,.07)}
+.tc-icon{width:48px;height:48px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:12px}
+.tc h3{font-size:.95rem;font-weight:800;color:var(--text);margin-bottom:5px;letter-spacing:-.01em}
+.tc p{font-size:.8rem;color:var(--text-sub);line-height:1.5;margin-bottom:14px}
+.tc-foot{display:flex;align-items:center;justify-content:space-between}
+.tc-meta{display:flex;gap:8px}
+.chip{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:99px;display:flex;align-items:center;gap:3px}
+.easy{background:var(--green-light);color:var(--green)}
+.med{background:var(--yellow-light);color:var(--yellow)}
+.hard{background:var(--red-light);color:var(--red)}
+.time-chip{background:var(--surface2);color:var(--text-muted)}
+.tc-arr{width:30px;height:30px;background:var(--indigo-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--indigo);font-size:.75rem;transition:all var(--t)}
+.tc:hover .tc-arr{background:var(--indigo);color:#fff;transform:translateX(2px)}
+.tc-done-arr{background:var(--green-light)!important;color:var(--green)!important}
+.tp{margin:10px 0 0;height:5px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.tp-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--indigo),var(--indigo-mid))}
+.tp-fill.done{background:linear-gradient(90deg,#16A34A,#22C55E)}
+.done-badge{position:absolute;top:10px;right:10px;width:20px;height:20px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.6rem}
+
+/* Mode select */
+.ms{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;text-align:center}
+.ms h2{font-size:1.4rem;font-weight:900;color:var(--text);margin:8px 0}
+.ms p{color:var(--text-sub);font-size:.875rem;margin-bottom:26px}
+.ms-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.ms-btn{padding:13px 26px;border-radius:var(--r-md);font-family:var(--font);font-size:.875rem;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all var(--t)}
+.ms-btn.a{background:var(--indigo);color:#fff;box-shadow:0 4px 14px rgba(67,56,202,.25)}
+.ms-btn.a:hover{background:#3730A3;transform:translateY(-2px)}
+.ms-btn.b{background:#7C3AED;color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.25)}
+.ms-btn.b:hover{background:#6D28D9;transform:translateY(-2px)}
+.back-lnk{margin-top:14px;background:none;border:none;color:var(--text-muted);font-family:var(--font);font-size:.82rem;cursor:pointer;text-decoration:underline}
+
+/* Lesson */
+.lesson-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:32px;box-shadow:var(--sh-sm)}
+.l-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:1.5px solid var(--border)}
+.l-top h2{font-size:1.2rem;font-weight:900;color:var(--text)}
+.l-sub{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--indigo);margin-bottom:3px}
+.close-btn{width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text-sub);cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all var(--t)}
+.close-btn:hover{background:var(--red-light);color:var(--red);border-color:var(--red-light)}
+.lb{color:var(--text-sub);line-height:1.75;font-size:.875rem}
+.lb h3{font-size:.95rem;font-weight:800;color:var(--text);margin:18px 0 7px}
+.lb p{margin-bottom:12px}
+.code-block{background:#0F172A;color:#E2E8F0;border-radius:var(--r-sm);padding:14px 16px;margin:10px 0;font-family:var(--mono);font-size:.78rem;line-height:1.65;overflow-x:auto}
+.code-block .cmt{color:#64748B}
+.code-block .kw{color:#C084FC}
+.code-block .str{color:#86EFAC}
+.code-block .bad{color:#FCA5A5}
+.callout{background:var(--indigo-light);border-left:3px solid var(--indigo);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:11px 14px;margin:12px 0;font-size:.82rem;color:var(--text-sub)}
+.callout strong{color:var(--indigo)}
+.inl{background:var(--surface2);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:.78rem}
+
+/* Quiz */
+.quiz-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:32px;box-shadow:var(--sh-sm)}
+.quiz-q{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:18px;line-height:1.4}
+.quiz-opts{display:flex;flex-direction:column;gap:9px}
+.qo{padding:13px 16px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--bg);font-family:var(--font);font-size:.85rem;font-weight:600;color:var(--text);cursor:pointer;text-align:left;transition:all var(--t);display:flex;align-items:center;gap:10px}
+.qo:hover{border-color:var(--indigo);background:var(--indigo-light);color:var(--indigo)}
+.qo.correct{border-color:var(--green);background:var(--green-light);color:var(--green)}
+.qo.wrong{border-color:var(--red);background:var(--red-light);color:var(--red)}
+.opt-l{width:26px;height:26px;flex-shrink:0;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:var(--text-sub);transition:all var(--t)}
+.qo:hover .opt-l{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.qo.correct .opt-l{background:var(--green);border-color:var(--green);color:#fff}
+.qo.wrong .opt-l{background:var(--red);border-color:var(--red);color:#fff}
+.q-fb{border-radius:var(--r-md);padding:12px 14px;font-size:.85rem;font-weight:600;margin-top:14px}
+
+/* Profile */
+.ph{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:28px;margin-bottom:20px;display:flex;gap:24px;align-items:center;box-shadow:var(--sh-xs)}
+.av-lg{width:82px;height:82px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:900;box-shadow:0 8px 24px rgba(99,102,241,.32);position:relative}
+.av-on{position:absolute;bottom:3px;right:3px;width:15px;height:15px;background:#22C55E;border-radius:50%;border:3px solid var(--surface)}
+.pi h1{font-size:1.6rem;font-weight:900;letter-spacing:-.03em;color:var(--text)}
+.p-tags{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap}
+.p-tag{font-size:.7rem;font-weight:700;padding:3px 11px;border-radius:99px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text-sub);display:flex;align-items:center;gap:4px}
+.p-tag.gold{background:var(--yellow-light);border-color:#FDE68A;color:var(--yellow)}
+.p-tag.ind{background:var(--indigo-light);border-color:rgba(99,102,241,.25);color:var(--indigo)}
+.s-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:var(--r-md);overflow:hidden;border:1.5px solid var(--border);flex-shrink:0}
+.sb{background:var(--surface2);padding:14px 10px;text-align:center}
+.sb .v{font-size:1.4rem;font-weight:900}
+.sb .l{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-top:2px}
+.sb.st .v{color:var(--orange)}.sb.sx .v{color:var(--indigo)}.sb.sm .v{color:var(--green)}
+
+.pg{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.pc{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-xs)}
+.ct{font-size:.88rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px;margin-bottom:14px;letter-spacing:-.01em}
+.bi{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg);margin-bottom:7px;transition:all var(--t)}
+.bi:hover{border-color:var(--indigo-mid);background:var(--indigo-light)}
+.b-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0}
+.b-nm{font-size:.8rem;font-weight:700;color:var(--text)}
+.b-ds{font-size:.7rem;color:var(--text-muted);margin-top:1px}
+.pri{padding:13px 15px;border:1.5px solid var(--border);border-radius:var(--r-md);margin-bottom:9px;transition:border-color var(--t);background:var(--bg)}
+.pri:hover{border-color:var(--indigo-mid)}
+.prh{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.ci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;margin-right:9px}
+.ci-n{font-size:.85rem;font-weight:700;color:var(--text)}
+.ci-l{font-size:.7rem;color:var(--text-muted);margin-top:1px}
+.pct{font-size:.95rem;font-weight:800}
+.pct.done{color:var(--green)}.pct.go{color:var(--indigo)}
+.pt{height:7px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.pf{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--indigo),var(--indigo-mid))}
+.pf.done{background:linear-gradient(90deg,#16A34A,#22C55E)}
+
+/* Anim */
+.view-in{animation:vIn .24s ease}
+@keyframes vIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .pg{grid-template-columns:1fr}
+  .ph{flex-direction:column;text-align:center}
+  .p-tags{justify-content:center}
+  .page{padding:16px}
+  .topic-grid{grid-template-columns:1fr}
+  .s-grid{grid-template-columns:repeat(3,1fr)}
+}
+.mob-hdr{display:none;position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1.5px solid var(--border);padding:10px 14px;align-items:center;justify-content:space-between}
+@media(max-width:768px){.mob-hdr{display:flex}.topbar{display:none}}
 </style>
-    </style>
 </head>
-<body class="flex h-screen overflow-hidden font-sans text-brilliant-text">
 
-    <!-- 1. SIDEBAR (TRÁI) - Phong cách tối giản -->
-    <aside class="w-64 bg-white border-r border-brilliant-border flex flex-col hidden md:flex z-50 dark:bg-gray-900 dark:border-gray-700">
-        <!-- Logo Area -->
-        <!-- Logo Area -->
-<!-- Tôi sửa h-20 thành h-auto py-4 để chiều cao tự giãn theo logo -->
-<div class="h-auto py-4 flex items-center px-6"> 
-    <img src="{{ url_for('static', filename='img/logo.png') }}" 
-         alt="Logo" 
-         class="custom-logo mr-3"> <!-- Đã xóa h-10 và thêm custom-logo -->
-         
-    <span class="font-bold text-xl tracking-tight dark:text-white">Pro<span class="text-blue-600">Edu</span></span>
-</div>
+<body>
 
-        <!-- Navigation -->
-        <nav class="flex-1 px-4 py-4 space-y-2">
-            <a href="/" class="flex items-center px-4 py-3 text-sm font-bold rounded-xl bg-gray-100 text-black transition-colors dark:bg-gray-800 dark:text-white">
-                <i class="fa-solid fa-house w-6 text-lg"></i> Trang chủ
-            </a>
-            <a href="/forum" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
-                <i class="fa-solid fa-comments w-6 text-lg"></i> Diễn đàn
-            </a>
-            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
-                <i class="fa-solid fa-book-open w-6 text-lg"></i> Các khóa học
-            </a>
-            <a href="#" onclick="showTab('profile'); return false;" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
-                <i class="fa-solid fa-user w-6 text-lg"></i> Hồ sơ cá nhân
-            </a>
-            <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-50 hover:text-black transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
-                <i class="fa-solid fa-trophy w-6 text-lg"></i> Bảng xếp hạng
-            </a>
-        </nav>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="s-logo">
+    <div class="logo-mark"><i class="fa-solid fa-code"></i></div>
+    <span class="logo-text">Pro<span>Edu</span></span>
+  </div>
 
-        <!-- User Footer -->
-        <div class="p-4 border-t border-gray-100 dark:border-gray-700">
-            <div onclick="showTab('profile')" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer" title="Xem hồ sơ">
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
-                    {{ user.username[0]|upper }}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold truncate dark:text-white">{{ user.username }}</div>
-                    <div class="text-xs text-blue-600 font-bold dark:text-blue-400 group-hover:underline">Xem hồ sơ</div>
-                </div>
-                <a href="/logout" onclick="event.stopPropagation()" class="text-gray-400 hover:text-red-500" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></a>
-            </div>
+  <div class="s-stats">
+    <div class="s-stat streak"><span class="v">🔥 7</span><span class="l">Streak</span></div>
+    <div class="s-stat xp"><span class="v">{{ user.xp }}</span><span class="l">XP</span></div>
+    <div class="s-stat lvl"><span class="v">Cấp {{ user.level or 1 }}</span><span class="l">Level</span></div>
+  </div>
+
+  <div class="xp-wrap">
+    <div class="xp-lbl"><span>Cấp {{ user.level or 1 }}</span><span>{{ user.xp }} XP</span></div>
+    <div class="xp-track"><div class="xp-fill" style="width:{{ (user.xp % 500) / 5 }}%"></div></div>
+  </div>
+
+  <nav class="s-nav">
+    <span class="nav-lbl">Học tập</span>
+    <a class="nav-item active" onclick="setTab('learn')">
+      <span class="nav-ic"><i class="fa-solid fa-house"></i></span> Tổng quan
+    </a>
+    <a class="nav-item" onclick="setTab('learn')">
+      <span class="nav-ic"><i class="fa-solid fa-book-open"></i></span>
+      Khóa học <span class="nav-badge">{{ courses|length }}</span>
+    </a>
+    <span class="nav-lbl">Cộng đồng</span>
+    <a class="nav-item" href="{{ url_for('forum.index') }}">
+      <span class="nav-ic"><i class="fa-solid fa-comments"></i></span> Diễn đàn
+    </a>
+    <a class="nav-item">
+      <span class="nav-ic"><i class="fa-solid fa-trophy"></i></span> Bảng xếp hạng
+    </a>
+    <span class="nav-lbl">Tài khoản</span>
+    <a class="nav-item" onclick="setTab('profile')">
+      <span class="nav-ic"><i class="fa-solid fa-user"></i></span> Hồ sơ của tôi
+    </a>
+  </nav>
+
+  <div class="s-user">
+    <div class="u-card" onclick="setTab('profile')">
+      <div class="avatar">{{ user.username[0]|upper }}<div class="av-dot"></div></div>
+      <div><div class="u-name">{{ user.username }}</div><div class="u-role">⚡ {{ user.role or 'Học viên' }}</div></div>
+      <button class="logout" onclick="event.stopPropagation(); window.location.href='{{ url_for('auth.logout') }}'" title="Đăng xuất">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- Mobile header -->
+  <div class="mob-hdr">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="logo-mark" style="width:30px;height:30px"><i class="fa-solid fa-code" style="font-size:12px"></i></div>
+      <span class="logo-text" style="font-size:.95rem">Pro<span>Edu</span></span>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="icon-btn" onclick="toggleTheme()"><i id="thi-m" class="fa-solid fa-moon"></i></button>
+      <div class="avatar" style="width:30px;height:30px;font-size:.8rem">{{ user.username[0]|upper }}</div>
+    </div>
+  </div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <span class="tb-title" id="tb-title">💻 Khóa học Lập trình</span>
+    <div class="tb-right">
+      <button class="icon-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+      <button class="icon-btn" onclick="toggleTheme()"><i id="thi" class="fa-solid fa-moon"></i></button>
+    </div>
+  </div>
+
+  <div class="page">
+    <!-- Tab nav -->
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tb-learn" onclick="setTab('learn')"><i class="fa-solid fa-graduation-cap"></i> Học tập</button>
+      <button class="tab-btn" id="tb-profile" onclick="setTab('profile')"><i class="fa-solid fa-user"></i> Hồ sơ</button>
+    </div>
+
+    <!-- ════ VIEW: LEARN ════ -->
+    <div id="view-learn" class="view-in">
+
+      <div class="streak-banner">
+        <span class="fire">🔥</span>
+        <div class="si">
+          <div class="t">Chuỗi học tập liên tiếp!</div>
+          <div class="s">Viết code mỗi ngày để không đánh mất streak của bạn</div>
         </div>
-    </aside>
+        <div class="sd"><div class="n">7</div><div class="l">Ngày liên tiếp</div></div>
+      </div>
 
-    <!-- 2. MAIN CONTENT (PHẢI) -->
-    <main class="flex-1 overflow-y-auto bg-[#f7f7f5] relative dark:bg-gray-900">
-        
-        <!-- Header Mobile -->
-        <header class="md:hidden h-16 bg-white border-b flex items-center justify-between px-4 sticky top-0 z-40 dark:bg-gray-900 dark:border-gray-700">
-            <div class="flex items-center">
-                 <img src="{{ url_for('static', filename='img/logo.png') }}" class="h-12 w-auto mr-2">
-            </div>
-            
-            <a href="/logout" class="text-gray-500"><i class="fa-solid fa-bars text-xl"></i></a>
-        </header>
+      <div class="sh"><h1>Khóa học Lập trình</h1><p>8 khóa học từ nhập môn đến nâng cao · Tích XP sau mỗi bài hoàn thành</p></div>
 
-        <div class="max-w-5xl mx-auto p-6 md:p-10">
-            
-            <!-- Greeting -->
-            <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-black dark:text-white">Trung tâm bảo mật 🛡️</h1>
-                    <p class="text-gray-500 dark:text-gray-400">Chọn một chủ đề để bắt đầu học hoặc kiểm tra an toàn.</p>
-                </div>
-            </div>
+      <!-- GIỮ NGUYÊN 8 KHÓA HỌC MẪU CỦA BẠN -->
+      <div class="topic-grid" id="topic-grid">
 
-            <!-- THANH ĐIỀU HƯỚNG TAB (JS sẽ xử lý click ở đây) -->
-            <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit mb-8 dark:bg-gray-800 dark:border-gray-700">
-                <button id="tab-learn" onclick="showTab('learn')" class="px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 bg-gray-900 text-white transition-all dark:bg-blue-600">
-                    <i class="fa-solid fa-graduation-cap"></i> Học tập
-                </button>
-                <button id="tab-check" onclick="showTab('check')" class="px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all dark:text-gray-400 dark:hover:text-white">
-                    <i class="fa-solid fa-shield-virus"></i> Kiểm tra An toàn
-                </button>
-                <button id="tab-profile" onclick="showTab('profile')" class="px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all dark:text-gray-400 dark:hover:text-white">
-                    <i class="fa-solid fa-user"></i> Hồ sơ
-                </button>
-            </div>
-
-            <!-- === VIEW: HỌC TẬP (LEARN) === -->
-            <div id="view-learn">
-                <!-- Grid danh sách chủ đề (JS sẽ render vào đây) -->
-                <div id="topic-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- JS sẽ điền nội dung vào đây -->
-                </div>
-
-                <!-- Giao diện khi chọn bài học (Ẩn mặc định) -->
-                <div id="mode-select" class="hidden flex-col items-center justify-center py-10 text-center space-y-6">
-                    <h2 id="selected-topic-title" class="text-2xl font-bold text-gray-800 dark:text-white">Topic Name</h2>
-                    <div class="flex gap-4">
-                        <button onclick="startLesson()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                            <i class="fa-solid fa-book-open mr-2"></i> Đọc bài học
-                        </button>
-                        <button onclick="startQuiz()" class="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition">
-                            <i class="fa-solid fa-puzzle-piece mr-2"></i> Làm trắc nghiệm
-                        </button>
-                    </div>
-                    <button onclick="resetLearn()" class="text-gray-500 underline text-sm dark:text-gray-400">Quay lại danh sách</button>
-                </div>
-
-                <!-- Nội dung Bài học (Ẩn mặc định) -->
-                <div id="lesson-content" class="hidden bg-white p-8 rounded-2xl border border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 id="lesson-heading" class="text-2xl font-bold text-gray-900 dark:text-white">Tiêu đề bài học</h2>
-                        <button onclick="resetLearn()" class="text-gray-400 hover:text-black dark:hover:text-white"><i class="fa-solid fa-times"></i></button>
-                    </div>
-                    <div id="lesson-body" class="space-y-6 text-gray-700 leading-relaxed dark:text-gray-300"></div>
-                </div>
-
-                <!-- Nội dung Trắc nghiệm (Ẩn mặc định) -->
-                <div id="quiz-content" class="hidden space-y-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 id="quiz-heading" class="text-xl font-bold text-gray-900 dark:text-white">Câu hỏi</h2>
-                        <button onclick="resetLearn()" class="text-gray-400 hover:text-black dark:hover:text-white"><i class="fa-solid fa-times"></i></button>
-                    </div>
-                    <div id="quiz-body" class="space-y-4"></div>
-                </div>
-            </div>
-
-            <!-- === VIEW: KIỂM TRA (CHECK) === -->
-            <div id="view-check" class="hidden">
-                <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-2xl mx-auto dark:bg-gray-800 dark:border-gray-700">
-                    <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Công cụ rà soát bảo mật</h2>
-                    <p class="text-gray-500 mb-6 text-sm dark:text-gray-400">Nhập đoạn mã hoặc đường dẫn để AI phân tích rủi ro.</p>
-                    
-                    <div id="check-form" class="space-y-4">
-                        <textarea id="check-input" rows="4" class="w-full p-4 rounded-xl border border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none transition dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:bg-gray-600" placeholder="Nhập URL hoặc đoạn mã cần kiểm tra..."></textarea>
-                        <button onclick="runCheck()" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition">
-                            <i class="fa-solid fa-magnifying-glass mr-2"></i> Quét ngay
-                        </button>
-                    </div>
-
-                    <!-- Kết quả kiểm tra -->
-                    <div id="check-result" class="hidden mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <div class="text-xs text-gray-500 uppercase font-bold dark:text-gray-400">Mức độ rủi ro</div>
-                                <div id="risk-level" class="text-2xl font-bold dark:text-white">SAFE</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs text-gray-500 uppercase font-bold dark:text-gray-400">Điểm an toàn</div>
-                                <div id="risk-score" class="text-2xl font-bold dark:text-white">95/100</div>
-                            </div>
-                        </div>
-                        <p id="risk-summary" class="text-gray-700 mb-4 bg-gray-50 p-3 rounded-lg dark:text-gray-300 dark:bg-gray-700"></p>
-                        <div id="risk-findings" class="space-y-3"></div>
-                        <button onclick="resetCheck()" class="mt-6 w-full py-2 text-gray-500 font-bold border border-gray-200 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">Quét lại</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- === VIEW: HỒ SƠ (PROFILE) - MỚI === -->
-            <div id="view-profile" class="hidden">
-                 <!-- Profile Header -->
-                <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm border border-gray-200 flex flex-col md:flex-row items-center gap-8 dark:bg-gray-800 dark:border-gray-700">
-                    <div class="relative">
-                        <div class="w-32 h-32 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-5xl ring-4 ring-white shadow-lg">
-                            {{ user.username[0]|upper }}
-                        </div>
-                        <div class="absolute bottom-0 right-0 bg-green-500 w-8 h-8 rounded-full border-4 border-white"></div>
-                    </div>
-                    
-                    <div class="flex-1 text-center md:text-left">
-                        <h1 class="text-3xl font-extrabold mb-2 dark:text-white">{{ user.username }}</h1>
-                        <div class="flex flex-wrap gap-3 justify-center md:justify-start mb-4">
-                            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium dark:bg-gray-700 dark:text-gray-300">
-                                <i class="fa-regular fa-calendar-alt mr-2"></i>Tham gia: {{ user.joined_at.strftime('%m/%Y') if user.joined_at else 'N/A' }}
-                            </span>
-                            <span class="px-3 py-1 rounded-full bg-{{ current_badge.color.split('-')[1] }}-100 {{ current_badge.color }} text-sm font-bold border border-{{ current_badge.color.split('-')[1] }}-200">
-                                <i class="fa-solid {{ current_badge.icon }} mr-2"></i>{{ current_badge.name }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Quick Stats Box -->
-                    <div class="grid grid-cols-3 gap-6 text-center bg-gray-50 p-6 rounded-xl border border-gray-100 dark:bg-gray-900 dark:border-gray-700">
-                        <div>
-                            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ user.streak }}</div>
-                            <div class="text-xs text-gray-500 uppercase font-semibold">Ngày Streak</div>
-                        </div>
-                        <div>
-                            <div class="text-2xl font-bold text-blue-600">{{ user.xp }}</div>
-                            <div class="text-xs text-gray-500 uppercase font-semibold">Total XP</div>
-                        </div>
-                        <div>
-                            <div class="text-2xl font-bold text-orange-500">{{ time_display }}</div>
-                            <div class="text-xs text-gray-500 uppercase font-semibold">Thời gian học</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    
-                    <!-- Left Column: Badges -->
-                    <div class="md:col-span-1 space-y-6">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2 dark:text-white">
-                                <i class="fa-solid fa-medal text-yellow-500"></i> Huy hiệu của tôi
-                            </h3>
-                            <div class="space-y-4">
-                                {% for badge in badges %}
-                                <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
-                                    <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center {{ badge.color }} dark:bg-gray-800">
-                                        <i class="fa-solid {{ badge.icon }} text-lg"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-bold text-sm dark:text-white">{{ badge.name }}</div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ badge.desc }}</div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                                
-                                {% if not badges %}
-                                <p class="text-sm text-gray-400 italic">Hãy học tập để mở khóa huy hiệu!</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Course Progress -->
-                    <div class="md:col-span-2">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-                            <h3 class="font-bold text-lg mb-6 flex items-center gap-2 dark:text-white">
-                                <i class="fa-solid fa-chart-line text-blue-600"></i> Tiến độ các khóa học
-                            </h3>
-                            
-                            <div class="space-y-6">
-                                {% for item in courses_data %}
-                                <div class="p-4 rounded-xl border border-gray-100 hover:border-blue-200 transition bg-white shadow-sm group dark:bg-gray-900 dark:border-gray-700">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 group-hover:bg-blue-600 group-hover:text-white transition dark:bg-gray-800 dark:text-gray-300">
-                                                <i class="fa-solid {{ item.course.icon }}"></i>
-                                            </div>
-                                            <div>
-                                                <h4 class="font-bold text-gray-800 dark:text-white">{{ item.course.title }}</h4>
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    <i class="fa-regular fa-clock mr-1"></i> Đã học: {{ item.time }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span class="text-xl font-bold {{ 'text-green-500' if item.percent == 100 else 'text-blue-600' }}">
-                                            {{ item.percent }}%
-                                        </span>
-                                    </div>
-                                    
-                                    <!-- Progress Bar -->
-                                    <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden dark:bg-gray-700">
-                                        <div class="h-full {{ 'bg-green-500' if item.percent == 100 else 'bg-blue-600' }} rounded-full transition-all duration-500" style="width: {{ item.percent }}%"></div>
-                                    </div>
-                                    <div class="text-right mt-1">
-                                        <small class="text-gray-400 text-xs">Truy cập lần cuối: {{ item.last_accessed.strftime('%d/%m/%Y') if item.last_accessed else 'Chưa học' }}</small>
-                                    </div>
-                                </div>
-                                {% endfor %}
-
-                                {% if not courses_data %}
-                                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                                    <p>Bạn chưa tham gia khóa học nào.</p>
-                                    <button onclick="showTab('learn')" class="text-blue-600 font-bold hover:underline mt-2 inline-block">Khám phá ngay</button>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Loading Spinner (Dùng chung) -->
-            <div id="loading" class="hidden flex-col items-center justify-center py-20">
-                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
-                <p class="text-gray-500 animate-pulse">Đang xử lý dữ liệu...</p>
-            </div>
-
+        <!-- Python - Done -->
+        <div class="tc" onclick="openTopic('python')">
+          <div class="done-badge"><i class="fa-solid fa-check"></i></div>
+          <div class="tc-icon" style="background:rgba(59,130,246,.12)"><span>🐍</span></div>
+          <h3>Python Cơ bản</h3>
+          <p>Biến, vòng lặp, hàm và cấu trúc dữ liệu — ngôn ngữ lý tưởng để bắt đầu lập trình.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip easy"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Nhập môn</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 4 giờ</span></div>
+            <div class="tc-arr tc-done-arr"><i class="fa-solid fa-check"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill done" style="width:100%"></div></div>
         </div>
-    </main>
 
-    <!-- === FLOATING DARK MODE BUTTON === -->
-    <button onclick="toggleTheme()" class="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 shadow-xl rounded-full px-4 py-3 flex items-center gap-2 cursor-pointer hover:scale-105 transition-all font-bold group">
-        <i id="theme-floating-icon" class="fa-solid fa-moon text-xl group-hover:rotate-12 transition-transform"></i>
-        <span class="text-sm">Theme</span>
-    </button>
+        <!-- HTML/CSS - In progress -->
+        <div class="tc" onclick="openTopic('html')">
+          <div class="tc-icon" style="background:rgba(234,88,12,.12)"><span>🌐</span></div>
+          <h3>HTML & CSS</h3>
+          <p>Xây dựng giao diện web từ đầu — cấu trúc trang, layout Flexbox, Grid và responsive design.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip easy"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Nhập môn</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 5 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:72%"></div></div>
+        </div>
 
-    <!-- QUAN TRỌNG: Link file JS -->
-    <script>
-        // Check theme onLoad
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            updateThemeIcon(true);
-        } else {
-            document.documentElement.classList.remove('dark');
-            updateThemeIcon(false);
-        }
+        <!-- JavaScript -->
+        <div class="tc" onclick="openTopic('js')">
+          <div class="tc-icon" style="background:rgba(217,119,6,.12)"><span>⚡</span></div>
+          <h3>JavaScript</h3>
+          <p>DOM manipulation, sự kiện, fetch API và async/await — làm cho trang web sống động.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip med"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Cơ bản</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 6 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:35%"></div></div>
+        </div>
 
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.theme = 'light';
-                updateThemeIcon(false);
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.theme = 'dark';
-                updateThemeIcon(true);
-            }
-        }
+        <!-- Git -->
+        <div class="tc" onclick="openTopic('git')">
+          <div class="tc-icon" style="background:rgba(239,68,68,.12)"><span>🔀</span></div>
+          <h3>Git & GitHub</h3>
+          <p>Quản lý phiên bản code, làm việc nhóm với branch, commit, merge và pull request.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip easy"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Nhập môn</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 2 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:0%"></div></div>
+        </div>
 
-        function updateThemeIcon(isDark) {
-            const icon = document.getElementById('theme-floating-icon');
-            if (icon) {
-                if (isDark) {
-                    icon.className = 'fa-solid fa-sun text-xl text-yellow-400 group-hover:rotate-12 transition-transform';
-                } else {
-                    icon.className = 'fa-solid fa-moon text-xl text-blue-600 group-hover:rotate-12 transition-transform';
-                }
-            }
-        }
-    </script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+        <!-- SQL -->
+        <div class="tc" onclick="openTopic('sql')">
+          <div class="tc-icon" style="background:rgba(99,102,241,.12)"><span>🗄️</span></div>
+          <h3>SQL Cơ bản</h3>
+          <p>Truy vấn cơ sở dữ liệu với SELECT, JOIN, GROUP BY — kỹ năng không thể thiếu cho backend.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip med"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Cơ bản</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 3 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:0%"></div></div>
+        </div>
+
+        <!-- C++ -->
+        <div class="tc" onclick="openTopic('cpp')">
+          <div class="tc-icon" style="background:rgba(124,58,237,.12)"><span>⚙️</span></div>
+          <h3>C++ Căn bản</h3>
+          <p>Con trỏ, bộ nhớ, OOP — nền tảng tư duy lập trình hệ thống và thuật toán hiệu năng cao.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip hard"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Nâng cao</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 8 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:0%"></div></div>
+        </div>
+
+        <!-- Data Structures -->
+        <div class="tc" onclick="openTopic('dsa')">
+          <div class="tc-icon" style="background:rgba(22,163,74,.12)"><span>🧩</span></div>
+          <h3>Cấu trúc dữ liệu</h3>
+          <p>Array, LinkedList, Stack, Queue, Tree, Hash Map — nền tảng để giải bài toán thuật toán.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip hard"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Nâng cao</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 10 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:0%"></div></div>
+        </div>
+
+        <!-- React -->
+        <div class="tc" onclick="openTopic('react')">
+          <div class="tc-icon" style="background:rgba(6,182,212,.12)"><span>⚛️</span></div>
+          <h3>React.js Nhập môn</h3>
+          <p>Component, props, state và hooks — xây dựng giao diện web hiện đại theo kiến trúc component.</p>
+          <div class="tc-foot">
+            <div class="tc-meta"><span class="chip med"><i class="fa-solid fa-circle" style="font-size:.42rem"></i> Cơ bản</span><span class="chip time-chip"><i class="fa-regular fa-clock"></i> 7 giờ</span></div>
+            <div class="tc-arr"><i class="fa-solid fa-arrow-right"></i></div>
+          </div>
+          <div class="tp"><div class="tp-fill" style="width:0%"></div></div>
+        </div>
+
+      </div>
+
+      <!-- Mode select (hidden) -->
+      <div id="mode-sel" class="ms hidden">
+        <div id="ms-emoji" style="font-size:3.2rem;margin-bottom:12px">🐍</div>
+        <h2 id="ms-title">Python Cơ bản</h2>
+        <p id="ms-desc">Chọn cách bạn muốn học chủ đề này</p>
+        <div class="ms-btns">
+          <button class="ms-btn a" onclick="showLesson()"><i class="fa-solid fa-book-open"></i> Đọc bài học</button>
+          <button class="ms-btn b" onclick="showQuiz()"><i class="fa-solid fa-puzzle-piece"></i> Làm trắc nghiệm</button>
+        </div>
+        <button class="back-lnk" onclick="resetLearn()">← Quay lại danh sách</button>
+      </div>
+
+      <!-- GIỮ NGUYÊN BÀI GIẢNG VÍ DỤ PYTHON CỦA BẠN -->
+      <div id="lesson-c" class="hidden">
+        <div class="lesson-card">
+          <div class="l-top">
+            <div><div class="l-sub">Bài học · Python Cơ bản</div><h2>Biến, kiểu dữ liệu và vòng lặp</h2></div>
+            <button class="close-btn" onclick="resetLearn()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="lb">
+            <p><strong style="color:var(--text)">Python</strong> là ngôn ngữ lập trình phổ biến nhất thế giới với cú pháp dễ đọc, phù hợp để học lập trình từ đầu và ứng dụng trong AI, web, data science.</p>
+            <h3>📦 Biến và kiểu dữ liệu</h3>
+            <p>Python không cần khai báo kiểu dữ liệu — trình thông dịch tự nhận biết:</p>
+            <div class="code-block">
+<span class="cmt"># Khai báo biến</span>
+<span class="kw">name</span> = <span class="str">"Nguyễn Dev"</span>    <span class="cmt"># str</span>
+<span class="kw">age</span>  = <span class="bad">22</span>              <span class="cmt"># int</span>
+<span class="kw">gpa</span>  = <span class="bad">3.8</span>             <span class="cmt"># float</span>
+<span class="kw">is_student</span> = <span class="bad">True</span>    <span class="cmt"># bool</span>
+
+<span class="cmt"># In ra màn hình</span>
+<span class="kw">print</span>(<span class="str">f"Xin chào {name}, năm nay {age} tuổi"</span>)</div>
+            <h3>🔁 Vòng lặp</h3>
+            <p>Python có 2 vòng lặp chính: <span class="inl">for</span> để duyệt qua danh sách và <span class="inl">while</span> để lặp theo điều kiện:</p>
+            <div class="code-block">
+<span class="cmt"># For loop - duyệt list</span>
+<span class="kw">courses</span> = [<span class="str">"Python"</span>, <span class="str">"JavaScript"</span>, <span class="str">"SQL"</span>]
+<span class="kw">for</span> course <span class="kw">in</span> courses:
+    <span class="kw">print</span>(<span class="str">f"Đang học: {course}"</span>)
+
+<span class="cmt"># While loop</span>
+<span class="kw">count</span> = <span class="bad">0</span>
+<span class="kw">while</span> count &lt; <span class="bad">5</span>:
+    <span class="kw">print</span>(count)
+    count += <span class="bad">1</span></div>
+            <div class="callout"><strong>💡 Mẹo:</strong> Python dùng <strong>indentation (thụt lề)</strong> thay vì dấu ngoặc nhọn <span class="inl">{}</span>. Đây là điểm khác biệt lớn nhất so với C/Java — cần nhất quán 4 spaces hoặc 1 tab.</div>
+          </div>
+          <div style="margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:.78rem;color:var(--text-muted)"><i class="fa-regular fa-clock" style="margin-right:4px"></i>~10 phút đọc</div>
+            <button class="ms-btn a" onclick="showQuiz()" style="padding:10px 18px;font-size:.8rem"><i class="fa-solid fa-arrow-right"></i> Làm bài trắc nghiệm</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz (hidden) -->
+      <div id="quiz-c" class="hidden">
+        <div class="quiz-card">
+          <div class="l-top">
+            <div><div class="l-sub" style="color:var(--yellow)">Câu hỏi 1/3 · Python Cơ bản</div>
+            <div class="quiz-q">Kết quả của đoạn code dưới đây là gì? <code class="inl">print(type(3.14))</code></div></div>
+            <button class="close-btn" onclick="resetLearn()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="quiz-opts">
+            <button class="qo" onclick="checkAns(this,false)"><span class="opt-l">A</span><code class="inl">&lt;class 'int'&gt;</code></button>
+            <button class="qo" onclick="checkAns(this,true)"><span class="opt-l">B</span><code class="inl">&lt;class 'float'&gt;</code></button>
+            <button class="qo" onclick="checkAns(this,false)"><span class="opt-l">C</span><code class="inl">&lt;class 'str'&gt;</code></button>
+            <button class="qo" onclick="checkAns(this,false)"><span class="opt-l">D</span><code class="inl">&lt;class 'double'&gt;</code></button>
+          </div>
+          <div id="qfb" class="q-fb hidden"></div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1.5px solid var(--border);display:flex;justify-content:space-between">
+            <button class="rescan" style="width:auto;padding:9px 18px" onclick="resetLearn()">← Quay lại</button>
+            <button class="ms-btn a" style="padding:10px 18px;font-size:.8rem" onclick="resetLearn()"><i class="fa-solid fa-check"></i> Hoàn thành</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /view-learn -->
+
+    <!-- ════ VIEW: PROFILE (KẾT NỐI DỮ LIỆU THẬT) ════ -->
+    <div id="view-profile" class="view-in hidden">
+      <div class="sh"><h1>Hồ sơ của tôi</h1><p>Theo dõi hành trình học tập và thành tích</p></div>
+
+      <div class="ph">
+        <div class="av-lg">{{ user.username[0]|upper }}<div class="av-on"></div></div>
+        <div class="pi" style="flex:1">
+          <h1>{{ user.username }}</h1>
+          <div class="p-tags">
+            <span class="p-tag"><i class="fa-regular fa-calendar"></i> Tham gia 2026</span>
+            <span class="p-tag gold"><i class="fa-solid fa-star"></i> {{ user.role or 'Học viên' }}</span>
+            <span class="p-tag ind"><i class="fa-solid fa-layer-group"></i> Cấp {{ user.level or 1 }}</span>
+          </div>
+        </div>
+        <div class="s-grid">
+          <div class="sb st"><div class="v">🔥 7</div><div class="l">Streak</div></div>
+          <div class="sb sx"><div class="v">{{ user.xp }}</div><div class="l">XP</div></div>
+          <div class="sb sm"><div class="v">{{ time_display }}</div><div class="l">Đã học</div></div>
+        </div>
+      </div>
+
+      <div class="pg">
+        <div class="pc">
+          <div class="ct"><i class="fa-solid fa-medal" style="color:var(--yellow)"></i> Huy hiệu</div>
+          {% for badge in badges %}
+          <div class="bi">
+            <div class="b-ico" style="background:var(--yellow-light);color:var(--yellow)"><i class="fa-solid {{ badge.icon }}"></i></div>
+            <div><div class="b-nm">{{ badge.name }}</div><div class="b-ds">{{ badge.desc }}</div></div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="pc">
+          <div class="ct"><i class="fa-solid fa-chart-line" style="color:var(--indigo)"></i> Tiến độ học tập thực tế</div>
+          {% for item in courses_data %}
+          <div class="pri">
+            <div class="prh">
+              <div style="display:flex;align-items:center"><div class="ci" style="background:rgba(59,130,246,.12)"><span>📚</span></div><div><div class="ci-n">{{ item.course.title }}</div><div class="ci-l"><i class="fa-regular fa-clock" style="margin-right:3px"></i>{{ item.time }}</div></div></div>
+              <span class="pct {% if item.percent == 100 %}done{% else %}go{% endif %}">{{ item.percent }}%</span>
+            </div>
+            <div class="pt"><div class="pf {% if item.percent == 100 %}done{% endif %}" style="width:{{ item.percent }}%"></div></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+</main>
+
+<script>
+// GIỮ NGUYÊN LOGIC JS MẪU CỦA BẠN
+const TOPICS = {
+  python:{emoji:'🐍',title:'Python Cơ bản',desc:'Ngôn ngữ lý tưởng để bắt đầu hành trình lập trình'},
+  html:  {emoji:'🌐',title:'HTML & CSS',desc:'Xây dựng giao diện web từ cấu trúc đến thiết kế'},
+  js:    {emoji:'⚡',title:'JavaScript',desc:'Làm trang web trở nên sống động và tương tác'},
+  git:   {emoji:'🔀',title:'Git & GitHub',desc:'Quản lý code và làm việc nhóm hiệu quả'},
+  sql:   {emoji:'🗄️',title:'SQL Cơ bản',desc:'Truy vấn và quản lý cơ sở dữ liệu'},
+  cpp:   {emoji:'⚙️',title:'C++ Căn bản',desc:'Nền tảng tư duy lập trình hệ thống'},
+  dsa:   {emoji:'🧩',title:'Cấu trúc dữ liệu',desc:'Nền tảng để giải các bài toán thuật toán'},
+  react: {emoji:'⚛️',title:'React.js Nhập môn',desc:'Xây dựng UI hiện đại theo kiến trúc component'}
+};
+
+function setTab(t) {
+  ['learn','profile'].forEach(k => {
+    document.getElementById('view-'+k).classList.add('hidden');
+    document.getElementById('tb-'+k).classList.remove('active');
+  });
+  document.getElementById('view-'+t).classList.remove('hidden');
+  document.getElementById('tb-'+t).classList.add('active');
+  const titles = {learn:'💻 Khóa học Lập trình', profile:'👤 Hồ sơ của tôi'};
+  document.getElementById('tb-title').textContent = titles[t];
+  if (t === 'learn') resetLearn();
+}
+
+function openTopic(k) {
+  const tp = TOPICS[k];
+  document.getElementById('topic-grid').classList.add('hidden');
+  const ms = document.getElementById('mode-sel');
+  ms.classList.remove('hidden');
+  document.getElementById('ms-emoji').textContent = tp.emoji;
+  document.getElementById('ms-title').textContent = tp.title;
+  document.getElementById('ms-desc').textContent = tp.desc;
+}
+
+function showLesson() {
+  document.getElementById('mode-sel').classList.add('hidden');
+  document.getElementById('lesson-c').classList.remove('hidden');
+}
+function showQuiz() {
+  document.getElementById('mode-sel').classList.add('hidden');
+  document.getElementById('lesson-c').classList.add('hidden');
+  document.getElementById('quiz-c').classList.remove('hidden');
+  document.getElementById('qfb').classList.add('hidden');
+  document.querySelectorAll('.qo').forEach(o => { o.classList.remove('correct','wrong'); o.disabled = false; });
+}
+function resetLearn() {
+  document.getElementById('topic-grid').classList.remove('hidden');
+  document.getElementById('mode-sel').classList.add('hidden');
+  document.getElementById('lesson-c').classList.add('hidden');
+  document.getElementById('quiz-c').classList.add('hidden');
+}
+function checkAns(el, correct) {
+  document.querySelectorAll('.qo').forEach(o => o.disabled = true);
+  const fb = document.getElementById('qfb');
+  fb.classList.remove('hidden');
+  if (correct) {
+    el.classList.add('correct');
+    fb.style.cssText = 'background:var(--green-light);color:var(--green)';
+    fb.innerHTML = '✅ Chính xác! <code style="font-family:var(--mono)">3.14</code> là số thực nên Python tự nhận kiểu <code style="font-family:var(--mono)">float</code>.';
+  } else {
+    el.classList.add('wrong');
+    document.querySelectorAll('.qo')[1].classList.add('correct');
+    fb.style.cssText = 'background:var(--red-light);color:var(--red)';
+    fb.innerHTML = '❌ Chưa đúng rồi. Đáp án là B.';
+  }
+}
+
+function toggleTheme() {
+  const d = document.documentElement.classList.toggle('dark');
+  localStorage.setItem('theme', d ? 'dark' : 'light');
+  updateThIcon(d);
+}
+function updateThIcon(d) {
+  const cls = d ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  ['thi','thi-m'].forEach(id => { const e = document.getElementById(id); if(e) e.className = cls; });
+}
+if (localStorage.theme === 'dark' || (!localStorage.theme && matchMedia('(prefers-color-scheme:dark)').matches)) {
+  document.documentElement.classList.add('dark');
+  updateThIcon(true);
+}
+</script>
 </body>
 </html>
