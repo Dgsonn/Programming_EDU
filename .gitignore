@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Backend database (mỗi người tự seed local)
+backend/db.sqlite3
+
+# Environment secrets
+backend/.env
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+backend/__pycache__/
+backend/routes/__pycache__/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
