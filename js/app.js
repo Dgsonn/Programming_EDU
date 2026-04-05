@@ -328,7 +328,18 @@ function loadAll() {
   loadNotifications();
 }
 
+/* ── Dynamic date ── */
+function updateDate() {
+  var days = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  var months = ['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6',
+                'tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'];
+  var now = new Date();
+  var el = document.querySelector('.topbar .sub');
+  if (el) el.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ', ' + now.getFullYear();
+}
+
 /* ── Init ── */
 document.addEventListener("DOMContentLoaded", function() {
+  updateDate();
   loadAll();
 });
