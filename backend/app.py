@@ -1,12 +1,19 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import sqlite3
 import os
 
-app = Flask(__name__)
+ROOT_DIR = os.path.join(os.path.dirname(__file__), '..')
+
+app = Flask(__name__, static_folder=ROOT_DIR, static_url_path='')
 CORS(app)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'edu.db')
+
+
+@app.route('/')
+def index():
+    return send_from_directory(ROOT_DIR, 'index.html')
 
 
 def get_db():
