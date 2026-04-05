@@ -20,12 +20,23 @@ def init_db():
     c = conn.cursor()
 
     c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id       INTEGER PRIMARY KEY,
-        name     TEXT,
-        email    TEXT,
-        phone    TEXT,
-        birthday TEXT,
-        role     TEXT DEFAULT 'Học viên'
+        id           INTEGER PRIMARY KEY,
+        name         TEXT,
+        email        TEXT,
+        phone        TEXT,
+        birthday     TEXT,
+        role         TEXT    DEFAULT 'Học viên',
+        password     TEXT    DEFAULT '123456',
+        streak       INTEGER DEFAULT 12,
+        certificates INTEGER DEFAULT 1
+    )''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS notifications (
+        user_id       INTEGER PRIMARY KEY,
+        email_notif   INTEGER DEFAULT 1,
+        push_notif    INTEGER DEFAULT 0,
+        study_remind  INTEGER DEFAULT 1,
+        content_update INTEGER DEFAULT 0
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS courses (
@@ -58,8 +69,11 @@ def init_db():
     # Seed nếu chưa có dữ liệu
     if not c.execute('SELECT 1 FROM users').fetchone():
         c.execute(
-            "INSERT INTO users VALUES (1,'Cao Văn Nhân','caovannhan@email.com','0901 234 567','27/08/2000','Học viên')"
+            "INSERT INTO users VALUES (1,'Cao Văn Nhân','caovannhan@email.com','0901 234 567','27/08/2000','Học viên','123456',12,1)"
         )
+
+    if not c.execute('SELECT 1 FROM notifications').fetchone():
+        c.execute("INSERT INTO notifications VALUES (1,1,0,1,0)")
 
     if not c.execute('SELECT 1 FROM courses').fetchone():
         courses_seed = [
@@ -195,6 +209,7 @@ def unenroll(course_id):
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     conn  = get_db()
+    user  = conn.execute('SELECT streak, certificates FROM users WHERE id=1').fetchone()
     count = conn.execute(
         'SELECT COUNT(*) AS n FROM enrollments WHERE user_id=1'
     ).fetchone()['n']
@@ -207,8 +222,70 @@ def get_stats():
     return jsonify({
         'enrolledCount': count,
         'avgProgress':   avg_progress,
-        'totalHours':    str(round(total_hours, 1)) + 'h'
+        'totalHours':    str(round(total_hours, 1)) + 'h',
+        'streakDays':    user['streak'],
+        'certificates':  user['certificates']
     })
+
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    conn = get_db()
+    row  = conn.execute('SELECT * FROM notifications WHERE user_id=1').fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'emailNotif': True, 'pushNotif': False, 'studyRemind': True, 'contentUpdate': False})
+    return jsonify({
+        'emailNotif':    bool(row['email_notif']),
+        'pushNotif':     bool(row['push_notif']),
+        'studyRemind':   bool(row['study_remind']),
+        'contentUpdate': bool(row['content_update'])
+    })
+
+
+@app.route('/api/notifications', methods=['PUT'])
+def update_notifications():
+    data = request.get_json()
+    conn = get_db()
+    conn.execute(
+        '''INSERT INTO notifications VALUES (1,?,?,?,?)
+           ON CONFLICT(user_id) DO UPDATE SET
+             email_notif=excluded.email_notif,
+             push_notif=excluded.push_notif,
+             study_remind=excluded.study_remind,
+             content_update=excluded.content_update''',
+        (
+            int(data.get('emailNotif', True)),
+            int(data.get('pushNotif', False)),
+            int(data.get('studyRemind', True)),
+            int(data.get('contentUpdate', False))
+        )
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+# ── Change password ───────────────────────────────────────────────────────────
+
+@app.route('/api/user/password', methods=['PUT'])
+def change_password():
+    data = request.get_json()
+    current = data.get('current', '')
+    new_pw  = data.get('new', '')
+    if not new_pw:
+        return jsonify({'error': 'Mật khẩu mới không được để trống'}), 400
+    conn = get_db()
+    user = conn.execute('SELECT password FROM users WHERE id=1').fetchone()
+    if user['password'] != current:
+        conn.close()
+        return jsonify({'error': 'Mật khẩu hiện tại không đúng'}), 401
+    conn.execute('UPDATE users SET password=? WHERE id=1', (new_pw,))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
 
 
 if __name__ == '__main__':

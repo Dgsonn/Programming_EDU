@@ -199,23 +199,56 @@ function setVal(id, val) {
 
 /* ── Save settings ── */
 function saveSettings() {
-  var data = {
+  var userData = {
     name:     document.getElementById("field-name").value,
     email:    document.getElementById("field-email").value,
     phone:    document.getElementById("field-phone").value,
     birthday: document.getElementById("field-birthday").value
   };
-  fetch(API + '/user', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-    .then(function(r) { return r.json(); })
+  var notifData = {
+    emailNotif:    document.getElementById('toggle-email').classList.contains('on'),
+    pushNotif:     document.getElementById('toggle-push').classList.contains('on'),
+    studyRemind:   document.getElementById('toggle-remind').classList.contains('on'),
+    contentUpdate: document.getElementById('toggle-content').classList.contains('on')
+  };
+  Promise.all([
+    fetch(API + '/user', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    }),
+    fetch(API + '/notifications', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(notifData)
+    })
+  ])
     .then(function() {
       loadUser();
       alert('Đã lưu thay đổi!');
     })
     .catch(function(err) { console.error('Lỗi lưu:', err); });
+}
+
+/* ── Change password ── */
+function changePassword() {
+  var current = prompt('Nhập mật khẩu hiện tại:');
+  if (!current) return;
+  var newPw = prompt('Nhập mật khẩu mới:');
+  if (!newPw) return;
+  var confirm = prompt('Nhập lại mật khẩu mới:');
+  if (newPw !== confirm) { alert('Mật khẩu mới không khớp!'); return; }
+  fetch(API + '/user/password', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ current: current, new: newPw })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.ok) alert('Đổi mật khẩu thành công!');
+      else alert('Lỗi: ' + res.error);
+    })
+    .catch(function(err) { console.error('Lỗi đổi mật khẩu:', err); });
 }
 
 /* ── API loaders ── */
@@ -262,10 +295,29 @@ function loadStats() {
     .then(function(s) {
       setText('stat-enrolled', s.enrolledCount);
       setText('stat-total-hours', s.totalHours);
+      setText('stat-streak', s.streakDays + ' ngày');
+      setText('stat-certificates', s.certificates);
       setText('my-stat-count', s.enrolledCount);
       setText('my-stat-hours', s.totalHours);
       setText('my-stat-avg', s.avgProgress + '%');
     });
+}
+
+function loadNotifications() {
+  return fetch(API + '/notifications')
+    .then(function(r) { return r.json(); })
+    .then(function(n) {
+      setToggle('toggle-email',   n.emailNotif);
+      setToggle('toggle-push',    n.pushNotif);
+      setToggle('toggle-remind',  n.studyRemind);
+      setToggle('toggle-content', n.contentUpdate);
+    });
+}
+
+function setToggle(id, on) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (on) el.classList.add('on'); else el.classList.remove('on');
 }
 
 function loadAll() {
@@ -273,6 +325,7 @@ function loadAll() {
   loadStats();
   loadCourses();
   loadEnrolled();
+  loadNotifications();
 }
 
 /* ── Init ── */
