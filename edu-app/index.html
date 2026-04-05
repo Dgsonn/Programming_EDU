@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programming EDU</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside id="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-profile">
+      <div class="avatar-wrap">
+        <img src="images/avatar.svg" alt="avatar" />
+        <span class="online-dot"></span>
+      </div>
+      <div>
+        <div class="logo-line1"><span class="blue">Pro</span><span class="blue">gram</span><span class="red">ming</span></div>
+        <div class="logo-line2"><span class="blue">E</span><span class="blue">D</span><span class="red">U</span></div>
+      </div>
+    </div>
+    <div class="user-info">
+      <div class="name" id="sidebar-name">Cao Nhân</div>
+      <div class="role" id="sidebar-role">Học viên</div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')">
+      <div class="nav-left"><div class="nav-icon">🏠</div><span>Dashboard</span></div>
+      <span class="nav-chevron">›</span>
+    </button>
+    <button class="nav-btn" data-page="courses" onclick="navigate('courses')">
+      <div class="nav-left"><div class="nav-icon">📖</div><span>Khóa học</span></div>
+    </button>
+    <button class="nav-btn" data-page="my-courses" onclick="navigate('my-courses')">
+      <div class="nav-left"><div class="nav-icon">🔖</div><span>Khóa học của tôi</span></div>
+    </button>
+    <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
+      <div class="nav-left"><div class="nav-icon">⚙️</div><span>Cài đặt</span></div>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn">
+      <div class="nav-icon">🚪</div><span>Đăng xuất</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<div id="main">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div>
+      <h1 id="topbar-title">Dashboard</h1>
+      <div class="sub">Thứ Ba, 31 tháng 3, 2026</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses()" />
+      </div>
+      <button class="bell-btn">🔔<span class="bell-dot"></span></button>
+      <div class="user-chip">
+        <img src="images/avatar.svg" alt="avatar" />
+        <span class="chip-name" id="chip-name">Cao Nhân</span>
+        <span style="color:#9CA3AF;font-size:12px">▾</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div class="page active" id="page-dashboard">
+    <div class="welcome-banner">
+      <div class="banner-dots"></div>
+      <div class="banner-inner">
+        <div>
+          <div class="greeting">Chào mừng trở lại! 👋</div>
+          <h2 id="banner-name">Cao Nhân</h2>
+          <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
+        </div>
+        <div class="banner-code">&lt;/&gt;</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
+        <div class="stat-icon" style="background:#EEF6FD">📖</div>
+        <div><div class="stat-val" id="stat-enrolled">2</div><div class="stat-lbl">Khóa học đang học</div></div>
+      </div>
+      <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
+        <div class="stat-icon" style="background:#FDEEEE">⏰</div>
+        <div><div class="stat-val" id="stat-total-hours">—</div><div class="stat-lbl">Tổng giờ đã học</div></div>
+      </div>
+      <div class="stat-card" onmouseenter="hoverStat(this,'#F59E0B')" onmouseleave="unhoverStat(this)">
+        <div class="stat-icon" style="background:#FEF9EE">🔥</div>
+        <div><div class="stat-val">12 ngày</div><div class="stat-lbl">Chuỗi ngày học</div></div>
+      </div>
+      <div class="stat-card" onmouseenter="hoverStat(this,'#10B981')" onmouseleave="unhoverStat(this)">
+        <div class="stat-icon" style="background:#EEFBF5">🏆</div>
+        <div><div class="stat-val">1</div><div class="stat-lbl">Chứng chỉ</div></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span style="color:#4A9EE0">📈</span><span>Tiến độ học tập</span></div>
+      <div class="progress-grid" id="progress-grid"></div>
+    </div>
+
+    <div class="courses-header">
+      <h2>Tất cả khóa học</h2>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="setFilter(this,'all')">Tất cả</button>
+        <button class="filter-btn" onclick="setFilter(this,'enrolled')">Đã đăng ký</button>
+        <button class="filter-btn" onclick="setFilter(this,'not-enrolled')">Chưa đăng ký</button>
+      </div>
+    </div>
+    <div class="courses-grid" id="courses-grid"></div>
+    <div class="empty" id="empty-state" style="display:none">
+      <div class="empty-icon">📖</div><p>Không tìm thấy khóa học nào</p>
+    </div>
+  </div>
+
+  <!-- ── My Courses ── -->
+  <div class="page" id="page-my-courses">
+    <div class="summary-grid">
+      <div class="stat-card" style="cursor:default">
+        <div class="stat-icon" style="background:#EEF6FD">📖</div>
+        <div><div class="stat-val" id="my-stat-count">—</div><div class="stat-lbl">Đang học</div></div>
+      </div>
+      <div class="stat-card" style="cursor:default">
+        <div class="stat-icon" style="background:#FDEEEE">⏰</div>
+        <div><div class="stat-val" id="my-stat-hours">—</div><div class="stat-lbl">Giờ đã học</div></div>
+      </div>
+      <div class="stat-card" style="cursor:default">
+        <div class="stat-icon" style="background:#EEFBF5">📈</div>
+        <div><div class="stat-val" id="my-stat-avg">—</div><div class="stat-lbl">Tiến độ TB</div></div>
+      </div>
+    </div>
+    <div id="enrolled-list"></div>
+  </div>
+
+  <!-- ── Settings ── -->
+  <div class="page" id="page-settings">
+    <div class="settings-wrap">
+
+      <div class="settings-section">
+        <div class="settings-section-title"><span style="color:#4A9EE0">👤</span><span>Thông tin cá nhân</span></div>
+        <div class="profile-top">
+          <div class="profile-avatar">
+            <img src="images/avatar.svg" alt="avatar" />
+            <button class="avatar-edit-btn">+</button>
+          </div>
+          <div>
+            <div class="profile-name" id="settings-profile-name">Cao Văn Nhân</div>
+            <div class="profile-email" id="settings-profile-email">caovannhan@email.com</div>
+            <span class="profile-badge">Học viên</span>
+          </div>
+        </div>
+        <div class="fields-grid">
+          <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" value="Cao Văn Nhân" /></div>
+          <div><label class="field-label">Email</label><input id="field-email" class="field-input" value="caovannhan@email.com" /></div>
+          <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" value="0901 234 567" /></div>
+          <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" value="27/08/2000" /></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title"><span style="color:#E84545">🔔</span><span>Thông báo</span></div>
+        <div class="notif-row"><div><div class="notif-lbl">Thông báo qua Email</div><div class="notif-desc">Nhận cập nhật khóa học qua email</div></div><button class="toggle on" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
+        <div class="notif-row"><div><div class="notif-lbl">Thông báo đẩy</div><div class="notif-desc">Nhận thông báo trực tiếp trên trình duyệt</div></div><button class="toggle" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
+        <div class="notif-row"><div><div class="notif-lbl">Nhắc nhở học tập</div><div class="notif-desc">Nhắc nhở lịch học hàng ngày</div></div><button class="toggle on" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
+        <div class="notif-row"><div><div class="notif-lbl">Cập nhật nội dung</div><div class="notif-desc">Thông báo khi có bài học mới</div></div><button class="toggle" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
+      </div>
+
+      <div class="sec-lang-grid">
+        <div class="sec-lang-card">
+          <div class="sec-lang-title"><span style="color:#4A9EE0">🛡</span><span>Bảo mật</span></div>
+          <button class="change-pw-btn">Đổi mật khẩu</button>
+        </div>
+        <div class="sec-lang-card">
+          <div class="sec-lang-title"><span style="color:#E84545">🌐</span><span>Ngôn ngữ</span></div>
+          <select class="lang-select"><option>Tiếng Việt</option><option>English</option></select>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="saveSettings()">💾 Lưu thay đổi</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

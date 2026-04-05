@@ -1,0 +1,2 @@
+var courses = [];
+var enrolledCourses = [];
