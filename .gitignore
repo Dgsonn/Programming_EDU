@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Database
+backend/edu.db
+
+# OS
+.DS_Store
+Thumbs.db
