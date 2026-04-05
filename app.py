@@ -6,10 +6,11 @@ from routes import register_blueprints
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.secret_key = Config.SECRET_KEY
 CORS(app)
 
 register_blueprints(app)
+init_db()
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=Config.DEBUG, port=Config.PORT)

@@ -1,2 +1,0 @@
-var courses = [];
-var enrolledCourses = [];

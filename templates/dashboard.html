@@ -46,7 +46,7 @@
   </nav>
 
   <div class="sidebar-footer">
-    <button class="logout-btn">
+    <button class="logout-btn" onclick="window.location='/auth/logout'">
       <div class="nav-icon">🚪</div><span>Đăng xuất</span>
     </button>
   </div>
@@ -196,7 +196,6 @@
 
 </div><!-- /main -->
 
-<script src="{{ url_for('static', filename='js/data.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

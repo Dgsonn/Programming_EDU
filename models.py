@@ -1,27 +1,30 @@
+import os
 import sqlite3
 from config import Config
 
 
 def get_db():
+    os.makedirs(os.path.dirname(Config.DB_PATH), exist_ok=True)
     conn = sqlite3.connect(Config.DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
+    os.makedirs(os.path.dirname(Config.DB_PATH), exist_ok=True)
     conn = get_db()
     c = conn.cursor()
 
     c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id           INTEGER PRIMARY KEY,
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
         name         TEXT,
-        email        TEXT,
-        phone        TEXT,
-        birthday     TEXT,
+        email        TEXT UNIQUE,
+        phone        TEXT    DEFAULT '',
+        birthday     TEXT    DEFAULT '',
         role         TEXT    DEFAULT 'Học viên',
-        password     TEXT    DEFAULT '123456',
-        streak       INTEGER DEFAULT 12,
-        certificates INTEGER DEFAULT 1
+        password     TEXT,
+        streak       INTEGER DEFAULT 0,
+        certificates INTEGER DEFAULT 0
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS courses (
@@ -59,14 +62,6 @@ def init_db():
         content_update INTEGER DEFAULT 0
     )''')
 
-    if not c.execute('SELECT 1 FROM users').fetchone():
-        c.execute(
-            "INSERT INTO users VALUES (1,'Cao Văn Nhân','caovannhan@email.com','0901 234 567','27/08/2000','Học viên','123456',12,1)"
-        )
-
-    if not c.execute('SELECT 1 FROM notifications').fetchone():
-        c.execute("INSERT INTO notifications VALUES (1,1,0,1,0)")
-
     if not c.execute('SELECT 1 FROM courses').fetchone():
         courses_seed = [
             ('cpp',     'C / C++',    'Lập trình hệ thống',
@@ -83,12 +78,6 @@ def init_db():
              'static/images/htmlcss.svg', 'Người mới bắt đầu',   '30 giờ', '35.1K', 4.9,  70, '#E84545','#4A9EE0','WEB DEVELOPMENT'),
         ]
         c.executemany('INSERT INTO courses VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', courses_seed)
-
-        enrollments_seed = [
-            (1, 'cpp',     42, 36, '16.8h', 'Bài 36: Con trỏ và cấu trúc', 'Bài 37: Hàm đệ quy'),
-            (1, 'htmlcss', 15, 10,  '4.5h', 'Bài 10: CSS Flexbox',          'Bài 11: CSS Grid'),
-        ]
-        c.executemany('INSERT INTO enrollments VALUES (?,?,?,?,?,?,?)', enrollments_seed)
 
     conn.commit()
     conn.close()

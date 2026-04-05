@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký — Programming EDU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+</head>
+<body class="auth-body">
+
+<div class="auth-card">
+
+  <div class="auth-logo">
+    <span class="blue">Pro</span><span class="blue">gram</span><span class="red">ming</span>
+    <span class="blue"> E</span><span class="blue">D</span><span class="red">U</span>
+  </div>
+
+  <div class="auth-title">Tạo tài khoản mới</div>
+  <div class="auth-sub">Bắt đầu hành trình lập trình của bạn</div>
+
+  <div class="auth-error" id="error-msg"></div>
+
+  <div class="auth-field">
+    <label class="auth-label">Họ và tên</label>
+    <input id="inp-name" class="auth-input" type="text" placeholder="Nguyễn Văn A" />
+  </div>
+
+  <div class="auth-field">
+    <label class="auth-label">Email</label>
+    <input id="inp-email" class="auth-input" type="email" placeholder="email@example.com" />
+  </div>
+
+  <div class="auth-field">
+    <label class="auth-label">Mật khẩu</label>
+    <input id="inp-password" class="auth-input" type="password" placeholder="Tối thiểu 6 ký tự" />
+  </div>
+
+  <button class="auth-btn" id="register-btn" onclick="doRegister()">Đăng ký →</button>
+
+  <div class="auth-divider">
+    Đã có tài khoản? <a href="/login">Đăng nhập</a>
+  </div>
+  <div class="auth-divider" style="margin-top:10px">
+    <a href="/">← Về trang chủ</a>
+  </div>
+
+</div>
+
+<script>
+  function showError(msg) {
+    var el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function doRegister() {
+    var btn      = document.getElementById('register-btn');
+    var name     = document.getElementById('inp-name').value.trim();
+    var email    = document.getElementById('inp-email').value.trim();
+    var password = document.getElementById('inp-password').value;
+    if (!name || !email || !password) { showError('Vui lòng nhập đầy đủ thông tin.'); return; }
+    if (password.length < 6) { showError('Mật khẩu phải có ít nhất 6 ký tự.'); return; }
+    btn.disabled = true;
+    btn.textContent = 'Đang đăng ký...';
+    fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, password: password })
+    })
+      .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+      .then(function(res) {
+        if (res.ok) { window.location = '/dashboard'; }
+        else {
+          showError(res.d.error || 'Đăng ký thất bại.');
+          btn.disabled = false;
+          btn.textContent = 'Đăng ký →';
+        }
+      })
+      .catch(function() {
+        showError('Không kết nối được server.');
+        btn.disabled = false;
+        btn.textContent = 'Đăng ký →';
+      });
+  }
+</script>
+
+</body>
+</html>

@@ -1,14 +1,22 @@
 var API = '/api';
 
-var activeFilter = "all";
-var searchQuery  = "";
+var courses         = [];
+var enrolledCourses = [];
+var activeFilter    = "all";
+var searchQuery     = "";
 
 var pageLabels = {
-  dashboard:   "Dashboard",
-  courses:     "Khóa học",
+  dashboard:    "Dashboard",
+  courses:      "Khóa học",
   "my-courses": "Khóa học của tôi",
-  settings:    "Cài đặt"
+  settings:     "Cài đặt"
 };
+
+/* ── Handle 401 (chưa đăng nhập) ── */
+function handleFetch(r) {
+  if (r.status === 401) { window.location = '/login'; return null; }
+  return r.json();
+}
 
 /* ── Navigation ── */
 function navigate(page) {
@@ -58,7 +66,7 @@ function renderCourses() {
     return [
       '<div class="course-card" onmouseenter="hoverCard(this,\'' + c.color + '\')" onmouseleave="unhoverCard(this)">',
         '<div class="card-img-wrap">',
-          '<img src="' + c.image + '" alt="' + c.title + '" />',
+          '<img src="/' + c.image + '" alt="' + c.title + '" />',
           '<div class="card-overlay"></div>',
           '<div class="badge-level" style="background:linear-gradient(135deg,' + c.color + ',' + c.accentColor + ')">' + c.level + '</div>',
           c.enrolled ? '<div class="badge-enrolled">Đã đăng ký</div>' : '',
@@ -92,6 +100,10 @@ function renderCourses() {
 /* ── My Courses rendering ── */
 function renderMyCourses() {
   var container = document.getElementById("enrolled-list");
+  if (!enrolledCourses.length) {
+    container.innerHTML = '<p style="color:#9CA3AF;font-size:14px;padding:24px 0">Bạn chưa đăng ký khóa học nào. <a href="#" onclick="navigate(\'courses\')" style="color:#4A9EE0">Khám phá khóa học →</a></p>';
+    return;
+  }
   container.innerHTML = enrolledCourses.map(function(c) {
     return [
       '<div class="enrolled-card"',
@@ -152,8 +164,8 @@ function renderProgress() {
 function toggleEnroll(courseId, isEnrolled) {
   var method = isEnrolled ? 'DELETE' : 'POST';
   fetch(API + '/courses/' + courseId + '/enroll', { method: method })
-    .then(function(r) { return r.json(); })
-    .then(function() { loadAll(); })
+    .then(handleFetch)
+    .then(function(d) { if (d) loadAll(); })
     .catch(function(err) { console.error('Lỗi đăng ký:', err); });
 }
 
@@ -175,11 +187,11 @@ function toggleSwitch(btn) { btn.classList.toggle("on"); }
 
 /* ── Hover helpers ── */
 function hoverStat(el, color) {
-  el.style.boxShadow  = "0 8px 24px " + color + "25";
+  el.style.boxShadow   = "0 8px 24px " + color + "25";
   el.style.borderColor = color + "40";
 }
 function unhoverStat(el) {
-  el.style.boxShadow  = "0 2px 8px rgba(0,0,0,0.04)";
+  el.style.boxShadow   = "0 2px 8px rgba(0,0,0,0.04)";
   el.style.borderColor = "#F3F4F6";
 }
 function hoverCard(el, color)  { el.style.borderColor = color + "40"; }
@@ -187,14 +199,13 @@ function unhoverCard(el)       { el.style.borderColor = "#F3F4F6"; }
 function ctaHover(btn, c, ac)  { btn.style.background = "linear-gradient(135deg," + c + "," + ac + ")"; btn.style.color = "#fff"; btn.style.boxShadow = "0 4px 12px " + c + "50"; }
 function ctaLeave(btn)         { btn.style.background = "#F3F4F6"; btn.style.color = "#6B7280"; btn.style.boxShadow = "none"; }
 
-/* ── Update DOM helpers ── */
-function setText(id, val) {
+/* ── DOM helpers ── */
+function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+function setVal(id, val)  { var el = document.getElementById(id); if (el) el.value = val; }
+function setToggle(id, on) {
   var el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-function setVal(id, val) {
-  var el = document.getElementById(id);
-  if (el) el.value = val;
+  if (!el) return;
+  if (on) el.classList.add('on'); else el.classList.remove('on');
 }
 
 /* ── Save settings ── */
@@ -212,21 +223,10 @@ function saveSettings() {
     contentUpdate: document.getElementById('toggle-content').classList.contains('on')
   };
   Promise.all([
-    fetch(API + '/user', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    }),
-    fetch(API + '/notifications', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(notifData)
-    })
+    fetch(API + '/user', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userData) }),
+    fetch(API + '/notifications', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(notifData) })
   ])
-    .then(function() {
-      loadUser();
-      alert('Đã lưu thay đổi!');
-    })
+    .then(function() { loadUser(); alert('Đã lưu thay đổi!'); })
     .catch(function(err) { console.error('Lỗi lưu:', err); });
 }
 
@@ -236,26 +236,23 @@ function changePassword() {
   if (!current) return;
   var newPw = prompt('Nhập mật khẩu mới:');
   if (!newPw) return;
-  var confirm = prompt('Nhập lại mật khẩu mới:');
-  if (newPw !== confirm) { alert('Mật khẩu mới không khớp!'); return; }
+  if (prompt('Nhập lại mật khẩu mới:') !== newPw) { alert('Mật khẩu mới không khớp!'); return; }
   fetch(API + '/user/password', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ current: current, new: newPw })
   })
-    .then(function(r) { return r.json(); })
-    .then(function(res) {
-      if (res.ok) alert('Đổi mật khẩu thành công!');
-      else alert('Lỗi: ' + res.error);
-    })
-    .catch(function(err) { console.error('Lỗi đổi mật khẩu:', err); });
+    .then(handleFetch)
+    .then(function(res) { if (res) { if (res.ok) alert('Đổi mật khẩu thành công!'); else alert('Lỗi: ' + res.error); } })
+    .catch(function(err) { console.error('Lỗi:', err); });
 }
 
 /* ── API loaders ── */
 function loadUser() {
   fetch(API + '/user')
-    .then(function(r) { return r.json(); })
+    .then(handleFetch)
     .then(function(u) {
+      if (!u) return;
       setText('sidebar-name', u.name.split(' ').slice(-1)[0]);
       setText('sidebar-role', u.role);
       setText('banner-name', u.name.split(' ').slice(-1)[0]);
@@ -264,35 +261,28 @@ function loadUser() {
       setText('settings-profile-email', u.email);
       setVal('field-name', u.name);
       setVal('field-email', u.email);
-      setVal('field-phone', u.phone);
-      setVal('field-birthday', u.birthday);
-    })
-    .catch(function(err) { console.error('Lỗi tải user:', err); });
+      setVal('field-phone', u.phone || '');
+      setVal('field-birthday', u.birthday || '');
+    });
 }
 
 function loadCourses() {
   return fetch(API + '/courses')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      courses = data;
-      renderCourses();
-    });
+    .then(handleFetch)
+    .then(function(data) { if (data) { courses = data; renderCourses(); } });
 }
 
 function loadEnrolled() {
   return fetch(API + '/enrolled')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      enrolledCourses = data;
-      renderMyCourses();
-      renderProgress();
-    });
+    .then(handleFetch)
+    .then(function(data) { if (data) { enrolledCourses = data; renderMyCourses(); renderProgress(); } });
 }
 
 function loadStats() {
   return fetch(API + '/stats')
-    .then(function(r) { return r.json(); })
+    .then(handleFetch)
     .then(function(s) {
+      if (!s) return;
       setText('stat-enrolled', s.enrolledCount);
       setText('stat-total-hours', s.totalHours);
       setText('stat-streak', s.streakDays + ' ngày');
@@ -305,19 +295,14 @@ function loadStats() {
 
 function loadNotifications() {
   return fetch(API + '/notifications')
-    .then(function(r) { return r.json(); })
+    .then(handleFetch)
     .then(function(n) {
+      if (!n) return;
       setToggle('toggle-email',   n.emailNotif);
       setToggle('toggle-push',    n.pushNotif);
       setToggle('toggle-remind',  n.studyRemind);
       setToggle('toggle-content', n.contentUpdate);
     });
-}
-
-function setToggle(id, on) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  if (on) el.classList.add('on'); else el.classList.remove('on');
 }
 
 function loadAll() {
@@ -330,11 +315,11 @@ function loadAll() {
 
 /* ── Dynamic date ── */
 function updateDate() {
-  var days = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  var days   = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
   var months = ['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6',
                 'tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'];
   var now = new Date();
-  var el = document.querySelector('.topbar .sub');
+  var el  = document.querySelector('.topbar .sub');
   if (el) el.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ', ' + now.getFullYear();
 }
 

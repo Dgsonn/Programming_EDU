@@ -1,18 +1,21 @@
 from flask import Blueprint, jsonify
 from models import get_db
+from utils import api_login_required, current_user_id
 
 courses_bp = Blueprint('courses', __name__)
 
 
 @courses_bp.route('/api/courses', methods=['GET'])
+@api_login_required
 def get_courses():
+    uid  = current_user_id()
     conn = get_db()
     rows = conn.execute('''
         SELECT c.*,
                CASE WHEN e.course_id IS NOT NULL THEN 1 ELSE 0 END AS enrolled
         FROM courses c
-        LEFT JOIN enrollments e ON c.id = e.course_id AND e.user_id = 1
-    ''').fetchall()
+        LEFT JOIN enrollments e ON c.id = e.course_id AND e.user_id = ?
+    ''', (uid,)).fetchall()
     conn.close()
     result = []
     for r in rows:
@@ -24,7 +27,9 @@ def get_courses():
 
 
 @courses_bp.route('/api/enrolled', methods=['GET'])
+@api_login_required
 def get_enrolled():
+    uid   = current_user_id()
     icons = {'cpp': '📘', 'htmlcss': '📗', 'python': '📙', 'java': '📕'}
     conn  = get_db()
     rows  = conn.execute('''
@@ -34,8 +39,8 @@ def get_enrolled():
                e.time_spent, e.last_lesson, e.next_lesson
         FROM enrollments e
         JOIN courses c ON e.course_id = c.id
-        WHERE e.user_id = 1
-    ''').fetchall()
+        WHERE e.user_id = ?
+    ''', (uid,)).fetchall()
     conn.close()
     result = []
     for r in rows:
@@ -52,20 +57,22 @@ def get_enrolled():
 
 
 @courses_bp.route('/api/courses/<course_id>/enroll', methods=['POST'])
+@api_login_required
 def enroll(course_id):
+    uid    = current_user_id()
     conn   = get_db()
     course = conn.execute('SELECT id, title FROM courses WHERE id=?', (course_id,)).fetchone()
     if not course:
         conn.close()
         return jsonify({'error': 'Không tìm thấy khóa học'}), 404
     exists = conn.execute(
-        'SELECT 1 FROM enrollments WHERE user_id=1 AND course_id=?', (course_id,)
+        'SELECT 1 FROM enrollments WHERE user_id=? AND course_id=?', (uid, course_id)
     ).fetchone()
     if not exists:
         first_lesson = 'Bài 1: ' + dict(course)['title']
         conn.execute(
-            'INSERT INTO enrollments VALUES (1,?,0,0,"0h","",?)',
-            (course_id, first_lesson)
+            'INSERT INTO enrollments VALUES (?,?,0,0,"0h","",?)',
+            (uid, course_id, first_lesson)
         )
         conn.commit()
     conn.close()
@@ -73,9 +80,11 @@ def enroll(course_id):
 
 
 @courses_bp.route('/api/courses/<course_id>/enroll', methods=['DELETE'])
+@api_login_required
 def unenroll(course_id):
+    uid  = current_user_id()
     conn = get_db()
-    conn.execute('DELETE FROM enrollments WHERE user_id=1 AND course_id=?', (course_id,))
+    conn.execute('DELETE FROM enrollments WHERE user_id=? AND course_id=?', (uid, course_id))
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
