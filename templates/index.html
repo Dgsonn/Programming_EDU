@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Programming EDU</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
-  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}" />
 </head>
 <body>
 
@@ -15,7 +15,7 @@
   <div class="sidebar-top">
     <div class="sidebar-profile">
       <div class="avatar-wrap">
-        <img src="images/avatar.svg" alt="avatar" />
+        <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
         <span class="online-dot"></span>
       </div>
       <div>
@@ -59,7 +59,7 @@
   <div class="topbar">
     <div>
       <h1 id="topbar-title">Dashboard</h1>
-      <div class="sub">Thứ Ba, 31 tháng 3, 2026</div>
+      <div class="sub"></div>
     </div>
     <div class="topbar-right">
       <div class="search-wrap">
@@ -68,7 +68,7 @@
       </div>
       <button class="bell-btn">🔔<span class="bell-dot"></span></button>
       <div class="user-chip">
-        <img src="images/avatar.svg" alt="avatar" />
+        <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
         <span class="chip-name" id="chip-name">Cao Nhân</span>
         <span style="color:#9CA3AF;font-size:12px">▾</span>
       </div>
@@ -92,7 +92,7 @@
     <div class="stats-grid">
       <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
         <div class="stat-icon" style="background:#EEF6FD">📖</div>
-        <div><div class="stat-val" id="stat-enrolled">2</div><div class="stat-lbl">Khóa học đang học</div></div>
+        <div><div class="stat-val" id="stat-enrolled">—</div><div class="stat-lbl">Khóa học đang học</div></div>
       </div>
       <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
         <div class="stat-icon" style="background:#FDEEEE">⏰</div>
@@ -154,7 +154,7 @@
         <div class="settings-section-title"><span style="color:#4A9EE0">👤</span><span>Thông tin cá nhân</span></div>
         <div class="profile-top">
           <div class="profile-avatar">
-            <img src="images/avatar.svg" alt="avatar" />
+            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
             <button class="avatar-edit-btn">+</button>
           </div>
           <div>
@@ -196,7 +196,7 @@
 
 </div><!-- /main -->
 
-<script src="js/data.js"></script>
-<script src="js/app.js"></script>
+<script src="{{ url_for('static', filename='js/data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

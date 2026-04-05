@@ -5,6 +5,7 @@ __pycache__/
 
 # Database
 backend/edu.db
+database/edu.db
 
 # OS
 .DS_Store

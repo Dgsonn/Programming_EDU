@@ -1,4 +1,4 @@
-var API = 'http://localhost:5000/api';
+var API = '/api';
 
 var activeFilter = "all";
 var searchQuery  = "";
