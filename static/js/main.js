@@ -6,11 +6,53 @@ var activeFilter    = "all";
 var searchQuery     = "";
 
 var pageLabels = {
-  dashboard:    "Dashboard",
-  courses:      "Khóa học",
-  "my-courses": "Khóa học của tôi",
-  settings:     "Cài đặt"
+  dashboard: "Dashboard",
+  courses:   "Khóa học",
+  roadmap:   "Lộ trình",
+  settings:  "Cài đặt"
 };
+
+var ROADMAPS = [
+  {
+    id: 'frontend', title: 'Frontend Web', icon: '🌐', color: '#4A9EE0',
+    phases: [
+      { name: 'Nền tảng',    items: ['HTML5 cơ bản', 'CSS3 & Flexbox', 'CSS Grid', 'Responsive Design'] },
+      { name: 'JavaScript',  items: ['JS cơ bản', 'DOM & Events', 'ES6+', 'Async/Await', 'Fetch API'] },
+      { name: 'Framework',   items: ['React cơ bản', 'React Hooks', 'React Router', 'State Management'] },
+      { name: 'Triển khai',  items: ['Git & GitHub', 'Vite / Webpack', 'Testing cơ bản', 'Deploy Vercel'] }
+    ]
+  },
+  {
+    id: 'backend', title: 'Backend', icon: '⚙️', color: '#E84545',
+    phases: [
+      { name: 'Ngôn ngữ',   items: ['Python hoặc Java', 'OOP cơ bản', 'Xử lý file & JSON', 'Regex'] },
+      { name: 'Database',   items: ['SQL cơ bản', 'SQLite / PostgreSQL', 'ORM (SQLAlchemy)', 'Migrations'] },
+      { name: 'API',        items: ['REST API', 'Flask / Spring Boot', 'Authentication & JWT', 'CORS'] },
+      { name: 'DevOps',     items: ['Linux cơ bản', 'Docker cơ bản', 'Nginx', 'Deploy VPS'] }
+    ]
+  },
+  {
+    id: 'python', title: 'Python & AI', icon: '🤖', color: '#10B981',
+    phases: [
+      { name: 'Python',     items: ['Cú pháp cơ bản', 'List / Dict / Set', 'OOP Python', 'Thư viện chuẩn'] },
+      { name: 'Data',       items: ['NumPy', 'Pandas', 'Matplotlib', 'Jupyter Notebook'] },
+      { name: 'ML cơ bản', items: ['Scikit-learn', 'Linear Regression', 'Classification', 'Đánh giá model'] },
+      { name: 'Deep Learning', items: ['Neural Network', 'TensorFlow / PyTorch', 'CNN / RNN', 'LLM & Prompt'] }
+    ]
+  },
+  {
+    id: 'cpp', title: 'C/C++ Systems', icon: '💻', color: '#F59E0B',
+    phases: [
+      { name: 'C cơ bản',   items: ['Biến & Kiểu dữ liệu', 'Vòng lặp & Điều kiện', 'Hàm & Con trỏ', 'Mảng & String'] },
+      { name: 'C nâng cao', items: ['Quản lý bộ nhớ', 'Struct & Enum', 'File I/O', 'Linked List'] },
+      { name: 'C++ OOP',    items: ['Class & Object', 'Kế thừa', 'Polymorphism', 'Template'] },
+      { name: 'Ứng dụng',   items: ['STL (vector, map)', 'Thuật toán cơ bản', 'Embedded cơ bản', 'Dự án thực tế'] }
+    ]
+  }
+];
+
+var activeRoadmap  = 'frontend';
+var doneItems      = {};
 
 /* ── Handle 401 (chưa đăng nhập) ── */
 function handleFetch(r) {
@@ -39,6 +81,10 @@ function navigate(page) {
   }
 
   document.getElementById("topbar-title").textContent = pageLabels[page] || "Dashboard";
+
+  // Chỉ hiện search bar ở trang Khóa học
+  var sw = document.getElementById("search-wrap");
+  if (sw) sw.style.visibility = (page === "courses") ? "visible" : "hidden";
 }
 
 /* ── Course rendering ── */
@@ -311,6 +357,96 @@ function loadAll() {
   loadCourses();
   loadEnrolled();
   loadNotifications();
+  loadRoadmap();
+}
+
+/* ── Roadmap ── */
+function loadRoadmap() {
+  fetch(API + '/roadmap')
+    .then(handleFetch)
+    .then(function(data) {
+      if (!data) return;
+      doneItems = {};
+      data.doneItems.forEach(function(id) { doneItems[id] = true; });
+      renderRoadmapTabs();
+      renderRoadmap();
+    });
+}
+
+function renderRoadmapTabs() {
+  var tabs = document.getElementById('roadmap-tabs');
+  if (!tabs) return;
+  tabs.innerHTML = ROADMAPS.map(function(r) {
+    var active = r.id === activeRoadmap ? ' active' : '';
+    return '<button class="filter-btn' + active + '" onclick="switchRoadmap(\'' + r.id + '\')">' +
+           r.icon + ' ' + r.title + '</button>';
+  }).join('');
+}
+
+function switchRoadmap(id) {
+  activeRoadmap = id;
+  renderRoadmapTabs();
+  renderRoadmap();
+}
+
+function renderRoadmap() {
+  var container = document.getElementById('roadmap-content');
+  if (!container) return;
+  var rm = ROADMAPS.find(function(r) { return r.id === activeRoadmap; });
+  if (!rm) return;
+
+  var totalItems = rm.phases.reduce(function(s, p) { return s + p.items.length; }, 0);
+  var doneCount  = rm.phases.reduce(function(s, p) {
+    return s + p.items.filter(function(item) { return doneItems[rm.id + ':' + item]; }).length;
+  }, 0);
+  var pct = totalItems ? Math.round(doneCount / totalItems * 100) : 0;
+
+  var html = '<div style="margin-bottom:20px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<span style="font-size:14px;color:#6B7280">Tiến độ tổng thể</span>' +
+      '<span style="font-weight:700;color:' + rm.color + '">' + pct + '%</span>' +
+    '</div>' +
+    '<div class="prog-bar-bg"><div class="prog-bar-fill" style="width:' + pct + '%;background:linear-gradient(90deg,' + rm.color + ',#888);transition:width 0.4s"></div></div>' +
+  '</div>';
+
+  html += '<div class="roadmap-grid">';
+  rm.phases.forEach(function(phase, pi) {
+    var phDone = phase.items.filter(function(item) { return doneItems[rm.id + ':' + item]; }).length;
+    html += '<div class="roadmap-phase">' +
+      '<div class="roadmap-phase-header" style="border-left:3px solid ' + rm.color + '">' +
+        '<div>' +
+          '<div class="roadmap-phase-title">Giai đoạn ' + (pi + 1) + ': ' + phase.name + '</div>' +
+          '<div class="roadmap-phase-sub">' + phDone + '/' + phase.items.length + ' hoàn thành</div>' +
+        '</div>' +
+        '<div class="roadmap-phase-pct" style="color:' + rm.color + '">' + Math.round(phDone / phase.items.length * 100) + '%</div>' +
+      '</div>';
+
+    phase.items.forEach(function(item) {
+      var itemId = rm.id + ':' + item;
+      var done   = !!doneItems[itemId];
+      html += '<div class="roadmap-item' + (done ? ' done' : '') + '" onclick="toggleRoadmapItem(\'' + itemId + '\')">' +
+        '<div class="roadmap-check" style="' + (done ? 'background:' + rm.color + ';border-color:' + rm.color : '') + '">' +
+          (done ? '✓' : '') +
+        '</div>' +
+        '<span>' + item + '</span>' +
+      '</div>';
+    });
+
+    html += '</div>';
+  });
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+function toggleRoadmapItem(itemId) {
+  doneItems[itemId] = !doneItems[itemId];
+  renderRoadmap();
+  fetch(API + '/roadmap/' + encodeURIComponent(itemId), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ done: doneItems[itemId] })
+  }).then(handleFetch).catch(function(e) { console.error(e); });
 }
 
 /* ── Dynamic date ── */

@@ -4,6 +4,7 @@ from routes.user          import user_bp
 from routes.courses       import courses_bp
 from routes.stats         import stats_bp
 from routes.notifications import notif_bp
+from routes.roadmap       import roadmap_bp
 
 
 def register_blueprints(app):
@@ -13,3 +14,4 @@ def register_blueprints(app):
     app.register_blueprint(courses_bp)
     app.register_blueprint(stats_bp)
     app.register_blueprint(notif_bp)
+    app.register_blueprint(roadmap_bp)

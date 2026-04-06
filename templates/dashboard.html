@@ -24,7 +24,7 @@
       </div>
     </div>
     <div class="user-info">
-      <div class="name" id="sidebar-name">Cao Nhân</div>
+      <div class="name" id="sidebar-name">—</div>
       <div class="role" id="sidebar-role">Học viên</div>
     </div>
   </div>
@@ -37,8 +37,8 @@
     <button class="nav-btn" data-page="courses" onclick="navigate('courses')">
       <div class="nav-left"><div class="nav-icon">📖</div><span>Khóa học</span></div>
     </button>
-    <button class="nav-btn" data-page="my-courses" onclick="navigate('my-courses')">
-      <div class="nav-left"><div class="nav-icon">🔖</div><span>Khóa học của tôi</span></div>
+    <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')">
+      <div class="nav-left"><div class="nav-icon">🗺️</div><span>Lộ trình</span></div>
     </button>
     <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
       <div class="nav-left"><div class="nav-icon">⚙️</div><span>Cài đặt</span></div>
@@ -62,14 +62,14 @@
       <div class="sub"></div>
     </div>
     <div class="topbar-right">
-      <div class="search-wrap">
+      <div class="search-wrap" id="search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses()" />
       </div>
       <button class="bell-btn">🔔<span class="bell-dot"></span></button>
       <div class="user-chip">
         <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
-        <span class="chip-name" id="chip-name">Cao Nhân</span>
+        <span class="chip-name" id="chip-name">—</span>
         <span style="color:#9CA3AF;font-size:12px">▾</span>
       </div>
     </div>
@@ -82,7 +82,7 @@
       <div class="banner-inner">
         <div>
           <div class="greeting">Chào mừng trở lại! 👋</div>
-          <h2 id="banner-name">Cao Nhân</h2>
+          <h2 id="banner-name">—</h2>
           <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
         </div>
         <div class="banner-code">&lt;/&gt;</div>
@@ -114,6 +114,15 @@
     </div>
 
     <div class="courses-header">
+      <h2>Khóa học của tôi</h2>
+      <button class="filter-btn active" onclick="navigate('courses')" style="font-size:13px">Khám phá thêm →</button>
+    </div>
+    <div id="enrolled-list"></div>
+  </div>
+
+  <!-- ── Courses ── -->
+  <div class="page" id="page-courses">
+    <div class="courses-header">
       <h2>Tất cả khóa học</h2>
       <div class="filter-group">
         <button class="filter-btn active" onclick="setFilter(this,'all')">Tất cả</button>
@@ -127,23 +136,13 @@
     </div>
   </div>
 
-  <!-- ── My Courses ── -->
-  <div class="page" id="page-my-courses">
-    <div class="summary-grid">
-      <div class="stat-card" style="cursor:default">
-        <div class="stat-icon" style="background:#EEF6FD">📖</div>
-        <div><div class="stat-val" id="my-stat-count">—</div><div class="stat-lbl">Đang học</div></div>
-      </div>
-      <div class="stat-card" style="cursor:default">
-        <div class="stat-icon" style="background:#FDEEEE">⏰</div>
-        <div><div class="stat-val" id="my-stat-hours">—</div><div class="stat-lbl">Giờ đã học</div></div>
-      </div>
-      <div class="stat-card" style="cursor:default">
-        <div class="stat-icon" style="background:#EEFBF5">📈</div>
-        <div><div class="stat-val" id="my-stat-avg">—</div><div class="stat-lbl">Tiến độ TB</div></div>
-      </div>
+  <!-- ── Roadmap ── -->
+  <div class="page" id="page-roadmap">
+    <div class="courses-header">
+      <h2>Lộ trình học tập</h2>
+      <div class="filter-group" id="roadmap-tabs"></div>
     </div>
-    <div id="enrolled-list"></div>
+    <div id="roadmap-content"></div>
   </div>
 
   <!-- ── Settings ── -->
@@ -158,16 +157,16 @@
             <button class="avatar-edit-btn">+</button>
           </div>
           <div>
-            <div class="profile-name" id="settings-profile-name">Cao Văn Nhân</div>
-            <div class="profile-email" id="settings-profile-email">caovannhan@email.com</div>
+            <div class="profile-name" id="settings-profile-name">—</div>
+            <div class="profile-email" id="settings-profile-email">—</div>
             <span class="profile-badge">Học viên</span>
           </div>
         </div>
         <div class="fields-grid">
-          <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" value="Cao Văn Nhân" /></div>
-          <div><label class="field-label">Email</label><input id="field-email" class="field-input" value="caovannhan@email.com" /></div>
-          <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" value="0901 234 567" /></div>
-          <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" value="27/08/2000" /></div>
+          <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" /></div>
+          <div><label class="field-label">Email</label><input id="field-email" class="field-input" /></div>
+          <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" /></div>
+          <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" /></div>
         </div>
       </div>
 

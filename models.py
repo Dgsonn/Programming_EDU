@@ -62,6 +62,13 @@ def init_db():
         content_update INTEGER DEFAULT 0
     )''')
 
+    c.execute('''CREATE TABLE IF NOT EXISTS roadmap_progress (
+        user_id INTEGER,
+        item_id TEXT,
+        done    INTEGER DEFAULT 0,
+        PRIMARY KEY (user_id, item_id)
+    )''')
+
     if not c.execute('SELECT 1 FROM courses').fetchone():
         courses_seed = [
             ('cpp',     'C / C++',    'Lập trình hệ thống',
