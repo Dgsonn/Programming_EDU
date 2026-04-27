@@ -22,9 +22,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
+  background: linear-gradient(90deg, #1A6BB5 0%, #6B5BA6 35%, #B84D5F 70%, #E84545 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-.landing-logo .blue { color: #4A9EE0; }
-.landing-logo .red  { color: #E84545; }
+.landing-logo .blue { color: unset; }
+.landing-logo .red  { color: unset; }
 
 .nav-actions { display: flex; gap: 12px; }
 
@@ -197,9 +201,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 8px;
+  background: linear-gradient(90deg, #1A6BB5 0%, #6B5BA6 35%, #B84D5F 70%, #E84545 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-.auth-logo .blue { color: #4A9EE0; }
-.auth-logo .red  { color: #E84545; }
+.auth-logo .blue { color: unset; }
+.auth-logo .red  { color: unset; }
 
 .auth-title {
   text-align: center;

@@ -13,10 +13,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .avatar-wrap { position: relative; flex-shrink: 0; }
 .avatar-wrap img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #DBEAFE; }
 .online-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #34D399; border-radius: 50%; border: 2px solid #fff; }
-.logo-line1 { font-size: 13px; font-weight: 800; line-height: 1.2; }
-.logo-line2 { font-size: 15px; font-weight: 900; letter-spacing: 0.08em; }
-.logo-line1 .blue, .logo-line2 .blue { color: #1A6BB5; text-shadow: 0 1px 4px rgba(26,107,181,0.35); }
-.logo-line1 .red,  .logo-line2 .red  { color: #D93030; text-shadow: 0 1px 4px rgba(217,48,48,0.35); }
+.logo-line1 { font-size: 13px; font-weight: 800; line-height: 1.2; background: linear-gradient(90deg, #1A6BB5 0%, #6B5BA6 35%, #B84D5F 70%, #E84545 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.logo-line2 { font-size: 15px; font-weight: 900; letter-spacing: 0.08em; background: linear-gradient(90deg, #1A6BB5 0%, #6B5BA6 35%, #B84D5F 70%, #E84545 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.logo-line1 .blue, .logo-line2 .blue { color: unset; text-shadow: none; }
+.logo-line1 .red,  .logo-line2 .red  { color: unset; text-shadow: none; }
 .user-info { margin-top: 16px; padding: 0 4px; }
 .user-info .name { font-size: 14px; font-weight: 600; color: #1F2937; }
 .user-info .role { font-size: 12px; color: #9CA3AF; margin-top: 2px; }
