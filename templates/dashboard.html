@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,194 +8,527 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}" />
+  <!-- ★ THÊM dòng này: CSS cho modal đổi mật khẩu -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}" />
 </head>
+
 <body>
 
-<!-- ══════════ SIDEBAR ══════════ -->
-<aside id="sidebar">
-  <div class="sidebar-top">
-    <div class="sidebar-profile">
-      <div class="avatar-wrap">
-        <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
-        <span class="online-dot"></span>
-      </div>
-      <div>
-        <div class="logo-line1"><span class="blue">Pro</span><span class="blue">gram</span><span class="red">ming</span></div>
-        <div class="logo-line2"><span class="blue">E</span><span class="blue">D</span><span class="red">U</span></div>
-      </div>
-    </div>
-    <div class="user-info">
-      <div class="name" id="sidebar-name">—</div>
-      <div class="role" id="sidebar-role">Học viên</div>
-    </div>
-  </div>
-
-  <nav>
-    <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')">
-      <div class="nav-left"><div class="nav-icon">🏠</div><span>Dashboard</span></div>
-      <span class="nav-chevron">›</span>
-    </button>
-    <button class="nav-btn" data-page="courses" onclick="navigate('courses')">
-      <div class="nav-left"><div class="nav-icon">📖</div><span>Khóa học</span></div>
-    </button>
-    <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')">
-      <div class="nav-left"><div class="nav-icon">🗺️</div><span>Lộ trình</span></div>
-    </button>
-    <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
-      <div class="nav-left"><div class="nav-icon">⚙️</div><span>Cài đặt</span></div>
-    </button>
-  </nav>
-
-  <div class="sidebar-footer">
-    <button class="logout-btn" onclick="window.location='/auth/logout'">
-      <div class="nav-icon">🚪</div><span>Đăng xuất</span>
-    </button>
-  </div>
-</aside>
-
-<!-- ══════════ MAIN ══════════ -->
-<div id="main">
-
-  <!-- Top bar -->
-  <div class="topbar">
-    <div>
-      <h1 id="topbar-title">Dashboard</h1>
-      <div class="sub"></div>
-    </div>
-    <div class="topbar-right">
-      <div class="search-wrap" id="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses()" />
-      </div>
-      <button class="bell-btn">🔔<span class="bell-dot"></span></button>
-      <div class="user-chip">
-        <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
-        <span class="chip-name" id="chip-name">—</span>
-        <span style="color:#9CA3AF;font-size:12px">▾</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Dashboard ── -->
-  <div class="page active" id="page-dashboard">
-    <div class="welcome-banner">
-      <div class="banner-dots"></div>
-      <div class="banner-inner">
+  <!-- ══════════ SIDEBAR ══════════ -->
+  <aside id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-profile">
+        <div class="avatar-wrap">
+          <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+          <span class="online-dot"></span>
+        </div>
         <div>
-          <div class="greeting">Chào mừng trở lại! 👋</div>
-          <h2 id="banner-name">—</h2>
-          <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
+          <div class="logo-line1"><span class="blue">Pro</span><span class="blue">gram</span><span
+              class="red">ming</span></div>
+          <div class="logo-line2"><span class="blue">E</span><span class="blue">D</span><span class="red">U</span></div>
         </div>
-        <div class="banner-code">&lt;/&gt;</div>
+      </div>
+      <div class="user-info">
+        <div class="name" id="sidebar-name">—</div>
+        <div class="role" id="sidebar-role">Học viên</div>
       </div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
-        <div class="stat-icon" style="background:#EEF6FD">📖</div>
-        <div><div class="stat-val" id="stat-enrolled">—</div><div class="stat-lbl">Khóa học đang học</div></div>
+    <nav>
+      <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')">
+        <div class="nav-left">
+          <div class="nav-icon">🏠</div><span>Dashboard</span>
+        </div>
+        <span class="nav-chevron">›</span>
+      </button>
+      <button class="nav-btn" data-page="courses" onclick="navigate('courses')">
+        <div class="nav-left">
+          <div class="nav-icon">📖</div><span>Khóa học</span>
+        </div>
+      </button>
+      <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')">
+        <div class="nav-left">
+          <div class="nav-icon">🗺️</div><span>Lộ trình</span>
+        </div>
+      </button>
+      <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
+        <div class="nav-left">
+          <div class="nav-icon">⚙️</div><span>Cài đặt</span>
+        </div>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="window.location='/auth/logout'">
+        <div class="nav-icon">🚪</div><span>Đăng xuất</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <div id="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div>
+        <h1 id="topbar-title">Dashboard</h1>
+        <div class="sub"></div>
       </div>
-      <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
-        <div class="stat-icon" style="background:#FDEEEE">⏰</div>
-        <div><div class="stat-val" id="stat-total-hours">—</div><div class="stat-lbl">Tổng giờ đã học</div></div>
-      </div>
-      <div class="stat-card" onmouseenter="hoverStat(this,'#F59E0B')" onmouseleave="unhoverStat(this)">
-        <div class="stat-icon" style="background:#FEF9EE">🔥</div>
-        <div><div class="stat-val" id="stat-streak">—</div><div class="stat-lbl">Chuỗi ngày học</div></div>
-      </div>
-      <div class="stat-card" onmouseenter="hoverStat(this,'#10B981')" onmouseleave="unhoverStat(this)">
-        <div class="stat-icon" style="background:#EEFBF5">🏆</div>
-        <div><div class="stat-val" id="stat-certificates">—</div><div class="stat-lbl">Chứng chỉ</div></div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-title"><span style="color:#4A9EE0">📈</span><span>Tiến độ học tập</span></div>
-      <div class="progress-grid" id="progress-grid"></div>
-    </div>
-
-    <div class="courses-header">
-      <h2>Khóa học của tôi</h2>
-      <button class="filter-btn active" onclick="navigate('courses')" style="font-size:13px">Khám phá thêm →</button>
-    </div>
-    <div id="enrolled-list"></div>
-  </div>
-
-  <!-- ── Courses ── -->
-  <div class="page" id="page-courses">
-    <div class="courses-header">
-      <h2>Tất cả khóa học</h2>
-      <div class="filter-group">
-        <button class="filter-btn active" onclick="setFilter(this,'all')">Tất cả</button>
-        <button class="filter-btn" onclick="setFilter(this,'enrolled')">Đã đăng ký</button>
-        <button class="filter-btn" onclick="setFilter(this,'not-enrolled')">Chưa đăng ký</button>
+      <div class="topbar-right">
+        <div class="search-wrap" id="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses()" />
+        </div>
+        <button class="bell-btn">🔔<span class="bell-dot"></span></button>
+        <div class="user-chip">
+          <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+          <span class="chip-name" id="chip-name">—</span>
+          <span style="color:#9CA3AF;font-size:12px">▾</span>
+        </div>
       </div>
     </div>
-    <div class="courses-grid" id="courses-grid"></div>
-    <div class="empty" id="empty-state" style="display:none">
-      <div class="empty-icon">📖</div><p>Không tìm thấy khóa học nào</p>
-    </div>
-  </div>
 
-  <!-- ── Roadmap ── -->
-  <div class="page" id="page-roadmap">
-    <div class="courses-header">
-      <h2>Lộ trình học tập</h2>
-      <div class="filter-group" id="roadmap-tabs"></div>
-    </div>
-    <div id="roadmap-content"></div>
-  </div>
-
-  <!-- ── Settings ── -->
-  <div class="page" id="page-settings">
-    <div class="settings-wrap">
-
-      <div class="settings-section">
-        <div class="settings-section-title"><span style="color:#4A9EE0">👤</span><span>Thông tin cá nhân</span></div>
-        <div class="profile-top">
-          <div class="profile-avatar">
-            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
-            <button class="avatar-edit-btn">+</button>
-          </div>
+    <!-- ── Dashboard ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="welcome-banner">
+        <div class="banner-dots"></div>
+        <div class="banner-inner">
           <div>
-            <div class="profile-name" id="settings-profile-name">—</div>
-            <div class="profile-email" id="settings-profile-email">—</div>
-            <span class="profile-badge">Học viên</span>
+            <div class="greeting">Chào mừng trở lại! 👋</div>
+            <h2 id="banner-name">—</h2>
+            <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
+          </div>
+          <div class="banner-code">&lt;/&gt;</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon" style="background:#EEF6FD">📖</div>
+          <div>
+            <div class="stat-val" id="stat-enrolled">—</div>
+            <div class="stat-lbl">Khóa học đang học</div>
           </div>
         </div>
-        <div class="fields-grid">
-          <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" /></div>
-          <div><label class="field-label">Email</label><input id="field-email" class="field-input" /></div>
-          <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" /></div>
-          <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" /></div>
+        <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon" style="background:#FDEEEE">⏰</div>
+          <div>
+            <div class="stat-val" id="stat-total-hours">—</div>
+            <div class="stat-lbl">Tổng giờ đã học</div>
+          </div>
+        </div>
+        <div class="stat-card" onmouseenter="hoverStat(this,'#F59E0B')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon" style="background:#FEF9EE">🔥</div>
+          <div>
+            <div class="stat-val" id="stat-streak">—</div>
+            <div class="stat-lbl">Chuỗi ngày học</div>
+          </div>
+        </div>
+        <div class="stat-card" onmouseenter="hoverStat(this,'#10B981')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon" style="background:#EEFBF5">🏆</div>
+          <div>
+            <div class="stat-val" id="stat-certificates">—</div>
+            <div class="stat-lbl">Chứng chỉ</div>
+          </div>
         </div>
       </div>
 
-      <div class="settings-section">
-        <div class="settings-section-title"><span style="color:#E84545">🔔</span><span>Thông báo</span></div>
-        <div class="notif-row"><div><div class="notif-lbl">Thông báo qua Email</div><div class="notif-desc">Nhận cập nhật khóa học qua email</div></div><button id="toggle-email" class="toggle on" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
-        <div class="notif-row"><div><div class="notif-lbl">Thông báo đẩy</div><div class="notif-desc">Nhận thông báo trực tiếp trên trình duyệt</div></div><button id="toggle-push" class="toggle" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
-        <div class="notif-row"><div><div class="notif-lbl">Nhắc nhở học tập</div><div class="notif-desc">Nhắc nhở lịch học hàng ngày</div></div><button id="toggle-remind" class="toggle on" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
-        <div class="notif-row"><div><div class="notif-lbl">Cập nhật nội dung</div><div class="notif-desc">Thông báo khi có bài học mới</div></div><button id="toggle-content" class="toggle" onclick="toggleSwitch(this)"><span class="toggle-knob"></span></button></div>
+      <div class="section-card">
+        <div class="section-title"><span style="color:#4A9EE0">📈</span><span>Tiến độ học tập</span></div>
+        <div class="progress-grid" id="progress-grid"></div>
       </div>
 
-      <div class="sec-lang-grid">
-        <div class="sec-lang-card">
-          <div class="sec-lang-title"><span style="color:#4A9EE0">🛡</span><span>Bảo mật</span></div>
-          <button class="change-pw-btn" onclick="changePassword()">Đổi mật khẩu</button>
-        </div>
-        <div class="sec-lang-card">
-          <div class="sec-lang-title"><span style="color:#E84545">🌐</span><span>Ngôn ngữ</span></div>
-          <select class="lang-select"><option>Tiếng Việt</option><option>English</option></select>
+      <div class="courses-header">
+        <h2>Khóa học của tôi</h2>
+        <button class="filter-btn active" onclick="navigate('courses')" style="font-size:13px">Khám phá thêm →</button>
+      </div>
+      <div id="enrolled-list"></div>
+    </div>
+
+    <!-- ── Courses ── -->
+    <div class="page" id="page-courses">
+      <div class="courses-header">
+        <h2>Tất cả khóa học</h2>
+        <div class="filter-group">
+          <button class="filter-btn active" onclick="setFilter(this,'all')">Tất cả</button>
+          <button class="filter-btn" onclick="setFilter(this,'enrolled')">Đã đăng ký</button>
+          <button class="filter-btn" onclick="setFilter(this,'not-enrolled')">Chưa đăng ký</button>
         </div>
       </div>
+      <div class="courses-grid" id="courses-grid"></div>
+      <div class="empty" id="empty-state" style="display:none">
+        <div class="empty-icon">📖</div>
+        <p>Không tìm thấy khóa học nào</p>
+      </div>
+    </div>
 
-      <button class="save-btn" onclick="saveSettings()">💾 Lưu thay đổi</button>
+    <!-- ── Roadmap ── -->
+    <div class="page" id="page-roadmap">
+      <div class="courses-header">
+        <h2>Lộ trình học tập</h2>
+        <div class="filter-group" id="roadmap-tabs"></div>
+      </div>
+      <div id="roadmap-content"></div>
+    </div>
+
+    <!-- ── Settings ── -->
+    <div class="page" id="page-settings">
+      <div class="settings-wrap">
+
+
+        <div class="settings-section">
+          <div class="settings-section-title"><span style="color:#4A9EE0">👤</span><span>Thông tin cá nhân</span></div>
+          <div class="profile-top">
+            <div class="profile-avatar">
+              <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+              <button class="avatar-edit-btn">+</button>
+            </div>
+            <div>
+              <div class="profile-name" id="settings-profile-name">—</div>
+              <div class="profile-email" id="settings-profile-email">—</div>
+              <span class="profile-badge">Học viên</span>
+            </div>
+          </div>
+          <div class="fields-grid">
+            <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" /></div>
+            <div><label class="field-label">Email</label><input id="field-email" class="field-input" /></div>
+            <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" /></div>
+            <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" /></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title"><span style="color:#E84545">🔔</span><span>Thông báo</span></div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Thông báo qua Email</div>
+              <div class="notif-desc">Nhận cập nhật khóa học qua email</div>
+            </div><button id="toggle-email" class="toggle on" onclick="toggleSwitch(this)"><span
+                class="toggle-knob"></span></button>
+          </div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Thông báo đẩy</div>
+              <div class="notif-desc">Nhận thông báo trực tiếp trên trình duyệt</div>
+            </div><button id="toggle-push" class="toggle" onclick="toggleSwitch(this)"><span
+                class="toggle-knob"></span></button>
+          </div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Nhắc nhở học tập</div>
+              <div class="notif-desc">Nhắc nhở lịch học hàng ngày</div>
+            </div><button id="toggle-remind" class="toggle on" onclick="toggleSwitch(this)"><span
+                class="toggle-knob"></span></button>
+          </div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Cập nhật nội dung</div>
+              <div class="notif-desc">Thông báo khi có bài học mới</div>
+            </div><button id="toggle-content" class="toggle" onclick="toggleSwitch(this)"><span
+                class="toggle-knob"></span></button>
+          </div>
+        </div>
+
+        <div class="sec-lang-grid">
+          <div class="sec-lang-card">
+            <div class="sec-lang-title"><span style="color:#4A9EE0">🛡</span><span>Bảo mật</span></div>
+            <!-- ★ SỬA dòng này: gọi hàm mở modal thay vì chuyển trang -->
+            <button class="change-pw-btn" onclick="openChangePasswordModal()">Đổi mật khẩu</button>
+          </div>
+          <div class="sec-lang-card">
+            <div class="sec-lang-title"><span style="color:#E84545">🌐</span><span>Ngôn ngữ</span></div>
+            <select class="lang-select">
+              <option>Tiếng Việt</option>
+              <option>English</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="save-btn" onclick="saveSettings()">💾 Lưu thay đổi</button>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ MODAL ĐỔI MẬT KHẨU - dán vào cuối <body>, NGOÀI #main
+     ════════════════════════════════════════════════════════════ -->
+  <div class="cp-overlay" id="changePasswordModal" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+    <div class="cp-modal">
+
+      <button class="cp-close" onclick="closeChangePasswordModal()" aria-label="Đóng">✕</button>
+
+      <div class="cp-header">
+        <div class="cp-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+            <circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </div>
+        <h3 class="cp-title" id="cpTitle">Đổi mật khẩu</h3>
+        <p class="cp-subtitle">Bảo vệ tài khoản của bạn an toàn hơn</p>
+      </div>
+
+      <form id="cpForm" autocomplete="off">
+
+        <!-- Mật khẩu hiện tại -->
+        <div class="cp-group">
+          <label class="cp-label" for="cpCurrent">Mật khẩu hiện tại</label>
+          <div class="cp-input-wrap">
+            <svg class="cp-leading-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+            </svg>
+            <input type="password" class="cp-input" id="cpCurrent" placeholder="Nhập mật khẩu hiện tại" required>
+            <button type="button" class="cp-toggle-eye" onclick="togglePassword('cpCurrent', this)"
+              aria-label="Hiện/ẩn mật khẩu">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="cp-msg" id="cpCurrentMsg"></div>
+        </div>
+
+        <!-- Mật khẩu mới -->
+        <div class="cp-group">
+          <label class="cp-label" for="cpNew">Mật khẩu mới</label>
+          <div class="cp-input-wrap">
+            <svg class="cp-leading-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="8" cy="15" r="4"></circle>
+              <path d="M10.8 12.2 21 2"></path>
+              <path d="m19 5 2 2"></path>
+              <path d="m16 8 2 2"></path>
+            </svg>
+            <input type="password" class="cp-input" id="cpNew" placeholder="Tối thiểu 8 ký tự" required
+              oninput="checkStrength(this.value)">
+            <button type="button" class="cp-toggle-eye" onclick="togglePassword('cpNew', this)"
+              aria-label="Hiện/ẩn mật khẩu">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="cp-strength" id="cpStrength">
+            <div class="cp-strength-bars">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="cp-strength-label" id="cpStrengthLabel"></div>
+          </div>
+        </div>
+
+        <!-- Xác nhận mật khẩu mới -->
+        <div class="cp-group">
+          <label class="cp-label" for="cpConfirm">Xác nhận mật khẩu mới</label>
+          <div class="cp-input-wrap">
+            <svg class="cp-leading-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            <input type="password" class="cp-input" id="cpConfirm" placeholder="Nhập lại mật khẩu mới" required
+              oninput="checkMatch()">
+            <button type="button" class="cp-toggle-eye" onclick="togglePassword('cpConfirm', this)"
+              aria-label="Hiện/ẩn mật khẩu">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="cp-msg" id="cpConfirmMsg"></div>
+        </div>
+
+        <div class="cp-actions">
+          <button type="button" class="cp-btn cp-btn-cancel" onclick="closeChangePasswordModal()">Hủy</button>
+          <button type="submit" class="cp-btn cp-btn-submit" id="cpSubmitBtn">
+            <span class="cp-btn-text">Cập nhật mật khẩu</span>
+            <span class="cp-spinner"></span>
+          </button>
+        </div>
+
+      </form>
     </div>
   </div>
 
-</div><!-- /main -->
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <!-- ════════════════════════════════════════════════════════════
+     ★ JAVASCRIPT cho modal đổi mật khẩu
+     ════════════════════════════════════════════════════════════ -->
+  <script>
+    function openChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      modal.classList.add('active');
+      document.body.classList.add('cp-modal-open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('cpCurrent').focus(), 300);
+    }
+
+    function closeChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      modal.classList.remove('active');
+      document.body.classList.remove('cp-modal-open');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        document.getElementById('cpForm').reset();
+        resetCpUI();
+      }, 300);
+    }
+
+    function resetCpUI() {
+      document.getElementById('cpStrength').className = 'cp-strength';
+      document.getElementById('cpStrengthLabel').textContent = '';
+      document.getElementById('cpCurrentMsg').textContent = '';
+      document.getElementById('cpConfirmMsg').textContent = '';
+    }
+
+    document.getElementById('changePasswordModal').addEventListener('click', (e) => {
+      if (e.target.id === 'changePasswordModal') closeChangePasswordModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' &&
+        document.getElementById('changePasswordModal').classList.contains('active')) {
+        closeChangePasswordModal();
+      }
+    });
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+
+      btn.innerHTML = isPassword
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+           <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+           <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+           <line x1="2" y1="2" x2="22" y2="22"></line>
+         </svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+           <circle cx="12" cy="12" r="3"></circle>
+         </svg>`;
+    }
+
+    function checkStrength(pwd) {
+      const strength = document.getElementById('cpStrength');
+      const label = document.getElementById('cpStrengthLabel');
+
+      if (!pwd) {
+        strength.className = 'cp-strength';
+        label.textContent = '';
+        return;
+      }
+
+      let score = 0;
+      if (pwd.length >= 8) score++;
+      if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+      if (/\d/.test(pwd)) score++;
+      if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+      const levels = ['', 'Yếu', 'Trung bình', 'Khá mạnh', 'Mạnh'];
+      strength.className = 'cp-strength level-' + score;
+      label.textContent = levels[score];
+
+      checkMatch();
+    }
+
+    function checkMatch() {
+      const newPwd = document.getElementById('cpNew').value;
+      const confirm = document.getElementById('cpConfirm').value;
+      const msg = document.getElementById('cpConfirmMsg');
+
+      if (!confirm) {
+        msg.textContent = '';
+        msg.className = 'cp-msg';
+        return;
+      }
+
+      if (newPwd === confirm) {
+        msg.textContent = '✓ Mật khẩu khớp';
+        msg.className = 'cp-msg success';
+      } else {
+        msg.textContent = '✗ Mật khẩu không khớp';
+        msg.className = 'cp-msg';
+      }
+    }
+
+    document.getElementById('cpSubmitBtn').addEventListener('click', function (e) {
+      const rect = this.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'cp-ripple';
+      ripple.style.width = ripple.style.height = '20px';
+      ripple.style.left = (e.clientX - rect.left - 10) + 'px';
+      ripple.style.top = (e.clientY - rect.top - 10) + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+
+    document.getElementById('cpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const currentPwd = document.getElementById('cpCurrent').value;
+      const newPwd = document.getElementById('cpNew').value;
+      const confirmPwd = document.getElementById('cpConfirm').value;
+      const submitBtn = document.getElementById('cpSubmitBtn');
+      const currentMsg = document.getElementById('cpCurrentMsg');
+
+      if (newPwd.length < 8) {
+        alert('Mật khẩu mới phải có ít nhất 8 ký tự');
+        return;
+      }
+      if (newPwd !== confirmPwd) {
+        document.getElementById('cpConfirmMsg').textContent = '✗ Mật khẩu không khớp';
+        return;
+      }
+      if (currentPwd === newPwd) {
+        currentMsg.textContent = 'Mật khẩu mới phải khác mật khẩu hiện tại';
+        return;
+      }
+
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+
+      try {
+        // [BACKEND] - Gọi API đổi mật khẩu - SỬA endpoint nếu cần
+        const response = await fetch('/api/user/password', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            current: currentPwd,
+            new: newPwd
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('✓ Đổi mật khẩu thành công!');
+          closeChangePasswordModal();
+        } else {
+          currentMsg.textContent = data.error || 'Mật khẩu hiện tại không đúng';
+        }
+
+      } catch (err) {
+        console.error('Change password error:', err);
+        currentMsg.textContent = 'Không kết nối được máy chủ. Vui lòng thử lại.';
+      } finally {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>
