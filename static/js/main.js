@@ -5,6 +5,14 @@ var enrolledCourses = [];
 var activeFilter    = "all";
 var searchQuery     = "";
 
+// Bảng liên kết khóa học → trang bài học
+var COURSE_URLS = {
+  'cpp':     '/giaodien',
+  'python':  '/lesson/python',
+  'java':    '/lesson/java',
+  'htmlcss': '/lesson/htmlcss',
+};
+
 var pageLabels = {
   dashboard: "Dashboard",
   courses:   "Khóa học",
@@ -130,12 +138,26 @@ function renderCourses() {
           '</div>',
           '<div class="card-footer">',
             '<span class="card-lessons">📖 ' + c.lessons + ' bài học</span>',
-            '<button class="cta-btn"',
-              ' onclick="toggleEnroll(\'' + c.id + '\',' + c.enrolled + ')"',
-              ' onmouseenter="ctaHover(this,\'' + c.color + '\',\'' + c.accentColor + '\')"',
-              ' onmouseleave="ctaLeave(this)">',
-              (c.enrolled ? 'Tiếp tục học' : 'Đăng ký') + ' →',
-            '</button>',
+            (function() {
+              if (c.enrolled) {
+                var goUrl = COURSE_URLS[c.id] || '#';
+                return '<div style="display:flex;align-items:center;gap:6px">' +
+                  '<button class="cta-btn"' +
+                    ' onclick="window.location=\'' + goUrl + '\'"' +
+                    ' onmouseenter="ctaHover(this,\'' + c.color + '\',\'' + c.accentColor + '\')"' +
+                    ' onmouseleave="ctaLeave(this)">Tiếp tục học →</button>' +
+                  '<button title="Hủy đăng ký"' +
+                    ' onclick="unenroll(\'' + c.id + '\',\'' + c.title.replace(/'/g, "\\'") + '\')"' +
+                    ' style="width:34px;height:34px;border-radius:10px;border:1px solid #E5E7EB;background:none;cursor:pointer;font-size:14px;color:#9CA3AF;transition:all 0.2s;flex-shrink:0"' +
+                    ' onmouseenter="this.style.background=\'#FEF2F2\';this.style.borderColor=\'#FCA5A5\';this.style.color=\'#EF4444\'"' +
+                    ' onmouseleave="this.style.background=\'none\';this.style.borderColor=\'#E5E7EB\';this.style.color=\'#9CA3AF\'">✕</button>' +
+                '</div>';
+              }
+              return '<button class="cta-btn"' +
+                ' onclick="toggleEnroll(\'' + c.id + '\',false)"' +
+                ' onmouseenter="ctaHover(this,\'' + c.color + '\',\'' + c.accentColor + '\')"' +
+                ' onmouseleave="ctaLeave(this)">Đăng ký →</button>';
+            })(),
           '</div>',
         '</div>',
       '</div>'
@@ -167,7 +189,18 @@ function renderMyCourses() {
               '</div>',
             '</div>',
           '</div>',
-          '<button class="continue-btn" style="background:linear-gradient(135deg,' + c.color + ',' + c.accentColor + ');box-shadow:0 4px 12px ' + c.color + '40">▶ Tiếp tục học</button>',
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">',
+            '<button class="continue-btn"' +
+              ' style="background:linear-gradient(135deg,' + c.color + ',' + c.accentColor + ');box-shadow:0 4px 12px ' + c.color + '40"' +
+              (COURSE_URLS[c.id] ? ' onclick="window.location=\'' + COURSE_URLS[c.id] + '\'"' : '') +
+              '>▶ Tiếp tục học</button>',
+            '<button onclick="unenroll(\'' + c.id + '\',\'' + c.title.replace(/'/g, "\\'") + '\')"' +
+              ' style="background:none;border:1px solid #E5E7EB;color:#9CA3AF;font-size:12px;font-weight:600;cursor:pointer;padding:6px 14px;border-radius:10px;transition:all 0.2s;white-space:nowrap"' +
+              ' onmouseenter="this.style.borderColor=\'#FCA5A5\';this.style.color=\'#EF4444\';this.style.background=\'#FEF2F2\'"' +
+              ' onmouseleave="this.style.borderColor=\'#E5E7EB\';this.style.color=\'#9CA3AF\';this.style.background=\'none\'">',
+              '✕ Hủy đăng ký',
+            '</button>',
+          '</div>',
         '</div>',
         '<div class="prog-section">',
           '<div class="prog-label"><span>Tiến độ hoàn thành</span><span style="color:' + c.color + ';font-weight:700">' + c.progress + '%</span></div>',
@@ -213,6 +246,35 @@ function toggleEnroll(courseId, isEnrolled) {
     .then(handleFetch)
     .then(function(d) { if (d) loadAll(); })
     .catch(function(err) { console.error('Lỗi đăng ký:', err); });
+}
+
+var pendingUnenrollId = null;
+
+function unenroll(courseId, courseTitle) {
+  pendingUnenrollId = courseId;
+  document.getElementById('unenroll-course-name').textContent = '"' + courseTitle + '"';
+  document.getElementById('unenrollModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeUnenrollModal() {
+  document.getElementById('unenrollModal').classList.remove('active');
+  document.body.style.overflow = '';
+  pendingUnenrollId = null;
+}
+
+function handleUnenrollOverlayClick(e) {
+  if (e.target === document.getElementById('unenrollModal')) closeUnenrollModal();
+}
+
+function confirmUnenroll() {
+  if (!pendingUnenrollId) return;
+  var courseId = pendingUnenrollId;
+  closeUnenrollModal();
+  fetch(API + '/courses/' + courseId + '/enroll', { method: 'DELETE' })
+    .then(handleFetch)
+    .then(function(d) { if (d) loadAll(); })
+    .catch(function(err) { console.error('Lỗi hủy đăng ký:', err); });
 }
 
 /* ── Filters & search ── */
@@ -464,3 +526,85 @@ document.addEventListener("DOMContentLoaded", function() {
   updateDate();
   loadAll();
 });
+
+/* -- giaodien -- */
+  let currentDrag = null;
+  const draggables = document.querySelectorAll('.logic-card');
+  const zones = document.querySelectorAll('.drop-target');
+
+        draggables.forEach(card => {
+    card.addEventListener('dragstart', (e) => {
+      currentDrag = card;
+      card.style.opacity = '0.4';
+      card.style.transform = 'scale(0.9)';
+    });
+            card.addEventListener('dragend', () => {
+    card.style.opacity = '1';
+  card.style.transform = 'scale(1)';
+            });
+        });
+
+        zones.forEach(zone => {
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('hovering');
+    });
+            zone.addEventListener('dragleave', () => {
+    zone.classList.remove('hovering');
+            });
+            zone.addEventListener('drop', (e) => {
+    zone.classList.remove('hovering');
+  zone.classList.add('filled');
+
+  const val = currentDrag.innerText;
+  const codeVal = currentDrag.getAttribute('data-val');
+
+  // Hiển thị khối lệnh vào ô thả
+  zone.innerHTML = `<div class="logic-card ${currentDrag.classList.contains('block-blue') ? 'block-blue' : 'block-orange'} !m-0 !shadow-none !border-none !py-1 !px-4 text-sm">${val}</div>`;
+
+  // Update Compiler UI
+  if(zone.id === 'zone-cond') {
+                    const target = document.getElementById('code-cond');
+  target.innerText = codeVal;
+  target.classList.remove('text-white/20');
+  target.classList.add('text-orange-400', 'bg-orange-500/10');
+                }
+  if(zone.id === 'zone-act') {
+                    const target = document.getElementById('code-act');
+  target.innerText = codeVal;
+  target.classList.remove('text-white/20');
+  target.classList.add('text-brand-secondary', 'bg-blue-500/10');
+                }
+            });
+        });
+
+  function runMission() {
+            const cond = document.getElementById('code-cond').innerText;
+  const act = document.getElementById('code-act').innerText;
+  const output = document.getElementById('output-text');
+  const hint = document.getElementById('hint-box');
+
+  if(cond === 'pin < 20' && act === 'charge()') {
+    output.innerHTML = "<span class='text-green-400 font-bold'>> [OK] Pin đang ở mức 15%. Robot đang di chuyển về trạm sạc... VROOM VROOM!</span>";
+  confetti({
+    particleCount: 150,
+  spread: 70,
+  origin: {y: 0.6 },
+  colors: ['#58CC02', '#1CB0F6', '#FF4B4B']
+                });
+                setTimeout(() => {
+    document.getElementById('success-modal').classList.remove('hidden');
+                }, 1000);
+            } else if (cond === '________' || act === '________') {
+    output.innerHTML = "<span class='text-yellow-400'>> [Hệ thống] Bạn chưa lấp đầy các ô trống kìa!</span>";
+            } else {
+    output.innerHTML = "<span class='text-red-400'>> [LỖI] Ối! Pin đang yếu mà bạn bắt Robot đi ngủ/tắt nguồn là hỏng đấy. Thử lại nhé!</span>";
+  hint.innerText = "Gợi ý: Hãy chọn 'Pin < 20' và 'Về trạm sạc'!";
+  hint.classList.remove('text-white/30');
+  hint.classList.add('text-red-400');
+            }
+        }
+
+  function closeModal() {
+    document.getElementById('success-modal').classList.add('hidden');
+        }

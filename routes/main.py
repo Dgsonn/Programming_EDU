@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect
-from utils import login_required
+from utils import login_required, current_user_id
+from models import get_db
 
 main_bp = Blueprint('main', __name__)
 
@@ -23,3 +24,33 @@ def register_page():
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+def _user_stats():
+    conn = get_db()
+    user = conn.execute('SELECT streak, gems FROM users WHERE id=?', (current_user_id(),)).fetchone()
+    conn.close()
+    return {'streak': user['streak'], 'gems': user['gems']}
+
+
+@main_bp.route('/giaodien')
+@login_required
+def giaodien():
+    return render_template('giaodien.html', **_user_stats())
+
+
+@main_bp.route('/lesson/python')
+@login_required
+def lesson_python():
+    return render_template('lesson_python.html', **_user_stats())
+
+
+@main_bp.route('/lesson/java')
+@login_required
+def lesson_java():
+    return render_template('lesson_java.html', **_user_stats())
+
+
+@main_bp.route('/lesson/htmlcss')
+@login_required
+def lesson_htmlcss():
+    return render_template('lesson_htmlcss.html', **_user_stats())

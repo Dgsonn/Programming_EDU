@@ -252,6 +252,84 @@
 
 
   <!-- ════════════════════════════════════════════════════════════
+     ★ MODAL HỦY ĐĂNG KÝ KHÓA HỌC
+     ════════════════════════════════════════════════════════════ -->
+  <style>
+    .un-overlay {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .un-overlay.active { opacity: 1; visibility: visible; }
+    .un-card {
+      background: #fff; border-radius: 28px;
+      padding: 40px 36px; max-width: 420px; width: 90%;
+      text-align: center;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.18);
+      transform: scale(0.88) translateY(24px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .un-overlay.active .un-card { transform: scale(1) translateY(0); }
+    .un-icon-wrap {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: #FEF2F2; border: 4px solid #FECACA;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; font-size: 34px;
+    }
+    .un-title { font-size: 22px; font-weight: 800; color: #111827; margin: 0 0 8px; }
+    .un-sub   { font-size: 14px; color: #6B7280; margin: 0 0 6px; }
+    .un-course-name {
+      font-size: 18px; font-weight: 800; color: #EF4444;
+      margin: 0 0 20px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .un-warning {
+      background: #FFF5F5; border: 1px solid #FED7D7; border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 28px;
+      display: flex; align-items: flex-start; gap: 10px; text-align: left;
+    }
+    .un-warning span { font-size: 20px; flex-shrink: 0; }
+    .un-warning p  { font-size: 13px; color: #B91C1C; font-weight: 500; margin: 0; line-height: 1.5; }
+    .un-actions { display: flex; gap: 12px; }
+    .un-btn-cancel {
+      flex: 1; padding: 15px; border-radius: 14px;
+      border: 2px solid #E5E7EB; background: white;
+      color: #374151; font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .un-btn-cancel:hover { background: #F9FAFB; border-color: #D1D5DB; }
+    .un-btn-confirm {
+      flex: 1; padding: 15px; border-radius: 14px;
+      border: none; background: linear-gradient(135deg, #EF4444, #DC2626);
+      color: white; font-weight: 700; font-size: 14px; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .un-btn-confirm:hover  { box-shadow: 0 6px 20px rgba(239,68,68,0.5); transform: translateY(-1px); }
+    .un-btn-confirm:active { transform: translateY(1px); }
+  </style>
+
+  <div class="un-overlay" id="unenrollModal" onclick="handleUnenrollOverlayClick(event)">
+    <div class="un-card">
+      <div class="un-icon-wrap">🗑️</div>
+      <h3 class="un-title">Hủy đăng ký?</h3>
+      <p class="un-sub">Bạn sắp hủy đăng ký khóa học</p>
+      <p class="un-course-name" id="unenroll-course-name"></p>
+      <div class="un-warning">
+        <span>⚠️</span>
+        <p>Toàn bộ tiến độ học tập của bạn trong khóa này sẽ bị <strong>xóa vĩnh viễn</strong> và không thể khôi phục lại.</p>
+      </div>
+      <div class="un-actions">
+        <button class="un-btn-cancel"  onclick="closeUnenrollModal()">Không, giữ lại</button>
+        <button class="un-btn-confirm" onclick="confirmUnenroll()">Đồng ý hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
      ★ MODAL ĐỔI MẬT KHẨU - dán vào cuối <body>, NGOÀI #main
      ════════════════════════════════════════════════════════════ -->
   <div class="cp-overlay" id="changePasswordModal" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
@@ -393,9 +471,11 @@
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' &&
-        document.getElementById('changePasswordModal').classList.contains('active')) {
-        closeChangePasswordModal();
+      if (e.key === 'Escape') {
+        if (document.getElementById('changePasswordModal').classList.contains('active'))
+          closeChangePasswordModal();
+        if (document.getElementById('unenrollModal').classList.contains('active'))
+          closeUnenrollModal();
       }
     });
 

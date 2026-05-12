@@ -24,8 +24,17 @@ def init_db():
         role         TEXT    DEFAULT 'Học viên',
         password     TEXT,
         streak       INTEGER DEFAULT 0,
-        certificates INTEGER DEFAULT 0
+        certificates INTEGER DEFAULT 0,
+        gems         INTEGER DEFAULT 0,
+        xp           INTEGER DEFAULT 0
     )''')
+
+    # Migration: thêm cột cho database cũ nếu chưa có
+    for col_def in ('gems INTEGER DEFAULT 0', 'xp INTEGER DEFAULT 0'):
+        try:
+            c.execute(f'ALTER TABLE users ADD COLUMN {col_def}')
+        except Exception:
+            pass
 
     c.execute('''CREATE TABLE IF NOT EXISTS courses (
         id           TEXT PRIMARY KEY,
