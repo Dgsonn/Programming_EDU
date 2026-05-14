@@ -119,18 +119,18 @@
             <!-- Progress Tracker -->
             <div class="hidden md:flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
                 <i class="fa-solid fa-fire text-orange-500"></i>
-                <span class="font-bold text-sm">3 Ngày liên tiếp!</span>
+                <span class="font-bold text-sm">{{ streak }} Ngày liên tiếp!</span>
             </div>
         </div>
 
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-2xl border border-blue-100">
                 <i class="fa-solid fa-gem text-brand-secondary"></i>
-                <span class="font-bold text-brand-secondary">1,240</span>
+                <span id="gems-count" class="font-bold text-brand-secondary">{{ gems }}</span>
             </div>
-            <div class="w-12 h-12 rounded-2xl border-2 border-gray-200 overflow-hidden cursor-pointer hover:border-brand-secondary transition-colors">
-                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Lucky" alt="User">
-            </div>
+            <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
         </div>
     </nav>
 
@@ -321,30 +321,48 @@
             });
         });
 
-        function runMission() {
-            const cond = document.getElementById('code-cond').innerText;
-            const act = document.getElementById('code-act').innerText;
+        async function runMission() {
+            const cond   = document.getElementById('code-cond').innerText;
+            const act    = document.getElementById('code-act').innerText;
             const output = document.getElementById('output-text');
-            const hint = document.getElementById('hint-box');
+            const hint   = document.getElementById('hint-box');
 
-            if(cond === 'pin < 20' && act === 'charge()') {
-                output.innerHTML = "<span class='text-green-400 font-bold'>> [OK] Pin đang ở mức 15%. Robot đang di chuyển về trạm sạc... VROOM VROOM!</span>";
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#58CC02', '#1CB0F6', '#FF4B4B']
-                });
-                setTimeout(() => {
-                    document.getElementById('success-modal').classList.remove('hidden');
-                }, 1000);
-            } else if (cond === '________' || act === '________') {
+            // Kiểm tra ô trống ngay tại client để phản hồi nhanh
+            if (cond === '________' || act === '________') {
                 output.innerHTML = "<span class='text-yellow-400'>> [Hệ thống] Bạn chưa lấp đầy các ô trống kìa!</span>";
-            } else {
-                output.innerHTML = "<span class='text-red-400'>> [LỖI] Ối! Pin đang yếu mà bạn bắt Robot đi ngủ/tắt nguồn là hỏng đấy. Thử lại nhé!</span>";
-                hint.innerText = "Gợi ý: Hãy chọn 'Pin < 20' và 'Về trạm sạc'!";
-                hint.classList.remove('text-white/30');
-                hint.classList.add('text-red-400');
+                return;
+            }
+
+            // Gửi đáp án lên server để xác thực và lưu tiến độ
+            try {
+                const res  = await fetch('/api/mission/complete', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ mission_id: 'cpp', condition: cond, action: act }),
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    output.innerHTML = "<span class='text-green-400 font-bold'>> [OK] Pin đang ở mức 15%. Robot đang di chuyển về trạm sạc... VROOM VROOM!</span>";
+                    // Cập nhật số gems trên navbar ngay lập tức
+                    document.getElementById('gems-count').innerText = data.gems.toLocaleString('vi-VN');
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#58CC02', '#1CB0F6', '#FF4B4B']
+                    });
+                    setTimeout(() => {
+                        document.getElementById('success-modal').classList.remove('hidden');
+                    }, 1000);
+                } else {
+                    output.innerHTML = `<span class='text-red-400'>> [LỖI] ${data.message}</span>`;
+                    hint.innerText = "Gợi ý: Hãy chọn 'Pin < 20' và 'Về trạm sạc'!";
+                    hint.classList.remove('text-white/30');
+                    hint.classList.add('text-red-400');
+                }
+            } catch (err) {
+                output.innerHTML = "<span class='text-red-400'>> [Lỗi mạng] Không thể kết nối server, thử lại nhé!</span>";
             }
         }
 
