@@ -28,7 +28,7 @@
         body { background-color: #ffffff; color: #4B4B4B; }
         .btn-3d { position: relative; border-bottom: 4px solid rgba(0,0,0,0.2); transition: all 0.1s; }
         .btn-3d:active { transform: translateY(2px); border-bottom-width: 2px; }
-        .logic-card { cursor: grab; padding: 12px 20px; border-radius: 16px; font-weight: 700; font-size: 15px; border: 2px solid #E5E5E5; background: white; box-shadow: 0 4px 0 #E5E5E5; user-select: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .logic-card { cursor: grab; padding: 12px 20px; border-radius: 16px; font-weight: 700; font-size: 15px; border: 2px solid #E5E5E5; background: white; box-shadow: 0 4px 0 #E5E5E5; -webkit-user-select: none; user-select: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .logic-card:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #E5E5E5; }
         .logic-card:active { cursor: grabbing; }
         .block-html { background-color: #FFF0ED; color: #E44D26; border-color: #FFCBBD; box-shadow: 0 4px 0 #FFCBBD; }
@@ -249,5 +249,8 @@
 
         function closeModal() { document.getElementById('success-modal').classList.add('hidden'); }
     </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+    {% include 'chatbot.html' %}
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
 </body>
 </html>

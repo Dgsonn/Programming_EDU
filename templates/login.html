@@ -10,6 +10,8 @@
   <link rel="prefetch" href="/register" />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/login.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -64,7 +66,7 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
             <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-            <button class="toggle-eye" onclick="togglePwd('login-password',this)" type="button">
+            <button class="toggle-eye" onclick="togglePwd('login-password',this)" type="button" aria-label="Toggle password visibility">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                 <circle cx="12" cy="12" r="3" />

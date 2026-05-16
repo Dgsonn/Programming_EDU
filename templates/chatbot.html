@@ -1,0 +1,93 @@
+<!-- 🤖 Gemini AI Chatbot Widget -->
+
+<!-- Floating Chat Button -->
+<button id="chatbot-toggle" class="chatbot-floating-btn" aria-label="Mở trợ lý AI">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" class="chatbot-btn-icon">
+        <path d="M12 1L13.8 9.2L22 11L13.8 12.8L12 21L10.2 12.8L2 11L10.2 9.2L12 1Z"/>
+        <path d="M19.5 2L20.5 6L24 7L20.5 8L19.5 12L18.5 8L15 7L18.5 6L19.5 2Z" opacity="0.75"/>
+        <path d="M5 15L5.8 17.7L8.5 18.5L5.8 19.3L5 22L4.2 19.3L1.5 18.5L4.2 17.7L5 15Z" opacity="0.65"/>
+    </svg>
+    <div class="chatbot-badge">
+        <span class="chatbot-pulse"></span>
+    </div>
+</button>
+
+<!-- Chat Window -->
+<div id="chatbot-window" class="chatbot-window chatbot-hidden">
+    <!-- Header -->
+    <div class="chatbot-header">
+        <div class="chatbot-header-left">
+            <div class="chatbot-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="chatbot-header-text">
+                <h3>Trợ Lý AI</h3>
+                <span class="chatbot-status"><span class="chatbot-status-dot"></span> Trực tuyến</span>
+            </div>
+        </div>
+        <button id="chatbot-close" class="chatbot-close-btn" aria-label="Đóng chat">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="chatbot-messages" class="chatbot-messages">
+        <div class="chatbot-message chatbot-message-ai">
+            <div class="chatbot-message-avatar">
+                <i class="fas fa-sparkles"></i>
+            </div>
+            <div class="chatbot-message-content">
+                <div class="chatbot-message-bubble">
+                    Chào bạn! 👋 Tôi là Gemini, trợ lý AI của bạn. Hãy hỏi tôi bất kỳ điều gì về lập trình hoặc học tập! 🚀
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview -->
+    <div id="chatbot-image-preview" class="chatbot-image-preview chatbot-hidden">
+        <div class="chatbot-preview-item">
+            <img id="chatbot-preview-img" src="" alt="Preview">
+            <button class="chatbot-preview-remove" onclick="removeChatbotImage()" aria-label="Xóa hình ảnh">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chatbot-input-area">
+        <!-- Quick Actions -->
+        <div class="chatbot-quick-actions">
+            <button class="chatbot-quick-btn" onclick="quickChatbotAsk('Giải thích code này')">
+                <i class="fas fa-lightbulb"></i>
+                <span>Giải thích</span>
+            </button>
+            <button class="chatbot-quick-btn" onclick="quickChatbotAsk('Tối ưu code')">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>Tối ưu</span>
+            </button>
+            <button class="chatbot-quick-btn" onclick="generateChatbotRoadmap()">
+                <i class="fas fa-map"></i>
+                <span>Lộ trình</span>
+            </button>
+        </div>
+
+        <!-- Input Box -->
+        <div class="chatbot-input-box">
+            <label for="chatbot-image-upload" class="chatbot-attach-btn" title="Đính kèm hình ảnh">
+                <i class="fas fa-paperclip"></i>
+                <input type="file" id="chatbot-image-upload" class="chatbot-hidden" accept="image/*" title="Chọn hình ảnh">
+            </label>
+            <input 
+                id="chatbot-input" 
+                type="text" 
+                placeholder="Nhập câu hỏi..."
+                class="chatbot-input"
+                autocomplete="off"
+            >
+            <button id="chatbot-send-btn" class="chatbot-send-btn" aria-label="Gửi">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+        </div>
+    </div>
+</div>

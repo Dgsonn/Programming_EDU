@@ -11,6 +11,8 @@
   <!-- ★ THÊM dòng này: CSS cho modal đổi mật khẩu -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -85,7 +87,7 @@
         <div class="user-chip">
           <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
           <span class="chip-name" id="chip-name">—</span>
-          <span style="color:#9CA3AF;font-size:12px">▾</span>
+          <span class="dropdown-icon">▾</span>
         </div>
       </div>
     </div>
@@ -106,28 +108,28 @@
 
       <div class="stats-grid">
         <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon" style="background:#EEF6FD">📖</div>
+          <div class="stat-icon icon-blue">📖</div>
           <div>
             <div class="stat-val" id="stat-enrolled">—</div>
             <div class="stat-lbl">Khóa học đang học</div>
           </div>
         </div>
         <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon" style="background:#FDEEEE">⏰</div>
+          <div class="stat-icon icon-red">⏰</div>
           <div>
             <div class="stat-val" id="stat-total-hours">—</div>
             <div class="stat-lbl">Tổng giờ đã học</div>
           </div>
         </div>
         <div class="stat-card" onmouseenter="hoverStat(this,'#F59E0B')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon" style="background:#FEF9EE">🔥</div>
+          <div class="stat-icon icon-orange">🔥</div>
           <div>
             <div class="stat-val" id="stat-streak">—</div>
             <div class="stat-lbl">Chuỗi ngày học</div>
           </div>
         </div>
         <div class="stat-card" onmouseenter="hoverStat(this,'#10B981')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon" style="background:#EEFBF5">🏆</div>
+          <div class="stat-icon icon-green">🏆</div>
           <div>
             <div class="stat-val" id="stat-certificates">—</div>
             <div class="stat-lbl">Chứng chỉ</div>
@@ -136,13 +138,13 @@
       </div>
 
       <div class="section-card">
-        <div class="section-title"><span style="color:#4A9EE0">📈</span><span>Tiến độ học tập</span></div>
+        <div class="section-title"><span class="title-icon-blue">📈</span><span>Tiến độ học tập</span></div>
         <div class="progress-grid" id="progress-grid"></div>
       </div>
 
       <div class="courses-header">
         <h2>Khóa học của tôi</h2>
-        <button class="filter-btn active" onclick="navigate('courses')" style="font-size:13px">Khám phá thêm →</button>
+        <button class="filter-btn active btn-small" onclick="navigate('courses')">Khám phá thêm →</button>
       </div>
       <div id="enrolled-list"></div>
     </div>
@@ -158,7 +160,7 @@
         </div>
       </div>
       <div class="courses-grid" id="courses-grid"></div>
-      <div class="empty" id="empty-state" style="display:none">
+      <div class="empty hidden" id="empty-state">
         <div class="empty-icon">📖</div>
         <p>Không tìm thấy khóa học nào</p>
       </div>
@@ -179,7 +181,7 @@
 
 
         <div class="settings-section">
-          <div class="settings-section-title"><span style="color:#4A9EE0">👤</span><span>Thông tin cá nhân</span></div>
+          <div class="settings-section-title"><span class="title-icon-blue">👤</span><span>Thông tin cá nhân</span></div>
           <div class="profile-top">
             <div class="profile-avatar">
               <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
@@ -192,54 +194,54 @@
             </div>
           </div>
           <div class="fields-grid">
-            <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" /></div>
-            <div><label class="field-label">Email</label><input id="field-email" class="field-input" /></div>
-            <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" /></div>
-            <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" /></div>
+            <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" placeholder="Nhập họ và tên" /></div>
+            <div><label class="field-label">Email</label><input id="field-email" class="field-input" placeholder="Nhập email" /></div>
+            <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" placeholder="Nhập số điện thoại" /></div>
+            <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" placeholder="Chọn ngày sinh" /></div>
           </div>
         </div>
 
         <div class="settings-section">
-          <div class="settings-section-title"><span style="color:#E84545">🔔</span><span>Thông báo</span></div>
+          <div class="settings-section-title"><span class="title-icon-red">🔔</span><span>Thông báo</span></div>
           <div class="notif-row">
             <div>
               <div class="notif-lbl">Thông báo qua Email</div>
               <div class="notif-desc">Nhận cập nhật khóa học qua email</div>
-            </div><button id="toggle-email" class="toggle on" onclick="toggleSwitch(this)"><span
+            </div><button id="toggle-email" class="toggle on" onclick="toggleSwitch(this)" aria-label="Toggle email notifications"><span
                 class="toggle-knob"></span></button>
           </div>
           <div class="notif-row">
             <div>
               <div class="notif-lbl">Thông báo đẩy</div>
               <div class="notif-desc">Nhận thông báo trực tiếp trên trình duyệt</div>
-            </div><button id="toggle-push" class="toggle" onclick="toggleSwitch(this)"><span
+            </div><button id="toggle-push" class="toggle" onclick="toggleSwitch(this)" aria-label="Toggle push notifications"><span
                 class="toggle-knob"></span></button>
           </div>
           <div class="notif-row">
             <div>
               <div class="notif-lbl">Nhắc nhở học tập</div>
               <div class="notif-desc">Nhắc nhở lịch học hàng ngày</div>
-            </div><button id="toggle-remind" class="toggle on" onclick="toggleSwitch(this)"><span
+            </div><button id="toggle-remind" class="toggle on" onclick="toggleSwitch(this)" aria-label="Toggle study reminders"><span
                 class="toggle-knob"></span></button>
           </div>
           <div class="notif-row">
             <div>
               <div class="notif-lbl">Cập nhật nội dung</div>
               <div class="notif-desc">Thông báo khi có bài học mới</div>
-            </div><button id="toggle-content" class="toggle" onclick="toggleSwitch(this)"><span
+            </div><button id="toggle-content" class="toggle" onclick="toggleSwitch(this)" aria-label="Toggle content updates"><span
                 class="toggle-knob"></span></button>
           </div>
         </div>
 
         <div class="sec-lang-grid">
           <div class="sec-lang-card">
-            <div class="sec-lang-title"><span style="color:#4A9EE0">🛡</span><span>Bảo mật</span></div>
+            <div class="sec-lang-title"><span class="title-icon-blue">🛡</span><span>Bảo mật</span></div>
             <!-- ★ SỬA dòng này: gọi hàm mở modal thay vì chuyển trang -->
             <button class="change-pw-btn" onclick="openChangePasswordModal()">Đổi mật khẩu</button>
           </div>
           <div class="sec-lang-card">
-            <div class="sec-lang-title"><span style="color:#E84545">🌐</span><span>Ngôn ngữ</span></div>
-            <select class="lang-select">
+            <div class="sec-lang-title"><span class="title-icon-red">🌐</span><span>Ngôn ngữ</span></div>
+            <select class="lang-select" aria-label="Select language">
               <option>Tiếng Việt</option>
               <option>English</option>
             </select>
@@ -260,6 +262,7 @@
     .un-overlay {
       position: fixed; inset: 0; z-index: 150;
       background: rgba(0,0,0,0.45);
+      -webkit-backdrop-filter: blur(6px);
       backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
       opacity: 0; visibility: hidden;
@@ -611,6 +614,9 @@
   </script>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  {% include 'chatbot.html' %}
+  <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
 </body>
 
 </html>

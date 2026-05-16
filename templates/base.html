@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Programming EDU{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}landing-body{% endblock %}">
@@ -16,12 +18,12 @@
 </div>
 <div class="grid-overlay"></div>
 <div class="particles" id="landingParticles">
-  <span class="particle" style="left:10%; width:4px; height:4px; animation-duration:12s; animation-delay:-2s; background:#FFFFFF;"></span>
-  <span class="particle" style="left:25%; width:3px; height:3px; animation-duration:10s; animation-delay:-5s; background:#EF5350;"></span>
-  <span class="particle" style="left:40%; width:5px; height:5px; animation-duration:14s; animation-delay:-3s; background:#42A5F5;"></span>
-  <span class="particle" style="left:60%; width:4px; height:4px; animation-duration:11s; animation-delay:-6s; background:#FF8A80;"></span>
-  <span class="particle" style="left:78%; width:3px; height:3px; animation-duration:13s; animation-delay:-4s; background:#BBDEFB;"></span>
-  <span class="particle" style="left:90%; width:5px; height:5px; animation-duration:16s; animation-delay:-8s; background:#FFFFFF;"></span>
+  <span class="particle particle-1"></span>
+  <span class="particle particle-2"></span>
+  <span class="particle particle-3"></span>
+  <span class="particle particle-4"></span>
+  <span class="particle particle-5"></span>
+  <span class="particle particle-6"></span>
 </div>
 
 {% block nav %}
@@ -46,6 +48,7 @@
 {% endblock %}
 
 {% block extra_scripts %}{% endblock %}
+
 
 </body>
 </html>
