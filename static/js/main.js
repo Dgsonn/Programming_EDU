@@ -521,8 +521,22 @@ function updateDate() {
   if (el) el.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ', ' + now.getFullYear();
 }
 
+/* ── Dark / Light mode ── */
+function applyTheme(isDark) {
+  document.body.classList.toggle('dark', isDark);
+  var btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  var isDark = !document.body.classList.contains('dark');
+  applyTheme(isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
 /* ── Init ── */
 document.addEventListener("DOMContentLoaded", function() {
+  applyTheme(localStorage.getItem('theme') === 'dark');
   updateDate();
   loadAll();
 });

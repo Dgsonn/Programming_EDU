@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}" />
   <!-- ★ THÊM dòng này: CSS cho modal đổi mật khẩu -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}" />
 </head>
 
 <body>
@@ -79,6 +80,7 @@
           <span class="search-icon">🔍</span>
           <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses()" />
         </div>
+        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
         <button class="bell-btn">🔔<span class="bell-dot"></span></button>
         <div class="user-chip">
           <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
@@ -292,7 +294,7 @@
       display: flex; align-items: flex-start; gap: 10px; text-align: left;
     }
     .un-warning span { font-size: 20px; flex-shrink: 0; }
-    .un-warning p  { font-size: 13px; color: #B91C1C; font-weight: 500; margin: 0; line-height: 1.5; }
+    .un-warning p  { font-size: 13px; color: #df1818ce; font-weight: 500; margin: 0; line-height: 1.5; }
     .un-actions { display: flex; gap: 12px; }
     .un-btn-cancel {
       flex: 1; padding: 15px; border-radius: 14px;

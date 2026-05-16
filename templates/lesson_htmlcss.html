@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson.css') }}">
     <script>
         tailwind.config = {
             theme: {
@@ -40,7 +41,7 @@
         .placeholder-pulse { animation: pulse-soft 2s infinite; }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="lesson-page h-screen flex flex-col overflow-hidden">
 
     <nav class="h-20 border-b-2 border-gray-100 flex items-center justify-between px-10 bg-white shrink-0">
         <div class="flex items-center gap-8">
@@ -98,7 +99,7 @@
                         <div class="flex items-center gap-4 pl-12">
                             <div class="w-10 h-10 border-l-4 border-b-4 border-gray-200 rounded-bl-2xl"></div>
                             <span class="text-xl font-bold text-gray-400">THÌ</span>
-                            <div class="px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-400 font-bold italic shadow-sm">
+                            <div class="lesson-else-default px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-400 font-bold italic shadow-sm">
                                 "desktop_view()"
                             </div>
                         </div>

@@ -1,0 +1,178 @@
+/* ══════════════════════════════════════════════════════════
+   LESSON PAGE — Dark Tech Theme
+   Dùng chung cho tất cả trang bài học
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Nền tối toàn trang ── */
+body.lesson-page {
+  background: linear-gradient(150deg, #06091A 0%, #0B1530 55%, #0E0A1F 100%) !important;
+  color: #E2EEFF;
+}
+
+/* Lưới kỹ thuật số */
+body.lesson-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(100,160,255,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,160,255,0.055) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Vầng sáng trang trí (trên-trái) */
+body.lesson-page::after {
+  content: '';
+  position: fixed;
+  top: -15%;
+  left: -5%;
+  width: 55vw;
+  height: 55vh;
+  background: radial-gradient(ellipse at center,
+    rgba(74,158,224,0.10) 0%,
+    transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.lesson-page > * { position: relative; z-index: 1; }
+
+/* ── Navbar: dark glass ── */
+body.lesson-page nav {
+  background: rgba(6, 11, 26, 0.80) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom-color: rgba(100,160,255,0.12) !important;
+  box-shadow: 0 1px 0 rgba(100,160,255,0.06);
+}
+
+/* Logo text trên dark bg */
+body.lesson-page nav span.text-gray-800 { color: #E2EEFF !important; }
+
+/* Streak badge */
+body.lesson-page nav .bg-gray-50 {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+body.lesson-page nav .text-sm.font-bold { color: rgba(200,220,255,0.75) !important; }
+
+/* Nút Back */
+body.lesson-page nav a.bg-gray-100 {
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(180,210,255,0.8) !important;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+body.lesson-page nav a.bg-gray-100:hover {
+  background: rgba(255,255,255,0.14) !important;
+  color: #fff !important;
+}
+
+/* ── Left panel ── */
+body.lesson-page main > section:first-child {
+  background: transparent !important;
+}
+
+/* Tiêu đề bài học */
+body.lesson-page main h2 {
+  color: #EEF4FF !important;
+  text-shadow: 0 2px 20px rgba(100,160,255,0.25);
+}
+
+/* Mô tả */
+body.lesson-page main .text-gray-500 {
+  color: rgba(160,200,255,0.60) !important;
+}
+
+/* ── Canvas kéo-thả ── */
+body.lesson-page .bg-gray-50.rounded-\[32px\] {
+  background: rgba(10,20,55,0.55) !important;
+  border-color: rgba(100,160,255,0.14) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* Nhãn NẾU / NGƯỢC LẠI */
+body.lesson-page .text-gray-400 {
+  color: rgba(130,170,255,0.50) !important;
+}
+
+/* Đường kẻ kết nối (border-gray-200) */
+body.lesson-page .border-gray-200 {
+  border-color: rgba(255,255,255,0.10) !important;
+}
+
+/* Ô else mặc định */
+body.lesson-page .lesson-else-default {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: rgba(130,170,255,0.45) !important;
+  box-shadow: none !important;
+}
+
+/* ── Drop targets ── */
+body.lesson-page .drop-target {
+  background: rgba(6,14,40,0.70) !important;
+  border-color: rgba(100,160,255,0.22) !important;
+}
+body.lesson-page .drop-target .text-gray-300 {
+  color: rgba(120,160,255,0.35) !important;
+}
+body.lesson-page .drop-target.hovering {
+  background: rgba(74,158,224,0.12) !important;
+  border-color: rgba(74,158,224,0.55) !important;
+  box-shadow: 0 0 20px rgba(74,158,224,0.15) !important;
+}
+body.lesson-page .drop-target.filled {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* ── Inventory (Túi đồ) ── */
+body.lesson-page .rounded-3xl.border-dashed {
+  background: rgba(255,255,255,0.03) !important;
+  border-color: rgba(100,160,255,0.15) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+body.lesson-page .uppercase.tracking-\[0\.2em\] {
+  color: rgba(120,165,255,0.40) !important;
+}
+
+/* Logic cards trên nền tối — tăng độ nổi */
+body.lesson-page .logic-card {
+  box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06) !important;
+  transition: all 0.2s !important;
+}
+body.lesson-page .logic-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.10) !important;
+}
+
+/* ── Right panel ── */
+body.lesson-page main > section:last-child {
+  background: rgba(4,9,22,0.50) !important;
+}
+
+/* Code window — outer glow */
+body.lesson-page .code-window {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 0 80px rgba(74,158,224,0.08),
+    0 32px 80px rgba(0,0,0,0.65) !important;
+}
+
+/* Hint text */
+body.lesson-page #hint-box {
+  color: rgba(130,170,255,0.38) !important;
+}
+
+/* ── Success modal ── */
+body.lesson-page #success-modal {
+  background: rgba(6,11,26,0.88) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
