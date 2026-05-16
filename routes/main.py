@@ -32,10 +32,10 @@ def _user_stats():
     return {'streak': user['streak'], 'gems': user['gems']}
 
 
-@main_bp.route('/giaodien')
+@main_bp.route('/interface')
 @login_required
-def giaodien():
-    return render_template('giaodien.html', **_user_stats())
+def interface():
+    return render_template('interface.html', **_user_stats())
 
 
 @main_bp.route('/lesson/python')

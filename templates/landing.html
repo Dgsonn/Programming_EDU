@@ -1,84 +1,182 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Programming EDU — Học lập trình hiện đại</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
-</head>
-<body class="landing-body">
+{% extends "base.html" %}
 
-<nav class="landing-nav">
-  <div class="landing-logo">
-    <span class="blue">Pro</span><span class="blue">gram</span><span class="red">ming</span>
-    <span class="blue"> E</span><span class="blue">D</span><span class="red">U</span>
-  </div>
-  <div class="nav-actions">
-    <a href="/login" class="btn-outline">Đăng nhập</a>
-    <a href="/register" class="btn-primary">Đăng ký miễn phí →</a>
-  </div>
-</nav>
+{% block title %}Programming EDU — Học lập trình hiện đại{% endblock %}
 
-<main class="landing-hero">
+{% block content %}
+<section class="hero-section reveal-on-scroll">
+  <div class="hero-content">
+    <div class="hero-badge neon-badge">🚀 Nền tảng học lập trình hàng đầu Việt Nam</div>
 
-  <div class="hero-badge">🚀 Nền tảng học lập trình hàng đầu Việt Nam</div>
+    <h1 class="hero-title neon-text">
+      Học <span class="neon-cyan">Lập Trình</span><br />
+      Theo Cách <span class="neon-pink">Hiện Đại</span>
+    </h1>
 
-  <h1 class="hero-title">
-    Học <span class="blue">Lập Trình</span><br />
-    Theo Cách <span class="red">Hiện Đại</span>
-  </h1>
+    <p class="hero-sub fade-in-up delay-1">
+      Từ HTML/CSS đến AI & Backend — nắm vững mọi kỹ năng lập trình với lộ trình được thiết kế bởi chuyên gia.
+    </p>
 
-  <p class="hero-sub">
-    Từ HTML/CSS đến AI & Backend — nắm vững mọi kỹ năng lập trình với lộ trình được thiết kế bởi chuyên gia.
-  </p>
-
-  <div class="hero-actions">
-    <a href="/register" class="btn-hero-primary">Bắt đầu miễn phí →</a>
-    <a href="/login" class="btn-hero-outline">Đăng nhập</a>
-  </div>
-
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-val">4+</div>
-      <div class="hero-stat-lbl">Khóa học</div>
+    <div class="hero-actions fade-in-up delay-2">
+      <a href="/register" class="btn-main neon-btn">Bắt đầu miễn phí →</a>
+      <a href="/login" class="btn-hero-outline glass-btn">Đăng nhập</a>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val">94K+</div>
-      <div class="hero-stat-lbl">Học viên</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val">⭐ 4.8</div>
-      <div class="hero-stat-lbl">Đánh giá</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val">100%</div>
-      <div class="hero-stat-lbl">Miễn phí</div>
+
+    <div class="hero-stats fade-in-up delay-3">
+      <div class="hero-stat">
+        <div class="hero-stat-val neon-glow-text">4+</div>
+        <div class="hero-stat-lbl">Khóa học</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val neon-glow-text">94K+</div>
+        <div class="hero-stat-lbl">Học viên</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val neon-glow-text">⭐ 4.8</div>
+        <div class="hero-stat-lbl">Đánh giá</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val neon-glow-text">100%</div>
+        <div class="hero-stat-lbl">Miễn phí</div>
+      </div>
     </div>
   </div>
+</section>
 
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">📚</div>
-      <div class="feature-title">Đa dạng khóa học</div>
-      <div class="feature-desc">C/C++, Python, Java, HTML/CSS — từ cơ bản đến nâng cao cho mọi cấp độ.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📊</div>
-      <div class="feature-title">Theo dõi tiến độ</div>
-      <div class="feature-desc">Dashboard trực quan hiển thị tiến độ học tập và thống kê chi tiết theo thời gian thực.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🏆</div>
-      <div class="feature-title">Chứng chỉ hoàn thành</div>
-      <div class="feature-desc">Nhận chứng chỉ sau khi hoàn thành khóa học, xây dựng portfolio ấn tượng.</div>
+<section class="landing-section reveal-on-scroll">
+  <div class="section-container">
+    <div class="section-heading neon-text-sm">Học theo lộ trình thực chiến</div>
+    <p class="section-sub">Chúng tôi thiết kế từng bài học để bạn có thể làm được việc ngay từ ngày đầu tiên. Mỗi khóa học gồm bài tập thực tế, dự án mini và thử thách tương tác, phù hợp cho người mới lẫn người muốn nâng cấp kỹ năng.</p>
+
+    <div class="section-grid 3d-grid">
+      <div class="section-card neon-card">
+        <div class="card-icon neon-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        </div>
+        <strong>Học từ căn bản đến chuyên sâu</strong>
+        <p>Chuỗi bài học rõ ràng, dễ hiểu và cập nhật theo xu hướng công nghệ mới nhất.</p>
+      </div>
+      <div class="section-card neon-card">
+        <div class="card-icon neon-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        </div>
+        <strong>Thực hành cùng dự án</strong>
+        <p>Từng module đi kèm bài tập thực tế để bạn xây dựng portfolio ngay trong quá trình học.</p>
+      </div>
+      <div class="section-card neon-card">
+        <div class="card-icon neon-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        </div>
+        <strong>Giáo viên hướng dẫn</strong>
+        <p>Đội ngũ mentor giàu kinh nghiệm luôn hỗ trợ 1:1 khi bạn gặp khó khăn.</p>
+      </div>
+      <div class="section-card neon-card">
+        <div class="card-icon neon-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        </div>
+        <strong>Học mọi lúc, mọi nơi</strong>
+        <p>Hỗ trợ học online linh hoạt, dễ dàng trên máy tính và điện thoại.</p>
+      </div>
     </div>
   </div>
+</section>
 
-</main>
+<section class="landing-section reveal-on-scroll">
+  <div class="section-container">
+    <div class="section-heading neon-text-sm">Những gì bạn sẽ làm được sau khóa học</div>
+    <p class="section-sub">Tập trung vào kỹ năng thực tế và kết quả rõ ràng: xây website, lập trình ứng dụng, xử lý dữ liệu, tạo AI đơn giản và tự tin làm việc nhóm.</p>
 
-<footer class="landing-footer">
-  © 2026 Programming EDU. All rights reserved.
-</footer>
+    <div class="section-grid 3d-grid">
+      <div class="section-card neon-card">
+        <span class="value-pill neon-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+          Web development
+        </span>
+        <p>Xây dựng giao diện responsive, JavaScript tương tác và kết nối backend.</p>
+      </div>
+      <div class="section-card neon-card">
+        <span class="value-pill neon-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+          AI & Machine Learning
+        </span>
+        <p>Làm quen với mô hình cơ bản, xử lý dữ liệu và triển khai ứng dụng thông minh.</p>
+      </div>
+      <div class="section-card neon-card">
+        <span class="value-pill neon-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>
+          Backend + Database
+        </span>
+        <p>Xây server, quản lý dữ liệu và tạo API an toàn cho ứng dụng thực tế.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-</body>
-</html>
+<section class="landing-section reveal-on-scroll">
+  <div class="section-container">
+    <div class="section-heading neon-text-sm">Học viên nói gì về chúng tôi</div>
+    <p class="section-sub">Hơn 94.000 học viên đã hoàn thành khóa học và tự tin xây sản phẩm đầu tay chỉ trong vài tuần.</p>
+
+    <div class="testimonial-grid">
+      <div class="testimonial-card glass-card">
+        <p>"Mình rất ấn tượng với cách giảng dễ hiểu và bài tập thực tế. Chỉ sau 1 tháng, mình đã xây được website cá nhân."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-author-avatar neon-border">T</div>
+          <div class="testimonial-author-info">
+            <strong>Thanh T.</strong>
+            <span>Frontend learner</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card glass-card">
+        <p>"Các bài giảng rõ ràng, mentor hỗ trợ nhiệt tình. Mình đã có thêm tự tin để làm dự án backend đầu tiên."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-author-avatar neon-border">L</div>
+          <div class="testimonial-author-info">
+            <strong>Lan H.</strong>
+            <span>Backend developer</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card glass-card">
+        <p>"Khóa học giúp mình hiểu rõ công nghệ AI cơ bản và cách áp dụng vào bài toán thực tế. Rất đáng giá!"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-author-avatar neon-border">N</div>
+          <div class="testimonial-author-info">
+            <strong>Nam Q.</strong>
+            <span>AI enthusiast</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section cta-panel neon-cta reveal-on-scroll">
+  <div class="section-container">
+    <h2 class="neon-text-sm">Bắt đầu hành trình lập trình của bạn hôm nay</h2>
+    <p>Đăng ký miễn phí và khám phá lộ trình phù hợp với mục tiêu cá nhân. Từ học viên mới đến người muốn nâng cấp kỹ năng, mọi thứ đã sẵn sàng.</p>
+    <div class="hero-actions">
+      <a href="/register" class="btn-hero-primary neon-btn">Tham gia miễn phí</a>
+      <a href="/login" class="btn-hero-outline glass-btn">Đã có tài khoản?</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
+      observer.observe(el);
+    });
+  });
+</script>
+{% endblock %}
