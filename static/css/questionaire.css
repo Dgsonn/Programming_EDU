@@ -1,0 +1,308 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- 1. ĐỊNH DẠNG CHUNG & NỀN ĐỘNG CHUYỂN MÀU TỪ TỪ --- */
+* {
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #0d1117;
+    color: #e6edf3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Tạo 2 luồng sáng tinh vân chuyển động chậm ở nền */
+body::before, body::after {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    opacity: 0.15;
+    animation: ambientLight 16s infinite alternate ease-in-out;
+}
+
+body::before {
+    background: #38bdf8;
+    top: 10%;
+    left: 10%;
+}
+
+body::after {
+    background: #dc2626;
+    bottom: 10%;
+    right: 10%;
+    animation-delay: -8s;
+}
+
+@keyframes ambientLight {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(80px, 50px) scale(1.2); }
+}
+
+
+/* --- 2. KHUNG CHỨA CÂU HỎI VỚI VIỀN LED CHUYỂN MÀU TỪ TỪ --- */
+.survey-container {
+    background-color: #161b22; /* Giữ nền trong phòng tối */
+    width: 100%;
+    max-width: 580px;
+    padding: 35px;
+    border-radius: 16px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+/* Đường viền sắc nét chạy màu hiệu ứng Cyberpunk */
+.survey-container::before {
+    content: '';
+    position: absolute;
+    top: -1.5px; left: -1.5px; right: -1.5px; bottom: -1.5px;
+    background: linear-gradient(45deg, #38bdf8, #2563eb, #dc2626, #ff7675, #38bdf8);
+    background-size: 400% 400%;
+    z-index: -1;
+    border-radius: 17px;
+    animation: waveGlow 10s linear infinite;
+}
+
+/* Hào quang tỏa sáng mờ mượt mà phía sau khung (Glow Effect) */
+.survey-container::after {
+    content: '';
+    position: absolute;
+    top: -10px; left: -10px; right: -10px; bottom: -10px;
+    background: linear-gradient(45deg, #38bdf8, #2563eb, #dc2626, #ff7675, #38bdf8);
+    background-size: 400% 400%;
+    z-index: -2;
+    border-radius: 24px;
+    filter: blur(25px);
+    opacity: 0.35; /* Độ sáng của hào quang */
+    animation: waveGlow 10s linear infinite;
+}
+
+/* Animation làm dải màu trôi đi từ từ */
+@keyframes waveGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+
+/* --- 3. LOGO CHUẨN MÀU THEO YÊU CẦU (HIỆU ỨNG GRADIENT TEXT) --- */
+.tech-logo {
+    display: flex;
+    flex-direction: column; /* Xếp chữ EDU xuống dòng giống trong ảnh */
+    align-items: center; /* Căn lề trái cho logo */
+    margin-bottom: 25px;
+    font-size: 2.2em; /* Phóng to logo lên một chút cho đẹp */
+    font-weight: 800; /* Làm chữ đậm hơn */
+    letter-spacing: -0.5px;
+    line-height: 1.1; /* Thu hẹp khoảng cách giữa 2 dòng */
+}
+
+.logo-text {
+    /* Hiệu ứng dải màu chuyển từ Xanh lam (#5dade2) sang Đỏ hồng (#ff8a80) */
+    background: linear-gradient(90deg, #5dade2 0%, #ff8a80 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent; /* Fallback */
+}
+
+
+h2 {
+    text-align: center;
+    color: white;
+    font-size: 1.1em;
+    margin-bottom: 25px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+
+/* --- 4. THANH TIẾN TRÌNH LED NEON ĐỘNG --- */
+.progress-container {
+    width: 100%;
+    background-color: #21262d;
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #ff7675, #38bdf8);
+    background-size: 200% auto;
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px #38bdf8;
+    animation: waveGlow 4s linear infinite; /* Thanh tiến trình cũng tự trôi màu nhẹ */
+}
+
+
+/* --- 5. LOGIC HIỂN THỊ TỪNG TRANG --- */
+.step {
+    display: none;
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step.active {
+    display: block;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* --- 6. ĐỊNH DẠNG CÂU HỎI & CÁC Ô LỰA CHỌN --- */
+.question-block {
+    margin-bottom: 20px;
+}
+
+.question {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin-bottom: 18px;
+    line-height: 1.4;
+}
+
+.note {
+    font-size: 0.75em;
+    color: #ff7b72;
+    font-weight: normal;
+    background-color: rgba(255, 123, 114, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+    color: #c9d1d9;
+    padding: 14px;
+    border-radius: 8px;
+    background-color: #21262d;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.option:hover {
+    background-color: #282e38;
+    border-color: rgba(56, 189, 248, 0.5);
+    color: white;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+input[type="radio"], input[type="checkbox"] {
+    margin-right: 14px;
+    accent-color: #38bdf8;
+    transform: scale(1.15);
+}
+
+.custom-text-input {
+    margin-left: 12px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-size: 0.9em;
+    background-color: #0d1117;
+    color: white;
+    flex-grow: 1;
+    max-width: 260px;
+    transition: all 0.3s;
+}
+
+.custom-text-input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+.custom-text-input:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.sub-question {
+    margin-top: 20px;
+    padding-left: 15px;
+    border-left: 2px dashed #30363d;
+}
+
+
+/* --- 7. HỆ THỐNG NÚT BẤM ĐIỀU HƯỚNG --- */
+.btn-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+}
+
+.next-btn, .prev-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.next-btn {
+    background-color: #21262d;
+    color: #c9d1d9;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-left: auto;
+}
+
+.next-btn:hover {
+    background-color: #30363d;
+    color: white;
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.prev-btn {
+    background-color: transparent;
+    color: #8b949e;
+}
+
+.prev-btn:hover {
+    color: white;
+}
+
+/* Nút hoàn thành rực lửa đồng bộ hiệu ứng chuyển màu */
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #dc2626, #ff7675);
+    background-size: 200% auto;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+}
+
+.submit-btn:hover {
+    background-position: right center; /* Tạo hiệu ứng chuyển màu khi di chuột */
+    box-shadow: 0 4px 25px rgba(220, 38, 38, 0.6);
+}
