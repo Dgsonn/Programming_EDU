@@ -26,11 +26,16 @@ def init_db():
         streak       INTEGER DEFAULT 0,
         certificates INTEGER DEFAULT 0,
         gems         INTEGER DEFAULT 0,
-        xp           INTEGER DEFAULT 0
+        xp           INTEGER DEFAULT 0,
+        questionnaire_completed INTEGER DEFAULT 0
     )''')
 
     # Migration: thêm cột cho database cũ nếu chưa có
-    for col_def in ('gems INTEGER DEFAULT 0', 'xp INTEGER DEFAULT 0'):
+    for col_def in (
+        'gems INTEGER DEFAULT 0',
+        'xp INTEGER DEFAULT 0',
+        'questionnaire_completed INTEGER DEFAULT 0',
+    ):
         try:
             c.execute(f'ALTER TABLE users ADD COLUMN {col_def}')
         except Exception:
@@ -76,6 +81,13 @@ def init_db():
         item_id TEXT,
         done    INTEGER DEFAULT 0,
         PRIMARY KEY (user_id, item_id)
+    )''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS surveys (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER,
+        data_json  TEXT,
+        created_at TEXT
     )''')
 
     if not c.execute('SELECT 1 FROM courses').fetchone():
