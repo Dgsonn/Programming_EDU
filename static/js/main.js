@@ -162,7 +162,7 @@ function renderEduInteractiveRoadmap() {
         line.setAttribute('x2', targetNode.x);
         line.setAttribute('y2', targetNode.y);
         
-        var strokeColor = document.body.classList.contains('dark-mode') ? '#4B5563' : '#9CA3AF';
+        var strokeColor = document.body.classList.contains('dark') ? '#4B5563' : '#9CA3AF';
         line.setAttribute('stroke', strokeColor); 
         line.setAttribute('stroke-width', '4');
 

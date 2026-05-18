@@ -359,12 +359,17 @@
     width: 100%;
     height: 70vh;
     overflow: auto;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 16px;
-    border: 1px solid #F3F4F6;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }
 
-body.dark-mode #roadmap-container-wrapper { border-color: #334155; }
+body.dark #roadmap-container-wrapper {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(100, 116, 139, 0.35);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
+}
 
 #roadmap-container {
     position: relative !important;
@@ -436,9 +441,9 @@ body.dark-mode #roadmap-container-wrapper { border-color: #334155; }
     overflow-y: auto;
 }
 
-body.dark-mode #sidebar-detail { background-color: #1e293b; border-color: #334155; }
-body.dark-mode #sidebar-title { color: #38bdf8; }
-body.dark-mode #sidebar-content { color: #cbd5e1; }
+body.dark #sidebar-detail { background-color: #1e293b; border-color: #334155; }
+body.dark #sidebar-title { color: #38bdf8; }
+body.dark #sidebar-content { color: #cbd5e1; }
 
 #sidebar-detail.open { right: 0; }
 
@@ -449,7 +454,7 @@ body.dark-mode #sidebar-content { color: #cbd5e1; }
     transition: background 0.2s;
 }
 #sidebar-detail .close-btn:hover { background: #FEE2E2; }
-body.dark-mode #sidebar-detail .close-btn { background: #451a1a; color: #fca5a5; }
+body.dark #sidebar-detail .close-btn { background: #451a1a; color: #fca5a5; }
 
 #sidebar-title { color: #2D7FC1; margin-top: 0; margin-bottom: 20px; }
 #sidebar-content { color: #4B5563; line-height: 1.6; }
