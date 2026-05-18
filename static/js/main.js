@@ -29,7 +29,6 @@ const centerX = 500;
 // 1. DỮ LIỆU CÁC LỘ TRÌNH
 var ROADMAPS = [
   {
-<<<<<<< HEAD
     id: 'frontend', title: 'Frontend Web', icon: '💻', color: '#4A9EE0',
     nodesData: [
         { id: '1', label: '1. Internet', x: centerX, y: 100, color: '#fde047', desc: '<strong>Kiến thức nền tảng về Internet:</strong><ul class="sidebar-list"><li>Mạng Internet hoạt động như thế nào?</li><li>HTTP và HTTPS khác nhau ra sao?</li><li>Cơ chế hoạt động của Trình duyệt</li><li>DNS (Hệ thống phân giải tên miền)</li><li>Hosting (Nơi lưu trữ) và Domain</li></ul>' },
@@ -115,6 +114,7 @@ var ROADMAPS = [
 ];
 
 var activeRoadmap = ROADMAPS[0].id;
+var doneItems = {};
 
 // 2. LOGIC ĐIỀU KHIỂN (Gắn chặt vào window để đè bẹp các hàm cũ bị xung đột)
 window.currentEduRoadmap = 'frontend';
@@ -216,163 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-=======
-    id: "frontend",
-    title: "Frontend Web",
-    icon: "🌐",
-    color: "#4A9EE0",
-    phases: [
-      {
-        name: "Nền tảng",
-        items: [
-          "HTML5 cơ bản",
-          "CSS3 & Flexbox",
-          "CSS Grid",
-          "Responsive Design",
-        ],
-      },
-      {
-        name: "JavaScript",
-        items: [
-          "JS cơ bản",
-          "DOM & Events",
-          "ES6+",
-          "Async/Await",
-          "Fetch API",
-        ],
-      },
-      {
-        name: "Framework",
-        items: [
-          "React cơ bản",
-          "React Hooks",
-          "React Router",
-          "State Management",
-        ],
-      },
-      {
-        name: "Triển khai",
-        items: [
-          "Git & GitHub",
-          "Vite / Webpack",
-          "Testing cơ bản",
-          "Deploy Vercel",
-        ],
-      },
-    ],
-  },
-  {
-    id: "backend",
-    title: "Backend",
-    icon: "⚙️",
-    color: "#E84545",
-    phases: [
-      {
-        name: "Ngôn ngữ",
-        items: ["Python hoặc Java", "OOP cơ bản", "Xử lý file & JSON", "Regex"],
-      },
-      {
-        name: "Database",
-        items: [
-          "SQL cơ bản",
-          "SQLite / PostgreSQL",
-          "ORM (SQLAlchemy)",
-          "Migrations",
-        ],
-      },
-      {
-        name: "API",
-        items: [
-          "REST API",
-          "Flask / Spring Boot",
-          "Authentication & JWT",
-          "CORS",
-        ],
-      },
-      {
-        name: "DevOps",
-        items: ["Linux cơ bản", "Docker cơ bản", "Nginx", "Deploy VPS"],
-      },
-    ],
-  },
-  {
-    id: "python",
-    title: "Python & AI",
-    icon: "🤖",
-    color: "#10B981",
-    phases: [
-      {
-        name: "Python",
-        items: [
-          "Cú pháp cơ bản",
-          "List / Dict / Set",
-          "OOP Python",
-          "Thư viện chuẩn",
-        ],
-      },
-      {
-        name: "Data",
-        items: ["NumPy", "Pandas", "Matplotlib", "Jupyter Notebook"],
-      },
-      {
-        name: "ML cơ bản",
-        items: [
-          "Scikit-learn",
-          "Linear Regression",
-          "Classification",
-          "Đánh giá model",
-        ],
-      },
-      {
-        name: "Deep Learning",
-        items: [
-          "Neural Network",
-          "TensorFlow / PyTorch",
-          "CNN / RNN",
-          "LLM & Prompt",
-        ],
-      },
-    ],
-  },
-  {
-    id: "cpp",
-    title: "C/C++ Systems",
-    icon: "💻",
-    color: "#F59E0B",
-    phases: [
-      {
-        name: "C cơ bản",
-        items: [
-          "Biến & Kiểu dữ liệu",
-          "Vòng lặp & Điều kiện",
-          "Hàm & Con trỏ",
-          "Mảng & String",
-        ],
-      },
-      {
-        name: "C nâng cao",
-        items: ["Quản lý bộ nhớ", "Struct & Enum", "File I/O", "Linked List"],
-      },
-      {
-        name: "C++ OOP",
-        items: ["Class & Object", "Kế thừa", "Polymorphism", "Template"],
-      },
-      {
-        name: "Ứng dụng",
-        items: [
-          "STL (vector, map)",
-          "Thuật toán cơ bản",
-          "Embedded cơ bản",
-          "Dự án thực tế",
-        ],
-      },
-    ],
-  },
-];
-
-var activeRoadmap = "frontend";
-var doneItems = {};
->>>>>>> 82e2480e7f49ed4ecc555aeaaecabb0a4a092ef0
 
 /* ── Handle 401 (chưa đăng nhập) ── */
 function handleFetch(r) {
@@ -1183,7 +1026,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /* -- giaodien -- */
-<<<<<<< HEAD
 
   function runMission() {
             const cond = document.getElementById('code-cond').innerText;
@@ -1215,88 +1057,3 @@ document.addEventListener("DOMContentLoaded", function () {
   function closeModal() {
     document.getElementById('success-modal').classList.add('hidden');
         }
-=======
-let currentDrag = null;
-const draggables = document.querySelectorAll(".logic-card");
-const zones = document.querySelectorAll(".drop-target");
-
-draggables.forEach((card) => {
-  card.addEventListener("dragstart", (e) => {
-    currentDrag = card;
-    card.style.opacity = "0.4";
-    card.style.transform = "scale(0.9)";
-  });
-  card.addEventListener("dragend", () => {
-    card.style.opacity = "1";
-    card.style.transform = "scale(1)";
-  });
-});
-
-zones.forEach((zone) => {
-  zone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    zone.classList.add("hovering");
-  });
-  zone.addEventListener("dragleave", () => {
-    zone.classList.remove("hovering");
-  });
-  zone.addEventListener("drop", (e) => {
-    zone.classList.remove("hovering");
-    zone.classList.add("filled");
-
-    const val = currentDrag.innerText;
-    const codeVal = currentDrag.getAttribute("data-val");
-
-    // Hiển thị khối lệnh vào ô thả
-    zone.innerHTML = `<div class="logic-card ${currentDrag.classList.contains("block-blue") ? "block-blue" : "block-orange"} !m-0 !shadow-none !border-none !py-1 !px-4 text-sm">${val}</div>`;
-
-    // Update Compiler UI
-    if (zone.id === "zone-cond") {
-      const target = document.getElementById("code-cond");
-      target.innerText = codeVal;
-      target.classList.remove("text-white/20");
-      target.classList.add("text-orange-400", "bg-orange-500/10");
-    }
-    if (zone.id === "zone-act") {
-      const target = document.getElementById("code-act");
-      target.innerText = codeVal;
-      target.classList.remove("text-white/20");
-      target.classList.add("text-brand-secondary", "bg-blue-500/10");
-    }
-  });
-});
-
-function runMission() {
-  const cond = document.getElementById("code-cond").innerText;
-  const act = document.getElementById("code-act").innerText;
-  const output = document.getElementById("output-text");
-  const hint = document.getElementById("hint-box");
-
-  if (cond === "pin < 20" && act === "charge()") {
-    output.innerHTML =
-      "<span class='text-green-400 font-bold'>> [OK] Pin đang ở mức 15%. Robot đang di chuyển về trạm sạc... VROOM VROOM!</span>";
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#58CC02", "#1CB0F6", "#FF4B4B"],
-    });
-    setTimeout(() => {
-      document.getElementById("success-modal").classList.remove("hidden");
-    }, 1000);
-  } else if (cond === "________" || act === "________") {
-    output.innerHTML =
-      "<span class='text-yellow-400'>> [Hệ thống] Bạn chưa lấp đầy các ô trống kìa!</span>";
-  } else {
-    output.innerHTML =
-      "<span class='text-red-400'>> [LỖI] Ối! Pin đang yếu mà bạn bắt Robot đi ngủ/tắt nguồn là hỏng đấy. Thử lại nhé!</span>";
-    hint.innerText = "Gợi ý: Hãy chọn 'Pin < 20' và 'Về trạm sạc'!";
-    hint.classList.remove("text-white/30");
-    hint.classList.add("text-red-400");
-  }
-}
-
-function closeModal() {
-  document.getElementById("success-modal").classList.add("hidden");
-}
->>>>>>> 82e2480e7f49ed4ecc555aeaaecabb0a4a092ef0
