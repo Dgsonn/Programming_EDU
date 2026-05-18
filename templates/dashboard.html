@@ -172,7 +172,18 @@
         <h2>Lộ trình học tập</h2>
         <div class="filter-group" id="roadmap-tabs"></div>
       </div>
-      <div id="roadmap-content"></div>
+      
+      <div id="roadmap-container-wrapper">
+        <div id="roadmap-container">
+            <svg id="edges-layer"></svg>
+        </div>
+      </div>
+
+      <div id="sidebar-detail">
+        <button class="close-btn" onclick="closeSidebar()">✖ Đóng</button>
+        <h2 id="sidebar-title">Tiêu đề</h2>
+        <div id="sidebar-content">Nội dung chi tiết sẽ hiển thị ở đây...</div>
+      </div>
     </div>
 
     <!-- ── Settings ── -->
