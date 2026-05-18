@@ -71,7 +71,7 @@ def enroll(course_id):
     if not exists:
         first_lesson = 'Bài 1: ' + dict(course)['title']
         conn.execute(
-            'INSERT INTO enrollments VALUES (?,?,0,0,"0h","",?)',
+            "INSERT INTO enrollments VALUES (?,?,0,0,'0h','',?)",
             (uid, course_id, first_lesson)
         )
         conn.commit()
