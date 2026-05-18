@@ -31,12 +31,15 @@ def _user_stats():
     conn.close()
     return {'streak': user['streak'], 'gems': user['gems']}
 
+@main_bp.route('/questionaire')
+@login_required
+def questionaire():
+    return render_template('questionaire.html',**_user_stats())
 
 @main_bp.route('/interface')
 @login_required
 def interface():
     return render_template('interface.html', **_user_stats())
-
 
 @main_bp.route('/lesson/python')
 @login_required
@@ -54,3 +57,4 @@ def lesson_java():
 @login_required
 def lesson_htmlcss():
     return render_template('lesson_htmlcss.html', **_user_stats())
+

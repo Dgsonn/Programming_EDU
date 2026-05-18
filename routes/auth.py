@@ -17,7 +17,8 @@ def login():
     if not user or user['password'] != password:
         return jsonify({'error': 'Email hoặc mật khẩu không đúng'}), 401
     session['user_id'] = user['id']
-    return jsonify({'ok': True, 'name': user['name']})
+    needs_questionnaire = not bool(user['questionnaire_completed'])
+    return jsonify({'ok': True, 'name': user['name'], 'needs_questionnaire': needs_questionnaire})
 
 
 @auth_bp.route('/auth/register', methods=['POST'])
@@ -37,10 +38,11 @@ def register():
         (name, email, password, 'Học viên')
     )
     conn.commit()
-    user = conn.execute('SELECT id FROM users WHERE email=?', (email,)).fetchone()
+    user = conn.execute('SELECT id, questionnaire_completed FROM users WHERE email=?', (email,)).fetchone()
     session['user_id'] = user['id']
     conn.close()
-    return jsonify({'ok': True})
+    needs_questionnaire = not bool(user['questionnaire_completed'])
+    return jsonify({'ok': True, 'needs_questionnaire': needs_questionnaire})
 
 
 @auth_bp.route('/auth/logout')

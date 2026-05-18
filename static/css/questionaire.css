@@ -306,3 +306,85 @@ input[type="radio"], input[type="checkbox"] {
     background-position: right center; /* Tạo hiệu ứng chuyển màu khi di chuột */
     box-shadow: 0 4px 25px rgba(220, 38, 38, 0.6);
 }
+
+/* --- 8. Thông báo cuối cùng --- */
+.thanks-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 10, 16, 0.65);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 50;
+}
+
+.thanks-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.thanks-modal {
+    width: 100%;
+    max-width: 420px;
+    background: #0f141b;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 18px;
+    padding: 26px 24px 22px;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+    transform: translateY(10px) scale(0.98);
+    transition: transform 0.25s ease;
+}
+
+.thanks-overlay.show .thanks-modal {
+    transform: translateY(0) scale(1);
+}
+
+.thanks-badge {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 22px;
+    color: #0b1118;
+    background: linear-gradient(135deg, #38bdf8, #ff7675);
+    border-radius: 50%;
+    box-shadow: 0 6px 16px rgba(56, 189, 248, 0.25);
+}
+
+.thanks-title {
+    font-size: 1.4em;
+    margin-bottom: 8px;
+    color: #f0f6fc;
+}
+
+.thanks-sub {
+    font-size: 0.95em;
+    color: #9aa4b2;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.thanks-btn {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #0d1117;
+    background: linear-gradient(135deg, #38bdf8, #ff7675);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.thanks-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(56, 189, 248, 0.25);
+}
