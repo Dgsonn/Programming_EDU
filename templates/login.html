@@ -282,9 +282,7 @@
           if (!res.ok)
             throw new Error(data.error || "Sai email hoặc mật khẩu.");
 
-          const nextUrl = data.needs_questionnaire
-            ? "/questionaire"
-            : "/dashboard";
+          const nextUrl = "/dashboard";
           document.getElementById("successOverlay").classList.add("show");
           setTimeout(() => {
             document.getElementById("successOverlay").classList.remove("show");
