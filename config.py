@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 class Config:
     DB_PATH    = os.path.join(os.path.dirname(__file__), 'database', 'edu.db')
@@ -8,6 +9,9 @@ class Config:
         raise RuntimeError('SECRET_KEY phải được thiết lập trong production')
     if not SECRET_KEY:
         SECRET_KEY = 'edu-secret-key-change-in-production'
-    # Read FLASK_DEBUG from environment: '1' enables debug, otherwise disabled.
     DEBUG      = os.environ.get('FLASK_DEBUG', '0') == '1'
     PORT       = 9000
+    SESSION_COOKIE_SECURE = True if FLASK_ENV == 'production' else False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
