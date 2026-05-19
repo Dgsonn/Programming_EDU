@@ -67,6 +67,11 @@ def init_db():
         xp                      INTEGER DEFAULT 0,
         questionnaire_completed INTEGER DEFAULT 0
     )''')
+    
+    try:
+        c.execute('ALTER TABLE users ALTER COLUMN password TYPE VARCHAR(512)')
+    except Exception:
+        conn.rollback()
 
     for col, definition in (
         ('gems',                    'INTEGER DEFAULT 0'),

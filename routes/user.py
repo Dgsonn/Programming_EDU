@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from flask import Blueprint, jsonify, request
+from werkzeug.security import generate_password_hash, check_password_hash
 from models import get_db
 from utils import api_login_required, current_user_id
 
@@ -40,10 +41,10 @@ def change_password():
         return jsonify({'error': 'Mật khẩu mới không được để trống'}), 400
     conn = get_db()
     user = conn.execute('SELECT password FROM users WHERE id=?', (current_user_id(),)).fetchone()
-    if user['password'] != current:
+    if not check_password_hash(user['password'], current):
         conn.close()
         return jsonify({'error': 'Mật khẩu hiện tại không đúng'}), 401
-    conn.execute('UPDATE users SET password=? WHERE id=?', (new_pw, current_user_id()))
+    conn.execute('UPDATE users SET password=? WHERE id=?', (generate_password_hash(new_pw), current_user_id()))
     conn.commit()
     conn.close()
     return jsonify({'ok': True})

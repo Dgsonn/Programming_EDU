@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, session, redirect
+from werkzeug.security import generate_password_hash, check_password_hash
 from models import get_db
 
 auth_bp = Blueprint('auth', __name__)
@@ -14,7 +15,7 @@ def login():
     conn = get_db()
     user = conn.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
     conn.close()
-    if not user or user['password'] != password:
+    if not user or not check_password_hash(user['password'], password):
         return jsonify({'error': 'Email hoặc mật khẩu không đúng'}), 401
     session['user_id'] = user['id']
     needs_questionnaire = not bool(user['questionnaire_completed'])
@@ -35,7 +36,7 @@ def register():
         return jsonify({'error': 'Email đã được sử dụng'}), 400
     conn.execute(
         'INSERT INTO users (name, email, password, role) VALUES (?,?,?,?)',
-        (name, email, password, 'Học viên')
+        (name, email, generate_password_hash(password), 'Học viên')
     )
     conn.commit()
     user = conn.execute('SELECT id, questionnaire_completed FROM users WHERE email=?', (email,)).fetchone()
