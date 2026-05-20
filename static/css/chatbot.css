@@ -532,6 +532,10 @@
         background: #334155;
     }
 
+    .chatbot-input-box:focus-within {
+        background: #334155;
+    }
+
     .chatbot-input {
         color: #f1f5f9;
     }

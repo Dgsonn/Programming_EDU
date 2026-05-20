@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Khảo Sát Học Viên - Programming Edu</title>
     <link
       rel="stylesheet"
@@ -307,6 +308,7 @@
       </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/questionaire.js') }}"></script>
   </body>
 </html>
