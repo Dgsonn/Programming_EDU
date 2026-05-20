@@ -2,6 +2,8 @@ import os
 from datetime import timedelta
 
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:9000').split(',')
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")  # bắt buộc để ký token
+app.config["WTF_CSRF_TIME_LIMIT"] = 3600            # token hết hạn sau 1h
 
 class Config:
     DB_PATH    = os.path.join(os.path.dirname(__file__), 'database', 'edu.db')

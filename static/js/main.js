@@ -1,5 +1,18 @@
 var API = "/api";
 
+(function () {
+  var _fetch = window.fetch;
+  var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  window.fetch = function (url, opts) {
+    opts = opts || {};
+    var method = (opts.method || 'GET').toUpperCase();
+    if (csrfToken && method !== 'GET' && method !== 'HEAD') {
+      opts.headers = Object.assign({ 'X-CSRFToken': csrfToken }, opts.headers);
+    }
+    return _fetch(url, opts);
+  };
+})();
+
 var courses = [];
 var enrolledCourses = [];
 var activeFilter = "all";
