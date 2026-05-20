@@ -1,6 +1,8 @@
 import os
 from datetime import timedelta
 
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:9000').split(',')
+
 class Config:
     DB_PATH    = os.path.join(os.path.dirname(__file__), 'database', 'edu.db')
     FLASK_ENV  = os.environ.get('FLASK_ENV', 'development')
