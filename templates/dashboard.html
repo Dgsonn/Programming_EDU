@@ -6,13 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Programming EDU</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}" />
-  <!-- ★ THÊM dòng này: CSS cho modal đổi mật khẩu -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=8" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -81,7 +80,13 @@
       <div class="topbar-right">
         <div class="search-wrap" id="search-wrap">
           <span class="search-icon">🔍</span>
-          <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses()" />
+          <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses(); showSearchSuggestions()" onfocus="showSearchSuggestions()" onclick="showSearchSuggestions()" onblur="closeSearchSuggestions()" autocomplete="off" />
+          <div class="search-suggestions hidden" id="search-suggestions">
+            <div class="suggestions-header">Gợi ý tìm kiếm</div>
+            <div class="suggestions-row" id="suggestions-row"></div>
+            <div class="suggestions-header">Cấp độ học</div>
+            <div class="suggestion-levels" id="suggestion-levels"></div>
+          </div>
         </div>
         <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
         <button class="bell-btn">🔔<span class="bell-dot"></span></button>
@@ -155,11 +160,54 @@
       <div class="courses-header">
         <h2>Tất cả khóa học</h2>
         <div class="filter-group">
-          <button class="filter-btn active" onclick="setFilter(this,'all')">Tất cả</button>
-          <button class="filter-btn" onclick="setFilter(this,'enrolled')">Đã đăng ký</button>
-          <button class="filter-btn" onclick="setFilter(this,'not-enrolled')">Chưa đăng ký</button>
+          <button class="filter-btn active" onclick="setEnrollmentFilter(this,'all')">Tất cả</button>
+          <button class="filter-btn" onclick="setEnrollmentFilter(this,'enrolled')">Đã đăng ký</button>
+          <button class="filter-btn" onclick="setEnrollmentFilter(this,'not-enrolled')">Chưa đăng ký</button>
         </div>
       </div>
+
+      <!-- Search bar + dropdown overlay -->
+      <div class="courses-search-bar-wrap" id="courses-search-bar-wrap">
+        <span class="csb-icon">🔍</span>
+        <input type="text" id="course-search-input" class="courses-search-bar-input"
+          placeholder="Tìm kiếm khóa học, ngôn ngữ, chủ đề..."
+          autocomplete="off"
+          onclick="cshOpen()"
+          oninput="cshInput(this.value)" />
+        <button class="csb-clear" id="course-search-clear" type="button"
+          style="display:none" onclick="cshClear()">✕</button>
+        <div class="course-search-hints" id="course-search-hints" style="display:none">
+          <div id="csh-static">
+            <div class="csh-label">Gợi ý tìm kiếm</div>
+            <div class="csh-pills">
+              <button type="button" class="csh-pill" onclick="cshPick('Python')">🐍 Python</button>
+              <button type="button" class="csh-pill" onclick="cshPick('C++')">⚙️ C / C++</button>
+              <button type="button" class="csh-pill" onclick="cshPick('Java')">☕ Java</button>
+              <button type="button" class="csh-pill" onclick="cshPick('HTML CSS')">🌐 HTML/CSS</button>
+            </div>
+          </div>
+          <ul id="csh-dynamic" style="display:none;list-style:none;padding:0;margin:8px 0 0"></ul>
+        </div>
+      </div>
+
+      <!-- Bộ lọc cấp độ + ngôn ngữ -->
+      <div class="course-filter-panel">
+        <div class="filter-pill-row" id="level-filter-row">
+          <span class="pill-label">Cấp độ</span>
+          <button class="pill-btn" onclick="setLevelFilter(this,'Cơ bản')">Cơ bản</button>
+          <button class="pill-btn" onclick="setLevelFilter(this,'Trung cấp')">Trung cấp</button>
+          <button class="pill-btn" onclick="setLevelFilter(this,'Nâng cao')">Nâng cao</button>
+        </div>
+        <div class="filter-pill-row" id="language-filter-row">
+          <span class="pill-label">Ngôn ngữ</span>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'Python')">Python</button>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'JS')">JS</button>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'Java')">Java</button>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'SQL')">SQL</button>
+        </div>
+        <div class="active-filters hidden" id="active-filters"></div>
+      </div>
+
       <div class="courses-grid" id="courses-grid"></div>
       <div class="empty hidden" id="empty-state">
         <div class="empty-icon">📖</div>
@@ -625,10 +673,10 @@
     });
   </script>
 
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=8"></script>
 
   {% include 'chatbot.html' %}
-  <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
 </body>
 
 </html>

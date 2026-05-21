@@ -15,8 +15,13 @@ var API = "/api";
 
 var courses = [];
 var enrolledCourses = [];
-var activeFilter = "all";
+var activeEnrollmentFilter = "all";
 var searchQuery = "";
+var levelFilter = "all";
+var languageFilters = [];
+var searchDebounceTimer = null;
+var searchSuggestions = ["C", "Python", "Java", "HTML", "AI", "Web Development"];
+var levelSuggestions = ["Cơ bản", "Trung cấp", "Nâng cao"];
 
 // Bảng liên kết khóa học → trang bài học
 var COURSE_URLS = {
@@ -266,9 +271,18 @@ function navigate(page) {
   document.getElementById("topbar-title").textContent =
     pageLabels[page] || "Dashboard";
 
-  // Chỉ hiện search bar ở trang Khóa học
+  // Hiện search bar topbar ở Dashboard và Khóa học
   var sw = document.getElementById("search-wrap");
-  if (sw) sw.style.visibility = page === "courses" ? "visible" : "hidden";
+  if (sw) sw.style.visibility =
+    page === "courses" || page === "dashboard" ? "visible" : "hidden";
+
+  // Đồng bộ ô tìm kiếm trong trang Khóa học với searchQuery hiện tại
+  if (page === 'courses') {
+    var csi = document.getElementById('course-search-input');
+    if (csi) csi.value = searchQuery || '';
+    var clearBtn = document.getElementById('course-search-clear');
+    if (clearBtn) clearBtn.classList.toggle('hidden', !searchQuery);
+  }
 }
 
 /* ── Course rendering ── */
@@ -278,22 +292,60 @@ function renderCourses() {
   var q = searchQuery.toLowerCase();
 
   var filtered = courses.filter(function (c) {
-    var matchSearch =
-      c.title.toLowerCase().indexOf(q) >= 0 ||
-      c.description.toLowerCase().indexOf(q) >= 0;
-    var matchFilter =
-      activeFilter === "all" ||
-      (activeFilter === "enrolled" && c.enrolled) ||
-      (activeFilter === "not-enrolled" && !c.enrolled);
-    return matchSearch && matchFilter;
+    var matchSearch;
+    if (q === 'c' || q === 'c++') {
+      matchSearch =
+        c.title.toLowerCase().indexOf('c / c++') >= 0 ||
+        c.subtitle.toLowerCase().indexOf('c / c++') >= 0 ||
+        c.description.toLowerCase().indexOf('c / c++') >= 0 ||
+        (c.tag || "").toLowerCase().indexOf('c / c++') >= 0 ||
+        c.title.toLowerCase().indexOf('c++') >= 0 ||
+        c.subtitle.toLowerCase().indexOf('c++') >= 0 ||
+        (c.tag || "").toLowerCase().indexOf('c++') >= 0;
+    } else {
+      matchSearch =
+        c.title.toLowerCase().indexOf(q) >= 0 ||
+        c.subtitle.toLowerCase().indexOf(q) >= 0 ||
+        c.description.toLowerCase().indexOf(q) >= 0 ||
+        (c.tag || "").toLowerCase().indexOf(q) >= 0;
+    }
+    var matchEnroll =
+      activeEnrollmentFilter === "all" ||
+      (activeEnrollmentFilter === "enrolled" && c.enrolled) ||
+      (activeEnrollmentFilter === "not-enrolled" && !c.enrolled);
+    var matchLevel =
+      levelFilter === "all" ||
+      (levelFilter === "Cơ bản" && /cơ bản|người mới|mọi cấp độ/i.test(c.level)) ||
+      (levelFilter === "Trung cấp" && /trung cấp/i.test(c.level)) ||
+      (levelFilter === "Nâng cao" && /nâng cao/i.test(c.level));
+    var matchLang =
+      languageFilters.length === 0 ||
+      languageFilters.some(function (lang) {
+        var title = c.title.toLowerCase();
+        var subtitle = (c.subtitle || "").toLowerCase();
+        var tag = (c.tag || "").toLowerCase();
+        if (lang === "Python") return title.includes("python") || subtitle.includes("python") || tag.includes("python");
+        if (lang === "JS") return (
+          title.includes("js") ||
+          subtitle.includes("js") ||
+          tag.includes("js") ||
+          title.includes("javascript") ||
+          subtitle.includes("javascript") ||
+          tag.includes("javascript")
+        );
+        if (lang === "Java") return title.includes("java") || subtitle.includes("java") || tag.includes("java");
+        if (lang === "SQL") return title.includes("sql") || subtitle.includes("sql") || tag.includes("sql");
+        return false;
+      });
+    return matchSearch && matchEnroll && matchLevel && matchLang;
   });
 
   if (!filtered.length) {
     grid.innerHTML = "";
-    empty.style.display = "block";
+    empty.classList.remove("hidden");
     return;
   }
-  empty.style.display = "none";
+  empty.classList.add("hidden");
 
   grid.innerHTML = filtered
     .map(function (c) {
@@ -567,16 +619,245 @@ function confirmUnenroll() {
 /* ── Filters & search ── */
 function filterCourses() {
   searchQuery = document.getElementById("search-input").value;
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(function () {
+    var coursesPage = document.getElementById('page-courses');
+    if (coursesPage && !coursesPage.classList.contains('active')) {
+      navigate('courses');
+    }
+    loadCourses();
+  }, 300);
+}
+
+function showSearchSuggestions() {
+  var panel = document.getElementById('search-suggestions');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.classList.remove('hidden');
+  renderSearchSuggestions();
+}
+
+function closeSearchSuggestions() {
+  setTimeout(function () {
+    var panel = document.getElementById('search-suggestions');
+    var searchWrap = document.getElementById('search-wrap');
+    var active = document.activeElement;
+    if (searchWrap && searchWrap.contains(active)) return;
+    if (panel) panel.classList.add('hidden');
+  }, 200);
+}
+
+function renderSearchSuggestions() {
+  var row = document.getElementById('suggestions-row');
+  var levels = document.getElementById('suggestion-levels');
+  if (!row || !levels) return;
+  row.innerHTML = searchSuggestions
+    .map(function (item) {
+      return '<button type="button" class="suggestion-pill" onclick="chooseSearchSuggestion(\'' + item + '\')">' + item + '</button>';
+    })
+    .join('');
+  levels.innerHTML = levelSuggestions
+    .map(function (item) {
+      var activeClass = levelFilter === item ? ' active' : '';
+      return '<button type="button" class="suggestion-pill' + activeClass + '" onclick="toggleSearchLevel(\'' + item + '\')">' + item + '</button>';
+    })
+    .join('');
+}
+
+function chooseSearchSuggestion(value) {
+  document.getElementById('search-input').value = value;
+  searchQuery = value;
+  var coursesPage = document.getElementById('page-courses');
+  if (coursesPage && !coursesPage.classList.contains('active')) {
+    navigate('courses');
+  }
+  loadCourses();
+  closeSearchSuggestions();
+}
+
+function toggleSearchLevel(level) {
+  if (levelFilter === level) {
+    levelFilter = 'all';
+  } else {
+    levelFilter = level;
+  }
+  renderSearchSuggestions();
+  renderActiveFilters();
+  loadCourses();
+}
+
+/* ════════════════════════════════════
+   COURSE SEARCH — 5 hàm đơn giản
+   ════════════════════════════════════ */
+
+function cshOpen() {
+  var h = document.getElementById('course-search-hints');
+  if (h) h.style.display = 'block';
+}
+
+function cshInput(val) {
+  searchQuery = val;
+  var clearBtn = document.getElementById('course-search-clear');
+  var staticEl = document.getElementById('csh-static');
+  var dynEl    = document.getElementById('csh-dynamic');
+  if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+  cshOpen();
+  if (!val.trim()) {
+    if (staticEl) staticEl.style.display = 'block';
+    if (dynEl)    dynEl.style.display    = 'none';
+  } else {
+    if (staticEl) staticEl.style.display = 'none';
+    if (dynEl) {
+      dynEl.style.display = 'block';
+      var ql = val.toLowerCase();
+      var hits = courses.filter(function (c) {
+        return c.title.toLowerCase().indexOf(ql) >= 0 ||
+               (c.subtitle||'').toLowerCase().indexOf(ql) >= 0 ||
+               (c.tag||'').toLowerCase().indexOf(ql) >= 0;
+      }).slice(0, 6);
+      dynEl.innerHTML = hits.length
+        ? hits.map(function (c) {
+            var s = c.title.replace(/'/g,"\\'");
+            return '<li class="csh-result-item" onclick="cshPick(\''+s+'\')">' + c.title + '</li>';
+          }).join('')
+        : '<li class="csh-no-result">Không tìm thấy kết quả</li>';
+    }
+  }
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(loadCourses, 300);
+}
+
+function cshPick(val) {
+  var input = document.getElementById('course-search-input');
+  var h     = document.getElementById('course-search-hints');
+  var cb    = document.getElementById('course-search-clear');
+  if (input) input.value = val;
+  if (h)     h.style.display = 'none';
+  if (cb)    cb.style.display = 'flex';
+  searchQuery = val;
+  loadCourses();
+}
+
+function cshClear() {
+  var input = document.getElementById('course-search-input');
+  var h     = document.getElementById('course-search-hints');
+  var cb    = document.getElementById('course-search-clear');
+  var staticEl = document.getElementById('csh-static');
+  var dynEl    = document.getElementById('csh-dynamic');
+  if (input) { input.value = ''; input.focus(); }
+  if (cb)    cb.style.display = 'none';
+  if (h)     h.style.display  = 'block';
+  if (staticEl) staticEl.style.display = 'block';
+  if (dynEl)    dynEl.style.display    = 'none';
+  searchQuery = '';
+  loadCourses();
+}
+
+/* Đóng dropdown khi click ra ngoài */
+document.addEventListener('click', function (e) {
+  var wrap = document.getElementById('courses-search-bar-wrap');
+  var h    = document.getElementById('course-search-hints');
+  if (h && wrap && !wrap.contains(e.target)) {
+    h.style.display = 'none';
+  }
+});
+
+function setEnrollmentFilter(btn, filter) {
+  activeEnrollmentFilter = filter;
+  var group = btn.parentNode;
+  if (group) {
+    group.querySelectorAll(".filter-btn").forEach(function (b) {
+      b.classList.remove("active");
+    });
+  }
+  btn.classList.add("active");
   renderCourses();
 }
 
-function setFilter(btn, filter) {
-  activeFilter = filter;
-  document.querySelectorAll(".filter-btn").forEach(function (b) {
-    b.classList.remove("active");
+function setLevelFilter(btn, level) {
+  if (levelFilter === level) {
+    levelFilter = 'all';
+    btn.classList.remove('active');
+  } else {
+    levelFilter = level;
+    var group = document.getElementById('level-filter-row');
+    if (group) {
+      group.querySelectorAll('.pill-btn').forEach(function (b) {
+        b.classList.remove('active');
+      });
+    }
+    btn.classList.add('active');
+  }
+  renderActiveFilters();
+  loadCourses();
+}
+
+function toggleLanguageFilter(btn, language) {
+  var index = languageFilters.indexOf(language);
+  if (index === -1) {
+    languageFilters.push(language);
+    btn.classList.add('active');
+  } else {
+    languageFilters.splice(index, 1);
+    btn.classList.remove('active');
+  }
+  renderActiveFilters();
+  loadCourses();
+}
+
+function renderActiveFilters() {
+  var container = document.getElementById('active-filters');
+  if (!container) return;
+  var chips = [];
+  if (levelFilter !== 'all') {
+    chips.push({ type: 'level', label: levelFilter });
+  }
+  languageFilters.forEach(function (lang) {
+    chips.push({ type: 'language', label: lang });
   });
-  btn.classList.add("active");
-  renderCourses();
+
+  if (!chips.length) {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+
+  container.classList.remove('hidden');
+  container.innerHTML =
+    '<span class="active-filters-label">Đang lọc:</span>' +
+    chips.map(function (chip) {
+      return (
+        '<span class="filter-chip">' +
+        chip.label +
+        '<button type="button" onclick="removeCourseFilter(\'' +
+        chip.type + '\', \'' + chip.label +
+        '\')">✕</button></span>'
+      );
+    }).join('');
+}
+
+function removeCourseFilter(type, value) {
+  if (type === 'level') {
+    levelFilter = 'all';
+    var group = document.getElementById('level-filter-row');
+    if (group) {
+      group.querySelectorAll('.pill-btn').forEach(function (b) {
+        b.classList.remove('active');
+      });
+    }
+  } else if (type === 'language') {
+    languageFilters = languageFilters.filter(function (lang) {
+      return lang !== value;
+    });
+    var group = document.getElementById('language-filter-row');
+    if (group) {
+      group.querySelectorAll('.pill-btn').forEach(function (b) {
+        if (b.textContent === value) b.classList.remove('active');
+      });
+    }
+  }
+  renderActiveFilters();
+  loadCourses();
 }
 
 /* ── Toggle switches ── */
@@ -714,7 +995,16 @@ function loadUser() {
 }
 
 function loadCourses() {
-  return fetch(API + "/courses")
+  var params = new URLSearchParams();
+  if (searchQuery.trim()) params.set('q', searchQuery.trim());
+  if (levelFilter !== 'all') params.set('level', levelFilter);
+  languageFilters.forEach(function (lang) {
+    params.append('language', lang);
+  });
+  var url = API + '/courses';
+  if (params.toString()) url += '?' + params.toString();
+
+  return fetch(url)
     .then(handleFetch)
     .then(function (data) {
       if (data) {

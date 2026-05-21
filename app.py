@@ -3,6 +3,7 @@ from flask_cors import CORS
 from config import Config, ALLOWED_ORIGINS
 from models import init_db
 from routes import register_blueprints
+from routes.auth import auth_bp
 from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
@@ -14,10 +15,13 @@ CORS(app, resources={
         "supports_credentials": True,
     }
 })
-CSRFProtect(app)
+
+csrf = CSRFProtect()
+csrf.init_app(app)
 
 register_blueprints(app)
-init_db()   
+csrf.exempt(auth_bp)
+init_db()
 
 if __name__ == '__main__':
     app.run(debug=Config.DEBUG, port=Config.PORT)

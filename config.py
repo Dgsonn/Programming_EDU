@@ -13,6 +13,7 @@ class Config:
     if not SECRET_KEY:
         SECRET_KEY = 'edu-secret-key-change-in-production'
     DEBUG      = os.environ.get('FLASK_DEBUG', '0') == '1'
+    SEND_FILE_MAX_AGE_DEFAULT = 0
     PORT       = 9000
     SESSION_COOKIE_SECURE = True if FLASK_ENV == 'production' else False
     SESSION_COOKIE_HTTPONLY = True

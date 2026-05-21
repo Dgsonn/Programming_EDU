@@ -53,14 +53,72 @@ nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4
 .topbar h1  { font-size: 18px; font-weight: 700; color: #1F2937; }
 .topbar .sub { font-size: 12px; color: #9CA3AF; margin-top: 1px; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
-.search-wrap { position: relative; }
+.search-wrap { position: relative; z-index: 30; }
 .search-wrap input {
-  padding: 8px 14px 8px 34px; border-radius: 12px; border: 1px solid #E5E7EB;
+  padding: 8px 8px 8px 34px; border-radius: 12px; border: 1px solid #E5E7EB;
   background: #F9FAFB; font-size: 13px; color: #374151; outline: none;
-  width: 220px; transition: all 0.2s;
+  width: 180px; transition: all 0.2s;
 }
 .search-wrap input:focus { border-color: #93C5FD; background: #fff; box-shadow: 0 0 0 3px rgba(147,197,253,0.2); }
 .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 14px; pointer-events: none; }
+.search-suggestions {
+  margin-top: 8px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-width: 360px;
+  min-width: 280px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  padding: 16px;
+  z-index: 999;
+  box-sizing: border-box;
+  animation: fadeIn 0.18s ease-in-out;
+}
+.search-suggestions.hidden { display: none; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.search-suggestions .suggestions-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.suggestions-row,
+.suggestion-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.suggestion-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #F8FAFC;
+  border: 1px solid #E5E7EB;
+  color: #1F2937;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.suggestion-pill:hover {
+  background: #EFF6FF;
+}
+.suggestion-pill.active {
+  background: linear-gradient(135deg, #4A9EE0, #E84545);
+  color: #fff;
+  border-color: transparent;
+}
+.search-suggestions .suggestion-levels {
+  margin-bottom: 0;
+}
 .bell-btn {
   position: relative; width: 36px; height: 36px; border-radius: 12px;
   border: 1px solid #E5E7EB; background: #F9FAFB; cursor: pointer;
