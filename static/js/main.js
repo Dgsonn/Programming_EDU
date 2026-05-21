@@ -233,7 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── Handle 401 (chưa đăng nhập) ── */
 function handleFetch(r) {
   if (r.status === 401) {
-    window.location = "/login";
+    const p = window.location.pathname;
+    if (p !== "/login" && p !== "/register") {
+      window.location = "/login";
+    }
     return null;
   }
   return r.json();
@@ -1034,7 +1037,10 @@ function initDragDrop() {
 document.addEventListener("DOMContentLoaded", function () {
   applyTheme(localStorage.getItem("theme") === "dark");
   updateDate();
-  loadAll();
+  const p = window.location.pathname;
+  if (p !== "/login" && p !== "/register") {
+    loadAll();
+  }
   initDragDrop();
 });
 

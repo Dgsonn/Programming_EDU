@@ -15,6 +15,10 @@ def login():
     conn = get_db()
     user = conn.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
     conn.close()
+    print(f'[DEBUG] email={email!r}, user_found={user is not None}')
+    if user:
+        pw_check = check_password_hash(user['password'], password)
+        print(f'[DEBUG] pw_check={pw_check}, hash_prefix={user["password"][:20]}')
     if not user or not check_password_hash(user['password'], password):
         return jsonify({'error': 'Email hoặc mật khẩu không đúng'}), 401
     session['user_id'] = user['id']

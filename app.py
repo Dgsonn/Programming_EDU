@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_wtf.csrf import CSRFProtect
 from config import Config, ALLOWED_ORIGINS
 from models import init_db
 from routes import register_blueprints
-from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 app.config.from_object(Config)
