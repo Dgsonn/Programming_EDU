@@ -53,7 +53,6 @@ def init_db():
     conn = psycopg2.connect(_DATABASE_URL)
     c = conn.cursor()
 
-    # Acquire advisory lock to prevent concurrent init_db() runs
     c.execute('SELECT pg_advisory_lock(123456789)')
 
     try:
@@ -76,8 +75,6 @@ def init_db():
             c.execute('ALTER TABLE users ALTER COLUMN password TYPE VARCHAR(512)')
         except Exception:
             conn.rollback()
-            
-            
 
         for col, definition in (
             ('gems',                    'INTEGER DEFAULT 0'),
@@ -88,7 +85,6 @@ def init_db():
                 c.execute(f'ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {definition}')
             except Exception:
                 conn.rollback()
-               
 
         c.execute('''CREATE TABLE IF NOT EXISTS courses (
             id           TEXT PRIMARY KEY,
@@ -139,66 +135,64 @@ def init_db():
             created_at TEXT
         )''')
 
-    c.execute('SELECT 1 FROM courses LIMIT 1')
-    if not c.fetchone():
-        courses_seed = [
-            ('cpp',     'C / C++',    'Lập trình hệ thống',
-             'Học lập trình từ nền tảng với C/C++, hiểu bộ nhớ, con trỏ và cấu trúc dữ liệu.',
-             'static/images/cpp.svg',     'Phù hợp người mới',    '40 giờ', '12.4K', 4.8,  85, '#4A9EE0', '#2D7FC1', 'HỆ THỐNG & NHÚNG'),
-            ('python',  'Python',     'Đa năng & AI',
-             'Làm chủ Python để xây dựng web, phân tích dữ liệu, AI/ML và tự động hóa.',
-             'static/images/python.svg',  'Phù hợp người mới',    '55 giờ', '28.7K', 4.9, 120, '#E84545', '#C83232', 'AI & DATA SCIENCE'),
-            ('java',    'Java',       'Backend & Enterprise',
-             'Xây dựng ứng dụng doanh nghiệp với Java OOP, Spring Boot và microservices.',
-             'static/images/java.svg',    'Trung cấp',             '60 giờ', '18.2K', 4.7, 110, '#4A9EE0', '#E84545', 'BACKEND & ENTERPRISE'),
-            ('htmlcss', 'HTML / CSS', 'Nền tảng Web',
-             'Tạo giao diện web đẹp, responsive với HTML5 hiện đại và CSS3 nâng cao.',
-             'static/images/htmlcss.svg', 'Phù hợp người mới',    '30 giờ', '35.1K', 4.9,  70, '#E84545', '#4A9EE0', 'WEB DEVELOPMENT'),
-        ]
-        c.executemany(
-            'INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-            courses_seed
-        )
+        c.execute('SELECT 1 FROM courses LIMIT 1')
+        if not c.fetchone():
+            courses_seed = [
+                ('cpp',     'C / C++',    'Lập trình hệ thống',
+                 'Học lập trình từ nền tảng với C/C++, hiểu bộ nhớ, con trỏ và cấu trúc dữ liệu.',
+                 'static/images/cpp.svg',     'Phù hợp người mới',    '40 giờ', '12.4K', 4.8,  85, '#4A9EE0', '#2D7FC1', 'HỆ THỐNG & NHÚNG'),
+                ('python',  'Python',     'Đa năng & AI',
+                 'Làm chủ Python để xây dựng web, phân tích dữ liệu, AI/ML và tự động hóa.',
+                 'static/images/python.svg',  'Phù hợp người mới',    '55 giờ', '28.7K', 4.9, 120, '#E84545', '#C83232', 'AI & DATA SCIENCE'),
+                ('java',    'Java',       'Backend & Enterprise',
+                 'Xây dựng ứng dụng doanh nghiệp với Java OOP, Spring Boot và microservices.',
+                 'static/images/java.svg',    'Trung cấp',             '60 giờ', '18.2K', 4.7, 110, '#4A9EE0', '#E84545', 'BACKEND & ENTERPRISE'),
+                ('htmlcss', 'HTML / CSS', 'Nền tảng Web',
+                 'Tạo giao diện web đẹp, responsive với HTML5 hiện đại và CSS3 nâng cao.',
+                 'static/images/htmlcss.svg', 'Phù hợp người mới',    '30 giờ', '35.1K', 4.9,  70, '#E84545', '#4A9EE0', 'WEB DEVELOPMENT'),
+            ]
+            c.executemany(
+                'INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                courses_seed
+            )
 
-    # Migration nhẹ: nếu DB đã có seed level cũ, chuẩn hóa về quy định mới
-    # - Chỉ dùng 3 mức: Cơ bản / Trung cấp / Nâng cao
-    # - Nếu không rõ cấp => chỉ gắn 'Phù hợp người mới'
-    c.execute("""
-        UPDATE courses
-        SET level = 'Phù hợp người mới'
-        WHERE level ILIKE '%mọi cấp độ%'
-           OR level ILIKE '%người mới%'
-           OR level ILIKE '%cơ bản → nâng cao%'
-           OR level ILIKE '%cơ bản -> nâng cao%'
-           OR level ILIKE '%cơ bản%nâng cao%'
-           OR level ILIKE '%cơ bản%nâng cao%'
-           OR level ILIKE '%Cơ bản%Nâng cao%'
-           OR level ILIKE '%Cơ bản% → Nâng cao%'
-           OR level ILIKE '%Cơ bản%–%Nâng cao%'
-           OR level ILIKE '%Cơ bản%->%Nâng cao%'
-    """)
+        c.execute("""
+            UPDATE courses
+            SET level = 'Phù hợp người mới'
+            WHERE level ILIKE '%mọi cấp độ%'
+               OR level ILIKE '%người mới%'
+               OR level ILIKE '%cơ bản → nâng cao%'
+               OR level ILIKE '%cơ bản -> nâng cao%'
+               OR level ILIKE '%cơ bản%nâng cao%'
+               OR level ILIKE '%Cơ bản%Nâng cao%'
+               OR level ILIKE '%Cơ bản% → Nâng cao%'
+               OR level ILIKE '%Cơ bản%–%Nâng cao%'
+               OR level ILIKE '%Cơ bản%->%Nâng cao%'
+        """)
 
-    # Chuẩn hóa chính xác các giá trị 3 cấp
-    c.execute("""
-        UPDATE courses SET level = 'Cơ bản'
-        WHERE level ILIKE '%cơ bản%'
-          AND level NOT ILIKE '%mọi cấp độ%'
-          AND level NOT ILIKE '%người mới%'
-    """)
+        c.execute("""
+            UPDATE courses SET level = 'Cơ bản'
+            WHERE level ILIKE '%cơ bản%'
+              AND level NOT ILIKE '%mọi cấp độ%'
+              AND level NOT ILIKE '%người mới%'
+        """)
 
-    c.execute("""
-        UPDATE courses SET level = 'Nâng cao'
-        WHERE level ILIKE '%nâng cao%'
-          AND level NOT ILIKE '%mọi cấp độ%'
-    """)
+        c.execute("""
+            UPDATE courses SET level = 'Nâng cao'
+            WHERE level ILIKE '%nâng cao%'
+              AND level NOT ILIKE '%mọi cấp độ%'
+        """)
 
-    # Trung cấp giữ nguyên nếu đã đúng
-    c.execute("""
-        UPDATE courses SET level = 'Trung cấp'
-        WHERE level ILIKE '%trung cấp%'
-          AND level NOT ILIKE '%mọi cấp độ%'
-    """)
+        c.execute("""
+            UPDATE courses SET level = 'Trung cấp'
+            WHERE level ILIKE '%trung cấp%'
+              AND level NOT ILIKE '%mọi cấp độ%'
+        """)
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+
+    finally:
+        c.execute('SELECT pg_advisory_unlock(123456789)')
+        conn.close()
+
     print('[DB] NeonDB initialized (levels normalized)')
