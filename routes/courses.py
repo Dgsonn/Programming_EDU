@@ -121,21 +121,15 @@ def get_enrolled():
 def enroll(course_id):
     uid    = current_user_id()
     conn   = get_db()
-    course = conn.execute('SELECT id, title FROM courses WHERE id=?', (course_id,)).fetchone()
-    if not course:
-        conn.close()
-        return jsonify({'error': 'Không tìm thấy khóa học'}), 404
-    exists = conn.execute(
-        'SELECT 1 FROM enrollments WHERE user_id=? AND course_id=?', (uid, course_id)
-    ).fetchone()
-    if not exists:
+    try:
+        course = conn.execute('SELECT id, title FROM courses WHERE id=?', (course_id,)).fetchone()
+        if not course:
+            return jsonify({'error': 'Không tìm thấy khóa học'}), 404
         first_lesson = 'Bài 1: ' + dict(course)['title']
-        conn.execute(
-            "INSERT INTO enrollments VALUES (?,?,0,0,'0h','',?)",
-            (uid, course_id, first_lesson)
-        )
+        conn.execute("INSERT INTO enrollments ... ON CONFLICT DO NOTHING", ...)
         conn.commit()
-    conn.close()
+    finally:
+        conn.close()
     return jsonify({'ok': True})
 
 

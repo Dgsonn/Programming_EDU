@@ -362,6 +362,16 @@
           document.head.appendChild(link);
         }
       }
+      
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          const btn = document.getElementById("loginBtn");
+          if (!btn.disabled) {
+            e.preventDefault();
+            btn.click();
+          }
+        }
+      });
     </script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>
