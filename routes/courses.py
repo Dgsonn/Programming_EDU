@@ -32,16 +32,18 @@ def get_courses():
 
     if level and level != 'all':
         if level == 'Cơ bản':
-            where_clauses.append(
-                "(c.level ILIKE %s OR c.level ILIKE %s OR c.level ILIKE %s)"
-            )
-            params.extend(['%cơ bản%', '%người mới%', '%mọi cấp độ%'])
+            where_clauses.append('c.level ILIKE %s')
+            params.append('%cơ bản%')
         elif level == 'Trung cấp':
             where_clauses.append('c.level ILIKE %s')
             params.append('%trung cấp%')
         elif level == 'Nâng cao':
             where_clauses.append('c.level ILIKE %s')
             params.append('%nâng cao%')
+        elif level == 'Phù hợp người mới':
+            where_clauses.append('c.level ILIKE %s')
+            params.append('%phù hợp người mới%')
+
 
     lang_clauses = []
     for lang in languages:
@@ -121,21 +123,15 @@ def get_enrolled():
 def enroll(course_id):
     uid    = current_user_id()
     conn   = get_db()
-    course = conn.execute('SELECT id, title FROM courses WHERE id=?', (course_id,)).fetchone()
-    if not course:
-        conn.close()
-        return jsonify({'error': 'Không tìm thấy khóa học'}), 404
-    exists = conn.execute(
-        'SELECT 1 FROM enrollments WHERE user_id=? AND course_id=?', (uid, course_id)
-    ).fetchone()
-    if not exists:
+    try:
+        course = conn.execute('SELECT id, title FROM courses WHERE id=?', (course_id,)).fetchone()
+        if not course:
+            return jsonify({'error': 'Không tìm thấy khóa học'}), 404
         first_lesson = 'Bài 1: ' + dict(course)['title']
-        conn.execute(
-            "INSERT INTO enrollments VALUES (?,?,0,0,'0h','',?)",
-            (uid, course_id, first_lesson)
-        )
+        conn.execute("INSERT INTO enrollments ... ON CONFLICT DO NOTHING", ...)
         conn.commit()
-    conn.close()
+    finally:
+        conn.close()
     return jsonify({'ok': True})
 
 

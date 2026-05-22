@@ -20,8 +20,9 @@ var searchQuery = "";
 var levelFilter = "all";
 var languageFilters = [];
 var searchDebounceTimer = null;
-var searchSuggestions = ["C", "Python", "Java", "HTML", "AI", "Web Development"];
-var levelSuggestions = ["Cơ bản", "Trung cấp", "Nâng cao"];
+var searchSuggestions = ["C", "Python", "Java", "HTML", "AI", "Web Development", "Phù hợp người mới", "Cơ bản", "Trung cấp", "Nâng cao"];
+var levelSuggestions = ["Phù hợp người mới", "Trung cấp", "Nâng cao"];
+
 
 // Bảng liên kết khóa học → trang bài học
 var COURSE_URLS = {
@@ -318,9 +319,12 @@ function renderCourses() {
       (activeEnrollmentFilter === "not-enrolled" && !c.enrolled);
     var matchLevel =
       levelFilter === "all" ||
-      (levelFilter === "Cơ bản" && /cơ bản|người mới|mọi cấp độ/i.test(c.level)) ||
+      // Map: Cơ bản == Phù hợp người mới (DB hiện normalize theo 'Phù hợp người mới')
+      (levelFilter === "Cơ bản" && /phù hợp người mới/i.test(c.level)) ||
       (levelFilter === "Trung cấp" && /trung cấp/i.test(c.level)) ||
-      (levelFilter === "Nâng cao" && /nâng cao/i.test(c.level));
+      (levelFilter === "Nâng cao" && /nâng cao/i.test(c.level)) ||
+      (levelFilter === "Phù hợp người mới" && /phù hợp người mới/i.test(c.level));
+
     var matchLang =
       languageFilters.length === 0 ||
       languageFilters.some(function (lang) {
@@ -737,9 +741,45 @@ function cshPick(val) {
   if (input) input.value = val;
   if (h)     h.style.display = 'none';
   if (cb)    cb.style.display = 'flex';
+
+  // Khi người dùng chọn level từ hints, map nhãn sang levelFilter tương ứng
+  // để đồng bộ với bộ lọc cấp độ trên grid.
+  if (val === 'Phù hợp người mới') {
+    levelFilter = 'Phù hợp người mới';
+    renderSearchSuggestions();
+    renderActiveFilters();
+    loadCourses();
+    return;
+  }
+  if (val === 'Cơ bản') {
+    // Backend hiện normalize cấp độ theo 'Phù hợp người mới'
+    levelFilter = 'Phù hợp người mới';
+    renderSearchSuggestions();
+    renderActiveFilters();
+    loadCourses();
+    return;
+  }
+  if (val === 'Trung cấp') {
+    levelFilter = 'Trung cấp';
+    renderSearchSuggestions();
+    renderActiveFilters();
+    loadCourses();
+    return;
+  }
+  if (val === 'Cao cấp') {
+    // Backend level tương ứng đang là 'Nâng cao'
+    levelFilter = 'Nâng cao';
+    renderSearchSuggestions();
+    renderActiveFilters();
+    loadCourses();
+    return;
+  }
+
+  // Chỉ set searchQuery khi chọn gợi ý tìm kiếm thông thường
   searchQuery = val;
   loadCourses();
 }
+
 
 function cshClear() {
   var input = document.getElementById('course-search-input');
