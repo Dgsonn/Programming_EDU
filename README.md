@@ -185,8 +185,10 @@ python check_user.py test@gmail.com reset   # đặt lại mật khẩu thành "
 
 > ⚠️ **Không code trực tiếp trên nhánh `main`.**
 
+> 🔁 **Bắt buộc: Mỗi ngày trước khi bắt đầu làm việc, phải pull code mới nhất về.** Nếu không, bạn sẽ code trên phiên bản cũ và gây conflict khi merge.
+
 ```bash
-# Lấy code mới nhất
+# Lấy code mới nhất — chạy mỗi ngày trước khi làm việc
 git checkout main && git pull
 
 # Tạo nhánh mới
