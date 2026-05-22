@@ -1,11 +1,24 @@
 import os
 import psycopg2
 import psycopg2.extras
+from contextlib import contextmanager
 from dotenv import load_dotenv
+from psycopg2.pool import ThreadedConnectionPool
 
 load_dotenv()
 
 _DATABASE_URL = os.getenv('DATABASE_URL')
+_pool = None
+
+
+def _get_pool():
+    """Lazy-init và trả về ThreadedConnectionPool."""
+    global _pool
+    if _pool is None:
+        if not _DATABASE_URL:
+            raise RuntimeError('DATABASE_URL chưa được cấu hình trong .env')
+        _pool = ThreadedConnectionPool(minconn=2, maxconn=10, dsn=_DATABASE_URL)
+    return _pool
 
 
 class _CursorWrapper:
@@ -38,19 +51,44 @@ class _ConnWrapper:
         self._conn.commit()
 
     def close(self):
-        self._conn.close()
+        _get_pool().putconn(self._conn)
 
 
 def get_db():
-    if not _DATABASE_URL:
-        raise RuntimeError('DATABASE_URL chưa được cấu hình trong .env')
-    return _ConnWrapper(psycopg2.connect(_DATABASE_URL))
+    """Backward-compatible: trả về _ConnWrapper, close() sẽ trả conn về pool."""
+    return _ConnWrapper(_get_pool().getconn())
+
+
+@contextmanager
+def get_db_connection():
+    """Context manager trả về raw psycopg2 connection từ pool."""
+    pool = _get_pool()
+    conn = pool.getconn()
+    try:
+        yield conn
+    finally:
+        pool.putconn(conn)
+
+
+@contextmanager
+def get_db_cursor(commit=False):
+    """Context manager trả về RealDictCursor. Cursor luôn close trong finally."""
+    with get_db_connection() as conn:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            yield cur
+            if commit:
+                conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cur.close()
 
 
 def init_db():
-    if not _DATABASE_URL:
-        raise RuntimeError('DATABASE_URL chưa được cấu hình trong .env')
-    conn = psycopg2.connect(_DATABASE_URL)
+    pool = _get_pool()
+    conn = pool.getconn()
     c = conn.cursor()
 
     c.execute('SELECT pg_advisory_lock(123456789)')
@@ -193,6 +231,7 @@ def init_db():
 
     finally:
         c.execute('SELECT pg_advisory_unlock(123456789)')
-        conn.close()
+        c.close()
+        _get_pool().putconn(conn)
 
     print('[DB] NeonDB initialized (levels normalized)')
