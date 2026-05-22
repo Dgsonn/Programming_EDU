@@ -32,16 +32,18 @@ def get_courses():
 
     if level and level != 'all':
         if level == 'Cơ bản':
-            where_clauses.append(
-                "(c.level ILIKE %s OR c.level ILIKE %s OR c.level ILIKE %s)"
-            )
-            params.extend(['%cơ bản%', '%người mới%', '%mọi cấp độ%'])
+            where_clauses.append('c.level ILIKE %s')
+            params.append('%cơ bản%')
         elif level == 'Trung cấp':
             where_clauses.append('c.level ILIKE %s')
             params.append('%trung cấp%')
         elif level == 'Nâng cao':
             where_clauses.append('c.level ILIKE %s')
             params.append('%nâng cao%')
+        elif level == 'Phù hợp người mới':
+            where_clauses.append('c.level ILIKE %s')
+            params.append('%phù hợp người mới%')
+
 
     lang_clauses = []
     for lang in languages:
