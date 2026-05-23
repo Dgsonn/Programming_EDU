@@ -54,6 +54,11 @@
           <div class="nav-icon">🗺️</div><span>Lộ trình</span>
         </div>
       </button>
+      <button class="nav-btn" data-page="skills" onclick="navigate('skills')">
+        <div class="nav-left">
+          <div class="nav-icon">🏅</div><span>Kỹ năng</span>
+        </div>
+      </button>
       <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
         <div class="nav-left">
           <div class="nav-icon">⚙️</div><span>Cài đặt</span>
@@ -237,6 +242,92 @@
         <button class="close-btn" onclick="closeSidebar()">✖ Đóng</button>
         <h2 id="sidebar-title">Tiêu đề</h2>
         <div id="sidebar-content">Nội dung chi tiết sẽ hiển thị ở đây...</div>
+      </div>
+    </div>
+
+    <!-- ── Skills ── -->
+    <div class="page" id="page-skills">
+      <style>
+        .sk-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+        .sk-header h2 { font-size:20px; font-weight:800; color:#1F2937; }
+        .sk-summary { display:flex; gap:12px; margin-bottom:24px; }
+        .sk-stat { flex:1; background:#fff; border-radius:14px; border:1px solid #F3F4F6;
+          padding:14px 16px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+        .sk-stat .v { font-size:22px; font-weight:800; color:#1F2937; }
+        .sk-stat .l { font-size:12px; color:#9CA3AF; margin-top:2px; }
+        .sk-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:20px; align-items:start; }
+        .sk-set {
+          background:#fff; border-radius:16px; border:1px solid #F3F4F6;
+          overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.05);
+        }
+        .sk-set-hd {
+          display:flex; align-items:center; gap:12px; padding:16px 20px;
+          cursor:pointer; user-select:none; transition:background 0.15s;
+          border-bottom:1px solid #F9FAFB;
+        }
+        .sk-set-hd:hover { background:#F9FAFB; }
+        .sk-set-icon { font-size:22px; flex-shrink:0; }
+        .sk-set-info { flex:1; min-width:0; }
+        .sk-set-title { font-size:15px; font-weight:700; color:#1F2937; margin-bottom:6px; }
+        .sk-set-bar { height:6px; background:#F3F4F6; border-radius:3px; overflow:hidden; }
+        .sk-set-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#4A9EE0,#10B981); transition:width 0.5s ease; }
+        .sk-set-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+        .sk-set-pct { font-size:13px; font-weight:700; color:#4A9EE0; }
+        .sk-arrow { font-size:10px; color:#9CA3AF; transition:transform 0.2s; flex-shrink:0; }
+        .sk-body { padding:12px 20px 16px; }
+        .sk-skill { margin-bottom:10px; }
+        .sk-skill-row {
+          display:flex; align-items:center; gap:10px; padding:8px 10px;
+          border-radius:10px; cursor:pointer; transition:background 0.12s;
+        }
+        .sk-skill-row:hover { background:#F3F4F6; }
+        .sk-skill-name { flex:1; font-size:13px; font-weight:600; color:#374151; }
+        .sk-skill-bar-wrap { width:80px; }
+        .sk-skill-bar { height:5px; background:#E5E7EB; border-radius:3px; overflow:hidden; }
+        .sk-skill-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
+        .sk-skill-pct { font-size:11px; color:#6B7280; white-space:nowrap; }
+        .sk-sub-list { padding:4px 0 0 10px; }
+        .sk-sub { display:flex; align-items:center; gap:8px; padding:5px 10px;
+          font-size:12px; border-radius:8px; transition:background 0.1s; }
+        .sk-sub:hover { background:#F9FAFB; }
+        .sk-sub-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .sk-sub-dot.done { background:#10B981; }
+        .sk-sub-dot.todo { background:#E5E7EB; border:1.5px solid #D1D5DB; }
+        .sk-sub-title { flex:1; }
+        .sk-sub-title.done { color:#6B7280; text-decoration:line-through; }
+        .sk-sub-title.todo { color:#374151; }
+
+        /* Badges */
+        .sk-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; flex-shrink:0; }
+        .sk-badge.achieved { background:#D1FAE5; color:#065F46; }
+        .sk-badge.review   { background:#FEF3C7; color:#92400E; }
+        .sk-badge.new      { background:#F3F4F6; color:#6B7280; }
+
+        /* Dark mode */
+        body.dark .sk-header h2 { color:#F1F5F9; }
+        body.dark .sk-stat { background:#1E293B; border-color:#334155; }
+        body.dark .sk-stat .v { color:#F1F5F9; }
+        body.dark .sk-stat .l { color:#64748B; }
+        body.dark .sk-set { background:#1E293B; border-color:#334155; }
+        body.dark .sk-set-hd:hover { background:#293548; }
+        body.dark .sk-set-title { color:#F1F5F9; }
+        body.dark .sk-set-bar { background:#334155; }
+        body.dark .sk-skill-row:hover { background:#293548; }
+        body.dark .sk-skill-name { color:#CBD5E1; }
+        body.dark .sk-skill-bar { background:#334155; }
+        body.dark .sk-skill-pct { color:#94A3B8; }
+        body.dark .sk-sub:hover { background:#293548; }
+        body.dark .sk-sub-title.todo { color:#CBD5E1; }
+        body.dark .sk-badge.new { background:#1E293B; color:#64748B; border:1px solid #334155; }
+      </style>
+
+      <div class="sk-header">
+        <h2>🏅 Theo dõi kỹ năng</h2>
+      </div>
+
+      <div class="sk-summary" id="sk-summary"></div>
+      <div class="sk-grid" id="sk-grid">
+        <div style="color:#9CA3AF;font-size:14px;padding:24px;">Đang tải...</div>
       </div>
     </div>
 
@@ -679,6 +770,117 @@
   </script>
 
   <script src="{{ url_for('static', filename='js/main.js') }}?v=8"></script>
+
+  <script>
+  function skSetToggle(hd) {
+    var body = hd.nextElementSibling;
+    var open = body.style.display === 'block';
+    body.style.display = open ? 'none' : 'block';
+    var arrow = hd.querySelector('.sk-arrow');
+    if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
+  }
+  function skSkillToggle(row) {
+    var sub = row.nextElementSibling;
+    sub.style.display = sub.style.display === 'block' ? 'none' : 'block';
+  }
+  </script>
+  <script>
+  (function () {
+    var _skillsLoaded = false;
+
+    function badge(pct) {
+      if (pct === 0) return '<span class="sk-badge new">Chưa bắt đầu</span>';
+      if (pct >= 70) return '<span class="sk-badge achieved">Đạt ✓</span>';
+      return '<span class="sk-badge review">Cần ôn</span>';
+    }
+
+    function fillColor(pct) {
+      if (pct === 0) return '#E5E7EB';
+      if (pct >= 70) return 'linear-gradient(90deg,#10B981,#059669)';
+      return 'linear-gradient(90deg,#F59E0B,#D97706)';
+    }
+
+    function renderSkills(data) {
+      var sets = data.skill_sets || [];
+      var total = 0, achieved = 0, review = 0, unstarted = 0;
+      sets.forEach(function (bs) {
+        bs.skills.forEach(function (sk) {
+          total++;
+          if (sk.progress === 0) unstarted++;
+          else if (sk.progress >= 70) achieved++;
+          else review++;
+        });
+      });
+
+      var sum = document.getElementById('sk-summary');
+      sum.innerHTML =
+        '<div class="sk-stat"><div class="v">' + total + '</div><div class="l">Tổng kỹ năng</div></div>' +
+        '<div class="sk-stat" style="border-color:#D1FAE5"><div class="v" style="color:#10B981">' + achieved + '</div><div class="l">Đã đạt ✓</div></div>' +
+        '<div class="sk-stat" style="border-color:#FDE68A"><div class="v" style="color:#F59E0B">' + review + '</div><div class="l">Cần ôn</div></div>' +
+        '<div class="sk-stat"><div class="v" style="color:#9CA3AF">' + unstarted + '</div><div class="l">Chưa bắt đầu</div></div>';
+
+      var grid = document.getElementById('sk-grid');
+      if (!sets.length) { grid.innerHTML = '<div style="color:#9CA3AF;font-size:14px;padding:24px;">Chưa có dữ liệu kỹ năng.</div>'; return; }
+
+      grid.innerHTML = sets.map(function (bs) {
+        var skillRows = bs.skills.map(function (sk) {
+          var subItems = sk.sub_skills.map(function (sub) {
+            var cls = sub.done ? 'done' : 'todo';
+            return '<div class="sk-sub">' +
+              '<span class="sk-sub-dot ' + cls + '"></span>' +
+              '<span class="sk-sub-title ' + cls + '">' + sub.title + '</span>' +
+              '</div>';
+          }).join('');
+          return '<div class="sk-skill">' +
+            '<div class="sk-skill-row" onclick="skSkillToggle(this)">' +
+              '<span class="sk-skill-name">' + sk.title + '</span>' +
+              '<div class="sk-skill-bar-wrap">' +
+                '<div class="sk-skill-bar"><div class="sk-skill-fill" style="width:' + sk.progress + '%;background:' + fillColor(sk.progress) + '"></div></div>' +
+              '</div>' +
+              '<span class="sk-skill-pct">' + sk.progress + '%</span>' +
+              badge(sk.progress) +
+            '</div>' +
+            '<div class="sk-sub-list" style="display:none">' + subItems + '</div>' +
+          '</div>';
+        }).join('');
+
+        return '<div class="sk-set">' +
+          '<div class="sk-set-hd" onclick="skSetToggle(this)">' +
+            '<span class="sk-set-icon">' + bs.icon + '</span>' +
+            '<div class="sk-set-info">' +
+              '<div class="sk-set-title">' + bs.title + '</div>' +
+              '<div class="sk-set-bar"><div class="sk-set-fill" style="width:' + bs.progress + '%"></div></div>' +
+            '</div>' +
+            '<div class="sk-set-right">' +
+              '<span class="sk-set-pct">' + bs.progress + '%</span>' +
+              badge(bs.progress) +
+            '</div>' +
+            '<span class="sk-arrow">▶</span>' +
+          '</div>' +
+          '<div class="sk-body" style="display:none">' + skillRows + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function loadSkills() {
+      if (_skillsLoaded) return;
+      _skillsLoaded = true;
+      fetch('/api/skills')
+        .then(function (r) { return r.json(); })
+        .then(renderSkills)
+        .catch(function () {
+          document.getElementById('sk-grid').innerHTML =
+            '<div style="color:#EF4444;font-size:14px;padding:24px;">Không tải được dữ liệu kỹ năng.</div>';
+        });
+    }
+
+    var _origNavigate = window.navigate;
+    window.navigate = function (page) {
+      _origNavigate(page);
+      if (page === 'skills') loadSkills();
+    };
+  })();
+  </script>
 
   {% include 'chatbot.html' %}
   <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
