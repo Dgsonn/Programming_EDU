@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect
+from flask import Blueprint, render_template, redirect, request
 from utils import login_required, current_user_id
 from models import get_db
 
@@ -358,22 +358,29 @@ def questionaire():
 def interface():
     return render_template('interface.html', **_user_stats())
 
-@main_bp.route('/lesson/python')
+_LESSON_TEMPLATES = {
+    'python':  'lesson_python.html',
+    'java':    'lesson_java.html',
+    'htmlcss': 'lesson_htmlcss.html',
+}
+
+# URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
+_LESSON_URLS = {
+    'python':  '/lesson/python',
+    'java':    '/lesson/java',
+    'htmlcss': '/lesson/htmlcss',
+    'cpp':     '/interface',
+}
+
+@main_bp.route('/lesson/<course_id>')
 @login_required
-def lesson_python():
-    return render_template('lesson_python.html', **_user_stats())
-
-
-@main_bp.route('/lesson/java')
-@login_required
-def lesson_java():
-    return render_template('lesson_java.html', **_user_stats())
-
-
-@main_bp.route('/lesson/htmlcss')
-@login_required
-def lesson_htmlcss():
-    return render_template('lesson_htmlcss.html', **_user_stats())
+def lesson_view(course_id):
+    lesson_idx = request.args.get('lesson', 0, type=int)
+    template = _LESSON_TEMPLATES.get(course_id)
+    if not template:
+        # cpp và các khóa chưa có trang lesson riêng → redirect đúng URL
+        return redirect(_LESSON_URLS.get(course_id, f'/courses/{course_id}'))
+    return render_template(template, lesson_idx=lesson_idx, **_user_stats())
 
 
 @main_bp.route('/courses/<course_id>')
@@ -387,7 +394,7 @@ def course_detail(course_id):
         return redirect('/dashboard')
     user = conn.execute('SELECT name, role, streak, gems FROM users WHERE id = %s', (uid,)).fetchone()
     enrollment = conn.execute(
-        'SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
+        'SELECT * FROM enrollments WHERE user_id = %s AND course_id = %s',
         (uid, course_id)
     ).fetchone()
     conn.close()
@@ -420,6 +427,8 @@ def course_detail(course_id):
             'total': len(lessons_with_status),
         })
 
+    lesson_url = _LESSON_URLS.get(course_id, f'/lesson/{course_id}')
+
     return render_template(
         'course_detail.html',
         course=course,
@@ -431,5 +440,6 @@ def course_detail(course_id):
         user_role=user.get('role', 'Học viên'),
         streak=user.get('streak', 0),
         gems=user.get('gems', 0),
+        lesson_url=lesson_url,
     )
 

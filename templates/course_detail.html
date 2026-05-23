@@ -96,8 +96,9 @@
     .cd-module-body.open { display: block; }
 
     /* ── Lessons ── */
-    .cd-lesson { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #F9FAFB; }
+    .cd-lesson { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #F9FAFB; border-radius: 8px; transition: background 0.15s; }
     .cd-lesson:last-child { border-bottom: none; }
+    .cd-lesson.done:hover, .cd-lesson.current:hover { background: #F0F7FF; margin: 0 -8px; padding: 9px 8px; }
     .cd-lesson-icon {
       width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center; font-size: 11px;
@@ -110,6 +111,31 @@
     .cd-lesson.current .cd-lesson-title { color: #1D4ED8; font-weight: 600; }
     .cd-lesson.locked  .cd-lesson-title { color: #9CA3AF; }
     .cd-lesson-num { font-size: 11px; color: #D1D5DB; }
+    .cd-lesson-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg,#4A9EE0,#2563EB); color: #fff; white-space: nowrap;
+    }
+    body.dark .cd-lesson.done:hover, body.dark .cd-lesson.current:hover { background: #293548; }
+    body.dark .cd-lesson-badge { background: linear-gradient(135deg,#1D4ED8,#4A9EE0); }
+
+    /* ── Gameboard lesson path ── */
+    .cd-lesson-list { position: relative; }
+    .cd-lesson-list::before {
+      content: ''; position: absolute;
+      left: 13px; top: 22px; bottom: 22px;
+      width: 2px; background: #E5E7EB; border-radius: 2px;
+    }
+    .cd-lesson { position: relative; z-index: 1; }
+    .cd-lesson-icon { position: relative; z-index: 2; }
+    .cd-lesson.current .cd-lesson-icon {
+      box-shadow: 0 0 0 3px rgba(74,158,224,0.25);
+      animation: lesson-pulse 2s ease-in-out infinite;
+    }
+    @keyframes lesson-pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(74,158,224,0.25); }
+      50%       { box-shadow: 0 0 0 7px rgba(74,158,224,0.08); }
+    }
+    body.dark .cd-lesson-list::before { background: #334155; }
 
     /* ── Reviews stub ── */
     .cd-reviews-stub { text-align: center; padding: 24px; color: #9CA3AF; font-size: 13px; }
@@ -336,8 +362,9 @@
           </div>
           <div style="padding:0;">
             {% for module in modules %}
+            {% set has_current = module.lessons | selectattr('status', 'equalto', 'current') | list | length > 0 %}
             <div class="cd-module">
-              <div class="cd-module-hd {% if loop.index <= 2 %}open{% endif %}" onclick="toggleModule(this)">
+              <div class="cd-module-hd {% if has_current or loop.index == 1 %}open{% endif %}" onclick="toggleModule(this)">
                 <div class="cd-module-arrow">▶</div>
                 <div class="cd-module-name">{{ module.title }}</div>
                 <div class="cd-module-meta">{{ module.total }} bài</div>
@@ -345,18 +372,26 @@
                 <div class="cd-module-prog" style="margin-left:8px;">{{ module.done_count }}/{{ module.total }} ✓</div>
                 {% endif %}
               </div>
-              <div class="cd-module-body {% if loop.index <= 2 %}open{% endif %}">
+              <div class="cd-module-body {% if has_current or loop.index == 1 %}open{% endif %}">
+              <div class="cd-lesson-list">
                 {% for lesson in module.lessons %}
-                <div class="cd-lesson {{ lesson.status }}">
+                <div class="cd-lesson {{ lesson.status }}"
+                  {% if lesson.status != 'locked' %}onclick="window.location='{{ lesson_url }}?lesson={{ lesson.index }}'" style="cursor:pointer;"{% endif %}
+                  {% if lesson.status == 'current' %}id="current-lesson"{% endif %}>
                   <div class="cd-lesson-icon">
                     {% if lesson.status == 'done' %}✓
                     {% elif lesson.status == 'current' %}▶
                     {% else %}○{% endif %}
                   </div>
                   <div class="cd-lesson-title">{{ lesson.title }}</div>
+                  {% if lesson.status == 'current' %}
+                  <span class="cd-lesson-badge">Tiếp tục</span>
+                  {% else %}
                   <div class="cd-lesson-num">{{ lesson.index + 1 }}</div>
+                  {% endif %}
                 </div>
                 {% endfor %}
+              </div><!-- /cd-lesson-list -->
               </div>
             </div>
             {% endfor %}
@@ -483,6 +518,8 @@
 
 <script>
   const COURSE_ID = "{{ course.id }}";
+  const CURRENT_LESSON_IDX = {{ enrollment.completed_lessons if enrollment else 0 }};
+  const LESSON_URL = "{{ lesson_url }}";
 
   const progFill = document.getElementById('prog-fill');
   if (progFill) progFill.style.width = '{{ enrollment.progress if enrollment else 0 }}%';
@@ -493,8 +530,16 @@
   }
 
   function goLesson() {
-    window.location = '/lesson/' + COURSE_ID;
+    var el = document.getElementById('current-lesson');
+    if (el) { el.click(); return; }
+    window.location = LESSON_URL + '?lesson=' + CURRENT_LESSON_IDX;
   }
+
+  // Scroll to the current lesson so user can see where they left off
+  (function () {
+    var el = document.getElementById('current-lesson');
+    if (el) setTimeout(function () { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+  })();
 
   function enroll() {
     const btn = document.getElementById('enroll-btn');
