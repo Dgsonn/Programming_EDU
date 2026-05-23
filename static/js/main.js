@@ -360,7 +360,7 @@ function renderCourses() {
         '<div class="course-card" onmouseenter="hoverCard(this,\'' +
           c.color +
           '\')" onmouseleave="unhoverCard(this)">',
-        '<div class="card-img-wrap">',
+        '<div class="card-img-wrap" style="cursor:pointer" onclick="window.location=\'/courses/' + c.id + '\'">',
         '<img src="/' + c.image + '" alt="' + c.title + '" />',
         '<div class="card-overlay"></div>',
         '<div class="badge-level" style="background:linear-gradient(135deg,' +
@@ -388,10 +388,16 @@ function renderCourses() {
         '<div class="card-footer">',
         '<span class="card-lessons">📖 ' + c.lessons + " bài học</span>",
         (function () {
+          var detailBtn =
+            '<button onclick="window.location=\'/courses/' + c.id + '\'"' +
+            ' style="height:34px;padding:0 12px;border-radius:10px;border:1px solid #E5E7EB;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#6B7280;transition:all 0.2s;white-space:nowrap;flex-shrink:0"' +
+            " onmouseenter=\"this.style.background='#F3F4F6';this.style.color='#1F2937'\"" +
+            " onmouseleave=\"this.style.background='none';this.style.color='#6B7280'\">Chi tiết</button>";
           if (c.enrolled) {
             var goUrl = COURSE_URLS[c.id] || "#";
             return (
               '<div style="display:flex;align-items:center;gap:6px">' +
+              detailBtn +
               '<button class="cta-btn"' +
               " onclick=\"window.location='" +
               goUrl +
@@ -415,6 +421,8 @@ function renderCourses() {
             );
           }
           return (
+            '<div style="display:flex;align-items:center;gap:6px">' +
+            detailBtn +
             '<button class="cta-btn"' +
             " onclick=\"toggleEnroll('" +
             c.id +
@@ -424,7 +432,8 @@ function renderCourses() {
             "','" +
             c.accentColor +
             "')\"" +
-            ' onmouseleave="ctaLeave(this)">Đăng ký →</button>'
+            ' onmouseleave="ctaLeave(this)">Đăng ký →</button>' +
+            "</div>"
           );
         })(),
         "</div>",

@@ -128,7 +128,13 @@ def enroll(course_id):
         if not course:
             return jsonify({'error': 'Không tìm thấy khóa học'}), 404
         first_lesson = 'Bài 1: ' + dict(course)['title']
-        conn.execute("INSERT INTO enrollments ... ON CONFLICT DO NOTHING", ...)
+        conn.execute(
+            '''INSERT INTO enrollments (user_id, course_id, progress, completed_lessons,
+                                       time_spent, last_lesson, next_lesson)
+               VALUES (?, ?, 0, 0, '0h', '', ?)
+               ON CONFLICT (user_id, course_id) DO NOTHING''',
+            (uid, course_id, first_lesson)
+        )
         conn.commit()
     finally:
         conn.close()
