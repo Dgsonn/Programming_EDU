@@ -11,7 +11,7 @@ def get_roadmap():
     uid  = current_user_id()
     conn = get_db()
     rows = conn.execute(
-        'SELECT item_id FROM roadmap_progress WHERE user_id=? AND done=1', (uid,)
+        'SELECT item_id FROM roadmap_progress WHERE user_id=%s AND done=1', (uid,)
     ).fetchall()
     conn.close()
     return jsonify({'doneItems': [r['item_id'] for r in rows]})
@@ -24,7 +24,7 @@ def update_roadmap(item_id):
     done = int(request.get_json().get('done', False))
     conn = get_db()
     conn.execute(
-        '''INSERT INTO roadmap_progress VALUES (?,?,?)
+        '''INSERT INTO roadmap_progress VALUES (%s,%s,%s)
            ON CONFLICT(user_id, item_id) DO UPDATE SET done=excluded.done''',
         (uid, item_id, done)
     )

@@ -12,7 +12,7 @@ user_bp = Blueprint('user', __name__)
 @api_login_required
 def get_user():
     conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE id=?', (current_user_id(),)).fetchone()
+    user = conn.execute('SELECT * FROM users WHERE id=%s', (current_user_id(),)).fetchone()
     conn.close()
     return jsonify(dict(user))
 
@@ -23,7 +23,7 @@ def update_user():
     data = request.get_json()
     conn = get_db()
     conn.execute(
-        'UPDATE users SET name=?, email=?, phone=?, birthday=? WHERE id=?',
+        'UPDATE users SET name=%s, email=%s, phone=%s, birthday=%s WHERE id=%s',
         (data.get('name'), data.get('email'), data.get('phone'), data.get('birthday'), current_user_id())
     )
     conn.commit()
@@ -40,11 +40,11 @@ def change_password():
     if not new_pw:
         return jsonify({'error': 'Mật khẩu mới không được để trống'}), 400
     conn = get_db()
-    user = conn.execute('SELECT password FROM users WHERE id=?', (current_user_id(),)).fetchone()
+    user = conn.execute('SELECT password FROM users WHERE id=%s', (current_user_id(),)).fetchone()
     if not check_password_hash(user['password'], current):
         conn.close()
         return jsonify({'error': 'Mật khẩu hiện tại không đúng'}), 401
-    conn.execute('UPDATE users SET password=? WHERE id=?', (generate_password_hash(new_pw), current_user_id()))
+    conn.execute('UPDATE users SET password=%s WHERE id=%s', (generate_password_hash(new_pw), current_user_id()))
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
@@ -58,11 +58,11 @@ def save_survey():
         return jsonify({'error': 'Dữ liệu khảo sát không hợp lệ'}), 400
     conn = get_db()
     conn.execute(
-        'INSERT INTO surveys (user_id, data_json, created_at) VALUES (?,?,?)',
+        'INSERT INTO surveys (user_id, data_json, created_at) VALUES (%s,%s,%s)',
         (current_user_id(), json.dumps(data, ensure_ascii=False), datetime.utcnow().isoformat())
     )
     conn.execute(
-        'UPDATE users SET questionnaire_completed=1 WHERE id=?',
+        'UPDATE users SET questionnaire_completed=1 WHERE id=%s',
         (current_user_id(),)
     )
     conn.commit()

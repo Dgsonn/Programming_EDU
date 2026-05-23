@@ -13,7 +13,7 @@ def login():
     if not email or not password:
         return jsonify({'error': 'Vui lòng nhập đầy đủ thông tin'}), 400
     conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
+    user = conn.execute('SELECT * FROM users WHERE email=%s', (email,)).fetchone()
     conn.close()
     print(f'[DEBUG] email={email!r}, user_found={user is not None}')
     if user:
@@ -35,15 +35,15 @@ def register():
     if not name or not email or not password:
         return jsonify({'error': 'Vui lòng nhập đầy đủ thông tin'}), 400
     conn = get_db()
-    if conn.execute('SELECT id FROM users WHERE email=?', (email,)).fetchone():
+    if conn.execute('SELECT id FROM users WHERE email=%s    ', (email,)).fetchone():
         conn.close()
         return jsonify({'error': 'Email đã được sử dụng'}), 400
     conn.execute(
-        'INSERT INTO users (name, email, password, role) VALUES (?,?,?,?)',
+        'INSERT INTO users (name, email, password, role) VALUES (%s,%s,%s,%s)',
         (name, email, generate_password_hash(password), 'Học viên')
     )
     conn.commit()
-    user = conn.execute('SELECT id, questionnaire_completed FROM users WHERE email=?', (email,)).fetchone()
+    user = conn.execute('SELECT id, questionnaire_completed FROM users WHERE email=%s', (email,)).fetchone()
     session['user_id'] = user['id']
     conn.close()
     needs_questionnaire = not bool(user['questionnaire_completed'])

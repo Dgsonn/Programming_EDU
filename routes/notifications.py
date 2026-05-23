@@ -10,7 +10,7 @@ notif_bp = Blueprint('notifications', __name__)
 def get_notifications():
     uid  = current_user_id()
     conn = get_db()
-    row  = conn.execute('SELECT * FROM notifications WHERE user_id=?', (uid,)).fetchone()
+    row  = conn.execute('SELECT * FROM notifications WHERE user_id=%s', (uid,)).fetchone()
     conn.close()
     if not row:
         return jsonify({'emailNotif': True, 'pushNotif': False, 'studyRemind': True, 'contentUpdate': False})
@@ -29,7 +29,7 @@ def update_notifications():
     data = request.get_json()
     conn = get_db()
     conn.execute(
-        '''INSERT INTO notifications VALUES (?,?,?,?,?)
+        '''INSERT INTO notifications VALUES (%s,%s,%s,%s,%s)
            ON CONFLICT(user_id) DO UPDATE SET
              email_notif=excluded.email_notif,
              push_notif=excluded.push_notif,

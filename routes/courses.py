@@ -101,7 +101,7 @@ def get_enrolled():
                e.time_spent, e.last_lesson, e.next_lesson
         FROM enrollments e
         JOIN courses c ON e.course_id = c.id
-        WHERE e.user_id = ?
+        WHERE e.user_id = %s
     ''', (uid,)).fetchall()
     conn.close()
     result = []
@@ -124,7 +124,7 @@ def enroll(course_id):
     uid    = current_user_id()
     conn   = get_db()
     try:
-        course = conn.execute('SELECT id, title FROM courses WHERE id=?', (course_id,)).fetchone()
+        course = conn.execute('SELECT id, title FROM courses WHERE id=%s', (course_id,)).fetchone()
         if not course:
             return jsonify({'error': 'Không tìm thấy khóa học'}), 404
         first_lesson = 'Bài 1: ' + dict(course)['title']
@@ -146,7 +146,7 @@ def enroll(course_id):
 def unenroll(course_id):
     uid  = current_user_id()
     conn = get_db()
-    conn.execute('DELETE FROM enrollments WHERE user_id=? AND course_id=?', (uid, course_id))
+    conn.execute('DELETE FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, course_id))
     conn.commit()
     conn.close()
     return jsonify({'ok': True})

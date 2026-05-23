@@ -344,7 +344,7 @@ def dashboard():
 
 def _user_stats():
     conn = get_db()
-    user = conn.execute('SELECT streak, gems FROM users WHERE id=?', (current_user_id(),)).fetchone()
+    user = conn.execute('SELECT streak, gems FROM users WHERE id=%s', (current_user_id(),)).fetchone()
     conn.close()
     return {'streak': user['streak'], 'gems': user['gems']}
 
@@ -381,11 +381,11 @@ def lesson_htmlcss():
 def course_detail(course_id):
     uid = current_user_id()
     conn = get_db()
-    course = conn.execute('SELECT * FROM courses WHERE id = ?', (course_id,)).fetchone()
+    course = conn.execute('SELECT * FROM courses WHERE id = %s', (course_id,)).fetchone()
     if not course:
         conn.close()
         return redirect('/dashboard')
-    user = conn.execute('SELECT name, role, streak, gems FROM users WHERE id = ?', (uid,)).fetchone()
+    user = conn.execute('SELECT name, role, streak, gems FROM users WHERE id = %s', (uid,)).fetchone()
     enrollment = conn.execute(
         'SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
         (uid, course_id)

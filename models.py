@@ -42,7 +42,7 @@ class _ConnWrapper:
         self._conn = conn
 
     def execute(self, sql, params=()):
-        sql = sql.replace('?', '%s')
+        # sql = sql.replace('?', '%s')
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(sql, params)
         return _CursorWrapper(cur)

@@ -10,12 +10,12 @@ stats_bp = Blueprint('stats', __name__)
 def get_stats():
     uid   = current_user_id()
     conn  = get_db()
-    user  = conn.execute('SELECT streak, certificates FROM users WHERE id=?', (uid,)).fetchone()
+    user  = conn.execute('SELECT streak, certificates FROM users WHERE id=%s', (uid,)).fetchone()
     count = conn.execute(
-        'SELECT COUNT(*) AS n FROM enrollments WHERE user_id=?', (uid,)
+        'SELECT COUNT(*) AS n FROM enrollments WHERE user_id=%s', (uid,)
     ).fetchone()['n']
     rows  = conn.execute(
-        'SELECT progress, time_spent FROM enrollments WHERE user_id=?', (uid,)
+        'SELECT progress, time_spent FROM enrollments WHERE user_id=%s', (uid,)
     ).fetchall()
     conn.close()
     avg_progress = round(sum(r['progress'] for r in rows) / len(rows)) if rows else 0
@@ -51,10 +51,10 @@ def complete_mission():
     uid  = current_user_id()
     conn = get_db()
     conn.execute(
-        'UPDATE users SET gems = gems + 50, xp = xp + 50, streak = streak + 1 WHERE id=?',
+        'UPDATE users SET gems = gems + 50, xp = xp + 50, streak = streak + 1 WHERE id=%s',
         (uid,)
     )
-    user = conn.execute('SELECT gems, xp, streak FROM users WHERE id=?', (uid,)).fetchone()
+    user = conn.execute('SELECT gems, xp, streak FROM users WHERE id=%s', (uid,)).fetchone()
     conn.commit()
     conn.close()
 
