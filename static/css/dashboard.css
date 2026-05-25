@@ -247,6 +247,9 @@
 }
 
 /* ── Dark mode ── */
+body.dark .courses-header h2 { color: #F1F5F9; }
+body.dark .filter-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+body.dark .filter-btn:hover { background: #334155; color: #e2e8f0; }
 body.dark .courses-search-bar-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
 body.dark .courses-search-bar-input:focus { border-color: #4A9EE0; }
 body.dark .courses-search-bar-input::placeholder { color: #475569; }
@@ -600,7 +603,8 @@ body.dark .course-filter-panel { background: #1e293b; border-color: #334155; }
     position: relative;
     width: 100%;
     height: 70vh;
-    overflow: auto;
+    min-height: 480px;
+    overflow: hidden;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 16px;
     border: 1px solid rgba(148, 163, 184, 0.35);
@@ -613,60 +617,76 @@ body.dark #roadmap-container-wrapper {
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
 }
 
-#roadmap-container {
-    position: relative !important;
-    display: block !important;
-    width: 1000px !important;
-    height: 1200px !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
+#roadmap-mermaid-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#edges-layer {
-    position: absolute !important;
-    top: 0 !important; 
-    left: 0 !important;
-    width: 1000px !important; 
-    height: 1200px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    z-index: 1;
-    pointer-events: none;
-    overflow: visible !important;
+/* ── Tab "Cá nhân" — hiện khi switchEduRoadmap('personal') ── */
+#roadmap-personal-view {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
-.animated-line {
-    stroke-dasharray: 6, 6;
-    animation: dash 1s linear infinite;
+#roadmap-personal-view .rm-personal-hd {
+    flex-shrink: 0;
 }
 
-@keyframes dash {
-    to { stroke-dashoffset: -12; }
+#roadmap-personal-view .rm-split {
+    flex: 1;
+    height: auto;
+    min-height: 0;
 }
 
-.node {
-    position: absolute !important;
-    z-index: 2;
-    padding: 14px 28px !important;
-    margin: 0 !important;
-    border-radius: 8px;
-    font-weight: 600;
-    color: #1F2937;
-    cursor: pointer;
-    transform: translate(-50%, -50%) !important;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    min-width: 120px;
-    box-sizing: border-box !important;
-    display: block !important;
+.rm-tab-personal {
+    margin-left: 6px;
+    border-left: 1px solid rgba(148,163,184,0.3);
+    padding-left: 14px;
 }
 
-.node:hover {
-    transform: translate(-50%, -50%) scale(1.08) !important;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+#roadmap-mermaid-wrap svg {
+    max-width: none !important;
+    width: 100% !important;
+    height: 100% !important;
 }
+
+/* ── Node hover trong SVG ── */
+#roadmap-mermaid-wrap g.node { cursor: pointer; }
+#roadmap-mermaid-wrap g.node:hover rect,
+#roadmap-mermaid-wrap g.node:hover polygon,
+#roadmap-mermaid-wrap g.node:hover circle {
+    filter: brightness(0.88);
+}
+
+/* ── Dark mode: edges & arrows ── */
+body.dark #roadmap-mermaid-wrap .edgePath path,
+body.dark #roadmap-mermaid-wrap .flowchart-link {
+    stroke: #64748b !important;
+}
+body.dark #roadmap-mermaid-wrap marker path,
+body.dark #roadmap-mermaid-wrap marker polygon {
+    fill: #64748b !important;
+    stroke: #64748b !important;
+}
+body.dark #roadmap-mermaid-wrap .edgeLabel span,
+body.dark #roadmap-mermaid-wrap .edgeLabel p {
+    color: #cbd5e1 !important;
+    background: transparent !important;
+}
+/* svg-pan-zoom controls trong dark mode */
+body.dark #roadmap-mermaid-wrap .svg-pan-zoom-control-background {
+    fill: rgba(30,41,59,0.85) !important;
+}
+body.dark #roadmap-mermaid-wrap .svg-pan-zoom-control {
+    fill: #94a3b8 !important;
+}
+
 
 /* Sidebar Chi tiết Roadmap */
 #sidebar-detail {
@@ -738,4 +758,262 @@ body.dark .filter-chip {
 body.dark .filter-chip button {
   background: #2563eb;
   color: #fff;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ★ CÁ NHÂN HÓA LỘ TRÌNH
+   ════════════════════════════════════════════════════════════ */
+
+.rm-personal-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #F3F4F6;
+  background: #FAFAFA;
+}
+
+.rm-personal-hd-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rm-personal-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.rm-personal-hd-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rm-ai-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #E5E7EB;
+  background: #F9FAFB;
+  color: #6B7280;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.rm-ai-btn:hover {
+  border-color: #8B5CF6;
+  color: #7C3AED;
+  background: #F5F3FF;
+}
+
+.rm-premium-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.rm-save-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #4A9EE0, #2D7FC1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 3px 10px rgba(74,158,224,0.3);
+}
+.rm-save-btn:hover { box-shadow: 0 5px 16px rgba(74,158,224,0.45); transform: translateY(-1px); }
+.rm-save-btn:disabled { opacity: 0.7; transform: none; cursor: default; }
+
+.rm-helper-panel {
+  padding: 14px 20px 0;
+  border-bottom: 1px solid #F3F4F6;
+  background: #FFFFFF;
+}
+
+.rm-helper-actions,
+.rm-helper-builder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rm-helper-note {
+  flex: 1 1 100%;
+  color: #475569;
+  font-size: 13px;
+}
+
+.rm-helper-btn,
+.rm-builder-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  background: #F8FAFC;
+  color: #1F2937;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rm-helper-btn:hover,
+.rm-builder-btn:hover {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.rm-helper-builder input {
+  flex: 1 1 220px;
+  min-width: 160px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #111827;
+  outline: none;
+  font-size: 13px;
+}
+
+.rm-helper-builder input:focus {
+  border-color: #4A9EE0;
+  box-shadow: 0 0 0 3px rgba(74,158,224,0.12);
+}
+
+/* ── Split pane ── */
+.rm-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 420px;
+}
+
+.rm-split-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rm-split-left {
+  border-right: 1px solid #F3F4F6;
+}
+
+.rm-pane-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9CA3AF;
+  padding: 8px 14px;
+  border-bottom: 1px solid #F3F4F6;
+  background: #FAFAFA;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+#rm-personal-editor {
+  flex: 1;
+  width: 100%;
+  padding: 14px;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #1F2937;
+  background: #fff;
+  border: none;
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.rm-parse-status {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 28px;
+  border-top: 1px solid #F3F4F6;
+  background: #FAFAFA;
+}
+.rm-status-ok    { color: #10B981; }
+.rm-status-error { color: #EF4444; }
+
+#rm-personal-preview {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+#rm-personal-preview svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+}
+
+.rm-preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+/* ── Toast thông báo ── */
+.rm-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1F2937;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 9999;
+  white-space: nowrap;
+}
+.rm-toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Dark mode ── */
+body.dark #roadmap-personal-view { background: #1E293B; }
+body.dark .rm-personal-hd    { background: #0F172A; border-color: #334155; }
+body.dark .rm-personal-label { color: #F1F5F9; }
+body.dark .rm-pane-label     { background: #0F172A; border-color: #334155; color: #64748B; }
+body.dark .rm-split-left     { border-color: #334155; }
+body.dark #rm-personal-editor{ background: #1E293B; color: #E2E8F0; }
+body.dark .rm-parse-status   { background: #0F172A; border-color: #334155; }
+body.dark #rm-personal-preview{ background: #1E293B; }
+body.dark .rm-ai-btn         { background: #1E293B; border-color: #334155; color: #94A3B8; }
+body.dark .rm-ai-btn:hover   { border-color: #8B5CF6; color: #A78BFA; background: #2D1B69; }
+body.dark .rm-helper-panel   { background: #0F172A; border-color: #334155; }
+body.dark .rm-helper-note    { color: #94A3B8; }
+body.dark .rm-helper-btn,
+body.dark .rm-builder-btn   { background: #111827; border-color: #334155; color: #E2E8F0; }
+body.dark .rm-helper-btn:hover,
+body.dark .rm-builder-btn:hover { background: #1E293B; }
+body.dark .rm-helper-builder input { background: #111827; border-color: #334155; color: #E2E8F0; }
+
+@media (max-width: 768px) {
+  .rm-split { grid-template-columns: 1fr; height: auto; }
+  .rm-split-left { border-right: none; border-bottom: 1px solid #F3F4F6; height: 260px; }
+  .rm-split-right { height: 260px; }
 }

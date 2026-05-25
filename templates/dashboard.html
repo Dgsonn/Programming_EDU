@@ -231,10 +231,52 @@
         <h2>Lộ trình học tập</h2>
         <div class="filter-group" id="roadmap-tabs"></div>
       </div>
-      
+
       <div id="roadmap-container-wrapper">
-        <div id="roadmap-container">
-            <svg id="edges-layer"></svg>
+        <div id="roadmap-mermaid-wrap">
+          <div style="color:#9CA3AF;padding:40px;text-align:center;font-size:14px;">Đang tải sơ đồ...</div>
+        </div>
+
+        <!-- ── Cá nhân — hiện khi chọn tab "Cá nhân" ── -->
+        <div id="roadmap-personal-view">
+          <div class="rm-personal-hd">
+            <div class="rm-personal-hd-left">
+              <span>✏️</span>
+              <span class="rm-personal-label">Lộ trình cá nhân của tôi</span>
+            </div>
+            <div class="rm-personal-hd-right">
+              <button class="rm-ai-btn" onclick="handlePersonalRoadmapAI()" title="Chỉ dành cho tài khoản Premium">
+                🤖 Tạo bằng AI <span class="rm-premium-badge">Premium</span>
+              </button>
+              <button class="rm-save-btn" onclick="savePersonalRoadmap()">💾 Lưu</button>
+            </div>
+          </div>
+          <div class="rm-helper-panel">
+            <div class="rm-helper-actions">
+              <span class="rm-helper-note">Nhập nhanh các bước để tạo sơ đồ mà không cần nhớ cú pháp Mermaid.</span>
+              <button class="rm-helper-btn" onclick="rmInsertTemplate()">📄 Mẫu nhanh</button>
+              <button class="rm-helper-btn" onclick="rmClearEditor()">🧼 Xóa sơ đồ</button>
+            </div>
+            <div class="rm-helper-builder">
+              <input id="rm-step-from" type="text" placeholder="Từ bước (ví dụ: Khởi đầu)" />
+              <input id="rm-step-to" type="text" placeholder="Tới bước (ví dụ: Hoàn thành)" />
+              <button class="rm-builder-btn" onclick="rmAddStep()">➕ Thêm bước</button>
+            </div>
+          </div>
+          <div class="rm-split">
+            <div class="rm-split-pane rm-split-left">
+              <div class="rm-pane-label">📝 Mermaid Editor</div>
+              <textarea id="rm-personal-editor"
+                placeholder="flowchart TD&#10;    A[&quot;Mục tiêu 1&quot;] --&gt; B[&quot;Mục tiêu 2&quot;]&#10;    B --&gt; C[&quot;Hoàn thành&quot;]"></textarea>
+              <div id="rm-parse-status" class="rm-parse-status"></div>
+            </div>
+            <div class="rm-split-pane rm-split-right">
+              <div class="rm-pane-label">👁️ Preview</div>
+              <div id="rm-personal-preview">
+                <div class="rm-preview-placeholder">Nhập Mermaid code để xem preview...</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -274,6 +316,16 @@
         .sk-set-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
         .sk-set-pct { font-size:13px; font-weight:700; color:#4A9EE0; }
         .sk-arrow { font-size:10px; color:#9CA3AF; transition:transform 0.2s; flex-shrink:0; }
+        /* Donut chart */
+        .sk-donut { width:54px; height:54px; border-radius:50%; flex-shrink:0;
+          display:flex; align-items:center; justify-content:center; position:relative; }
+        .sk-donut-inner { width:36px; height:36px; border-radius:50%; background:#fff;
+          position:absolute; display:flex; align-items:center; justify-content:center; }
+        .sk-donut-pct { font-size:10px; font-weight:800; color:#1F2937; line-height:1; z-index:1; position:relative; }
+        .sk-set-meta { font-size:11px; color:#9CA3AF; margin-top:3px; }
+        body.dark .sk-donut-inner { background:#1E293B; }
+        body.dark .sk-donut-pct { color:#F1F5F9; }
+        body.dark .sk-set-meta { color:#64748B; }
         .sk-body { padding:12px 20px 16px; }
         .sk-skill { margin-bottom:10px; }
         .sk-skill-row {
@@ -769,6 +821,8 @@
     });
   </script>
 
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}?v=8"></script>
 
   <script>
@@ -798,6 +852,14 @@
       if (pct === 0) return '#E5E7EB';
       if (pct >= 70) return 'linear-gradient(90deg,#10B981,#059669)';
       return 'linear-gradient(90deg,#F59E0B,#D97706)';
+    }
+
+    function donutChart(pct) {
+      var color = pct >= 70 ? '#10B981' : (pct > 0 ? '#F59E0B' : '#D1D5DB');
+      var bg = 'conic-gradient(' + color + ' ' + pct + '%, #E5E7EB ' + pct + '% 100%)';
+      return '<div class="sk-donut" style="background:' + bg + '">' +
+        '<div class="sk-donut-inner"><span class="sk-donut-pct">' + pct + '%</span></div>' +
+      '</div>';
     }
 
     function renderSkills(data) {
@@ -844,17 +906,17 @@
           '</div>';
         }).join('');
 
+        var setAchieved = bs.skills.filter(function(sk){ return sk.progress >= 70; }).length;
+        var setTotal = bs.skills.length;
         return '<div class="sk-set">' +
           '<div class="sk-set-hd" onclick="skSetToggle(this)">' +
             '<span class="sk-set-icon">' + bs.icon + '</span>' +
             '<div class="sk-set-info">' +
               '<div class="sk-set-title">' + bs.title + '</div>' +
-              '<div class="sk-set-bar"><div class="sk-set-fill" style="width:' + bs.progress + '%"></div></div>' +
+              '<div class="sk-set-meta">' + setAchieved + '/' + setTotal + ' kỹ năng đạt</div>' +
             '</div>' +
-            '<div class="sk-set-right">' +
-              '<span class="sk-set-pct">' + bs.progress + '%</span>' +
-              badge(bs.progress) +
-            '</div>' +
+            badge(bs.progress) +
+            donutChart(bs.progress) +
             '<span class="sk-arrow">▶</span>' +
           '</div>' +
           '<div class="sk-body" style="display:none">' + skillRows + '</div>' +
@@ -878,6 +940,17 @@
     window.navigate = function (page) {
       _origNavigate(page);
       if (page === 'skills') loadSkills();
+      if (page === 'roadmap') {
+        if (typeof _eduRoadmaps !== 'undefined' && _eduRoadmaps.length) {
+          renderEduRoadmapTabs();
+          if (window.currentEduRoadmap !== 'personal') {
+            _roadmapRenderedId = null;
+            renderEduInteractiveRoadmap();
+          }
+        } else if (typeof loadEduRoadmaps === 'function') {
+          loadEduRoadmaps().then(function() { renderEduInteractiveRoadmap(); });
+        }
+      }
     };
   })();
   </script>

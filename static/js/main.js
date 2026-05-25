@@ -40,203 +40,354 @@ var pageLabels = {
 };
 
 /* ════════════════════════════════════════════════════════════
-   ★ JAVASCRIPT: LỘ TRÌNH HỌC TẬP (ĐÃ FIX XUNG ĐỘT CODE)
+   ★ TRANG LỘ TRÌNH — Mermaid flowchart TD từ DB
    ════════════════════════════════════════════════════════════ */
 
-const centerX = 500; 
-
-// 1. DỮ LIỆU CÁC LỘ TRÌNH
-var ROADMAPS = [
-  {
-    id: 'frontend', title: 'Frontend Web', icon: '💻', color: '#4A9EE0',
-    nodesData: [
-        { id: '1', label: '1. Internet', x: centerX, y: 100, color: '#fde047', desc: '<strong>Kiến thức nền tảng về Internet:</strong><ul class="sidebar-list"><li>Mạng Internet hoạt động như thế nào?</li><li>HTTP và HTTPS khác nhau ra sao?</li><li>Cơ chế hoạt động của Trình duyệt</li><li>DNS (Hệ thống phân giải tên miền)</li><li>Hosting (Nơi lưu trữ) và Domain</li></ul>' },
-        { id: '2', label: '2. HTML', x: centerX, y: 200, color: '#fca5a5', desc: '<strong>Ngôn ngữ cấu trúc trang web:</strong><ul class="sidebar-list"><li>Semantic HTML (Viết mã có ngữ nghĩa)</li><li>Làm việc với Forms và Validations</li><li>Accessibility (a11y)</li><li>SEO Basics</li></ul>' },
-        { id: '3', label: '3. CSS', x: centerX, y: 300, color: '#93c5fd', desc: '<strong>Ngôn ngữ thiết kế giao diện:</strong><ul class="sidebar-list"><li>Box Model (Margin, Padding, Border)</li><li>Selectors, Specificity</li><li>Flexbox & CSS Grid</li><li>Responsive Design</li></ul>' },
-        { id: '4', label: '4. JavaScript', x: centerX, y: 400, color: '#fcd34d', desc: '<strong>Ngôn ngữ lập trình cốt lõi:</strong><ul class="sidebar-list"><li>Cú pháp cơ bản (Biến, Hàm, Vòng lặp)</li><li>ES6+ (Arrow functions, Destructuring)</li><li>Bất đồng bộ: Callbacks, Promises, Async/Await</li></ul>' },
-        { id: '5', label: '5. DOM & Events', x: centerX - 180, y: 500, color: '#fcd34d', desc: '<strong>Tương tác với giao diện (DOM):</strong><ul class="sidebar-list"><li>Truy vấn phần tử</li><li>Thêm, sửa, xóa DOM</li><li>Event Listeners (Lắng nghe sự kiện)</li></ul>' },
-        { id: '6', label: '6. Fetch API', x: centerX + 180, y: 500, color: '#fcd34d', desc: '<strong>Giao tiếp với Server/Backend:</strong><ul class="sidebar-list"><li>Gửi HTTP Requests (GET, POST...)</li><li>Xử lý dữ liệu JSON</li><li>Hiểu về CORS</li></ul>' },
-        { id: '7', label: '7. Frameworks', x: centerX, y: 700, color: '#6ee7b7', desc: '<strong>Công cụ xây dựng UI hiện đại:</strong><ul class="sidebar-list"><li><b>React (Lựa chọn phổ biến nhất)</b></li><li>Vue.js</li><li>Angular</li></ul>' },
-        { id: '8', label: '8. React cơ bản', x: centerX - 180, y: 800, color: '#6ee7b7', desc: '<strong>Trọng tâm thư viện React:</strong><ul class="sidebar-list"><li>Cú pháp JSX & Components</li><li>Hooks: <code>useState</code>, <code>useEffect</code></li><li>Truyền dữ liệu bằng Props</li></ul>' },
-        { id: '9', label: '9. State Management', x: centerX + 180, y: 800, color: '#6ee7b7', desc: '<strong>Quản lý trạng thái toàn cục:</strong><ul class="sidebar-list"><li>Redux Toolkit</li><li>Zustand (Trending)</li><li>React Context API</li></ul>' },
-        { id: '10', label: '10. Git & GitHub', x: centerX - 180, y: 1000, color: '#d8b4fe', desc: '<strong>Quản lý mã nguồn:</strong><ul class="sidebar-list"><li>Các lệnh cơ bản: <code>git add, commit, push, pull</code></li><li>Quản lý nhánh (Branching)</li><li>Xử lý xung đột code</li></ul>' },
-        { id: '11', label: '11. Build Tools', x: centerX + 180, y: 1000, color: '#d8b4fe', desc: '<strong>Công cụ đóng gói:</strong><ul class="sidebar-list"><li>Vite (Cực nhanh, khuyên dùng)</li><li>Webpack</li><li>NPM Scripts</li></ul>' },
-        { id: '12', label: '12. Deployment', x: centerX, y: 1100, color: '#fdba74', desc: '<strong>Triển khai ứng dụng thực tế:</strong><ul class="sidebar-list"><li>Vercel</li><li>Netlify</li><li>GitHub Pages</li></ul>' }
-    ],
-    edgesData: [
-        { source: '1', target: '2', animated: true }, { source: '2', target: '3', animated: true }, { source: '3', target: '4', animated: true },
-        { source: '4', target: '5' }, { source: '4', target: '6' }, { source: '5', target: '7', animated: true }, { source: '6', target: '7', animated: true },
-        { source: '7', target: '8' }, { source: '7', target: '9' }, { source: '8', target: '10', animated: true }, { source: '9', target: '11', animated: true },
-        { source: '10', target: '12' }, { source: '11', target: '12' }
-    ]
-  },
-  {
-    id: 'backend', title: 'Backend', icon: '⚙️', color: '#E84545',
-    nodesData: [
-        { id: 'b1', label: '1. Kiến thức cơ bản', x: centerX, y: 100, color: '#fde047', desc: '<strong>Nền tảng backend:</strong><ul class="sidebar-list"><li>Hệ điều hành Linux/Unix</li><li>Terminal / shell basics</li><li>TCP/IP, HTTP/HTTPS, client-server</li></ul>' },
-        { id: 'b2', label: '2. Ngôn ngữ Backend', x: centerX, y: 220, color: '#fca5a5', desc: '<strong>So sánh runtime:</strong><ul class="sidebar-list"><li>Node.js, Python, Java, C#</li><li>Frameworks phổ biến: Express, Django, Spring, ASP.NET</li><li>Package manager và môi trường phát triển</li></ul>' },
-        { id: 'b3', label: '3. DB SQL', x: centerX - 180, y: 360, color: '#93c5fd', desc: '<strong>Database quan hệ:</strong><ul class="sidebar-list"><li>Thiết kế schema</li><li>Joins, indexing, transactions</li><li>PostgreSQL / MySQL, migration</li></ul>' },
-        { id: 'b4', label: '4. DB NoSQL', x: centerX + 180, y: 360, color: '#93c5fd', desc: '<strong>NoSQL & caching:</strong><ul class="sidebar-list"><li>MongoDB document model</li><li>Redis caching/session</li><li>Quando chọn NoSQL vs SQL</li></ul>' },
-        { id: 'b5', label: '5. Thiết kế API', x: centerX, y: 500, color: '#fcd34d', desc: '<strong>API chuyên nghiệp:</strong><ul class="sidebar-list"><li>RESTful conventions</li><li>GraphQL basics</li><li>Validation, error handling, versioning</li></ul>' },
-        { id: 'b6', label: '6. Bảo mật & Auth', x: centerX, y: 640, color: '#6ee7b7', desc: '<strong>An toàn backend:</strong><ul class="sidebar-list"><li>JWT, OAuth2, session</li><li>Hash mật khẩu, encryption</li><li>Chống XSS, CSRF, SQL injection</li></ul>' },
-        { id: 'b7', label: '7. Container & Docker', x: centerX - 180, y: 780, color: '#d8b4fe', desc: '<strong>Đóng gói ứng dụng:</strong><ul class="sidebar-list"><li>Dockerfile</li><li>Docker Compose</li><li>Một quy trình dev/prod</li></ul>' },
-        { id: 'b8', label: '8. CI/CD', x: centerX + 180, y: 780, color: '#d8b4fe', desc: '<strong>Tự động hóa triển khai:</strong><ul class="sidebar-list"><li>Unit test / integration test</li><li>Linting và build</li><li>GitHub Actions / pipeline</li></ul>' },
-        { id: 'b9', label: '9. Triển khai', x: centerX, y: 920, color: '#fdba74', desc: '<strong>Đưa lên production:</strong><ul class="sidebar-list"><li>AWS, DigitalOcean, Heroku</li><li>Nginx reverse proxy</li><li>SSL/TLS, monitoring, logging</li></ul>' }
-    ],
-    edgesData: [
-        { source: 'b1', target: 'b2', animated: true }, { source: 'b2', target: 'b3' }, { source: 'b2', target: 'b4' },
-        { source: 'b3', target: 'b5', animated: true }, { source: 'b4', target: 'b5', animated: true },
-        { source: 'b5', target: 'b6', animated: true }, { source: 'b6', target: 'b7' }, { source: 'b6', target: 'b8' },
-        { source: 'b7', target: 'b9', animated: true }, { source: 'b8', target: 'b9', animated: true }
-    ]
-  },
-  {
-    id: 'python', title: 'Python & AI', icon: '🐍', color: '#10B981',
-    nodesData: [
-        { id: 'p1', label: '1. Python Cơ Bản', x: centerX, y: 100, color: '#fde047', desc: '<strong>Nguyên tắc Python:</strong><ul class="sidebar-list"><li>Biến, kiểu dữ liệu, hàm</li><li>Vòng lặp, điều kiện</li><li>List, tuple, dict, set</li></ul>' },
-        { id: 'p2', label: '2. Python Nâng Cao', x: centerX, y: 220, color: '#fca5a5', desc: '<strong>Lập trình Python chuyên sâu:</strong><ul class="sidebar-list"><li>Class, OOP, kế thừa</li><li>Decorators, generator</li><li>Module & package</li></ul>' },
-        { id: 'p3', label: '3. Phân Tích Dữ Liệu', x: centerX, y: 340, color: '#93c5fd', desc: '<strong>Data science:</strong><ul class="sidebar-list"><li>NumPy arrays</li><li>Pandas DataFrame</li><li>Visualization với Matplotlib/Seaborn</li></ul>' },
-        { id: 'p4', label: '4. Toán Học Cho AI', x: centerX, y: 460, color: '#fcd34d', desc: '<strong>Toán nền tảng:</strong><ul class="sidebar-list"><li>Đại số tuyến tính</li><li>Giải tích cơ bản</li><li>Xác suất & thống kê</li></ul>' },
-        { id: 'p5', label: '5. Machine Learning', x: centerX, y: 600, color: '#6ee7b7', desc: '<strong>Học máy truyền thống:</strong><ul class="sidebar-list"><li>Regression, classification</li><li>Feature engineering</li><li>Scikit-Learn</li></ul>' },
-        { id: 'p6', label: '6. Deep Learning', x: centerX, y: 740, color: '#6ee7b7', desc: '<strong>Deep learning:</strong><ul class="sidebar-list"><li>PyTorch / TensorFlow</li><li>CNN, RNN</li><li>Overfitting và regularization</li></ul>' },
-        { id: 'p7', label: '7. Thị Giác Máy Tính', x: centerX - 180, y: 880, color: '#d8b4fe', desc: '<strong>Computer vision:</strong><ul class="sidebar-list"><li>OpenCV image processing</li><li>Object detection</li><li>CNN / YOLO</li></ul>' },
-        { id: 'p8', label: '8. Xử Lý Ngôn Ngữ', x: centerX + 180, y: 880, color: '#d8b4fe', desc: '<strong>NLP cơ bản:</strong><ul class="sidebar-list"><li>Tokenization</li><li>Embedding, word vectors</li><li>Transformer, spaCy</li></ul>' },
-        { id: 'p9', label: '9. Generative AI', x: centerX, y: 1020, color: '#fdba74', desc: '<strong>Generative AI:</strong><ul class="sidebar-list"><li>LLMs, Transformers</li><li>ChatGPT API</li><li>Prompt engineering, LangChain</li></ul>' }
-    ],
-    edgesData: [
-        { source: 'p1', target: 'p2', animated: true }, { source: 'p2', target: 'p3', animated: true },
-        { source: 'p3', target: 'p4', animated: true }, { source: 'p4', target: 'p5', animated: true },
-        { source: 'p5', target: 'p6', animated: true }, { source: 'p6', target: 'p7' }, { source: 'p6', target: 'p8' },
-        { source: 'p7', target: 'p9', animated: true }, { source: 'p8', target: 'p9', animated: true }
-    ]
-  },
-  {
-    id: 'cpp', title: 'C/C++ Systems', icon: '🖥️', color: '#8B5CF6',
-    nodesData: [
-        { id: 'c1', label: '1. Cốt Lõi Ngôn Ngữ C', x: centerX, y: 100, color: '#fde047', desc: '<strong>Cơ bản C:</strong><ul class="sidebar-list"><li>Kiểu dữ liệu, hàm, mảng</li><li>Con trỏ và truyền tham trị</li><li>Quy tắc biên dịch</li></ul>' },
-        { id: 'c2', label: '2. Con Trỏ & Bộ Nhớ', x: centerX, y: 220, color: '#fca5a5', desc: '<strong>Quản lý bộ nhớ:</strong><ul class="sidebar-list"><li>malloc/free</li><li>Stack vs heap</li><li>Memory leak, buffer overflow</li></ul>' },
-        { id: 'c3', label: '3. Cấu Trúc Dữ Liệu', x: centerX, y: 340, color: '#93c5fd', desc: '<strong>DSA C/C++:</strong><ul class="sidebar-list"><li>Struct, linked list</li><li>Stack, queue, tree</li><li>Độ phức tạp thuật toán</li></ul>' },
-        { id: 'c4', label: '4. C++ OOP', x: centerX, y: 460, color: '#fcd34d', desc: '<strong>C++ OOP:</strong><ul class="sidebar-list"><li>Class / object</li><li>Kế thừa, đa hình</li><li>Encapsulation, template</li></ul>' },
-        { id: 'c5', label: '5. Thư viện STL C++', x: centerX, y: 580, color: '#6ee7b7', desc: '<strong>STL essentials:</strong><ul class="sidebar-list"><li>Vector, map, set</li><li>Iterator</li><li>Algorithms</li></ul>' },
-        { id: 'c6', label: '6. Modern C++', x: centerX, y: 700, color: '#6ee7b7', desc: '<strong>C++ hiện đại:</strong><ul class="sidebar-list"><li>Smart pointers</li><li>Lambda, auto</li><li>Move semantics</li></ul>' },
-        { id: 'c7', label: '7. Lập Trình Hệ Thống', x: centerX, y: 820, color: '#d8b4fe', desc: '<strong>Systems programming:</strong><ul class="sidebar-list"><li>Đa luồng, mutex</li><li>Tiến trình và đồng bộ</li><li>Concurrency</li></ul>' },
-        { id: 'c8', label: '8. Biên Dịch & Công Cụ', x: centerX, y: 940, color: '#d8b4fe', desc: '<strong>Build tools:</strong><ul class="sidebar-list"><li>Makefile, CMake</li><li>GDB debugging</li><li>Profiling</li></ul>' },
-        { id: 'c9', label: '9. Nhúng / Socket', x: centerX, y: 1060, color: '#fdba74', desc: '<strong>Nhúng & mạng:</strong><ul class="sidebar-list"><li>Socket TCP/UDP</li><li>Vi điều khiển</li><li>Ứng dụng nhúng cơ bản</li></ul>' }
-    ],
-    edgesData: [
-        { source: 'c1', target: 'c2', animated: true }, { source: 'c2', target: 'c3', animated: true },
-        { source: 'c3', target: 'c4', animated: true }, { source: 'c4', target: 'c5', animated: true },
-        { source: 'c5', target: 'c6', animated: true }, { source: 'c6', target: 'c7', animated: true },
-        { source: 'c7', target: 'c8', animated: true }, { source: 'c8', target: 'c9', animated: true }
-    ]
-  }
-];
-
-var activeRoadmap = ROADMAPS[0].id;
-var doneItems = {};
-
-// 2. LOGIC ĐIỀU KHIỂN (Gắn chặt vào window để đè bẹp các hàm cũ bị xung đột)
+var _eduRoadmaps = [];          // dữ liệu tải từ API
+var _mermaidRenderCount = 0;
+var _roadmapRenderedId = null;
 window.currentEduRoadmap = 'frontend';
 
 function renderEduRoadmapTabs() {
-    var tabsContainer = document.getElementById("roadmap-tabs");
+    var tabsContainer = document.getElementById('roadmap-tabs');
     if (!tabsContainer) return;
-    tabsContainer.innerHTML = ROADMAPS.map(function(r) {
+    var tabs = _eduRoadmaps.map(function(r) {
         var isActive = r.id === window.currentEduRoadmap ? 'active' : '';
-        // Gắn sự kiện click trực tiếp vào hàm window.switchEduRoadmap
         return '<button class="filter-btn ' + isActive + '" onclick="window.switchEduRoadmap(\'' + r.id + '\')">' + r.icon + ' ' + r.title + '</button>';
-    }).join("");
+    });
+    var personalActive = window.currentEduRoadmap === 'personal' ? 'active' : '';
+    tabs.push('<button class="filter-btn rm-tab-personal ' + personalActive + '" onclick="window.switchEduRoadmap(\'personal\')">✏️ Cá nhân</button>');
+    tabsContainer.innerHTML = tabs.join('');
 }
 
 window.switchEduRoadmap = function(roadmapId) {
     window.currentEduRoadmap = roadmapId;
     renderEduRoadmapTabs();
-    renderEduInteractiveRoadmap();
+    var mermaidWrap   = document.getElementById('roadmap-mermaid-wrap');
+    var personalView  = document.getElementById('roadmap-personal-view');
+    if (roadmapId === 'personal') {
+        if (mermaidWrap)  mermaidWrap.style.display  = 'none';
+        if (personalView) personalView.style.display = 'flex';
+        if (_rmPersonalLoaded) {
+            var ta = document.getElementById('rm-personal-editor');
+            if (ta && ta.value.trim()) setTimeout(function() { _rmRenderPreview(ta.value); }, 150);
+        } else {
+            loadPersonalRoadmap();
+        }
+    } else {
+        if (mermaidWrap)  mermaidWrap.style.display  = '';
+        if (personalView) personalView.style.display = 'none';
+        _roadmapRenderedId = null;
+        renderEduInteractiveRoadmap();
+    }
 };
 
 function renderEduInteractiveRoadmap() {
-    var roadmap = ROADMAPS.find(r => r.id === window.currentEduRoadmap) || ROADMAPS[0];
-    var container = document.getElementById('roadmap-container');
-    var svgLayer = document.getElementById('edges-layer');
-    if (!container || !svgLayer) return;
+    var roadmap = _eduRoadmaps.find(function(r) { return r.id === window.currentEduRoadmap; });
+    if (!roadmap) return;
+    if (_roadmapRenderedId === roadmap.id) return;
+    var wrap = document.getElementById('roadmap-mermaid-wrap');
+    if (!wrap) return;
+    _roadmapRenderedId = roadmap.id;
 
-    // Xóa nội dung cũ
-    svgLayer.innerHTML = '';
-    container.querySelectorAll('.node').forEach(n => n.remove());
+    wrap.innerHTML = '<div style="color:#9CA3AF;padding:40px;text-align:center;font-size:14px;">Đang tải sơ đồ...</div>';
 
-    // Cố định toạ độ khung nền
-    svgLayer.setAttribute('width', '1000');
-    svgLayer.setAttribute('height', '1200');
-    svgLayer.setAttribute('viewBox', '0 0 1000 1200');
+    if (typeof mermaid === 'undefined') {
+        setTimeout(renderEduInteractiveRoadmap, 300);
+        return;
+    }
 
-    // Vẽ tia
-    roadmap.edgesData.forEach(edge => {
-        var sourceNode = roadmap.nodesData.find(n => n.id === edge.source);
-        var targetNode = roadmap.nodesData.find(n => n.id === edge.target);
-        if(!sourceNode || !targetNode) return;
+    var svgId = 'rm-svg-' + (++_mermaidRenderCount);
+    mermaid.render(svgId, roadmap.mermaid_def).then(function(result) {
+        wrap.innerHTML = result.svg;
+        var svgEl = wrap.querySelector('svg');
+        if (svgEl) {
+            svgEl.removeAttribute('width');
+            svgEl.removeAttribute('height');
+            svgEl.style.width = '100%';
+            svgEl.style.height = '100%';
 
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', sourceNode.x);
-        line.setAttribute('y1', sourceNode.y);
-        line.setAttribute('x2', targetNode.x);
-        line.setAttribute('y2', targetNode.y);
-        
-        var strokeColor = document.body.classList.contains('dark') ? '#4B5563' : '#9CA3AF';
-        line.setAttribute('stroke', strokeColor); 
-        line.setAttribute('stroke-width', '4');
+            // Gắn click handler vào từng node trong SVG
+            svgEl.querySelectorAll('g.node, g[class*="node"]').forEach(function(gEl) {
+                gEl.style.cursor = 'pointer';
+                gEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // Mermaid v11: id = "{anything}-rm_1-0" hoặc "{uid}rm_1-{n}"
+                    // Dùng pattern cố định của chúng ta: rm_[bpc]?\d+
+                    var m = gEl.id.match(/rm_[bpc]?\d+/);
+                    if (!m) return;
+                    var nodeId = m[0];
+                    var node = roadmap.nodes && roadmap.nodes[nodeId];
+                    if (!node) return;
+                    var sidebarTitle   = document.getElementById('sidebar-title');
+                    var sidebarContent = document.getElementById('sidebar-content');
+                    var sidebarDetail  = document.getElementById('sidebar-detail');
+                    if (!sidebarDetail) return;
+                    if (sidebarTitle)   sidebarTitle.textContent = node.title;
+                    if (sidebarContent) sidebarContent.innerHTML  = node.desc;
+                    sidebarDetail.classList.add('open');
+                });
+            });
 
-        if (edge.animated) {
-            line.classList.add('animated-line');
+            if (typeof svgPanZoom !== 'undefined') {
+                svgPanZoom(svgEl, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: true,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.2,
+                    maxZoom: 4,
+                    panEnabled: true,
+                });
+            }
         }
-        svgLayer.appendChild(line);
-    });
-
-    // Vẽ khối hộp
-    roadmap.nodesData.forEach(node => {
-        var div = document.createElement('div');
-        div.className = 'node';
-        div.innerHTML = node.label;
-        div.style.left = node.x + 'px';
-        div.style.top = node.y + 'px';
-        if (node.color) div.style.backgroundColor = node.color;
-        
-        // Gắn hàm mở Sidebar
-        div.addEventListener('click', function(e) {
-            e.stopPropagation();
-            window.openSidebarDetail(node);
-        });
-        container.appendChild(div);
+    }).catch(function(err) {
+        wrap.innerHTML = '<div style="color:#EF4444;padding:40px;text-align:center;font-size:14px;">Không tải được sơ đồ.</div>';
+        console.error('Mermaid render error:', err);
     });
 }
 
-// Bắt buộc khai báo window để file HTML có thể gọi được
-window.openSidebarDetail = function(node) {
-    document.getElementById('sidebar-title').innerText = node.label.replace(/^[0-9a-z]+\.\s/i, ''); 
-    document.getElementById('sidebar-content').innerHTML = node.desc;
-    document.getElementById('sidebar-detail').classList.add('open');
-};
+function loadEduRoadmaps() {
+    return fetch(API + '/roadmaps')
+        .then(handleFetch)
+        .then(function(data) {
+            if (!Array.isArray(data) || !data.length) {
+                console.warn('loadEduRoadmaps: empty or non-array response', data);
+                return;
+            }
+            _eduRoadmaps = data;
+            window.currentEduRoadmap = data[0].id;
+            renderEduRoadmapTabs();
+        })
+        .catch(function(err) {
+            console.error('loadEduRoadmaps:', err);
+            var wrap = document.getElementById('roadmap-mermaid-wrap');
+            if (wrap) wrap.innerHTML = '<div style="color:#EF4444;padding:40px;text-align:center;font-size:14px;">Không tải được lộ trình. Vui lòng thử lại.</div>';
+        });
+}
 
 window.closeSidebar = function() {
-    document.getElementById('sidebar-detail').classList.remove('open');
+    var sd = document.getElementById('sidebar-detail');
+    if (sd) sd.classList.remove('open');
 };
 
-// Gọi chạy khi trang web tải xong
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById("roadmap-tabs")) {
-        renderEduRoadmapTabs();
-        renderEduInteractiveRoadmap();
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: 'strict',
+            suppressErrors: true,
+        });
     }
-
     document.addEventListener('click', function(e) {
         var sidebar = document.getElementById('sidebar-detail');
         if (!sidebar || !sidebar.classList.contains('open')) return;
-        if (!sidebar.contains(e.target)) {
-            closeSidebar();
-        }
+        if (!sidebar.contains(e.target)) closeSidebar();
     });
 });
 
-/* ── Handle 401 (chưa đăng nhập) ── */
+/* ════════════════════════════════════════════════════════════
+   ★ CÁ NHÂN HÓA LỘ TRÌNH — Mermaid editor + live preview
+   ════════════════════════════════════════════════════════════ */
+var _rmPreviewCount = 0;
+var _rmDebounce = null;
+var _rmPersonalLoaded = false;
+
+var _RM_DEFAULT = 'flowchart TD\n    A["🎯 Mục tiêu"] --> B["📚 Học lý thuyết"]\n    B --> C["🛠️ Thực hành"]\n    C --> D["✅ Hoàn thành"]\n    classDef default fill:#4A9EE0,stroke:#2D7FC1,color:#fff';
+
+function _rmSetStatus(msg, isError) {
+    var el = document.getElementById('rm-parse-status');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'rm-parse-status ' + (isError ? 'rm-status-error' : (msg ? 'rm-status-ok' : ''));
+}
+
+function _rmRenderPreview(code) {
+    var wrap = document.getElementById('rm-personal-preview');
+    if (!wrap || !code.trim()) {
+        if (wrap) wrap.innerHTML = '<div class="rm-preview-placeholder">Nhập Mermaid code để xem preview...</div>';
+        return;
+    }
+    if (typeof mermaid === 'undefined') return;
+    // Parse trước để tránh mermaid tự hiện popup lỗi khi render
+    mermaid.parse(code, { suppressErrors: true }).then(function(ok) {
+        if (ok === false) {
+            wrap.innerHTML = '<div class="rm-preview-placeholder" style="color:#EF4444;">Cú pháp lỗi — kiểm tra lại code</div>';
+            return null;
+        }
+        var svgId = 'rm-personal-svg-' + (++_rmPreviewCount);
+        return mermaid.render(svgId, code);
+    }).then(function(result) {
+        if (!result) return;
+        wrap.innerHTML = result.svg;
+        var svgEl = wrap.querySelector('svg');
+        if (svgEl) {
+            svgEl.removeAttribute('width');
+            svgEl.removeAttribute('height');
+            svgEl.style.width = '100%';
+            svgEl.style.height = '100%';
+        }
+    }).catch(function() {
+        wrap.innerHTML = '<div class="rm-preview-placeholder" style="color:#EF4444;">Cú pháp lỗi — kiểm tra lại code</div>';
+    });
+}
+
+function _rmValidateOnBlur(code) {
+    if (!code.trim() || typeof mermaid === 'undefined') { _rmSetStatus('', false); return; }
+    mermaid.parse(code, { suppressErrors: true })
+        .then(function(ok) {
+            if (ok !== false) {
+                _rmSetStatus('✓ Cú pháp hợp lệ', false);
+            } else {
+                _rmSetStatus('✗ Cú pháp không hợp lệ — kiểm tra lại', true);
+            }
+        })
+        .catch(function() { _rmSetStatus('✗ Cú pháp không hợp lệ', true); });
+}
+
+function _rmInitEditor() {
+    var ta = document.getElementById('rm-personal-editor');
+    if (!ta || ta._rmInited) return;
+    ta._rmInited = true;
+
+    ta.addEventListener('input', function() {
+        _rmSetStatus('', false);
+        clearTimeout(_rmDebounce);
+        _rmDebounce = setTimeout(function() { _rmRenderPreview(ta.value); }, 500);
+    });
+
+    ta.addEventListener('blur', function() { _rmValidateOnBlur(ta.value); });
+}
+
+function rmNormalizeLabel(label) {
+    return label.trim().replace(/\s+/g, ' ').replace(/[^\w\s-]/g, '');
+}
+
+function rmNodeId(label) {
+    var slug = rmNormalizeLabel(label).toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    return slug ? 'n_' + slug : 'n_step';
+}
+
+function rmInsertTemplate() {
+    var ta = document.getElementById('rm-personal-editor');
+    if (!ta) return;
+    ta.value = _RM_DEFAULT;
+    _rmSetStatus('Đã chèn mẫu lộ trình cơ bản.', false);
+    _rmRenderPreview(ta.value);
+}
+
+function rmClearEditor() {
+    var ta = document.getElementById('rm-personal-editor');
+    if (!ta) return;
+    ta.value = 'flowchart TD\n    A["🎯 Bắt đầu"]';
+    _rmSetStatus('Đã xóa sơ đồ. Bắt đầu lại với một bước mới.', false);
+    _rmRenderPreview(ta.value);
+}
+
+function rmAddStep() {
+    var from = document.getElementById('rm-step-from');
+    var to = document.getElementById('rm-step-to');
+    if (!from || !to) return;
+    var fromText = from.value.trim();
+    var toText = to.value.trim();
+    if (!fromText || !toText) {
+        _rmSetStatus('Nhập cả bước bắt đầu và bước kế tiếp để thêm.', true);
+        return;
+    }
+
+    var ta = document.getElementById('rm-personal-editor');
+    if (!ta) return;
+
+    var code = ta.value.trim();
+    if (!code) {
+        code = _RM_DEFAULT;
+    }
+    if (!/^flowchart\s+[A-Z]/i.test(code)) {
+        code = _RM_DEFAULT + '\n' + code;
+    }
+
+    var fromId = rmNodeId(fromText);
+    var toId = rmNodeId(toText);
+    var nodeFrom = fromId + '["' + fromText + '"]';
+    var nodeTo = toId + '["' + toText + '"]';
+    var edge = fromId + ' --> ' + toId;
+
+    var lines = code.split('\n');
+    if (!lines.some(function(line) { return line.indexOf(fromId + '["') !== -1; })) {
+        lines.push('    ' + nodeFrom);
+    }
+    if (!lines.some(function(line) { return line.indexOf(toId + '["') !== -1; })) {
+        lines.push('    ' + nodeTo);
+    }
+    lines.push('    ' + edge);
+
+    ta.value = lines.join('\n');
+    _rmSetStatus('Đã thêm bước mới vào sơ đồ.', false);
+    _rmRenderPreview(ta.value);
+    from.value = '';
+    to.value = '';
+}
+
+function loadPersonalRoadmap() {
+    if (_rmPersonalLoaded) return;
+    _rmPersonalLoaded = true;
+    _rmInitEditor();
+    fetch(API + '/me/roadmap')
+        .then(handleFetch)
+        .then(function(data) {
+            if (!data) return;
+            var ta = document.getElementById('rm-personal-editor');
+            if (!ta) return;
+            var code = (data.mermaid_def || '').trim() || _RM_DEFAULT;
+            ta.value = code;
+            // Delay to avoid racing with the main roadmap mermaid render
+            setTimeout(function() { _rmRenderPreview(code); }, 400);
+        })
+        .catch(function() {});
+}
+
+function savePersonalRoadmap() {
+    var ta = document.getElementById('rm-personal-editor');
+    if (!ta) return;
+    var btn = document.querySelector('.rm-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu...'; }
+    fetch(API + '/me/roadmap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mermaid_def: ta.value })
+    })
+    .then(handleFetch)
+    .then(function(d) {
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Đã lưu'; setTimeout(function(){ btn.textContent = '💾 Lưu'; }, 2000); }
+    })
+    .catch(function() {
+        if (btn) { btn.disabled = false; btn.textContent = '💾 Lưu'; }
+    });
+}
+
+function handlePersonalRoadmapAI() {
+    fetch(API + '/me/roadmap/ai', { method: 'POST' })
+        .then(function(r) {
+            if (r.status === 402) {
+                _rmShowToast('🔒 Tính năng Tạo bằng AI chỉ dành cho tài khoản Premium');
+            }
+        })
+        .catch(function() {});
+}
+
+function _rmShowToast(msg) {
+    var t = document.createElement('div');
+    t.className = 'rm-toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function() { t.classList.add('rm-toast-show'); });
+    setTimeout(function() {
+        t.classList.remove('rm-toast-show');
+        setTimeout(function() { t.remove(); }, 400);
+    }, 3000);
+}
+
+/* ── Handle HTTP errors ── */
 function handleFetch(r) {
   if (r.status === 401) {
     const p = window.location.pathname;
@@ -244,6 +395,13 @@ function handleFetch(r) {
       window.location = "/login";
     }
     return null;
+  }
+  if (!r.ok) {
+    return r.json().then(function(body) {
+      throw new Error((body && body.message) || ('HTTP ' + r.status));
+    }).catch(function() {
+      throw new Error('HTTP ' + r.status);
+    });
   }
   return r.json();
 }
@@ -1111,158 +1269,9 @@ function loadAll() {
   loadCourses();
   loadEnrolled();
   loadNotifications();
-  if (document.getElementById('roadmap-content')) {
-    loadRoadmap();
-  }
+  loadEduRoadmaps();
 }
 
-/* ── Roadmap ── */
-function loadRoadmap() {
-  fetch(API + "/roadmap")
-    .then(handleFetch)
-    .then(function (data) {
-      if (!data) return;
-      doneItems = {};
-      data.doneItems.forEach(function (id) {
-        doneItems[id] = true;
-      });
-      renderRoadmapTabs();
-      renderRoadmap();
-    });
-}
-
-function renderRoadmapTabs() {
-  var tabs = document.getElementById("roadmap-tabs");
-  if (!tabs) return;
-  tabs.innerHTML = ROADMAPS.map(function (r) {
-    var active = r.id === activeRoadmap ? " active" : "";
-    return (
-      '<button class="filter-btn' +
-      active +
-      '" onclick="switchRoadmap(\'' +
-      r.id +
-      "')\">" +
-      r.icon +
-      " " +
-      r.title +
-      "</button>"
-    );
-  }).join("");
-}
-
-function switchRoadmap(id) {
-  activeRoadmap = id;
-  renderRoadmapTabs();
-  renderRoadmap();
-}
-
-function renderRoadmap() {
-  var container = document.getElementById("roadmap-content");
-  if (!container) return;
-  var rm = ROADMAPS.find(function (r) {
-    return r.id === activeRoadmap;
-  });
-  if (!rm) return;
-
-  var totalItems = rm.phases.reduce(function (s, p) {
-    return s + p.items.length;
-  }, 0);
-  var doneCount = rm.phases.reduce(function (s, p) {
-    return (
-      s +
-      p.items.filter(function (item) {
-        return doneItems[rm.id + ":" + item];
-      }).length
-    );
-  }, 0);
-  var pct = totalItems ? Math.round((doneCount / totalItems) * 100) : 0;
-
-  var html =
-    '<div style="margin-bottom:20px">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
-    '<span style="font-size:14px;color:#6B7280">Tiến độ tổng thể</span>' +
-    '<span style="font-weight:700;color:' +
-    rm.color +
-    '">' +
-    pct +
-    "%</span>" +
-    "</div>" +
-    '<div class="prog-bar-bg"><div class="prog-bar-fill" style="width:' +
-    pct +
-    "%;background:linear-gradient(90deg," +
-    rm.color +
-    ',#888);transition:width 0.4s"></div></div>' +
-    "</div>";
-
-  html += '<div class="roadmap-grid">';
-  rm.phases.forEach(function (phase, pi) {
-    var phDone = phase.items.filter(function (item) {
-      return doneItems[rm.id + ":" + item];
-    }).length;
-    html +=
-      '<div class="roadmap-phase">' +
-      '<div class="roadmap-phase-header" style="border-left:3px solid ' +
-      rm.color +
-      '">' +
-      "<div>" +
-      '<div class="roadmap-phase-title">Giai đoạn ' +
-      (pi + 1) +
-      ": " +
-      phase.name +
-      "</div>" +
-      '<div class="roadmap-phase-sub">' +
-      phDone +
-      "/" +
-      phase.items.length +
-      " hoàn thành</div>" +
-      "</div>" +
-      '<div class="roadmap-phase-pct" style="color:' +
-      rm.color +
-      '">' +
-      Math.round((phDone / phase.items.length) * 100) +
-      "%</div>" +
-      "</div>";
-
-    phase.items.forEach(function (item) {
-      var itemId = rm.id + ":" + item;
-      var done = !!doneItems[itemId];
-      html +=
-        '<div class="roadmap-item' +
-        (done ? " done" : "") +
-        '" onclick="toggleRoadmapItem(\'' +
-        itemId +
-        "')\">" +
-        '<div class="roadmap-check" style="' +
-        (done ? "background:" + rm.color + ";border-color:" + rm.color : "") +
-        '">' +
-        (done ? "✓" : "") +
-        "</div>" +
-        "<span>" +
-        item +
-        "</span>" +
-        "</div>";
-    });
-
-    html += "</div>";
-  });
-  html += "</div>";
-
-  container.innerHTML = html;
-}
-
-function toggleRoadmapItem(itemId) {
-  doneItems[itemId] = !doneItems[itemId];
-  renderRoadmap();
-  fetch(API + "/roadmap/" + encodeURIComponent(itemId), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ done: doneItems[itemId] }),
-  })
-    .then(handleFetch)
-    .catch(function (e) {
-      console.error(e);
-    });
-}
 
 /* ── Dynamic date ── */
 function updateDate() {
