@@ -35,7 +35,7 @@ def register():
     if not name or not email or not password:
         return jsonify({'error': 'Vui lòng nhập đầy đủ thông tin'}), 400
     conn = get_db()
-    if conn.execute('SELECT id FROM users WHERE email=%s    ', (email,)).fetchone():
+    if conn.execute('SELECT id FROM users WHERE email=%s', (email,)).fetchone():
         conn.close()
         return jsonify({'error': 'Email đã được sử dụng'}), 400
     conn.execute(

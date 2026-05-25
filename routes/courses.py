@@ -131,7 +131,7 @@ def enroll(course_id):
         conn.execute(
             '''INSERT INTO enrollments (user_id, course_id, progress, completed_lessons,
                                        time_spent, last_lesson, next_lesson)
-               VALUES (?, ?, 0, 0, '0h', '', ?)
+               VALUES (%s, %s, 0, 0, '0h', '', %s)
                ON CONFLICT (user_id, course_id) DO NOTHING''',
             (uid, course_id, first_lesson)
         )
