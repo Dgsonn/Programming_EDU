@@ -5,6 +5,23 @@ from utils import api_login_required, current_user_id
 stats_bp = Blueprint('stats', __name__)
 
 
+def parse_time_spent(value) -> float:
+    if value is None or value == '':
+        return 0.0
+    s = str(value).replace('h', '').strip()
+    if not s:
+        return 0.0
+    try:
+        result = float(s)
+    except ValueError:
+        return 0.0
+    if result < 0:
+        return 0.0
+    if result > 24:
+        return 24.0
+    return result
+
+
 @stats_bp.route('/api/stats', methods=['GET'])
 @api_login_required
 def get_stats():
@@ -19,7 +36,7 @@ def get_stats():
     ).fetchall()
     conn.close()
     avg_progress = round(sum(r['progress'] for r in rows) / len(rows)) if rows else 0
-    total_hours  = sum(float(r['time_spent'].replace('h', '')) for r in rows)
+    total_hours  = sum(parse_time_spent(r.get('time_spent')) for r in rows)
     return jsonify({
         'enrolledCount': count,
         'avgProgress':   avg_progress,
