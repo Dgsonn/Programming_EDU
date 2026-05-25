@@ -122,6 +122,48 @@
   gap: 8px;
 }
 
+.courses-controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.sort-dropdown-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sort-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.sort-select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #1F2937;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.sort-select:hover {
+  border-color: #4A9EE0;
+  background: #F0F9FF;
+}
+
+.sort-select:focus {
+  border-color: #4A9EE0;
+  box-shadow: 0 0 0 3px rgba(74, 158, 224, 0.1);
+}
+
 /* ════════════════════════════════════════════
    SEARCH BAR + DROPDOWN — Courses page
    ════════════════════════════════════════════ */
@@ -250,6 +292,10 @@
 body.dark .courses-header h2 { color: #F1F5F9; }
 body.dark .filter-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
 body.dark .filter-btn:hover { background: #334155; color: #e2e8f0; }
+body.dark .sort-label { color: #94A3B8; }
+body.dark .sort-select { background: #1E293B; border-color: #334155; color: #E2E8F0; }
+body.dark .sort-select:hover { background: #334155; border-color: #4A9EE0; }
+body.dark .sort-select:focus { border-color: #4A9EE0; box-shadow: 0 0 0 3px rgba(74, 158, 224, 0.2); }
 body.dark .courses-search-bar-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
 body.dark .courses-search-bar-input:focus { border-color: #4A9EE0; }
 body.dark .courses-search-bar-input::placeholder { color: #475569; }

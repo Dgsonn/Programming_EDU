@@ -37,29 +37,29 @@
       </div>
     </div>
 
-    <nav>
-      <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')">
+    <nav role="navigation" aria-label="Main navigation">
+      <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')" role="button" aria-label="Dashboard">
         <div class="nav-left">
           <div class="nav-icon">🏠</div><span>Dashboard</span>
         </div>
         <span class="nav-chevron">›</span>
       </button>
-      <button class="nav-btn" data-page="courses" onclick="navigate('courses')">
+      <button class="nav-btn" data-page="courses" onclick="navigate('courses')" role="button" aria-label="Khóa học">
         <div class="nav-left">
           <div class="nav-icon">📖</div><span>Khóa học</span>
         </div>
       </button>
-      <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')">
+      <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')" role="button" aria-label="Lộ trình">
         <div class="nav-left">
           <div class="nav-icon">🗺️</div><span>Lộ trình</span>
         </div>
       </button>
-      <button class="nav-btn" data-page="skills" onclick="navigate('skills')">
+      <button class="nav-btn" data-page="skills" onclick="navigate('skills')" role="button" aria-label="Kỹ năng">
         <div class="nav-left">
           <div class="nav-icon">🏅</div><span>Kỹ năng</span>
         </div>
       </button>
-      <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
+      <button class="nav-btn" data-page="settings" onclick="navigate('settings')" role="button" aria-label="Cài đặt">
         <div class="nav-left">
           <div class="nav-icon">⚙️</div><span>Cài đặt</span>
         </div>
@@ -164,10 +164,20 @@
     <div class="page" id="page-courses">
       <div class="courses-header">
         <h2>Tất cả khóa học</h2>
-        <div class="filter-group">
-          <button class="filter-btn active" onclick="setEnrollmentFilter(this,'all')">Tất cả</button>
-          <button class="filter-btn" onclick="setEnrollmentFilter(this,'enrolled')">Đã đăng ký</button>
-          <button class="filter-btn" onclick="setEnrollmentFilter(this,'not-enrolled')">Chưa đăng ký</button>
+        <div class="courses-controls">
+          <div class="filter-group" role="group" aria-label="Enrollment filter">
+            <button class="filter-btn active" onclick="setEnrollmentFilter(this,'all')" role="radio" aria-checked="true">Tất cả</button>
+            <button class="filter-btn" onclick="setEnrollmentFilter(this,'enrolled')" role="radio" aria-checked="false">Đã đăng ký</button>
+            <button class="filter-btn" onclick="setEnrollmentFilter(this,'not-enrolled')" role="radio" aria-checked="false">Chưa đăng ký</button>
+          </div>
+          <div class="sort-dropdown-wrap">
+            <label for="course-sort-select" class="sort-label">Sắp xếp:</label>
+            <select id="course-sort-select" class="sort-select" onchange="setSortOrder(this.value)" aria-label="Sort courses by">
+              <option value="newest">Mới nhất</option>
+              <option value="popular">Phổ biến nhất</option>
+              <option value="duration">Ngắn nhất</option>
+            </select>
+          </div>
         </div>
       </div>
 

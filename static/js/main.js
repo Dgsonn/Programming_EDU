@@ -16,6 +16,7 @@ var API = "/api";
 var courses = [];
 var enrolledCourses = [];
 var activeEnrollmentFilter = "all";
+var currentSort = "newest";
 var searchQuery = "";
 var levelFilter = "all";
 var languageFilters = [];
@@ -183,6 +184,14 @@ document.addEventListener('DOMContentLoaded', function() {
         var sidebar = document.getElementById('sidebar-detail');
         if (!sidebar || !sidebar.classList.contains('open')) return;
         if (!sidebar.contains(e.target)) closeSidebar();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            closeSearchSuggestions();
+            closeSidebar();
+            var editor = document.getElementById('rm-personal-editor');
+            if (editor) editor.blur();
+        }
     });
 });
 
@@ -447,6 +456,28 @@ function navigate(page) {
   }
 }
 
+/* ── Sort & Filter Courses ── */
+function sortCourses(courseList) {
+  if (!courseList || !courseList.length) return [];
+  var sorted = courseList.slice();
+  if (currentSort === 'newest') {
+    sorted.sort(function(a, b) { return (b.id || 0) - (a.id || 0); });
+  } else if (currentSort === 'popular') {
+    sorted.sort(function(a, b) { 
+      var enrollA = parseInt(a.enrollments || '0'.replace(/[^\d]/g, '')) || 0;
+      var enrollB = parseInt(b.enrollments || '0'.replace(/[^\d]/g, '')) || 0;
+      return enrollB - enrollA; 
+    });
+  } else if (currentSort === 'duration') {
+    sorted.sort(function(a, b) {
+      var durA = parseInt(a.duration || '0'.replace(/[^\d]/g, '')) || 999;
+      var durB = parseInt(b.duration || '0'.replace(/[^\d]/g, '')) || 999;
+      return durA - durB;
+    });
+  }
+  return sorted;
+}
+
 /* ── Course rendering ── */
 function renderCourses() {
   var grid = document.getElementById("courses-grid");
@@ -504,6 +535,8 @@ function renderCourses() {
       });
     return matchSearch && matchEnroll && matchLevel && matchLang;
   });
+
+  filtered = sortCourses(filtered);
 
   if (!filtered.length) {
     grid.innerHTML = "";
@@ -978,9 +1011,16 @@ function setEnrollmentFilter(btn, filter) {
   if (group) {
     group.querySelectorAll(".filter-btn").forEach(function (b) {
       b.classList.remove("active");
+      b.setAttribute('aria-checked', 'false');
     });
   }
   btn.classList.add("active");
+  btn.setAttribute('aria-checked', 'true');
+  renderCourses();
+}
+
+function setSortOrder(value) {
+  currentSort = value;
   renderCourses();
 }
 
