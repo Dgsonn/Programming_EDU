@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Programming Edu — Đăng nhập</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -56,9 +56,11 @@
           <p class="form-title">Chào mừng trở lại!</p>
           <p class="form-subtitle">Tiếp tục hành trình lập trình của bạn 💡</p>
 
-          <!-- Email -->
-          <div class="field">
-            <label class="field-label" for="login-email">Email</label>
+          <!-- Email or Phone -->
+          <div class="field" id="field-group-email">
+            <label class="field-label" for="login-email"
+              >Email hoặc số điện thoại</label
+            >
             <div class="field-wrap">
               <svg
                 class="field-icon"
@@ -71,12 +73,13 @@
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
               <input
-                type="email"
+                type="text"
                 id="login-email"
-                placeholder="email@example.com"
-                autocomplete="email"
+                placeholder="Email hoặc số điện thoại"
+                autocomplete="username"
               />
             </div>
+            <span class="field-error" id="login-email-error"></span>
           </div>
 
           <!-- Mật khẩu -->
@@ -118,6 +121,7 @@
                 </svg>
               </button>
             </div>
+            <span class="field-error" id="login-password-error"></span>
           </div>
 
           <div class="forgot">
@@ -257,15 +261,44 @@
         r.addEventListener("animationend", () => r.remove());
       }
 
+      /* ── FIELD ERROR HELPERS ── */
+      function clearFieldErrors() {
+        document.querySelectorAll(".field-error").forEach((el) => {
+          el.textContent = "";
+        });
+        document.querySelectorAll(".field.has-error").forEach((el) => {
+          el.classList.remove("has-error");
+        });
+      }
+
+      function showFieldErrors(errors) {
+        clearFieldErrors();
+        const fieldMap = {
+          email: "login-email-error",
+          password: "login-password-error",
+        };
+        const groupMap = {
+          email: "field-group-email",
+          password: "field-group-password",
+        };
+        for (const [field, msg] of Object.entries(errors)) {
+          const errEl = document.getElementById(fieldMap[field]);
+          const groupEl = document.getElementById(groupMap[field]);
+          if (errEl) errEl.textContent = msg;
+          if (groupEl) groupEl.classList.add("has-error");
+        }
+      }
+
       /* ── HANDLE LOGIN ── */
       async function handleLogin(e) {
         addRipple(e.currentTarget, e);
+        clearFieldErrors();
 
         const email = document.getElementById("login-email").value.trim();
         const password = document.getElementById("login-password").value;
 
         if (!email || !password) {
-          showError("Vui lòng nhập email và mật khẩu.");
+          showError("Vui lòng nhập email hoặc số điện thoại và mật khẩu.");
           return;
         }
 
@@ -280,8 +313,15 @@
           });
 
           const data = await res.json();
-          if (!res.ok)
-            throw new Error(data.error || "Sai email hoặc mật khẩu.");
+          if (!res.ok) {
+            if (data.errors) {
+              showFieldErrors(data.errors);
+              return;
+            }
+            throw new Error(
+              data.error || "Sai email/số điện thoại hoặc mật khẩu.",
+            );
+          }
 
           const nextUrl = "/dashboard";
           document.getElementById("successOverlay").classList.add("show");
@@ -300,7 +340,7 @@
       async function handleForgot() {
         const email = document.getElementById("login-email").value.trim();
         if (!email) {
-          showError("Vui lòng nhập email trước khi khôi phục mật khẩu.");
+          showError("Vui lòng nhập email để khôi phục mật khẩu.");
           return;
         }
 
@@ -362,7 +402,7 @@
           document.head.appendChild(link);
         }
       }
-      
+
       document.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           const btn = document.getElementById("loginBtn");
@@ -373,6 +413,6 @@
         }
       });
     </script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>
 </html>

@@ -252,6 +252,29 @@ body {
     margin-bottom: 0.85rem;
 }
 
+.or-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0.2rem 0 0.85rem;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.or-divider span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.30);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
 .field-label {
     display: block;
     font-size: 0.75rem;
@@ -594,4 +617,25 @@ body {
 .error-toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+/* ── FIELD INLINE ERRORS ── */
+.field-error {
+    display: block;
+    font-size: 0.75rem;
+    color: #EF5350;
+    margin-top: 0.35rem;
+    padding-left: 0.25rem;
+    min-height: 0;
+    line-height: 1.4;
+}
+
+.field.has-error .field-wrap {
+    border-radius: 12px;
+    box-shadow: 0 0 0 2px rgba(239, 83, 80, 0.45);
+}
+
+.field.has-error input {
+    border-color: #EF5350;
+    background: rgba(239, 83, 80, 0.08);
 }

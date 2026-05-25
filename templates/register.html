@@ -45,7 +45,7 @@
         <p class="form-subtitle">Tham gia cộng đồng lập trình viên hàng ngàn người 🚀</p>
 
         <!-- Họ và tên -->
-        <div class="field">
+        <div class="field" id="field-group-name">
           <label class="field-label" for="reg-name">Họ và tên</label>
           <div class="field-wrap">
             <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -54,10 +54,11 @@
             </svg>
             <input type="text" id="reg-name" placeholder="Nguyễn Văn A" autocomplete="name" />
           </div>
+          <span class="field-error" id="reg-name-error"></span>
         </div>
 
         <!-- Email -->
-        <div class="field">
+        <div class="field" id="field-group-email">
           <label class="field-label" for="reg-email">Email</label>
           <div class="field-wrap">
             <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -66,10 +67,23 @@
             </svg>
             <input type="email" id="reg-email" placeholder="email@example.com" autocomplete="email" />
           </div>
+          <span class="field-error" id="reg-email-error"></span>
+        </div>
+
+        <!-- Số điện thoại -->
+        <div class="field" id="field-group-phone">
+          <label class="field-label" for="reg-phone">Số điện thoại</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <input type="tel" id="reg-phone" placeholder="0912345678" autocomplete="tel" />
+          </div>
+          <span class="field-error" id="reg-phone-error"></span>
         </div>
 
         <!-- Mật khẩu -->
-        <div class="field">
+        <div class="field" id="field-group-password">
           <label class="field-label" for="reg-password">Mật khẩu</label>
           <div class="field-wrap">
             <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -84,6 +98,7 @@
               </svg>
             </button>
           </div>
+          <span class="field-error" id="reg-password-error"></span>
         </div>
 
         <p class="terms">Bằng cách đăng ký, bạn đồng ý với <a href="#">Điều khoản</a> và <a href="#">Chính sách bảo
@@ -187,16 +202,36 @@
       r.addEventListener('animationend', () => r.remove());
     }
 
+    /* ── FIELD ERROR HELPERS ── */
+    function clearFieldErrors() {
+      document.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; });
+      document.querySelectorAll('.field.has-error').forEach(el => { el.classList.remove('has-error'); });
+    }
+
+    function showFieldErrors(errors) {
+      clearFieldErrors();
+      const fieldMap = { name: 'reg-name-error', email: 'reg-email-error', phone: 'reg-phone-error', password: 'reg-password-error' };
+      const groupMap = { name: 'field-group-name', email: 'field-group-email', phone: 'field-group-phone', password: 'field-group-password' };
+      for (const [field, msg] of Object.entries(errors)) {
+        const errEl = document.getElementById(fieldMap[field]);
+        const groupEl = document.getElementById(groupMap[field]);
+        if (errEl) errEl.textContent = msg;
+        if (groupEl) groupEl.classList.add('has-error');
+      }
+    }
+
     /* ── HANDLE REGISTER ── */
     async function handleRegister(e) {
       addRipple(e.currentTarget, e);
+      clearFieldErrors();
 
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
       const password = document.getElementById('reg-password').value;
 
-      if (!name || !email || !password) { showError('Vui lòng điền đầy đủ thông tin.'); return; }
-      if (password.length < 8) { showError('Mật khẩu phải có ít nhất 8 ký tự.'); return; }
+      if (!name || !password) { showError('Vui lòng điền họ tên và mật khẩu.'); return; }
+      if (!email && !phone) { showError('Vui lòng nhập email hoặc số điện thoại.'); return; }
 
       setLoading(true);
 
@@ -205,11 +240,17 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
-          body: JSON.stringify({ name, email, password }),
+          body: JSON.stringify({ name, email, phone, password }),
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Đăng ký thất bại.');
+        if (!res.ok) {
+          if (data.errors) {
+            showFieldErrors(data.errors);
+            return;
+          }
+          throw new Error(data.error || 'Đăng ký thất bại.');
+        }
 
         document.getElementById('successOverlay').classList.add('show');
         setTimeout(() => {
