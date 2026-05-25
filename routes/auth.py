@@ -2,11 +2,13 @@ from flask import Blueprint, jsonify, request, session, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import get_db
 from validators import validate_email_field, validate_password_field, validate_name_field, validate_phone_field
+from extensions import limiter
 
 auth_bp = Blueprint('auth', __name__)
 
 
 @auth_bp.route('/auth/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     data       = request.get_json() or {}
     identifier = (data.get('email') or data.get('phone') or '').strip()
@@ -56,6 +58,7 @@ def login():
 
 
 @auth_bp.route('/auth/register', methods=['POST'])
+@limiter.limit("3 per minute")
 def register():
     data     = request.get_json()
     name     = data.get('name', '').strip()

@@ -20,3 +20,4 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
     WTF_CSRF_CHECK_DEFAULT     = False
+    RATELIMIT_STORAGE_URI      = os.environ.get('REDIS_URL', 'memory://')

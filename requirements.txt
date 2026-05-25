@@ -5,3 +5,5 @@ python-dotenv>=1.0.0
 werkzeug>=2.3
 flask-wtf
 email-validator>=2.1
+flask-limiter>=3.5
+redis>=5.0
