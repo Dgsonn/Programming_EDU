@@ -172,6 +172,18 @@ window.closeSidebar = function() {
     if (sd) sd.classList.remove('open');
 };
 
+window.toggleSidebar = function() {
+  var sidebar = document.getElementById('sidebar');
+  var btn = document.getElementById('sidebar-toggle-btn');
+  if (!sidebar) return;
+  var hidden = sidebar.classList.toggle('hidden');
+  if (btn) {
+    btn.setAttribute('aria-expanded', String(!hidden));
+    btn.textContent = hidden ? '☰' : '✕';
+    btn.title = hidden ? 'Mở menu' : 'Đóng menu';
+  }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof mermaid !== 'undefined') {
         mermaid.initialize({
