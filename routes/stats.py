@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import get_db
+from models import get_db, MissionRepository
 from utils import api_login_required, current_user_id
 
 stats_bp = Blueprint('stats', __name__)
@@ -45,31 +45,32 @@ def get_stats():
         'certificates':  user['certificates']
     })
 
-# Đáp án đúng cho từng khóa học
-MISSIONS = {
-    'cpp':     {'condition': 'pin < 20',   'action': 'charge()'},
-    'python':  {'condition': 'km <= 10',   'action': 'deliver_now()'},
-    'java':    {'condition': 'age >= 18',  'action': 'access_granted()'},
-    'htmlcss': {'condition': 'width < 768','action': 'mobile_view()'},
-}
+# # Đáp án đúng cho từng khóa học — đã được chuyển vào bảng missions (DB)
+# Xem MissionRepository trong models.py
 
 @stats_bp.route('/api/mission/complete', methods=['POST'])
 @api_login_required
 def complete_mission():
     data       = request.get_json() or {}
-    mission_id = data.get('mission_id', 'cpp')
+    # Frontend gửi mission_id = course_id (string), dùng verify_answer_by_course()
+    # để backward-compatible — không cần sửa JS phía client.
+    mission_id = data.get('mission_id', '')
     condition  = data.get('condition', '')
     action     = data.get('action', '')
 
-    correct = MISSIONS.get(mission_id)
-    if not correct or condition != correct['condition'] or action != correct['action']:
+    if not mission_id:
+        return jsonify({'success': False, 'message': 'Thiếu mission_id'}), 400
+
+    mission = MissionRepository.verify_answer_by_course(mission_id, condition, action)
+    if not mission:
         return jsonify({'success': False, 'message': 'Câu trả lời chưa đúng, thử lại nhé!'})
 
+    xp_reward = mission['xp_reward']
     uid  = current_user_id()
     conn = get_db()
     conn.execute(
-        'UPDATE users SET gems = gems + 50, xp = xp + 50, streak = streak + 1 WHERE id=%s',
-        (uid,)
+        'UPDATE users SET gems = gems + %s, xp = xp + %s, streak = streak + 1 WHERE id=%s',
+        (xp_reward, xp_reward, uid)
     )
     user = conn.execute('SELECT gems, xp, streak FROM users WHERE id=%s', (uid,)).fetchone()
     conn.commit()
