@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>HTML/CSS - Thiết Kế Responsive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: { primary: '#E44D26', secondary: '#F16529', accent: '#264DE4', dark: '#4B4B4B' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #ffffff; color: #4B4B4B; }
+        .btn-3d { position: relative; border-bottom: 4px solid rgba(0,0,0,0.2); transition: all 0.1s; }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 2px; }
+        .logic-card { cursor: grab; padding: 12px 20px; border-radius: 16px; font-weight: 700; font-size: 15px; border: 2px solid #E5E5E5; background: white; box-shadow: 0 4px 0 #E5E5E5; -webkit-user-select: none; user-select: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .logic-card:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #E5E5E5; }
+        .logic-card:active { cursor: grabbing; }
+        .block-html { background-color: #FFF0ED; color: #E44D26; border-color: #FFCBBD; box-shadow: 0 4px 0 #FFCBBD; }
+        .block-css  { background-color: #EDF0FF; color: #264DE4; border-color: #C5CCFF; box-shadow: 0 4px 0 #C5CCFF; }
+        .drop-target { min-width: 160px; height: 52px; background: #F7F7F7; border: 2px dashed #D1D1D1; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin: 0 4px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drop-target.hovering { border-color: #E44D26; background: #FFF0ED; transform: scale(1.05); }
+        .drop-target.filled   { border-style: solid; background: white; border-color: #E5E5E5; }
+        .code-window { background-color: #1A1A1A; border-radius: 24px; border: 8px solid #333333; }
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .placeholder-pulse { animation: pulse-soft 2s infinite; }
+
+        @keyframes fire-wiggle {
+            0%, 100% { transform: rotate(-8deg) scale(1); }
+            25%       { transform: rotate(8deg) scale(1.15); }
+            50%       { transform: rotate(-5deg) scale(1.08); }
+            75%       { transform: rotate(6deg) scale(1.12); }
+        }
+        @keyframes fire-glow {
+            0%, 100% { text-shadow: 0 0 6px rgba(251,146,60,0.5); }
+            50%       { text-shadow: 0 0 18px rgba(251,146,60,1), 0 0 30px rgba(234,88,12,0.5); }
+        }
+        .streak-fire-on  { animation: fire-wiggle 1.4s ease-in-out infinite, fire-glow 1.4s ease-in-out infinite; }
+        .streak-fire-off { opacity: 0.35; filter: grayscale(1); }
+        .streak-badge-on  { background: linear-gradient(135deg,#fff7ed,#ffedd5); border-color: #fed7aa; }
+        .streak-badge-off { background: #f9fafb; border-color: #f3f4f6; }
+    </style>
+</head>
+<body class="lesson-page h-screen flex flex-col overflow-hidden">
+
+    <nav class="h-20 border-b-2 border-gray-100 flex items-center justify-between px-10 bg-white shrink-0">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-orange-100">
+                    <i class="fa-brands fa-html5"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tight text-gray-800">CODE<span class="text-brand-primary">GEN Z</span></span>
+            </div>
+            <div id="streak-badge" class="hidden md:flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all duration-500 {% if streak_active %}streak-badge-on{% else %}streak-badge-off{% endif %}">
+                <i id="streak-fire" class="fa-solid fa-fire text-xl transition-all duration-500 {% if streak_active %}text-orange-500 streak-fire-on{% else %}text-gray-300 streak-fire-off{% endif %}"></i>
+                <div class="flex flex-col leading-tight">
+                    <span id="streak-count" class="font-extrabold text-sm {% if streak_active %}text-orange-600{% else %}text-gray-400{% endif %}">{{ streak }} ngày</span>
+                    <span id="streak-status" class="text-xs {% if streak_active %}text-orange-400{% else %}text-gray-300{% endif %}">
+                        {% if streak_active %}Đang duy trì! 🔥{% else %}Học ngay để giữ chuỗi{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-2xl border border-orange-100">
+                <i class="fa-solid fa-gem text-brand-primary"></i>
+                <span id="gems-count" class="font-bold text-brand-primary">{{ gems }}</span>
+            </div>
+            <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex overflow-hidden">
+
+        <section class="w-1/2 p-12 overflow-y-auto bg-white flex flex-col items-center">
+            <div class="w-full max-w-xl">
+                <div class="mb-10 text-center">
+                    <h2 class="text-4xl font-extrabold text-gray-800 mb-4">Thiết Kế Responsive! 📱</h2>
+                    <p class="text-gray-500 text-lg font-medium">Kéo các khối để CSS quyết định layout nào phù hợp với màn hình điện thoại.</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-[32px] p-10 border-2 border-gray-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 to-blue-500"></div>
+                    <div class="space-y-10">
+                        <div class="flex items-center flex-wrap gap-4">
+                            <span class="text-2xl font-extrabold text-gray-400">NẾU</span>
+                            <div class="drop-target" id="zone-cond">
+                                <span class="text-gray-300 text-sm placeholder-pulse">Thả điều kiện...</span>
+                            </div>
+                            <span class="text-2xl font-extrabold text-gray-400">:</span>
+                        </div>
+                        <div class="flex items-center gap-4 pl-12">
+                            <div class="w-10 h-10 border-l-4 border-b-4 border-gray-200 rounded-bl-2xl"></div>
+                            <span class="text-xl font-bold text-brand-primary">THÌ</span>
+                            <div class="drop-target" id="zone-act">
+                                <span class="text-gray-300 text-sm placeholder-pulse">Thả hành động...</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-2xl font-extrabold text-gray-400">NGƯỢC LẠI:</span>
+                        </div>
+                        <div class="flex items-center gap-4 pl-12">
+                            <div class="w-10 h-10 border-l-4 border-b-4 border-gray-200 rounded-bl-2xl"></div>
+                            <span class="text-xl font-bold text-gray-400">THÌ</span>
+                            <div class="lesson-else-default px-6 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-400 font-bold italic shadow-sm">
+                                "desktop_view()"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 bg-white rounded-3xl p-6 border-2 border-dashed border-gray-200">
+                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 text-center">Túi đồ của bạn 🎒</h4>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <div class="logic-card block-html" draggable="true" data-type="cond" data-val="width < 768">
+                            <i class="fa-solid fa-mobile-screen"></i> width &lt; 768px
+                        </div>
+                        <div class="logic-card block-html" draggable="true" data-type="cond" data-val="width > 1200">
+                            <i class="fa-solid fa-desktop"></i> width &gt; 1200px
+                        </div>
+                        <div class="logic-card block-css" draggable="true" data-type="act" data-val="mobile_view()">
+                            <i class="fa-solid fa-mobile-screen-button"></i> Mobile view
+                        </div>
+                        <div class="logic-card block-css" draggable="true" data-type="act" data-val="desktop_view()">
+                            <i class="fa-solid fa-display"></i> Desktop view
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="w-1/2 p-12 bg-[#F7F9FC] flex flex-col items-center">
+            <div class="w-full max-w-xl h-full flex flex-col code-window shadow-2xl shadow-orange-900/10">
+                <div class="h-12 border-b border-white/5 flex items-center px-6 gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                    <span class="ml-4 text-white/30 font-mono text-xs font-bold uppercase tracking-widest">CSS Breakpoint</span>
+                </div>
+
+                <div class="flex-1 p-10 font-mono text-xl leading-relaxed overflow-y-auto">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-purple-400">screen_width</span>
+                        <span class="text-white/40">=</span>
+                        <span class="text-orange-400">480</span>
+                        <span class="text-white/20 text-sm italic"># px</span>
+                    </div>
+                    <div class="text-white/20 text-sm italic mb-6"># Breakpoint mobile: 768px</div>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-pink-500 font-bold">if</span>
+                            <span id="code-cond" class="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white/20">________</span>
+                            <span class="text-white/40">:</span>
+                        </div>
+                        <div class="pl-12 flex items-center gap-3">
+                            <span id="code-act" class="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white/20">________</span>
+                        </div>
+                        <div class="text-pink-500 font-bold">else:</div>
+                        <div class="pl-12 text-green-400">desktop_view()</div>
+                    </div>
+                    <div class="mt-16 pt-10 border-t border-white/5">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[10px] text-white/30 font-black uppercase tracking-widest">Output Terminal</span>
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        </div>
+                        <div id="output-text" class="text-sm text-white/40 italic leading-loose">
+                            > Đang đợi lệnh từ bạn...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8 bg-[#222222] border-t border-white/5 flex justify-between items-center rounded-b-[16px]">
+                    <p id="hint-box" class="text-xs text-white/30 font-medium max-w-[200px]">Hãy kéo 'width &lt; 768px' — màn hình 480px là mobile!</p>
+                    <button onclick="runMission()" class="btn-3d px-10 py-4 bg-brand-primary text-white font-extrabold rounded-2xl flex items-center gap-3 hover:bg-brand-secondary shadow-lg shadow-orange-900/20 active:scale-95 transition-all uppercase tracking-tight">
+                        Kiểm tra <i class="fa-solid fa-rocket"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="success-modal" class="fixed inset-0 z-50 bg-white/90 backdrop-blur-md hidden flex items-center justify-center">
+        <div class="text-center p-12 bg-white rounded-[40px] shadow-2xl border-4 border-brand-primary max-w-sm w-full mx-4">
+            <div class="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl">🎉</div>
+            <h3 class="text-3xl font-black text-gray-800 mb-2">QUÁ ĐỈNH!</h3>
+            <p class="text-gray-500 font-medium mb-8">Bạn đã hiểu CSS responsive breakpoint rồi! +50 XP</p>
+            <button onclick="closeModal()" class="btn-3d w-full py-4 bg-brand-primary text-white font-black rounded-2xl uppercase">Tiếp tục nào</button>
+        </div>
+    </div>
+
+    <script>
+        let currentDrag = null;
+        document.querySelectorAll('.logic-card').forEach(card => {
+            card.addEventListener('dragstart', () => { currentDrag = card; card.style.opacity = '0.4'; card.style.transform = 'scale(0.9)'; });
+            card.addEventListener('dragend',   () => { card.style.opacity = '1'; card.style.transform = 'scale(1)'; });
+        });
+        document.querySelectorAll('.drop-target').forEach(zone => {
+            zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('hovering'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('hovering'));
+            zone.addEventListener('drop', () => {
+                zone.classList.remove('hovering');
+                zone.classList.add('filled');
+                const val     = currentDrag.innerText;
+                const codeVal = currentDrag.getAttribute('data-val');
+                zone.innerHTML = `<div class="logic-card ${currentDrag.classList.contains('block-css') ? 'block-css' : 'block-html'} !m-0 !shadow-none !border-none !py-1 !px-4 text-sm">${val}</div>`;
+                if (zone.id === 'zone-cond') {
+                    const t = document.getElementById('code-cond');
+                    t.innerText = codeVal;
+                    t.classList.remove('text-white/20');
+                    t.classList.add('text-orange-400', 'bg-orange-500/10');
+                }
+                if (zone.id === 'zone-act') {
+                    const t = document.getElementById('code-act');
+                    t.innerText = codeVal;
+                    t.classList.remove('text-white/20');
+                    t.classList.add('text-blue-400', 'bg-blue-500/10');
+                }
+            });
+        });
+
+        async function runMission() {
+            const cond   = document.getElementById('code-cond').innerText;
+            const act    = document.getElementById('code-act').innerText;
+            const output = document.getElementById('output-text');
+            const hint   = document.getElementById('hint-box');
+
+            if (cond === '________' || act === '________') {
+                output.innerHTML = "<span class='text-yellow-400'>> [Hệ thống] Bạn chưa lấp đầy các ô trống kìa!</span>";
+                return;
+            }
+            try {
+                const res  = await fetch('/api/mission/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mission_id: 'htmlcss', condition: cond, action: act }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    output.innerHTML = "<span class='text-green-400 font-bold'>> [OK] 480px &lt; 768px → Mobile layout được áp dụng! 📱</span>";
+                    document.getElementById('gems-count').innerText = data.gems.toLocaleString('vi-VN');
+                    activateStreakBadge(data.streak);
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#E44D26', '#264DE4', '#27C93F'] });
+                    setTimeout(() => document.getElementById('success-modal').classList.remove('hidden'), 1000);
+                } else {
+                    output.innerHTML = `<span class='text-red-400'>> [LỖI] ${data.message}</span>`;
+                    hint.innerText = "Gợi ý: 480px < 768px → dùng mobile layout!";
+                    hint.classList.replace('text-white/30', 'text-red-400');
+                }
+            } catch {
+                output.innerHTML = "<span class='text-red-400'>> [Lỗi mạng] Không thể kết nối server!</span>";
+            }
+        }
+
+        function closeModal() { document.getElementById('success-modal').classList.add('hidden'); }
+
+        function activateStreakBadge(newStreak) {
+            var badge  = document.getElementById('streak-badge');
+            var fire   = document.getElementById('streak-fire');
+            var count  = document.getElementById('streak-count');
+            var status = document.getElementById('streak-status');
+            if (!badge) return;
+            badge.classList.remove('streak-badge-off');
+            badge.classList.add('streak-badge-on');
+            fire.classList.remove('text-gray-300', 'streak-fire-off');
+            fire.classList.add('text-orange-500', 'streak-fire-on');
+            count.className = 'font-extrabold text-sm text-orange-600';
+            count.textContent = newStreak + ' ngày';
+            status.className = 'text-xs text-orange-400';
+            status.textContent = 'Đang duy trì! 🔥';
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+    {% include 'chatbot.html' %}
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Programming EDU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=8" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+  <!-- Hidden elements to keep JS working (sidebar-name, sidebar-role) -->
+  <span id="sidebar-name" style="display:none">—</span>
+  <span id="sidebar-role" style="display:none">Học viên</span>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <div id="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="brand brand-always">
+          <div class="brand-title">Programming EDU</div>
+        </div>
+      </div>
+
+      <nav class="topbar-nav" role="navigation" aria-label="Main navigation">
+        <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')" aria-label="Dashboard">
+          <span class="nav-icon">🏠</span><span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-page="courses" onclick="navigate('courses')" aria-label="Khóa học">
+          <span class="nav-icon">📖</span><span>Khóa học</span>
+        </button>
+        <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')" aria-label="Lộ trình">
+          <span class="nav-icon">🗺️</span><span>Lộ trình</span>
+        </button>
+        <button class="nav-btn" data-page="skills" onclick="navigate('skills')" aria-label="Kỹ năng">
+          <span class="nav-icon">🏅</span><span>Kỹ năng</span>
+        </button>
+        <button class="nav-btn" data-page="forum" onclick="navigate('forum')" aria-label="Diễn đàn">
+          <span class="nav-icon">💬</span><span>Diễn đàn</span>
+        </button>
+      </nav>
+
+      <div class="topbar-right">
+        <div class="search-wrap" id="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses(); showSearchSuggestions()" onfocus="showSearchSuggestions()" onclick="showSearchSuggestions()" onblur="closeSearchSuggestions()" autocomplete="off" />
+          <div class="search-suggestions hidden" id="search-suggestions">
+            <div class="suggestions-header">Gợi ý tìm kiếm</div>
+            <div class="suggestions-row" id="suggestions-row"></div>
+            <div class="suggestions-header">Cấp độ học</div>
+            <div class="suggestion-levels" id="suggestion-levels"></div>
+          </div>
+        </div>
+        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+        <button class="bell-btn">🔔<span class="bell-dot"></span></button>
+        <div class="user-chip-wrap" id="user-chip-wrap">
+          <div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
+            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+            <span class="chip-name" id="chip-name">—</span>
+            <span class="dropdown-icon" id="chip-arrow">▾</span>
+          </div>
+          <div class="user-dropdown" id="user-dropdown" role="menu">
+            <div class="user-dropdown-header">
+              <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" class="udh-avatar" />
+              <div>
+                <div class="udh-name" id="udh-name">—</div>
+                <div class="udh-role">Học viên</div>
+              </div>
+            </div>
+            <div class="user-dropdown-divider"></div>
+            <button class="user-dropdown-item" onclick="navigate('dashboard'); closeUserMenu()" role="menuitem">
+              <span class="udi-icon">🙋</span> Trang của tôi
+            </button>
+            <button class="user-dropdown-item" onclick="navigate('settings'); closeUserMenu()" role="menuitem">
+              <span class="udi-icon">⚙️</span> Cài đặt
+            </button>
+            <div class="user-dropdown-divider"></div>
+            <button class="user-dropdown-item danger" onclick="window.location='/auth/logout'" role="menuitem">
+              <span class="udi-icon">🚪</span> Đăng xuất
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dashboard ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="welcome-banner">
+        <div class="banner-dots"></div>
+        <div class="banner-inner">
+          <div>
+            <div class="greeting">Chào mừng trở lại! 👋</div>
+            <h2 id="banner-name">—</h2>
+            <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
+          </div>
+          <div class="banner-code">&lt;/&gt;</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon icon-blue">📖</div>
+          <div>
+            <div class="stat-val" id="stat-enrolled">—</div>
+            <div class="stat-lbl">Khóa học đang học</div>
+          </div>
+        </div>
+        <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon icon-red">⏰</div>
+          <div>
+            <div class="stat-val" id="stat-total-hours">—</div>
+            <div class="stat-lbl">Tổng giờ đã học</div>
+          </div>
+        </div>
+        <div class="stat-card" onmouseenter="hoverStat(this,'#F59E0B')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon icon-orange">🔥</div>
+          <div>
+            <div class="stat-val" id="stat-streak">—</div>
+            <div class="stat-lbl">Chuỗi ngày học</div>
+          </div>
+        </div>
+        <div class="stat-card" onmouseenter="hoverStat(this,'#10B981')" onmouseleave="unhoverStat(this)">
+          <div class="stat-icon icon-green">🏆</div>
+          <div>
+            <div class="stat-val" id="stat-certificates">—</div>
+            <div class="stat-lbl">Chứng chỉ</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><span class="title-icon-blue">📈</span><span>Tiến độ học tập</span></div>
+        <div class="progress-grid" id="progress-grid"></div>
+      </div>
+
+      <div class="courses-header">
+        <h2>Khóa học của tôi</h2>
+        <button class="filter-btn active btn-small" onclick="navigate('courses')">Khám phá thêm →</button>
+      </div>
+      <div class="courses-search-bar-wrap" id="dash-search-wrap">
+        <span class="csb-icon">🔍</span>
+        <input type="text" id="dash-search-input" class="courses-search-bar-input"
+          placeholder="Tìm trong khóa học của tôi..."
+          autocomplete="off" oninput="dashSearch(this.value)" />
+        <button class="csb-clear" id="dash-search-clear" type="button"
+          style="display:none" onclick="dashClearSearch()">✕</button>
+      </div>
+      <div id="enrolled-list"></div>
+      <div id="dash-search-empty" style="display:none;text-align:center;padding:32px 0;color:#9CA3AF;font-size:14px;">Không tìm thấy khóa học nào khớp với từ khoá.</div>
+    </div>
+
+    <!-- ── Courses ── -->
+    <div class="page" id="page-courses">
+      <div class="courses-header">
+        <h2>Tất cả khóa học</h2>
+        <div class="courses-controls">
+          <div class="filter-group" role="group" aria-label="Enrollment filter">
+            <button class="filter-btn active" onclick="setEnrollmentFilter(this,'all')" role="radio" aria-checked="true">Tất cả</button>
+            <button class="filter-btn" onclick="setEnrollmentFilter(this,'enrolled')" role="radio" aria-checked="false">Đã đăng ký</button>
+            <button class="filter-btn" onclick="setEnrollmentFilter(this,'not-enrolled')" role="radio" aria-checked="false">Chưa đăng ký</button>
+          </div>
+          <div class="sort-dropdown-wrap">
+            <label for="course-sort-select" class="sort-label">Sắp xếp:</label>
+            <select id="course-sort-select" class="sort-select" onchange="setSortOrder(this.value)" aria-label="Sort courses by">
+              <option value="newest">Mới nhất</option>
+              <option value="popular">Phổ biến nhất</option>
+              <option value="duration">Ngắn nhất</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search bar + dropdown overlay -->
+      <div class="courses-search-bar-wrap" id="courses-search-bar-wrap">
+        <span class="csb-icon">🔍</span>
+        <input type="text" id="course-search-input" class="courses-search-bar-input"
+          placeholder="Tìm kiếm khóa học, ngôn ngữ, chủ đề..."
+          autocomplete="off"
+          onclick="cshOpen()"
+          oninput="cshInput(this.value)" />
+        <button class="csb-clear" id="course-search-clear" type="button"
+          style="display:none" onclick="cshClear()">✕</button>
+        <div class="course-search-hints" id="course-search-hints" style="display:none">
+          <div id="csh-static">
+            <div class="csh-label">Gợi ý tìm kiếm</div>
+            <div class="csh-pills">
+              <button type="button" class="csh-pill" onclick="cshPick('Phù hợp người mới')">✨ Phù hợp người mới</button>
+              <button type="button" class="csh-pill" onclick="cshPick('Cơ bản')">📘 Cơ bản</button>
+              <button type="button" class="csh-pill" onclick="cshPick('Trung cấp')">🧠 Trung cấp</button>
+              <button type="button" class="csh-pill" onclick="cshPick('Cao cấp')">🚀 Cao cấp</button>
+
+              <button type="button" class="csh-pill" onclick="cshPick('Python')">🐍 Python</button>
+              <button type="button" class="csh-pill" onclick="cshPick('C++')">⚙️ C / C++</button>
+              <button type="button" class="csh-pill" onclick="cshPick('Java')">☕ Java</button>
+              <button type="button" class="csh-pill" onclick="cshPick('HTML CSS')">🌐 HTML/CSS</button>
+            </div>
+          </div>
+          <ul id="csh-dynamic" style="display:none;list-style:none;padding:0;margin:8px 0 0"></ul>
+        </div>
+      </div>
+
+      <!-- Bộ lọc cấp độ + ngôn ngữ -->
+      <div class="course-filter-panel">
+        <div class="filter-pill-row" id="level-filter-row">
+          <span class="pill-label">Cấp độ</span>
+          <button class="pill-btn" onclick="setLevelFilter(this,'Cơ bản')">Cơ bản</button>
+          <button class="pill-btn" onclick="setLevelFilter(this,'Trung cấp')">Trung cấp</button>
+          <button class="pill-btn" onclick="setLevelFilter(this,'Nâng cao')">Nâng cao</button>
+        </div>
+        <div class="filter-pill-row" id="language-filter-row">
+          <span class="pill-label">Ngôn ngữ</span>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'Python')">Python</button>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'JS')">JS</button>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'Java')">Java</button>
+          <button class="pill-btn" onclick="toggleLanguageFilter(this,'SQL')">SQL</button>
+        </div>
+        <div class="active-filters hidden" id="active-filters"></div>
+      </div>
+
+      <div class="courses-grid" id="courses-grid"></div>
+      <div class="empty hidden" id="empty-state">
+        <div class="empty-icon">📖</div>
+        <p>Không tìm thấy khóa học nào</p>
+      </div>
+    </div>
+
+    <!-- ── Roadmap ── -->
+    <div class="page" id="page-roadmap">
+      <div class="courses-header">
+        <h2>Lộ trình học tập</h2>
+        <div class="filter-group" id="roadmap-tabs"></div>
+      </div>
+      <div class="courses-search-bar-wrap" id="roadmap-search-wrap">
+        <span class="csb-icon">🔍</span>
+        <input type="text" id="roadmap-search-input" class="courses-search-bar-input"
+          placeholder="Tìm lộ trình (ví dụ: Frontend, Python, C++...)"
+          autocomplete="off" oninput="roadmapSearch(this.value)" />
+        <button class="csb-clear" id="roadmap-search-clear" type="button"
+          style="display:none" onclick="roadmapClearSearch()">✕</button>
+      </div>
+
+      <div id="roadmap-container-wrapper">
+        <div id="roadmap-mermaid-wrap">
+          <div style="color:#9CA3AF;padding:40px;text-align:center;font-size:14px;">Đang tải sơ đồ...</div>
+        </div>
+
+        <!-- ── Cá nhân — hiện khi chọn tab "Cá nhân" ── -->
+        <div id="roadmap-personal-view">
+          <div class="rm-personal-hd">
+            <div class="rm-personal-hd-left">
+              <span>✏️</span>
+              <span class="rm-personal-label">Lộ trình cá nhân của tôi</span>
+            </div>
+            <div class="rm-personal-hd-right">
+              <button class="rm-ai-btn" onclick="handlePersonalRoadmapAI()" title="Chỉ dành cho tài khoản Premium">
+                🤖 Tạo bằng AI <span class="rm-premium-badge">Premium</span>
+              </button>
+              <button class="rm-save-btn" onclick="savePersonalRoadmap()">💾 Lưu</button>
+            </div>
+          </div>
+          <div class="rm-helper-panel">
+            <div class="rm-helper-actions">
+              <span class="rm-helper-note">Nhập nhanh các bước để tạo sơ đồ mà không cần nhớ cú pháp Mermaid.</span>
+              <button class="rm-helper-btn" onclick="rmInsertTemplate()">📄 Mẫu nhanh</button>
+              <button class="rm-helper-btn" onclick="rmClearEditor()">🧼 Xóa sơ đồ</button>
+            </div>
+            <div class="rm-helper-builder">
+              <input id="rm-step-from" type="text" placeholder="Từ bước (ví dụ: Khởi đầu)" />
+              <input id="rm-step-to" type="text" placeholder="Tới bước (ví dụ: Hoàn thành)" />
+              <button class="rm-builder-btn" onclick="rmAddStep()">➕ Thêm bước</button>
+            </div>
+          </div>
+          <div class="rm-split">
+            <div class="rm-split-pane rm-split-left">
+              <div class="rm-pane-label">📝 Mermaid Editor</div>
+              <textarea id="rm-personal-editor"
+                placeholder="flowchart TD&#10;    A[&quot;Mục tiêu 1&quot;] --&gt; B[&quot;Mục tiêu 2&quot;]&#10;    B --&gt; C[&quot;Hoàn thành&quot;]"></textarea>
+              <div id="rm-parse-status" class="rm-parse-status"></div>
+            </div>
+            <div class="rm-split-pane rm-split-right">
+              <div class="rm-pane-label">👁️ Preview</div>
+              <div id="rm-personal-preview">
+                <div class="rm-preview-placeholder">Nhập Mermaid code để xem preview...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sidebar-detail">
+        <button class="close-btn" onclick="closeSidebar()">✖ Đóng</button>
+        <h2 id="sidebar-title">Tiêu đề</h2>
+        <div id="sidebar-content">Nội dung chi tiết sẽ hiển thị ở đây...</div>
+      </div>
+    </div>
+
+    <!-- ── Skills ── -->
+    <div class="page" id="page-skills">
+
+      <div class="courses-header">
+        <h2>🏅 Kỹ năng</h2>
+      </div>
+      <div class="courses-search-bar-wrap" id="skills-search-wrap">
+        <span class="csb-icon">🔍</span>
+        <input type="text" id="skills-search-input" class="courses-search-bar-input"
+          placeholder="Tìm kỹ năng (ví dụ: Python, HTML, Git...)"
+          autocomplete="off" oninput="skillsSearch(this.value)" />
+        <button class="csb-clear" id="skills-search-clear" type="button"
+          style="display:none" onclick="skillsClearSearch()">✕</button>
+      </div>
+
+      <div id="skills-search-empty" style="display:none;text-align:center;padding:32px 0;color:#9CA3AF;font-size:14px;">Không tìm thấy kỹ năng nào khớp với từ khoá.</div>
+      <div class="sk-summary" id="sk-summary"></div>
+      <div class="sk-grid" id="sk-grid">
+        <div style="color:#9CA3AF;font-size:14px;padding:24px;">Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- ── Forum ── -->
+    <div class="page" id="page-forum">
+
+      <div class="courses-header">
+        <div>
+          <h2>💬 Diễn đàn</h2>
+          <p class="page-subtitle">Chia sẻ kiến thức, đặt câu hỏi và thảo luận cùng mọi người</p>
+        </div>
+        <button class="forum-new-btn" onclick="forumOpenCreate()">✏️ Đăng bài mới</button>
+      </div>
+
+      <div class="courses-search-bar-wrap" id="forum-search-wrap">
+        <span class="csb-icon">🔍</span>
+        <input type="text" id="forum-search-input" class="courses-search-bar-input"
+          placeholder="Tìm bài viết..."
+          autocomplete="off" oninput="forumSearch(this.value)" />
+        <button class="csb-clear" id="forum-search-clear" type="button"
+          style="display:none" onclick="forumClearSearch()">✕</button>
+      </div>
+
+      <div class="courses-header" style="margin-bottom:16px">
+        <div class="filter-group" id="forum-tabs">
+          <button class="filter-btn active" data-cat="all"      onclick="forumSetCat(this,'all')">🌐 Tất cả</button>
+          <button class="filter-btn"        data-cat="question"  onclick="forumSetCat(this,'question')">❓ Câu hỏi</button>
+          <button class="filter-btn"        data-cat="share"     onclick="forumSetCat(this,'share')">💡 Chia sẻ</button>
+          <button class="filter-btn"        data-cat="discuss"   onclick="forumSetCat(this,'discuss')">🗣️ Thảo luận</button>
+        </div>
+        <div class="sort-dropdown-wrap">
+          <label class="sort-label">Sắp xếp:</label>
+          <select class="sort-select" onchange="forumSetSort(this.value)">
+            <option value="newest">Mới nhất</option>
+            <option value="likes">Nhiều like nhất</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Post list -->
+      <div id="forum-list"></div>
+
+      <!-- Empty state -->
+      <div class="empty hidden" id="forum-empty">
+        <div class="empty-icon">💬</div>
+        <p>Chưa có bài viết nào. Hãy là người đầu tiên đăng bài!</p>
+      </div>
+    </div>
+
+    <!-- ── Settings ── -->
+    <div class="page" id="page-settings">
+      <div class="settings-wrap">
+
+
+        <div class="settings-section">
+          <div class="settings-section-title"><span class="title-icon-blue">👤</span><span>Thông tin cá nhân</span></div>
+          <div class="profile-top">
+            <div class="profile-avatar">
+              <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+              <button class="avatar-edit-btn">+</button>
+            </div>
+            <div>
+              <div class="profile-name" id="settings-profile-name">—</div>
+              <div class="profile-email" id="settings-profile-email">—</div>
+              <span class="profile-badge">Học viên</span>
+            </div>
+          </div>
+          <div class="fields-grid">
+            <div><label class="field-label">Họ và tên</label><input id="field-name" class="field-input" placeholder="Nhập họ và tên" /></div>
+            <div><label class="field-label">Email</label><input id="field-email" class="field-input" placeholder="Nhập email" /></div>
+            <div><label class="field-label">Số điện thoại</label><input id="field-phone" class="field-input" placeholder="Nhập số điện thoại" /></div>
+            <div><label class="field-label">Ngày sinh</label><input id="field-birthday" class="field-input" placeholder="Chọn ngày sinh" /></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title"><span class="title-icon-red">🔔</span><span>Thông báo</span></div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Thông báo qua Email</div>
+              <div class="notif-desc">Nhận cập nhật khóa học qua email</div>
+            </div><button id="toggle-email" class="toggle on" onclick="toggleSwitch(this)" aria-label="Toggle email notifications"><span
+                class="toggle-knob"></span></button>
+          </div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Thông báo đẩy</div>
+              <div class="notif-desc">Nhận thông báo trực tiếp trên trình duyệt</div>
+            </div><button id="toggle-push" class="toggle" onclick="toggleSwitch(this)" aria-label="Toggle push notifications"><span
+                class="toggle-knob"></span></button>
+          </div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Nhắc nhở học tập</div>
+              <div class="notif-desc">Nhắc nhở lịch học hàng ngày</div>
+            </div><button id="toggle-remind" class="toggle on" onclick="toggleSwitch(this)" aria-label="Toggle study reminders"><span
+                class="toggle-knob"></span></button>
+          </div>
+          <div class="notif-row">
+            <div>
+              <div class="notif-lbl">Cập nhật nội dung</div>
+              <div class="notif-desc">Thông báo khi có bài học mới</div>
+            </div><button id="toggle-content" class="toggle" onclick="toggleSwitch(this)" aria-label="Toggle content updates"><span
+                class="toggle-knob"></span></button>
+          </div>
+        </div>
+
+        <div class="sec-lang-grid">
+          <div class="sec-lang-card">
+            <div class="sec-lang-title"><span class="title-icon-blue">🛡</span><span>Bảo mật</span></div>
+            <!-- ★ SỬA dòng này: gọi hàm mở modal thay vì chuyển trang -->
+            <button class="change-pw-btn" onclick="openChangePasswordModal()">Đổi mật khẩu</button>
+          </div>
+          <div class="sec-lang-card">
+            <div class="sec-lang-title"><span class="title-icon-red">🌐</span><span>Ngôn ngữ</span></div>
+            <select class="lang-select" aria-label="Select language">
+              <option>Tiếng Việt</option>
+              <option>English</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="save-btn" onclick="saveSettings()">💾 Lưu thay đổi</button>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ MODAL HỦY ĐĂNG KÝ KHÓA HỌC
+     ════════════════════════════════════════════════════════════ -->
+  <style>
+    .un-overlay {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,0.45);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .un-overlay.active { opacity: 1; visibility: visible; }
+    .un-card {
+      background: #fff; border-radius: 28px;
+      padding: 40px 36px; max-width: 420px; width: 90%;
+      text-align: center;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.18);
+      transform: scale(0.88) translateY(24px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .un-overlay.active .un-card { transform: scale(1) translateY(0); }
+    .un-icon-wrap {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: #FEF2F2; border: 4px solid #FECACA;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; font-size: 34px;
+    }
+    .un-title { font-size: 22px; font-weight: 800; color: #111827; margin: 0 0 8px; }
+    .un-sub   { font-size: 14px; color: #6B7280; margin: 0 0 6px; }
+    .un-course-name {
+      font-size: 18px; font-weight: 800; color: #EF4444;
+      margin: 0 0 20px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .un-warning {
+      background: #FFF5F5; border: 1px solid #FED7D7; border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 28px;
+      display: flex; align-items: flex-start; gap: 10px; text-align: left;
+    }
+    .un-warning span { font-size: 20px; flex-shrink: 0; }
+    .un-warning p  { font-size: 13px; color: #df1818ce; font-weight: 500; margin: 0; line-height: 1.5; }
+    .un-actions { display: flex; gap: 12px; }
+    .un-btn-cancel {
+      flex: 1; padding: 15px; border-radius: 14px;
+      border: 2px solid #E5E7EB; background: white;
+      color: #374151; font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .un-btn-cancel:hover { background: #F9FAFB; border-color: #D1D5DB; }
+    .un-btn-confirm {
+      flex: 1; padding: 15px; border-radius: 14px;
+      border: none; background: linear-gradient(135deg, #EF4444, #DC2626);
+      color: white; font-weight: 700; font-size: 14px; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .un-btn-confirm:hover  { box-shadow: 0 6px 20px rgba(239,68,68,0.5); transform: translateY(-1px); }
+    .un-btn-confirm:active { transform: translateY(1px); }
+  </style>
+
+  <div class="un-overlay" id="unenrollModal" onclick="handleUnenrollOverlayClick(event)">
+    <div class="un-card">
+      <div class="un-icon-wrap">🗑️</div>
+      <h3 class="un-title">Hủy đăng ký?</h3>
+      <p class="un-sub">Bạn sắp hủy đăng ký khóa học</p>
+      <p class="un-course-name" id="unenroll-course-name"></p>
+      <div class="un-warning">
+        <span>⚠️</span>
+        <p>Toàn bộ tiến độ học tập của bạn trong khóa này sẽ bị <strong>xóa vĩnh viễn</strong> và không thể khôi phục lại.</p>
+      </div>
+      <div class="un-actions">
+        <button class="un-btn-cancel"  onclick="closeUnenrollModal()">Không, giữ lại</button>
+        <button class="un-btn-confirm" onclick="confirmUnenroll()">Đồng ý hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ MODAL ĐỔI MẬT KHẨU - dán vào cuối <body>, NGOÀI #main
+     ════════════════════════════════════════════════════════════ -->
+  <div class="cp-overlay" id="changePasswordModal" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+    <div class="cp-modal">
+
+      <button class="cp-close" onclick="closeChangePasswordModal()" aria-label="Đóng">✕</button>
+
+      <div class="cp-header">
+        <div class="cp-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+            <circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </div>
+        <h3 class="cp-title" id="cpTitle">Đổi mật khẩu</h3>
+        <p class="cp-subtitle">Bảo vệ tài khoản của bạn an toàn hơn</p>
+      </div>
+
+      <form id="cpForm" autocomplete="off">
+
+        <!-- Mật khẩu hiện tại -->
+        <div class="cp-group">
+          <label class="cp-label" for="cpCurrent">Mật khẩu hiện tại</label>
+          <div class="cp-input-wrap">
+            <svg class="cp-leading-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+            </svg>
+            <input type="password" class="cp-input" id="cpCurrent" placeholder="Nhập mật khẩu hiện tại" required>
+            <button type="button" class="cp-toggle-eye" onclick="togglePassword('cpCurrent', this)"
+              aria-label="Hiện/ẩn mật khẩu">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="cp-msg" id="cpCurrentMsg"></div>
+        </div>
+
+        <!-- Mật khẩu mới -->
+        <div class="cp-group">
+          <label class="cp-label" for="cpNew">Mật khẩu mới</label>
+          <div class="cp-input-wrap">
+            <svg class="cp-leading-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="8" cy="15" r="4"></circle>
+              <path d="M10.8 12.2 21 2"></path>
+              <path d="m19 5 2 2"></path>
+              <path d="m16 8 2 2"></path>
+            </svg>
+            <input type="password" class="cp-input" id="cpNew" placeholder="Tối thiểu 8 ký tự" required
+              oninput="checkStrength(this.value)">
+            <button type="button" class="cp-toggle-eye" onclick="togglePassword('cpNew', this)"
+              aria-label="Hiện/ẩn mật khẩu">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="cp-strength" id="cpStrength">
+            <div class="cp-strength-bars">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="cp-strength-label" id="cpStrengthLabel"></div>
+          </div>
+        </div>
+
+        <!-- Xác nhận mật khẩu mới -->
+        <div class="cp-group">
+          <label class="cp-label" for="cpConfirm">Xác nhận mật khẩu mới</label>
+          <div class="cp-input-wrap">
+            <svg class="cp-leading-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            <input type="password" class="cp-input" id="cpConfirm" placeholder="Nhập lại mật khẩu mới" required
+              oninput="checkMatch()">
+            <button type="button" class="cp-toggle-eye" onclick="togglePassword('cpConfirm', this)"
+              aria-label="Hiện/ẩn mật khẩu">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="cp-msg" id="cpConfirmMsg"></div>
+        </div>
+
+        <div class="cp-actions">
+          <button type="button" class="cp-btn cp-btn-cancel" onclick="closeChangePasswordModal()">Hủy</button>
+          <button type="submit" class="cp-btn cp-btn-submit" id="cpSubmitBtn">
+            <span class="cp-btn-text">Cập nhật mật khẩu</span>
+            <span class="cp-spinner"></span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ JAVASCRIPT cho modal đổi mật khẩu
+     ════════════════════════════════════════════════════════════ -->
+  <script>
+    /* ── User avatar dropdown ── */
+    function toggleUserMenu() {
+      var wrap = document.getElementById('user-chip-wrap');
+      var btn  = document.getElementById('user-chip-btn');
+      var menu = document.getElementById('user-dropdown');
+      var open = menu.classList.contains('open');
+      if (open) {
+        menu.classList.remove('open');
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        menu.classList.add('open');
+        btn.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function closeUserMenu() {
+      var btn  = document.getElementById('user-chip-btn');
+      var menu = document.getElementById('user-dropdown');
+      menu.classList.remove('open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    document.addEventListener('click', function(e) {
+      var wrap = document.getElementById('user-chip-wrap');
+      if (wrap && !wrap.contains(e.target)) closeUserMenu();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeUserMenu();
+    });
+
+    /* Sync tên hiển thị trong dropdown header khi mở */
+    var _origToggleUserMenu = toggleUserMenu;
+    toggleUserMenu = function() {
+      var n = document.getElementById('chip-name');
+      var d = document.getElementById('udh-name');
+      if (n && d) d.textContent = n.textContent;
+      _origToggleUserMenu();
+    };
+  </script>
+
+  <script>
+    function openChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      modal.classList.add('active');
+      document.body.classList.add('cp-modal-open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('cpCurrent').focus(), 300);
+    }
+
+    function closeChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      modal.classList.remove('active');
+      document.body.classList.remove('cp-modal-open');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        document.getElementById('cpForm').reset();
+        resetCpUI();
+      }, 300);
+    }
+
+    function resetCpUI() {
+      document.getElementById('cpStrength').className = 'cp-strength';
+      document.getElementById('cpStrengthLabel').textContent = '';
+      document.getElementById('cpCurrentMsg').textContent = '';
+      document.getElementById('cpConfirmMsg').textContent = '';
+    }
+
+    document.getElementById('changePasswordModal').addEventListener('click', (e) => {
+      if (e.target.id === 'changePasswordModal') closeChangePasswordModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (document.getElementById('changePasswordModal').classList.contains('active'))
+          closeChangePasswordModal();
+        if (document.getElementById('unenrollModal').classList.contains('active'))
+          closeUnenrollModal();
+      }
+    });
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+
+      btn.innerHTML = isPassword
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+           <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+           <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+           <line x1="2" y1="2" x2="22" y2="22"></line>
+         </svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+           <circle cx="12" cy="12" r="3"></circle>
+         </svg>`;
+    }
+
+    function checkStrength(pwd) {
+      const strength = document.getElementById('cpStrength');
+      const label = document.getElementById('cpStrengthLabel');
+
+      if (!pwd) {
+        strength.className = 'cp-strength';
+        label.textContent = '';
+        return;
+      }
+
+      let score = 0;
+      if (pwd.length >= 8) score++;
+      if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+      if (/\d/.test(pwd)) score++;
+      if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+      const levels = ['', 'Yếu', 'Trung bình', 'Khá mạnh', 'Mạnh'];
+      strength.className = 'cp-strength level-' + score;
+      label.textContent = levels[score];
+
+      checkMatch();
+    }
+
+    function checkMatch() {
+      const newPwd = document.getElementById('cpNew').value;
+      const confirm = document.getElementById('cpConfirm').value;
+      const msg = document.getElementById('cpConfirmMsg');
+
+      if (!confirm) {
+        msg.textContent = '';
+        msg.className = 'cp-msg';
+        return;
+      }
+
+      if (newPwd === confirm) {
+        msg.textContent = '✓ Mật khẩu khớp';
+        msg.className = 'cp-msg success';
+      } else {
+        msg.textContent = '✗ Mật khẩu không khớp';
+        msg.className = 'cp-msg';
+      }
+    }
+
+    document.getElementById('cpSubmitBtn').addEventListener('click', function (e) {
+      const rect = this.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'cp-ripple';
+      ripple.style.width = ripple.style.height = '20px';
+      ripple.style.left = (e.clientX - rect.left - 10) + 'px';
+      ripple.style.top = (e.clientY - rect.top - 10) + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+
+    document.getElementById('cpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const currentPwd = document.getElementById('cpCurrent').value;
+      const newPwd = document.getElementById('cpNew').value;
+      const confirmPwd = document.getElementById('cpConfirm').value;
+      const submitBtn = document.getElementById('cpSubmitBtn');
+      const currentMsg = document.getElementById('cpCurrentMsg');
+
+      if (newPwd.length < 8) {
+        alert('Mật khẩu mới phải có ít nhất 8 ký tự');
+        return;
+      }
+      if (newPwd !== confirmPwd) {
+        document.getElementById('cpConfirmMsg').textContent = '✗ Mật khẩu không khớp';
+        return;
+      }
+      if (currentPwd === newPwd) {
+        currentMsg.textContent = 'Mật khẩu mới phải khác mật khẩu hiện tại';
+        return;
+      }
+
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+
+      try {
+        // [BACKEND] - Gọi API đổi mật khẩu - SỬA endpoint nếu cần
+        const response = await fetch('/api/user/password', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            current: currentPwd,
+            new: newPwd
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('✓ Đổi mật khẩu thành công!');
+          closeChangePasswordModal();
+        } else {
+          currentMsg.textContent = data.error || 'Mật khẩu hiện tại không đúng';
+        }
+
+      } catch (err) {
+        console.error('Change password error:', err);
+        currentMsg.textContent = 'Không kết nối được máy chủ. Vui lòng thử lại.';
+      } finally {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=8"></script>
+
+  <script>
+  function skSetToggle(hd) {
+    var body = hd.nextElementSibling;
+    var open = body.style.display === 'block';
+    body.style.display = open ? 'none' : 'block';
+    var arrow = hd.querySelector('.sk-arrow');
+    if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
+  }
+  function skSkillToggle(row) {
+    var sub = row.nextElementSibling;
+    sub.style.display = sub.style.display === 'block' ? 'none' : 'block';
+  }
+  </script>
+  <script>
+  (function () {
+    var _skillsLoaded = false;
+
+    function badge(pct) {
+      if (pct === 0) return '<span class="sk-badge new">Chưa bắt đầu</span>';
+      if (pct >= 70) return '<span class="sk-badge achieved">Đạt ✓</span>';
+      return '<span class="sk-badge review">Cần ôn</span>';
+    }
+
+    function fillColor(pct) {
+      if (pct === 0) return '#E5E7EB';
+      if (pct >= 70) return 'linear-gradient(90deg,#10B981,#059669)';
+      return 'linear-gradient(90deg,#F59E0B,#D97706)';
+    }
+
+    function donutChart(pct) {
+      var color = pct >= 70 ? '#10B981' : (pct > 0 ? '#F59E0B' : '#D1D5DB');
+      var bg = 'conic-gradient(' + color + ' ' + pct + '%, #E5E7EB ' + pct + '% 100%)';
+      return '<div class="sk-donut" style="background:' + bg + '">' +
+        '<div class="sk-donut-inner"><span class="sk-donut-pct">' + pct + '%</span></div>' +
+      '</div>';
+    }
+
+    function renderSkills(data) {
+      var sets = data.skill_sets || [];
+      var total = 0, achieved = 0, review = 0, unstarted = 0;
+      sets.forEach(function (bs) {
+        bs.skills.forEach(function (sk) {
+          total++;
+          if (sk.progress === 0) unstarted++;
+          else if (sk.progress >= 70) achieved++;
+          else review++;
+        });
+      });
+
+      var sum = document.getElementById('sk-summary');
+      sum.innerHTML =
+        '<div class="sk-stat"><div class="v">' + total + '</div><div class="l">Tổng kỹ năng</div></div>' +
+        '<div class="sk-stat" style="border-color:#D1FAE5"><div class="v" style="color:#10B981">' + achieved + '</div><div class="l">Đã đạt ✓</div></div>' +
+        '<div class="sk-stat" style="border-color:#FDE68A"><div class="v" style="color:#F59E0B">' + review + '</div><div class="l">Cần ôn</div></div>' +
+        '<div class="sk-stat"><div class="v" style="color:#9CA3AF">' + unstarted + '</div><div class="l">Chưa bắt đầu</div></div>';
+
+      var grid = document.getElementById('sk-grid');
+      if (!sets.length) { grid.innerHTML = '<div style="color:#9CA3AF;font-size:14px;padding:24px;">Chưa có dữ liệu kỹ năng.</div>'; return; }
+
+      grid.innerHTML = sets.map(function (bs) {
+        var skillRows = bs.skills.map(function (sk) {
+          var subItems = sk.sub_skills.map(function (sub) {
+            var cls = sub.done ? 'done' : 'todo';
+            return '<div class="sk-sub">' +
+              '<span class="sk-sub-dot ' + cls + '"></span>' +
+              '<span class="sk-sub-title ' + cls + '">' + sub.title + '</span>' +
+              '</div>';
+          }).join('');
+          return '<div class="sk-skill">' +
+            '<div class="sk-skill-row" onclick="skSkillToggle(this)">' +
+              '<span class="sk-skill-name">' + sk.title + '</span>' +
+              '<div class="sk-skill-bar-wrap">' +
+                '<div class="sk-skill-bar"><div class="sk-skill-fill" style="width:' + sk.progress + '%;background:' + fillColor(sk.progress) + '"></div></div>' +
+              '</div>' +
+              '<span class="sk-skill-pct">' + sk.progress + '%</span>' +
+              badge(sk.progress) +
+            '</div>' +
+            '<div class="sk-sub-list" style="display:none">' + subItems + '</div>' +
+          '</div>';
+        }).join('');
+
+        var setAchieved = bs.skills.filter(function(sk){ return sk.progress >= 70; }).length;
+        var setTotal = bs.skills.length;
+        return '<div class="sk-set">' +
+          '<div class="sk-set-hd" onclick="skSetToggle(this)">' +
+            '<span class="sk-set-icon">' + bs.icon + '</span>' +
+            '<div class="sk-set-info">' +
+              '<div class="sk-set-title">' + bs.title + '</div>' +
+              '<div class="sk-set-meta">' + setAchieved + '/' + setTotal + ' kỹ năng đạt</div>' +
+            '</div>' +
+            badge(bs.progress) +
+            donutChart(bs.progress) +
+            '<span class="sk-arrow">▶</span>' +
+          '</div>' +
+          '<div class="sk-body" style="display:none">' + skillRows + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function loadSkills() {
+      if (_skillsLoaded) return;
+      _skillsLoaded = true;
+      fetch('/api/skills')
+        .then(function (r) { return r.json(); })
+        .then(renderSkills)
+        .catch(function () {
+          document.getElementById('sk-grid').innerHTML =
+            '<div style="color:#EF4444;font-size:14px;padding:24px;">Không tải được dữ liệu kỹ năng.</div>';
+        });
+    }
+
+    var _origNavigate = window.navigate;
+    window.navigate = function (page) {
+      _origNavigate(page);
+      if (page === 'skills') loadSkills();
+      if (page === 'roadmap') {
+        if (typeof _eduRoadmaps !== 'undefined' && _eduRoadmaps.length) {
+          renderEduRoadmapTabs();
+          if (window.currentEduRoadmap !== 'personal') {
+            _roadmapRenderedId = null;
+            renderEduInteractiveRoadmap();
+          }
+        } else if (typeof loadEduRoadmaps === 'function') {
+          loadEduRoadmaps().then(function() { renderEduInteractiveRoadmap(); });
+        }
+      }
+    };
+  })();
+  </script>
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ MODAL TẠO BÀI ĐĂNG DIỄN ĐÀN
+     ════════════════════════════════════════════════════════════ -->
+  <div class="forum-modal-overlay" id="forumCreateModal" onclick="forumOverlayClick(event)">
+    <div class="forum-modal-card">
+      <div class="forum-modal-hd">
+        <span class="forum-modal-title">✏️ Đăng bài mới</span>
+        <button class="forum-modal-close" onclick="forumCloseCreate()">✕</button>
+      </div>
+      <div class="forum-modal-body">
+        <div class="forum-field">
+          <label class="forum-field-label">Danh mục</label>
+          <div class="forum-cat-picker" id="forum-cat-picker">
+            <button type="button" class="forum-cat-pick active" data-val="question" onclick="forumPickCat(this)">❓ Câu hỏi</button>
+            <button type="button" class="forum-cat-pick" data-val="share"    onclick="forumPickCat(this)">💡 Chia sẻ</button>
+            <button type="button" class="forum-cat-pick" data-val="discuss"  onclick="forumPickCat(this)">🗣️ Thảo luận</button>
+          </div>
+        </div>
+        <div class="forum-field">
+          <label class="forum-field-label" for="forum-input-title">Tiêu đề bài viết</label>
+          <input id="forum-input-title" class="forum-input" type="text" maxlength="120"
+            placeholder="Nhập tiêu đề ngắn gọn, rõ ràng..." />
+          <div class="forum-char-count" id="forum-title-count">0 / 120</div>
+        </div>
+        <div class="forum-field">
+          <label class="forum-field-label" for="forum-input-body">Nội dung</label>
+          <textarea id="forum-input-body" class="forum-textarea"
+            placeholder="Mô tả chi tiết vấn đề hoặc nội dung bạn muốn chia sẻ..." maxlength="2000"></textarea>
+          <div class="forum-char-count" id="forum-body-count">0 / 2000</div>
+        </div>
+      </div>
+      <div class="forum-modal-ft">
+        <button class="forum-modal-cancel" onclick="forumCloseCreate()">Hủy</button>
+        <button class="forum-modal-submit" onclick="forumSubmitPost()">🚀 Đăng bài</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ JAVASCRIPT CHO DIỄN ĐÀN
+     ════════════════════════════════════════════════════════════ -->
+  <script>
+  (function () {
+
+    var STORAGE_KEY = 'edu_forum_posts';
+
+    var CAT_LABELS = { question: '❓ Câu hỏi', share: '💡 Chia sẻ', discuss: '🗣️ Thảo luận' };
+    var CAT_COLORS = { question: '#3B82F6', share: '#10B981', discuss: '#8B5CF6' };
+    var CAT_BG     = { question: '#EFF6FF', share: '#ECFDF5', discuss: '#F5F3FF' };
+
+    var _currentCat  = 'all';
+    var _currentSort = 'newest';
+    var _selectedCat = 'question';
+
+    var MOCK_POSTS = [
+      {
+        id: 'm1', cat: 'question',
+        title: 'Làm thế nào để hiểu rõ về con trỏ trong C/C++?',
+        body: 'Mình đang học C++ nhưng phần con trỏ khá khó hiểu, đặc biệt là con trỏ đôi (double pointer). Mọi người có thể giải thích hoặc gợi ý tài liệu dễ hiểu không?',
+        author: 'Trần Minh Tuấn', avatar: '🧑‍💻',
+        time: Date.now() - 2 * 3600 * 1000, likes: 14, liked: false, comments: 5,
+      },
+      {
+        id: 'm2', cat: 'share',
+        title: 'Tổng hợp 10 extension VSCode hữu ích nhất cho lập trình viên Python',
+        body: 'Sau một thời gian dùng VSCode để code Python, mình tổng hợp lại các extension mình thấy thực sự hữu ích. Hi vọng giúp ích cho mọi người: Pylance, Black Formatter, Python Debugger...',
+        author: 'Nguyễn Hà Linh', avatar: '👩‍💻',
+        time: Date.now() - 5 * 3600 * 1000, likes: 32, liked: false, comments: 8,
+      },
+      {
+        id: 'm3', cat: 'discuss',
+        title: 'Nên học Java hay Python trước khi học Machine Learning?',
+        body: 'Mình đang phân vân giữa Java và Python để bắt đầu. Mình nghe nói Python phổ biến hơn trong ML, nhưng Java lại mạnh hơn về OOP. Mọi người nghĩ sao?',
+        author: 'Lê Văn Đức', avatar: '🧑‍🎓',
+        time: Date.now() - 24 * 3600 * 1000, likes: 21, liked: false, comments: 12,
+      },
+      {
+        id: 'm4', cat: 'share',
+        title: 'Mình đã hoàn thành khóa học HTML/CSS sau 3 tuần — Chia sẻ kinh nghiệm',
+        body: 'Sau 3 tuần học chăm chỉ, mình đã hoàn thành khóa HTML/CSS. Bí quyết của mình là học mỗi ngày ít nhất 1 tiếng và làm project nhỏ ngay sau khi học xong mỗi phần.',
+        author: 'Phạm Thị Mai', avatar: '👩‍🎓',
+        time: Date.now() - 2 * 24 * 3600 * 1000, likes: 47, liked: false, comments: 15,
+      },
+      {
+        id: 'm5', cat: 'question',
+        title: 'Git merge vs Git rebase — khi nào nên dùng cái nào?',
+        body: 'Mình hay bị nhầm lẫn giữa merge và rebase. Anh/chị nào có thể giải thích sự khác biệt và khi nào thì nên dùng từng loại không ạ?',
+        author: 'Hoàng Quốc Bảo', avatar: '🧑',
+        time: Date.now() - 3 * 24 * 3600 * 1000, likes: 9, liked: false, comments: 6,
+      },
+    ];
+
+    function loadPosts() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+
+    function savePosts(posts) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); } catch (e) {}
+    }
+
+    function allPosts() {
+      var user = loadPosts();
+      return MOCK_POSTS.concat(user);
+    }
+
+    function filteredSorted() {
+      var posts = allPosts();
+      if (_currentCat !== 'all') posts = posts.filter(function(p){ return p.cat === _currentCat; });
+      var q = (typeof _forumTextQ !== 'undefined' && _forumTextQ) ? _forumTextQ : '';
+      if (q) posts = posts.filter(function(p){
+        return p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q);
+      });
+      if (_currentSort === 'likes') posts.sort(function(a,b){ return b.likes - a.likes; });
+      else posts.sort(function(a,b){ return b.time - a.time; });
+      return posts;
+    }
+
+    function timeAgo(ts) {
+      var diff = Math.floor((Date.now() - ts) / 1000);
+      if (diff < 60)   return 'vừa xong';
+      if (diff < 3600) return Math.floor(diff/60) + ' phút trước';
+      if (diff < 86400) return Math.floor(diff/3600) + ' giờ trước';
+      return Math.floor(diff/86400) + ' ngày trước';
+    }
+
+    function renderPosts() {
+      var posts = filteredSorted();
+      var list  = document.getElementById('forum-list');
+      var empty = document.getElementById('forum-empty');
+      if (!list) return;
+
+      if (!posts.length) {
+        list.innerHTML = '';
+        empty && empty.classList.remove('hidden');
+        return;
+      }
+      empty && empty.classList.add('hidden');
+
+      list.innerHTML = posts.map(function(p) {
+        var catColor = CAT_COLORS[p.cat] || '#6B7280';
+        var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
+        var catLabel = CAT_LABELS[p.cat] || p.cat;
+        var excerpt  = p.body.length > 160 ? p.body.slice(0, 157) + '...' : p.body;
+        var likedCls = p.liked ? 'liked' : '';
+        var likedIcon = p.liked ? '❤️' : '🤍';
+        return (
+          '<div class="forum-post-card" id="fpc-' + p.id + '">' +
+            '<div class="fpc-top">' +
+              '<div class="fpc-avatar">' + (p.avatar || '🧑') + '</div>' +
+              '<div class="fpc-meta">' +
+                '<span class="fpc-author">' + p.author + '</span>' +
+                '<span class="fpc-time">' + timeAgo(p.time) + '</span>' +
+              '</div>' +
+              '<span class="fpc-cat-tag" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
+            '</div>' +
+            '<div class="fpc-title">' + escHtml(p.title) + '</div>' +
+            '<div class="fpc-excerpt">' + escHtml(excerpt) + '</div>' +
+            '<div class="fpc-actions">' +
+              '<button class="fpc-like-btn ' + likedCls + '" onclick="forumToggleLike(\'' + p.id + '\')" title="Thích">' +
+                likedIcon + ' <span class="fpc-like-count">' + p.likes + '</span>' +
+              '</button>' +
+              '<span class="fpc-comment-count">💬 ' + p.comments + ' bình luận</span>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.forumSetCat = function(btn, cat) {
+      document.querySelectorAll('#forum-tabs .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      _currentCat = cat;
+      renderPosts();
+    };
+
+    window.forumSetSort = function(val) {
+      _currentSort = val;
+      renderPosts();
+    };
+
+    window.forumToggleLike = function(postId) {
+      var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+      if (mockIdx !== -1) {
+        MOCK_POSTS[mockIdx].liked = !MOCK_POSTS[mockIdx].liked;
+        MOCK_POSTS[mockIdx].likes += MOCK_POSTS[mockIdx].liked ? 1 : -1;
+      } else {
+        var userPosts = loadPosts();
+        var uIdx = userPosts.findIndex(function(p){ return p.id === postId; });
+        if (uIdx !== -1) {
+          userPosts[uIdx].liked = !userPosts[uIdx].liked;
+          userPosts[uIdx].likes += userPosts[uIdx].liked ? 1 : -1;
+          savePosts(userPosts);
+        }
+      }
+      renderPosts();
+    };
+
+    window.forumOpenCreate = function() {
+      document.getElementById('forumCreateModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.forumCloseCreate = function() {
+      document.getElementById('forumCreateModal').classList.remove('active');
+      document.body.style.overflow = '';
+      document.getElementById('forum-input-title').value = '';
+      document.getElementById('forum-input-body').value = '';
+      document.getElementById('forum-title-count').textContent = '0 / 120';
+      document.getElementById('forum-body-count').textContent  = '0 / 2000';
+      _selectedCat = 'question';
+      document.querySelectorAll('.forum-cat-pick').forEach(function(b){
+        b.classList.toggle('active', b.dataset.val === 'question');
+      });
+    };
+
+    window.forumOverlayClick = function(e) {
+      if (e.target.id === 'forumCreateModal') forumCloseCreate();
+    };
+
+    window.forumPickCat = function(btn) {
+      document.querySelectorAll('.forum-cat-pick').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      _selectedCat = btn.dataset.val;
+    };
+
+    window.forumSubmitPost = function() {
+      var title = document.getElementById('forum-input-title').value.trim();
+      var body  = document.getElementById('forum-input-body').value.trim();
+      if (!title) { alert('Vui lòng nhập tiêu đề bài viết.'); return; }
+      if (!body)  { alert('Vui lòng nhập nội dung bài viết.'); return; }
+
+      var userPosts = loadPosts();
+      var userName  = document.getElementById('sidebar-name').textContent || 'Bạn';
+      var newPost = {
+        id: 'u' + Date.now(),
+        cat: _selectedCat,
+        title: title,
+        body: body,
+        author: userName,
+        avatar: '🙋',
+        time: Date.now(),
+        likes: 0,
+        liked: false,
+        comments: 0,
+      };
+      userPosts.unshift(newPost);
+      savePosts(userPosts);
+      forumCloseCreate();
+      _currentCat  = 'all';
+      _currentSort = 'newest';
+      document.querySelectorAll('#forum-tabs .filter-btn').forEach(function(b){
+        b.classList.toggle('active', b.dataset.cat === 'all');
+      });
+      renderPosts();
+    };
+
+    document.getElementById('forum-input-title').addEventListener('input', function() {
+      document.getElementById('forum-title-count').textContent = this.value.length + ' / 120';
+    });
+    document.getElementById('forum-input-body').addEventListener('input', function() {
+      document.getElementById('forum-body-count').textContent = this.value.length + ' / 2000';
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && document.getElementById('forumCreateModal').classList.contains('active'))
+        forumCloseCreate();
+    });
+
+    var _origNavigateForum = window.navigate;
+    window.navigate = function(page) {
+      _origNavigateForum(page);
+      if (page === 'forum') renderPosts();
+    };
+
+  })();
+  </script>
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ SEARCH BAR — Dashboard, Roadmap, Skills, Forum
+     ════════════════════════════════════════════════════════════ -->
+  <script>
+  /* ── Shared helper: setup clear button ── */
+  function _sbToggleClear(clearId, val) {
+    var btn = document.getElementById(clearId);
+    if (btn) btn.style.display = val ? 'flex' : 'none';
+  }
+
+  /* ══════════ DASHBOARD: tìm trong "Khóa học của tôi" ══════════ */
+  function dashSearch(val) {
+    _sbToggleClear('dash-search-clear', val);
+    var q = val.trim().toLowerCase();
+    var cards = document.querySelectorAll('#enrolled-list .enrolled-card');
+    var hasVisible = false;
+    cards.forEach(function(card) {
+      var title = (card.querySelector('h3') || {}).textContent || '';
+      var sub   = (card.querySelector('.subtitle') || {}).textContent || '';
+      var match = !q || title.toLowerCase().includes(q) || sub.toLowerCase().includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) hasVisible = true;
+    });
+    var empty = document.getElementById('dash-search-empty');
+    if (empty) empty.style.display = (q && !hasVisible) ? 'block' : 'none';
+  }
+
+  function dashClearSearch() {
+    var el = document.getElementById('dash-search-input');
+    if (el) { el.value = ''; dashSearch(''); el.focus(); }
+  }
+
+  /* ══════════ ROADMAP: chuyển tab khớp ══════════ */
+  function roadmapSearch(val) {
+    _sbToggleClear('roadmap-search-clear', val);
+    var q = val.trim().toLowerCase();
+    if (!q) return;
+    var tabs = document.querySelectorAll('#roadmap-tabs .filter-btn');
+    var matched = null;
+    tabs.forEach(function(tab) {
+      if (!matched && tab.textContent.toLowerCase().includes(q)) matched = tab;
+    });
+    if (matched) matched.click();
+  }
+
+  function roadmapClearSearch() {
+    var el = document.getElementById('roadmap-search-input');
+    if (el) { el.value = ''; _sbToggleClear('roadmap-search-clear', ''); el.focus(); }
+  }
+
+  /* ══════════ SKILLS: lọc skill set + skill con ══════════ */
+  function skillsSearch(val) {
+    _sbToggleClear('skills-search-clear', val);
+    var q = val.trim().toLowerCase();
+    var sets = document.querySelectorAll('#sk-grid .sk-set');
+    var hasVisible = false;
+    sets.forEach(function(set) {
+      var setTitle = (set.querySelector('.sk-set-title') || {}).textContent || '';
+      var skills   = set.querySelectorAll('.sk-skill-name');
+      var skillMatch = false;
+      skills.forEach(function(sk) {
+        if (sk.textContent.toLowerCase().includes(q)) skillMatch = true;
+      });
+      var match = !q || setTitle.toLowerCase().includes(q) || skillMatch;
+      set.style.display = match ? '' : 'none';
+      if (match) hasVisible = true;
+    });
+    var empty = document.getElementById('skills-search-empty');
+    if (empty) empty.style.display = (q && !hasVisible) ? 'block' : 'none';
+  }
+
+  function skillsClearSearch() {
+    var el = document.getElementById('skills-search-input');
+    if (el) { el.value = ''; skillsSearch(''); el.focus(); }
+  }
+
+  /* ══════════ FORUM: lọc bài viết theo text ══════════ */
+  var _forumTextQ = '';
+
+  function forumSearch(val) {
+    _sbToggleClear('forum-search-clear', val);
+    _forumTextQ = val.trim().toLowerCase();
+    renderPosts();
+  }
+
+  function forumClearSearch() {
+    var el = document.getElementById('forum-search-input');
+    if (el) { el.value = ''; forumSearch(''); el.focus(); }
+  }
+  </script>
+
+  {% include 'chatbot.html' %}
+  <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
+</body>
+
+</html>

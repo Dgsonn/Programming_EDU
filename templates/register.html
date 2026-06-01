@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Programming Edu — Đăng ký</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="prefetch" href="/login" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/register.css" />
+</head>
+
+<body>
+
+  <div class="bg-canvas">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="bg-blob b3"></div>
+    <div class="bg-blob b4"></div>
+  </div>
+  <div class="grid-overlay"></div>
+  <div class="particles" id="particles"></div>
+
+  <div class="page">
+    <div class="auth-wrapper">
+      <div class="card">
+
+        <!-- Logo -->
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="white">
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M8 6l4-4 4 4M8 18l4 4 4-4M4 12H2m20 0h-2M6.3 6.3l-1.4-1.4M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"
+                stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" />
+            </svg>
+          </div>
+          <span class="logo-text">Programming Edu</span>
+        </div>
+
+        <p class="form-title">Tạo tài khoản</p>
+        <p class="form-subtitle">Tham gia cộng đồng lập trình viên hàng ngàn người 🚀</p>
+
+        <!-- Họ và tên -->
+        <div class="field" id="field-group-name">
+          <label class="field-label" for="reg-name">Họ và tên</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <input type="text" id="reg-name" placeholder="Nguyễn Văn A" autocomplete="name" />
+          </div>
+          <span class="field-error" id="reg-name-error"></span>
+        </div>
+
+        <!-- Email -->
+        <div class="field" id="field-group-email">
+          <label class="field-label" for="reg-email">Email</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+            <input type="email" id="reg-email" placeholder="email@example.com" autocomplete="email" />
+          </div>
+          <span class="field-error" id="reg-email-error"></span>
+        </div>
+
+        <!-- Số điện thoại -->
+        <div class="field" id="field-group-phone">
+          <label class="field-label" for="reg-phone">Số điện thoại</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <input type="tel" id="reg-phone" placeholder="0912345678" autocomplete="tel" />
+          </div>
+          <span class="field-error" id="reg-phone-error"></span>
+        </div>
+
+        <!-- Mật khẩu -->
+        <div class="field" id="field-group-password">
+          <label class="field-label" for="reg-password">Mật khẩu</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input type="password" id="reg-password" placeholder="Ít nhất 8 ký tự" autocomplete="new-password" />
+            <button class="toggle-eye" onclick="togglePwd('reg-password',this)" type="button">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+          <span class="field-error" id="reg-password-error"></span>
+        </div>
+
+        <p class="terms">Bằng cách đăng ký, bạn đồng ý với <a href="#">Điều khoản</a> và <a href="#">Chính sách bảo
+            mật</a>.</p>
+
+        <button class="btn-main" id="regBtn" onclick="handleRegister(event)" type="button">
+          <span class="btn-bg"></span>
+          <span class="btn-bg-hover"></span>
+          <span class="btn-label">
+            <span id="regBtnText">Tạo tài khoản</span>
+            <div class="btn-spinner" id="regSpinner"></div>
+          </span>
+        </button>
+
+        <div class="divider"><span>hoặc tiếp tục với</span></div>
+
+        <div class="socials">
+          <button class="btn-social" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4" />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853" />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05" />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335" />
+            </svg>
+            Google
+          </button>
+          <button class="btn-social" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2">
+              <path
+                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+            </svg>
+            Facebook
+          </button>
+        </div>
+
+        <p class="switch-text">Đã có tài khoản? <a href="/login" onmouseover="prefetchRoute('/login')">Đăng nhập ngay</a></p>
+
+        <!-- Success Overlay -->
+        <div class="success-overlay" id="successOverlay">
+          <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polyline class="check-path" points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <p class="success-title">Đăng ký thành công!</p>
+          <p class="success-sub">Chào mừng bạn đến với Programming Edu 🎉</p>
+        </div>
+
+        <!-- Error Toast -->
+        <div class="error-toast" id="errorToast">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span id="errorMsg">Có lỗi xảy ra.</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── PARTICLES ── */
+    const colors = ['#42A5F5', '#1565C0', '#EF5350', '#C62828', '#FFFFFF'];
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 2 + Math.random() * 4;
+      p.style.cssText = `left:${Math.random() * 100}%;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random() * colors.length)]};animation-duration:${6 + Math.random() * 14}s;animation-delay:${Math.random() * -20}s;opacity:${(0.3 + Math.random() * 0.5).toFixed(2)}`;
+      pc.appendChild(p);
+    }
+
+    /* ── TOGGLE PASSWORD ── */
+    function togglePwd(id, btn) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'text' ? 'password' : 'text';
+      btn.innerHTML = input.type === 'password'
+        ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+        : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    }
+
+    /* ── RIPPLE ── */
+    function addRipple(btn, e) {
+      const rect = btn.getBoundingClientRect();
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const size = Math.max(rect.width, rect.height) * 1.5;
+      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
+      btn.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    }
+
+    /* ── FIELD ERROR HELPERS ── */
+    function clearFieldErrors() {
+      document.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; });
+      document.querySelectorAll('.field.has-error').forEach(el => { el.classList.remove('has-error'); });
+    }
+
+    function showFieldErrors(errors) {
+      clearFieldErrors();
+      const fieldMap = { name: 'reg-name-error', email: 'reg-email-error', phone: 'reg-phone-error', password: 'reg-password-error' };
+      const groupMap = { name: 'field-group-name', email: 'field-group-email', phone: 'field-group-phone', password: 'field-group-password' };
+      for (const [field, msg] of Object.entries(errors)) {
+        const errEl = document.getElementById(fieldMap[field]);
+        const groupEl = document.getElementById(groupMap[field]);
+        if (errEl) errEl.textContent = msg;
+        if (groupEl) groupEl.classList.add('has-error');
+      }
+    }
+
+    /* ── HANDLE REGISTER ── */
+    async function handleRegister(e) {
+      addRipple(e.currentTarget, e);
+      clearFieldErrors();
+
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      if (!name || !password) { showError('Vui lòng điền họ tên và mật khẩu.'); return; }
+      if (!email && !phone) { showError('Vui lòng nhập email hoặc số điện thoại.'); return; }
+
+      setLoading(true);
+
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ name, email, phone, password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          if (data.errors) {
+            showFieldErrors(data.errors);
+            return;
+          }
+          throw new Error(data.error || 'Đăng ký thất bại.');
+        }
+
+        document.getElementById('successOverlay').classList.add('show');
+        setTimeout(() => {
+          document.getElementById('successOverlay').classList.remove('show');
+          window.location.href = '/questionaire';
+        }, 1500);
+
+      } catch (err) {
+        showError(err.message || 'Đăng ký thất bại, vui lòng thử lại.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function setLoading(on) {
+      document.getElementById('regBtn').disabled = on;
+      document.getElementById('regBtnText').textContent = on ? 'Đang tạo tài khoản...' : 'Tạo tài khoản';
+      document.getElementById('regSpinner').style.display = on ? 'block' : 'none';
+    }
+
+    function showError(msg) {
+      document.getElementById('errorMsg').textContent = msg;
+      const t = document.getElementById('errorToast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function prefetchRoute(url) {
+      if (!document.querySelector(`link[rel="prefetch"][href="${url}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        document.head.appendChild(link);
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+{
+  "html.validate.scripts": true,
+  "html.validate.styles": true,
+  "css.validate": true,
+  "files.associations": {
+    "*.html": "jinja-html"
+  },
+  "[jinja-html]": {
+    "editor.defaultFormatter": "monosans.polymer-ide"
+  }
+}

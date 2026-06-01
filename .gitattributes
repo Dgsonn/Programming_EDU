@@ -1,0 +1,22 @@
+# Normalize line endings to LF in the repo, convert to CRLF on Windows checkout
+* text=auto eol=lf
+
+# Explicit text files
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.svg   text eol=lf
+
+# Binary files — never touch line endings
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary

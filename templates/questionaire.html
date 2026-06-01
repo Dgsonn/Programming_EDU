@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Khảo Sát Học Viên - Programming Edu</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/questionaire.css') }}"
+    />
+  </head>
+  <body>
+    <div class="survey-container">
+      <div class="tech-logo">
+        <span class="logo-text">Programming EDU</span>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <form id="surveyForm">
+        <div class="step active">
+          <div class="question-block">
+            <p class="question">1. Nghề nghiệp hiện tại của bạn là gì?</p>
+            <label class="option"
+              ><input type="radio" name="job" value="Học sinh" /> Học
+              sinh</label
+            >
+            <label class="option"
+              ><input type="radio" name="job" value="Sinh viên" /> Sinh
+              viên</label
+            >
+            <label class="option"
+              ><input type="radio" name="job" value="Người đi làm" /> Người đi
+              làm</label
+            >
+            <label class="option">
+              <input type="radio" name="job" value="other" id="job_other" />
+              Khác:
+              <input
+                type="text"
+                id="job_text"
+                class="custom-text-input"
+                placeholder="Nhập nghề nghiệp..."
+                disabled
+              />
+            </label>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="next-btn">Tiếp tục</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="question-block">
+            <p class="question">
+              2. Bạn học lập trình để làm gì?
+              <span class="note">(Chọn tối đa 2)</span>
+            </p>
+            <label class="option"
+              ><input type="checkbox" name="purpose" value="Đi làm IT" /> Đi làm
+              IT</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="purpose" value="Chuyển ngành" />
+              Chuyển ngành</label
+            >
+            <label class="option"
+              ><input
+                type="checkbox"
+                name="purpose"
+                value="Làm dự án cá nhân"
+              />
+              Làm dự án cá nhân</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="purpose" value="Học cho biết" /> Học
+              cho biết</label
+            >
+            <label class="option">
+              <input
+                type="checkbox"
+                name="purpose"
+                value="other"
+                id="purpose_other"
+              />
+              Khác:
+              <input
+                type="text"
+                id="purpose_text"
+                class="custom-text-input"
+                placeholder="Nhập mục đích..."
+                disabled
+              />
+            </label>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="prev-btn">Quay lại</button>
+            <button type="button" class="next-btn">Tiếp tục</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="question-block">
+            <p class="question">
+              3. Bạn mong muốn đạt được điều gì sau khóa học?
+            </p>
+            <label class="option"
+              ><input type="radio" name="goal" value="Có việc làm" /> Có việc
+              làm</label
+            >
+            <label class="option"
+              ><input type="radio" name="goal" value="Làm được project" /> Làm
+              được project</label
+            >
+            <label class="option"
+              ><input type="radio" name="goal" value="Hiểu kiến thức cơ bản" />
+              Hiểu kiến thức cơ bản</label
+            >
+            <label class="option">
+              <input type="radio" name="goal" value="other" id="goal_other" />
+              Khác:
+              <input
+                type="text"
+                id="goal_text"
+                class="custom-text-input"
+                placeholder="Nhập mong muốn..."
+                disabled
+              />
+            </label>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="prev-btn">Quay lại</button>
+            <button type="button" class="next-btn">Tiếp tục</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="question-block">
+            <p class="question">4. Bạn đã từng học lập trình chưa?</p>
+            <label class="option"
+              ><input type="radio" name="experience" value="Chưa từng" /> Chưa
+              từng</label
+            >
+            <label class="option"
+              ><input type="radio" name="experience" value="Có (cơ bản)" /> Có
+              (cơ bản)</label
+            >
+            <label class="option"
+              ><input
+                type="radio"
+                name="experience"
+                value="Có (trung cấp trở lên)"
+              />
+              Có (trung cấp trở lên)</label
+            >
+          </div>
+
+          <div class="question-block sub-question" id="sub_language_section">
+            <p class="question">Nếu có, bạn đã học ngôn ngữ nào?</p>
+            <label class="option"
+              ><input type="checkbox" name="language" value="Python" />
+              Python</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="language" value="Java" />
+              Java</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="language" value="C/C++" />
+              C/C++</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="language" value="JavaScript" />
+              JavaScript</label
+            >
+            <label class="option">
+              <input
+                type="checkbox"
+                name="language"
+                value="other"
+                id="lang_other"
+              />
+              Khác:
+              <input
+                type="text"
+                id="lang_text"
+                class="custom-text-input"
+                placeholder="Nhập ngôn ngữ..."
+                disabled
+              />
+            </label>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="prev-btn">Quay lại</button>
+            <button type="button" class="next-btn">Tiếp tục</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="question-block">
+            <p class="question">5. Bạn tự đánh giá level của mình:</p>
+            <label class="option"
+              ><input type="radio" name="level" value="Beginner" />
+              Beginner</label
+            >
+            <label class="option"
+              ><input type="radio" name="level" value="Intermediate" />
+              Intermediate</label
+            >
+            <label class="option"
+              ><input type="radio" name="level" value="Advanced" />
+              Advanced</label
+            >
+          </div>
+          <div class="btn-group">
+            <button type="button" class="prev-btn">Quay lại</button>
+            <button type="button" class="next-btn">Tiếp tục</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="question-block">
+            <p class="question">6. Bạn muốn học mảng nào?</p>
+            <label class="option"
+              ><input type="checkbox" name="field" value="Web" /> Web</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="field" value="Mobile" />
+              Mobile</label
+            >
+            <label class="option"
+              ><input
+                type="checkbox"
+                name="field"
+                value="AI / Machine Learning"
+              />
+              AI / Machine Learning</label
+            >
+            <label class="option"
+              ><input type="checkbox" name="field" value="Data" /> Data</label
+            >
+            <label class="option">
+              <input
+                type="checkbox"
+                name="field"
+                value="other"
+                id="field_other"
+              />
+              Khác:
+              <input
+                type="text"
+                id="field_text"
+                class="custom-text-input"
+                placeholder="Nhập mảng..."
+                disabled
+              />
+            </label>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="prev-btn">Quay lại</button>
+            <button type="button" class="next-btn">Tiếp tục</button>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="question-block">
+            <p class="question">7. Bạn có thể dành thời gian học:</p>
+            <label class="option"
+              ><input type="radio" name="time" value="< 5h/tuần" /> &lt;
+              5h/tuần</label
+            >
+            <label class="option"
+              ><input type="radio" name="time" value="5–10h/tuần" />
+              5–10h/tuần</label
+            >
+            <label class="option"
+              ><input type="radio" name="time" value="> 10h/tuần" /> &gt;
+              10h/tuần</label
+            >
+          </div>
+          <div class="btn-group">
+            <button type="button" class="prev-btn">Quay lại</button>
+            <button type="submit" class="submit-btn">
+              Hoàn thành Khảo sát
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="thanks-overlay" id="thanksOverlay" aria-hidden="true">
+      <div
+        class="thanks-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="thanksTitle"
+      >
+        <div class="thanks-badge">✓</div>
+        <h3 id="thanksTitle" class="thanks-title">Cảm ơn bạn!</h3>
+        <p class="thanks-sub">
+          Phản hồi của bạn đã được ghi nhận. Chúng tôi sẽ cá nhân hóa lộ trình
+          học phù hợp hơn.
+        </p>
+        <button class="thanks-btn" id="thanksOkBtn" type="button">OK</button>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/questionaire.js') }}"></script>
+  </body>
+</html>

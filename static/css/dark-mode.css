@@ -1,0 +1,275 @@
+/* ══════════════════════════════════════════════════
+   DARK MODE — Programming EDU Dashboard
+   Áp dụng khi body có class .dark
+   ══════════════════════════════════════════════════ */
+
+/* ── Transition mượt cho mọi thứ ── */
+body, #sidebar, #main, .topbar,
+.stat-card, .section-card, .course-card, .enrolled-card,
+.roadmap-phase, .settings-section, .sec-lang-card,
+.field-input, .lang-select, .nav-btn, .search-wrap input,
+.user-chip, .bell-btn, .lesson-box, .roadmap-item {
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* ── Base layout ── */
+body.dark              { background: #0F172A; color: #E2E8F0; }
+body.dark #main        { background: #0F172A; }
+body.dark .page        { background: #0F172A; }
+
+/* ── Sidebar ── */
+body.dark #sidebar {
+  background: #1E293B;
+  border-right-color: #334155;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+}
+body.dark .sidebar-top    { border-bottom-color: #334155; }
+body.dark .sidebar-footer { border-top-color: #334155; }
+body.dark .user-info .name { color: #F1F5F9; }
+body.dark .user-info .role { color: #64748B; }
+
+body.dark .nav-btn        { color: #94A3B8; }
+body.dark .nav-btn:hover  { background: rgba(74,158,224,0.1); color: #7DD3FC; }
+body.dark .nav-btn.active {
+  background: linear-gradient(135deg, rgba(74,158,224,0.15), rgba(232,69,69,0.1));
+  color: #7DD3FC;
+  box-shadow: 0 2px 8px rgba(74,158,224,0.2);
+}
+body.dark .nav-icon        { background: rgba(255,255,255,0.06); }
+body.dark .nav-btn.active .nav-icon { background: rgba(74,158,224,0.15); }
+
+body.dark .logout-btn      { color: #64748B; }
+body.dark .logout-btn:hover { background: rgba(232,69,69,0.12); color: #F87171; }
+
+/* ── Topbar ── */
+body.dark .topbar {
+  background: #1E293B;
+  border-bottom-color: #334155;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+body.dark .topbar h1  { color: #F1F5F9; }
+body.dark .topbar .sub { color: #64748B; }
+
+/* ── Topbar nav (horizontal) dark mode ── */
+body.dark .topbar-nav .nav-btn       { color: #94A3B8; }
+body.dark .topbar-nav .nav-btn:hover { background: rgba(74,158,224,0.1); color: #7DD3FC; }
+body.dark .topbar-nav .nav-btn.active {
+  background: linear-gradient(135deg, rgba(74,158,224,0.15), rgba(232,69,69,0.1));
+  color: #7DD3FC;
+}
+
+body.dark .search-wrap input {
+  background: #0F172A;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+body.dark .search-wrap input::placeholder { color: #475569; }
+body.dark .search-wrap input:focus {
+  border-color: #4A9EE0;
+  background: #0F172A;
+  box-shadow: 0 0 0 3px rgba(74,158,224,0.15);
+}
+
+body.dark .bell-btn {
+  background: #0F172A;
+  border-color: #334155;
+  color: #94A3B8;
+}
+body.dark .bell-btn:hover { background: #1E293B; border-color: #4A9EE0; }
+
+body.dark .user-chip {
+  background: #0F172A;
+  border-color: #334155;
+}
+body.dark .user-chip:hover { background: #1E293B; border-color: #4A9EE0; }
+body.dark .user-chip .chip-name { color: #CBD5E1; }
+
+/* ── Theme toggle button ── */
+.theme-toggle-btn {
+  width: 36px; height: 36px; border-radius: 12px;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover { background: #EFF6FF; border-color: #BFDBFE; transform: scale(1.08); }
+body.dark .theme-toggle-btn {
+  background: #0F172A;
+  border-color: #334155;
+}
+body.dark .theme-toggle-btn:hover { background: #1E293B; border-color: #4A9EE0; }
+
+/* ── Stat cards ── */
+body.dark .stat-card {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+body.dark .stat-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+body.dark .stat-val  { color: #F1F5F9; }
+body.dark .stat-lbl  { color: #64748B; }
+
+/* ── Section card ── */
+body.dark .section-card {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+body.dark .section-title span { color: #E2E8F0; }
+
+/* ── Progress ── */
+body.dark .prog-bar-bg  { background: #334155; }
+body.dark .prog-name    { color: #CBD5E1; }
+body.dark .prog-icon    { /* keep colored bg */ }
+
+/* ── Welcome banner ── (giữ gradient, chỉ tweak text) */
+body.dark .banner-inner .greeting { color: rgba(255,255,255,0.75); }
+
+/* ── Courses header & filters ── */
+body.dark .courses-header h2 { color: #F1F5F9; }
+body.dark .filter-btn {
+  background: #1E293B;
+  color: #64748B;
+  border: 1px solid #334155;
+}
+body.dark .filter-btn:hover { background: #293548; color: #94A3B8; }
+body.dark .filter-btn.active {
+  background: linear-gradient(135deg, #4A9EE0, #E84545);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ── Course cards ── */
+body.dark .course-card {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+body.dark .course-card:hover {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.3);
+  border-color: #4A9EE040;
+}
+body.dark .card-desc     { color: #94A3B8; }
+body.dark .card-stat     { color: #475569; }
+body.dark .card-lessons  { color: #475569; }
+body.dark .card-footer   { border-top-color: #334155; }
+body.dark .cta-btn {
+  background: #0F172A;
+  color: #64748B;
+  border: 1px solid #334155;
+}
+
+/* ── Enrolled cards ── */
+body.dark .enrolled-card {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+body.dark .enrolled-info h3       { color: #F1F5F9; }
+body.dark .enrolled-info .subtitle { color: #64748B; }
+body.dark .enrolled-meta span      { color: #94A3B8; }
+body.dark .prog-label span:first-child { color: #64748B; }
+
+body.dark .lesson-box { background: #0F172A !important; border-color: #334155 !important; }
+body.dark .lesson-box .lbl { color: #475569; }
+body.dark .lesson-box .val { color: #CBD5E1; }
+
+/* ── Roadmap ── */
+body.dark .roadmap-phase {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+body.dark .roadmap-phase-title { color: #F1F5F9; }
+body.dark .roadmap-phase-sub   { color: #475569; }
+body.dark .roadmap-item        { color: #CBD5E1; }
+body.dark .roadmap-item:hover  { background: #293548; }
+body.dark .roadmap-item.done   { color: #475569; }
+body.dark .roadmap-check       { border-color: #475569; }
+
+/* ── Settings ── */
+body.dark .settings-section {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+body.dark .settings-section-title span { color: #F1F5F9; }
+body.dark .profile-name   { color: #F1F5F9; }
+body.dark .profile-email  { color: #64748B; }
+body.dark .field-label    { color: #94A3B8; }
+body.dark .field-input {
+  background: #0F172A;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+body.dark .field-input:focus { border-color: #4A9EE0; background: #0F172A; }
+
+body.dark .notif-lbl   { color: #CBD5E1; }
+body.dark .notif-desc  { color: #475569; }
+body.dark .notif-row   { border-bottom-color: #1E293B; }
+
+body.dark .sec-lang-card {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+body.dark .sec-lang-title span { color: #F1F5F9; }
+body.dark .change-pw-btn {
+  background: #0F172A;
+  color: #94A3B8;
+  border: 1px solid #334155;
+}
+body.dark .change-pw-btn:hover { opacity: 0.8; }
+body.dark .lang-select {
+  background: #0F172A;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+/* ── Empty state ── */
+body.dark .empty p    { color: #475569; }
+body.dark .empty-icon { color: #334155; }
+
+/* ── Unenroll modal ── */
+body.dark .un-card {
+  background: #1E293B;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+}
+body.dark .un-title  { color: #F1F5F9; }
+body.dark .un-sub    { color: #94A3B8; }
+body.dark .un-warning {
+  background: rgba(220,38,38,0.1);
+  border-color: rgba(220,38,38,0.25);
+}
+body.dark .un-btn-cancel {
+  background: #0F172A;
+  border-color: #334155;
+  color: #CBD5E1;
+}
+body.dark .un-btn-cancel:hover { background: #293548; border-color: #475569; }
+
+/* ── Skills ── */
+body.dark .courses-header h2 { color: #F1F5F9; }
+body.dark .sk-stat            { background:#1E293B; border-color:#334155; }
+body.dark .sk-stat .v         { color:#F1F5F9; }
+body.dark .sk-stat .l         { color:#64748B; }
+body.dark .sk-set             { background:#1E293B; border-color:#334155; }
+body.dark .sk-set-hd:hover    { background:#293548; }
+body.dark .sk-set-title       { color:#F1F5F9; }
+body.dark .sk-set-bar         { background:#334155; }
+body.dark .sk-set-meta        { color:#64748B; }
+body.dark .sk-donut-inner     { background:#1E293B; }
+body.dark .sk-donut-pct       { color:#F1F5F9; }
+body.dark .sk-skill-row:hover { background:#293548; }
+body.dark .sk-skill-name      { color:#CBD5E1; }
+body.dark .sk-skill-bar       { background:#334155; }
+body.dark .sk-skill-pct       { color:#94A3B8; }
+body.dark .sk-sub:hover       { background:#293548; }
+body.dark .sk-sub-title.todo  { color:#CBD5E1; }
+body.dark .sk-badge.new       { background:#1E293B; color:#64748B; border:1px solid #334155; }
+
+/* ── Shared: page-subtitle ── */
+body.dark .page-subtitle { color: #475569; }
