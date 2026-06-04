@@ -13,4 +13,23 @@ database/edu.db
 # OS
 .DS_Store
 Thumbs.db
-app.log
+
+# Agent instruction files
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+QODER.md
+.cursorrules
+.windsurfrules
+
+# Agent config folders
+.claude/
+.code-review-graph/
+.cursor/
+.gemini/
+.kiro/
+.qoder/
+
+# MCP configs
+.mcp.json
+.opencode.json
