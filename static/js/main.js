@@ -71,8 +71,8 @@ window.switchEduRoadmap = function(roadmapId) {
         if (mermaidWrap)  mermaidWrap.style.display  = 'none';
         if (personalView) personalView.style.display = 'flex';
         if (_rmPersonalLoaded) {
-            var ta = document.getElementById('rm-personal-editor');
-            if (ta && ta.value.trim()) setTimeout(function() { _rmRenderPreview(ta.value); }, 150);
+            _rmVInitCanvas();
+            _rmVRender();
         } else {
             loadPersonalRoadmap();
         }
@@ -92,7 +92,7 @@ function renderEduInteractiveRoadmap() {
     if (!wrap) return;
     _roadmapRenderedId = roadmap.id;
 
-    wrap.innerHTML = '<div style="color:#9CA3AF;padding:40px;text-align:center;font-size:14px;">Đang tải sơ đồ...</div>';
+    wrap.innerHTML = '<div class="rm-loading"><div class="rm-loading-spinner"></div><div class="rm-loading-text">Đang tải sơ đồ...</div></div>';
 
     if (typeof mermaid === 'undefined') {
         setTimeout(renderEduInteractiveRoadmap, 300);
@@ -109,13 +109,30 @@ function renderEduInteractiveRoadmap() {
             svgEl.style.width = '100%';
             svgEl.style.height = '100%';
 
-            // Gắn click handler vào từng node trong SVG
+            // Gắn click + glow handler vào từng node trong SVG
             svgEl.querySelectorAll('g.node, g[class*="node"]').forEach(function(gEl) {
                 gEl.style.cursor = 'pointer';
+                gEl.style.transition = 'filter 0.2s ease';
+
+                // Đọc màu stroke để làm glow khớp màu node
+                var shape = gEl.querySelector('rect, circle, polygon, path');
+                var glowColor = 'rgba(56,189,248,0.7)';
+                if (shape) {
+                    var stroke = shape.getAttribute('stroke') || '';
+                    if (stroke && stroke !== 'none') glowColor = stroke;
+                }
+                var glowOn  = 'drop-shadow(0 0 0px ' + glowColor + ') drop-shadow(0 0 12px ' + glowColor + ')';
+                var glowOff = 'none';
+
+                gEl.addEventListener('mouseenter', function() {
+                    gEl.style.filter = glowOn;
+                });
+                gEl.addEventListener('mouseleave', function() {
+                    gEl.style.filter = glowOff;
+                });
+
                 gEl.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    // Mermaid v11: id = "{anything}-rm_1-0" hoặc "{uid}rm_1-{n}"
-                    // Dùng pattern cố định của chúng ta: rm_[bpc]?\d+
                     var m = gEl.id.match(/rm_[bpc]?\d+/);
                     if (!m) return;
                     var nodeId = m[0];
@@ -144,7 +161,7 @@ function renderEduInteractiveRoadmap() {
             }
         }
     }).catch(function(err) {
-        wrap.innerHTML = '<div style="color:#EF4444;padding:40px;text-align:center;font-size:14px;">Không tải được sơ đồ.</div>';
+        wrap.innerHTML = '<div class="rm-loading"><div style="font-size:32px">⚠️</div><div class="rm-loading-text" style="color:#EF4444">Không tải được sơ đồ. Vui lòng thử lại.</div></div>';
         console.error('Mermaid render error:', err);
     });
 }
@@ -209,163 +226,361 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ════════════════════════════════════════════════════════════
-   ★ CÁ NHÂN HÓA LỘ TRÌNH — Mermaid editor + live preview
+   ★ CÁ NHÂN HÓA LỘ TRÌNH — Visual drag-and-drop builder
    ════════════════════════════════════════════════════════════ */
-var _rmPreviewCount = 0;
-var _rmDebounce = null;
 var _rmPersonalLoaded = false;
 
-var _RM_DEFAULT = 'flowchart TD\n    A["🎯 Mục tiêu"] --> B["📚 Học lý thuyết"]\n    B --> C["🛠️ Thực hành"]\n    C --> D["✅ Hoàn thành"]\n    classDef default fill:#4A9EE0,stroke:#2D7FC1,color:#fff';
+/* ── State ── */
+var _rmV = {
+    nodes:      [],       // [{id, x, y, label, color}]
+    edges:      [],       // [{from, to}]
+    nextId:     1,
+    mode:       'normal', // 'normal' | 'connect'
+    connectSrc: null,
+    selected:   null,
+    drag:       null,
+    didDrag:    false,
+};
+var _RMV_COLORS = 6;
 
-function _rmSetStatus(msg, isError) {
-    var el = document.getElementById('rm-parse-status');
+/* ── Helpers ── */
+function _rmVEsc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Default starter diagram ── */
+function _rmVInitDefault() {
+    _rmV.nodes = [
+        { id:'vn_1', x:220, y:80,  label:'🎯 Bắt đầu',      color:0 },
+        { id:'vn_2', x:220, y:200, label:'📚 Học lý thuyết', color:1 },
+        { id:'vn_3', x:220, y:320, label:'🛠️ Thực hành',     color:2 },
+        { id:'vn_4', x:220, y:440, label:'✅ Hoàn thành',    color:3 },
+    ];
+    _rmV.edges  = [{from:'vn_1',to:'vn_2'},{from:'vn_2',to:'vn_3'},{from:'vn_3',to:'vn_4'}];
+    _rmV.nextId = 5;
+}
+
+/* ── Serialize / Deserialize ── */
+function _rmVToMermaid() {
+    if (!_rmV.nodes.length) return 'flowchart TD\n    A["🎯 Bắt đầu"] --> B["✅ Hoàn thành"]';
+    var lines = ['flowchart TD'];
+    _rmV.nodes.forEach(function(n) {
+        lines.push('    ' + n.id + '["' + n.label.replace(/"/g,"'") + '"]');
+    });
+    _rmV.edges.forEach(function(e) {
+        lines.push('    ' + e.from + ' --> ' + e.to);
+    });
+    lines.push('%% VDATA:' + JSON.stringify({nodes:_rmV.nodes, edges:_rmV.edges, nextId:_rmV.nextId}));
+    return lines.join('\n');
+}
+
+function _rmVFromMermaid(mdef) {
+    var m = mdef && mdef.match(/%% VDATA:(.+)$/m);
+    if (!m) return false;
+    try {
+        var d = JSON.parse(m[1]);
+        _rmV.nodes  = d.nodes  || [];
+        _rmV.edges  = d.edges  || [];
+        _rmV.nextId = d.nextId || (_rmV.nodes.length + 1);
+        return true;
+    } catch(e) { return false; }
+}
+
+/* ── Render ── */
+function _rmVRenderArrows() {
+    var canvas = document.getElementById('rm-visual-canvas');
+    var svg    = document.getElementById('rm-arrows-svg');
+    if (!svg || !canvas) return;
+
+    svg.innerHTML = '<defs>'
+        + '<marker id="rmva" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">'
+        + '<polygon points="0 0,9 3.5,0 7" fill="#38BDF8"/></marker>'
+        + '<marker id="rmva-del" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">'
+        + '<polygon points="0 0,9 3.5,0 7" fill="#F472B6"/></marker>'
+        + '</defs>';
+
+    _rmV.edges.forEach(function(e, ei) {
+        var fn = _rmV.nodes.find(function(n){ return n.id === e.from; });
+        var tn = _rmV.nodes.find(function(n){ return n.id === e.to;   });
+        if (!fn || !tn) return;
+
+        var fEl = canvas.querySelector('.rm-vnode[data-id="'+e.from+'"]');
+        var tEl = canvas.querySelector('.rm-vnode[data-id="'+e.to+'"]');
+        var fH  = fEl ? fEl.offsetHeight : 44;
+        var tH  = tEl ? tEl.offsetHeight : 44;
+
+        var x1 = fn.x,    y1 = fn.y + fH / 2;
+        var x2 = tn.x,    y2 = tn.y - tH / 2;
+
+        /* If target above source, use side exits */
+        if (tn.y < fn.y + fH) {
+            var fW  = fEl ? fEl.offsetWidth : 130;
+            var tW  = tEl ? tEl.offsetWidth : 130;
+            var dir = tn.x >= fn.x ? 1 : -1;
+            x1 = fn.x + dir * fW / 2;  y1 = fn.y;
+            x2 = tn.x - dir * tW / 2;  y2 = tn.y;
+        }
+
+        var dy = Math.abs(y2 - y1), dx = Math.abs(x2 - x1);
+        var cy = Math.max(40, (dy + dx) * 0.35);
+        var d  = 'M'+x1+','+y1+' C'+x1+','+(y1+cy)+' '+x2+','+(y2-cy)+' '+x2+','+y2;
+
+        /* Invisible wide hit path */
+        var hit = document.createElementNS('http://www.w3.org/2000/svg','path');
+        hit.setAttribute('d', d);
+        hit.setAttribute('stroke','transparent');
+        hit.setAttribute('stroke-width','14');
+        hit.setAttribute('fill','none');
+        hit.style.cursor = 'pointer';
+        hit.title = 'Click để xóa mũi tên';
+        (function(idx){ hit.addEventListener('click', function(ev){ ev.stopPropagation(); rmVDeleteEdge(idx); }); })(ei);
+
+        /* Visible path */
+        var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d', d);
+        path.setAttribute('stroke','#38BDF8');
+        path.setAttribute('stroke-width','2');
+        path.setAttribute('fill','none');
+        path.setAttribute('marker-end','url(#rmva)');
+        path.style.pointerEvents = 'none';
+
+        svg.appendChild(hit);
+        svg.appendChild(path);
+    });
+}
+
+function _rmVRender() {
+    var canvas = document.getElementById('rm-visual-canvas');
+    if (!canvas) return;
+    canvas.querySelectorAll('.rm-vnode').forEach(function(el){ el.remove(); });
+
+    _rmV.nodes.forEach(function(n) {
+        var div = document.createElement('div');
+        div.className = 'rm-vnode';
+        div.setAttribute('data-id', n.id);
+        div.setAttribute('data-color', n.color || 0);
+        div.style.left = n.x + 'px';
+        div.style.top  = n.y + 'px';
+        if (_rmV.selected === n.id)  div.classList.add('rmv-selected');
+        if (_rmV.mode === 'connect' && _rmV.connectSrc === n.id) div.classList.add('rmv-src');
+        if (_rmV.mode === 'connect' && _rmV.connectSrc && _rmV.connectSrc !== n.id) div.classList.add('rmv-tgt');
+
+        div.innerHTML = '<div class="rmv-label">' + _rmVEsc(n.label) + '</div>'
+                      + '<button class="rmv-del" title="Xóa node">×</button>';
+
+        div.querySelector('.rmv-del').addEventListener('click', function(e){
+            e.stopPropagation(); rmVDeleteNode(n.id);
+        });
+        div.addEventListener('mousedown', function(e){
+            if (e.target.classList.contains('rmv-del')) return;
+            _rmVStartDrag(e, n);
+        });
+        div.addEventListener('click', function(e){
+            if (e.target.classList.contains('rmv-del')) return;
+            if (_rmV.didDrag) { _rmV.didDrag = false; return; }
+            e.stopPropagation(); _rmVNodeClick(n.id);
+        });
+        div.addEventListener('dblclick', function(e){
+            if (e.target.classList.contains('rmv-del')) return;
+            e.stopPropagation(); _rmVRenameInline(n, div);
+        });
+
+        canvas.appendChild(div);
+    });
+
+    _rmVRenderArrows();
+    _rmVSyncToolbar();
+    _rmVSetHint('');
+}
+
+/* ── Toolbar sync ── */
+function _rmVSyncToolbar() {
+    var btn = document.getElementById('rm-vbtn-connect');
+    if (btn) btn.classList.toggle('rmv-active', _rmV.mode === 'connect');
+}
+
+function _rmVSetHint(msg) {
+    var el = document.getElementById('rm-vhint');
     if (!el) return;
-    el.textContent = msg;
-    el.className = 'rm-parse-status ' + (isError ? 'rm-status-error' : (msg ? 'rm-status-ok' : ''));
+    if (msg) { el.textContent = msg; return; }
+    if (_rmV.nodes.length === 0) { el.textContent = 'Click "Thêm node" để bắt đầu'; return; }
+    if (_rmV.mode === 'connect') {
+        el.textContent = _rmV.connectSrc ? 'Chọn node đích →' : 'Chọn node nguồn →';
+    } else {
+        el.textContent = 'Kéo để di chuyển · Nhấn đúp để đổi tên · Click mũi tên để xóa';
+    }
 }
 
-function _rmRenderPreview(code) {
-    var wrap = document.getElementById('rm-personal-preview');
-    if (!wrap || !code.trim()) {
-        if (wrap) wrap.innerHTML = '<div class="rm-preview-placeholder">Nhập Mermaid code để xem preview...</div>';
-        return;
+/* ── Actions ── */
+function rmVAddNode() {
+    var canvas = document.getElementById('rm-visual-canvas');
+    var cx = canvas ? canvas.clientWidth  / 2 : 220;
+    var cy = canvas ? canvas.scrollTop + canvas.clientHeight / 2 : 220;
+    var offset = (_rmV.nodes.length % 5) * 28;
+    var n = { id:'vn_'+(_rmV.nextId++), x:cx+offset-60, y:cy+offset-60,
+              label:'Node '+_rmV.nodes.length, color:_rmV.nodes.length % _RMV_COLORS };
+    _rmV.nodes.push(n);
+    _rmV.selected = n.id;
+    _rmVRender();
+    /* Auto-open rename after a tick */
+    setTimeout(function(){
+        var el = canvas.querySelector('.rm-vnode[data-id="'+n.id+'"]');
+        if (el) _rmVRenameInline(n, el);
+    }, 40);
+}
+
+function rmVToggleConnect() {
+    _rmV.mode = (_rmV.mode === 'connect') ? 'normal' : 'connect';
+    _rmV.connectSrc = null;
+    _rmVRender();
+}
+
+function rmVClearAll() {
+    if (!_rmV.nodes.length || !confirm('Xóa toàn bộ sơ đồ?')) return;
+    _rmV.nodes = []; _rmV.edges = []; _rmV.selected = null; _rmV.connectSrc = null;
+    _rmVRender();
+}
+
+function rmVDeleteNode(id) {
+    _rmV.nodes = _rmV.nodes.filter(function(n){ return n.id !== id; });
+    _rmV.edges = _rmV.edges.filter(function(e){ return e.from !== id && e.to !== id; });
+    if (_rmV.selected   === id) _rmV.selected   = null;
+    if (_rmV.connectSrc === id) _rmV.connectSrc = null;
+    _rmVRender();
+}
+
+function rmVDeleteEdge(idx) {
+    _rmV.edges.splice(idx, 1);
+    _rmVRenderArrows();
+}
+
+function _rmVNodeClick(id) {
+    if (_rmV.mode === 'connect') {
+        if (!_rmV.connectSrc) {
+            _rmV.connectSrc = id;
+            _rmVRender();
+        } else if (_rmV.connectSrc !== id) {
+            var dup = _rmV.edges.some(function(e){ return e.from===_rmV.connectSrc && e.to===id; });
+            if (!dup) _rmV.edges.push({from:_rmV.connectSrc, to:id});
+            _rmV.connectSrc = null;
+            _rmVRender();
+        }
+    } else {
+        _rmV.selected = (_rmV.selected === id) ? null : id;
+        _rmVRender();
     }
-    if (typeof mermaid === 'undefined') return;
-    // Parse trước để tránh mermaid tự hiện popup lỗi khi render
-    mermaid.parse(code, { suppressErrors: true }).then(function(ok) {
-        if (ok === false) {
-            wrap.innerHTML = '<div class="rm-preview-placeholder" style="color:#EF4444;">Cú pháp lỗi — kiểm tra lại code</div>';
-            return null;
+}
+
+/* ── Drag ── */
+function _rmVStartDrag(e, node) {
+    e.preventDefault();
+    var canvas = document.getElementById('rm-visual-canvas');
+    var r = canvas.getBoundingClientRect();
+    var ox = e.clientX - r.left - node.x;
+    var oy = e.clientY - r.top  - node.y;
+    var sx = e.clientX, sy = e.clientY;
+    _rmV.drag = true;
+    _rmV.didDrag = false;
+
+    function onMove(me) {
+        if (!_rmV.didDrag) {
+            if (Math.abs(me.clientX - sx) > 5 || Math.abs(me.clientY - sy) > 5) {
+                _rmV.didDrag = true;
+            } else return;
         }
-        var svgId = 'rm-personal-svg-' + (++_rmPreviewCount);
-        return mermaid.render(svgId, code);
-    }).then(function(result) {
-        if (!result) return;
-        wrap.innerHTML = result.svg;
-        var svgEl = wrap.querySelector('svg');
-        if (svgEl) {
-            svgEl.removeAttribute('width');
-            svgEl.removeAttribute('height');
-            svgEl.style.width = '100%';
-            svgEl.style.height = '100%';
-        }
-    }).catch(function() {
-        wrap.innerHTML = '<div class="rm-preview-placeholder" style="color:#EF4444;">Cú pháp lỗi — kiểm tra lại code</div>';
+        node.x = Math.max(0, me.clientX - r.left - ox);
+        node.y = Math.max(0, me.clientY - r.top  - oy);
+        var el = canvas.querySelector('.rm-vnode[data-id="'+node.id+'"]');
+        if (el) { el.style.left = node.x+'px'; el.style.top = node.y+'px'; }
+        _rmVRenderArrows();
+    }
+    function onUp() {
+        _rmV.drag = null;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+}
+
+/* ── Inline rename ── */
+function _rmVRenameInline(node, divEl) {
+    var lbl = divEl.querySelector('.rmv-label');
+    if (!lbl) return;
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = node.label;
+    inp.className = 'rmv-input';
+    inp.setAttribute('lang', 'vi');
+    lbl.replaceWith(inp);
+    inp.focus(); inp.select();
+
+    var done = false;
+    function commit() {
+        if (done) return;
+        done = true;
+        node.label = inp.value.trim() || node.label;
+        _rmVRender();
+    }
+    inp.addEventListener('blur', commit);
+    /* Bỏ qua keydown trong lúc IME đang compose (tiếng Việt, CJK...) */
+    inp.addEventListener('keydown', function(e) {
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+        if (e.key === 'Escape') { done = true; _rmVRender(); }
     });
 }
 
-function _rmValidateOnBlur(code) {
-    if (!code.trim() || typeof mermaid === 'undefined') { _rmSetStatus('', false); return; }
-    mermaid.parse(code, { suppressErrors: true })
-        .then(function(ok) {
-            if (ok !== false) {
-                _rmSetStatus('✓ Cú pháp hợp lệ', false);
-            } else {
-                _rmSetStatus('✗ Cú pháp không hợp lệ — kiểm tra lại', true);
-            }
-        })
-        .catch(function() { _rmSetStatus('✗ Cú pháp không hợp lệ', true); });
-}
-
-function _rmInitEditor() {
-    var ta = document.getElementById('rm-personal-editor');
-    if (!ta || ta._rmInited) return;
-    ta._rmInited = true;
-
-    ta.addEventListener('input', function() {
-        _rmSetStatus('', false);
-        clearTimeout(_rmDebounce);
-        _rmDebounce = setTimeout(function() { _rmRenderPreview(ta.value); }, 500);
+/* ── Canvas init (once) ── */
+function _rmVInitCanvas() {
+    var canvas = document.getElementById('rm-visual-canvas');
+    if (!canvas || canvas._rmVInited) return;
+    canvas._rmVInited = true;
+    canvas.addEventListener('click', function(e){
+        if (e.target === canvas || e.target.id === 'rm-arrows-svg') {
+            _rmV.selected = null;
+            _rmV.connectSrc = null;
+            _rmVRender();
+        }
     });
-
-    ta.addEventListener('blur', function() { _rmValidateOnBlur(ta.value); });
+    canvas.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+            _rmV.mode = 'normal'; _rmV.connectSrc = null; _rmVRender();
+        }
+        if ((e.key==='Delete'||e.key==='Backspace') && _rmV.selected) {
+            rmVDeleteNode(_rmV.selected);
+        }
+    });
 }
 
-function rmNormalizeLabel(label) {
-    return label.trim().replace(/\s+/g, ' ').replace(/[^\w\s-]/g, '');
-}
-
-function rmNodeId(label) {
-    var slug = rmNormalizeLabel(label).toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    return slug ? 'n_' + slug : 'n_step';
-}
-
-function rmInsertTemplate() {
-    var ta = document.getElementById('rm-personal-editor');
-    if (!ta) return;
-    ta.value = _RM_DEFAULT;
-    _rmSetStatus('Đã chèn mẫu lộ trình cơ bản.', false);
-    _rmRenderPreview(ta.value);
-}
-
-function rmClearEditor() {
-    var ta = document.getElementById('rm-personal-editor');
-    if (!ta) return;
-    ta.value = 'flowchart TD\n    A["🎯 Bắt đầu"]';
-    _rmSetStatus('Đã xóa sơ đồ. Bắt đầu lại với một bước mới.', false);
-    _rmRenderPreview(ta.value);
-}
-
-function rmAddStep() {
-    var from = document.getElementById('rm-step-from');
-    var to = document.getElementById('rm-step-to');
-    if (!from || !to) return;
-    var fromText = from.value.trim();
-    var toText = to.value.trim();
-    if (!fromText || !toText) {
-        _rmSetStatus('Nhập cả bước bắt đầu và bước kế tiếp để thêm.', true);
-        return;
-    }
-
-    var ta = document.getElementById('rm-personal-editor');
-    if (!ta) return;
-
-    var code = ta.value.trim();
-    if (!code) {
-        code = _RM_DEFAULT;
-    }
-    if (!/^flowchart\s+[A-Z]/i.test(code)) {
-        code = _RM_DEFAULT + '\n' + code;
-    }
-
-    var fromId = rmNodeId(fromText);
-    var toId = rmNodeId(toText);
-    var nodeFrom = fromId + '["' + fromText + '"]';
-    var nodeTo = toId + '["' + toText + '"]';
-    var edge = fromId + ' --> ' + toId;
-
-    var lines = code.split('\n');
-    if (!lines.some(function(line) { return line.indexOf(fromId + '["') !== -1; })) {
-        lines.push('    ' + nodeFrom);
-    }
-    if (!lines.some(function(line) { return line.indexOf(toId + '["') !== -1; })) {
-        lines.push('    ' + nodeTo);
-    }
-    lines.push('    ' + edge);
-
-    ta.value = lines.join('\n');
-    _rmSetStatus('Đã thêm bước mới vào sơ đồ.', false);
-    _rmRenderPreview(ta.value);
-    from.value = '';
-    to.value = '';
-}
-
+/* ── Load / Save ── */
 function loadPersonalRoadmap() {
     if (_rmPersonalLoaded) return;
     _rmPersonalLoaded = true;
-    _rmInitEditor();
+    _rmVInitCanvas();
     fetch(API + '/me/roadmap')
         .then(handleFetch)
         .then(function(data) {
-            if (!data) return;
-            var ta = document.getElementById('rm-personal-editor');
-            if (!ta) return;
-            var code = (data.mermaid_def || '').trim() || _RM_DEFAULT;
-            ta.value = code;
-            // Delay to avoid racing with the main roadmap mermaid render
-            setTimeout(function() { _rmRenderPreview(code); }, 400);
+            var mdef = (data && data.mermaid_def || '').trim();
+            if (!_rmVFromMermaid(mdef)) _rmVInitDefault();
+            _rmVRender();
         })
-        .catch(function() {});
+        .catch(function() { _rmVInitDefault(); _rmVRender(); });
+}
+
+function savePersonalRoadmap() {
+    var btn = document.querySelector('.rm-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu...'; }
+    fetch(API + '/me/roadmap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mermaid_def: _rmVToMermaid() })
+    })
+    .then(handleFetch)
+    .then(function() {
+        if (btn) { btn.disabled=false; btn.textContent='✅ Đã lưu'; setTimeout(function(){ btn.textContent='💾 Lưu lộ trình'; },2000); }
+    })
+    .catch(function() { if (btn) { btn.disabled=false; btn.textContent='💾 Lưu lộ trình'; } });
 }
 
 function savePersonalRoadmap() {
@@ -1244,6 +1459,8 @@ function loadUser() {
     .then(handleFetch)
     .then(function (u) {
       if (!u) return;
+      var isNewUser = Boolean(u.is_new_user || u.first_login || u.questionnaire_completed === 0);
+      setText("banner-greeting", isNewUser ? "Chào mừng bạn đến với Programming EDU! 🎉" : "Chào mừng trở lại! 👋");
       setText("sidebar-name", u.name.split(" ").slice(-1)[0]);
       setText("sidebar-role", u.role);
       setText("banner-name", u.name.split(" ").slice(-1)[0]);

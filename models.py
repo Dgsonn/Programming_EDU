@@ -249,15 +249,15 @@ def init_db():
         c.execute('SELECT 1 FROM roadmaps LIMIT 1')
         if not c.fetchone():
             _classDefs = (
-                '    classDef col_yellow fill:#fde047,stroke:#d97706,color:#1F2937\n'
-                '    classDef col_pink   fill:#fca5a5,stroke:#ef4444,color:#1F2937\n'
-                '    classDef col_blue   fill:#93c5fd,stroke:#3b82f6,color:#1F2937\n'
-                '    classDef col_gold   fill:#fcd34d,stroke:#d97706,color:#1F2937\n'
-                '    classDef col_green  fill:#6ee7b7,stroke:#10B981,color:#1F2937\n'
-                '    classDef col_purple fill:#d8b4fe,stroke:#8B5CF6,color:#1F2937\n'
-                '    classDef col_orange fill:#fdba74,stroke:#f97316,color:#1F2937'
+                '    classDef col_yellow fill:#1C1500,stroke:#FBBF24,stroke-width:2px,color:#FEF08A,rx:8\n'
+                '    classDef col_pink   fill:#1A0520,stroke:#F472B6,stroke-width:2px,color:#FBCFE8,rx:8\n'
+                '    classDef col_blue   fill:#050E1F,stroke:#38BDF8,stroke-width:2px,color:#BAE6FD,rx:8\n'
+                '    classDef col_gold   fill:#150E00,stroke:#F59E0B,stroke-width:2px,color:#FDE68A,rx:8\n'
+                '    classDef col_green  fill:#011C0E,stroke:#4ADE80,stroke-width:2px,color:#BBF7D0,rx:8\n'
+                '    classDef col_purple fill:#0F0520,stroke:#A78BFA,stroke-width:2px,color:#DDD6FE,rx:8\n'
+                '    classDef col_orange fill:#1A0A00,stroke:#FB923C,stroke-width:2px,color:#FED7AA,rx:8'
             )
-            _init_block = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#4A9EE0"},"flowchart":{"curve":"linear","useMaxWidth":false,"nodeSpacing":60,"rankSpacing":80,"padding":20}}}%%'
+            _init_block = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#050E1F","primaryTextColor":"#E2E8F0","primaryBorderColor":"#38BDF8","lineColor":"#38BDF8","edgeLabelBackground":"transparent"},"flowchart":{"curve":"basis","useMaxWidth":false,"nodeSpacing":55,"rankSpacing":75,"padding":20}}}%%'
 
             roadmaps_seed = [
                 (
@@ -422,15 +422,15 @@ def init_db():
             )
 
         # Luôn cập nhật mermaid_def để đảm bảo label tiếng Việt đầy đủ dấu
-        _ib = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#4A9EE0"},"flowchart":{"curve":"linear","useMaxWidth":false,"nodeSpacing":60,"rankSpacing":80,"padding":20}}}%%'
+        _ib = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#050E1F","primaryTextColor":"#E2E8F0","primaryBorderColor":"#38BDF8","lineColor":"#38BDF8","edgeLabelBackground":"transparent"},"flowchart":{"curve":"basis","useMaxWidth":false,"nodeSpacing":55,"rankSpacing":75,"padding":20}}}%%'
         _cd = (
-            '    classDef col_yellow fill:#fde047,stroke:#d97706,color:#1F2937\n'
-            '    classDef col_pink   fill:#fca5a5,stroke:#ef4444,color:#1F2937\n'
-            '    classDef col_blue   fill:#93c5fd,stroke:#3b82f6,color:#1F2937\n'
-            '    classDef col_gold   fill:#fcd34d,stroke:#d97706,color:#1F2937\n'
-            '    classDef col_green  fill:#6ee7b7,stroke:#10B981,color:#1F2937\n'
-            '    classDef col_purple fill:#d8b4fe,stroke:#8B5CF6,color:#1F2937\n'
-            '    classDef col_orange fill:#fdba74,stroke:#f97316,color:#1F2937'
+            '    classDef col_yellow fill:#1C1500,stroke:#FBBF24,stroke-width:2px,color:#FEF08A,rx:8\n'
+            '    classDef col_pink   fill:#1A0520,stroke:#F472B6,stroke-width:2px,color:#FBCFE8,rx:8\n'
+            '    classDef col_blue   fill:#050E1F,stroke:#38BDF8,stroke-width:2px,color:#BAE6FD,rx:8\n'
+            '    classDef col_gold   fill:#150E00,stroke:#F59E0B,stroke-width:2px,color:#FDE68A,rx:8\n'
+            '    classDef col_green  fill:#011C0E,stroke:#4ADE80,stroke-width:2px,color:#BBF7D0,rx:8\n'
+            '    classDef col_purple fill:#0F0520,stroke:#A78BFA,stroke-width:2px,color:#DDD6FE,rx:8\n'
+            '    classDef col_orange fill:#1A0A00,stroke:#FB923C,stroke-width:2px,color:#FED7AA,rx:8'
         )
         _mermaid_defs_vn = {
             'frontend': (

@@ -6,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Programming EDU</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=8" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -62,7 +62,18 @@
           </div>
         </div>
         <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-        <button class="bell-btn">🔔<span class="bell-dot"></span></button>
+        <div class="bell-wrap" id="bell-wrap">
+          <button class="bell-btn" id="bell-btn" onclick="toggleBellPanel()" aria-haspopup="true" aria-expanded="false" aria-label="Thông báo">
+            🔔<span class="bell-dot" id="bell-dot"></span>
+          </button>
+          <div class="bell-panel" id="bell-panel" role="dialog" aria-label="Thông báo">
+            <div class="bell-panel-header">
+              <span class="bell-panel-title">🔔 Thông báo</span>
+              <button class="bell-mark-all" onclick="markAllBellRead()">Đánh dấu đã đọc</button>
+            </div>
+            <div class="bell-panel-body" id="bell-panel-body"></div>
+          </div>
+        </div>
         <div class="user-chip-wrap" id="user-chip-wrap">
           <div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
             <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
@@ -99,7 +110,7 @@
         <div class="banner-dots"></div>
         <div class="banner-inner">
           <div>
-            <div class="greeting">Chào mừng trở lại! 👋</div>
+            <div class="greeting" id="banner-greeting">Chào mừng trở lại! 👋</div>
             <h2 id="banner-name">—</h2>
             <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
           </div>
@@ -236,72 +247,116 @@
 
     <!-- ── Roadmap ── -->
     <div class="page" id="page-roadmap">
-      <div class="courses-header">
-        <h2>Lộ trình học tập</h2>
-        <div class="filter-group" id="roadmap-tabs"></div>
-      </div>
-      <div class="courses-search-bar-wrap" id="roadmap-search-wrap">
-        <span class="csb-icon">🔍</span>
-        <input type="text" id="roadmap-search-input" class="courses-search-bar-input"
-          placeholder="Tìm lộ trình (ví dụ: Frontend, Python, C++...)"
-          autocomplete="off" oninput="roadmapSearch(this.value)" />
-        <button class="csb-clear" id="roadmap-search-clear" type="button"
-          style="display:none" onclick="roadmapClearSearch()">✕</button>
+
+      <!-- Hero banner -->
+      <div class="rm-hero">
+        <div class="rm-hero-icon">🗺️</div>
+        <div class="rm-hero-body">
+          <div class="rm-hero-title">Lộ trình học tập</div>
+          <div class="rm-hero-sub">Khám phá con đường học lập trình từ cơ bản đến chuyên sâu · Ấn vào node để xem chi tiết</div>
+          <div class="rm-hero-tags">
+            <span class="rm-hero-tag rm-tag-blue">🌐 Frontend</span>
+            <span class="rm-hero-tag rm-tag-green">⚙️ Backend</span>
+            <span class="rm-hero-tag rm-tag-purple">🤖 AI / ML</span>
+            <span class="rm-hero-tag rm-tag-orange">📱 Mobile</span>
+          </div>
+        </div>
+        <div class="rm-hero-stats">
+          <div class="rm-hero-stat">
+            <span class="rm-hs-val">5+</span>
+            <span class="rm-hs-lbl">Lộ trình</span>
+          </div>
+          <div class="rm-hero-stat-divider"></div>
+          <div class="rm-hero-stat">
+            <span class="rm-hs-val">50+</span>
+            <span class="rm-hs-lbl">Kỹ năng</span>
+          </div>
+        </div>
       </div>
 
+      <!-- Toolbar: tabs + search -->
+      <div class="rm-toolbar">
+        <div class="rm-tabs-wrap filter-group" id="roadmap-tabs"></div>
+        <div class="rm-search-box" id="roadmap-search-wrap">
+          <span class="rm-search-icon">🔍</span>
+          <input type="text" id="roadmap-search-input" class="rm-search-input"
+            placeholder="Tìm lộ trình..."
+            autocomplete="off" oninput="roadmapSearch(this.value)" />
+          <button class="rm-search-clear" id="roadmap-search-clear" type="button"
+            style="display:none" onclick="roadmapClearSearch()">✕</button>
+        </div>
+      </div>
+
+      <!-- Diagram container -->
       <div id="roadmap-container-wrapper">
         <div id="roadmap-mermaid-wrap">
-          <div style="color:#9CA3AF;padding:40px;text-align:center;font-size:14px;">Đang tải sơ đồ...</div>
+          <div class="rm-loading">
+            <div class="rm-loading-spinner"></div>
+            <div class="rm-loading-text">Đang tải sơ đồ lộ trình...</div>
+          </div>
         </div>
 
-        <!-- ── Cá nhân — hiện khi chọn tab "Cá nhân" ── -->
+        <!-- Cá nhân — hiện khi chọn tab "Cá nhân" -->
         <div id="roadmap-personal-view">
           <div class="rm-personal-hd">
             <div class="rm-personal-hd-left">
-              <span>✏️</span>
-              <span class="rm-personal-label">Lộ trình cá nhân của tôi</span>
+              <div class="rm-personal-icon">✏️</div>
+              <div>
+                <div class="rm-personal-label">Lộ trình cá nhân của tôi</div>
+                <div class="rm-personal-sub">Kéo thả · Nhấn đúp để đổi tên · Click mũi tên để xóa</div>
+              </div>
             </div>
             <div class="rm-personal-hd-right">
               <button class="rm-ai-btn" onclick="handlePersonalRoadmapAI()" title="Chỉ dành cho tài khoản Premium">
                 🤖 Tạo bằng AI <span class="rm-premium-badge">Premium</span>
               </button>
-              <button class="rm-save-btn" onclick="savePersonalRoadmap()">💾 Lưu</button>
+              <button class="rm-save-btn" onclick="savePersonalRoadmap()">💾 Lưu lộ trình</button>
             </div>
           </div>
-          <div class="rm-helper-panel">
-            <div class="rm-helper-actions">
-              <span class="rm-helper-note">Nhập nhanh các bước để tạo sơ đồ mà không cần nhớ cú pháp Mermaid.</span>
-              <button class="rm-helper-btn" onclick="rmInsertTemplate()">📄 Mẫu nhanh</button>
-              <button class="rm-helper-btn" onclick="rmClearEditor()">🧼 Xóa sơ đồ</button>
-            </div>
-            <div class="rm-helper-builder">
-              <input id="rm-step-from" type="text" placeholder="Từ bước (ví dụ: Khởi đầu)" />
-              <input id="rm-step-to" type="text" placeholder="Tới bước (ví dụ: Hoàn thành)" />
-              <button class="rm-builder-btn" onclick="rmAddStep()">➕ Thêm bước</button>
-            </div>
+
+          <!-- Visual toolbar -->
+          <div class="rmv-toolbar">
+            <button class="rmv-btn rmv-btn-add" onclick="rmVAddNode()">
+              <span>➕</span> Thêm node
+            </button>
+            <button class="rmv-btn rmv-btn-connect" id="rm-vbtn-connect" onclick="rmVToggleConnect()">
+              <span>🔗</span> Nối node
+            </button>
+            <button class="rmv-btn rmv-btn-clear" onclick="rmVClearAll()">
+              <span>🗑️</span> Xóa hết
+            </button>
+            <div class="rmv-hint" id="rm-vhint">Click "Thêm node" để bắt đầu</div>
           </div>
-          <div class="rm-split">
-            <div class="rm-split-pane rm-split-left">
-              <div class="rm-pane-label">📝 Mermaid Editor</div>
-              <textarea id="rm-personal-editor"
-                placeholder="flowchart TD&#10;    A[&quot;Mục tiêu 1&quot;] --&gt; B[&quot;Mục tiêu 2&quot;]&#10;    B --&gt; C[&quot;Hoàn thành&quot;]"></textarea>
-              <div id="rm-parse-status" class="rm-parse-status"></div>
-            </div>
-            <div class="rm-split-pane rm-split-right">
-              <div class="rm-pane-label">👁️ Preview</div>
-              <div id="rm-personal-preview">
-                <div class="rm-preview-placeholder">Nhập Mermaid code để xem preview...</div>
-              </div>
-            </div>
+
+          <!-- Canvas -->
+          <div id="rm-visual-canvas" tabindex="0">
+            <svg id="rm-arrows-svg" xmlns="http://www.w3.org/2000/svg"></svg>
           </div>
         </div>
       </div>
 
+      <!-- Hint bar -->
+      <div class="rm-hint-bar">
+        <span class="rm-hint-item">💡 Ấn vào node để xem chi tiết kỹ năng</span>
+        <span class="rm-hint-sep">·</span>
+        <span class="rm-hint-item">🖱️ Scroll để zoom · Kéo để di chuyển bản đồ</span>
+        <span class="rm-hint-sep">·</span>
+        <span class="rm-hint-item">⌨️ Ctrl+Scroll để zoom nhanh</span>
+      </div>
+
+      <!-- Sidebar chi tiết node -->
       <div id="sidebar-detail">
-        <button class="close-btn" onclick="closeSidebar()">✖ Đóng</button>
+        <div class="rm-sidebar-header">
+          <div class="rm-sidebar-icon" id="sidebar-icon">📌</div>
+          <div class="rm-sidebar-close-wrap">
+            <button class="rm-sidebar-close" onclick="closeSidebar()" aria-label="Đóng">✕</button>
+          </div>
+        </div>
         <h2 id="sidebar-title">Tiêu đề</h2>
+        <div class="rm-sidebar-divider"></div>
         <div id="sidebar-content">Nội dung chi tiết sẽ hiển thị ở đây...</div>
       </div>
+
     </div>
 
     <!-- ── Skills ── -->
@@ -682,8 +737,87 @@
       var n = document.getElementById('chip-name');
       var d = document.getElementById('udh-name');
       if (n && d) d.textContent = n.textContent;
+      closeBellPanel();
       _origToggleUserMenu();
     };
+
+    /* ── Bell notification panel ── */
+    var _bellNotifs = [
+      { icon: '✅', text: 'Bạn đã hoàn thành bài học đầu tiên trong khóa C++!', time: '5 phút trước', unread: true },
+      { icon: '🔥', text: 'Streak 7 ngày liên tiếp! Tiếp tục phát huy nhé!', time: '2 giờ trước', unread: true },
+      { icon: '📖', text: 'Khóa học Python vừa được cập nhật thêm nội dung mới.', time: 'Hôm qua', unread: true },
+      { icon: '🏅', text: 'Bạn đã đạt huy hiệu "Người mới bắt đầu". Chúc mừng!', time: '3 ngày trước', unread: false },
+    ];
+
+    function _renderBellItems() {
+      var body = document.getElementById('bell-panel-body');
+      if (!body) return;
+      if (!_bellNotifs.length) {
+        body.innerHTML = '<div class="bell-empty"><div class="bell-empty-icon">🔕</div><div>Chưa có thông báo nào</div></div>';
+        return;
+      }
+      body.innerHTML = _bellNotifs.map(function(n, i) {
+        return '<div class="bell-item' + (n.unread ? ' unread' : '') + '" onclick="readBellItem(' + i + ')" role="menuitem" tabindex="0">'
+          + '<div class="bell-item-icon">' + n.icon + '</div>'
+          + '<div class="bell-item-body">'
+          + '<div class="bell-item-text">' + n.text + '</div>'
+          + '<div class="bell-item-time">' + n.time + '</div>'
+          + '</div>'
+          + (n.unread ? '<div class="bell-unread-dot"></div>' : '')
+          + '</div>';
+      }).join('');
+    }
+
+    function _updateBellDot() {
+      var dot = document.getElementById('bell-dot');
+      if (!dot) return;
+      var hasUnread = _bellNotifs.some(function(n) { return n.unread; });
+      dot.style.display = hasUnread ? '' : 'none';
+    }
+
+    function toggleBellPanel() {
+      var panel = document.getElementById('bell-panel');
+      var btn   = document.getElementById('bell-btn');
+      var open  = panel.classList.contains('open');
+      if (open) {
+        panel.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        closeUserMenu();
+        _renderBellItems();
+        panel.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function closeBellPanel() {
+      var panel = document.getElementById('bell-panel');
+      var btn   = document.getElementById('bell-btn');
+      if (panel) panel.classList.remove('open');
+      if (btn)   btn.setAttribute('aria-expanded', 'false');
+    }
+
+    function readBellItem(idx) {
+      if (_bellNotifs[idx]) {
+        _bellNotifs[idx].unread = false;
+        _renderBellItems();
+        _updateBellDot();
+      }
+    }
+
+    function markAllBellRead() {
+      _bellNotifs.forEach(function(n) { n.unread = false; });
+      _renderBellItems();
+      _updateBellDot();
+    }
+
+    document.addEventListener('click', function(e) {
+      var wrap = document.getElementById('bell-wrap');
+      if (wrap && !wrap.contains(e.target)) closeBellPanel();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeBellPanel();
+    });
   </script>
 
   <script>

@@ -15,7 +15,12 @@ def get_user():
     conn = get_db()
     user = conn.execute('SELECT * FROM users WHERE id=%s', (current_user_id(),)).fetchone()
     conn.close()
-    return jsonify(dict(user))
+    if not user:
+        return jsonify({}), 404
+    user = dict(user)
+    user['is_new_user'] = not bool(user.get('questionnaire_completed'))
+    user['first_login'] = user['is_new_user']
+    return jsonify(user)
 
 
 @user_bp.route('/api/user', methods=['PUT'])

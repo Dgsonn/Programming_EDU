@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ course.title }} – Programming EDU</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=8" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=8" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=9" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     /* ── Hero ── */
@@ -277,7 +277,18 @@
           onkeydown="if(event.key==='Enter'&&this.value.trim())window.location='/dashboard?q='+encodeURIComponent(this.value.trim())" />
       </div>
       <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-      <button class="bell-btn">🔔<span class="bell-dot"></span></button>
+      <div class="bell-wrap" id="bell-wrap">
+        <button class="bell-btn" id="bell-btn" onclick="toggleBellPanel()" aria-haspopup="true" aria-expanded="false" aria-label="Thông báo">
+          🔔<span class="bell-dot" id="bell-dot"></span>
+        </button>
+        <div class="bell-panel" id="bell-panel" role="dialog" aria-label="Thông báo">
+          <div class="bell-panel-header">
+            <span class="bell-panel-title">🔔 Thông báo</span>
+            <button class="bell-mark-all" onclick="markAllBellRead()">Đánh dấu đã đọc</button>
+          </div>
+          <div class="bell-panel-body" id="bell-panel-body"></div>
+        </div>
+      </div>
       <div class="user-chip-wrap" id="user-chip-wrap">
         <div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
           <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
@@ -588,6 +599,7 @@
     var btn  = document.getElementById('user-chip-btn');
     var menu = document.getElementById('user-dropdown');
     var open = menu.classList.contains('open');
+    closeBellPanel();
     if (open) {
       menu.classList.remove('open');
       btn.classList.remove('open');
@@ -600,14 +612,16 @@
   }
 
   document.addEventListener('click', function(e) {
-    var wrap = document.getElementById('user-chip-wrap');
-    if (wrap && !wrap.contains(e.target)) {
+    var userWrap = document.getElementById('user-chip-wrap');
+    if (userWrap && !userWrap.contains(e.target)) {
       var btn  = document.getElementById('user-chip-btn');
       var menu = document.getElementById('user-dropdown');
       menu.classList.remove('open');
       btn.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
     }
+    var bellWrap = document.getElementById('bell-wrap');
+    if (bellWrap && !bellWrap.contains(e.target)) closeBellPanel();
   });
 
   document.addEventListener('keydown', function(e) {
@@ -615,8 +629,78 @@
       var btn  = document.getElementById('user-chip-btn');
       var menu = document.getElementById('user-dropdown');
       if (menu) { menu.classList.remove('open'); btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+      closeBellPanel();
     }
   });
+
+  /* ── Bell notification panel ── */
+  var _bellNotifs = [
+    { icon: '✅', text: 'Bạn đã hoàn thành bài học đầu tiên trong khóa C++!', time: '5 phút trước', unread: true },
+    { icon: '🔥', text: 'Streak 7 ngày liên tiếp! Tiếp tục phát huy nhé!', time: '2 giờ trước', unread: true },
+    { icon: '📖', text: 'Khóa học Python vừa được cập nhật thêm nội dung mới.', time: 'Hôm qua', unread: true },
+    { icon: '🏅', text: 'Bạn đã đạt huy hiệu "Người mới bắt đầu". Chúc mừng!', time: '3 ngày trước', unread: false },
+  ];
+
+  function _renderBellItems() {
+    var body = document.getElementById('bell-panel-body');
+    if (!body) return;
+    if (!_bellNotifs.length) {
+      body.innerHTML = '<div class="bell-empty"><div class="bell-empty-icon">🔕</div><div>Chưa có thông báo nào</div></div>';
+      return;
+    }
+    body.innerHTML = _bellNotifs.map(function(n, i) {
+      return '<div class="bell-item' + (n.unread ? ' unread' : '') + '" onclick="readBellItem(' + i + ')" role="menuitem" tabindex="0">'
+        + '<div class="bell-item-icon">' + n.icon + '</div>'
+        + '<div class="bell-item-body">'
+        + '<div class="bell-item-text">' + n.text + '</div>'
+        + '<div class="bell-item-time">' + n.time + '</div>'
+        + '</div>'
+        + (n.unread ? '<div class="bell-unread-dot"></div>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  function _updateBellDot() {
+    var dot = document.getElementById('bell-dot');
+    if (!dot) return;
+    var hasUnread = _bellNotifs.some(function(n) { return n.unread; });
+    dot.style.display = hasUnread ? '' : 'none';
+  }
+
+  function toggleBellPanel() {
+    var panel = document.getElementById('bell-panel');
+    var btn   = document.getElementById('bell-btn');
+    var open  = panel.classList.contains('open');
+    if (open) {
+      panel.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    } else {
+      _renderBellItems();
+      panel.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  function closeBellPanel() {
+    var panel = document.getElementById('bell-panel');
+    var btn   = document.getElementById('bell-btn');
+    if (panel) panel.classList.remove('open');
+    if (btn)   btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function readBellItem(idx) {
+    if (_bellNotifs[idx]) {
+      _bellNotifs[idx].unread = false;
+      _renderBellItems();
+      _updateBellDot();
+    }
+  }
+
+  function markAllBellRead() {
+    _bellNotifs.forEach(function(n) { n.unread = false; });
+    _renderBellItems();
+    _updateBellDot();
+  }
 </script>
 
 {% include 'chatbot.html' %}

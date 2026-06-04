@@ -77,6 +77,23 @@ body.dark .bell-btn {
 }
 body.dark .bell-btn:hover { background: #1E293B; border-color: #4A9EE0; }
 
+body.dark .bell-panel {
+  background: #1E293B;
+  border-color: #334155;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+}
+body.dark .bell-panel-header  { border-bottom-color: #334155; }
+body.dark .bell-panel-title   { color: #F1F5F9; }
+body.dark .bell-item          { border-bottom-color: #0F172A; }
+body.dark .bell-item:hover    { background: #293548; }
+body.dark .bell-item.unread   { background: rgba(74,158,224,0.12); }
+body.dark .bell-item.unread:hover { background: rgba(74,158,224,0.2); }
+body.dark .bell-item-icon     { background: #334155; }
+body.dark .bell-item.unread .bell-item-icon { background: rgba(74,158,224,0.18); }
+body.dark .bell-item-text     { color: #E2E8F0; }
+body.dark .bell-item-time     { color: #64748B; }
+body.dark .bell-empty         { color: #475569; }
+
 body.dark .user-chip {
   background: #0F172A;
   border-color: #334155;
