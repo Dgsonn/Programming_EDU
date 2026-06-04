@@ -55,7 +55,7 @@
 }
 .settings-section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .settings-section-title span { font-size: 15px; font-weight: 600; color: #1F2937; }
-.profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.profile-top { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px; text-align: center; }
 .profile-avatar { position: relative; }
 .profile-avatar img { width: 64px; height: 64px; border-radius: 16px; border: 2px solid #DBEAFE; }
 .avatar-edit-btn {
