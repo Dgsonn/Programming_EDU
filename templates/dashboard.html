@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Programming EDU</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=10" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
@@ -389,7 +389,6 @@
           <h2>💬 Diễn đàn</h2>
           <p class="page-subtitle">Chia sẻ kiến thức, đặt câu hỏi và thảo luận cùng mọi người</p>
         </div>
-        <button class="forum-new-btn" onclick="forumOpenCreate()">✏️ Đăng bài mới</button>
       </div>
 
       <div class="courses-search-bar-wrap" id="forum-search-wrap">
@@ -412,8 +411,34 @@
           <label class="sort-label">Sắp xếp:</label>
           <select class="sort-select" onchange="forumSetSort(this.value)">
             <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
             <option value="likes">Nhiều like nhất</option>
           </select>
+        </div>
+      </div>
+
+      <!-- FB-style Create Box -->
+      <div class="forum-create-box">
+        <div class="forum-create-row">
+          <div class="fcb-avatar">
+            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" id="fcb-user-avatar" />
+          </div>
+          <div class="fcb-input-fake" onclick="forumOpenCreate()">Bạn đang nghĩ gì? Chia sẻ với mọi người...</div>
+        </div>
+        <div class="fcb-divider"></div>
+        <div class="fcb-actions">
+          <button class="fcb-action-btn" onclick="forumOpenCreateWithMedia()">
+            <span>🖼️</span> Ảnh/Video
+          </button>
+          <button class="fcb-action-btn" onclick="forumOpenCreateCat('question')">
+            <span>❓</span> Câu hỏi
+          </button>
+          <button class="fcb-action-btn" onclick="forumOpenCreateCat('share')">
+            <span>💡</span> Chia sẻ
+          </button>
+          <button class="fcb-action-btn" onclick="forumOpenCreateCat('discuss')">
+            <span>🗣️</span> Thảo luận
+          </button>
         </div>
       </div>
 
@@ -1153,6 +1178,20 @@
             placeholder="Mô tả chi tiết vấn đề hoặc nội dung bạn muốn chia sẻ..." maxlength="2000"></textarea>
           <div class="forum-char-count" id="forum-body-count">0 / 2000</div>
         </div>
+        <div class="forum-field">
+          <label class="forum-field-label">Thêm ảnh / video</label>
+          <div class="forum-media-toolbar">
+            <button type="button" class="forum-media-btn" onclick="document.getElementById('forum-img-input').click()">
+              📷 Ảnh
+            </button>
+            <button type="button" class="forum-media-btn" onclick="document.getElementById('forum-vid-input').click()">
+              🎬 Video
+            </button>
+          </div>
+          <input type="file" id="forum-img-input" accept="image/*" multiple style="display:none" onchange="forumHandleMedia(event,'image')">
+          <input type="file" id="forum-vid-input" accept="video/*" multiple style="display:none" onchange="forumHandleMedia(event,'video')">
+          <div class="forum-media-preview" id="forum-media-preview"></div>
+        </div>
       </div>
       <div class="forum-modal-ft">
         <button class="forum-modal-cancel" onclick="forumCloseCreate()">Hủy</button>
@@ -1173,9 +1212,15 @@
     var CAT_COLORS = { question: '#3B82F6', share: '#10B981', discuss: '#8B5CF6' };
     var CAT_BG     = { question: '#EFF6FF', share: '#ECFDF5', discuss: '#F5F3FF' };
 
+    var REACT_EMOJIS  = { like:'👍', love:'❤️', haha:'😂', wow:'😮', sad:'😢', angry:'😡' };
+    var REACT_LABELS  = { like:'Thích', love:'Yêu thích', haha:'Haha', wow:'Wow', sad:'Buồn', angry:'Phẫn nộ' };
+
+    var _forumMediaFiles = [];
+
     var _currentCat  = 'all';
     var _currentSort = 'newest';
     var _selectedCat = 'question';
+    var _cmtSortMap  = {};
 
     var MOCK_POSTS = [
       {
@@ -1183,35 +1228,67 @@
         title: 'Làm thế nào để hiểu rõ về con trỏ trong C/C++?',
         body: 'Mình đang học C++ nhưng phần con trỏ khá khó hiểu, đặc biệt là con trỏ đôi (double pointer). Mọi người có thể giải thích hoặc gợi ý tài liệu dễ hiểu không?',
         author: 'Trần Minh Tuấn', avatar: '🧑‍💻',
-        time: Date.now() - 2 * 3600 * 1000, likes: 14, liked: false, comments: 5,
+        time: Date.now() - 2 * 3600 * 1000,
+        reactions: { like: 10, love: 2, haha: 0, wow: 2, sad: 0, angry: 0 }, myReaction: null,
+        comments: 3,
+        commentList: [
+          { id: 'c1a', author: 'Nguyễn Văn An', avatar: '👨‍💻', time: Date.now() - 100*60*1000, text: 'Con trỏ đôi về bản chất là một con trỏ trỏ tới một con trỏ khác. Bạn thử hình dung bộ nhớ như một dãy ô, mỗi ô có địa chỉ riêng — con trỏ chỉ là biến lưu địa chỉ đó thôi!', reactions:{like:4,love:1,haha:0,wow:0,sad:0,angry:0}, myReaction:null, replies:[{id:'r1a',author:'Trần Minh Tuấn',avatar:'🧑‍💻',time:Date.now()-85*60*1000,text:'Cảm ơn bạn! Cách so sánh với dãy ô bộ nhớ dễ hình dung lắm, mình hiểu ngay rồi!',replyTo:'Nguyễn Văn An'}] },
+          { id: 'c1b', author: 'Lê Thị Hoa', avatar: '👩‍🏫', time: Date.now() - 60*60*1000, text: 'Mình học từ sách "C Programming Language" của Kernighan & Ritchie, phần con trỏ giải thích rất trực quan. Bạn nên thử debug từng bước để thấy giá trị thay đổi.', reactions:{like:2,love:0,haha:0,wow:1,sad:0,angry:0}, myReaction:null, replies:[] },
+          { id: 'c1c', author: 'Phạm Đức Huy', avatar: '🧑‍🎓', time: Date.now() - 20*60*1000, text: 'Series C++ của The Cherno trên YouTube giải thích con trỏ bằng hình ảnh rất dễ hiểu. Mình đã học từ đó và hiểu ngay sau 2 video!', reactions:{like:6,love:2,haha:0,wow:0,sad:0,angry:0}, myReaction:null, replies:[] },
+        ],
       },
       {
         id: 'm2', cat: 'share',
         title: 'Tổng hợp 10 extension VSCode hữu ích nhất cho lập trình viên Python',
         body: 'Sau một thời gian dùng VSCode để code Python, mình tổng hợp lại các extension mình thấy thực sự hữu ích. Hi vọng giúp ích cho mọi người: Pylance, Black Formatter, Python Debugger...',
         author: 'Nguyễn Hà Linh', avatar: '👩‍💻',
-        time: Date.now() - 5 * 3600 * 1000, likes: 32, liked: false, comments: 8,
+        time: Date.now() - 5 * 3600 * 1000,
+        reactions: { like: 25, love: 7, haha: 0, wow: 0, sad: 0, angry: 0 }, myReaction: null,
+        comments: 2,
+        commentList: [
+          { id: 'c2a', author: 'Trần Bình', avatar: '🧑‍💻', time: Date.now() - 3*3600*1000, text: 'Mình thêm GitLens vào danh sách nhé, siêu hữu ích khi làm việc nhóm, xem ai commit gì ngay trong editor.' },
+          { id: 'c2b', author: 'Mai Anh', avatar: '👩‍🎓', time: Date.now() - 1*3600*1000, text: 'Docker extension cũng rất tiện nếu bạn hay dùng container. Quản lý image và container ngay trong VSCode luôn.' },
+        ],
       },
       {
         id: 'm3', cat: 'discuss',
         title: 'Nên học Java hay Python trước khi học Machine Learning?',
         body: 'Mình đang phân vân giữa Java và Python để bắt đầu. Mình nghe nói Python phổ biến hơn trong ML, nhưng Java lại mạnh hơn về OOP. Mọi người nghĩ sao?',
         author: 'Lê Văn Đức', avatar: '🧑‍🎓',
-        time: Date.now() - 24 * 3600 * 1000, likes: 21, liked: false, comments: 12,
+        time: Date.now() - 24 * 3600 * 1000,
+        reactions: { like: 14, love: 3, haha: 1, wow: 3, sad: 0, angry: 0 }, myReaction: null,
+        comments: 3,
+        commentList: [
+          { id: 'c3a', author: 'Hoàng Nam', avatar: '👨‍💻', time: Date.now() - 20*3600*1000, text: 'Python chắc chắn rồi! Hầu hết thư viện ML như TensorFlow, PyTorch, scikit-learn đều Python-first. Java không có hệ sinh thái ML mạnh như vậy.' },
+          { id: 'c3b', author: 'Thu Hương', avatar: '👩‍💻', time: Date.now() - 15*3600*1000, text: 'Mình cũng từng phân vân như bạn, cuối cùng chọn Python và không hối hận. NumPy + Pandas là bộ đôi không thể thiếu, học Python để dùng được 2 thư viện này.' },
+          { id: 'c3c', author: 'Việt Anh', avatar: '🧑', time: Date.now() - 5*3600*1000, text: 'Java mạnh về enterprise và Android, nhưng cho ML thì Python win tuyệt đối. Bắt đầu Python đi bạn, 2-3 tháng là dùng được thư viện cơ bản rồi.' },
+        ],
       },
       {
         id: 'm4', cat: 'share',
         title: 'Mình đã hoàn thành khóa học HTML/CSS sau 3 tuần — Chia sẻ kinh nghiệm',
         body: 'Sau 3 tuần học chăm chỉ, mình đã hoàn thành khóa HTML/CSS. Bí quyết của mình là học mỗi ngày ít nhất 1 tiếng và làm project nhỏ ngay sau khi học xong mỗi phần.',
         author: 'Phạm Thị Mai', avatar: '👩‍🎓',
-        time: Date.now() - 2 * 24 * 3600 * 1000, likes: 47, liked: false, comments: 15,
+        time: Date.now() - 2 * 24 * 3600 * 1000,
+        reactions: { like: 30, love: 12, haha: 0, wow: 5, sad: 0, angry: 0 }, myReaction: null,
+        comments: 2,
+        commentList: [
+          { id: 'c4a', author: 'Minh Khoa', avatar: '🧑‍💻', time: Date.now() - 40*3600*1000, text: 'Chúc mừng bạn! 3 tuần là rất nhanh đó. Bước tiếp theo bạn định học JavaScript hay framework nào không?' },
+          { id: 'c4b', author: 'Ngọc Linh', avatar: '👩‍🎓', time: Date.now() - 30*3600*1000, text: 'Làm project nhỏ sau mỗi bài là cách hay nhất để nhớ kiến thức lâu dài. Mình cũng áp dụng phương pháp này và tiến bộ rất nhanh!' },
+        ],
       },
       {
         id: 'm5', cat: 'question',
         title: 'Git merge vs Git rebase — khi nào nên dùng cái nào?',
         body: 'Mình hay bị nhầm lẫn giữa merge và rebase. Anh/chị nào có thể giải thích sự khác biệt và khi nào thì nên dùng từng loại không ạ?',
         author: 'Hoàng Quốc Bảo', avatar: '🧑',
-        time: Date.now() - 3 * 24 * 3600 * 1000, likes: 9, liked: false, comments: 6,
+        time: Date.now() - 3 * 24 * 3600 * 1000,
+        reactions: { like: 7, love: 1, haha: 0, wow: 1, sad: 0, angry: 0 }, myReaction: null,
+        comments: 2,
+        commentList: [
+          { id: 'c5a', author: 'Đức Thịnh', avatar: '👨‍💻', time: Date.now() - 60*3600*1000, text: 'Merge giữ lại lịch sử đầy đủ, thích hợp cho feature branch lớn. Rebase tạo lịch sử linear sạch hơn, hay dùng trước khi merge vào main để commit gọn gàng.' },
+          { id: 'c5b', author: 'Khánh An', avatar: '👩‍💻', time: Date.now() - 48*3600*1000, text: 'Rule of thumb: không rebase nhánh public đã push lên remote vì sẽ thay đổi lịch sử ảnh hưởng người khác. Chỉ rebase nhánh local của mình thôi nhé!' },
+        ],
       },
     ];
 
@@ -1238,7 +1315,8 @@
       if (q) posts = posts.filter(function(p){
         return p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q);
       });
-      if (_currentSort === 'likes') posts.sort(function(a,b){ return b.likes - a.likes; });
+      if (_currentSort === 'likes')   posts.sort(function(a,b){ return b.likes - a.likes; });
+      else if (_currentSort === 'oldest') posts.sort(function(a,b){ return a.time - b.time; });
       else posts.sort(function(a,b){ return b.time - a.time; });
       return posts;
     }
@@ -1269,8 +1347,39 @@
         var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
         var catLabel = CAT_LABELS[p.cat] || p.cat;
         var excerpt  = p.body.length > 160 ? p.body.slice(0, 157) + '...' : p.body;
-        var likedCls = p.liked ? 'liked' : '';
-        var likedIcon = p.liked ? '❤️' : '🤍';
+
+        // Reactions
+        var reactions   = p.reactions || { like: p.likes || 0 };
+        var myReaction  = p.myReaction || null;
+        var totalR      = Object.values(reactions).reduce(function(a,b){return a+b;},0);
+        var reactEmoji  = myReaction ? REACT_EMOJIS[myReaction] : '👍';
+        var reactLabel  = myReaction ? REACT_LABELS[myReaction] : 'Thích';
+        var reactClass  = myReaction ? ('reacted-' + myReaction) : '';
+
+        // Top reactions summary (show top 3 emojis that have counts > 0)
+        var reactSummary = Object.keys(reactions)
+          .filter(function(k){ return reactions[k] > 0; })
+          .sort(function(a,b){ return reactions[b]-reactions[a]; })
+          .slice(0,3)
+          .map(function(k){ return REACT_EMOJIS[k]; })
+          .join('');
+
+        // Reaction picker items
+        var pickerItems = Object.keys(REACT_EMOJIS).map(function(k) {
+          return '<span class="reaction-item" onclick="forumSetReaction(\'' + p.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
+        }).join('');
+
+        // Media thumbnails (if any)
+        var mediaPart = '';
+        if (p.media && p.media.length) {
+          mediaPart = '<div class="fpc-media-row">' + p.media.map(function(m) {
+            if (m.type === 'video') {
+              return '<video src="' + m.url + '" class="fpc-media-item" controls muted></video>';
+            }
+            return '<img src="' + m.url + '" class="fpc-media-item" alt="ảnh" />';
+          }).join('') + '</div>';
+        }
+
         return (
           '<div class="forum-post-card" id="fpc-' + p.id + '">' +
             '<div class="fpc-top">' +
@@ -1283,11 +1392,39 @@
             '</div>' +
             '<div class="fpc-title">' + escHtml(p.title) + '</div>' +
             '<div class="fpc-excerpt">' + escHtml(excerpt) + '</div>' +
+            mediaPart +
             '<div class="fpc-actions">' +
-              '<button class="fpc-like-btn ' + likedCls + '" onclick="forumToggleLike(\'' + p.id + '\')" title="Thích">' +
-                likedIcon + ' <span class="fpc-like-count">' + p.likes + '</span>' +
+              '<div class="fpc-react-wrap">' +
+                '<button class="fpc-react-btn ' + reactClass + '" onclick="forumSetReaction(\'' + p.id + '\',\'' + (myReaction || 'like') + '\')">' +
+                  reactEmoji + ' <span>' + reactLabel + '</span>' +
+                  (totalR > 0 ? ' <span style="opacity:.55;font-weight:400">· ' + totalR + '</span>' : '') +
+                '</button>' +
+                '<div class="reaction-picker">' + pickerItems + '</div>' +
+              '</div>' +
+              (reactSummary && totalR > 0 ? '<span class="fpc-react-summary">' + reactSummary + ' ' + totalR + '</span>' : '') +
+              '<button class="fpc-comment-btn" id="fpc-cmtbtn-' + p.id + '" onclick="forumToggleComments(\'' + p.id + '\')">' +
+                '💬 ' + p.comments + ' bình luận' +
               '</button>' +
-              '<span class="fpc-comment-count">💬 ' + p.comments + ' bình luận</span>' +
+            '</div>' +
+            '<div class="fpc-comments" id="fpc-cmt-' + p.id + '">' +
+              '<div class="fpc-cmt-sort-bar">' +
+                '<span class="fpc-cmt-sort-label">Bình luận</span>' +
+                '<div class="fpc-cmt-sort-btns">' +
+                  '<button class="fpc-cmt-sort-btn active" id="fpc-csort-newest-' + p.id + '" onclick="forumSetCmtSort(\'' + p.id + '\',\'newest\')">↓ Mới nhất</button>' +
+                  '<button class="fpc-cmt-sort-btn" id="fpc-csort-oldest-' + p.id + '" onclick="forumSetCmtSort(\'' + p.id + '\',\'oldest\')">↑ Cũ nhất</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="fpc-cmt-list" id="fpc-cmt-list-' + p.id + '"></div>' +
+              '<div class="fpc-cmt-input-row">' +
+                '<div class="fpc-cmt-avatar-col">' +
+                  '<div class="fpc-cmt-avatar fpc-cmt-me">🧑</div>' +
+                '</div>' +
+                '<div class="fpc-cmt-compose">' +
+                  '<input class="fpc-cmt-input" id="fpc-cmt-inp-' + p.id + '" placeholder="Viết bình luận..." ' +
+                    'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();forumAddComment(\'' + p.id + '\');}" />' +
+                  '<button class="fpc-cmt-send" onclick="forumAddComment(\'' + p.id + '\')" title="Gửi (Enter)">↑</button>' +
+                '</div>' +
+              '</div>' +
             '</div>' +
           '</div>'
         );
@@ -1311,18 +1448,32 @@
     };
 
     window.forumToggleLike = function(postId) {
+      forumSetReaction(postId, 'like');
+    };
+
+    window.forumSetReaction = function(postId, key) {
+      function applyReaction(post) {
+        if (!post.reactions) {
+          post.reactions = { like: post.likes || 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+          post.likes = 0;
+        }
+        var prev = post.myReaction || null;
+        if (prev === key) {
+          post.myReaction = null;
+          if (post.reactions[key] > 0) post.reactions[key]--;
+        } else {
+          if (prev && post.reactions[prev] > 0) post.reactions[prev]--;
+          post.myReaction = key;
+          post.reactions[key] = (post.reactions[key] || 0) + 1;
+        }
+      }
       var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
       if (mockIdx !== -1) {
-        MOCK_POSTS[mockIdx].liked = !MOCK_POSTS[mockIdx].liked;
-        MOCK_POSTS[mockIdx].likes += MOCK_POSTS[mockIdx].liked ? 1 : -1;
+        applyReaction(MOCK_POSTS[mockIdx]);
       } else {
         var userPosts = loadPosts();
         var uIdx = userPosts.findIndex(function(p){ return p.id === postId; });
-        if (uIdx !== -1) {
-          userPosts[uIdx].liked = !userPosts[uIdx].liked;
-          userPosts[uIdx].likes += userPosts[uIdx].liked ? 1 : -1;
-          savePosts(userPosts);
-        }
+        if (uIdx !== -1) { applyReaction(userPosts[uIdx]); savePosts(userPosts); }
       }
       renderPosts();
     };
@@ -1330,6 +1481,53 @@
     window.forumOpenCreate = function() {
       document.getElementById('forumCreateModal').classList.add('active');
       document.body.style.overflow = 'hidden';
+    };
+
+    window.forumOpenCreateWithMedia = function() {
+      forumOpenCreate();
+      setTimeout(function() {
+        document.getElementById('forum-img-input').click();
+      }, 300);
+    };
+
+    window.forumOpenCreateCat = function(cat) {
+      forumOpenCreate();
+      setTimeout(function() {
+        document.querySelectorAll('.forum-cat-pick').forEach(function(b){
+          b.classList.toggle('active', b.dataset.val === cat);
+        });
+        _selectedCat = cat;
+      }, 50);
+    };
+
+    window.forumHandleMedia = function(e, type) {
+      var files = Array.from(e.target.files);
+      files.forEach(function(file) {
+        var url = URL.createObjectURL(file);
+        _forumMediaFiles.push({ type: type, url: url, name: file.name });
+      });
+      renderMediaPreview();
+      e.target.value = '';
+    };
+
+    function renderMediaPreview() {
+      var container = document.getElementById('forum-media-preview');
+      if (!container) return;
+      container.innerHTML = _forumMediaFiles.map(function(m, i) {
+        var thumb = m.type === 'video'
+          ? '<video src="' + m.url + '" muted></video>'
+          : '<img src="' + m.url + '" alt="' + m.name + '" />';
+        return '<div class="forum-media-thumb">' +
+          thumb +
+          '<button class="forum-thumb-remove" onclick="forumRemoveMedia(' + i + ')" title="Xóa">✕</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    window.forumRemoveMedia = function(idx) {
+      URL.revokeObjectURL(_forumMediaFiles[idx].url);
+      _forumMediaFiles.splice(idx, 1);
+      renderMediaPreview();
     };
 
     window.forumCloseCreate = function() {
@@ -1343,6 +1541,10 @@
       document.querySelectorAll('.forum-cat-pick').forEach(function(b){
         b.classList.toggle('active', b.dataset.val === 'question');
       });
+      // Clear media
+      _forumMediaFiles.forEach(function(m){ URL.revokeObjectURL(m.url); });
+      _forumMediaFiles = [];
+      renderMediaPreview();
     };
 
     window.forumOverlayClick = function(e) {
@@ -1371,9 +1573,10 @@
         author: userName,
         avatar: '🙋',
         time: Date.now(),
-        likes: 0,
-        liked: false,
+        reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
+        myReaction: null,
         comments: 0,
+        media: _forumMediaFiles.slice(),
       };
       userPosts.unshift(newPost);
       savePosts(userPosts);
@@ -1392,6 +1595,289 @@
     document.getElementById('forum-input-body').addEventListener('input', function() {
       document.getElementById('forum-body-count').textContent = this.value.length + ' / 2000';
     });
+
+    window.forumToggleComments = function(postId) {
+      var section = document.getElementById('fpc-cmt-' + postId);
+      var btn = document.getElementById('fpc-cmtbtn-' + postId);
+      if (!section) return;
+      var isOpen = section.classList.toggle('open');
+      if (btn) btn.classList.toggle('active', isOpen);
+      if (isOpen) {
+        forumRenderComments(postId);
+        setTimeout(function() {
+          var inp = document.getElementById('fpc-cmt-inp-' + postId);
+          if (inp) inp.focus();
+        }, 80);
+      }
+    };
+
+    window.forumRenderComments = function(postId) {
+      var list = document.getElementById('fpc-cmt-list-' + postId);
+      if (!list) return;
+      var post = MOCK_POSTS.find(function(p){ return p.id === postId; });
+      if (!post) post = loadPosts().find(function(p){ return p.id === postId; });
+      var cmts = (post && post.commentList) ? post.commentList.slice() : [];
+      var sortDir = _cmtSortMap[postId] || 'newest';
+      cmts.sort(function(a, b){ return sortDir === 'oldest' ? a.time - b.time : b.time - a.time; });
+      if (!cmts.length) {
+        list.innerHTML = '<p class="fpc-cmt-empty">Chưa có bình luận nào. Hãy là người đầu tiên! 👋</p>';
+        return;
+      }
+      list.innerHTML = cmts.map(function(c, i) {
+        var isLast = (i === cmts.length - 1);
+        var reactions  = c.reactions  || {};
+        var myReaction = c.myReaction || null;
+        var totalR = Object.values(reactions).reduce(function(a,b){ return a+b; }, 0);
+        var reactEmoji = myReaction ? REACT_EMOJIS[myReaction] : '👍';
+        var reactLabel = myReaction ? REACT_LABELS[myReaction] : 'Thích';
+        var reactCls   = myReaction ? 'cmt-reacted-' + myReaction : '';
+        var replies    = c.replies || [];
+
+        var pickerHtml = Object.keys(REACT_EMOJIS).map(function(k) {
+          return '<span class="fpc-cmt-react-item" onclick="forumSetCmtReaction(\'' + postId + '\',\'' + c.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
+        }).join('');
+
+        var reactSummaryHtml = '';
+        if (totalR > 0) {
+          var topEmojis = Object.keys(reactions)
+            .filter(function(k){ return reactions[k] > 0; })
+            .sort(function(a,b){ return reactions[b]-reactions[a]; })
+            .slice(0,2).map(function(k){ return REACT_EMOJIS[k]; }).join('');
+          reactSummaryHtml = '<span class="fpc-cmt-react-summary">' + topEmojis + ' ' + totalR + '</span>';
+        }
+
+        var repliesHtml = replies.map(function(r) {
+          var rReactions  = r.reactions  || {};
+          var rMyReaction = r.myReaction || null;
+          var rTotalR = Object.values(rReactions).reduce(function(a,b){ return a+b; }, 0);
+          var rReactEmoji = rMyReaction ? REACT_EMOJIS[rMyReaction] : '👍';
+          var rReactLabel = rMyReaction ? REACT_LABELS[rMyReaction] : 'Thích';
+          var rReactCls   = rMyReaction ? 'cmt-reacted-' + rMyReaction : '';
+          var rPickerHtml = Object.keys(REACT_EMOJIS).map(function(k) {
+            return '<span class="fpc-cmt-react-item" onclick="forumSetReplyReaction(\'' + postId + '\',\'' + c.id + '\',\'' + r.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
+          }).join('');
+          var rSummaryHtml = '';
+          if (rTotalR > 0) {
+            var rTopEmojis = Object.keys(rReactions)
+              .filter(function(k){ return rReactions[k] > 0; })
+              .sort(function(a,b){ return rReactions[b]-rReactions[a]; })
+              .slice(0,2).map(function(k){ return REACT_EMOJIS[k]; }).join('');
+            rSummaryHtml = '<span class="fpc-cmt-react-summary">' + rTopEmojis + ' ' + rTotalR + '</span>';
+          }
+          return (
+            '<div class="fpc-reply-item">' +
+              '<div class="fpc-reply-avatar">' + (r.avatar || '🧑') + '</div>' +
+              '<div class="fpc-reply-body">' +
+                '<div class="fpc-cmt-bubble">' +
+                  '<span class="fpc-cmt-author">' + escHtml(r.author) + '</span>' +
+                  (r.replyTo ? '<span class="fpc-reply-to"> @' + escHtml(r.replyTo) + '</span> ' : '') +
+                  '<p class="fpc-cmt-text">' + escHtml(r.text) + '</p>' +
+                '</div>' +
+                '<div class="fpc-cmt-actions">' +
+                  '<span class="fpc-cmt-time-inline">' + timeAgo(r.time) + '</span>' +
+                  '<div class="fpc-cmt-react-wrap">' +
+                    '<button class="fpc-cmt-act-btn fpc-cmt-like-btn ' + rReactCls + '" onclick="forumSetReplyReaction(\'' + postId + '\',\'' + c.id + '\',\'' + r.id + '\',\'' + (rMyReaction || 'like') + '\')">' +
+                      rReactEmoji + ' ' + rReactLabel +
+                    '</button>' +
+                    '<div class="fpc-cmt-reaction-picker">' + rPickerHtml + '</div>' +
+                  '</div>' +
+                  rSummaryHtml +
+                  '<button class="fpc-cmt-act-btn fpc-cmt-reply-btn" onclick="forumToggleReply(\'' + postId + '\',\'' + c.id + '\',\'' + escHtml(r.author) + '\')">Trả lời</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+        return (
+          '<div class="fpc-cmt-item" id="fpc-ci-' + postId + '-' + c.id + '">' +
+            '<div class="fpc-cmt-avatar-col">' +
+              '<div class="fpc-cmt-avatar">' + (c.avatar || '🧑') + '</div>' +
+              '<div class="fpc-cmt-vline"></div>' +
+            '</div>' +
+            '<div class="fpc-cmt-body">' +
+              '<div class="fpc-cmt-bubble">' +
+                '<span class="fpc-cmt-author">' + escHtml(c.author) + '</span>' +
+                '<p class="fpc-cmt-text">' + escHtml(c.text) + '</p>' +
+              '</div>' +
+              '<div class="fpc-cmt-actions">' +
+                '<span class="fpc-cmt-time-inline">' + timeAgo(c.time) + '</span>' +
+                '<div class="fpc-cmt-react-wrap">' +
+                  '<button class="fpc-cmt-act-btn fpc-cmt-like-btn ' + reactCls + '" onclick="forumSetCmtReaction(\'' + postId + '\',\'' + c.id + '\',\'' + (myReaction || 'like') + '\')">' +
+                    reactEmoji + ' ' + reactLabel +
+                  '</button>' +
+                  '<div class="fpc-cmt-reaction-picker">' + pickerHtml + '</div>' +
+                '</div>' +
+                reactSummaryHtml +
+                '<button class="fpc-cmt-act-btn fpc-cmt-reply-btn" onclick="forumToggleReply(\'' + postId + '\',\'' + c.id + '\',\'' + escHtml(c.author) + '\')">Trả lời</button>' +
+              '</div>' +
+              (repliesHtml ? '<div class="fpc-replies-list">' + repliesHtml + '</div>' : '') +
+              '<div class="fpc-reply-input-row" id="fpc-reply-row-' + postId + '-' + c.id + '" style="display:none">' +
+                '<div class="fpc-reply-avatar">🧑</div>' +
+                '<div class="fpc-cmt-compose">' +
+                  '<input class="fpc-cmt-input" id="fpc-reply-inp-' + postId + '-' + c.id + '" placeholder="Trả lời ' + escHtml(c.author) + '..." ' +
+                    'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();forumAddReply(\'' + postId + '\',\'' + c.id + '\');}" />' +
+                  '<button class="fpc-cmt-send" onclick="forumAddReply(\'' + postId + '\',\'' + c.id + '\')" title="Gửi">↑</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    };
+
+    window.forumAddComment = function(postId) {
+      var inp = document.getElementById('fpc-cmt-inp-' + postId);
+      if (!inp) return;
+      var text = inp.value.trim();
+      if (!text) return;
+      var nameEl = document.getElementById('chip-name');
+      var comment = {
+        id: 'c' + Date.now(),
+        author: (nameEl && nameEl.textContent.trim() && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn',
+        avatar: '🧑',
+        time: Date.now(),
+        text: text,
+      };
+      var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+      if (mockIdx !== -1) {
+        if (!MOCK_POSTS[mockIdx].commentList) MOCK_POSTS[mockIdx].commentList = [];
+        MOCK_POSTS[mockIdx].commentList.push(comment);
+        MOCK_POSTS[mockIdx].comments = MOCK_POSTS[mockIdx].commentList.length;
+      } else {
+        var posts = loadPosts();
+        var uIdx = posts.findIndex(function(p){ return p.id === postId; });
+        if (uIdx !== -1) {
+          if (!posts[uIdx].commentList) posts[uIdx].commentList = [];
+          posts[uIdx].commentList.push(comment);
+          posts[uIdx].comments = posts[uIdx].commentList.length;
+          savePosts(posts);
+        }
+      }
+      inp.value = '';
+      forumRenderComments(postId);
+      var btn = document.getElementById('fpc-cmtbtn-' + postId);
+      if (btn) {
+        var count = mockIdx !== -1 ? MOCK_POSTS[mockIdx].comments :
+          (loadPosts().find(function(p){ return p.id === postId; }) || {}).comments || 0;
+        btn.textContent = '💬 ' + count + ' bình luận';
+      }
+      var listEl = document.getElementById('fpc-cmt-list-' + postId);
+      if (listEl && listEl.lastElementChild)
+        listEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    window.forumSetCmtSort = function(postId, dir) {
+      _cmtSortMap[postId] = dir;
+      ['newest','oldest'].forEach(function(d) {
+        var btn = document.getElementById('fpc-csort-' + d + '-' + postId);
+        if (btn) btn.classList.toggle('active', d === dir);
+      });
+      forumRenderComments(postId);
+    };
+
+    window.forumSetCmtReaction = function(postId, cmtId, key) {
+      function apply(post) {
+        var cmt = (post.commentList || []).find(function(c){ return c.id === cmtId; });
+        if (!cmt) return;
+        if (!cmt.reactions) cmt.reactions = { like:0, love:0, haha:0, wow:0, sad:0, angry:0 };
+        var prev = cmt.myReaction || null;
+        if (prev === key) {
+          cmt.myReaction = null;
+          if (cmt.reactions[key] > 0) cmt.reactions[key]--;
+        } else {
+          if (prev && cmt.reactions[prev] > 0) cmt.reactions[prev]--;
+          cmt.myReaction = key;
+          cmt.reactions[key] = (cmt.reactions[key] || 0) + 1;
+        }
+      }
+      var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+      if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
+      else {
+        var posts = loadPosts();
+        var uIdx = posts.findIndex(function(p){ return p.id === postId; });
+        if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
+      }
+      forumRenderComments(postId);
+    };
+
+    window.forumSetReplyReaction = function(postId, cmtId, replyId, key) {
+      function apply(post) {
+        var cmt = (post.commentList || []).find(function(c){ return c.id === cmtId; });
+        if (!cmt) return;
+        var reply = (cmt.replies || []).find(function(r){ return r.id === replyId; });
+        if (!reply) return;
+        if (!reply.reactions) reply.reactions = { like:0, love:0, haha:0, wow:0, sad:0, angry:0 };
+        var prev = reply.myReaction || null;
+        if (prev === key) {
+          reply.myReaction = null;
+          if (reply.reactions[key] > 0) reply.reactions[key]--;
+        } else {
+          if (prev && reply.reactions[prev] > 0) reply.reactions[prev]--;
+          reply.myReaction = key;
+          reply.reactions[key] = (reply.reactions[key] || 0) + 1;
+        }
+      }
+      var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+      if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
+      else {
+        var posts = loadPosts();
+        var uIdx = posts.findIndex(function(p){ return p.id === postId; });
+        if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
+      }
+      forumRenderComments(postId);
+    };
+
+    window.forumToggleReply = function(postId, cmtId, mentionName) {
+      var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
+      if (!row) return;
+      var inp = document.getElementById('fpc-reply-inp-' + postId + '-' + cmtId);
+      var alreadyOpen = row.style.display !== 'none';
+      // Nếu đang mở và mention trùng → đóng lại
+      var prevMention = row.dataset.mention || '';
+      if (alreadyOpen && prevMention === mentionName) {
+        row.style.display = 'none';
+        row.dataset.mention = '';
+        return;
+      }
+      row.style.display = 'flex';
+      row.dataset.mention = mentionName;
+      if (inp) {
+        inp.placeholder = 'Trả lời ' + mentionName + '...';
+        // Giữ nội dung đang gõ nếu chỉ đổi mention
+        setTimeout(function(){ inp.focus(); }, 30);
+      }
+    };
+
+    window.forumAddReply = function(postId, cmtId) {
+      var inp = document.getElementById('fpc-reply-inp-' + postId + '-' + cmtId);
+      if (!inp) return;
+      var text = inp.value.trim();
+      if (!text) return;
+      var nameEl = document.getElementById('chip-name');
+      var myName = (nameEl && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn';
+      var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
+      var replyTo = (row && row.dataset.mention) || '';
+      function apply(post) {
+        var cmt = (post.commentList || []).find(function(c){ return c.id === cmtId; });
+        if (!cmt) return;
+        if (!cmt.replies) cmt.replies = [];
+        cmt.replies.push({ id:'r'+Date.now(), author:myName, avatar:'🧑', time:Date.now(), text:text, replyTo: replyTo || cmt.author });
+      }
+      var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+      if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
+      else {
+        var posts = loadPosts();
+        var uIdx = posts.findIndex(function(p){ return p.id === postId; });
+        if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
+      }
+      inp.value = '';
+      forumRenderComments(postId);
+      setTimeout(function(){
+        var item = document.getElementById('fpc-ci-' + postId + '-' + cmtId);
+        if (item) item.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      }, 50);
+    };
 
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && document.getElementById('forumCreateModal').classList.contains('active'))
