@@ -26,27 +26,33 @@ def parse_time_spent(value) -> float:
 @stats_bp.route('/api/stats', methods=['GET'])
 @api_login_required
 def get_stats():
-    uid   = current_user_id()
-    conn  = get_db()
-    user  = conn.execute('SELECT streak, certificates, last_study_date FROM users WHERE id=%s', (uid,)).fetchone()
-    count = conn.execute(
-        'SELECT COUNT(*) AS n FROM enrollments WHERE user_id=%s', (uid,)
-    ).fetchone()['n']
-    rows  = conn.execute(
+    uid  = current_user_id()
+    conn = get_db()
+    # Query 1: gộp user info + enrollment count vào 1 JOIN (giảm 1 round-trip)
+    summary = conn.execute('''
+        SELECT u.streak, u.certificates, u.last_study_date,
+               COUNT(e.course_id) AS enrolled_count
+        FROM users u
+        LEFT JOIN enrollments e ON e.user_id = u.id
+        WHERE u.id = %s
+        GROUP BY u.id, u.streak, u.certificates, u.last_study_date
+    ''', (uid,)).fetchone()
+    # Query 2: lấy progress + time_spent để tính avg và tổng giờ
+    rows = conn.execute(
         'SELECT progress, time_spent FROM enrollments WHERE user_id=%s', (uid,)
     ).fetchall()
     conn.close()
-    avg_progress = round(sum(r['progress'] for r in rows) / len(rows)) if rows else 0
-    total_hours  = sum(parse_time_spent(r.get('time_spent')) for r in rows)
-    last_date = user['last_study_date']
+    avg_progress  = round(sum(r['progress'] for r in rows) / len(rows)) if rows else 0
+    total_hours   = sum(parse_time_spent(r.get('time_spent')) for r in rows)
+    last_date     = summary['last_study_date']
     streak_active = (last_date == date.today()) if last_date else False
     return jsonify({
-        'enrolledCount':  count,
-        'avgProgress':    avg_progress,
-        'totalHours':     str(round(total_hours, 1)) + 'h',
-        'streakDays':     user['streak'],
-        'streakActive':   streak_active,
-        'certificates':   user['certificates']
+        'enrolledCount': summary['enrolled_count'],
+        'avgProgress':   avg_progress,
+        'totalHours':    str(round(total_hours, 1)) + 'h',
+        'streakDays':    summary['streak'],
+        'streakActive':  streak_active,
+        'certificates':  summary['certificates']
     })
 
 # # Đáp án đúng cho từng khóa học — đã được chuyển vào bảng missions (DB)

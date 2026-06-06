@@ -182,6 +182,12 @@ def init_db():
             tag          TEXT
         )''')
 
+        c.execute('CREATE EXTENSION IF NOT EXISTS pg_trgm')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_courses_level ON courses(level)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_courses_title_trgm ON courses USING gin(title gin_trgm_ops)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_courses_tag_trgm ON courses USING gin(tag gin_trgm_ops)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_courses_subtitle_trgm ON courses USING gin(subtitle gin_trgm_ops)')
+
         c.execute('''CREATE TABLE IF NOT EXISTS enrollments (
             user_id           INTEGER,
             course_id         TEXT,
@@ -192,6 +198,9 @@ def init_db():
             next_lesson       TEXT    DEFAULT '',
             PRIMARY KEY (user_id, course_id)
         )''')
+
+        c.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_user_id ON enrollments(user_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_course_id ON enrollments(course_id)')
 
         c.execute('''CREATE TABLE IF NOT EXISTS missions (
             id                SERIAL PRIMARY KEY,

@@ -9,7 +9,7 @@ from extensions import limiter
 from models import init_db
 from routes import register_blueprints
 from routes.auth import auth_bp
-# from utils.logging import init_request_id, log_5xx, setup_logging
+from utils.logging import init_request_id, log_5xx, setup_logging
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -36,7 +36,7 @@ csrf.exempt(auth_bp)
 init_db()
 
 # ── Logger dùng trong module này ───────────────────────────────────────────
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
