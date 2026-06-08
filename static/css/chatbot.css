@@ -108,7 +108,7 @@
 /* Header */
 .chatbot-header {
     padding: 16px;
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #4A9EE0, #E84545);
     color: white;
     border-radius: 16px 16px 0 0;
     display: flex;
@@ -180,7 +180,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    background: #f8fafc;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -233,7 +233,7 @@
 .chatbot-message-avatar {
     width: 28px;
     height: 28px;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    background: linear-gradient(135deg, #4A9EE0, #E84545);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -244,8 +244,8 @@
 }
 
 .chatbot-message-user .chatbot-message-avatar {
-    background: #e0e7ff;
-    color: #4f46e5;
+    background: linear-gradient(135deg, #4A9EE0, #E84545);
+    color: white; 
 }
 
 .chatbot-message-content {
@@ -264,7 +264,7 @@
 }
 
 .chatbot-message-user .chatbot-message-bubble {
-    background: #2563eb;
+    background: linear-gradient(135deg, #4A9EE0, #E84545);
     color: white;
     border: none;
 }
@@ -379,7 +379,7 @@
 /* Input Area */
 .chatbot-input-area {
     padding: 12px 16px;
-    background: white;
+    background: rgba(238, 238, 243, 0.849);
     border-top: 1px solid #e2e8f0;
 }
 
@@ -436,8 +436,8 @@
 
 .chatbot-input-box:focus-within {
     background: white;
-    box-shadow: 0 0 0 2px #2563eb;
-    border: 1px solid #2563eb;
+    box-shadow: 0 0 0 2px #4A9EE0;
+    border: 1px solid #4A9EE0;
     padding: 8px 12px;
 }
 
@@ -476,7 +476,7 @@
 .chatbot-send-btn {
     width: 32px;
     height: 32px;
-    background: #2563eb;
+    background: linear-gradient(135deg, #4A9EE0, #E84545);
     border: none;
     border-radius: 50%;
     color: white;
@@ -512,46 +512,70 @@
     }
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .chatbot-window {
-        background: #1e293b;
-    }
-
-    .chatbot-messages {
-        background: #0f172a;
-    }
-
-    .chatbot-message-bubble {
-        background: #334155;
-        color: #f1f5f9;
-        border-color: #475569;
-    }
-
-    .chatbot-input-box {
-        background: #334155;
-    }
-
-    .chatbot-input-box:focus-within {
-        background: #334155;
-    }
-
-    .chatbot-input {
-        color: #f1f5f9;
-    }
-
-    .chatbot-input::placeholder {
-        color: #64748b;
-    }
-
-    .chatbot-quick-btn {
-        background: #334155;
-        color: #cbd5e1;
-        border-color: #475569;
-    }
-
-    .chatbot-quick-btn:hover {
-        background: #2563eb;
-        color: white;
-    }
+/* Dark Mode Support - Class-based (.dark) */
+body.dark .chatbot-window {
+    background: #3f7bbf;
 }
+
+body.dark .chatbot-messages {
+    background: #334155;
+}
+
+body.dark .chatbot-header {
+    background: linear-gradient(135deg, #7DD3FC, #F87171);
+}
+
+body.dark .chatbot-message-avatar {
+    background: linear-gradient(135deg, #7DD3FC, #F87171);
+}
+
+body.dark .chatbot-message-user .chatbot-message-avatar {
+    background: linear-gradient(135deg, #7DD3FC, #F87171);
+}
+
+body.dark .chatbot-message-user .chatbot-message-bubble {
+    background: linear-gradient(135deg, #7DD3FC, #F87171);
+    color: white;
+    border: none;
+}
+
+body.dark .chatbot-message-bubble {
+    background: #334155;
+    color: #f1f5f9;
+    border-color: #475569;
+}
+
+body.dark .chatbot-send-btn {
+    background: linear-gradient(135deg, #7DD3FC, #F87171);
+}
+
+body.dark .chatbot-input-box {
+    background: #334155;
+}
+
+body.dark .chatbot-input-box:focus-within {
+    background: #334155;
+    box-shadow: 0 0 0 2px #4A9EE0;
+    border: 1px solid #4A9EE0;
+}
+
+body.dark .chatbot-input {
+    color: #f1f5f9;
+}
+
+body.dark .chatbot-input::placeholder {
+    color: #64748b;
+}
+
+body.dark .chatbot-quick-btn {
+    background: #334155;
+    color: #cbd5e1;
+    border-color: #475569;
+}
+
+body.dark .chatbot-quick-btn:hover {
+    background: #7DD3FC;
+    color: #1e293b;
+    border-color: #7DD3FC;
+}
+
