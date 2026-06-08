@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "code-review-graph": {
+      "command": "C:\\Users\\namdz\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+      "args": [
+        "-m",
+        "code_review_graph",
+        "serve"
+      ],
+      "cwd": "D:\\newcty\\Programming_EDU",
+      "type": "stdio"
+    }
+  }
+}
