@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Programming EDU</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=10" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=11" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
@@ -154,6 +154,27 @@
         <div class="section-title"><span class="title-icon-blue">📈</span><span>Tiến độ học tập</span></div>
         <div class="progress-grid" id="progress-grid"></div>
       </div>
+
+      <!-- ── Lịch học tuần ── -->
+      <div class="section-card study-cal-card">
+        <div class="study-cal-header">
+          <div class="section-title" style="margin-bottom:0"><span class="title-icon-blue">📅</span><span>Lịch học tuần này</span></div>
+          <div class="study-cal-streak" id="cal-streak-badge">
+            <span class="cal-fire">🔥</span>
+            <span class="cal-streak-num" id="cal-streak-num">0</span>
+            <span class="cal-streak-lbl">ngày streak</span>
+          </div>
+        </div>
+        <div class="study-cal-grid" id="study-cal-grid"></div>
+        <div class="study-cal-legend">
+          <span class="cal-legend-item"><span class="cal-legend-dot cal-done">✓</span> Đã học</span>
+          <span class="cal-legend-item"><span class="cal-legend-dot cal-todo">○</span> Chưa học</span>
+          <span class="cal-legend-item"><span class="cal-legend-dot cal-today-dot"></span> Hôm nay</span>
+        </div>
+      </div>
+
+      <!-- Tooltip lịch học -->
+      <div class="cal-tooltip" id="cal-tooltip"></div>
 
       <div class="courses-header">
         <h2>Khóa học của tôi</h2>
@@ -1025,7 +1046,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=8"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=9"></script>
 
   <script>
   function skSetToggle(hd) {

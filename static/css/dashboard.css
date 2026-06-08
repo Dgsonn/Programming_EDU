@@ -1,4 +1,209 @@
 /* ════════════════════════════════════════════════════════════
+   ★ LỊCH HỌC TUẦN (Study Calendar)
+   ════════════════════════════════════════════════════════════ */
+
+.study-cal-card { padding: 20px 24px 16px; }
+
+.study-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.study-cal-streak {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #FFF7ED, #FEF3C7);
+  border: 1.5px solid #FDE68A;
+  border-radius: 20px;
+  padding: 5px 14px;
+}
+.cal-fire       { font-size: 16px; }
+.cal-streak-num { font-size: 18px; font-weight: 800; color: #D97706; line-height: 1; }
+.cal-streak-lbl { font-size: 12px; color: #92400E; font-weight: 500; }
+
+.study-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.cal-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px 10px;
+  border-radius: 14px;
+  cursor: default;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1.5px solid transparent;
+}
+.cal-day:hover { transform: translateY(-2px); }
+
+.cal-day-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.cal-day-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.cal-day-icon {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+/* Trạng thái: đã học */
+.cal-day.done {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+.cal-day.done .cal-day-label { color: #059669; }
+.cal-day.done .cal-day-num   { color: #065F46; }
+.cal-day.done .cal-day-icon  {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #fff;
+  font-size: 15px;
+}
+.cal-day.done:hover { box-shadow: 0 4px 14px rgba(16,185,129,0.25); }
+
+/* Trạng thái: chưa học */
+.cal-day.todo {
+  background: #F9FAFB;
+  border-color: #F3F4F6;
+}
+.cal-day.todo .cal-day-icon {
+  background: #F3F4F6;
+  color: #9CA3AF;
+  font-size: 14px;
+}
+.cal-day.todo:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+
+/* Trạng thái: tương lai */
+.cal-day.future {
+  background: #FAFAFA;
+  border-color: #F3F4F6;
+  opacity: 0.55;
+}
+.cal-day.future .cal-day-icon {
+  background: #F3F4F6;
+  color: #D1D5DB;
+}
+
+/* Hôm nay — vòng viền đặc biệt */
+.cal-day.today {
+  border-color: #4A9EE0;
+  box-shadow: 0 0 0 3px rgba(74,158,224,0.15);
+}
+.cal-day.today .cal-day-label { color: #2D7FC1; font-weight: 700; }
+.cal-day.today .cal-day-num   { color: #1D4ED8; }
+
+.cal-today-ring {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4A9EE0;
+}
+
+/* Legend */
+.study-cal-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #F3F4F6;
+  flex-wrap: wrap;
+}
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6B7280;
+}
+.cal-legend-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+.cal-legend-dot.cal-done  { background: linear-gradient(135deg,#10B981,#059669); color: #fff; }
+.cal-legend-dot.cal-todo  { background: #F3F4F6; color: #9CA3AF; border: 1.5px solid #E5E7EB; }
+.cal-legend-dot.cal-today-dot { background: #4A9EE0; border: 2px solid #4A9EE0; }
+
+/* Tooltip */
+.cal-tooltip {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+  background: #1F2937;
+  color: #F9FAFB;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  max-width: 200px;
+}
+.cal-tooltip.show { opacity: 1; transform: translateY(0); }
+.cal-tooltip-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.cal-tooltip-sub   { color: #9CA3AF; font-size: 11px; }
+.cal-tooltip-status-done { color: #34D399; font-weight: 600; }
+.cal-tooltip-status-todo { color: #9CA3AF; }
+.cal-tooltip-status-future { color: #6B7280; }
+
+/* Dark mode */
+body.dark .study-cal-card          { background: #1E293B; border-color: #334155; }
+body.dark .study-cal-streak        { background: linear-gradient(135deg,#3D2500,#2D1F00); border-color: #92400E; }
+body.dark .cal-streak-lbl          { color: #FDE68A; }
+body.dark .cal-day.done            { background: #052e16; border-color: #065F46; }
+body.dark .cal-day.done .cal-day-label { color: #34D399; }
+body.dark .cal-day.done .cal-day-num   { color: #6EE7B7; }
+body.dark .cal-day.todo            { background: #1E293B; border-color: #334155; }
+body.dark .cal-day.todo .cal-day-icon  { background: #334155; color: #475569; }
+body.dark .cal-day.todo .cal-day-label { color: #475569; }
+body.dark .cal-day.todo .cal-day-num   { color: #64748B; }
+body.dark .cal-day.future          { background: #161E2D; border-color: #1E293B; }
+body.dark .cal-day.today           { border-color: #4A9EE0; }
+body.dark .cal-day.today .cal-day-label { color: #60A5FA; }
+body.dark .cal-day.today .cal-day-num   { color: #93C5FD; }
+body.dark .study-cal-legend        { border-color: #334155; }
+body.dark .cal-legend-item         { color: #94A3B8; }
+body.dark .cal-legend-dot.cal-todo { background: #334155; border-color: #475569; }
+
+/* ════════════════════════════════════════════════════════════
    ★ SHARED PAGE COMPONENTS
    ════════════════════════════════════════════════════════════ */
 

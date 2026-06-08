@@ -1569,8 +1569,137 @@ function loadStats() {
       setText("my-stat-count", s.enrolledCount);
       setText("my-stat-hours", s.totalHours);
       setText("my-stat-avg", s.avgProgress + "%");
+      renderStudyCalendar(s.streakDays || 0, s.streakActive || false);
     });
 }
+
+/* ── Lịch học tuần ── */
+(function () {
+  var DAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  var DAY_NAMES  = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+
+  function getMonday(d) {
+    var day = d.getDay();
+    var diff = (day === 0) ? -6 : 1 - day;
+    var mon = new Date(d);
+    mon.setDate(d.getDate() + diff);
+    mon.setHours(0, 0, 0, 0);
+    return mon;
+  }
+
+  function fmtDate(d) {
+    return d.getDate() + '/' + (d.getMonth() + 1);
+  }
+
+  function fmtFull(d) {
+    return d.getDate() + ' tháng ' + (d.getMonth() + 1) + ', ' + d.getFullYear();
+  }
+
+  window.renderStudyCalendar = function (streakDays, streakActive) {
+    var grid  = document.getElementById('study-cal-grid');
+    var numEl = document.getElementById('cal-streak-num');
+    if (!grid) return;
+
+    if (numEl) numEl.textContent = streakDays;
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var monday = getMonday(today);
+
+    /* tính các ngày đã học: tính ngược từ hôm nay theo streak */
+    var studiedDates = {};
+    if (streakDays > 0) {
+      var cursor = new Date(today);
+      if (!streakActive) cursor.setDate(cursor.getDate() - 1);
+      for (var i = 0; i < streakDays; i++) {
+        var k = cursor.getFullYear() + '-' + cursor.getMonth() + '-' + cursor.getDate();
+        studiedDates[k] = true;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+    }
+
+    var html = '';
+    for (var d = 0; d < 7; d++) {
+      var day = new Date(monday);
+      day.setDate(monday.getDate() + d);
+      day.setHours(0, 0, 0, 0);
+
+      var isToday  = day.getTime() === today.getTime();
+      var isFuture = day.getTime() > today.getTime();
+      var key      = day.getFullYear() + '-' + day.getMonth() + '-' + day.getDate();
+      var isDone   = !isFuture && !!studiedDates[key];
+
+      var stateClass = isFuture ? 'future' : (isDone ? 'done' : 'todo');
+      if (isToday) stateClass += ' today';
+
+      var icon = isFuture ? '○' : (isDone ? '✓' : '○');
+      var todayRing = isToday ? '<span class="cal-today-ring"></span>' : '';
+
+      var statusText, statusClass;
+      if (isFuture) {
+        statusText = 'Chưa đến ngày';
+        statusClass = 'cal-tooltip-status-future';
+      } else if (isDone) {
+        statusText = '✓ Đã hoàn thành';
+        statusClass = 'cal-tooltip-status-done';
+      } else {
+        statusText = '○ Chưa học';
+        statusClass = 'cal-tooltip-status-todo';
+      }
+
+      var tipData = encodeURIComponent(JSON.stringify({
+        name: DAY_NAMES[d],
+        date: fmtFull(day),
+        statusText: statusText,
+        statusClass: statusClass,
+        isToday: isToday
+      }));
+
+      html += '<div class="cal-day ' + stateClass + '"'
+            + ' data-tip="' + tipData + '"'
+            + ' onmouseenter="calShowTip(this,event)"'
+            + ' onmousemove="calMoveTip(event)"'
+            + ' onmouseleave="calHideTip()">'
+            + todayRing
+            + '<span class="cal-day-label">' + DAY_LABELS[d] + '</span>'
+            + '<span class="cal-day-num">' + fmtDate(day) + '</span>'
+            + '<span class="cal-day-icon">' + icon + '</span>'
+            + '</div>';
+    }
+    grid.innerHTML = html;
+  };
+
+  window.calShowTip = function (el, e) {
+    var tip = document.getElementById('cal-tooltip');
+    if (!tip) return;
+    try {
+      var data = JSON.parse(decodeURIComponent(el.getAttribute('data-tip')));
+      tip.innerHTML = '<div class="cal-tooltip-title">'
+                    + data.name
+                    + (data.isToday ? ' · <span style="color:#60A5FA">Hôm nay</span>' : '')
+                    + '</div>'
+                    + '<div class="cal-tooltip-sub">' + data.date + '</div>'
+                    + '<div class="' + data.statusClass + '" style="margin-top:4px;">' + data.statusText + '</div>';
+    } catch (_) { return; }
+    tip.classList.add('show');
+    calMoveTip(e);
+  };
+
+  window.calMoveTip = function (e) {
+    var tip = document.getElementById('cal-tooltip');
+    if (!tip) return;
+    var x = e.clientX + 14;
+    var y = e.clientY - 10;
+    if (x + 220 > window.innerWidth) x = e.clientX - 224;
+    tip.style.left = x + 'px';
+    tip.style.top  = y + 'px';
+  };
+
+  window.calHideTip = function () {
+    var tip = document.getElementById('cal-tooltip');
+    if (tip) tip.classList.remove('show');
+  };
+})();
 
 function loadNotifications() {
   return fetch(API + "/notifications")
