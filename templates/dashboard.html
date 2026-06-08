@@ -1995,6 +1995,181 @@
 
   {% include 'chatbot.html' %}
   <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
+
+  <!-- ════════════════════════════════════════════════════════════
+     ★ POPUP NHẮC GIỮ CHUỖI HỌC
+     ════════════════════════════════════════════════════════════ -->
+  <style>
+    .streak-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0, 0, 0, 0.55);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+    .streak-overlay.active {
+      opacity: 1; visibility: visible;
+    }
+    .streak-card {
+      background: #fff;
+      border-radius: 28px;
+      padding: 44px 40px 36px;
+      max-width: 400px; width: 90%;
+      text-align: center;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.22);
+      transform: scale(0.82) translateY(32px);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .streak-overlay.active .streak-card {
+      transform: scale(1) translateY(0);
+    }
+    .streak-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg, #F59E0B, #EF4444, #F97316);
+      background-size: 200% 100%;
+      animation: streak-shimmer 2.5s linear infinite;
+    }
+    @keyframes streak-shimmer {
+      0%   { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
+    }
+    .streak-fire-wrap {
+      position: relative;
+      width: 90px; height: 90px;
+      margin: 0 auto 20px;
+    }
+    .streak-fire-bg {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      border: 4px solid #FCD34D;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 42px;
+      animation: streak-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes streak-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,158,11,0.5); }
+      50%       { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(245,158,11,0); }
+    }
+    .streak-ring {
+      position: absolute; inset: -6px; border-radius: 50%;
+      border: 3px dashed #FBBF24;
+      animation: streak-spin 8s linear infinite;
+    }
+    @keyframes streak-spin {
+      to { transform: rotate(360deg); }
+    }
+    .streak-title {
+      font-size: 22px; font-weight: 800; color: #111827;
+      margin: 0 0 10px; line-height: 1.3;
+    }
+    .streak-sub {
+      font-size: 14px; color: #6B7280;
+      margin: 0 0 28px; line-height: 1.6;
+    }
+    .streak-btn-go {
+      display: block; width: 100%;
+      padding: 16px 24px;
+      border-radius: 16px; border: none;
+      background: linear-gradient(135deg, #F59E0B, #EF4444);
+      color: #fff; font-size: 16px; font-weight: 800;
+      cursor: pointer; letter-spacing: 0.3px;
+      box-shadow: 0 6px 20px rgba(245,158,11,0.45);
+      transition: box-shadow 0.25s, transform 0.15s;
+    }
+    .streak-btn-go:hover  { box-shadow: 0 8px 28px rgba(245,158,11,0.6); transform: translateY(-2px); }
+    .streak-btn-go:active { transform: translateY(0); }
+    .streak-btn-skip {
+      display: block; width: 100%; margin-top: 12px;
+      padding: 10px; border: none; background: none;
+      font-size: 13px; color: #9CA3AF; cursor: pointer;
+      transition: color 0.2s;
+    }
+    .streak-btn-skip:hover { color: #6B7280; }
+
+    body.dark .streak-card {
+      background: #1F2937;
+    }
+    body.dark .streak-title { color: #F9FAFB; }
+    body.dark .streak-sub   { color: #9CA3AF; }
+    body.dark .streak-btn-skip { color: #6B7280; }
+    body.dark .streak-btn-skip:hover { color: #9CA3AF; }
+  </style>
+
+  <div class="streak-overlay" id="streakPopup">
+    <div class="streak-card">
+      <div class="streak-fire-wrap">
+        <div class="streak-ring"></div>
+        <div class="streak-fire-bg">🔥</div>
+      </div>
+      <h3 class="streak-title">Đừng quên giữ chuỗi hôm nay!</h3>
+      <p class="streak-sub">Bạn đang có chuỗi học liên tiếp tuyệt vời.<br>Học một chút hôm nay để không bị gián đoạn nhé!</p>
+      <button class="streak-btn-go" onclick="streakGoLearn()">🚀 Đi học ngay</button>
+      <button class="streak-btn-skip" onclick="streakClose()">Để sau</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    function streakShouldShow() {
+      return new URLSearchParams(window.location.search).get('streak') === '1';
+    }
+
+    function streakCleanUrl() {
+      var url = new URL(window.location.href);
+      url.searchParams.delete('streak');
+      history.replaceState(null, '', url.toString());
+    }
+
+    window.streakClose = function () {
+      var el = document.getElementById('streakPopup');
+      if (el) {
+        el.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+
+    window.streakGoLearn = function () {
+      streakClose();
+      if (typeof navigate === 'function') navigate('courses');
+    };
+
+    document.addEventListener('click', function (e) {
+      var popup = document.getElementById('streakPopup');
+      if (popup && e.target === popup) streakClose();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var popup = document.getElementById('streakPopup');
+        if (popup && popup.classList.contains('active')) streakClose();
+      }
+    });
+
+    function streakShow() {
+      if (!streakShouldShow()) return;
+      streakCleanUrl();
+      var el = document.getElementById('streakPopup');
+      if (!el) return;
+      document.body.style.overflow = 'hidden';
+      el.classList.add('active');
+    }
+
+    /* Hiện popup sau khi trang load xong ~800ms */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(streakShow, 800);
+      });
+    } else {
+      setTimeout(streakShow, 800);
+    }
+  })();
+  </script>
+
 </body>
 
 </html>
