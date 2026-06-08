@@ -921,7 +921,7 @@ body.dark #roadmap-container-wrapper {
     height: 100% !important;
 }
 
-/* ── SVG nodes: tech dark style ── */
+/* ── SVG nodes ── */
 #roadmap-mermaid-wrap g.node { cursor: pointer; }
 
 /* Text bên trong node: đậm hơn, monospace */
@@ -934,16 +934,34 @@ body.dark #roadmap-container-wrapper {
     letter-spacing: 0.2px;
 }
 
-/* Edge / connector lines: màu xanh tech */
+/* Light mode: node nền gần trong suốt, viền giữ màu, text tối */
+body:not(.dark) #roadmap-mermaid-wrap g.node rect,
+body:not(.dark) #roadmap-mermaid-wrap g.node polygon,
+body:not(.dark) #roadmap-mermaid-wrap g.node circle,
+body:not(.dark) #roadmap-mermaid-wrap g.node ellipse {
+    fill-opacity: 0.10 !important;
+    stroke-opacity: 0.65 !important;
+    stroke-width: 2px !important;
+}
+body:not(.dark) #roadmap-mermaid-wrap g.node text {
+    fill: #1E293B !important;
+}
+body:not(.dark) #roadmap-mermaid-wrap g.node .nodeLabel,
+body:not(.dark) #roadmap-mermaid-wrap g.node span,
+body:not(.dark) #roadmap-mermaid-wrap g.node p {
+    color: #1E293B !important;
+}
+
+/* Edge / connector lines: light mode — softer blue */
 #roadmap-mermaid-wrap .edgePath path,
 #roadmap-mermaid-wrap .flowchart-link {
-    stroke: #38BDF8 !important;
+    stroke: #60A5FA !important;
     stroke-width: 1.5px !important;
 }
 #roadmap-mermaid-wrap marker path,
 #roadmap-mermaid-wrap marker polygon {
-    fill: #38BDF8 !important;
-    stroke: #38BDF8 !important;
+    fill: #60A5FA !important;
+    stroke: #60A5FA !important;
 }
 
 /* Dark mode: edge lines */
@@ -1278,6 +1296,44 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   white-space: nowrap;
 }
 
+/* ── Zoom controls ── */
+.rmv-zoom-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border-left: 1px solid #E5E7EB;
+  padding-left: 10px;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.rmv-zoom-btn {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  border: 1.5px solid #E5E7EB;
+  background: #fff;
+  color: #374151;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.rmv-zoom-btn:hover { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; }
+.rmv-zoom-reset { font-size: 14px; }
+.rmv-zoom-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6B7280;
+  min-width: 38px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+body.dark .rmv-zoom-wrap     { border-color: #1E293B; }
+body.dark .rmv-zoom-btn      { background: #1E293B; border-color: #334155; color: #94A3B8; }
+body.dark .rmv-zoom-btn:hover { background: #0F172A; border-color: #4A9EE0; color: #38BDF8; }
+body.dark .rmv-zoom-label    { color: #64748B; }
+
 /* ── Canvas ── */
 #rm-visual-canvas {
   flex: 1;
@@ -1290,6 +1346,12 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   cursor: default;
   outline: none;
 }
+#rm-vcontent {
+  position: absolute;
+  top: 0; left: 0;
+  min-width: 100%; min-height: 100%;
+  transform-origin: 0 0;
+}
 #rm-arrows-svg {
   position: absolute;
   inset: 0;
@@ -1299,7 +1361,7 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   overflow: visible;
 }
 
-/* ── Nodes ── */
+/* ── Nodes (light mode defaults — pastel) ── */
 .rm-vnode {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1307,16 +1369,16 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   max-width: 180px;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 2px solid #FBBF24;
-  background: #1C1500;
-  color: #FEF08A;
+  border: 2px solid #93C5FD;
+  background: #EFF6FF;
+  color: #1E40AF;
   font-size: 13px;
   font-weight: 600;
   font-family: 'Fira Code', 'Consolas', monospace;
   cursor: grab;
   user-select: none;
   text-align: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
   transition: box-shadow 0.15s, border-color 0.15s;
   word-break: break-word;
   display: flex;
@@ -1325,17 +1387,18 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   gap: 4px;
 }
 .rm-vnode:active { cursor: grabbing; }
-.rm-vnode.rmv-selected { box-shadow: 0 0 0 3px #4A9EE0, 0 4px 20px rgba(74,158,224,0.45); }
-.rm-vnode.rmv-src      { box-shadow: 0 0 0 3px #4ADE80, 0 4px 24px rgba(74,222,128,0.55); border-color: #4ADE80 !important; }
+.rm-vnode.rmv-selected { box-shadow: 0 0 0 3px #4A9EE0, 0 4px 16px rgba(74,158,224,0.30); }
+.rm-vnode.rmv-src      { box-shadow: 0 0 0 3px #22C55E, 0 4px 18px rgba(34,197,94,0.35); border-color: #22C55E !important; }
 .rm-vnode.rmv-tgt      { cursor: crosshair; }
-.rm-vnode.rmv-tgt:hover { box-shadow: 0 0 0 3px #38BDF8, 0 4px 24px rgba(56,189,248,0.55); }
+.rm-vnode.rmv-tgt:hover { box-shadow: 0 0 0 3px #60A5FA, 0 4px 18px rgba(96,165,250,0.35); }
 
-.rm-vnode[data-color="0"] { background:#1C1500; border-color:#FBBF24; color:#FEF08A; }
-.rm-vnode[data-color="1"] { background:#050E1F; border-color:#38BDF8; color:#BAE6FD; }
-.rm-vnode[data-color="2"] { background:#011C0E; border-color:#4ADE80; color:#BBF7D0; }
-.rm-vnode[data-color="3"] { background:#0F0520; border-color:#A78BFA; color:#DDD6FE; }
-.rm-vnode[data-color="4"] { background:#1A0520; border-color:#F472B6; color:#FBCFE8; }
-.rm-vnode[data-color="5"] { background:#1A0A00; border-color:#FB923C; color:#FED7AA; }
+/* Light mode pastel palette */
+.rm-vnode[data-color="0"] { background:#FFFBEB; border-color:#F59E0B; color:#92400E; }
+.rm-vnode[data-color="1"] { background:#EFF6FF; border-color:#60A5FA; color:#1D4ED8; }
+.rm-vnode[data-color="2"] { background:#F0FDF4; border-color:#34D399; color:#065F46; }
+.rm-vnode[data-color="3"] { background:#F5F3FF; border-color:#A78BFA; color:#5B21B6; }
+.rm-vnode[data-color="4"] { background:#FDF2F8; border-color:#F472B6; color:#9D174D; }
+.rm-vnode[data-color="5"] { background:#FFF7ED; border-color:#FB923C; color:#9A3412; }
 
 .rmv-label { flex: 1; line-height: 1.35; }
 
@@ -1344,8 +1407,8 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   width: 18px; height: 18px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.15);
-  color: #fff;
+  background: rgba(0,0,0,0.10);
+  color: #6B7280;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -1354,7 +1417,7 @@ body.dark .rm-search-input::placeholder { color: #475569; }
   transition: background 0.15s;
 }
 .rm-vnode:hover .rmv-del { display: flex; align-items: center; justify-content: center; }
-.rmv-del:hover { background: #EF4444; }
+.rmv-del:hover { background: #EF4444; color: #fff; }
 
 .rmv-input {
   background: transparent;
@@ -1401,6 +1464,20 @@ body.dark .rmv-btn:hover       { background: #0F172A; border-color: #4A9EE0; col
 body.dark .rmv-btn-connect.rmv-active { background: rgba(74,222,128,0.1); border-color: #4ADE80; color: #4ADE80; }
 body.dark .rmv-hint            { color: #334155; }
 body.dark #rm-visual-canvas    { background:#0A101F; background-image:radial-gradient(circle,#1E293B 1px,transparent 1px); background-size:24px 24px; }
+
+/* Dark mode: restore neon node palette */
+body.dark .rm-vnode { box-shadow: 0 4px 16px rgba(0,0,0,0.35); }
+body.dark .rm-vnode.rmv-selected { box-shadow: 0 0 0 3px #4A9EE0, 0 4px 20px rgba(74,158,224,0.45); }
+body.dark .rm-vnode.rmv-src      { box-shadow: 0 0 0 3px #4ADE80, 0 4px 24px rgba(74,222,128,0.55); border-color: #4ADE80 !important; }
+body.dark .rm-vnode.rmv-tgt:hover { box-shadow: 0 0 0 3px #38BDF8, 0 4px 24px rgba(56,189,248,0.55); }
+body.dark .rm-vnode[data-color="0"] { background:#1C1500; border-color:#FBBF24; color:#FEF08A; }
+body.dark .rm-vnode[data-color="1"] { background:#050E1F; border-color:#38BDF8; color:#BAE6FD; }
+body.dark .rm-vnode[data-color="2"] { background:#011C0E; border-color:#4ADE80; color:#BBF7D0; }
+body.dark .rm-vnode[data-color="3"] { background:#0F0520; border-color:#A78BFA; color:#DDD6FE; }
+body.dark .rm-vnode[data-color="4"] { background:#1A0520; border-color:#F472B6; color:#FBCFE8; }
+body.dark .rm-vnode[data-color="5"] { background:#1A0A00; border-color:#FB923C; color:#FED7AA; }
+body.dark .rmv-del { background: rgba(255,255,255,0.15); color: #fff; }
+body.dark .rmv-del:hover { background: #EF4444; }
 
 
 /* ════════════════════════════════════════════════════════════

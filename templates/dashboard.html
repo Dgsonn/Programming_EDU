@@ -16,6 +16,7 @@
 </head>
 
 <body>
+<script>if(localStorage.getItem('theme')!=='light')document.body.classList.add('dark');</script>
 
   <!-- Hidden elements to keep JS working (sidebar-name, sidebar-role) -->
   <span id="sidebar-name" style="display:none">—</span>
@@ -326,11 +327,19 @@
               <span>🗑️</span> Xóa hết
             </button>
             <div class="rmv-hint" id="rm-vhint">Click "Thêm node" để bắt đầu</div>
+            <div class="rmv-zoom-wrap">
+              <button class="rmv-zoom-btn" onclick="rmVZoomOut()" title="Thu nhỏ (Ctrl+Scroll)">−</button>
+              <span class="rmv-zoom-label" id="rm-vzoom-label">100%</span>
+              <button class="rmv-zoom-btn" onclick="rmVZoomIn()" title="Phóng to (Ctrl+Scroll)">+</button>
+              <button class="rmv-zoom-btn rmv-zoom-reset" onclick="rmVZoomReset()" title="Reset zoom">↺</button>
+            </div>
           </div>
 
           <!-- Canvas -->
           <div id="rm-visual-canvas" tabindex="0">
-            <svg id="rm-arrows-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div id="rm-vcontent">
+              <svg id="rm-arrows-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
           </div>
         </div>
       </div>

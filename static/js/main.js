@@ -240,6 +240,7 @@ var _rmV = {
     selected:   null,
     drag:       null,
     didDrag:    false,
+    zoom:       1.0,
 };
 var _RMV_COLORS = 6;
 
@@ -288,9 +289,10 @@ function _rmVFromMermaid(mdef) {
 
 /* ── Render ── */
 function _rmVRenderArrows() {
-    var canvas = document.getElementById('rm-visual-canvas');
-    var svg    = document.getElementById('rm-arrows-svg');
-    if (!svg || !canvas) return;
+    var content = document.getElementById('rm-vcontent');
+    var svg     = document.getElementById('rm-arrows-svg');
+    if (!svg || !content) return;
+    var canvas  = content; // alias for querySelector calls below
 
     svg.innerHTML = '<defs>'
         + '<marker id="rmva" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">'
@@ -350,7 +352,7 @@ function _rmVRenderArrows() {
 }
 
 function _rmVRender() {
-    var canvas = document.getElementById('rm-visual-canvas');
+    var canvas = document.getElementById('rm-vcontent');
     if (!canvas) return;
     canvas.querySelectorAll('.rm-vnode').forEach(function(el){ el.remove(); });
 
@@ -413,9 +415,11 @@ function _rmVSetHint(msg) {
 
 /* ── Actions ── */
 function rmVAddNode() {
-    var canvas = document.getElementById('rm-visual-canvas');
-    var cx = canvas ? canvas.clientWidth  / 2 : 220;
-    var cy = canvas ? canvas.scrollTop + canvas.clientHeight / 2 : 220;
+    var canvas  = document.getElementById('rm-visual-canvas');
+    var content = document.getElementById('rm-vcontent');
+    var z  = _rmV.zoom;
+    var cx = canvas ? canvas.clientWidth  / 2 / z : 220;
+    var cy = canvas ? (canvas.scrollTop + canvas.clientHeight / 2) / z : 220;
     var offset = (_rmV.nodes.length % 5) * 28;
     var n = { id:'vn_'+(_rmV.nextId++), x:cx+offset-60, y:cy+offset-60,
               label:'Node '+_rmV.nodes.length, color:_rmV.nodes.length % _RMV_COLORS };
@@ -424,7 +428,7 @@ function rmVAddNode() {
     _rmVRender();
     /* Auto-open rename after a tick */
     setTimeout(function(){
-        var el = canvas.querySelector('.rm-vnode[data-id="'+n.id+'"]');
+        var el = content ? content.querySelector('.rm-vnode[data-id="'+n.id+'"]') : null;
         if (el) _rmVRenameInline(n, el);
     }, 40);
 }
@@ -474,10 +478,12 @@ function _rmVNodeClick(id) {
 /* ── Drag ── */
 function _rmVStartDrag(e, node) {
     e.preventDefault();
-    var canvas = document.getElementById('rm-visual-canvas');
-    var r = canvas.getBoundingClientRect();
-    var ox = e.clientX - r.left - node.x;
-    var oy = e.clientY - r.top  - node.y;
+    var canvas  = document.getElementById('rm-visual-canvas');
+    var content = document.getElementById('rm-vcontent');
+    var r  = canvas.getBoundingClientRect();
+    var z  = _rmV.zoom;
+    var ox = (e.clientX - r.left) / z - node.x;
+    var oy = (e.clientY - r.top)  / z - node.y;
     var sx = e.clientX, sy = e.clientY;
     _rmV.drag = true;
     _rmV.didDrag = false;
@@ -488,9 +494,9 @@ function _rmVStartDrag(e, node) {
                 _rmV.didDrag = true;
             } else return;
         }
-        node.x = Math.max(0, me.clientX - r.left - ox);
-        node.y = Math.max(0, me.clientY - r.top  - oy);
-        var el = canvas.querySelector('.rm-vnode[data-id="'+node.id+'"]');
+        node.x = Math.max(0, (me.clientX - r.left) / z - ox);
+        node.y = Math.max(0, (me.clientY - r.top)  / z - oy);
+        var el = content ? content.querySelector('.rm-vnode[data-id="'+node.id+'"]') : null;
         if (el) { el.style.left = node.x+'px'; el.style.top = node.y+'px'; }
         _rmVRenderArrows();
     }
@@ -516,20 +522,42 @@ function _rmVRenameInline(node, divEl) {
     inp.focus(); inp.select();
 
     var done = false;
+    var isComposing = false;
+
+    inp.addEventListener('compositionstart', function() { isComposing = true; });
+    inp.addEventListener('compositionend',   function() { isComposing = false; });
+
     function commit() {
         if (done) return;
         done = true;
         node.label = inp.value.trim() || node.label;
         _rmVRender();
     }
-    inp.addEventListener('blur', commit);
-    /* Bỏ qua keydown trong lúc IME đang compose (tiếng Việt, CJK...) */
+    /* Trì hoãn blur để compositionend kịp chạy trước (tiếng Việt, CJK...) */
+    inp.addEventListener('blur', function() {
+        setTimeout(function() {
+            if (!isComposing) commit();
+        }, 80);
+    });
     inp.addEventListener('keydown', function(e) {
+        /* Chặn sự kiện lan lên canvas — tránh Backspace xóa node khi đang gõ */
+        e.stopPropagation();
         if (e.isComposing || e.keyCode === 229) return;
         if (e.key === 'Enter')  { e.preventDefault(); commit(); }
         if (e.key === 'Escape') { done = true; _rmVRender(); }
     });
 }
+
+/* ── Zoom ── */
+function _rmVApplyZoom() {
+    var content = document.getElementById('rm-vcontent');
+    if (content) content.style.transform = 'scale(' + _rmV.zoom + ')';
+    var lbl = document.getElementById('rm-vzoom-label');
+    if (lbl) lbl.textContent = Math.round(_rmV.zoom * 100) + '%';
+}
+function rmVZoomIn()    { _rmV.zoom = Math.min(2.5, +(_rmV.zoom + 0.15).toFixed(2)); _rmVApplyZoom(); }
+function rmVZoomOut()   { _rmV.zoom = Math.max(0.3, +(_rmV.zoom - 0.15).toFixed(2)); _rmVApplyZoom(); }
+function rmVZoomReset() { _rmV.zoom = 1.0; _rmVApplyZoom(); }
 
 /* ── Canvas init (once) ── */
 function _rmVInitCanvas() {
@@ -537,20 +565,22 @@ function _rmVInitCanvas() {
     if (!canvas || canvas._rmVInited) return;
     canvas._rmVInited = true;
     canvas.addEventListener('click', function(e){
-        if (e.target === canvas || e.target.id === 'rm-arrows-svg') {
+        var content = document.getElementById('rm-vcontent');
+        if (e.target === canvas || e.target === content || e.target.id === 'rm-arrows-svg') {
             _rmV.selected = null;
             _rmV.connectSrc = null;
-            _rmVRender();
-        }
-    });
-    canvas.addEventListener('keydown', function(e){
-        if (e.key === 'Escape') {
-            _rmV.mode = 'normal'; _rmV.connectSrc = null; _rmVRender();
         }
         if ((e.key==='Delete'||e.key==='Backspace') && _rmV.selected) {
             rmVDeleteNode(_rmV.selected);
         }
     });
+    canvas.addEventListener('wheel', function(e){
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        var delta = e.deltaY > 0 ? -0.1 : 0.1;
+        _rmV.zoom = Math.min(2.5, Math.max(0.3, +(_rmV.zoom + delta).toFixed(2)));
+        _rmVApplyZoom();
+    }, { passive: false });
 }
 
 /* ── Load / Save ── */
@@ -1653,7 +1683,7 @@ function initDragDrop() {
 
 /* ── Init ── */
 document.addEventListener("DOMContentLoaded", function () {
-  applyTheme(localStorage.getItem("theme") === "dark");
+  applyTheme(localStorage.getItem("theme") !== "light");
   updateDate();
   const p = window.location.pathname;
   if (p !== "/login" && p !== "/register") {
