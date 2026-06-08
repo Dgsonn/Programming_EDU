@@ -118,6 +118,55 @@ def get_enrolled():
     return jsonify(result)
 
 
+@courses_bp.route('/api/courses-enrolled', methods=['GET'])
+@api_login_required
+def get_courses_and_enrolled():
+    """Trả về courses + enrolled detail trong 1 query, 1 request."""
+    uid   = current_user_id()
+    icons = {'cpp': '📘', 'htmlcss': '📗', 'python': '📙', 'java': '📕'}
+    conn  = get_db()
+
+    rows = conn.execute('''
+        SELECT c.id, c.title, c.subtitle, c.description, c.image, c.level,
+               c.duration, c.students, c.rating, c.lessons,
+               c.color, c.accent_color, c.tag,
+               CASE WHEN e.course_id IS NOT NULL THEN 1 ELSE 0 END AS enrolled,
+               e.progress, e.completed_lessons,
+               e.time_spent, e.last_lesson, e.next_lesson
+        FROM courses c
+        LEFT JOIN enrollments e ON c.id = e.course_id AND e.user_id = %s
+    ''', (uid,)).fetchall()
+    conn.close()
+
+    courses_list  = []
+    enrolled_list = []
+    for r in rows:
+        d = dict(r)
+        enrolled     = bool(d['enrolled'])
+        accent_color = d.pop('accent_color')
+        d['enrolled']    = enrolled
+        d['accentColor'] = accent_color
+        courses_list.append(d)
+        if enrolled:
+            enrolled_list.append({
+                'id':               d['id'],
+                'title':            d['title'],
+                'subtitle':         d['subtitle'],
+                'color':            d['color'],
+                'accentColor':      accent_color,
+                'progress':         d['progress']          or 0,
+                'completedLessons': d['completed_lessons'] or 0,
+                'totalLessons':     d['lessons'],
+                'duration':         d['duration'],
+                'timeSpent':        d['time_spent']  or '0h',
+                'lastLesson':       d['last_lesson'] or '',
+                'nextLesson':       d['next_lesson'] or '',
+                'icon':             icons.get(d['id'], '📘'),
+            })
+
+    return jsonify({'courses': courses_list, 'enrolled': enrolled_list})
+
+
 @courses_bp.route('/api/courses/<course_id>/enroll', methods=['POST'])
 @api_login_required
 def enroll(course_id):

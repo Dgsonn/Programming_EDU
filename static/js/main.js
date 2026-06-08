@@ -100,70 +100,68 @@ function renderEduInteractiveRoadmap() {
     }
 
     var svgId = 'rm-svg-' + (++_mermaidRenderCount);
-    mermaid.render(svgId, roadmap.mermaid_def).then(function(result) {
-        wrap.innerHTML = result.svg;
-        var svgEl = wrap.querySelector('svg');
-        if (svgEl) {
-            svgEl.removeAttribute('width');
-            svgEl.removeAttribute('height');
-            svgEl.style.width = '100%';
-            svgEl.style.height = '100%';
 
-            // Gắn click + glow handler vào từng node trong SVG
-            svgEl.querySelectorAll('g.node, g[class*="node"]').forEach(function(gEl) {
-                gEl.style.cursor = 'pointer';
-                gEl.style.transition = 'filter 0.2s ease';
+    /* Defer sang idle tick để tránh block UI khi navigate */
+    setTimeout(function() {
+        mermaid.render(svgId, roadmap.mermaid_def).then(function(result) {
+            wrap.innerHTML = result.svg;
+            var svgEl = wrap.querySelector('svg');
+            if (svgEl) {
+                svgEl.removeAttribute('width');
+                svgEl.removeAttribute('height');
+                svgEl.style.width = '100%';
+                svgEl.style.height = '100%';
 
-                // Đọc màu stroke để làm glow khớp màu node
-                var shape = gEl.querySelector('rect, circle, polygon, path');
-                var glowColor = 'rgba(56,189,248,0.7)';
-                if (shape) {
-                    var stroke = shape.getAttribute('stroke') || '';
-                    if (stroke && stroke !== 'none') glowColor = stroke;
+                svgEl.querySelectorAll('g.node, g[class*="node"]').forEach(function(gEl) {
+                    gEl.style.cursor = 'pointer';
+                    gEl.style.transition = 'filter 0.2s ease';
+
+                    var shape = gEl.querySelector('rect, circle, polygon, path');
+                    var glowColor = 'rgba(56,189,248,0.7)';
+                    if (shape) {
+                        var stroke = shape.getAttribute('stroke') || '';
+                        if (stroke && stroke !== 'none') glowColor = stroke;
+                    }
+                    var glowOn  = 'drop-shadow(0 0 0px ' + glowColor + ') drop-shadow(0 0 12px ' + glowColor + ')';
+                    var glowOff = 'none';
+
+                    gEl.addEventListener('mouseenter', function() { gEl.style.filter = glowOn; });
+                    gEl.addEventListener('mouseleave', function() { gEl.style.filter = glowOff; });
+
+                    gEl.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var m = gEl.id.match(/rm_[bpc]?\d+/);
+                        if (!m) return;
+                        var nodeId = m[0];
+                        var node = roadmap.nodes && roadmap.nodes[nodeId];
+                        if (!node) return;
+                        var sidebarTitle   = document.getElementById('sidebar-title');
+                        var sidebarContent = document.getElementById('sidebar-content');
+                        var sidebarDetail  = document.getElementById('sidebar-detail');
+                        if (!sidebarDetail) return;
+                        if (sidebarTitle)   sidebarTitle.textContent = node.title;
+                        if (sidebarContent) sidebarContent.innerHTML  = node.desc;
+                        sidebarDetail.classList.add('open');
+                    });
+                });
+
+                if (typeof svgPanZoom !== 'undefined') {
+                    svgPanZoom(svgEl, {
+                        zoomEnabled: true,
+                        controlIconsEnabled: true,
+                        fit: true,
+                        center: true,
+                        minZoom: 0.2,
+                        maxZoom: 4,
+                        panEnabled: true,
+                    });
                 }
-                var glowOn  = 'drop-shadow(0 0 0px ' + glowColor + ') drop-shadow(0 0 12px ' + glowColor + ')';
-                var glowOff = 'none';
-
-                gEl.addEventListener('mouseenter', function() {
-                    gEl.style.filter = glowOn;
-                });
-                gEl.addEventListener('mouseleave', function() {
-                    gEl.style.filter = glowOff;
-                });
-
-                gEl.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    var m = gEl.id.match(/rm_[bpc]?\d+/);
-                    if (!m) return;
-                    var nodeId = m[0];
-                    var node = roadmap.nodes && roadmap.nodes[nodeId];
-                    if (!node) return;
-                    var sidebarTitle   = document.getElementById('sidebar-title');
-                    var sidebarContent = document.getElementById('sidebar-content');
-                    var sidebarDetail  = document.getElementById('sidebar-detail');
-                    if (!sidebarDetail) return;
-                    if (sidebarTitle)   sidebarTitle.textContent = node.title;
-                    if (sidebarContent) sidebarContent.innerHTML  = node.desc;
-                    sidebarDetail.classList.add('open');
-                });
-            });
-
-            if (typeof svgPanZoom !== 'undefined') {
-                svgPanZoom(svgEl, {
-                    zoomEnabled: true,
-                    controlIconsEnabled: true,
-                    fit: true,
-                    center: true,
-                    minZoom: 0.2,
-                    maxZoom: 4,
-                    panEnabled: true,
-                });
             }
-        }
-    }).catch(function(err) {
-        wrap.innerHTML = '<div class="rm-loading"><div style="font-size:32px">⚠️</div><div class="rm-loading-text" style="color:#EF4444">Không tải được sơ đồ. Vui lòng thử lại.</div></div>';
-        console.error('Mermaid render error:', err);
-    });
+        }).catch(function(err) {
+            wrap.innerHTML = '<div class="rm-loading"><div style="font-size:32px">⚠️</div><div class="rm-loading-text" style="color:#EF4444">Không tải được sơ đồ. Vui lòng thử lại.</div></div>';
+            console.error('Mermaid render error:', err);
+        });
+    }, 0);
 }
 
 function loadEduRoadmaps() {
@@ -294,6 +292,15 @@ function _rmVRenderArrows() {
     if (!svg || !content) return;
     var canvas  = content; // alias for querySelector calls below
 
+    /* Batch read: đọc tất cả sizes trước, tránh reflow trong vòng lặp */
+    var sizeCache = {};
+    _rmV.nodes.forEach(function(n) {
+        var el = canvas.querySelector('.rm-vnode[data-id="'+n.id+'"]');
+        sizeCache[n.id] = el
+            ? { w: el.offsetWidth, h: el.offsetHeight }
+            : { w: 130, h: 44 };
+    });
+
     svg.innerHTML = '<defs>'
         + '<marker id="rmva" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">'
         + '<polygon points="0 0,9 3.5,0 7" fill="#38BDF8"/></marker>'
@@ -306,21 +313,17 @@ function _rmVRenderArrows() {
         var tn = _rmV.nodes.find(function(n){ return n.id === e.to;   });
         if (!fn || !tn) return;
 
-        var fEl = canvas.querySelector('.rm-vnode[data-id="'+e.from+'"]');
-        var tEl = canvas.querySelector('.rm-vnode[data-id="'+e.to+'"]');
-        var fH  = fEl ? fEl.offsetHeight : 44;
-        var tH  = tEl ? tEl.offsetHeight : 44;
+        var fS = sizeCache[e.from] || { w: 130, h: 44 };
+        var tS = sizeCache[e.to]   || { w: 130, h: 44 };
 
-        var x1 = fn.x,    y1 = fn.y + fH / 2;
-        var x2 = tn.x,    y2 = tn.y - tH / 2;
+        var x1 = fn.x,    y1 = fn.y + fS.h / 2;
+        var x2 = tn.x,    y2 = tn.y - tS.h / 2;
 
         /* If target above source, use side exits */
-        if (tn.y < fn.y + fH) {
-            var fW  = fEl ? fEl.offsetWidth : 130;
-            var tW  = tEl ? tEl.offsetWidth : 130;
+        if (tn.y < fn.y + fS.h) {
             var dir = tn.x >= fn.x ? 1 : -1;
-            x1 = fn.x + dir * fW / 2;  y1 = fn.y;
-            x2 = tn.x - dir * tW / 2;  y2 = tn.y;
+            x1 = fn.x + dir * fS.w / 2;  y1 = fn.y;
+            x2 = tn.x - dir * tS.w / 2;  y2 = tn.y;
         }
 
         var dy = Math.abs(y2 - y1), dx = Math.abs(x2 - x1);
@@ -810,7 +813,7 @@ function renderCourses() {
           c.color +
           '\')" onmouseleave="unhoverCard(this)">',
         '<div class="card-img-wrap" style="cursor:pointer" onclick="window.location=\'/courses/' + c.id + '\'">',
-        '<img src="/' + c.image + '" alt="' + c.title + '" />',
+        '<img src="/' + c.image + '" alt="' + c.title + '" loading="lazy" />',
         '<div class="card-overlay"></div>',
         '<div class="badge-level" style="background:linear-gradient(135deg,' +
           c.color +
@@ -1034,12 +1037,32 @@ function renderProgress() {
 }
 
 /* ── Enroll / Unenroll ── */
+function _applyEnrollState(courseId, enrolled) {
+  try { sessionStorage.removeItem(_COURSES_CACHE_KEY); } catch (e) {}
+  courses.forEach(function(c) {
+    if (c.id === courseId) c.enrolled = enrolled;
+  });
+  if (enrolled) {
+    var c = courses.find(function(c) { return c.id === courseId; });
+    if (c && !enrolledCourses.some(function(e) { return e.id === courseId; })) {
+      enrolledCourses.push(c);
+    }
+  } else {
+    enrolledCourses = enrolledCourses.filter(function(c) { return c.id !== courseId; });
+  }
+  renderCourses();
+  renderMyCourses();
+  renderProgress();
+  var countEl = document.getElementById('stat-enrolled');
+  if (countEl) countEl.textContent = enrolledCourses.length;
+}
+
 function toggleEnroll(courseId, isEnrolled) {
   var method = isEnrolled ? "DELETE" : "POST";
   fetch(API + "/courses/" + courseId + "/enroll", { method: method })
     .then(handleFetch)
     .then(function (d) {
-      if (d) loadAll();
+      if (d) _applyEnrollState(courseId, !isEnrolled);
     })
     .catch(function (err) {
       console.error("Lỗi đăng ký:", err);
@@ -1074,7 +1097,7 @@ function confirmUnenroll() {
   fetch(API + "/courses/" + courseId + "/enroll", { method: "DELETE" })
     .then(handleFetch)
     .then(function (d) {
-      if (d) loadAll();
+      if (d) _applyEnrollState(courseId, false);
     })
     .catch(function (err) {
       console.error("Lỗi hủy đăng ký:", err);
@@ -1090,8 +1113,8 @@ function filterCourses() {
     if (coursesPage && !coursesPage.classList.contains('active')) {
       navigate('courses');
     }
-    loadCourses();
-  }, 300);
+    renderCourses();
+  }, 150);
 }
 
 function showSearchSuggestions() {
@@ -1136,7 +1159,7 @@ function chooseSearchSuggestion(value) {
   if (coursesPage && !coursesPage.classList.contains('active')) {
     navigate('courses');
   }
-  loadCourses();
+  renderCourses();
   closeSearchSuggestions();
 }
 
@@ -1148,7 +1171,7 @@ function toggleSearchLevel(level) {
   }
   renderSearchSuggestions();
   renderActiveFilters();
-  loadCourses();
+  renderCourses();
 }
 
 /* ════════════════════════════════════
@@ -1189,7 +1212,7 @@ function cshInput(val) {
     }
   }
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(loadCourses, 300);
+  searchDebounceTimer = setTimeout(renderCourses, 150);
 }
 
 function cshPick(val) {
@@ -1206,36 +1229,34 @@ function cshPick(val) {
     levelFilter = 'Phù hợp người mới';
     renderSearchSuggestions();
     renderActiveFilters();
-    loadCourses();
+    renderCourses();
     return;
   }
   if (val === 'Cơ bản') {
-    // Backend hiện normalize cấp độ theo 'Phù hợp người mới'
     levelFilter = 'Phù hợp người mới';
     renderSearchSuggestions();
     renderActiveFilters();
-    loadCourses();
+    renderCourses();
     return;
   }
   if (val === 'Trung cấp') {
     levelFilter = 'Trung cấp';
     renderSearchSuggestions();
     renderActiveFilters();
-    loadCourses();
+    renderCourses();
     return;
   }
   if (val === 'Cao cấp') {
-    // Backend level tương ứng đang là 'Nâng cao'
     levelFilter = 'Nâng cao';
     renderSearchSuggestions();
     renderActiveFilters();
-    loadCourses();
+    renderCourses();
     return;
   }
 
   // Chỉ set searchQuery khi chọn gợi ý tìm kiếm thông thường
   searchQuery = val;
-  loadCourses();
+  renderCourses();
 }
 
 
@@ -1251,7 +1272,7 @@ function cshClear() {
   if (staticEl) staticEl.style.display = 'block';
   if (dynEl)    dynEl.style.display    = 'none';
   searchQuery = '';
-  loadCourses();
+  renderCourses();
 }
 
 /* Đóng dropdown khi click ra ngoài */
@@ -1297,7 +1318,7 @@ function setLevelFilter(btn, level) {
     btn.classList.add('active');
   }
   renderActiveFilters();
-  loadCourses();
+  renderCourses();
 }
 
 function toggleLanguageFilter(btn, language) {
@@ -1310,7 +1331,7 @@ function toggleLanguageFilter(btn, language) {
     btn.classList.remove('active');
   }
   renderActiveFilters();
-  loadCourses();
+  renderCourses();
 }
 
 function renderActiveFilters() {
@@ -1365,7 +1386,7 @@ function removeCourseFilter(type, value) {
     }
   }
   renderActiveFilters();
-  loadCourses();
+  renderCourses();
 }
 
 /* ── Toggle switches ── */
@@ -1563,11 +1584,36 @@ function loadNotifications() {
     });
 }
 
+var _COURSES_CACHE_KEY = 'edu_courses_cache_v1';
+
+function _applyCoursesData(data) {
+  courses = data.courses;
+  enrolledCourses = data.enrolled;
+  renderCourses();
+  renderMyCourses();
+  renderProgress();
+}
+
+function loadCoursesAndEnrolled() {
+  /* Render từ cache ngay lập tức nếu có → UI hiện lên trước khi fetch xong */
+  try {
+    var cached = sessionStorage.getItem(_COURSES_CACHE_KEY);
+    if (cached) _applyCoursesData(JSON.parse(cached));
+  } catch (e) {}
+
+  return fetch(API + '/courses-enrolled')
+    .then(handleFetch)
+    .then(function(data) {
+      if (!data) return;
+      try { sessionStorage.setItem(_COURSES_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+      _applyCoursesData(data);
+    });
+}
+
 function loadAll() {
   loadUser();
   loadStats();
-  loadCourses();
-  loadEnrolled();
+  loadCoursesAndEnrolled();
   loadNotifications();
   loadEduRoadmaps();
 }

@@ -13,9 +13,12 @@ database/edu.db
 # OS
 .DS_Store
 Thumbs.db
+<<<<<<< HEAD
 app.log
 # Added by code-review-graph
 .code-review-graph/
+=======
+>>>>>>> 8b8a298a2aed8f18f7c8fc4cc696a64ea302e28f
 
 # Agent instruction files
 CLAUDE.md
