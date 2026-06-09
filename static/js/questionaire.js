@@ -6,6 +6,48 @@ document.addEventListener("DOMContentLoaded", function () {
   const progressBar = document.getElementById("progressBar");
   let currentStep = 0;
 
+  // Tên input bắt buộc phải chọn tại mỗi step (theo thứ tự)
+  const STEP_REQUIRED = [
+    { name: 'job',        otherId: 'job_other',    textId: 'job_text' },
+    { name: 'purpose',    otherId: 'purpose_other', textId: 'purpose_text' },
+    { name: 'goal',       otherId: 'goal_other',   textId: 'goal_text' },
+    { name: 'experience', otherId: null,            textId: null },
+    { name: 'level',      otherId: null,            textId: null },
+    { name: 'field',      otherId: 'field_other',  textId: 'field_text' },
+    { name: 'time',       otherId: null,            textId: null },
+  ];
+
+  function isStepAnswered(stepIndex) {
+    const req = STEP_REQUIRED[stepIndex];
+    if (!req) return true;
+    const hasSelection = document.querySelectorAll(`input[name="${req.name}"]:checked`).length > 0;
+    if (!hasSelection) return false;
+    // Nếu chọn "Khác" thì bắt buộc phải nhập text mới cho qua
+    if (req.otherId && req.textId) {
+      const otherChecked = document.querySelector(`#${req.otherId}:checked`);
+      if (otherChecked && !document.getElementById(req.textId).value.trim()) return false;
+    }
+    // Câu 4: nếu sub_language_section đang hiện thì bắt buộc chọn ít nhất 1 ngôn ngữ
+    if (stepIndex === 3) {
+      const langSection = document.getElementById('sub_language_section');
+      if (langSection && langSection.style.display !== 'none') {
+        const hasLang = document.querySelectorAll('input[name="language"]:checked').length > 0;
+        if (!hasLang) return false;
+        const langOther = document.querySelector('#lang_other:checked');
+        if (langOther && !document.getElementById('lang_text').value.trim()) return false;
+      }
+    }
+    return true;
+  }
+
+  function updateNextBtn() {
+    const activeStep = steps[currentStep];
+    if (!activeStep) return;
+    const nextBtn = activeStep.querySelector('.next-btn');
+    if (!nextBtn) return;
+    nextBtn.classList.toggle('locked', !isStepAnswered(currentStep));
+  }
+
   function updateForm() {
     steps.forEach((step, index) => {
       step.classList.toggle("active", index === currentStep);
@@ -13,10 +55,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // Cập nhật thanh tiến trình %
     const progress = (currentStep / (steps.length - 1)) * 100;
     progressBar.style.width = progress + "%";
+    updateNextBtn();
   }
 
   nextBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (!isStepAnswered(currentStep)) {
+        showStepError('Vui lòng trả lời câu hỏi bắt buộc trước khi tiếp tục.');
+        shakeQuestion();
+        return;
+      }
       if (currentStep < steps.length - 1) {
         currentStep++;
         updateForm();
@@ -34,6 +82,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   updateForm(); // Khởi chạy lần đầu
+
+  // Cập nhật trạng thái nút Next mỗi khi user thay đổi lựa chọn hoặc gõ vào ô Khác
+  document.getElementById("surveyForm").addEventListener("change", updateNextBtn);
+  document.getElementById("surveyForm").addEventListener("input", updateNextBtn);
 
   // --- 2. LOGIC BẬT/TẮT Ô NHẬP "KHÁC" ---
   function setupOtherInput(inputType, name, otherId, textId) {
@@ -65,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   setupOtherInput("radio", "job", "job_other", "job_text");
   setupOtherInput("checkbox", "purpose", "purpose_other", "purpose_text");
-  setupOtherInput("radio", "goal", "goal_other", "goal_text");
+  setupOtherInput("checkbox", "goal", "goal_other", "goal_text");
   setupOtherInput("checkbox", "language", "lang_other", "lang_text");
   setupOtherInput("checkbox", "field", "field_other", "field_text");
 
@@ -110,17 +162,64 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // --- 5. XỬ LÝ LƯU KẾT QUẢ KHI SUBMIT FORM (KHÔNG CHẤM ĐIỂM) ---
+  // Khởi tạo đúng trạng thái khi user quay lại step này với radio đã được chọn sẵn
+  const preCheckedExperience = document.querySelector('input[name="experience"]:checked');
+  if (preCheckedExperience && preCheckedExperience.value.includes("Có")) {
+    subLanguageSection.style.display = "block";
+  }
+
+  // --- 5. VALIDATE TOÀN BỘ TRƯỚC KHI SUBMIT ---
+  function validateAll() {
+    for (let i = 0; i < steps.length; i++) {
+      if (!isStepAnswered(i)) return i;
+    }
+    return -1;
+  }
+
+  function shakeQuestion() {
+    const block = steps[currentStep].querySelector('.question-block');
+    if (!block) return;
+    block.classList.remove('shake');
+    void block.offsetWidth; // reset để animation chạy lại
+    block.classList.add('shake');
+    block.addEventListener('animationend', () => block.classList.remove('shake'), { once: true });
+  }
+
+  function showStepError(message) {
+    const activeStep = steps[currentStep];
+    let errEl = activeStep.querySelector('.step-error');
+    if (!errEl) {
+      errEl = document.createElement('p');
+      errEl.className = 'step-error';
+      activeStep.querySelector('.btn-group').before(errEl);
+    }
+    errEl.textContent = message;
+    errEl.style.display = 'block';
+    clearTimeout(errEl._hideTimer);
+    errEl._hideTimer = setTimeout(() => { errEl.style.display = 'none'; }, 3000);
+  }
+
+  // --- 6. XỬ LÝ LƯU KẾT QUẢ KHI SUBMIT FORM (KHÔNG CHẤM ĐIỂM) ---
   document
     .getElementById("surveyForm")
     .addEventListener("submit", async function (event) {
       event.preventDefault();
+
+      // Rà soát toàn bộ câu hỏi trước khi gửi
+      const failingStep = validateAll();
+      if (failingStep !== -1) {
+        currentStep = failingStep;
+        updateForm();
+        showStepError('Vui lòng hoàn thành câu hỏi này trước khi gửi.');
+        return;
+      }
 
       const formData = new FormData(this);
       let finalSurveyData = {};
 
       // Khởi tạo các mảng cho câu hỏi chọn nhiều (checkbox) để gom dữ liệu lại cho gọn
       finalSurveyData.purpose = [];
+      finalSurveyData.goal = [];
       finalSurveyData.language = [];
       finalSurveyData.field = [];
 
