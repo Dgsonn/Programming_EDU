@@ -3,7 +3,7 @@
   "html.validate.styles": true,
   "css.validate": true,
   "files.associations": {
-    "*.html": "jinja-html"
+    "*.html": "html"
   },
   "[jinja-html]": {
     "editor.defaultFormatter": "monosans.polymer-ide"
