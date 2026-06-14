@@ -9,6 +9,7 @@ from extensions import limiter
 from models import init_db
 from routes import register_blueprints
 from routes.auth import auth_bp
+from routes.oauth import google_bp, facebook_bp, _oauth_callback
 from utils.logging import init_request_id, log_5xx, setup_logging
 
 app = Flask(__name__)
@@ -33,6 +34,9 @@ limiter.init_app(app)
 # ── Blueprints ─────────────────────────────────────────────────────────────
 register_blueprints(app)
 csrf.exempt(auth_bp)
+csrf.exempt(google_bp)
+csrf.exempt(facebook_bp)
+csrf.exempt(_oauth_callback)
 init_db()
 
 # ── Logger dùng trong module này ───────────────────────────────────────────

@@ -21,3 +21,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
     WTF_CSRF_CHECK_DEFAULT     = False
     RATELIMIT_STORAGE_URI      = os.environ.get('REDIS_URL', 'memory://')
+
+    GOOGLE_CLIENT_ID     = os.environ.get('GOOGLE_CLIENT_ID', '')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+    FACEBOOK_CLIENT_ID     = os.environ.get('FACEBOOK_CLIENT_ID', '')
+    FACEBOOK_CLIENT_SECRET = os.environ.get('FACEBOOK_CLIENT_SECRET', '')

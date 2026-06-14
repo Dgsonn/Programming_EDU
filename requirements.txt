@@ -7,3 +7,4 @@ flask-wtf
 email-validator>=2.1
 flask-limiter>=3.5
 redis>=5.0
+flask-dance>=7.0

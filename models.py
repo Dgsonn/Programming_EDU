@@ -160,11 +160,22 @@ def init_db():
             ('xp',                      'INTEGER DEFAULT 0'),
             ('questionnaire_completed', 'INTEGER DEFAULT 0'),
             ('last_study_date',         'DATE DEFAULT NULL'),
+            ('oauth_provider',          'TEXT DEFAULT NULL'),
+            ('oauth_provider_id',       'TEXT DEFAULT NULL'),
         ):
             try:
                 c.execute(f'ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {definition}')
             except Exception:
                 conn.rollback()
+
+        try:
+            c.execute(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth '
+                'ON users(oauth_provider, oauth_provider_id) '
+                'WHERE oauth_provider IS NOT NULL'
+            )
+        except Exception:
+            conn.rollback()
 
         c.execute('''CREATE TABLE IF NOT EXISTS courses (
             id           TEXT PRIMARY KEY,
