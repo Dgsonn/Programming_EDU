@@ -391,6 +391,19 @@ def lesson_view(course_id):
 def course_detail(course_id):
     uid = current_user_id()
     conn = get_db()
+
+    if course_id == 'db_design':
+        user = conn.execute('SELECT name, streak FROM users WHERE id=%s', (uid,)).fetchone()
+        enrollment = conn.execute(
+            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, 'db_design')
+        ).fetchone()
+        conn.close()
+        user = dict(user) if user else {}
+        return render_template('course_db_design.html',
+            user_name=user.get('name', ''),
+            streak=user.get('streak', 0),
+            enrollment=dict(enrollment) if enrollment else None)
+
     course = conn.execute('SELECT * FROM courses WHERE id = %s', (course_id,)).fetchone()
     if not course:
         conn.close()

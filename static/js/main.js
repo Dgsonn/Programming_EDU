@@ -31,6 +31,7 @@ var COURSE_URLS = {
   python: "/lesson/python",
   java: "/lesson/java",
   htmlcss: "/lesson/htmlcss",
+  db_design: "/lesson/db_design",
 };
 
 var pageLabels = {
@@ -1823,8 +1824,29 @@ function loadNotifications() {
 
 var _COURSES_CACHE_KEY = 'edu_courses_cache_v1';
 
+var _DB_DESIGN_CARD = {
+  id: 'db_design',
+  title: 'Database Design',
+  subtitle: 'Thiết kế & Quản lý CSDL',
+  description: 'Thiết kế và quản lý cơ sở dữ liệu quan hệ từ ER Diagram, SQL đến tối ưu hóa query thực tế.',
+  image: 'static/images/db_design.svg',
+  level: 'Trung cấp',
+  duration: '40 giờ',
+  students: '12.5K',
+  rating: 4.8,
+  lessons: 60,
+  color: '#1a2744',
+  accentColor: '#0f172a',
+  tag: 'DATABASE',
+  enrolled: false
+};
+
 function _applyCoursesData(data) {
   courses = data.courses;
+  // Thêm card Database Design nếu backend chưa trả về
+  if (!courses.some(function(c) { return c.id === 'db_design'; })) {
+    courses.push(_DB_DESIGN_CARD);
+  }
   enrolledCourses = data.enrolled;
   renderCourses();
   renderMyCourses();
