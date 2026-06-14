@@ -1,109 +1,17 @@
-<!DOCTYPE html>
-<html lang="vi">
+{% extends 'base.html' %}
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Programming EDU</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=12" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=8" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
+{% block title %}Programming EDU{% endblock %}
 
-<body>
-<script>if(localStorage.getItem('theme')!=='light')document.body.classList.add('dark');</script>
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=12" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
+{% endblock %}
 
-  <!-- Hidden elements to keep JS working (sidebar-name, sidebar-role) -->
-  <span id="sidebar-name" style="display:none">—</span>
-  <span id="sidebar-role" style="display:none">Học viên</span>
-
-  <!-- ══════════ MAIN ══════════ -->
+{% block content %}
   <div id="main">
-
-    <!-- Top bar -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <div class="brand brand-always" onclick="navigate('dashboard');window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer" title="Về trang chủ">
-          <div class="brand-title">Programming EDU</div>
-        </div>
-      </div>
-
-      <nav class="topbar-nav" role="navigation" aria-label="Main navigation">
-        <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')" aria-label="Dashboard">
-          <span class="nav-icon">🏠</span><span>Dashboard</span>
-        </button>
-        <button class="nav-btn" data-page="courses" onclick="navigate('courses')" aria-label="Khóa học">
-          <span class="nav-icon">📖</span><span>Khóa học</span>
-        </button>
-        <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')" aria-label="Lộ trình">
-          <span class="nav-icon">🗺️</span><span>Lộ trình</span>
-        </button>
-        <button class="nav-btn" data-page="skills" onclick="navigate('skills')" aria-label="Kỹ năng">
-          <span class="nav-icon">🏅</span><span>Kỹ năng</span>
-        </button>
-        <button class="nav-btn" data-page="forum" onclick="navigate('forum')" aria-label="Diễn đàn">
-          <span class="nav-icon">💬</span><span>Diễn đàn</span>
-        </button>
-      </nav>
-
-      <div class="topbar-right">
-        <div class="search-wrap" id="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses(); showSearchSuggestions()" onfocus="showSearchSuggestions()" onclick="showSearchSuggestions()" onblur="closeSearchSuggestions()" autocomplete="off" />
-          <div class="search-suggestions hidden" id="search-suggestions">
-            <div class="suggestions-header">Gợi ý tìm kiếm</div>
-            <div class="suggestions-row" id="suggestions-row"></div>
-            <div class="suggestions-header">Cấp độ học</div>
-            <div class="suggestion-levels" id="suggestion-levels"></div>
-          </div>
-        </div>
-        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
-        <div class="bell-wrap" id="bell-wrap">
-          <button class="bell-btn" id="bell-btn" onclick="toggleBellPanel()" aria-haspopup="true" aria-expanded="false" aria-label="Thông báo">
-            🔔<span class="bell-dot" id="bell-dot"></span>
-          </button>
-          <div class="bell-panel" id="bell-panel" role="dialog" aria-label="Thông báo">
-            <div class="bell-panel-header">
-              <span class="bell-panel-title">🔔 Thông báo</span>
-              <button class="bell-mark-all" onclick="markAllBellRead()">Đánh dấu đã đọc</button>
-            </div>
-            <div class="bell-panel-body" id="bell-panel-body"></div>
-          </div>
-        </div>
-        <div class="user-chip-wrap" id="user-chip-wrap">
-          <div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
-            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
-            <span class="chip-name" id="chip-name">—</span>
-            <span class="dropdown-icon" id="chip-arrow">▾</span>
-          </div>
-          <div class="user-dropdown" id="user-dropdown" role="menu">
-            <div class="user-dropdown-header">
-              <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" class="udh-avatar" />
-              <div>
-                <div class="udh-name" id="udh-name">—</div>
-                <div class="udh-role">Học viên</div>
-              </div>
-            </div>
-            <div class="user-dropdown-divider"></div>
-            <button class="user-dropdown-item" onclick="navigate('dashboard'); closeUserMenu()" role="menuitem">
-              <span class="udi-icon">🙋</span> Trang của tôi
-            </button>
-            <button class="user-dropdown-item" onclick="navigate('settings'); closeUserMenu()" role="menuitem">
-              <span class="udi-icon">⚙️</span> Cài đặt
-            </button>
-            <div class="user-dropdown-divider"></div>
-            <button class="user-dropdown-item danger" onclick="window.location='/auth/logout'" role="menuitem">
-              <span class="udi-icon">🚪</span> Đăng xuất
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- ── Dashboard ── -->
     <div class="page active" id="page-dashboard">
@@ -269,7 +177,6 @@
 
     <!-- ── Roadmap ── -->
     <div class="page" id="page-roadmap">
-
 
       <!-- Toolbar: tabs + search -->
       <div class="rm-toolbar">
@@ -460,7 +367,6 @@
     <!-- ── Settings ── -->
     <div class="page" id="page-settings">
       <div class="settings-wrap">
-
 
         <div class="settings-section">
           <div class="settings-section-title"><span class="title-icon-blue">👤</span><span>Thông tin cá nhân</span></div>
@@ -738,7 +644,4 @@
   {% include 'chatbot.html' %}
   <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=1"></script>
-
-</body>
-
-</html>
+{% endblock %}
