@@ -277,6 +277,35 @@ input[type="radio"], input[type="checkbox"] {
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
 }
 
+.next-btn.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+}
+
+.next-btn.locked:hover {
+    background-color: #21262d;
+    color: #c9d1d9;
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-7px); }
+    40%       { transform: translateX(7px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+}
+
+.question-block.shake {
+    animation: shake 0.4s ease;
+    outline: 1px solid rgba(255, 123, 114, 0.45);
+    border-radius: 8px;
+    will-change: transform;
+}
+
 .prev-btn {
     background-color: transparent;
     color: #8b949e;
@@ -307,7 +336,20 @@ input[type="radio"], input[type="checkbox"] {
     box-shadow: 0 4px 25px rgba(220, 38, 38, 0.6);
 }
 
-/* --- 8. Thông báo cuối cùng --- */
+/* --- 8. Thông báo lỗi validation inline --- */
+.step-error {
+    display: none;
+    color: #ff7b72;
+    background-color: rgba(255, 123, 114, 0.1);
+    border: 1px solid rgba(255, 123, 114, 0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+    animation: slideUp 0.2s ease;
+}
+
+/* --- 9. Thông báo cuối cùng --- */
 .thanks-overlay {
     position: fixed;
     inset: 0;
@@ -315,6 +357,7 @@ input[type="radio"], input[type="checkbox"] {
     align-items: center;
     justify-content: center;
     background: rgba(6, 10, 16, 0.65);
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     opacity: 0;
     visibility: hidden;
