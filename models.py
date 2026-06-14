@@ -257,33 +257,26 @@ def init_db():
 
         c.execute('SELECT 1 FROM roadmaps LIMIT 1')
         if not c.fetchone():
-            _classDefs = (
-                '    classDef col_yellow fill:#1C1500,stroke:#FBBF24,stroke-width:2px,color:#FEF08A,rx:8\n'
-                '    classDef col_pink   fill:#1A0520,stroke:#F472B6,stroke-width:2px,color:#FBCFE8,rx:8\n'
-                '    classDef col_blue   fill:#050E1F,stroke:#38BDF8,stroke-width:2px,color:#BAE6FD,rx:8\n'
-                '    classDef col_gold   fill:#150E00,stroke:#F59E0B,stroke-width:2px,color:#FDE68A,rx:8\n'
-                '    classDef col_green  fill:#011C0E,stroke:#4ADE80,stroke-width:2px,color:#BBF7D0,rx:8\n'
-                '    classDef col_purple fill:#0F0520,stroke:#A78BFA,stroke-width:2px,color:#DDD6FE,rx:8\n'
-                '    classDef col_orange fill:#1A0A00,stroke:#FB923C,stroke-width:2px,color:#FED7AA,rx:8'
-            )
-            _init_block = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#050E1F","primaryTextColor":"#E2E8F0","primaryBorderColor":"#38BDF8","lineColor":"#38BDF8","edgeLabelBackground":"transparent"},"flowchart":{"curve":"basis","useMaxWidth":false,"nodeSpacing":55,"rankSpacing":75,"padding":20}}}%%'
+            # Bỏ classDef + init block để JS palette (main.js _PASTEL_LIGHT/_PASTEL_DARK)
+            # hoàn toàn kiểm soát màu node, đồng bộ với roadmap cá nhân
+            _flowchart_header = 'flowchart TD\n'
 
             roadmaps_seed = [
                 (
                     'frontend', 'Frontend Web', '💻', '#4A9EE0',
-                    _init_block + '\nflowchart TD\n'
-                    '    rm_1["1. Internet"]:::col_yellow\n'
-                    '    rm_2["2. HTML"]:::col_pink\n'
-                    '    rm_3["3. CSS"]:::col_blue\n'
-                    '    rm_4["4. JavaScript"]:::col_gold\n'
-                    '    rm_5["5. DOM & Events"]:::col_gold\n'
-                    '    rm_6["6. Fetch API"]:::col_gold\n'
-                    '    rm_7["7. Frameworks"]:::col_green\n'
-                    '    rm_8["8. React co ban"]:::col_green\n'
-                    '    rm_9["9. State Management"]:::col_green\n'
-                    '    rm_10["10. Git & GitHub"]:::col_purple\n'
-                    '    rm_11["11. Build Tools"]:::col_purple\n'
-                    '    rm_12["12. Deployment"]:::col_orange\n'
+                    _flowchart_header +
+                    '    rm_1["1. Internet"]\n'
+                    '    rm_2["2. HTML"]\n'
+                    '    rm_3["3. CSS"]\n'
+                    '    rm_4["4. JavaScript"]\n'
+                    '    rm_5["5. DOM & Events"]\n'
+                    '    rm_6["6. Fetch API"]\n'
+                    '    rm_7["7. Frameworks"]\n'
+                    '    rm_8["8. React co ban"]\n'
+                    '    rm_9["9. State Management"]\n'
+                    '    rm_10["10. Git & GitHub"]\n'
+                    '    rm_11["11. Build Tools"]\n'
+                    '    rm_12["12. Deployment"]\n'
                     '    rm_1 --> rm_2\n'
                     '    rm_2 --> rm_3\n'
                     '    rm_3 --> rm_4\n'
@@ -297,20 +290,19 @@ def init_db():
                     '    rm_9 --> rm_11\n'
                     '    rm_10 --> rm_12\n'
                     '    rm_11 --> rm_12\n'
-                    + _classDefs
                 ),
                 (
                     'backend', 'Backend', '⚙️', '#E84545',
-                    _init_block + '\nflowchart TD\n'
-                    '    rm_b1["1. Kien thuc co ban"]:::col_yellow\n'
-                    '    rm_b2["2. Ngon ngu Backend"]:::col_pink\n'
-                    '    rm_b3["3. DB SQL"]:::col_blue\n'
-                    '    rm_b4["4. DB NoSQL"]:::col_blue\n'
-                    '    rm_b5["5. Thiet ke API"]:::col_gold\n'
-                    '    rm_b6["6. Bao mat & Auth"]:::col_green\n'
-                    '    rm_b7["7. Container & Docker"]:::col_purple\n'
-                    '    rm_b8["8. CI/CD"]:::col_purple\n'
-                    '    rm_b9["9. Trien khai"]:::col_orange\n'
+                    _flowchart_header +
+                    '    rm_b1["1. Kien thuc co ban"]\n'
+                    '    rm_b2["2. Ngon ngu Backend"]\n'
+                    '    rm_b3["3. DB SQL"]\n'
+                    '    rm_b4["4. DB NoSQL"]\n'
+                    '    rm_b5["5. Thiet ke API"]\n'
+                    '    rm_b6["6. Bao mat & Auth"]\n'
+                    '    rm_b7["7. Container & Docker"]\n'
+                    '    rm_b8["8. CI/CD"]\n'
+                    '    rm_b9["9. Trien khai"]\n'
                     '    rm_b1 --> rm_b2\n'
                     '    rm_b2 --> rm_b3\n'
                     '    rm_b2 --> rm_b4\n'
@@ -321,20 +313,19 @@ def init_db():
                     '    rm_b6 --> rm_b8\n'
                     '    rm_b7 --> rm_b9\n'
                     '    rm_b8 --> rm_b9\n'
-                    + _classDefs
                 ),
                 (
                     'python', 'Python & AI', '🐍', '#10B981',
-                    _init_block + '\nflowchart TD\n'
-                    '    rm_p1["1. Python Co Ban"]:::col_yellow\n'
-                    '    rm_p2["2. Python Nang Cao"]:::col_pink\n'
-                    '    rm_p3["3. Phan Tich Du Lieu"]:::col_blue\n'
-                    '    rm_p4["4. Toan Hoc Cho AI"]:::col_gold\n'
-                    '    rm_p5["5. Machine Learning"]:::col_green\n'
-                    '    rm_p6["6. Deep Learning"]:::col_green\n'
-                    '    rm_p7["7. Thi Giac May Tinh"]:::col_purple\n'
-                    '    rm_p8["8. Xu Ly Ngon Ngu"]:::col_purple\n'
-                    '    rm_p9["9. Generative AI"]:::col_orange\n'
+                    _flowchart_header +
+                    '    rm_p1["1. Python Co Ban"]\n'
+                    '    rm_p2["2. Python Nang Cao"]\n'
+                    '    rm_p3["3. Phan Tich Du Lieu"]\n'
+                    '    rm_p4["4. Toan Hoc Cho AI"]\n'
+                    '    rm_p5["5. Machine Learning"]\n'
+                    '    rm_p6["6. Deep Learning"]\n'
+                    '    rm_p7["7. Thi Giac May Tinh"]\n'
+                    '    rm_p8["8. Xu Ly Ngon Ngu"]\n'
+                    '    rm_p9["9. Generative AI"]\n'
                     '    rm_p1 --> rm_p2\n'
                     '    rm_p2 --> rm_p3\n'
                     '    rm_p3 --> rm_p4\n'
@@ -344,20 +335,19 @@ def init_db():
                     '    rm_p6 --> rm_p8\n'
                     '    rm_p7 --> rm_p9\n'
                     '    rm_p8 --> rm_p9\n'
-                    + _classDefs
                 ),
                 (
                     'cpp', 'C/C++ Systems', '🖥️', '#8B5CF6',
-                    _init_block + '\nflowchart TD\n'
-                    '    rm_c1["1. Cot Loi Ngon Ngu C"]:::col_yellow\n'
-                    '    rm_c2["2. Con Tro & Bo Nho"]:::col_pink\n'
-                    '    rm_c3["3. Cau Truc Du Lieu"]:::col_blue\n'
-                    '    rm_c4["4. C++ OOP"]:::col_gold\n'
-                    '    rm_c5["5. Thu vien STL C++"]:::col_green\n'
-                    '    rm_c6["6. Modern C++"]:::col_green\n'
-                    '    rm_c7["7. Lap Trinh He Thong"]:::col_purple\n'
-                    '    rm_c8["8. Bien Dich & Cong Cu"]:::col_purple\n'
-                    '    rm_c9["9. Nhung / Socket"]:::col_orange\n'
+                    _flowchart_header +
+                    '    rm_c1["1. Cot Loi Ngon Ngu C"]\n'
+                    '    rm_c2["2. Con Tro & Bo Nho"]\n'
+                    '    rm_c3["3. Cau Truc Du Lieu"]\n'
+                    '    rm_c4["4. C++ OOP"]\n'
+                    '    rm_c5["5. Thu vien STL C++"]\n'
+                    '    rm_c6["6. Modern C++"]\n'
+                    '    rm_c7["7. Lap Trinh He Thong"]\n'
+                    '    rm_c8["8. Bien Dich & Cong Cu"]\n'
+                    '    rm_c9["9. Nhung / Socket"]\n'
                     '    rm_c1 --> rm_c2\n'
                     '    rm_c2 --> rm_c3\n'
                     '    rm_c3 --> rm_c4\n'
@@ -366,7 +356,6 @@ def init_db():
                     '    rm_c6 --> rm_c7\n'
                     '    rm_c7 --> rm_c8\n'
                     '    rm_c8 --> rm_c9\n'
-                    + _classDefs
                 ),
             ]
             c.executemany(
@@ -431,88 +420,81 @@ def init_db():
             )
 
         # Luôn cập nhật mermaid_def để đảm bảo label tiếng Việt đầy đủ dấu
-        _ib = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#050E1F","primaryTextColor":"#E2E8F0","primaryBorderColor":"#38BDF8","lineColor":"#38BDF8","edgeLabelBackground":"transparent"},"flowchart":{"curve":"basis","useMaxWidth":false,"nodeSpacing":55,"rankSpacing":75,"padding":20}}}%%'
-        _cd = (
-            '    classDef col_yellow fill:#1C1500,stroke:#FBBF24,stroke-width:2px,color:#FEF08A,rx:8\n'
-            '    classDef col_pink   fill:#1A0520,stroke:#F472B6,stroke-width:2px,color:#FBCFE8,rx:8\n'
-            '    classDef col_blue   fill:#050E1F,stroke:#38BDF8,stroke-width:2px,color:#BAE6FD,rx:8\n'
-            '    classDef col_gold   fill:#150E00,stroke:#F59E0B,stroke-width:2px,color:#FDE68A,rx:8\n'
-            '    classDef col_green  fill:#011C0E,stroke:#4ADE80,stroke-width:2px,color:#BBF7D0,rx:8\n'
-            '    classDef col_purple fill:#0F0520,stroke:#A78BFA,stroke-width:2px,color:#DDD6FE,rx:8\n'
-            '    classDef col_orange fill:#1A0A00,stroke:#FB923C,stroke-width:2px,color:#FED7AA,rx:8'
-        )
+        # Bỏ classDef + init block để JS palette (main.js _PASTEL_LIGHT/_PASTEL_DARK)
+        # hoàn toàn kiểm soát màu node, đồng bộ với roadmap cá nhân
         _mermaid_defs_vn = {
             'frontend': (
-                _ib + '\nflowchart TD\n'
-                '    rm_1["1. Internet"]:::col_yellow\n'
-                '    rm_2["2. HTML"]:::col_pink\n'
-                '    rm_3["3. CSS"]:::col_blue\n'
-                '    rm_4["4. JavaScript"]:::col_gold\n'
-                '    rm_5["5. DOM & Events"]:::col_gold\n'
-                '    rm_6["6. Fetch API"]:::col_gold\n'
-                '    rm_7["7. Frameworks"]:::col_green\n'
-                '    rm_8["8. React cơ bản"]:::col_green\n'
-                '    rm_9["9. State Management"]:::col_green\n'
-                '    rm_10["10. Git & GitHub"]:::col_purple\n'
-                '    rm_11["11. Build Tools"]:::col_purple\n'
-                '    rm_12["12. Deployment"]:::col_orange\n'
+                'flowchart TD\n'
+                '    rm_1["1. Internet"]\n'
+                '    rm_2["2. HTML"]\n'
+                '    rm_3["3. CSS"]\n'
+                '    rm_4["4. JavaScript"]\n'
+                '    rm_5["5. DOM & Events"]\n'
+                '    rm_6["6. Fetch API"]\n'
+                '    rm_7["7. Frameworks"]\n'
+                '    rm_8["8. React cơ bản"]\n'
+                '    rm_9["9. State Management"]\n'
+                '    rm_10["10. Git & GitHub"]\n'
+                '    rm_11["11. Build Tools"]\n'
+                '    rm_12["12. Deployment"]\n'
                 '    rm_1 --> rm_2\n    rm_2 --> rm_3\n    rm_3 --> rm_4\n'
                 '    rm_4 --> rm_5\n    rm_4 --> rm_6\n'
                 '    rm_5 --> rm_7\n    rm_6 --> rm_7\n'
                 '    rm_7 --> rm_8\n    rm_7 --> rm_9\n'
                 '    rm_8 --> rm_10\n    rm_9 --> rm_11\n'
-                '    rm_10 --> rm_12\n    rm_11 --> rm_12\n' + _cd
+                '    rm_10 --> rm_12\n    rm_11 --> rm_12\n'
             ),
             'backend': (
-                _ib + '\nflowchart TD\n'
-                '    rm_b1["1. Kiến thức cơ bản"]:::col_yellow\n'
-                '    rm_b2["2. Ngôn ngữ Backend"]:::col_pink\n'
-                '    rm_b3["3. DB SQL"]:::col_blue\n'
-                '    rm_b4["4. DB NoSQL"]:::col_blue\n'
-                '    rm_b5["5. Thiết kế API"]:::col_gold\n'
-                '    rm_b6["6. Bảo mật & Auth"]:::col_green\n'
-                '    rm_b7["7. Container & Docker"]:::col_purple\n'
-                '    rm_b8["8. CI/CD"]:::col_purple\n'
-                '    rm_b9["9. Triển khai"]:::col_orange\n'
+                'flowchart TD\n'
+                '    rm_b1["1. Kiến thức cơ bản"]\n'
+                '    rm_b2["2. Ngôn ngữ Backend"]\n'
+                '    rm_b3["3. DB SQL"]\n'
+                '    rm_b4["4. DB NoSQL"]\n'
+                '    rm_b5["5. Thiết kế API"]\n'
+                '    rm_b6["6. Bảo mật & Auth"]\n'
+                '    rm_b7["7. Container & Docker"]\n'
+                '    rm_b8["8. CI/CD"]\n'
+                '    rm_b9["9. Triển khai"]\n'
                 '    rm_b1 --> rm_b2\n'
                 '    rm_b2 --> rm_b3\n    rm_b2 --> rm_b4\n'
                 '    rm_b3 --> rm_b5\n    rm_b4 --> rm_b5\n'
                 '    rm_b5 --> rm_b6\n'
                 '    rm_b6 --> rm_b7\n    rm_b6 --> rm_b8\n'
-                '    rm_b7 --> rm_b9\n    rm_b8 --> rm_b9\n' + _cd
+                '    rm_b7 --> rm_b9\n    rm_b8 --> rm_b9\n'
             ),
             'python': (
-                _ib + '\nflowchart TD\n'
-                '    rm_p1["1. Python Cơ Bản"]:::col_yellow\n'
-                '    rm_p2["2. Python Nâng Cao"]:::col_pink\n'
-                '    rm_p3["3. Phân Tích Dữ Liệu"]:::col_blue\n'
-                '    rm_p4["4. Toán Học Cho AI"]:::col_gold\n'
-                '    rm_p5["5. Machine Learning"]:::col_green\n'
-                '    rm_p6["6. Deep Learning"]:::col_green\n'
-                '    rm_p7["7. Thị Giác Máy Tính"]:::col_purple\n'
-                '    rm_p8["8. Xử Lý Ngôn Ngữ"]:::col_purple\n'
-                '    rm_p9["9. Generative AI"]:::col_orange\n'
+                'flowchart TD\n'
+                '    rm_p1["1. Python Cơ Bản"]\n'
+                '    rm_p2["2. Python Nâng Cao"]\n'
+                '    rm_p3["3. Phân Tích Dữ Liệu"]\n'
+                '    rm_p4["4. Toán Học Cho AI"]\n'
+                '    rm_p5["5. Machine Learning"]\n'
+                '    rm_p6["6. Deep Learning"]\n'
+                '    rm_p7["7. Thị Giác Máy Tính"]\n'
+                '    rm_p8["8. Xử Lý Ngôn Ngữ"]\n'
+                '    rm_p9["9. Generative AI"]\n'
                 '    rm_p1 --> rm_p2\n    rm_p2 --> rm_p3\n'
                 '    rm_p3 --> rm_p4\n    rm_p4 --> rm_p5\n'
                 '    rm_p5 --> rm_p6\n'
                 '    rm_p6 --> rm_p7\n    rm_p6 --> rm_p8\n'
-                '    rm_p7 --> rm_p9\n    rm_p8 --> rm_p9\n' + _cd
+                '    rm_p7 --> rm_p9\n    rm_p8 --> rm_p9\n'
             ),
             'cpp': (
-                _ib + '\nflowchart TD\n'
-                '    rm_c1["1. Cốt Lõi Ngôn Ngữ C"]:::col_yellow\n'
-                '    rm_c2["2. Con Trỏ & Bộ Nhớ"]:::col_pink\n'
-                '    rm_c3["3. Cấu Trúc Dữ Liệu"]:::col_blue\n'
-                '    rm_c4["4. C++ OOP"]:::col_gold\n'
-                '    rm_c5["5. Thư viện STL C++"]:::col_green\n'
-                '    rm_c6["6. Modern C++"]:::col_green\n'
-                '    rm_c7["7. Lập Trình Hệ Thống"]:::col_purple\n'
-                '    rm_c8["8. Biên Dịch & Công Cụ"]:::col_purple\n'
-                '    rm_c9["9. Nhúng / Socket"]:::col_orange\n'
+                'flowchart TD\n'
+                '    rm_c1["1. Cốt Lõi Ngôn Ngữ C"]\n'
+                '    rm_c2["2. Con Trỏ & Bộ Nhớ"]\n'
+                '    rm_c3["3. Cấu Trúc Dữ Liệu"]\n'
+                '    rm_c4["4. C++ OOP"]\n'
+                '    rm_c5["5. Thư viện STL C++"]\n'
+                '    rm_c6["6. Modern C++"]\n'
+                '    rm_c7["7. Lập Trình Hệ Thống"]\n'
+                '    rm_c8["8. Biên Dịch & Công Cụ"]\n'
+                '    rm_c9["9. Nhúng / Socket"]\n'
                 '    rm_c1 --> rm_c2\n    rm_c2 --> rm_c3\n'
                 '    rm_c3 --> rm_c4\n    rm_c4 --> rm_c5\n'
-                '    rm_c5 --> rm_c6\n    rm_c6 --> rm_c7\n'
-                '    rm_c7 --> rm_c8\n    rm_c8 --> rm_c9\n' + _cd
+                '    rm_c5 --> rm_c6\n'
+                '    rm_c6 --> rm_c7\n    rm_c7 --> rm_c8\n'
+                '    rm_c8 --> rm_c9\n'
             ),
         }
         for _rid, _mdef in _mermaid_defs_vn.items():

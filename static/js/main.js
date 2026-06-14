@@ -101,10 +101,17 @@ function renderEduInteractiveRoadmap() {
 
     var svgId = 'rm-svg-' + (++_mermaidRenderCount);
 
+    /* Bỏ %%{init}%% dark theme nếu backend có nhúng — JS palette sẽ kiểm soát hoàn toàn.
+       Đồng thời tiêm init light-theme base để Mermaid không fallback default (trắng). */
+    var _cleanDef = String(roadmap.mermaid_def || '').replace(/%%\{init:[\s\S]*?\}%%/g, '').trim();
+    var _initDirective = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#ffffff","primaryTextColor":"#1F2937","primaryBorderColor":"#94A3B8","lineColor":"#94A3B8","edgeLabelBackground":"#ffffff","tertiaryColor":"#ffffff","classText":"#1F2937"},"flowchart":{"curve":"basis","useMaxWidth":false,"nodeSpacing":55,"rankSpacing":75,"padding":20,"htmlLabels":true}}}%%';
+    var _defForRender = _initDirective + '\n' + _cleanDef;
+
     /* Defer sang idle tick để tránh block UI khi navigate */
     setTimeout(function() {
-        mermaid.render(svgId, roadmap.mermaid_def).then(function(result) {
+        mermaid.render(svgId, _defForRender).then(function(result) {
             wrap.innerHTML = result.svg;
+            console.log('[roadmap] mermaid rendered, node count =', wrap.querySelectorAll('g.node, g[class*="node"]').length);
             var svgEl = wrap.querySelector('svg');
             if (svgEl) {
                 svgEl.removeAttribute('width');
@@ -112,19 +119,61 @@ function renderEduInteractiveRoadmap() {
                 svgEl.style.width = '100%';
                 svgEl.style.height = '100%';
 
+                var _isDark = document.body.classList.contains('dark');
+                /* Palette đồng bộ với .rm-vnode[data-color] trong dashboard.css (roadmap cá nhân) */
+                var _PASTEL_LIGHT = [
+                    { bg:'#FFFBEB', border:'#F59E0B', text:'#92400E' },
+                    { bg:'#EFF6FF', border:'#60A5FA', text:'#1D4ED8' },
+                    { bg:'#F0FDF4', border:'#34D399', text:'#065F46' },
+                    { bg:'#F5F3FF', border:'#A78BFA', text:'#5B21B6' },
+                    { bg:'#FDF2F8', border:'#F472B6', text:'#9D174D' },
+                    { bg:'#FFF7ED', border:'#FB923C', text:'#9A3412' },
+                ];
+                var _PASTEL_DARK = [
+                    { bg:'#1C1500', border:'#FBBF24', text:'#FEF08A' },
+                    { bg:'#050E1F', border:'#38BDF8', text:'#BAE6FD' },
+                    { bg:'#011C0E', border:'#4ADE80', text:'#BBF7D0' },
+                    { bg:'#0F0520', border:'#A78BFA', text:'#DDD6FE' },
+                    { bg:'#1A0520', border:'#F472B6', text:'#FBCFE8' },
+                    { bg:'#1A0A00', border:'#FB923C', text:'#FED7AA' },
+                ];
+                var _palette = _isDark ? _PASTEL_DARK : _PASTEL_LIGHT;
+
+                var _nodeIdx = 0;
                 svgEl.querySelectorAll('g.node, g[class*="node"]').forEach(function(gEl) {
                     gEl.style.cursor = 'pointer';
                     gEl.style.transition = 'filter 0.2s ease';
 
-                    var shape = gEl.querySelector('rect, circle, polygon, path');
-                    var glowColor = 'rgba(56,189,248,0.7)';
-                    if (shape) {
-                        var stroke = shape.getAttribute('stroke') || '';
-                        if (stroke && stroke !== 'none') glowColor = stroke;
-                    }
-                    var glowOn  = 'drop-shadow(0 0 0px ' + glowColor + ') drop-shadow(0 0 12px ' + glowColor + ')';
-                    var glowOff = 'none';
+                    /* áp màu pastel lên mọi shape bên trong g.node */
+                    var c = _palette[_nodeIdx % _palette.length];
+                    _nodeIdx++;
 
+                    gEl.querySelectorAll('rect, circle, polygon, ellipse, path').forEach(function(shape) {
+                        /* bỏ qua path là edge (nằm trong .edgePath) */
+                        if (shape.closest('.edgePath')) return;
+                        /* dùng inline style !important để thắng mọi CSS/theme của Mermaid */
+                        var prev = shape.getAttribute('style') || '';
+                        var extra = 'fill:' + c.bg + '!important;stroke:' + c.border + '!important;stroke-width:2px!important;';
+                        if (shape.tagName.toLowerCase() === 'rect') {
+                            extra += 'rx:10px!important;ry:10px!important;';
+                        }
+                        shape.setAttribute('style', prev + extra);
+                    });
+                    /* SVG text elements */
+                    gEl.querySelectorAll('text, tspan').forEach(function(t) {
+                        var prev = t.getAttribute('style') || '';
+                        t.setAttribute('style', prev + 'fill:' + c.text + '!important;font-weight:600!important;font-size:13px!important;font-family:"Fira Code","Consolas",monospace!important;letter-spacing:0.3px!important;');
+                    });
+                    /* HTML-based foreignObject labels */
+                    gEl.querySelectorAll('.nodeLabel, .nodeLabel span, .nodeLabel p, foreignObject div, foreignObject span, foreignObject p').forEach(function(el) {
+                        el.style.color = c.text;
+                        el.style.fontWeight = '600';
+                        el.style.fontSize = '13px';
+                        el.style.fontFamily = "'Fira Code', 'Consolas', monospace";
+                    });
+
+                    var glowOn  = 'drop-shadow(0 0 6px ' + c.border + ') drop-shadow(0 0 14px ' + c.border + '80)';
+                    var glowOff = 'none';
                     gEl.addEventListener('mouseenter', function() { gEl.style.filter = glowOn; });
                     gEl.addEventListener('mouseleave', function() { gEl.style.filter = glowOff; });
 
@@ -143,6 +192,15 @@ function renderEduInteractiveRoadmap() {
                         if (sidebarContent) sidebarContent.innerHTML  = node.desc;
                         sidebarDetail.classList.add('open');
                     });
+                });
+
+                /* màu đường nối */
+                svgEl.querySelectorAll('.edgePath path, .flowchart-link').forEach(function(p) {
+                    p.setAttribute('stroke', _isDark ? '#475569' : '#94A3B8');
+                    p.setAttribute('stroke-width', '2');
+                });
+                svgEl.querySelectorAll('marker path, marker polygon').forEach(function(m) {
+                    m.setAttribute('fill', _isDark ? '#475569' : '#94A3B8');
                 });
 
                 if (typeof svgPanZoom !== 'undefined') {
@@ -200,13 +258,63 @@ window.toggleSidebar = function() {
   }
 };
 
+function _getMermaidTheme() {
+    var dark = document.body.classList.contains('dark');
+    if (dark) {
+        return {
+            theme: 'base',
+            themeVariables: {
+                background:            '#0A101F',
+                primaryColor:          '#050E1F',
+                primaryBorderColor:    '#38BDF8',
+                primaryTextColor:      '#BAE6FD',
+                secondaryColor:        '#011C0E',
+                secondaryBorderColor:  '#4ADE80',
+                secondaryTextColor:    '#BBF7D0',
+                tertiaryColor:         '#0F0520',
+                tertiaryBorderColor:   '#A78BFA',
+                tertiaryTextColor:     '#DDD6FE',
+                lineColor:             '#475569',
+                edgeLabelBackground:   '#1E293B',
+                clusterBkg:            '#1E293B',
+                clusterBorder:         '#334155',
+                titleColor:            '#F1F5F9',
+                nodeTextColor:         '#F1F5F9',
+                fontFamily:            'inherit',
+            }
+        };
+    }
+    return {
+        theme: 'base',
+        themeVariables: {
+            background:            '#FFFFFF',
+            primaryColor:          '#EFF6FF',
+            primaryBorderColor:    '#60A5FA',
+            primaryTextColor:      '#1D4ED8',
+            secondaryColor:        '#F0FDF4',
+            secondaryBorderColor:  '#34D399',
+            secondaryTextColor:    '#065F46',
+            tertiaryColor:         '#F5F3FF',
+            tertiaryBorderColor:   '#A78BFA',
+            tertiaryTextColor:     '#5B21B6',
+            lineColor:             '#94A3B8',
+            edgeLabelBackground:   '#F8FAFC',
+            clusterBkg:            '#FAFAFA',
+            clusterBorder:         '#E5E7EB',
+            titleColor:            '#1F2937',
+            nodeTextColor:         '#1F2937',
+            fontFamily:            'inherit',
+        }
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof mermaid !== 'undefined') {
-        mermaid.initialize({
+        mermaid.initialize(Object.assign({
             startOnLoad: false,
             securityLevel: 'strict',
             suppressErrors: true,
-        });
+        }, _getMermaidTheme()));
     }
     document.addEventListener('click', function(e) {
         var sidebar = document.getElementById('sidebar-detail');
@@ -1797,6 +1905,17 @@ function toggleTheme() {
   var isDark = !document.body.classList.contains("dark");
   applyTheme(isDark);
   localStorage.setItem("theme", isDark ? "dark" : "light");
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize(Object.assign({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      suppressErrors: true,
+    }, _getMermaidTheme()));
+    _roadmapRenderedId = null;
+    if (window.currentEduRoadmap && window.currentEduRoadmap !== 'personal') {
+      renderEduInteractiveRoadmap();
+    }
+  }
 }
 
 function initDragDrop() {
