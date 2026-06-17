@@ -4,9 +4,10 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=12" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=30" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}?v=1" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
 {% endblock %}
 
@@ -15,92 +16,94 @@
 
     <!-- ── Dashboard ── -->
     <div class="page active" id="page-dashboard">
-      <div class="welcome-banner">
-        <div class="banner-dots"></div>
-        <div class="banner-inner">
-          <div>
-            <div class="greeting" id="banner-greeting">Chào mừng trở lại! 👋</div>
-            <h2 id="banner-name">—</h2>
-            <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình lập trình nhé!</p>
+
+      <div class="dash-grid">
+
+        <!-- ── TRÁI 1/2: welcome + stats + calendar + BXH ── -->
+        <div class="dash-col-left">
+
+          <!-- Welcome (full width cột trái = 1/2 viewport) -->
+          <div class="welcome-banner welcome-banner--slim">
+            <div class="banner-dots"></div>
+            <div class="banner-inner">
+              <div class="banner-text">
+                <span class="greeting" id="banner-greeting">Chào mừng trở lại! 👋</span>
+                <h2 id="banner-name">—</h2>
+              </div>
+              <div class="banner-code">&lt;/&gt;</div>
+            </div>
           </div>
-          <div class="banner-code">&lt;/&gt;</div>
+
+          <!-- Stats: 4 thẻ dưới welcome -->
+          <div class="stats-grid" id="stats-grid">
+            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
+            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
+            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
+            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
+          </div>
+
+          <!-- Calendar -->
+          <div class="section-card study-cal-card">
+            <div class="study-cal-header">
+              <div class="section-title" style="margin-bottom:0"><span class="title-icon-blue">📅</span><span>Lịch học tuần này</span></div>
+              <div class="study-cal-streak" id="cal-streak-badge">
+                <span class="cal-fire">🔥</span>
+                <span class="cal-streak-num" id="cal-streak-num">0</span>
+                <span class="cal-streak-lbl">ngày streak</span>
+              </div>
+            </div>
+            <div class="study-cal-grid" id="study-cal-grid">
+              <div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div>
+            </div>
+            <div class="study-cal-legend">
+              <span class="cal-legend-item"><span class="cal-legend-dot cal-done">✓</span> Đã học</span>
+              <span class="cal-legend-item"><span class="cal-legend-dot cal-todo">○</span> Chưa học</span>
+              <span class="cal-legend-item"><span class="cal-legend-dot cal-today-dot"></span> Hôm nay</span>
+            </div>
+          </div>
+          <div class="cal-tooltip" id="cal-tooltip"></div>
+
+          <!-- BXH -->
+          <div class="section-card lb-card">
+            <div class="lb-header">
+              <div class="section-title" style="margin-bottom:0">
+                <span class="title-icon-blue">🏆</span><span>Bảng xếp hạng</span>
+              </div>
+              <div class="lb-tabs" role="tablist" aria-label="Bảng xếp hạng">
+                <button type="button" class="lb-tab active" data-type="weekly"  role="tab" aria-selected="true">⏱ Tuần</button>
+                <button type="button" class="lb-tab"        data-type="streak"  role="tab" aria-selected="false">🔥 Streak</button>
+                <button type="button" class="lb-tab"        data-type="friends" role="tab" aria-selected="false">👥 Bạn bè</button>
+              </div>
+            </div>
+            <div class="lb-meta" id="lb-meta">Đang tải…</div>
+            <ol class="lb-list" id="lb-list" aria-live="polite">
+              <li class="lb-skel">Đang tải bảng xếp hạng…</li>
+            </ol>
+            <div class="lb-me" id="lb-me" hidden></div>
+          </div>
+        </div>
+
+        <!-- ── PHẢI 1/2: roadmap ── -->
+        <div class="dash-col-right">
+          <div class="section-card mini-rm-card mini-rm-card--full">
+            <div class="mini-rm-header">
+              <div class="section-title" style="margin-bottom:0">
+                <span class="title-icon-blue">🗺</span><span>Lộ trình của bạn</span>
+              </div>
+              <a class="mini-rm-more" href="#" onclick="navigate('roadmap');return false;">Xem tất cả →</a>
+            </div>
+            <div class="mini-rm-canvas" id="mini-rm-canvas" tabindex="0">
+              <div class="mini-rm-loading">Đang tải lộ trình…</div>
+            </div>
+            <div class="mini-rm-legend">
+              <span class="lb-legend-item"><span class="lb-legend-dot lb-done">✓</span> Hoàn thành</span>
+              <span class="lb-legend-item"><span class="lb-legend-dot lb-progress">◐</span> Đang học</span>
+              <span class="lb-legend-item"><span class="lb-legend-dot lb-locked">○</span> Mở khoá</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="stats-grid">
-        <div class="stat-card" onmouseenter="hoverStat(this,'#4A9EE0')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon icon-blue">📖</div>
-          <div>
-            <div class="stat-val" id="stat-enrolled">—</div>
-            <div class="stat-lbl">Khóa học đang học</div>
-          </div>
-        </div>
-        <div class="stat-card" onmouseenter="hoverStat(this,'#E84545')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon icon-red">⏰</div>
-          <div>
-            <div class="stat-val" id="stat-total-hours">—</div>
-            <div class="stat-lbl">Tổng giờ đã học</div>
-          </div>
-        </div>
-        <div class="stat-card" onmouseenter="hoverStat(this,'#F59E0B')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon icon-orange">🔥</div>
-          <div>
-            <div class="stat-val" id="stat-streak">—</div>
-            <div class="stat-lbl">Chuỗi ngày học</div>
-          </div>
-        </div>
-        <div class="stat-card" onmouseenter="hoverStat(this,'#10B981')" onmouseleave="unhoverStat(this)">
-          <div class="stat-icon icon-green">🏆</div>
-          <div>
-            <div class="stat-val" id="stat-certificates">—</div>
-            <div class="stat-lbl">Chứng chỉ</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-card">
-        <div class="section-title"><span class="title-icon-blue">📈</span><span>Tiến độ học tập</span></div>
-        <div class="progress-grid" id="progress-grid"></div>
-      </div>
-
-      <!-- ── Lịch học tuần ── -->
-      <div class="section-card study-cal-card">
-        <div class="study-cal-header">
-          <div class="section-title" style="margin-bottom:0"><span class="title-icon-blue">📅</span><span>Lịch học tuần này</span></div>
-          <div class="study-cal-streak" id="cal-streak-badge">
-            <span class="cal-fire">🔥</span>
-            <span class="cal-streak-num" id="cal-streak-num">0</span>
-            <span class="cal-streak-lbl">ngày streak</span>
-          </div>
-        </div>
-        <div class="study-cal-grid" id="study-cal-grid"></div>
-        <div class="study-cal-legend">
-          <span class="cal-legend-item"><span class="cal-legend-dot cal-done">✓</span> Đã học</span>
-          <span class="cal-legend-item"><span class="cal-legend-dot cal-todo">○</span> Chưa học</span>
-          <span class="cal-legend-item"><span class="cal-legend-dot cal-today-dot"></span> Hôm nay</span>
-        </div>
-      </div>
-
-      <!-- Tooltip lịch học -->
-      <div class="cal-tooltip" id="cal-tooltip"></div>
-
-      <div class="courses-header">
-        <h2>Khóa học của tôi</h2>
-        <button class="filter-btn active btn-small" onclick="navigate('courses')">Khám phá thêm →</button>
-      </div>
-      <div class="courses-search-bar-wrap" id="dash-search-wrap">
-        <span class="csb-icon">🔍</span>
-        <input type="text" id="dash-search-input" class="courses-search-bar-input"
-          placeholder="Tìm trong khóa học của tôi..."
-          autocomplete="off" oninput="dashSearch(this.value)" />
-        <button class="csb-clear" id="dash-search-clear" type="button"
-          style="display:none" onclick="dashClearSearch()">✕</button>
-      </div>
-      <div id="enrolled-list"></div>
-      <div id="dash-search-empty" style="display:none;text-align:center;padding:32px 0;color:#9CA3AF;font-size:14px;">Không tìm thấy khóa học nào khớp với từ khoá.</div>
-    </div>
-
-    <!-- ── Courses ── -->
+    </div>    <!-- ── Courses ── -->
     <div class="page" id="page-courses">
       <div class="courses-header">
         <h2>Tất cả khóa học</h2>
@@ -168,7 +171,13 @@
         <div class="active-filters hidden" id="active-filters"></div>
       </div>
 
-      <div class="courses-grid" id="courses-grid"></div>
+      <div class="courses-grid" id="courses-grid">
+        <!-- Skeleton -->
+        <div class="skel-course-card"><div class="skel-card-img skel"></div><div class="skel-card-body"><div class="skel-card-tag skel"></div><div class="skel-card-title skel"></div><div class="skel-card-desc skel"></div><div class="skel-card-footer"><div class="skel-card-meta skel"></div><div class="skel-card-btn skel"></div></div></div></div>
+        <div class="skel-course-card"><div class="skel-card-img skel"></div><div class="skel-card-body"><div class="skel-card-tag skel"></div><div class="skel-card-title skel"></div><div class="skel-card-desc skel"></div><div class="skel-card-footer"><div class="skel-card-meta skel"></div><div class="skel-card-btn skel"></div></div></div></div>
+        <div class="skel-course-card"><div class="skel-card-img skel"></div><div class="skel-card-body"><div class="skel-card-tag skel"></div><div class="skel-card-title skel"></div><div class="skel-card-desc skel"></div><div class="skel-card-footer"><div class="skel-card-meta skel"></div><div class="skel-card-btn skel"></div></div></div></div>
+        <div class="skel-course-card"><div class="skel-card-img skel"></div><div class="skel-card-body"><div class="skel-card-tag skel"></div><div class="skel-card-title skel"></div><div class="skel-card-desc skel"></div><div class="skel-card-footer"><div class="skel-card-meta skel"></div><div class="skel-card-btn skel"></div></div></div></div>
+      </div>
       <div class="empty hidden" id="empty-state">
         <div class="empty-icon">📖</div>
         <p>Không tìm thấy khóa học nào</p>
@@ -256,15 +265,15 @@
         <span class="rm-hint-item">⌨️ Ctrl+Scroll để zoom nhanh</span>
       </div>
 
+      <!-- Backdrop cho sidebar chi tiết (click để đóng) -->
+      <div id="sidebar-backdrop" onclick="closeSidebar()" aria-hidden="true"></div>
+
       <!-- Sidebar chi tiết node -->
-      <div id="sidebar-detail">
+      <div id="sidebar-detail" role="dialog" aria-modal="true" aria-labelledby="sidebar-title">
         <div class="rm-sidebar-header">
-          <div class="rm-sidebar-icon" id="sidebar-icon">📌</div>
-          <div class="rm-sidebar-close-wrap">
-            <button class="rm-sidebar-close" onclick="closeSidebar()" aria-label="Đóng">✕</button>
-          </div>
+          <h2 id="sidebar-title">Tiêu đề</h2>
+          <button class="rm-sidebar-close" id="rm-sidebar-close" onclick="closeSidebar()" aria-label="Đóng" type="button" title="Đóng (Esc)">✕</button>
         </div>
-        <h2 id="sidebar-title">Tiêu đề</h2>
         <div class="rm-sidebar-divider"></div>
         <div id="sidebar-content">Nội dung chi tiết sẽ hiển thị ở đây...</div>
       </div>
@@ -639,7 +648,7 @@
   <!-- External libraries -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=9"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=10"></script>
 
   {% include 'chatbot.html' %}
   <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>

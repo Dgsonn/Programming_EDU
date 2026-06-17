@@ -892,7 +892,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 }
 
 /* 3D Grid & Cards */
-.3d-grid {
+.grid-3D {
   perspective: 1000px;
 }
 .neon-card {

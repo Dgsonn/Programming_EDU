@@ -152,26 +152,38 @@ function renderEduInteractiveRoadmap() {
                     gEl.querySelectorAll('rect, circle, polygon, ellipse, path').forEach(function(shape) {
                         /* bỏ qua path là edge (nằm trong .edgePath) */
                         if (shape.closest('.edgePath')) return;
-                        /* dùng inline style !important để thắng mọi CSS/theme của Mermaid */
-                        var prev = shape.getAttribute('style') || '';
-                        var extra = 'fill:' + c.bg + '!important;stroke:' + c.border + '!important;stroke-width:2px!important;';
+                        /* Xóa inline style cũ + set trực tiếp fill/stroke để thắng
+                           mọi CSS rule của Mermaid (kể cả !important) */
+                        shape.removeAttribute('style');
+                        shape.setAttribute('fill', c.bg);
+                        shape.setAttribute('stroke', c.border);
+                        shape.setAttribute('stroke-width', '2');
                         if (shape.tagName.toLowerCase() === 'rect') {
-                            extra += 'rx:10px!important;ry:10px!important;';
+                            shape.setAttribute('rx', '10');
+                            shape.setAttribute('ry', '10');
                         }
-                        shape.setAttribute('style', prev + extra);
                     });
                     /* SVG text elements */
                     gEl.querySelectorAll('text, tspan').forEach(function(t) {
-                        var prev = t.getAttribute('style') || '';
-                        t.setAttribute('style', prev + 'fill:' + c.text + '!important;font-weight:600!important;font-size:13px!important;font-family:"Fira Code","Consolas",monospace!important;letter-spacing:0.3px!important;');
+                        t.removeAttribute('style');
+                        t.setAttribute('fill', c.text);
+                        t.setAttribute('font-weight', '600');
+                        t.setAttribute('font-size', '13');
+                        t.setAttribute('font-family', '"Fira Code", "Consolas", monospace');
                     });
                     /* HTML-based foreignObject labels */
                     gEl.querySelectorAll('.nodeLabel, .nodeLabel span, .nodeLabel p, foreignObject div, foreignObject span, foreignObject p').forEach(function(el) {
+                        el.removeAttribute('style');
                         el.style.color = c.text;
                         el.style.fontWeight = '600';
                         el.style.fontSize = '13px';
                         el.style.fontFamily = "'Fira Code', 'Consolas', monospace";
                     });
+                    /* Set CSS variable trên g.node để bất kỳ CSS rule nào cũng
+                       có thể dùng — fallback cho trường hợp Mermaid render element lạ */
+                    gEl.style.setProperty('--rm-node-bg', c.bg);
+                    gEl.style.setProperty('--rm-node-border', c.border);
+                    gEl.style.setProperty('--rm-node-text', c.text);
 
                     var glowOn  = 'drop-shadow(0 0 6px ' + c.border + ') drop-shadow(0 0 14px ' + c.border + '80)';
                     var glowOff = 'none';
@@ -188,10 +200,34 @@ function renderEduInteractiveRoadmap() {
                         var sidebarTitle   = document.getElementById('sidebar-title');
                         var sidebarContent = document.getElementById('sidebar-content');
                         var sidebarDetail  = document.getElementById('sidebar-detail');
+                        var sidebarBackdrop = document.getElementById('sidebar-backdrop');
                         if (!sidebarDetail) return;
                         if (sidebarTitle)   sidebarTitle.textContent = node.title;
                         if (sidebarContent) sidebarContent.innerHTML  = node.desc;
+                        /* Reset scroll về đầu để user thấy title ngay */
+                        sidebarDetail.scrollTop = 0;
                         sidebarDetail.classList.add('open');
+                        if (sidebarBackdrop) sidebarBackdrop.classList.add('open');
+                        document.body.classList.add('rm-sidebar-open');
+                    });
+
+                    /* Fix click ở giữa block: ép text/foreignObject capture events.
+                       KHÔNG thêm rect overlay nữa — nó hiện thành bảng trắng trên
+                       browser mobile. */
+                    gEl.querySelectorAll('text, tspan').forEach(function(t) {
+                        t.style.pointerEvents = 'all';
+                        t.style.cursor = 'pointer';
+                    });
+                    gEl.querySelectorAll('foreignObject').forEach(function(fo) {
+                        fo.style.pointerEvents = 'all';
+                        fo.style.cursor = 'pointer';
+                        try {
+                            var inner = fo.querySelectorAll('*');
+                            for (var i = 0; i < inner.length; i++) {
+                                inner[i].style.pointerEvents = 'all';
+                                inner[i].style.cursor = 'pointer';
+                            }
+                        } catch (e) {}
                     });
                 });
 
@@ -213,8 +249,74 @@ function renderEduInteractiveRoadmap() {
                         minZoom: 0.2,
                         maxZoom: 4,
                         panEnabled: true,
+                        preventMouseEventsDefault: false,
                     });
                 }
+
+                /* Helper: tìm node group từ 1 điểm (x, y) trên viewport.
+                   1. Thử elementFromPoint + closest g.node trước (rẻ, đúng cho
+                      click trúng rect/text).
+                   2. Nếu không trúng (click vào khoảng trống trong block) →
+                      quét getBoundingClientRect() của tất cả g.node để tìm
+                      node nào chứa điểm đó. */
+                function findNodeFromPoint(x, y) {
+                    var el = document.elementFromPoint(x, y);
+                    if (el) {
+                        var g = el.closest && el.closest('g.node, g[class*="node"]');
+                        if (g) return g;
+                    }
+                    /* Fallback: quét bounding rect của từng node group */
+                    var nodes = svgEl.querySelectorAll('g.node, g[class*="node"]');
+                    for (var i = 0; i < nodes.length; i++) {
+                        var r = nodes[i].getBoundingClientRect();
+                        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                            return nodes[i];
+                        }
+                    }
+                    return null;
+                }
+
+                /* Click handler trên SVG: xử lý click vào KHOẢNG TRỐNG trong
+                   block. Click trúng rect/text vẫn được g.node bắt trước (và
+                   stopPropagation), nên handler này chỉ chạy khi click rơi ra
+                   ngoài element con của g.node. */
+                svgEl.addEventListener('click', function(e) {
+                    var nodeG = findNodeFromPoint(e.clientX, e.clientY);
+                    if (!nodeG) return;
+                    /* Click trúng rect/text thì g.node đã xử lý rồi (stopPropagation
+                       chặn bubble). Check e.target để tránh mở lại lần 2. */
+                    if (e.target.closest && e.target.closest('g.node, g[class*="node"]') === nodeG) return;
+                    nodeG.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                });
+
+                /* Mobile: svgPanZoom nuốt touch events → node click không hoạt động.
+                   Dùng touchend ngắn (< 300ms, di < 10px) để giả lập click trên node. */
+                (function() {
+                    var _tStart = null;
+                    svgEl.addEventListener('touchstart', function(e) {
+                        if (e.touches.length === 1) {
+                            _tStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+                        } else {
+                            _tStart = null;
+                        }
+                    }, { passive: true });
+                    svgEl.addEventListener('touchend', function(e) {
+                        if (!_tStart) return;
+                        var touch = e.changedTouches[0];
+                        var dx = Math.abs(touch.clientX - _tStart.x);
+                        var dy = Math.abs(touch.clientY - _tStart.y);
+                        var dt = Date.now() - _tStart.t;
+                        _tStart = null;
+                        if (dx > 10 || dy > 10 || dt > 300) return;
+                        /* Dùng findNodeFromPoint (có fallback getBoundingClientRect)
+                           để bắt cả touch vào khoảng trống trong block */
+                        var nodeG = findNodeFromPoint(touch.clientX, touch.clientY);
+                        if (nodeG) {
+                            e.preventDefault();
+                            nodeG.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        }
+                    });
+                })();
             }
         }).catch(function(err) {
             wrap.innerHTML = '<div class="rm-loading"><div style="font-size:32px">⚠️</div><div class="rm-loading-text" style="color:#EF4444">Không tải được sơ đồ. Vui lòng thử lại.</div></div>';
@@ -244,7 +346,35 @@ function loadEduRoadmaps() {
 
 window.closeSidebar = function() {
     var sd = document.getElementById('sidebar-detail');
-    if (sd) sd.classList.remove('open');
+    var bd = document.getElementById('sidebar-backdrop');
+    if (!sd) return;
+
+    /* Ẩn backdrop + body class ngay lập tức */
+    if (bd) bd.classList.remove('open');
+    document.body.classList.remove('rm-sidebar-open');
+
+    /* Nếu đang trong quá trình đóng rồi → bỏ qua, không add thêm listener/setTimeout */
+    if (sd.classList.contains('closing')) return;
+    /* Nếu chưa mở thì thôi */
+    if (!sd.classList.contains('open')) return;
+
+    /* Gỡ 'open' trước để CSS transition chạy ngược (right 0 → -400).
+       Thêm 'closing' làm flag nội bộ để chặn click đúp. */
+    sd.classList.remove('open');
+    sd.classList.add('closing');
+
+    var cleanup = function() {
+        sd.classList.remove('closing');
+        sd.removeEventListener('transitionend', onEnd);
+    };
+    var onEnd = function(ev) {
+        /* chỉ cleanup khi transition của `right` (slide) kết thúc */
+        if (ev && ev.propertyName && ev.propertyName !== 'right') return;
+        cleanup();
+    };
+    sd.addEventListener('transitionend', onEnd);
+    /* Fallback 400ms nếu transitionend không fire (vd: bị che bởi element khác) */
+    setTimeout(cleanup, 400);
 };
 
 window.toggleSidebar = function() {
@@ -320,6 +450,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         var sidebar = document.getElementById('sidebar-detail');
         if (!sidebar || !sidebar.classList.contains('open')) return;
+        /* Click trên backdrop thì backdrop tự xử lý onclick → bỏ qua để tránh double-call */
+        var bd = document.getElementById('sidebar-backdrop');
+        if (bd && bd.contains(e.target)) return;
         if (!sidebar.contains(e.target)) closeSidebar();
     });
     document.addEventListener('keydown', function(e) {
@@ -768,6 +901,9 @@ function handleFetch(r) {
 
 /* ── Navigation ── */
 function navigate(page) {
+  /* Đóng panel chi tiết roadmap (nếu đang mở) để tránh kẹt body scroll + UI lỗi */
+  try { closeSidebar(); } catch (_) {}
+
   document.querySelectorAll(".page").forEach(function (p) {
     p.classList.remove("active");
   });
@@ -1652,6 +1788,14 @@ function loadStats() {
     .then(handleFetch)
     .then(function (s) {
       if (!s) return;
+      var grid = document.getElementById('stats-grid');
+      if (grid && grid.querySelector('.skel-stat')) {
+        grid.innerHTML =
+          '<div class="stat-card" onmouseenter="hoverStat(this,\'#4A9EE0\')" onmouseleave="unhoverStat(this)"><div class="stat-icon icon-blue">📖</div><div class="stat-body"><div class="stat-val" id="stat-enrolled">—</div><div class="stat-lbl">Khóa học đang học</div></div></div>' +
+          '<div class="stat-card" onmouseenter="hoverStat(this,\'#E84545\')" onmouseleave="unhoverStat(this)"><div class="stat-icon icon-red">⏰</div><div class="stat-body"><div class="stat-val" id="stat-total-hours">—</div><div class="stat-lbl">Tổng giờ học</div></div></div>' +
+          '<div class="stat-card" onmouseenter="hoverStat(this,\'#F59E0B\')" onmouseleave="unhoverStat(this)"><div class="stat-icon icon-orange">🔥</div><div class="stat-body"><div class="stat-val" id="stat-streak">—</div><div class="stat-lbl">Chuỗi ngày học</div></div></div>' +
+          '<div class="stat-card" onmouseenter="hoverStat(this,\'#10B981\')" onmouseleave="unhoverStat(this)"><div class="stat-icon icon-green">🏆</div><div class="stat-body"><div class="stat-val" id="stat-certificates">—</div><div class="stat-lbl">Chứng chỉ</div></div></div>';
+      }
       setText("stat-enrolled", s.enrolledCount);
       setText("stat-total-hours", s.totalHours);
       setText("stat-streak", s.streakDays + " ngày");

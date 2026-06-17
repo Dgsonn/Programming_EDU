@@ -106,6 +106,7 @@ nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   font-size: 15px; white-space: nowrap;
 }
+.brand-short { display: none; }
 
 /* ── Topbar horizontal nav ── */
 .topbar-nav {
@@ -455,3 +456,158 @@ body.dark .user-dropdown-item.danger:hover { background: #2D1111; color: #FCA5A5
 .section-title span { font-size: 15px; font-weight: 600; color: #1F2937; }
 .prog-bar-bg   { height: 6px; background: #F3F4F6; border-radius: 99px; overflow: hidden; }
 .prog-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+
+/* ════════════════════════════════════════════════════════════
+   Responsive — 1440 / 768 / 375
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 1440px: comfortable widescreen ── */
+@media (min-width: 1440px) {
+  .page { max-width: 1200px; margin-inline: auto; }
+  .sk-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ── 768px: tablet ── */
+@media (max-width: 768px) {
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar-nav .nav-btn span:not(.nav-icon) { display: none; }
+  .topbar-nav .nav-btn { padding: 7px 10px; }
+  .topbar-nav { gap: 0; }
+  .search-wrap input { width: 120px; font-size: 12px; }
+  .chip-name { display: none; }
+  .page { padding: 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .progress-grid { grid-template-columns: 1fr; }
+  .courses-grid { grid-template-columns: 1fr; }
+  .fields-grid { grid-template-columns: 1fr; }
+  .sec-lang-grid { grid-template-columns: 1fr; }
+  .lesson-grid { grid-template-columns: 1fr; }
+  .sk-grid { grid-template-columns: 1fr; }
+  .study-cal-grid { gap: 4px; }
+  .cal-day { padding: 8px 2px; }
+  .cal-day-icon { width: 28px; height: 28px; font-size: 14px; }
+}
+
+/* ── mobile (bao gồm 375px – 430px) ── */
+@media (max-width: 576px) {
+  /* — Topbar: logo rút gọn PE, chỉ hiện icon nav — */
+  .brand-full { display: none !important; }
+  .brand-short { display: block !important; font-size: 18px !important; font-weight: 900 !important; }
+  .topbar { padding: 0 10px; height: 48px; gap: 4px; }
+  .topbar-nav { gap: 0; flex: 1; justify-content: center; }
+  .topbar-nav .nav-btn { padding: 6px 8px; }
+  .topbar-nav .nav-btn span:not(.nav-icon) { display: none; }
+  .topbar-nav .nav-btn .nav-icon { width: 20px; height: 20px; font-size: 14px; }
+  .topbar-right { gap: 6px; }
+  .search-wrap { display: none; }
+  .chip-name { display: none; }
+  .user-chip { padding: 4px 6px; }
+  .bell-btn { width: 32px; height: 32px; font-size: 14px; }
+  .theme-toggle-btn { font-size: 14px; }
+  .bell-panel { width: 280px; right: -40px; }
+
+  /* — Nội dung căn giữa — */
+  .page { padding: 12px; }
+  #main { align-items: center; }
+
+  /* — Banner — */
+  .welcome-banner { border-radius: 12px; padding: 14px; }
+  .banner-inner { flex-direction: column; text-align: center; gap: 8px; }
+  .banner-inner h2 { font-size: 18px; }
+  .banner-inner p { font-size: 12px; }
+  .banner-code { display: none; }
+
+  /* — Stats grid — */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 12px; gap: 8px; }
+  .stat-icon { width: 32px; height: 32px; font-size: 15px; }
+  .stat-val { font-size: 15px; }
+  .stat-lbl { display: none; }
+
+  /* — Section cards — */
+  .section-card { padding: 14px; border-radius: 12px; }
+
+  /* — Lịch học tuần — */
+  .study-cal-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .study-cal-grid { gap: 3px; }
+  .cal-day { padding: 6px 1px; border-radius: 10px; }
+  .cal-day-label { font-size: 10px; }
+  .cal-day-num { font-size: 11px; }
+  .cal-day-icon { width: 24px; height: 24px; font-size: 12px; }
+
+  /* — Enrolled cards — */
+  .enrolled-card { padding: 14px; }
+  .enrolled-top { flex-direction: column; align-items: stretch; gap: 10px; }
+  .enrolled-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 12px; }
+  .enrolled-info h3 { font-size: 14px; }
+  .continue-btn { padding: 6px 12px; font-size: 12px; width: 100%; justify-content: center; }
+
+  /* — Courses header & grid — */
+  .courses-header { flex-direction: column; align-items: stretch; gap: 8px; }
+  .courses-header h2 { font-size: 16px; }
+  .courses-controls { flex-direction: column; gap: 8px; align-items: stretch; }
+  .courses-grid { grid-template-columns: 1fr !important; gap: 14px; }
+  .card-img-wrap { height: 180px; }
+
+  /* — Course card nội dung gọn — */
+  .card-body { padding: 12px; }
+  .card-desc { font-size: 12px; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-stats { gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .card-stat { font-size: 11px; }
+  .card-footer { flex-direction: column; align-items: stretch; gap: 8px; }
+  .card-lessons { font-size: 11px; }
+  .card-footer > div { display: flex !important; flex-wrap: wrap; gap: 6px !important; }
+  .card-footer > div .cta-btn { flex: 1; justify-content: center; font-size: 12px; }
+  .card-footer > div button { min-width: 0; }
+  .course-card:hover { transform: none; }
+
+  /* — Badge gọn hơn — */
+  .badge-level { font-size: 10px; padding: 3px 8px; top: 8px; left: 8px; }
+  .badge-enrolled { font-size: 10px; padding: 3px 8px; top: 8px; right: 8px; }
+  .card-title-overlay h3 { font-size: 14px; }
+  .card-tag { font-size: 9px; }
+
+  /* — Bộ lọc — */
+  .filter-group { flex-wrap: wrap; gap: 4px; }
+  .filter-btn { font-size: 11px; padding: 5px 8px; }
+  .course-filter-panel { gap: 8px; padding: 10px 12px; }
+  .filter-pill-row { flex-wrap: wrap; gap: 6px; }
+  .pill-btn { font-size: 11px; padding: 4px 8px; }
+  .pill-label { font-size: 11px; }
+  .sort-dropdown-wrap { width: 100%; }
+  .sort-select { width: 100%; }
+
+  /* — Progress grid — */
+  .progress-grid { grid-template-columns: 1fr; }
+
+  /* — Settings — */
+  .settings-wrap { max-width: 100%; }
+  .fields-grid { grid-template-columns: 1fr; }
+  .sec-lang-grid { grid-template-columns: 1fr; }
+
+  /* — Roadmap — */
+  #roadmap-container-wrapper { height: 55vh; min-height: 360px; border-radius: 14px; }
+  .rm-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .rm-tabs-wrap { flex-wrap: wrap; gap: 4px; }
+  .rm-tabs-wrap .filter-btn { font-size: 11px; padding: 5px 8px; }
+  .rm-tab-personal { margin-left: 0; border-left: none; padding-left: 8px; }
+  .rm-hint-bar { display: none; }
+  /* Dùng `body #sidebar-detail` thay vì `#sidebar-detail` để thắng rule desktop
+     trong dashboard.css (cùng specificity nhưng load sau nên ưu tiên hơn). */
+  /* Mobile: drawer 360px bên phải, dưới topbar — phần roadmap bên trái vẫn thấy */
+  body #sidebar-detail { width: 360px; max-width: 92vw; right: -100%; top: 48px; height: calc(100vh - 48px); overflow-x: hidden; box-sizing: border-box; }
+  body #sidebar-detail.open { right: 0; }
+  /* Backdrop mobile: phủ toàn màn hình dưới topbar, click để đóng */
+  body #sidebar-backdrop { z-index: 9998; top: 48px; }
+  /* ✕ nhỏ hơn trên mobile (36×36) để vừa header */
+  .rm-sidebar-close { width: 36px; height: 36px; font-size: 18px; }
+  .rm-personal-hd { flex-direction: column; gap: 8px; }
+  .rm-personal-hd-right { width: 100%; }
+  .rm-personal-hd-right button { flex: 1; font-size: 12px; }
+  .rmv-toolbar { flex-wrap: wrap; gap: 6px; }
+
+  /* — Forum — */
+  .fcb-actions { flex-wrap: wrap; }
+  .fcb-action-btn { font-size: 12px; }
+  .forum-create-box { padding: 12px 14px 10px; }
+}
