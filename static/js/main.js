@@ -725,25 +725,6 @@ function savePersonalRoadmap() {
     .catch(function() { if (btn) { btn.disabled=false; btn.textContent='💾 Lưu lộ trình'; } });
 }
 
-function savePersonalRoadmap() {
-    var ta = document.getElementById('rm-personal-editor');
-    if (!ta) return;
-    var btn = document.querySelector('.rm-save-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu...'; }
-    fetch(API + '/me/roadmap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mermaid_def: ta.value })
-    })
-    .then(handleFetch)
-    .then(function(d) {
-        if (btn) { btn.disabled = false; btn.textContent = '✅ Đã lưu'; setTimeout(function(){ btn.textContent = '💾 Lưu'; }, 2000); }
-    })
-    .catch(function() {
-        if (btn) { btn.disabled = false; btn.textContent = '💾 Lưu'; }
-    });
-}
-
 function handlePersonalRoadmapAI() {
     fetch(API + '/me/roadmap/ai', { method: 'POST' })
         .then(function(r) {
