@@ -526,11 +526,24 @@ def init_db():
                 ('htmlcss', 'HTML / CSS', 'Nền tảng Web',
                  'Tạo giao diện web đẹp, responsive với HTML5 hiện đại và CSS3 nâng cao.',
                  'static/images/htmlcss.svg', 'Phù hợp người mới',    '30 giờ', '35.1K', 4.9,  70, '#E84545', '#4A9EE0', 'WEB DEVELOPMENT'),
+                ('db_design', 'Database Design', 'Thiết kế & Chuẩn hóa CSDL',
+                 'Trang bị toàn bộ kiến thức để thiết kế và quản lý cơ sở dữ liệu quan hệ. Từ sơ đồ E-R, chuẩn hóa dữ liệu đến viết SQL truy vấn phức tạp và tối ưu hóa hiệu năng.',
+                 'static/images/db_design.svg', 'Phù hợp người mới',  '40 giờ', '0',     4.9,  60, '#06B6D4', '#0E7490', 'DATABASE & BACKEND'),
             ]
             c.executemany(
                 'INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                 courses_seed
             )
+        else:
+            # Migration: ensure db_design row exists (in case the table was seeded before db_design was added)
+            c.execute('SELECT 1 FROM courses WHERE id = %s', ('db_design',))
+            if not c.fetchone():
+                c.execute(
+                    'INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                    ('db_design', 'Database Design', 'Thiết kế & Chuẩn hóa CSDL',
+                     'Trang bị toàn bộ kiến thức để thiết kế và quản lý cơ sở dữ liệu quan hệ. Từ sơ đồ E-R, chuẩn hóa dữ liệu đến viết SQL truy vấn phức tạp và tối ưu hóa hiệu năng.',
+                     'static/images/db_design.svg', 'Phù hợp người mới', '40 giờ', '0', 4.9, 60, '#06B6D4', '#0E7490', 'DATABASE & BACKEND')
+                )
 
         # Seed missions sau courses vì có FK: course_id REFERENCES courses(id)
         c.execute('SELECT 1 FROM missions LIMIT 1')

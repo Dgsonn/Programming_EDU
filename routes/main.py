@@ -319,6 +319,37 @@ CURRICULA = {
             ]},
         ],
     },
+    'db_design': {
+        'requirements': [
+            'Không cần kinh nghiệm CSDL trước',
+            'Tư duy logic tốt là lợi thế',
+            'Sẵn sàng vẽ sơ đồ và viết SQL',
+        ],
+        'skills': [
+            'Thiết kế cơ sở dữ liệu quan hệ từ yêu cầu thực tế',
+            'Vẽ sơ đồ E-R (Entity-Relationship)',
+            'Ánh xạ E-R sang bảng vật lý (Mapping)',
+            'Phát hiện & loại bỏ dư thừa dữ liệu (Redundancy)',
+            'Chuẩn hóa 1NF, 2NF, 3NF, BCNF',
+            'Viết SQL truy vấn: SELECT, JOIN, GROUP BY',
+            'Thiết kế Foreign Key & Junction Table cho quan hệ M:N',
+        ],
+        'instructor': 'Lê Minh Tuấn',
+        'modules': [
+            {'title': 'Module 1: Giới thiệu & Nền tảng Database', 'lessons': [
+                'Entity Set & Primary Key', 'Composite & Derived Attributes',
+                'Foreign Key & JOIN', 'M:N & Bảng trung gian (Junction Table)',
+                'Thực thể yếu (Weak Entity)',
+            ]},
+            {'title': 'Module 2: Chuẩn hóa dữ liệu (Normal Forms)', 'lessons': [
+                'Redundancy & Phụ thuộc hàm (FD)', 'Dạng chuẩn 1 (1NF) — Nguyên tử hóa',
+                'Dạng chuẩn BCNF & Phân rã Phi tổn thất', 'Dạng chuẩn 3 (3NF) & Sự thỏa hiệp',
+            ]},
+            {'title': 'Module 3: Thiết kế hệ thống thực tế', 'lessons': [
+                'Trận chiến cuối — Siêu hệ thống chuẩn hóa',
+            ]},
+        ],
+    },
 }
 
 
@@ -362,17 +393,19 @@ def interface():
     return render_template('interface.html', **_user_stats())
 
 _LESSON_TEMPLATES = {
-    'python':  'lesson_python.html',
-    'java':    'lesson_java.html',
-    'htmlcss': 'lesson_htmlcss.html',
+    'python':   'lesson_python.html',
+    'java':     'lesson_java.html',
+    'htmlcss':  'lesson_htmlcss.html',
+    'db_design': 'lesson_db_design.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
 _LESSON_URLS = {
-    'python':  '/lesson/python',
-    'java':    '/lesson/java',
-    'htmlcss': '/lesson/htmlcss',
-    'cpp':     '/interface',
+    'python':   '/lesson/python',
+    'java':     '/lesson/java',
+    'htmlcss':  '/lesson/htmlcss',
+    'cpp':      '/interface',
+    'db_design': '/lesson/db_design',
 }
 
 @main_bp.route('/lesson/<course_id>')
