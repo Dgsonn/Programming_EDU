@@ -100,13 +100,11 @@
         <h1 class="cd-hero-title">Database Design</h1>
         <p class="cd-hero-subtitle">Thiết kế và quản lý cơ sở dữ liệu từ ER Diagram đến tối ưu hóa query thực tế</p>
         <div class="cd-meta">
-          <div class="cd-meta-item">⭐ <span class="val">4.8</span> đánh giá</div>
-          <div class="cd-meta-item">👥 <span class="val">12.5K</span> học viên</div>
           <div class="cd-meta-item">🕐 <span class="val">40 giờ</span></div>
           <div class="cd-meta-item">📖 <span class="val">60</span> bài học</div>
           <div class="cd-meta-item">🎯 <span class="val">Trung cấp</span></div>
         </div>
-        <div class="cd-instructor">Giảng viên: <strong>Nguyễn Văn Hùng</strong></div>
+        
       </div>
       <div class="cd-hero-visual">🗄️</div>
     </div>
@@ -326,12 +324,28 @@
           </div>
           <div class="cd-block-body">
             <div class="cd-reviews-stub">
-              <div class="stars">⭐⭐⭐⭐⭐</div>
-              <div class="score">4.8</div>
-              <div style="font-size:14px;margin-top:4px;color:#6B7280;">Đánh giá trung bình</div>
-              <div style="font-size:13px;margin-top:16px;color:#9CA3AF;max-width:320px;margin-left:auto;margin-right:auto;">
-                Tính năng đánh giá chi tiết đang được phát triển. Hãy quay lại sau!
+              <!-- Điểm trung bình -->
+              <div class="star-avg-wrap">
+                <div class="star-avg">
+                  <div class="star-avg-bg">★★★★★</div>
+                  <div class="star-avg-fill" data-fill="96">★★★★★</div>
+                </div>
               </div>
+              <div class="score">4.8</div>
+              <div class="avg-label">Đánh giá trung bình</div>
+
+              <!-- Đánh giá tương tác -->
+              <div class="user-rate-section">
+                <div class="user-rate-label">Đánh giá của bạn:</div>
+                <div class="star-interactive" id="starInteractive">
+                  {% for i in [1,2,3,4,5] %}
+                  <div class="si-star" data-star="{{ i }}">★</div>
+                  {% endfor %}
+                </div>
+                <div class="user-rate-val" id="userRateVal">—</div>
+              </div>
+
+              <div class="coming-soon-note">Tính năng lưu đánh giá đang được phát triển. Hãy quay lại sau!</div>
             </div>
           </div>
         </div>

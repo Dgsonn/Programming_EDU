@@ -165,3 +165,60 @@ function markAllBellRead() {
   _renderBellItems();
   _updateBellDot();
 }
+
+/* ── Interactive Star Rating ── */
+(function () {
+  var fillEl = document.querySelector('.star-avg-fill');
+  if (fillEl) fillEl.style.width = (fillEl.dataset.fill || 0) + '%';
+
+  var container = document.getElementById('starInteractive');
+  var rateVal   = document.getElementById('userRateVal');
+  if (!container || !rateVal) return;
+
+  var stars = container.querySelectorAll('.si-star');
+  var selectedRating = 0;
+
+  var LABELS = {
+    0.5: 'Quá tệ', 1: 'Rất tệ', 1.5: 'Tệ', 2: 'Không tốt',
+    2.5: 'Tạm được', 3: 'Bình thường', 3.5: 'Khá ổn',
+    4: 'Tốt', 4.5: 'Rất tốt', 5: 'Xuất sắc! 🎉'
+  };
+
+  function paintStars(val) {
+    stars.forEach(function (star, i) {
+      var n = i + 1;
+      star.classList.remove('star-full', 'star-half');
+      if (val >= n)            star.classList.add('star-full');
+      else if (val >= n - 0.5) star.classList.add('star-half');
+    });
+  }
+
+  function updateLabel(val) {
+    rateVal.textContent = val ? val + ' ★  ' + (LABELS[val] || '') : '—';
+  }
+
+  stars.forEach(function (star) {
+    star.addEventListener('mousemove', function (e) {
+      var rect = star.getBoundingClientRect();
+      var isLeft = (e.clientX - rect.left) < rect.width / 2;
+      var n = parseInt(star.dataset.star);
+      paintStars(isLeft ? n - 0.5 : n);
+      updateLabel(isLeft ? n - 0.5 : n);
+    });
+    star.addEventListener('click', function (e) {
+      var rect = star.getBoundingClientRect();
+      var isLeft = (e.clientX - rect.left) < rect.width / 2;
+      var n = parseInt(star.dataset.star);
+      selectedRating = isLeft ? n - 0.5 : n;
+      paintStars(selectedRating);
+      updateLabel(selectedRating);
+    });
+  });
+
+  container.addEventListener('mouseleave', function () {
+    paintStars(selectedRating);
+    updateLabel(selectedRating);
+  });
+
+  paintStars(0);
+})();

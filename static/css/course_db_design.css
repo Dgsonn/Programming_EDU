@@ -113,9 +113,34 @@
   50%       { box-shadow: 0 0 0 7px rgba(74,158,224,0.08); }
 }
 /* ── Reviews stub ── */
-.cd-reviews-stub { text-align: center; padding: 24px; color: #9CA3AF; font-size: 13px; }
-.cd-reviews-stub .stars { font-size: 28px; letter-spacing: 3px; margin-bottom: 8px; }
-.cd-reviews-stub .score { font-size: 40px; font-weight: 800; color: #F59E0B; }
+.cd-reviews-stub { text-align: center; padding: 24px; }
+
+.star-avg-wrap { display: inline-block; margin-bottom: 8px; }
+.star-avg { position: relative; display: inline-block; font-size: 36px; line-height: 1; letter-spacing: 6px; }
+.star-avg-bg { color: #D1D5DB; }
+.star-avg-fill { position: absolute; top: 0; left: 0; overflow: hidden; white-space: nowrap; color: #F59E0B; width: 0; }
+
+.cd-reviews-stub .score { font-size: 40px; font-weight: 800; color: #F59E0B; margin-bottom: 4px; }
+.avg-label { font-size: 14px; color: #6B7280; }
+
+.user-rate-section { margin-top: 24px; border-top: 1px solid #F3F4F6; padding-top: 20px; }
+.user-rate-label { font-size: 13px; color: #9CA3AF; margin-bottom: 12px; }
+.star-interactive { display: inline-flex; gap: 8px; margin-bottom: 10px; }
+
+.si-star {
+  font-size: 38px; line-height: 1; color: #D1D5DB;
+  cursor: pointer; -webkit-user-select: none; user-select: none;
+  transition: transform 0.12s ease;
+}
+.si-star.star-full { color: #F59E0B; transform: scale(1.18); }
+.si-star.star-half {
+  background: linear-gradient(to right, #F59E0B 50%, #D1D5DB 50%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; transform: scale(1.1);
+}
+
+.user-rate-val { font-size: 16px; font-weight: 700; color: #F59E0B; min-height: 22px; }
+.coming-soon-note { font-size: 12px; color: #9CA3AF; margin-top: 16px; }
 /* ── Enrollment sidebar card ── */
 .cd-card {
   background: #fff; border-radius: 16px; border: 1px solid #F3F4F6;

@@ -124,9 +124,43 @@ body.dark .cd-lesson-badge { background: linear-gradient(135deg,#1D4ED8,#4A9EE0)
 body.dark .cd-lesson-list::before { background: #334155; }
 
 /* ── Reviews stub ── */
-.cd-reviews-stub { text-align: center; padding: 24px; color: #9CA3AF; font-size: 13px; }
-.cd-reviews-stub .stars { font-size: 28px; letter-spacing: 3px; margin-bottom: 8px; }
-.cd-reviews-stub .score { font-size: 40px; font-weight: 800; color: #F59E0B; }
+.cd-reviews-stub { text-align: center; padding: 24px; }
+
+/* Hiển thị điểm trung bình */
+.star-avg-wrap { display: inline-block; margin-bottom: 8px; }
+.star-avg { position: relative; display: inline-block; font-size: 36px; line-height: 1; letter-spacing: 6px; }
+.star-avg-bg { color: #D1D5DB; }
+.star-avg-fill { position: absolute; top: 0; left: 0; overflow: hidden; white-space: nowrap; color: #F59E0B; width: 0; }
+
+.cd-reviews-stub .score { font-size: 40px; font-weight: 800; color: #F59E0B; margin-bottom: 4px; }
+.avg-label { font-size: 14px; color: #6B7280; }
+
+/* Đánh giá tương tác */
+.user-rate-section { margin-top: 24px; border-top: 1px solid #F3F4F6; padding-top: 20px; }
+.user-rate-label { font-size: 13px; color: #9CA3AF; margin-bottom: 12px; }
+.star-interactive { display: inline-flex; gap: 8px; margin-bottom: 10px; }
+
+.si-star {
+  font-size: 38px; line-height: 1; color: #D1D5DB;
+  cursor: pointer; -webkit-user-select: none; user-select: none;
+  transition: transform 0.12s ease;
+}
+.si-star.star-full { color: #F59E0B; transform: scale(1.18); }
+.si-star.star-half {
+  background: linear-gradient(to right, #F59E0B 50%, #D1D5DB 50%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transform: scale(1.1);
+}
+
+.user-rate-val { font-size: 16px; font-weight: 700; color: #F59E0B; min-height: 22px; transition: opacity 0.15s; }
+.coming-soon-note { font-size: 12px; color: #9CA3AF; margin-top: 16px; }
+
+body.dark .avg-label { color: #94A3B8; }
+body.dark .user-rate-section { border-top-color: #334155; }
+body.dark .user-rate-label { color: #64748B; }
+body.dark .si-star::before { color: #475569; }
+body.dark .coming-soon-note { color: #475569; }
 
 /* ── Enrollment sidebar card ── */
 .cd-card {
@@ -147,6 +181,7 @@ body.dark .cd-lesson-list::before { background: #334155; }
   font-size: 14px; font-weight: 700; cursor: pointer; margin: 14px 0 12px; transition: all 0.2s;
 }
 .cd-enroll-btn.primary {
+  margin-top: 14px;
   background: linear-gradient(135deg,#4A9EE0,#2563EB); color: #fff;
   box-shadow: 0 4px 12px rgba(74,158,224,0.35);
 }
@@ -159,7 +194,7 @@ body.dark .cd-lesson-list::before { background: #334155; }
 .cd-enroll-btn.unenroll { background: #FEF2F2; color: #EF4444; border: 1px solid #FEE2E2; }
 .cd-enroll-btn.unenroll:hover { background: #FEE2E2; }
 
-.cd-progress-row { margin-bottom: 16px; }
+.cd-progress-row { margin-top: 14px; margin-bottom: 16px; }
 .cd-progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #6B7280; margin-bottom: 6px; }
 .cd-progress-label .pct { font-weight: 700; color: #4A9EE0; }
 .cd-prog-bar { height: 7px; background: #F3F4F6; border-radius: 4px; overflow: hidden; }
