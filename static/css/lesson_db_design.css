@@ -31,12 +31,12 @@
   --module-accent-soft: var(--primary-soft);
   --module-accent-glow: var(--primary-glow);
 
-  /* Animation duration + easing tokens (chuan hoa) */
-  --anim-fast:    var(--anim-fast);
-  --anim-medium:  var(--anim-medium);
-  --anim-normal:  var(--anim-normal);
-  --anim-slow:    var(--anim-slow);
-  --anim-spring:  var(--anim-spring);
+  /* Animation duration + easing tokens */
+  --anim-fast:    0.15s;
+  --anim-medium:  0.4s;
+  --anim-normal:  0.3s;
+  --anim-slow:    0.5s;
+  --anim-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
   --anim-ease:    cubic-bezier(0.4, 0, 0.2, 1);
 
   --success:       #10B981;
@@ -133,17 +133,6 @@ body.lesson-focus-mode::before {
   display: flex; align-items: center; gap: 8px;
 }
 /* Sticky progress khi scroll xuống dưới (toggle .is-scrolled qua IntersectionObserver ở JS) */
-@media (min-width: 1024px) {
-  .lesson-header.is-scrolled .progress-track {
-    padding: 4px 12px;
-    background: rgba(11, 17, 33, 0.85);
-    backdrop-filter: blur(12px);
-    border-radius: 100px;
-    border: 1px solid rgba(148, 163, 184, 0.08);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all var(--anim-fast) ease;
-  }
-}
 
 .progress-step {
   display: flex; align-items: center; gap: 8px;
@@ -283,13 +272,6 @@ body.lesson-focus-mode::before {
   color: var(--text-500);
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
-}
-@media (max-width: 900px) {
-  .player-pill { display: none; } /* compact on mobile */
-}
-
-@media (min-width: 1024px) {
-  .progress-step .step-label-tiny { display: inline; }
 }
 
 /* ── Stage ──────────────────────────────────────────────────────── */
@@ -1221,7 +1203,6 @@ body.lesson-focus-mode::before {
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-
 @keyframes truck-idle {
   0%, 100% { transform: translateY(0) rotate(0); }
   25%      { transform: translateY(-1.5px) rotate(-1.5deg); }
@@ -1310,7 +1291,7 @@ body.lesson-focus-mode::before {
 
 /* Wrong-order shake */
 .pipeline-truck.shake .truck-body {
-  animation: truck-shake 0.6s ease !important;
+  animation: truck-shake 0.6s ease;
 }
 
 @keyframes truck-shake {
@@ -2527,16 +2508,6 @@ body.lesson-focus-mode::before {
 ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.25); }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .visual-db { grid-template-columns: 1fr; }
-  .split-pane { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-  .pane-left { border-right: none; border-bottom: 1px solid rgba(148, 163, 184, 0.06); }
-  .lesson-title { font-size: 28px; }
-  .mcq-question { font-size: 20px; }
-  .player-card { display: none; }
-  .hearts { padding: 4px 8px; }
-}
-
 
 /* ════════════════════════════════════════════════════════════════════
  * REDESIGN v2 — Patterns from Brilliant, Codecademy, Codedex,
@@ -3150,13 +3121,6 @@ body.lesson-focus-mode::before {
 }
 
 /* Responsive overrides */
-@media (max-width: 900px) {
-  .leetcode-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .player-card { display: none; }
-  .lesson-nav-footer { padding: 10px 14px; gap: 8px; }
-  .nav-indicator .nav-step-name { display: none; }
-  .nav-shortcut-hint { display: none; }
-}
 
 /* ════════════════════════════════════════════════════════════════════
  * REALIGN v3 — Foundation for 10-lesson re-design
@@ -3630,8 +3594,6 @@ body.lesson-focus-mode::before {
 .drop-line-slot .logic-pill.dragging-back {
   opacity: 0.4;
 }
-
-
 
 /* ════════════════════════════════════════════════════════════════════
  * LESSON NAV FOOTER — sticky Back / Indicator / Next
@@ -4207,15 +4169,6 @@ body.lesson-focus-mode::before {
   .truck-body { font-size: 15px; }
 }
 
-@media (max-width: 900px) {
-  .drag-map { width: min(360px, 100%); }
-  .drag-truck { width: 28px; height: 28px; }
-  .truck-body { font-size: 13px; }
-  .status-row { gap: 6px; }
-  .status-val { font-size: 11px; max-width: 120px; }
-}
-
-
 /* ════════════════════════════════════════════════════════════════════
  * Interactive Table Explorer (Step 1 — Theory)
  * 3D-feel schema card on the left + sample data table on the right.
@@ -4236,10 +4189,6 @@ body.lesson-focus-mode::before {
   gap: 16px;
   align-items: start;
   min-width: 0;
-}
-
-@media (max-width: 900px) {
-  .te-grid { grid-template-columns: 1fr; }
 }
 
 .te-pane {
@@ -4728,8 +4677,8 @@ body.lesson-focus-mode::before {
 }
 
 .te-cell-highlight {
-  background: rgba(6, 182, 212, 0.16) !important;
-  color: var(--text-100) !important;
+  background: rgba(6, 182, 212, 0.16);
+  color: var(--text-100);
   box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.35);
   transform: scale(1.02);
 }
@@ -4871,7 +4820,7 @@ body.lesson-focus-mode::before {
   background: rgba(15, 23, 42, 0.5);
 }
 .decomp-cell-warn {
-  color: #FBBF24 !important;
+  color: #FBBF24;
   font-weight: 700;
   background: rgba(245, 158, 11, 0.08);
 }
@@ -5461,6 +5410,41 @@ body.lesson-focus-mode::before {
 
 .qf-step { transition: transform var(--anim-fast) ease; }
 .qf-step:hover { transform: translateX(4px); }
+
+@media (min-width: 1024px) {
+  .lesson-header.is-scrolled .progress-track {
+    padding: 4px 12px;
+    background: rgba(11, 17, 33, 0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 100px;
+    border: 1px solid rgba(148, 163, 184, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all var(--anim-fast) ease;
+  }
+  .progress-step .step-label-tiny { display: inline; }
+}
+
+@media (max-width: 900px) {
+  .player-pill { display: none; } /* compact on mobile */
+  .visual-db { grid-template-columns: 1fr; }
+  .split-pane { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .pane-left { border-right: none; border-bottom: 1px solid rgba(148, 163, 184, 0.06); }
+  .lesson-title { font-size: 28px; }
+  .mcq-question { font-size: 20px; }
+  .player-card { display: none; }
+  .hearts { padding: 4px 8px; }
+  .leetcode-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .player-card { display: none; }
+  .lesson-nav-footer { padding: 10px 14px; gap: 8px; }
+  .nav-indicator .nav-step-name { display: none; }
+  .nav-shortcut-hint { display: none; }
+  .drag-map { width: min(360px, 100%); }
+  .drag-truck { width: 28px; height: 28px; }
+  .truck-body { font-size: 13px; }
+  .status-row { gap: 6px; }
+  .status-val { font-size: 11px; max-width: 120px; }
+  .te-grid { grid-template-columns: 1fr; }
+}
 
 /* Reduce motion preference */
 @media (prefers-reduced-motion: reduce) {

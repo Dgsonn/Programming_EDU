@@ -60,6 +60,52 @@
   let lastProgress = 0;
   let lastIsComplete = false;
 
+  /* ═════ SOUND (Brilliant-style Web Audio) ═════ */
+  let soundEnabled = (() => {
+    try { return localStorage.getItem('truck-sound') !== 'off'; } catch(e) { return true; }
+  })();
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playTone(freq, dur, type='sine', vol=0.15) {
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  }
+
+  function sfxEngine() { playTone(80, 0.4, 'sawtooth', 0.04); }      // low rumble
+  function sfxBump()   { playTone(180, 0.15, 'square', 0.18); setTimeout(() => playTone(90, 0.18, 'sawtooth', 0.12), 50); }
+  function sfxChime()  { playTone(660, 0.12, 'sine', 0.15); setTimeout(() => playTone(880, 0.18, 'sine', 0.18), 80); setTimeout(() => playTone(1100, 0.25, 'sine', 0.12), 180); }
+  function sfxCrash()  { playTone(120, 0.4, 'sawtooth', 0.2); setTimeout(() => playTone(60, 0.3, 'square', 0.15), 100); }
+
+  /* Expose to UI */
+  window.DragGameSound = {
+    toggle: () => {
+      soundEnabled = !soundEnabled;
+      try { localStorage.setItem('truck-sound', soundEnabled ? 'on' : 'off'); } catch(e) {}
+      if (soundEnabled) sfxChime();
+      return soundEnabled;
+    },
+    isOn: () => soundEnabled,
+  };
+
   /* ═════ INIT — build the pipeline ═════ */
   function init(opts) {
     opts = opts || {};
@@ -92,8 +138,13 @@
         <div class="pipeline-truck" data-truck>
           <div class="truck-glow"></div>
           <div class="truck-trail"></div>
+          <div class="truck-smoke"><span></span><span></span><span></span></div>
           <div class="truck-cargo"></div>
-          <div class="truck-body">🚚</div>
+          <div class="truck-body">
+            <div class="truck-cab">🚚</div>
+            <div class="truck-wheel truck-wheel-front"></div>
+            <div class="truck-wheel truck-wheel-rear"></div>
+          </div>
         </div>
       </div>
 
@@ -138,8 +189,33 @@
     `;
     root.appendChild(statusEl);
 
-    /* Initial truck position */
-    requestAnimationFrame(() => moveTruckTo(0, /*instant=*/true));
+    /* Sound toggle button (top-right of pipeline) */
+    const soundBtn = document.createElement('button');
+    soundBtn.className = 'pipeline-sound-toggle';
+    if (!soundEnabled) soundBtn.classList.add('muted');
+    soundBtn.innerHTML = soundEnabled ? '🔊' : '🔇';
+    soundBtn.title = soundEnabled ? 'Tắt âm thanh (Brilliant-style truck sound)' : 'Bật âm thanh';
+    soundBtn.addEventListener('click', () => {
+      const on = window.DragGameSound.toggle();
+      soundBtn.classList.toggle('muted', !on);
+      soundBtn.innerHTML = on ? '🔊' : '🔇';
+      soundBtn.title = on ? 'Tắt âm thanh (Brilliant-style truck sound)' : 'Bật âm thanh';
+    });
+    root.appendChild(soundBtn);
+    /* Truck drive-in animation: start off-screen, slide to first station */
+    if (truckEl) {
+      truckEl.classList.add('driving');
+      requestAnimationFrame(() => {
+        /* Place off-screen left, then move to station 0 */
+        const startLeft = -80;
+        truckEl.style.setProperty('--tx', startLeft + 'px');
+        requestAnimationFrame(() => moveTruckTo(0, /*instant=*/false));
+        setTimeout(() => truckEl.classList.remove('driving'), 900);
+        /* Engine sound on arrival */
+        setTimeout(() => sfxEngine(), 200);
+        setTimeout(() => sfxChime(), 1000);
+      });
+    }
     lastProgress = 0;
     lastIsComplete = false;
 
@@ -236,6 +312,8 @@
 
     /* Slide truck */
     truckEl.style.setProperty('--tx', targetX + 'px');
+    /* Engine sound while driving */
+    sfxEngine();
 
     /* On arrival: bounce + station glow burst */
     const onArrival = (e) => {
@@ -243,6 +321,8 @@
       truckEl.classList.remove('driving');
       truckEl.classList.add('arriving');
       target.classList.add('arriving');
+      /* Chime when arriving at a new station */
+      sfxChime();
 
       setTimeout(() => {
         truckEl.classList.remove('arriving');
@@ -479,6 +559,42 @@
     void truckEl.offsetWidth;
     truckEl.classList.add('shake');
     setTimeout(() => truckEl.classList.remove('shake'), 700);
+    /* Crash sound + bump */
+    sfxBump();
+    sfxCrash();
+    /* Spawn dust particles */
+    spawnDustParticles();
+  }
+
+  /* ═════ Dust particles on wrong drop ═════ */
+  function spawnDustParticles() {
+    if (!truckEl) return;
+    const colors = ['#FBBF24', '#EF4444', '#F59E0B', '#94A3B8'];
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.className = 'truck-dust';
+      p.style.cssText = `
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        width: ${6 + Math.random()*6}px;
+        height: ${6 + Math.random()*6}px;
+        background: ${colors[Math.floor(Math.random()*colors.length)]};
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 20;
+      `;
+      truckEl.appendChild(p);
+      const angle = (Math.random() * Math.PI) - Math.PI/2;
+      const dist = 30 + Math.random() * 30;
+      const dx = Math.cos(angle) * dist;
+      const dy = -Math.abs(Math.sin(angle) * dist) - 10;
+      p.animate([
+        { transform: 'translate(-50%, 0) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx}px), ${dy}px) scale(0.3)`, opacity: 0 }
+      ], { duration: 600 + Math.random() * 300, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' });
+      setTimeout(() => p.remove(), 1000);
+    }
   }
 
   /* ═════ Reset ═════ */
@@ -516,6 +632,11 @@
         colors: ['#06B6D4', '#10B981', '#F59E0B', '#FBBF24']
       });
     }
+    /* Triumphant chime */
+    sfxChime();
+    setTimeout(() => sfxChime(), 200);
+    setTimeout(() => sfxChime(), 400);
+
     /* Pulse all stations */
     STATIONS.forEach((s, i) => {
       setTimeout(() => {

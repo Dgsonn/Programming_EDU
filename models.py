@@ -42,8 +42,21 @@ class _ConnWrapper:
     def __init__(self, conn):
         self._conn = conn
 
+    def _ensure_connected(self):
+        try:
+            cur = self._conn.cursor()
+            cur.execute("SELECT 1")
+            cur.close()
+        except Exception:
+            try:
+                self._conn.close()
+            except Exception:
+                pass
+            _get_pool().putconn(self._conn, close=True)
+            self._conn = _get_pool().getconn()
+
     def execute(self, sql, params=()):
-        # sql = sql.replace('?', '%s')
+        self._ensure_connected()
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(sql, params)
         return _CursorWrapper(cur)
@@ -105,6 +118,18 @@ def get_db_connection():
     """Context manager trả về raw psycopg2 connection từ pool."""
     pool = _get_pool()
     conn = pool.getconn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        pool.putconn(conn, close=True)
+        conn = pool.getconn()
+        
     try:
         yield conn
     finally:

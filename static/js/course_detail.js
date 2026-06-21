@@ -6,7 +6,7 @@ function toggleModule(hd) {
 function goLesson() {
   var el = document.getElementById('current-lesson');
   if (el) { el.click(); return; }
-  window.location = LESSON_URL + '?lesson=' + CURRENT_LESSON_IDX;
+  window.location = LESSON_URL + '?lesson=' + (CURRENT_LESSON_IDX + 1);
 }
 
 // Scroll to the current lesson so user can see where they left off

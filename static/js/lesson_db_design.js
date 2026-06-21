@@ -2318,7 +2318,7 @@
     const data = window.LESSON_CONTENT['db_design'];
     const nextIdx = state.currentLessonIdx + 1;
     if (nextIdx < data.lessons.length) {
-      window.location.href = `/lesson/db_design?lesson=${nextIdx}`;
+      window.location.href = `/lesson/db_design?lesson=${nextIdx + 1}`;
     } else {
       window.location.href = '/courses/db_design';
     }

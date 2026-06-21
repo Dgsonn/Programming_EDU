@@ -273,7 +273,15 @@ document.addEventListener("DOMContentLoaded", function () {
           body: JSON.stringify(finalSurveyData),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Không thể lưu khảo sát.");
+        if (!res.ok) {
+          let errMsg = "Không thể lưu khảo sát.";
+          if (typeof data.error === 'string') {
+            errMsg = data.error;
+          } else if (data.error && typeof data.error === 'object' && data.error.message) {
+            errMsg = data.error.message;
+          }
+          throw new Error(errMsg);
+        }
 
         showThanksModal();
       } catch (err) {

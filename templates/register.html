@@ -249,7 +249,13 @@
             showFieldErrors(data.errors);
             return;
           }
-          throw new Error(data.error || 'Đăng ký thất bại.');
+          let errMsg = 'Đăng ký thất bại.';
+          if (typeof data.error === 'string') {
+            errMsg = data.error;
+          } else if (data.error && typeof data.error === 'object' && data.error.message) {
+            errMsg = data.error.message;
+          }
+          throw new Error(errMsg);
         }
 
         document.getElementById('successOverlay').classList.add('show');

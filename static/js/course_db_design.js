@@ -1,7 +1,9 @@
 // Cập nhật trạng thái bài học dựa trên tiến độ
 (function updateLessonStatuses() {
-  const completed = CURRENT_LESSON_IDX;
+  // Cap completed at actual lesson count (PART 2 = 10 bài, không theo cũ 60 bài)
   const allLessons = document.querySelectorAll('.cd-lesson');
+  const totalLessons = allLessons.length;
+  const completed = Math.min(CURRENT_LESSON_IDX, totalLessons);
   allLessons.forEach(function(lesson, idx) {
     const icon = lesson.querySelector('.cd-lesson-icon');
     const title = lesson.querySelector('.cd-lesson-title');
@@ -10,13 +12,13 @@
       lesson.classList.add('done');
       icon.textContent = '✓';
       lesson.style.cursor = 'pointer';
-      lesson.onclick = function() { window.location = LESSON_URL + '?lesson=' + idx; };
+      lesson.onclick = function() { window.location = LESSON_URL + '?lesson=' + (idx + 1); };
     } else if (idx === completed && completed > 0) {
       lesson.classList.add('current');
       icon.textContent = '▶';
       lesson.id = 'current-lesson';
       lesson.style.cursor = 'pointer';
-      lesson.onclick = function() { window.location = LESSON_URL + '?lesson=' + idx; };
+      lesson.onclick = function() { window.location = LESSON_URL + '?lesson=' + (idx + 1); };
       // Thêm badge Tiếp tục
       if (!lesson.querySelector('.cd-lesson-badge')) {
         var badge = document.createElement('span');
@@ -39,7 +41,7 @@ function toggleModule(hd) {
 function goLesson() {
   var el = document.getElementById('current-lesson');
   if (el) { el.click(); return; }
-  window.location = LESSON_URL + '?lesson=' + CURRENT_LESSON_IDX;
+  window.location = LESSON_URL + '?lesson=' + (CURRENT_LESSON_IDX + 1);
 }
 
 // Scroll đến bài học hiện tại

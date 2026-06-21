@@ -318,9 +318,13 @@
               showFieldErrors(data.errors);
               return;
             }
-            throw new Error(
-              data.error || "Sai email/số điện thoại hoặc mật khẩu.",
-            );
+            let errMsg = "Sai email/số điện thoại hoặc mật khẩu.";
+            if (typeof data.error === 'string') {
+              errMsg = data.error;
+            } else if (data.error && typeof data.error === 'object' && data.error.message) {
+              errMsg = data.error.message;
+            }
+            throw new Error(errMsg);
           }
 
           const nextUrl = "/dashboard?streak=1";

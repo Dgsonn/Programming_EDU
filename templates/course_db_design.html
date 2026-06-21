@@ -98,11 +98,11 @@
       <div class="cd-hero-content">
         <span class="cd-tag">DATABASE</span>
         <h1 class="cd-hero-title">Database Design</h1>
-        <p class="cd-hero-subtitle">Thiết kế và quản lý cơ sở dữ liệu từ ER Diagram đến tối ưu hóa query thực tế</p>
+        <p class="cd-hero-subtitle">ER Mapping, Phụ thuộc hàm & Chuẩn hóa dữ liệu — theo giáo trình Silberschatz</p>
         <div class="cd-meta">
-          <div class="cd-meta-item">🕐 <span class="val">40 giờ</span></div>
-          <div class="cd-meta-item">📖 <span class="val">60</span> bài học</div>
-          <div class="cd-meta-item">🎯 <span class="val">Trung cấp</span></div>
+          <div class="cd-meta-item">🕐 <span class="val">8 giờ</span></div>
+          <div class="cd-meta-item">📖 <span class="val">18</span> bài học</div>
+          <div class="cd-meta-item">🎯 <span class="val">Cơ bản</span></div>
         </div>
         
       </div>
@@ -123,156 +123,89 @@
           </div>
           <div class="cd-block-body">
             <p class="cd-desc">
-              Khóa học <strong>Database Design</strong> trang bị cho bạn toàn bộ kiến thức để thiết kế và quản lý cơ sở dữ liệu quan hệ một cách chuyên nghiệp. Từ việc phân tích yêu cầu, vẽ ER Diagram, chuẩn hóa dữ liệu đến viết SQL query phức tạp và tối ưu hóa hiệu năng hệ thống.
+              Bạn có ý tưởng một <strong>game shop</strong>, một <strong>mạng xã hội cho gamer</strong>, hay một <strong>app đặt đồ ăn</strong> — nhưng chưa biết <em>"cơ sở dữ liệu" thì thiết kế từ đâu</em>? Khóa học này dành cho bạn.
               <br><br>
-              Bạn sẽ thực hành trực tiếp trên <strong>PostgreSQL</strong> và <strong>MySQL</strong> — hai hệ quản trị CSDL phổ biến nhất trong ngành. Kết thúc khóa học, bạn sẽ tự tin thiết kế schema cho các hệ thống thực tế như e-commerce, social network, hay hệ thống quản lý doanh nghiệp.
+              Trong <strong>18 bài</strong> (3 module), bạn sẽ đi từ <em>không biết gì</em> đến <em>tự tin thiết kế</em> một database hoàn chỉnh chạy thật trong dự án của mình. Mỗi bài là một <strong>bài toán thực tế</strong> (game shop, mạng xã hội, app giao đồ ăn) chứ không phải lý thuyết khô khan.
+            </p>
+            <p class="cd-desc" style="margin-top: 14px;">
+              <strong>Sau khóa học, bạn sẽ làm được:</strong>
+            </p>
+              <ul class="cd-outcomes">
+                <li>📐 <strong>Vẽ được sơ đồ ER</strong> cho bất kỳ bài toán nào (game, web, app) chỉ trong vài phút</li>
+                <li>🗄️ <strong>Thiết kế bảng SQL</strong> không thừa không thiếu — không bao giờ bị lỗi <em>"duplicate dữ liệu"</em> hay <em>"mất thông tin khi update"</em></li>
+                <li>🧠 <strong>Giải thích được vì sao</strong> cần tách bảng, thêm khóa ngoại — để tự tin bảo vệ thiết kế trước team/lead</li>
+                <li>📊 <strong>Chuẩn hóa dữ liệu</strong> qua 1NF → BCNF → 3NF với thuật toán tách bảng chuẩn</li>
+                <li>🛡️ <strong>Biết cách đánh đổi</strong> giữa BCNF (chuẩn tuyệt đối) và 3NF (thực tế, performance tốt hơn)</li>
+                <li>🏆 <strong>Hoàn thành Boss Battle</strong> — thiết kế database cho Mạng Xã Hội Gamers từ A-Z (capstone project)</li>
+              </ul>
+            <p class="cd-desc" style="margin-top: 14px; font-size: 13px; color: #9CA3AF;">
+              💡 <strong>Cách học:</strong> Mỗi bài 4 bước — đọc lý thuyết ngắn gọn → trắc nghiệm kiểm tra hiểu → kéo thả xếp câu SQL → tự code với gợi ý 4 cấp độ. Thực hành ngay trên trình duyệt, không cần cài database.
             </p>
           </div>
         </div>
 
-        <!-- Block 2: Giáo trình -->
+        <!-- Block 2: Giáo trình — Khóa Cơ bản Database Design (18 bài, 3 module) -->
         <div class="cd-block">
           <div class="cd-block-hd">
             <div class="cd-block-icon">📚</div>
             <h3>Giáo trình</h3>
-            <span style="margin-left:auto;font-size:12px;color:#9CA3AF;">6 module · 60 bài học</span>
+            <span style="margin-left:auto;font-size:12px;color:#9CA3AF;">Khóa Cơ bản: 18 bài · 3 module</span>
           </div>
           <div style="padding:0;">
 
-            <!-- Module 1 -->
+            <!-- Module 1: ER Model & Mapping (Bài 1-6) — Ch 6.2-6.8 -->
             <div class="cd-module">
               <div class="cd-module-hd open" onclick="toggleModule(this)">
                 <div class="cd-module-arrow">▶</div>
-                <div class="cd-module-name">Module 1: Giới thiệu & Nền tảng Database</div>
-                <div class="cd-module-meta">10 bài</div>
+                <div class="cd-module-name">Module 1: ER Model & Mapping</div>
+                <div class="cd-module-meta">6 bài</div>
               </div>
               <div class="cd-module-body open">
                 <div class="cd-lesson-list">
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Database là gì? DBMS và ứng dụng thực tế</div><div class="cd-lesson-num">1</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Các loại CSDL: Relational, NoSQL, NewSQL</div><div class="cd-lesson-num">2</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Cài đặt PostgreSQL và MySQL</div><div class="cd-lesson-num">3</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">pgAdmin và MySQL Workbench cơ bản</div><div class="cd-lesson-num">4</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">SQL: Ngôn ngữ truy vấn cơ sở dữ liệu</div><div class="cd-lesson-num">5</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Tạo Database và Table đầu tiên</div><div class="cd-lesson-num">6</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Kiểu dữ liệu trong SQL</div><div class="cd-lesson-num">7</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Constraints: PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE</div><div class="cd-lesson-num">8</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Quan hệ giữa các bảng — Khái niệm cốt lõi</div><div class="cd-lesson-num">9</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Bài tập thực hành: Tạo CSDL thư viện sách</div><div class="cd-lesson-num">10</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Entity Set & Primary Key (Bài 1)</div><div class="cd-lesson-num">1</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Composite & Derived Attributes (Bài 2)</div><div class="cd-lesson-num">2</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Foreign Key & JOIN (Bài 3)</div><div class="cd-lesson-num">3</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">M:N & Bảng trung gian (Junction Table) (Bài 4)</div><div class="cd-lesson-num">4</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Weak Entity (Thực thể yếu) (Bài 5)</div><div class="cd-lesson-num">5</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Mapping ER → Bảng quan hệ (Bài 6)</div><div class="cd-lesson-num">6</div></div>
                 </div>
               </div>
             </div>
 
-            <!-- Module 2 -->
+            <!-- Module 2: Normalization & Boss Battle (Bài 7-13) — Ch 7.1-7.9 -->
             <div class="cd-module">
               <div class="cd-module-hd" onclick="toggleModule(this)">
                 <div class="cd-module-arrow">▶</div>
-                <div class="cd-module-name">Module 2: ER Diagram & Mô hình hóa dữ liệu</div>
-                <div class="cd-module-meta">10 bài</div>
+                <div class="cd-module-name">Module 2: Phụ thuộc hàm & Chuẩn hóa (FD & Normal Forms)</div>
+                <div class="cd-module-meta">7 bài</div>
               </div>
               <div class="cd-module-body">
                 <div class="cd-lesson-list">
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Entity, Attribute và Relationship</div><div class="cd-lesson-num">11</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Cardinality: One-to-One, One-to-Many, Many-to-Many</div><div class="cd-lesson-num">12</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Vẽ ER Diagram với draw.io</div><div class="cd-lesson-num">13</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Crow's Foot Notation — Ký hiệu chuyên nghiệp</div><div class="cd-lesson-num">14</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Chuyển đổi ER Diagram thành các bảng SQL</div><div class="cd-lesson-num">15</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Weak Entity và Identifying Relationship</div><div class="cd-lesson-num">16</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Specialization, Generalization và Aggregation</div><div class="cd-lesson-num">17</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Bài tập: Thiết kế ER hệ thống quản lý sinh viên</div><div class="cd-lesson-num">18</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Bài tập: Thiết kế ER hệ thống bán hàng</div><div class="cd-lesson-num">19</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Review & Code review ER Diagram</div><div class="cd-lesson-num">20</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Redundancy & Phụ thuộc hàm (FD) (Bài 7)</div><div class="cd-lesson-num">7</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Dạng chuẩn 1 (1NF) — Nguyên tử hóa (Bài 8)</div><div class="cd-lesson-num">8</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Dạng chuẩn 2 (2NF) — Phụ thuộc đầy đủ (Bài 9)</div><div class="cd-lesson-num">9</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Dạng chuẩn BCNF & Phân rã Phi tổn thất (Bài 10)</div><div class="cd-lesson-num">10</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Dạng chuẩn 3 (3NF) — Phụ thuộc bắc cầu (Bài 11)</div><div class="cd-lesson-num">11</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị (Bài 12)</div><div class="cd-lesson-num">12</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Boss Battle — Siêu hệ thống chuẩn hóa (Bài 13)</div><div class="cd-lesson-num">13</div></div>
                 </div>
               </div>
             </div>
 
-            <!-- Module 3 -->
+            <!-- Module 3: Application Design (Bài 14-18) — Ch 8-9 (PART 3) -->
             <div class="cd-module">
               <div class="cd-module-hd" onclick="toggleModule(this)">
                 <div class="cd-module-arrow">▶</div>
-                <div class="cd-module-name">Module 3: SQL cơ bản</div>
-                <div class="cd-module-meta">10 bài</div>
+                <div class="cd-module-name">Module 3: Application Design</div>
+                <div class="cd-module-meta">5 bài</div>
               </div>
               <div class="cd-module-body">
                 <div class="cd-lesson-list">
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">DDL: CREATE, ALTER, DROP TABLE</div><div class="cd-lesson-num">21</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">DML: INSERT — Thêm dữ liệu vào bảng</div><div class="cd-lesson-num">22</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">DML: UPDATE và DELETE</div><div class="cd-lesson-num">23</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">SELECT cơ bản: Lấy dữ liệu từ bảng</div><div class="cd-lesson-num">24</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">WHERE: Lọc dữ liệu theo điều kiện</div><div class="cd-lesson-num">25</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">ORDER BY, LIMIT và OFFSET</div><div class="cd-lesson-num">26</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">GROUP BY, HAVING và Aggregate Functions</div><div class="cd-lesson-num">27</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">String Functions và Date/Time Functions</div><div class="cd-lesson-num">28</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">NULL — Xử lý giá trị rỗng đúng cách</div><div class="cd-lesson-num">29</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Bài tập tổng hợp SQL cơ bản</div><div class="cd-lesson-num">30</div></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Module 4 -->
-            <div class="cd-module">
-              <div class="cd-module-hd" onclick="toggleModule(this)">
-                <div class="cd-module-arrow">▶</div>
-                <div class="cd-module-name">Module 4: SQL nâng cao</div>
-                <div class="cd-module-meta">10 bài</div>
-              </div>
-              <div class="cd-module-body">
-                <div class="cd-lesson-list">
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">INNER JOIN: Kết hợp dữ liệu từ 2 bảng</div><div class="cd-lesson-num">31</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN</div><div class="cd-lesson-num">32</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">SELF JOIN và CROSS JOIN</div><div class="cd-lesson-num">33</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Subquery — Truy vấn lồng nhau</div><div class="cd-lesson-num">34</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Correlated Subquery và EXISTS</div><div class="cd-lesson-num">35</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">VIEW: Tạo bảng ảo</div><div class="cd-lesson-num">36</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Stored Procedure và Function</div><div class="cd-lesson-num">37</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Trigger — Tự động hóa tác vụ</div><div class="cd-lesson-num">38</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Transaction: COMMIT, ROLLBACK, SAVEPOINT</div><div class="cd-lesson-num">39</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Index: Tăng tốc độ truy vấn</div><div class="cd-lesson-num">40</div></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Module 5 -->
-            <div class="cd-module">
-              <div class="cd-module-hd" onclick="toggleModule(this)">
-                <div class="cd-module-arrow">▶</div>
-                <div class="cd-module-name">Module 5: Chuẩn hóa dữ liệu (Normal Forms)</div>
-                <div class="cd-module-meta">10 bài</div>
-              </div>
-              <div class="cd-module-body">
-                <div class="cd-lesson-list">
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Vấn đề của dữ liệu không chuẩn hóa</div><div class="cd-lesson-num">41</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Functional Dependency — Phụ thuộc hàm</div><div class="cd-lesson-num">42</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">1NF: First Normal Form</div><div class="cd-lesson-num">43</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">2NF: Second Normal Form</div><div class="cd-lesson-num">44</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">3NF: Third Normal Form</div><div class="cd-lesson-num">45</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">BCNF: Boyce-Codd Normal Form</div><div class="cd-lesson-num">46</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">4NF và 5NF — Chuẩn hóa nâng cao</div><div class="cd-lesson-num">47</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Denormalization — Khi nào nên phi chuẩn hóa</div><div class="cd-lesson-num">48</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Case study: Chuẩn hóa database thực tế</div><div class="cd-lesson-num">49</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Dự án: Thiết kế và chuẩn hóa CSDL hoàn chỉnh</div><div class="cd-lesson-num">50</div></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Module 6 -->
-            <div class="cd-module">
-              <div class="cd-module-hd" onclick="toggleModule(this)">
-                <div class="cd-module-arrow">▶</div>
-                <div class="cd-module-name">Module 6: Thiết kế hệ thống thực tế & Tối ưu hóa</div>
-                <div class="cd-module-meta">10 bài</div>
-              </div>
-              <div class="cd-module-body">
-                <div class="cd-lesson-list">
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">EXPLAIN và Query Execution Plan</div><div class="cd-lesson-num">51</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Tối ưu hóa Index — Khi nào và loại nào?</div><div class="cd-lesson-num">52</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Thiết kế schema cho hệ thống E-commerce</div><div class="cd-lesson-num">53</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Thiết kế schema cho Social Network</div><div class="cd-lesson-num">54</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Partitioning và Sharding</div><div class="cd-lesson-num">55</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Database Security và Access Control</div><div class="cd-lesson-num">56</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Backup, Recovery và Replication</div><div class="cd-lesson-num">57</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Database Migration với Flyway / Alembic</div><div class="cd-lesson-num">58</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Giới thiệu NoSQL: MongoDB vs PostgreSQL</div><div class="cd-lesson-num">59</div></div>
-                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Thi chứng chỉ Database Design & Tổng kết</div><div class="cd-lesson-num">60</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">JSON trong Relational DB (Bài 14)</div><div class="cd-lesson-num">14</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Spatial Data & Truy vấn tọa độ (Bài 15)</div><div class="cd-lesson-num">15</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">ORM (Django) — Ánh xạ Lớp ↔ Bảng (Bài 16)</div><div class="cd-lesson-num">16</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">SQL Injection — Lỗ hổng chết người (Bài 17)</div><div class="cd-lesson-num">17</div></div>
+                  <div class="cd-lesson locked"><div class="cd-lesson-icon">○</div><div class="cd-lesson-title">Password Security — Salt & Hashing (Bài 18)</div><div class="cd-lesson-num">18</div></div>
                 </div>
               </div>
             </div>
@@ -288,10 +221,10 @@
           </div>
           <div class="cd-block-body">
             <ul class="cd-req-list">
-              <li>Hiểu biết cơ bản về lập trình (bất kỳ ngôn ngữ nào)</li>
-              <li>Máy tính đã cài MySQL hoặc PostgreSQL (hướng dẫn cài trong bài đầu)</li>
-              <li>Kiến thức về cấu trúc dữ liệu là một lợi thế, không bắt buộc</li>
-              <li>Tinh thần chăm chỉ và sẵn sàng thực hành nhiều bài tập</li>
+              <li>Biết SQL cơ bản: SELECT, FROM, WHERE (tương đương PART 1 — đã học ở "SQL cơ bản")</li>
+              <li>Hiểu khái niệm bảng, cột, dòng, khóa chính/khóa ngoại</li>
+              <li>Có khả năng đọc ER Diagram cơ bản</li>
+              <li>Trình duyệt web hiện đại (Chrome / Edge / Firefox mới nhất) — không cần cài DB</li>
             </ul>
           </div>
         </div>
@@ -304,14 +237,19 @@
           </div>
           <div class="cd-block-body">
             <div class="cd-skills">
-              <div class="cd-skill-item"><div class="check">✓</div><span>Thiết kế ER Diagram chuyên nghiệp</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Chuẩn hóa dữ liệu 1NF → BCNF</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Viết SQL query từ cơ bản đến nâng cao</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Tối ưu hóa hiệu năng database</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Thiết kế schema cho hệ thống thực tế</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Làm việc với PostgreSQL và MySQL</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Sử dụng JOIN, Subquery, Transaction</span></div>
-              <div class="cd-skill-item"><div class="check">✓</div><span>Database Migration và Backup/Recovery</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Phân biệt các loại Key: Primary, Composite, Foreign Key</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Thiết kế bảng cho quan hệ 1:1, 1:N, M:N qua Foreign Key &amp; Junction Table</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Thiết kế Composite Key &amp; Weak Entity đúng chuẩn</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Phát hiện &amp; loại bỏ Redundancy, Phụ thuộc hàm (FD) dư thừa</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Chuẩn hóa dữ liệu qua 1NF → BCNF → 3NF với thuật toán tách bảng chuẩn</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Giải thích được sự thỏa hiệp giữa BCNF (chuẩn) và 3NF (thực tế)</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Áp dụng toàn bộ vào Boss Battle — thiết kế schema Mạng Xã Hội Gamers từ A-Z</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Tự tin giải thích &amp; bảo vệ thiết kế database trước team/lead</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Truy vấn JSONB trong Postgres: toán tử <code>-&gt;</code>, <code>-&gt;&gt;</code>, GROUP BY theo key lồng nhau (Module 3 — db_14)</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Spatial Query với PostGIS: <code>ST_MakePoint(lon, lat)</code>, <code>ST_Distance</code>, <code>ST_DWithin</code>, GiST index (db_15)</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>ORM Django: <code>select_related</code>, <code>values/annotate</code>, ánh xạ Class ↔ Table (db_16)</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Phòng chống SQL Injection: Prepared Statement, validate input, principle of least privilege (db_17)</span></div>
+              <div class="cd-skill-item"><div class="check">✓</div><span>Password Security: bcrypt + salt, audit <code>CASE WHEN</code> phát hiện thuật toán hash yếu (db_18)</span></div>
             </div>
           </div>
         </div>
@@ -361,10 +299,12 @@
             <div class="cd-card-free">🎉 Hoàn toàn không mất phí</div>
 
             {% if enrollment %}
+              {% set done = [enrollment.completed_lessons, 18] | min %}
+              {% set pct = (done * 100 / 18) | round(1) if done > 0 else 0 %}
               <div class="cd-progress-row" style="margin-top:14px;">
                 <div class="cd-progress-label">
                   <span>Tiến độ</span>
-                  <span class="pct">{{ enrollment.progress }}%</span>
+                  <span class="pct">{{ pct }}%</span>
                 </div>
                 <div class="cd-prog-bar">
                   <div class="cd-prog-fill" id="prog-fill"></div>
@@ -373,11 +313,11 @@
 
               <div class="cd-card-stats">
                 <div class="cd-cs">
-                  <div class="v">{{ enrollment.completed_lessons }}</div>
+                  <div class="v">{{ [enrollment.completed_lessons, 18] | min }}</div>
                   <div class="l">Bài đã học</div>
                 </div>
                 <div class="cd-cs">
-                  <div class="v">{{ 60 - enrollment.completed_lessons }}</div>
+                  <div class="v">{{ [18 - enrollment.completed_lessons, 0] | max }}</div>
                   <div class="l">Còn lại</div>
                 </div>
                 <div class="cd-cs">
@@ -401,9 +341,10 @@
 
             <div class="cd-includes">
               <div class="cd-includes-title">KHÓA HỌC BAO GỒM</div>
-              <div class="cd-inc-item"><i class="fas fa-book-open"></i> 60 bài học</div>
-              <div class="cd-inc-item"><i class="fas fa-clock"></i> 40 giờ học</div>
-              <div class="cd-inc-item"><i class="fas fa-database"></i> Thực hành PostgreSQL & MySQL</div>
+              <div class="cd-inc-item"><i class="fas fa-book-open"></i> 18 bài học (Khóa Cơ bản)</div>
+              <div class="cd-inc-item"><i class="fas fa-project-diagram"></i> 3 module (ER / Normalization / Application)</div>
+              <div class="cd-inc-item"><i class="fas fa-clock"></i> ~14 giờ học</div>
+              <div class="cd-inc-item"><i class="fas fa-database"></i> Thực hành trên trình duyệt (không cần cài DB)</div>
               <div class="cd-inc-item"><i class="fas fa-infinity"></i> Truy cập vĩnh viễn</div>
               <div class="cd-inc-item"><i class="fas fa-certificate"></i> Chứng chỉ hoàn thành</div>
               <div class="cd-inc-item"><i class="fas fa-mobile-alt"></i> Học trên mọi thiết bị</div>
@@ -421,7 +362,7 @@
   const CURRENT_LESSON_IDX = {{ enrollment.completed_lessons if enrollment else 0 }};
   const LESSON_URL = '/lesson/db_design';
   const progFill = document.getElementById('prog-fill');
-  if (progFill) progFill.style.width = '{{ enrollment.progress if enrollment else 0 }}%';
+  if (progFill) progFill.style.width = '{{ pct if enrollment else 0 }}%';
 </script>
 <script src="{{ url_for('static', filename='js/course_db_design.js') }}?v=1"></script>
 <script>

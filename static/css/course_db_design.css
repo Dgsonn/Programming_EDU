@@ -213,6 +213,26 @@ body:not(.light) {
   color: var(--primary);
 }
 
+.cd-outcomes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.cd-outcomes li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-300);
+  padding: 10px 14px;
+  background: rgba(6, 182, 212, 0.05);
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+}
+.cd-outcomes li strong { color: #fff; }
+body.light .cd-outcomes li { color: #374151; background: rgba(6, 182, 212, 0.06); }
+body.light .cd-outcomes li strong { color: #0e2a3a; }
+
 /* ── Skills grid ────────────────────────────────────────────────── */
 .cd-skills {
   display: grid; grid-template-columns: 1fr 1fr;
@@ -291,6 +311,30 @@ body:not(.light) {
 .cd-module-name {
   flex: 1; font-size: 14px; font-weight: 600;
   color: var(--text-100);
+}
+
+/* Soon tag + upcoming module styling */
+.cd-tag-soon {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--warning-soft, rgba(245, 158, 11, 0.15));
+  color: var(--warning);
+  vertical-align: middle;
+}
+.cd-module-soon {
+  opacity: 0.78;
+}
+.cd-module-soon .cd-module-hd {
+  border-left: 3px solid transparent;
+}
+.cd-module-soon > .cd-module-hd.open {
+  border-left-color: var(--warning);
 }
 
 .cd-module-meta {
