@@ -56,18 +56,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong CSDL quan hệ, mỗi <strong>Entity Set</strong> = 1 table. Mỗi dòng = 1 thực thể (entity), mỗi cột = 1 thuộc tính (attribute). <strong>Primary Key (PK)</strong> là cột đảm bảo mỗi dòng có giá trị <em>DUY NHẤT</em> — không trùng, không NULL.',
           example: 'Bảng <code class="code">game_catalog</code> dưới đây có cột <code class="code">id</code> làm PK. Hai game có thể trùng tên (Elden Ring xuất hiện 2 lần ở 2 thể loại), nhưng <code class="code">id</code> thì không bao giờ trùng — vì vậy dùng <code class="code">id</code> trong WHERE sẽ chốt được đúng 1 dòng.'
         },
-        concept_cards: [
-          {
-            icon: 'fa-cube',
-            title: 'Entity Set (Tập thực thể)',
-            body: 'Một nhóm các thực thể cùng loại. Trong CSDL, entity set ↔ 1 table. Mỗi entity (dòng) là 1 thể hiện cụ thể của tập đó.'
-          },
-          {
-            icon: 'fa-key',
-            title: 'Primary Key (Khóa chính)',
-            body: 'Cột có giá trị DUY NHẤT cho mỗi dòng. Không trùng, không NULL. Khi truy vấn với <code>WHERE pk = X</code>, chỉ chọn đúng 1 record.'
-          }
-        ],
+                intro: 'Bạn vừa nhận việc ở 1 shop game online. Sếp bảo: <em>"Tổ chức lại kho 5000 game cho gọn gàng"</em>. Bước đầu tiên? Tạo 1 <strong>bảng</strong> (table) — nơi mỗi game là 1 dòng, mỗi thuộc tính (tên, giá, thể loại) là 1 cột. Đây chính là <strong>Entity Set</strong> trong database design.',
+concept_cards: [
+            {
+                  "icon": "fa-cube",
+                  "title": "Entity Set (Tập thực thể)",
+                  "body": "Bạn có 1000 game trong shop. Lưu vào đâu? Mỗi <strong>Entity Set</strong> = 1 bảng chứa mọi thứ cùng loại. Bảng <code>game_catalog</code> = nơi 1000 game đó sống — mỗi dòng là 1 game, mỗi cột là 1 thuộc tính."
+            },
+            {
+                  "icon": "fa-key",
+                  "title": "Primary Key (Khóa chính)",
+                  "body": "Hai game đều tên \"Elden Ring\" — làm sao DB biết bạn muốn game nào? <strong>Primary Key</strong> giải quyết: mỗi dòng có 1 số ID riêng, không ai giống ai. <code>WHERE id = 101</code> → chính xác 1 dòng, không bao giờ nhầm."
+            }
+      ],
         visual: {
           diagram: {
             type: 'er',
@@ -241,7 +242,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong ER diagram, một thuộc tính có thể là <strong>Composite</strong> (gồm nhiều mảnh: address = city + district + street) hoặc <strong>Derived</strong> (tính toán từ thuộc tính khác: age = currentYear - birthYear). Khi chuyển sang bảng vật lý, ta <em>tách</em> composite thành nhiều cột độc lập, và <em>không lưu</em> derived — chỉ tính khi SELECT.',
           example: 'Bảng <code class="code">player_profile</code> dưới đây đã tách address thành <code>address_city</code> + <code>address_dist</code>. Cột <code>age</code> KHÔNG tồn tại vật lý — sẽ được tính bằng <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code>.'
         },
-        concept_cards: [{'icon': 'fa-puzzle-piece', 'title': 'Composite Attribute (Phức hợp)', 'body': 'Một thuộc tính ghép từ nhiều mảnh nhỏ. <code>address = city + district + street</code>. Khi chuyển sang bảng, tách thành nhiều cột độc lập.'}, {'icon': 'fa-calculator', 'title': 'Derived Attribute (Dẫn xuất)', 'body': 'Giá trị TÍNH TOÁN từ thuộc tính khác. <code>age = currentYear - birthYear</code>. <strong>KHÔNG lưu</strong> vật lý — chỉ tính khi <code>SELECT</code> với <code>AS</code>.'}],
+                intro: 'Điều gì xảy ra khi 1 khách hàng đăng ký tài khoản và bạn cần lưu <strong>địa chỉ</strong>? Ghi thành 1 cột dài "<code>Q1, Nguyễn Huệ, HCM</code>"? Hay tách thành <code>city</code>, <code>district</code>, <code>street</code>? Câu trả lời quyết định tốc độ query 100 lần. Bài này dạy <strong>Composite</strong> + <strong>Derived</strong> attribute.',
+concept_cards: [
+            {
+                  "icon": "fa-puzzle-piece",
+                  "title": "Composite Attribute",
+                  "body": "Giống <strong>địa chỉ nhà</strong> bạn điền form: số nhà, đường, quận, thành phố. Mỗi mảnh là 1 thông tin riêng. Database ghép lại thành cột <code>address</code> nhưng <em>nên tách thành 4 cột</em> để query \"tìm theo quận\" cực nhanh."
+            },
+            {
+                  "icon": "fa-calculator",
+                  "title": "Derived Attribute",
+                  "body": "Như <strong>tuổi của bạn</strong> — không ai hỏi mẹ sinh năm nào rồi ghi vào sổ; chỉ cần biết năm sinh, ai cũng tự tính. <code>age = 2026 - birth_year</code>. DB <em>không lưu</em>, chỉ tính khi SELECT với <code>AS</code>."
+            }
+      ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 240, 'entities': [{'name': 'player_profile', 'columns': [{'name': 'p_id', 'type': 'INT', 'key': 'PK'}, {'name': 'username', 'type': 'VARCHAR'}, {'name': 'address_city', 'type': 'VARCHAR'}, {'name': 'address_dist', 'type': 'VARCHAR'}, {'name': 'birth_year', 'type': 'INT', 'derived': true, 'note': 'age'}]}], 'note': 'address = composite (city + dist) · age = derived (KHÔNG lưu)'},
@@ -285,25 +298,54 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {
-          title: 'Phân loại: cột nào là Composite / Derived / Thường?',
-          instruction: 'Trong bảng <code>player_profile</code>, mỗi thẻ là 1 cột. Kéo vào ô tương ứng. <br><strong style="color:var(--primary)">Composite</strong> = tách được thành nhiều mảnh · <strong style="color:var(--warning)">Derived</strong> = tính toán được từ cột khác · <strong style="color:var(--text-400)">Thường</strong> = cột độc lập, nguyên tử.',
-          chips: [
-            { id: 'c-address', label: 'address (gốc ER)' },
-            { id: 'c-age',     label: 'age' },
-            { id: 'c-birth',   label: 'birth_year' },
-            { id: 'c-name',    label: 'username' }
+        mini_game:         {
+          "type": "match",
+          "title": "Nối thuộc tính → loại",
+          "instruction": "Mỗi thuộc tính thuộc loại nào? Click ô trái rồi click ô phải tương ứng.",
+          "xp": 20,
+          "pairs": [
+            {
+              "left": "address = city + district + street",
+              "leftId": "a1",
+              "rightId": "r1",
+              "right": {
+                "id": "r1",
+                "label": "Composite"
+              }
+            },
+            {
+              "left": "age = 2026 - birth_year",
+              "leftId": "a2",
+              "rightId": "r2",
+              "right": {
+                "id": "r2",
+                "label": "Derived"
+              }
+            },
+            {
+              "left": "student_name (1 giá trị đơn)",
+              "leftId": "a3",
+              "rightId": "r3",
+              "right": {
+                "id": "r3",
+                "label": "Simple"
+              }
+            },
+            {
+              "left": "phones = [0901, 0902, 0903]",
+              "leftId": "a4",
+              "rightId": "r4",
+              "right": {
+                "id": "r4",
+                "label": "Multivalued"
+              }
+            }
           ],
-          bins: [
-            { id: 'composite', label: 'Composite (tách được)', correct: 'composite' },
-            { id: 'derived',   label: 'Derived (tính toán)',    correct: 'derived' },
-            { id: 'normal',    label: 'Thường (độc lập)',      correct: 'normal' }
-          ],
-          solution: {
-            'c-address': 'composite',
-            'c-age':     'derived',
-            'c-birth':   'normal',
-            'c-name':    'normal'
+          "solution": {
+            "a1": "r1",
+            "a2": "r2",
+            "a3": "r3",
+            "a4": "r4"
           }
         }
       },
@@ -402,7 +444,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong thực tế, dữ liệu nằm rải rác ở nhiều bảng. <strong>Foreign Key (FK)</strong> là cột lưu <em>bản sao</em> Khóa chính của bảng khác — đánh dấu quan hệ. <strong>JOIN ... ON</strong> là cú pháp nối 2 bảng qua FK ↔ PK để tạo "siêu bảng" tạm thời phục vụ truy vấn.',
           example: 'Bảng <code>game</code> có cột <code>pub_id</code> (FK) trỏ sang <code>publisher.id</code> (PK). Khi muốn biết game nào do Nintendo sản xuất, ta JOIN 2 bảng rồi WHERE theo <code>publisher.name</code>.'
         },
-        concept_cards: [{'icon': 'fa-link', 'title': 'Foreign Key (Khóa ngoại)', 'body': 'Cột trong bảng này <em>tham chiếu</em> đến PK của bảng khác. <code>game.pub_id → publisher.pub_id</code>. Đảm bảo <strong>referential integrity</strong>.'}, {'icon': 'fa-object-group', 'title': 'JOIN — nối 2 bảng', 'body': 'Dùng <code>JOIN ... ON</code> để nối bảng qua FK. <code>SELECT g.title, p.name FROM game g JOIN publisher p ON g.pub_id = p.pub_id</code>.'}],
+                intro: '90% lỗi SQL mới bắt đầu do <strong>JOIN sai bảng</strong>. Bạn tưởng query chạy đúng → 10 giây sau trả về 0 dòng, hoặc tệ hơn: trả về duplicate row. Nguyên nhân gốc: thiếu <strong>Foreign Key constraint</strong> + hiểu sai quan hệ. 1 bài này tiết kiệm 6 tháng debug.',
+concept_cards: [
+            {
+                  "icon": "fa-link",
+                  "title": "Foreign Key — Hợp đồng liên bảng",
+                  "body": "60% bug SQL mới bắt đầu do <strong>JOIN sai bảng</strong>. FK là \"hợp đồng\" giữa 2 bảng: <code>game.pub_id</code> HỨA rằng giá trị này PHẢI tồn tại trong <code>publisher.pub_id</code>. Phá hợp đồng → DB từ chối INSERT ngay lập tức."
+            },
+            {
+                  "icon": "fa-object-group",
+                  "title": "JOIN — Nối bảng qua FK",
+                  "body": "1 game có 1 publisher. <strong>Không lưu</strong> tên publisher trong bảng game — chỉ lưu <code>pub_id</code>. Khi cần tên → <code>JOIN</code> qua FK. Đây là lý do database thiết kế chuẩn 3NF tiết kiệm hàng GB storage ở quy mô triệu record."
+            }
+      ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'game', 'columns': [{'name': 'game_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}, {'name': 'pub_id', 'type': 'INT', 'key': 'FK'}]}, {'name': 'publisher', 'columns': [{'name': 'pub_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}, {'name': 'country', 'type': 'VARCHAR'}]}], 'connectors': [{'from': 'game', 'to': 'publisher', 'label': 'published_by', 'fromCard': 'N', 'toCard': '1'}], 'note': 'N game thuộc về 1 publisher. Mũi tên từ game.pub_id → publisher.pub_id'},
@@ -588,7 +642,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Quan hệ M:N xuất hiện khắp nơi: SV học nhiều môn, môn có nhiều SV; khách mua nhiều game, game bán cho nhiều khách. Không thể đặt FK vào bên nào (sẽ lặp). Giải pháp: <strong>Bảng trung gian (Junction Table)</strong> chỉ chứa 2 FK, tạo 1 dòng cho mỗi cặp. Truy vấn M:N nghĩa là <strong>Double JOIN chuỗi</strong> qua bảng trung gian.',
           example: 'Bảng <code>player_game_library</code> ở giữa chỉ chứa <code>ref_p_id</code> + <code>ref_game_id</code>. Khi DragonLord (p_id=7) mua Elden Ring (game_id=101) → 1 dòng (7, 101) trong library. Khi cùng DragonLord mua Hades (game_id=103) → 1 dòng (7, 103). Khi NoobMaster (p_id=8) cũng mua Elden Ring → 1 dòng (8, 101).'
         },
-        concept_cards: [{'icon': 'fa-arrows-left-right', 'title': 'M:N — Many-to-Many', 'body': '1 học sinh học N môn. 1 môn có N học sinh. Không thể lưu trực tiếp — cần <strong>1 bảng trung gian (junction table)</strong>.'}, {'icon': 'fa-table-list', 'title': 'Junction Table', 'body': 'Bảng chỉ chứa 2 FK (đôi khi + thuộc tính riêng như <code>enrolled_at</code>). PK thường là cặp 2 FK ghép. <code>enrollment(student_id, course_id)</code>.'}],
+                intro: 'Năm ngoái, một intern mới vào team thiết kế schema cho ứng dụng đặt lịch học. Cô ấy vẽ 1 bảng <code>enrollment</code> với 8 cột: student_name, course_name, instructor, room, time... Cuối cùng 1 SV đăng ký 3 môn = 3 dòng, mỗi dòng lặp lại tên SV. Insert sai = sai toàn bộ. Bài này dạy <strong>M:N qua junction table</strong>.',
+concept_cards: [
+            {
+                  "icon": "fa-arrows-left-right",
+                  "title": "Mối quan hệ 1:N — Tình huống Minh học 3 môn",
+                  "body": "Sinh viên Minh đăng ký Database (40 SV), OOP (35 SV), Web (50 SV). Nếu lưu \"Minh học\" = 3 dòng riêng → tên Minh lặp 3 lần. Nếu gộp \"môn1, môn2, môn3\" thành 3 cột → giới hạn số môn. Giải pháp: <strong>FK ở bên N</strong>, mỗi dòng enrollment = 1 cặp."
+            },
+            {
+                  "icon": "fa-table-list",
+                  "title": "Junction Table — Cầu nối M:N",
+                  "body": "Bảng <code>enrollment(student_id, course_id)</code> chỉ chứa 2 FK. PK là cặp (student_id, course_id) ghép lại. Đôi khi có thêm cột riêng như <code>enrolled_at</code> hay <code>grade</code>. Đây là <strong>1 bảng trung gian</strong> cho mọi quan hệ M:N."
+            }
+      ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 620, 'height': 280, 'entities': [{'name': 'student', 'columns': [{'name': 'student_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}]}, {'name': 'course', 'columns': [{'name': 'course_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}]}, {'name': 'enrollment', 'columns': [{'name': 'student_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'course_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'enrolled_at', 'type': 'DATE'}]}], 'connectors': [{'from': 'student', 'to': 'enrollment', 'fromCard': '1', 'toCard': 'N', 'label': 'enrolls'}, {'from': 'course', 'to': 'enrollment', 'fromCard': '1', 'toCard': 'N', 'label': 'has'}], 'note': 'M:N qua bảng trung gian. 2 FK + PK ghép.'},
@@ -654,29 +720,39 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {
-          title: 'Phân loại: cột nào là PK / FK (junction) / Thường?',
-          instruction: 'Trong 3 bảng <code>player</code>, <code>player_game_library</code>, <code>game</code>, mỗi thẻ là 1 cột. Kéo vào ô tương ứng.',
-          chips: [
-            { id: 'p-pid',   label: 'player.p_id' },
-            { id: 'p-name',  label: 'player.username' },
-            { id: 'l-pid',   label: 'library.ref_p_id' },
-            { id: 'l-gid',   label: 'library.ref_game_id' },
-            { id: 'g-gid',   label: 'game.game_id' },
-            { id: 'g-title', label: 'game.title' }
+        mini_game:         {
+          "type": "order",
+          "title": "Sắp xếp bước tạo quan hệ M:N",
+          "instruction": "Kéo thả để sắp đúng thứ tự khi thiết kế M:N.",
+          "xp": 20,
+          "items": [
+            {
+              "id": "s1",
+              "label": "Bước 1: Xác định 2 entity set (Player, Game)"
+            },
+            {
+              "id": "s2",
+              "label": "Bước 2: Tạo bảng riêng cho từng entity với PK"
+            },
+            {
+              "id": "s3",
+              "label": "Bước 3: Tạo junction table (player_game_library)"
+            },
+            {
+              "id": "s4",
+              "label": "Bước 4: Thêm 2 FK tham chiếu PK 2 bảng gốc"
+            },
+            {
+              "id": "s5",
+              "label": "Bước 5: PK của junction = composite (player_id, game_id)"
+            }
           ],
-          bins: [
-            { id: 'pk',     label: 'Primary Key (PK)',     correct: 'true' },
-            { id: 'fk',     label: 'Foreign Key (FK)',     correct: 'fk' },
-            { id: 'normal', label: 'Cột thường',           correct: 'normal' }
-          ],
-          solution: {
-            'p-pid':   'pk',
-            'p-name':  'normal',
-            'l-pid':   'fk',
-            'l-gid':   'fk',
-            'g-gid':   'pk',
-            'g-title': 'normal'
+          "solution": {
+            "s1": 1,
+            "s2": 2,
+            "s3": 3,
+            "s4": 4,
+            "s5": 5
           }
         }
       },
@@ -798,7 +874,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Có những thực thể không thể tự tồn tại nếu thiếu "cha". Ví dụ: bản mở rộng (DLC) <em>"Gói số 1"</em> — chưa biết của game nào. Nó cần kết hợp với <code>ref_game_id</code> mới định danh được. <strong>Thực thể yếu</strong> dùng Khóa chính tổng hợp: FK (trỏ về cha) + Discriminator (cột phân biệt trong phạm vi cha).',
           example: 'Trong bảng <code>dlc_content</code>, không có cột <code>dlc_id</code> riêng. Khóa chính là 2 cột cộng lại: <code>ref_game_id</code> (FK) + <code>dlc_no</code> (Discriminator). Truy vấn cần dùng <code>AND</code>: <code>WHERE dlc_no = 1 AND ref_game_id = 400</code>.'
         },
-        concept_cards: [{'icon': 'fa-link-slash', 'title': 'Weak Entity (Thực thể yếu)', 'body': 'Thực thể <strong>không có PK riêng</strong>, phải dựa vào owner entity để định danh. VD: <code>room</code> trong <code>building</code> — phòng 101 KHÔNG duy nhất nếu không biết building nào.'}, {'icon': 'fa-key', 'title': 'Partial Key + Identifying Relationship', 'body': '<strong>Partial key</strong> = khóa phân biệt trong phạm vi owner (vd: <code>room_number</code>). <strong>Identifying relationship</strong> = đường nét đôi trong ER, FK gồm cả PK của owner.'}],
+                intro: 'Thử tưởng tượng bạn có database cho 1 chuỗi khách sạn 50 chi nhánh. Mỗi chi nhánh có 200 phòng. Tổng = 10.000 phòng. Phòng 101 ở Hà Nội và phòng 101 ở Sài Gòn — cùng số nhưng KHÁC phòng. Bạn định danh phòng thế nào? Đây chính là <strong>Weak Entity</strong> + composite PK.',
+concept_cards: [
+            {
+                  "icon": "fa-link-slash",
+                  "title": "Weak Entity — Không có khóa riêng",
+                  "body": "Thử thách: phòng 101 trong tòa nhà A — có phải duy nhất? Không! Building A cũng có phòng 101. Phòng là <strong>weak entity</strong>, phải dựa vào building để định danh. Nếu xóa building → tất cả phòng biến mất (cascading). Bạn có thấy quen không? (Order/OrderItem chính là cặp này)."
+            },
+            {
+                  "icon": "fa-key",
+                  "title": "Partial Key + Identifying Relationship",
+                  "body": "<strong>Partial key</strong> = khóa phân biệt TRONG phạm vi owner (vd: <code>room_number</code>). <strong>Identifying relationship</strong> (đường nét đôi) nối weak với owner, FK gồm CẢ PK owner + partial key = composite PK. Thử vẽ ER với Room(building_id, room_number) xem."
+            }
+      ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'building', 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'PK'}, {'name': 'address', 'type': 'VARCHAR'}]}, {'name': 'room', 'weak': true, 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'room_number', 'type': 'INT', 'key': 'PK(partial)'}, {'name': 'capacity', 'type': 'INT'}]}], 'connectors': [{'from': 'building', 'to': 'room', 'label': 'contains', 'fromCard': '1', 'toCard': 'N'}], 'note': 'room là WEAK entity (viền đứt nét). PK ghép: (bld_id, room_number)'},
@@ -841,24 +929,19 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {
-          title: 'Phân loại: cột nào là FK / Discriminator / Thường?',
-          instruction: 'Trong bảng <code>dlc_content</code>, mỗi thẻ là 1 cột. Kéo vào ô tương ứng.<br><strong style="color:var(--primary)">FK (Khóa ngoại)</strong> · <strong style="color:var(--warning)">Discriminator (Phân biệt)</strong> · <strong style="color:var(--text-400)">Thường</strong>.',
-          chips: [
-            { id: 'c-ref',   label: 'ref_game_id' },
-            { id: 'c-no',    label: 'dlc_no' },
-            { id: 'c-name',  label: 'dlc_name' }
-          ],
-          bins: [
-            { id: 'fk',   label: 'FK (Khóa ngoại)',          correct: 'fk' },
-            { id: 'disc', label: 'Discriminator (Phân biệt)', correct: 'disc' },
-            { id: 'norm', label: 'Cột thường',                correct: 'norm' }
-          ],
-          solution: {
-            'c-ref':  'fk',
-            'c-no':   'disc',
-            'c-name': 'norm'
-          }
+        mini_game:         {
+          "type": "bug_spot",
+          "title": "Tìm lỗi trong Weak Entity setup",
+          "instruction": "Dòng nào sai trong SQL tạo bảng weak entity DLC?",
+          "xp": 25,
+          "code": "CREATE TABLE dlc_content (\n  dlc_id INT PRIMARY KEY,\n  game_id INT,\n  dlc_name VARCHAR(100),\n  price DECIMAL(10,2)\n);",
+          "bugType": "logic",
+          "bugs": [
+            {
+              "line": 2,
+              "description": "Weak entity KHÔNG có PK riêng! PK phải là composite (game_id, dlc_id) — dlc_id chỉ là partial key. Sửa: PRIMARY KEY (game_id, dlc_id) và FOREIGN KEY (game_id) REFERENCES games(game_id)."
+            }
+          ]
         }
       },
 
@@ -950,7 +1033,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Có ER Diagram đẹp đẽ nhưng DB không hiểu hình vẽ — phải <strong>ánh xạ (mapping)</strong> sang bảng vật lý. Silberschatz định nghĩa 7 quy tắc mapping trong Ch 6.7: <em>Mỗi entity set mạnh → 1 bảng; mỗi weak entity set → 1 bảng với PK tổng hợp; mỗi 1:1 → FK ở 1 bên; 1:N → FK ở phía N; M:N → junction table riêng; multi-valued attribute → bảng riêng.</em>',
           example: 'ER có <code>Game</code> (entity mạnh) + <code>Publisher</code> (entity mạnh) + quan hệ <em>publishes</em> (1:N — 1 publisher xuất bản nhiều game). Mapping: tạo bảng <code>game(game_id PK, title, pub_id FK)</code> và <code>publisher(id PK, name)</code>. FK <code>pub_id</code> nằm phía N (game) — đúng quy tắc.'
         },
-        concept_cards: [{'icon': 'fa-arrow-right-arrow-left', 'title': 'ER → Relational Mapping', 'body': 'Quy tắc: <strong>Entity set → Table</strong>. Mỗi attribute đơn → cột. PK của entity → PK của table. M:N + multivalued → bảng riêng.'}, {'icon': 'fa-diagram-project', 'title': '7 bước mapping (Silberschatz Ch 6.7)', 'body': 'B1: Entity mạnh → table. B2: Weak entity → table có FK + partial key. B3: Binary 1:1 → FK ở 1 bên. B4: Binary 1:N → FK ở bên N. B5: Binary M:N → bảng riêng. B6: Multivalued → bảng riêng. B7: Derived → KHÔNG lưu.'}],
+                intro: '<strong>Trước</strong>: bạn có 1 bản vẽ ER trên giấy với 12 entity, 18 quan hệ, 30 attribute. <strong>Sau</strong>: bạn cần chuyển thành SQL DDL. Có 1 quy tắc mapping chuẩn, 7 trường hợp. Nắm vững 7 quy tắc này = 30 phút làm xong thay vì 3 ngày mò mẫm.',
+concept_cards: [
+            {
+                  "icon": "fa-arrow-right-arrow-left",
+                  "title": "ER → Bảng: 1 quy tắc, 7 trường hợp",
+                  "body": "<strong>Trước</strong>: bạn vẽ ER với entity, attribute, relationship. <strong>Sau</strong>: bạn có schema quan hệ với table, column, FK. Mọi ER concept đều ánh xạ được — chỉ cần nhớ 7 quy tắc mapping. Bài này tóm gọn tất cả trong 1 bảng."
+            },
+            {
+                  "icon": "fa-diagram-project",
+                  "title": "Bảng 7 quy tắc Mapping",
+                  "body": "<strong>Strong entity</strong> → table có PK. <strong>Weak entity</strong> → table có FK + partial key = composite PK. <strong>1:1</strong> → FK ở 1 bên. <strong>1:N</strong> → FK ở bên N. <strong>M:N</strong> → bảng riêng. <strong>Multivalued</strong> → bảng riêng. <strong>Derived</strong> → KHÔNG lưu. Hết!"
+            }
+      ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'employee', 'columns': [{'name': 'emp_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}, {'name': 'dept_id', 'type': 'INT', 'key': 'FK'}]}, {'name': 'department', 'columns': [{'name': 'dept_id', 'type': 'INT', 'key': 'PK'}, {'name': 'dept_name', 'type': 'VARCHAR'}]}, {'name': 'project', 'columns': [{'name': 'proj_id', 'type': 'INT', 'key': 'PK'}, {'name': 'proj_name', 'type': 'VARCHAR'}]}, {'name': 'works_on', 'columns': [{'name': 'emp_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'proj_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'hours', 'type': 'INT'}]}], 'connectors': [{'from': 'employee', 'to': 'department', 'label': 'belongs_to', 'fromCard': 'N', 'toCard': '1'}, {'from': 'employee', 'to': 'works_on', 'label': 'works', 'fromCard': '1', 'toCard': 'N'}, {'from': 'project', 'to': 'works_on', 'label': 'has', 'fromCard': '1', 'toCard': 'N'}], 'note': '3 entity + 1 junction. Bài 6: áp dụng 7 bước mapping để tạo table vật lý.'},
@@ -1009,26 +1104,54 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {
-          title: 'Phân loại: quy tắc mapping nào đúng cho tình huống này?',
-          instruction: 'Mỗi thẻ là 1 tình huống ER. Kéo vào ô quy tắc mapping tương ứng.<br><strong style="color:var(--success)">Entity Set → 1 bảng</strong> · <strong style="color:var(--primary)">1:N → FK ở phía N</strong> · <strong style="color:var(--warning)">M:N → Junction Table</strong> · <strong style="color:var(--text-400)">Multi-valued → Bảng riêng</strong>.',
-          chips: [
-            { id: 'm1', label: 'Game (entity mạnh)' },
-            { id: 'm2', label: '1 Publisher xuất bản nhiều Game (1:N)' },
-            { id: 'm3', label: 'Player chơi nhiều Game, Game có nhiều Player (M:N)' },
-            { id: 'm4', label: 'User có nhiều email (multi-valued)' }
+        mini_game:         {
+          "type": "match",
+          "title": "Nối ER element → Relational",
+          "instruction": "Mỗi thành phần ER ánh xạ thành gì trong bảng quan hệ?",
+          "xp": 25,
+          "pairs": [
+            {
+              "left": "Strong Entity Set",
+              "leftId": "e1",
+              "rightId": "r1",
+              "right": {
+                "id": "r1",
+                "label": "Table + PK riêng"
+              }
+            },
+            {
+              "left": "Weak Entity Set",
+              "leftId": "e2",
+              "rightId": "r2",
+              "right": {
+                "id": "r2",
+                "label": "Table + FK + partial key = composite PK"
+              }
+            },
+            {
+              "left": "M:N Relationship",
+              "leftId": "e3",
+              "rightId": "r3",
+              "right": {
+                "id": "r3",
+                "label": "Junction table + 2 FK"
+              }
+            },
+            {
+              "left": "1:N Relationship",
+              "leftId": "e4",
+              "rightId": "r4",
+              "right": {
+                "id": "r4",
+                "label": "FK ở phía N"
+              }
+            }
           ],
-          bins: [
-            { id: 'entity',   label: 'Entity Set → 1 bảng',       correct: 'entity' },
-            { id: 'one_n',    label: '1:N → FK ở phía N',          correct: 'one_n' },
-            { id: 'm_n',      label: 'M:N → Junction Table',       correct: 'm_n' },
-            { id: 'multi',    label: 'Multi-valued → Bảng riêng',  correct: 'multi' }
-          ],
-          solution: {
-            'm1': 'entity',
-            'm2': 'one_n',
-            'm3': 'm_n',
-            'm4': 'multi'
+          "solution": {
+            "e1": "r1",
+            "e2": "r2",
+            "e3": "r3",
+            "e4": "r4"
           }
         }
       },
@@ -1128,7 +1251,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bảng <code>game_studio_combined</code> dưới đây có vấn đề: <em>FromSoftware</em> xuất hiện 3 lần, mỗi lần lặp lại "Japan". Đó là <strong>Redundancy</strong> (dư thừa) — tốn ổ cứng, dễ sinh mâu thuẫn. <strong>Phụ thuộc hàm (Functional Dependency)</strong> là quy tắc: nếu biết <code>studio_name</code> thì biết <code>st_country</code> (mỗi studio chỉ ở 1 nước). Viết: <code>studio_name → st_country</code>.',
           example: 'Bạn phát hiện FD: <code>studio_name → st_country</code>. Đây là quy tắc toán học — không phải syntax SQL — nhưng là gốc rễ để biết bảng "có vấn đề" và cần tách. Có 3 dạng chuẩn sẽ dùng FD để phát hiện vi phạm: 1NF, 2NF, 3NF, BCNF.'
         },
-        concept_cards: [{"icon": "fa-arrows-to-dot", "title": "Redundancy (Dư thừa)", "body": "Cùng 1 thông tin lặp lại ở nhiều dòng. VD: <code>studio_country</code> lặp ở mỗi game → tốn storage + dễ sai khi update."}, {"icon": "fa-arrows-left-right", "title": "Functional Dependency (FD)", "body": "Quy tắc <code>X → Y</code>: biết X thì xác định được Y duy nhất. <code>game_id → title, genre, price</code>. Mọi FD đều từ PK."}],
+                intro: 'Bạn được giao maintain database cho 1 startup game. Table <code>games</code> hiện tại có 5000 dòng, mỗi dòng lưu <code>studio_name</code> + <code>studio_country</code>. 1 sáng đẹp trời, CEO bảo: <em>"Đổi tên Sony Japan thành Sony Japan Holdings"</em>. Bạn UPDATE... mất 4 giờ. Quên 1 dòng. Dữ liệu mâu thuẫn. Bài này dạy <strong>Functional Dependency</strong>.',
+concept_cards: [
+            {
+                  "icon": "fa-arrows-to-dot",
+                  "title": "Redundancy — Cùng thông tin, nhiều chỗ",
+                  "body": "Bạn có bảng 1000 game. Mỗi game lưu <code>studio_name</code> + <code>studio_country</code>. Studio \"Sony\" → \"Japan\" lặp 50 lần. Sửa \"Japan\" thành \"Nhật Bản\" → UPDATE 50 dòng. Quên 1 dòng? <strong>Dữ liệu mâu thuẫn</strong>. Bạn có thấy vấn đề không?"
+            },
+            {
+                  "icon": "fa-arrows-left-right",
+                  "title": "Functional Dependency (FD)",
+                  "body": "Quy tắc <code>X → Y</code>: biết X thì xác định Y duy nhất. <code>game_id → title, genre, price</code> (mọi FD đều từ PK). Nhưng <code>studio_name → studio_country</code> cũng là FD — đây là manh mối để tách bảng. Cứ tìm FD mà PK không liên quan → tách ra."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — chưa tách", "columns": ["game_id", "title", "studio", "studio_country"], "rows": [["1", "Mario", "Nintendo", "Japan"], ["2", "Zelda", "Nintendo", "Japan"], ["3", "Hades", "Supergiant", "USA"]], "violations": {"1-3": true, "2-3": true}}, "after": {"title": "SAU — tách studio", "columns": ["game_id", "title", "studio"], "rows": [["1", "Mario", "Nintendo"], ["2", "Zelda", "Nintendo"], ["3", "Hades", "Supergiant"]]}, "note": "Tách thành 2 bảng: game + studio. studio_country lưu 1 lần duy nhất."},
@@ -1307,7 +1442,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bảng <code class="code">student_raw</code> dưới đây VI PHẠM 1NF: cột <code class="code">phones</code> chứa <strong>nhiều số điện thoại</strong> trong 1 ô (vd: <code>"0901-xxx, 0902-yyy"</code>). Đây là <em>multivalued attribute</em> — không nguyên tử. Theo Silberschatz Ch 7.8: <strong>1NF yêu cầu mỗi attribute phải có domain nguyên tử — không thể chia nhỏ thành nhiều giá trị có ý nghĩa</strong>.',
           example: 'Nếu muốn tìm TẤT CẢ sinh viên có số "0901-xxx" — bạn không thể <code>WHERE phones = \'0901-xxx\'</code> (vì ô chứa "0901-xxx, 0902-yyy" không bằng). Phải dùng <code>LIKE \'%0901-xxx%\'</code> → chậm và sai (vd: cũng match "0901-xxx-old"). Tách <code>phones</code> thành bảng riêng thì query đúng & nhanh: <code>WHERE phone = \'0901-xxx\'</code>.'
         },
-        concept_cards: [{"icon": "fa-atom", "title": "1NF — Atomic Domains", "body": "Mỗi cell chỉ chứa <strong>1 giá trị nguyên tử</strong> (không list, không nested). Multivalued → tách thành nhiều dòng. Composite → tách thành nhiều cột."}, {"icon": "fa-list", "title": "Multivalued vs Composite", "body": "<strong>Multivalued</strong>: 1 cell chứa N giá trị cùng loại (vd: <code>phones = \"0901,0902\"</code>) → tách thành nhiều dòng. <strong>Composite</strong>: 1 cell chứa nhiều mảnh khác loại (vd: <code>address</code>) → tách thành nhiều cột."}],
+                intro: 'Điều gì xảy ra khi 1 sinh viên đăng ký có 3 số điện thoại? Bạn lưu vào 1 cột <code>phones = "0901, 0902, 0903"</code>? Tưởng đâu vào đó... cho đến khi PM bảo <em>"Tìm SV có số 0902"</em>. Query <code>LIKE \'%0902%\'</code> chạy 10 giây, miss các format <code>"0901;0902"</code>. Bài này dạy <strong>1NF</strong> + Atomic Domain.',
+concept_cards: [
+            {
+                  "icon": "fa-atom",
+                  "title": "1NF — Mỗi cell 1 giá trị",
+                  "body": "Giống <strong>hộp thư</strong> của bạn: mỗi hộp chỉ chứa 1 lá thư, không nhét cả xấp vào. Cell trong DB cũng vậy — 1 giá trị nguyên tử, không list, không JSON. Muốn lưu nhiều số điện thoại? <em>Tách thành nhiều dòng</em> trong bảng phụ."
+            },
+            {
+                  "icon": "fa-list",
+                  "title": "Multivalued vs Composite — 2 cái bẫy 1NF",
+                  "body": "<strong>Multivalued</strong>: 1 cell chứa N giá trị cùng loại (vd: <code>phones = \"0901,0902\"</code>) → tách thành nhiều dòng. <strong>Composite</strong>: 1 cell chứa nhiều mảnh khác loại (vd: <code>address = \"Q1, HCM\"</code>) → tách thành nhiều cột. Cùng vi phạm 1NF nhưng fix khác nhau."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 1NF", "columns": ["member_id", "name", "phones"], "rows": [["1", "Alice", "0901,0902"], ["2", "Bob", "0903"]], "violations": {"0-2": true, "1-2": true}}, "after": {"title": "SAU — đã 1NF (tách dòng)", "columns": ["member_id", "name", "phone"], "rows": [["1", "Alice", "0901"], ["1", "Alice", "0902"], ["2", "Bob", "0903"]], "fixes": {"0-2": true, "1-2": true, "2-2": true}}, "note": "1NF yêu cầu atomic: tách \"0901,0902\" thành 2 dòng riêng."},
@@ -1360,7 +1507,41 @@ window.LESSON_CONTENT['db_design'] = {
           },
           hint: 'Cột phones chứa nhiều giá trị → tách thành bảng riêng (mỗi phone 1 dòng). Cột name chỉ phụ thuộc student_id → ở lại bảng student.'
         },
-        mini_game: {"type": "classify", "title": "Phân loại: bảng nào vi phạm 1NF?", "instruction": "Mỗi thẻ là 1 bảng mẫu. Kéo vào ô <strong style=\"color:var(--danger)\">Vi phạm 1NF</strong> hoặc <strong style=\"color:var(--success)\">Đạt 1NF</strong>.", "chips": [{"id": "t-phones", "label": "phones = \"0901,0902\""}, {"id": "t-age", "label": "age = 25 (số nguyên)"}, {"id": "t-addr", "label": "address = \"Hanoi, Cầu Giấy\" (composite)"}, {"id": "t-name", "label": "name = \"Alice\""}], "bins": [{"id": "bad", "label": "Vi phạm 1NF (multivalued)", "correct": "bad"}, {"id": "good", "label": "Đạt 1NF (atomic)", "correct": "good"}], "solution": {"t-phones": "bad", "t-age": "good", "t-addr": "bad", "t-name": "good"}}
+        mini_game:         {
+          "type": "order",
+          "title": "Sắp xếp bước xử lý vi phạm 1NF",
+          "instruction": "Kéo thả đúng thứ tự fix 1NF khi gặp multivalued.",
+          "xp": 20,
+          "items": [
+            {
+              "id": "s1",
+              "label": "Bước 1: Phát hiện cột multivalued (phones chứa \"0901, 0902\")"
+            },
+            {
+              "id": "s2",
+              "label": "Bước 2: Tạo bảng con (student_phone) với PK riêng"
+            },
+            {
+              "id": "s3",
+              "label": "Bước 3: Di chuyển multivalued data sang bảng con"
+            },
+            {
+              "id": "s4",
+              "label": "Bước 4: Thêm FK (student_id) liên kết bảng con ↔ bảng gốc"
+            },
+            {
+              "id": "s5",
+              "label": "Bước 5: Xóa cột multivalued khỏi bảng gốc"
+            }
+          ],
+          "solution": {
+            "s1": 1,
+            "s2": 2,
+            "s3": 3,
+            "s4": 4,
+            "s5": 5
+          }
+        }
       },
 
       step_3: {
@@ -1451,7 +1632,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bạn quản lý <strong>thư viện sách</strong>. Bảng <code class="code">book_loan_raw</code> có khóa chính tổng hợp <code class="code">(book_id, copy_no)</code> (mỗi cuốn sách có thể có nhiều bản copy). Vấn đề: <code class="code">member_name</code> chỉ phụ thuộc vào <code class="code">member_id</code> (một phần khóa qua loan) — không phụ thuộc <code class="code">copy_no</code>. <strong>2NF</strong> yêu cầu mỗi cột non-key phải phụ thuộc <em>toàn bộ</em> khóa.',
           example: 'Nếu đổi tên người mượn từ "Minh" → "Minh Nguyễn", bạn phải sửa MỌI DÒNG có member_name = "Minh" (vì Minh mượn nhiều sách → có nhiều dòng). Đó là <strong>update anomaly</strong>. Tách member ra bảng riêng → sửa 1 chỗ là xong.'
         },
-        concept_cards: [{"icon": "fa-puzzle-piece", "title": "2NF — No Partial Dependency", "body": "Mọi cột non-key phải phụ thuộc CẢ PK (không phụ thuộc 1 phần PK). Với composite PK (a,b): <code>{a,b} → c</code> OK, <code>a → c</code> SAI → tách ra bảng riêng."}, {"icon": "fa-scissors", "title": "Cách fix 2NF", "body": "Tách phần PK gây phụ thuộc ra bảng riêng. PK gốc giữ lại. VD: <code>loans(book_id, copy_no, member_id)</code> có <code>member_id → member_name</code> → tách thành <code>member</code> riêng."}],
+                intro: '70% database mới ra trường có <strong>partial dependency</strong> mà dev không biết. Khi data lên 100K dòng, update sai = mất 3 ngày fix. Bài này tóm gọn 2NF trong 5 phút — thay vì 3 tuần tự mò. Sau bài này bạn sẽ <em>chủ động tách bảng</em> trước khi code, không phải fix sau.',
+concept_cards: [
+            {
+                  "icon": "fa-puzzle-piece",
+                  "title": "2NF — Phụ thuộc CẢ PK",
+                  "body": "Thư viện A lưu tên thành viên LẶP LẠI 500 lần — mỗi lần mượn sách = 1 dòng có <code>member_name</code>. Sửa tên 1 người = UPDATE 500 dòng. Quên 1 dòng? <strong>Dữ liệu mâu thuẫn</strong>. Đây là partial dependency — cột <code>member_name</code> chỉ phụ thuộc <code>member_id</code>, không cần <code>book_id</code>. 2NF fix vấn đề này."
+            },
+            {
+                  "icon": "fa-scissors",
+                  "title": "Cách fix 2NF",
+                  "body": "Tách phần PK gây phụ thuộc ra bảng riêng. <code>loans(book_id, copy_no, member_id, member_name)</code> có <code>member_id → member_name</code> → tách thành bảng <code>member(member_id, member_name)</code>. Bảng loans chỉ giữ FK <code>member_id</code>. 1 dòng UPDATE, 1 dòng sửa — xong."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 2NF", "columns": ["book_id", "copy_no", "member_id", "member_name", "loan_date"], "rows": [["B1", "1", "M01", "Alice", "2026-01-01"], ["B1", "2", "M01", "Alice", "2026-01-05"], ["B2", "1", "M02", "Bob", "2026-01-03"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 2NF (tách member)", "columns": ["book_id", "copy_no", "member_id", "loan_date"], "rows": [["B1", "1", "M01", "2026-01-01"], ["B1", "2", "M01", "2026-01-05"], ["B2", "1", "M02", "2026-01-03"]]}, "note": "PK (book_id, copy_no) nhưng member_name chỉ phụ thuộc member_id → tách member riêng."},
@@ -1625,7 +1818,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bạn quản lý <strong>hồ sơ bệnh viện</strong>. Bảng <code class="code">treatments</code> ghi lại: bệnh nhân nào, do bác sĩ nào, điều trị gì, ngày nào. Nhưng bạn cũng muốn biết <em>chuyên khoa</em> của bác sĩ. Vấn đề: <code class="code">doctor_id</code> quyết định <code class="code">doctor_specialty</code> (mỗi bác sĩ chỉ có 1 chuyên khoa), nhưng <code class="code">doctor_id</code> <em>không phải</em> siêu khóa của bảng treatments → <strong>vi phạm BCNF</strong>.',
           example: 'Cập nhật chuyên khoa bác sĩ D01 từ "Tim mạch" → "Nội tiết" → phải sửa nhiều dòng. Nếu 1 dòng bị sót → dữ liệu mâu thuẫn (inconsistency). Tách <code class="code">doctors</code> ra bảng riêng: sửa 1 chỗ, dữ liệu luôn nhất quán.'
         },
-        concept_cards: [{"icon": "fa-shield-halved", "title": "BCNF — Boyce-Codd Normal Form", "body": "Mọi FD <code>X → Y</code> phải có <code>X</code> là superkey. Nếu có FD mà vế trái KHÔNG phải superkey → vi phạm BCNF → tách bảng."}, {"icon": "fa-code-branch", "title": "Ví dụ kinh điển", "body": "Bảng <code>teaches(prof, course, dept)</code>. FD: <code>prof → dept</code>. Nhưng <code>{prof, course}</code> mới là PK → <code>prof</code> không phải superkey → vi phạm BCNF. Tách thành <code>prof_dept</code> riêng."}],
+                intro: 'Năm 2018, hệ thống đăng ký môn học của 1 trường ĐH Việt Nam bị sập 4 giờ. Nguyên nhân: bảng <code>teaches</code> có 50K dòng, query join mất 45 giây. Dev trưởng mở schema lên — thấy ngay vi phạm <strong>BCNF</strong>: 1 prof dạy 1 dept, dept lặp ở mỗi môn. Tách 1 bảng → query còn 0.5 giây. Bài này dạy <strong>BCNF decomposition</strong>.',
+concept_cards: [
+            {
+                  "icon": "fa-shield-halved",
+                  "title": "BCNF — Câu chuyện ông Prof Smith",
+                  "body": "Prof Smith dạy 2 môn (Database, Networks), ở dept CS. Bảng <code>teaches(prof, course, dept)</code> có 4 dòng. Smith chuyển dept → UPDATE 2 dòng. Nhưng nếu Smith dạy 3 môn = UPDATE 3 dòng. Quên 1? <strong>Dữ liệu sai</strong>. BCNF bắt buộc mọi FD vế trái phải là superkey."
+            },
+            {
+                  "icon": "fa-code-branch",
+                  "title": "BCNF vi phạm & cách tách",
+                  "body": "FD: <code>prof → dept</code>. Nhưng <code>{prof, course}</code> mới là PK → <code>prof</code> không phải superkey → vi phạm BCNF. Tách: <code>prof_dept(prof, dept)</code> + <code>teaches(prof, course)</code>. Giờ Smith chuyển dept = UPDATE 1 dòng, không phụ thuộc số môn dạy."
+            }
+      ],
                 visual: {
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm BCNF", "columns": ["patient_id", "doctor_id", "treatment", "doctor_specialty"], "rows": [["P01", "D01", "Khám tổng quát", "Tim mạch"], ["P01", "D01", "Tái khám", "Tim mạch"], ["P02", "D02", "Phẫu thuật", "Ngoại khoa"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã BCNF (tách doctors)", "columns": ["patient_id", "doctor_id", "treatment"], "rows": [["P01", "D01", "Khám tổng quát"], ["P01", "D01", "Tái khám"], ["P02", "D02", "Phẫu thuật"]]}, "note": "Tách doctors(doctor_id, specialty) riêng. doctor_specialty lưu 1 lần."},
           schema: {
@@ -1686,7 +1891,56 @@ window.LESSON_CONTENT['db_design'] = {
           },
           hint: 'Câu hỏi BCNF: "Cột X có phải siêu khóa không?" Nếu X quyết định Y mà X không phải siêu khóa → vi phạm → tách X-Y ra bảng riêng. Ở đây doctor_id quyết định doctor_specialty mà doctor_id không phải superkey.'
         },
-        mini_game: {"type": "classify", "title": "Phân loại: bảng nào vi phạm BCNF?", "instruction": "Mỗi thẻ là 1 tình huống FD. Kéo vào ô <strong style=\"color:var(--danger)\">Vi phạm BCNF</strong> hoặc <strong style=\"color:var(--success)\">Đạt BCNF</strong>.", "chips": [{"id": "t-teaches", "label": "teaches(prof, course, dept) — prof → dept"}, {"id": "t-enroll", "label": "enroll(student, course) — chỉ có PK"}, {"id": "t-borrow", "label": "borrow(book, member) — không có FD riêng"}, {"id": "t-publish", "label": "publish(prof, journal) — prof → dept + journal → prof"}], "bins": [{"id": "bad", "label": "Vi phạm BCNF", "correct": "bad"}, {"id": "good", "label": "Đạt BCNF", "correct": "good"}], "solution": {"t-teaches": "bad", "t-enroll": "good", "t-borrow": "good", "t-publish": "bad"}}
+        mini_game:         {
+          "type": "match",
+          "title": "FD nào vi phạm dạng chuẩn nào?",
+          "instruction": "Mỗi phụ thuộc hàm vi phạm dạng chuẩn nào? Click nối từng cặp.",
+          "xp": 30,
+          "pairs": [
+            {
+              "left": "PK(A,B) và A → C",
+              "leftId": "f1",
+              "rightId": "n1",
+              "right": {
+                "id": "n1",
+                "label": "Vi phạm 2NF (partial dep)"
+              }
+            },
+            {
+              "left": "A → B → C (transitive)",
+              "leftId": "f2",
+              "rightId": "n2",
+              "right": {
+                "id": "n2",
+                "label": "Vi phạm 3NF"
+              }
+            },
+            {
+              "left": "X → Y nhưng X không SK",
+              "leftId": "f3",
+              "rightId": "n3",
+              "right": {
+                "id": "n3",
+                "label": "Vi phạm BCNF"
+              }
+            },
+            {
+              "left": "X →→ Y (multivalued)",
+              "leftId": "f4",
+              "rightId": "n4",
+              "right": {
+                "id": "n4",
+                "label": "Vi phạm 4NF"
+              }
+            }
+          ],
+          "solution": {
+            "f1": "n1",
+            "f2": "n2",
+            "f3": "n3",
+            "f4": "n4"
+          }
+        }
       },
 
       step_3: {
@@ -1806,7 +2060,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bạn quản lý <strong>cửa hàng trực tuyến</strong>. Bảng <code class="code">orders</code> ghi: ai mua, mua gì, số lượng, giá, tổng. Bạn cũng muốn biết <em>quản lý</em> của <em>danh mục</em> sản phẩm. Vấn đề: <code class="code">order_id</code> → <code class="code">product_id</code> → <code class="code">category</code> → <code class="code">category_manager</code>. Cột <code class="code">category_manager</code> phụ thuộc BẮC CẦU vào <code class="code">order_id</code> qua trung gian <code class="code">category</code> → <strong>vi phạm 3NF</strong>.',
           example: '3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là <em>khóa của bảng khác</em>. Ví dụ: trong bảng orders, cột <code class="code">product_name</code> phụ thuộc <code class="code">product_id</code> (khóa của bảng products) — vẫn OK theo 3NF, dù không lý tưởng. Đó là sự "thỏa hiệp" giữa tính chuẩn và tốc độ truy vấn.'
         },
-        concept_cards: [{"icon": "fa-link", "title": "3NF — No Transitive Dependency", "body": "Không có chuỗi FD <code>X → Y → Z</code> với X là PK, Y không phải key, Z là non-key. Nếu có → tách Y-Z thành bảng riêng. 3NF <strong>cho phép</strong> FD non-superkey (khác BCNF)."}, {"icon": "fa-scale-balanced", "title": "3NF vs BCNF", "body": "<strong>BCNF</strong> nghiêm hơn 3NF. Nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd khi có 2+ candidate key overlap)."}],
+                intro: 'Thử tưởng tượng bạn là data engineer cho 1 ngân hàng. Schema có 200 bảng. Sếp bảo: <em>"Review lại toàn bộ, đảm bảo 3NF"</em>. Bạn check từng bảng... 2 tuần vẫn chưa xong. Trong khi bạn có thể check trong 2 ngày nếu biết <strong>3NF = transitive dependency check</strong>. Bài này tiết kiệm cho bạn 12 ngày.',
+concept_cards: [
+            {
+                  "icon": "fa-link",
+                  "title": "3NF — Cho phép vi phạm BCNF (đôi khi)",
+                  "body": "Thử thách: bạn có FD <code>course → dept</code> và <code>dept → head</code>. <code>course</code> là PK. <code>head</code> chỉ phụ thuộc <code>dept</code> (transitive). 3NF bắt buộc: hoặc <code>dept</code> là superkey, hoặc <code>head</code> là prime attribute. 3NF <strong>cho phép</strong> FD non-superkey nếu vế phải là key — khác BCNF!"
+            },
+            {
+                  "icon": "fa-scale-balanced",
+                  "title": "BCNF vs 3NF — Sự thỏa hiệp",
+                  "body": "<strong>BCNF</strong> nghiêm hơn 3NF: nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd: 2+ candidate key overlap, vd ở B10). Thực tế: BCNF thường tốt hơn, nhưng đôi khi 3NF + giữ redundancy chấp nhận được. Bạn chọn cái nào?"
+            }
+      ],
                 visual: {
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 3NF", "columns": ["order_id", "product_id", "category", "category_manager"], "rows": [["1001", "P01", "Game", "An"], ["1002", "P02", "Game", "An"], ["1003", "P03", "Gear", "Bình"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 3NF (tách categories)", "columns": ["order_id", "product_id", "category"], "rows": [["1001", "P01", "Game"], ["1002", "P02", "Game"], ["1003", "P03", "Gear"]]}, "note": "Tách categories(category, manager) riêng. category_manager lưu 1 lần / category."},
           schema: {
@@ -1993,7 +2259,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong <strong>hệ thống khóa học</strong>, một khóa học <code>CS101</code> có NHIỀU giáo trình (Database Concepts, SQL Performance) VÀ NHIỀU giảng viên (Dr. Trần, Dr. Lê). Hai tập này <em>độc lập</em> với nhau — nhưng khi nhét vào 1 bảng, ta buộc phải lặp tổ hợp Cartesian: 2 textbook × 2 instructor = 4 dòng, dù thực tế chỉ cần 2 + 2 = 4 dòng tách biệt.',
           example: 'Bảng <code>course_offering_raw</code> có MVD: <code>course_id →→ textbook</code> và <code>course_id →→ instructor</code>. Hai MVD này độc lập → vi phạm 4NF. Sửa: tách thành <code>course_textbook(course_id, textbook)</code> và <code>course_instructor(course_id, instructor)</code>. Mỗi bảng chỉ chứa 1 MVD → không còn lặp Cartesian.'
         },
-        concept_cards: [{"icon": "fa-cubes-stacked", "title": "4NF — No Multivalued Dependency", "body": "Khi 1 khóa X quyết định NHIỀU giá trị Y độc lập với các cột khác → <code>X →→ Y</code> (multivalued dep). Tách thành 2 bảng riêng."}, {"icon": "fa-explosion", "title": "Cartesian explosion", "body": "Nếu <code>prof →→ course</code> và <code>prof →→ hobby</code> mà không tách → bảng có số dòng = |course| × |hobby|. Vd: 4 course × 3 hobby = 12 dòng thay vì 4+3=7."}],
+                intro: '<strong>Trước</strong>: bảng <code>prof_skill</code> có 12 dòng cho 1 prof (4 course × 3 hobby). Insert 1 hobby mới = 4 dòng duplicate. <strong>Sau</strong>: 2 bảng <code>prof_course</code> (4 dòng) + <code>prof_hobby</code> (3 dòng). Insert 1 hobby = 1 dòng. Storage giảm 42%. Đây là <strong>4NF</strong> xử lý multivalued dependency.',
+concept_cards: [
+            {
+                  "icon": "fa-cubes-stacked",
+                  "title": "4NF — Trước vs Sau khi tách",
+                  "body": "<strong>Trước</strong>: bảng <code>prof_skill(prof, course, hobby)</code> có 1 prof dạy 4 course + 3 hobby = <strong>12 dòng</strong> (Cartesian product). <strong>Sau</strong>: 2 bảng <code>prof_course(prof, course)</code> + <code>prof_hobby(prof, hobby)</code> = <strong>4 + 3 = 7 dòng</strong>. Tiết kiệm 42% storage."
+            },
+            {
+                  "icon": "fa-explosion",
+                  "title": "Multivalued Dependency (MVD)",
+                  "body": "Khi 1 khóa X quyết định NHIỀU giá trị Y <em>độc lập</em> với cột khác → <code>X →→ Y</code>. <strong>Quy tắc</strong>: nếu có 2+ MVD cùng vế trái, tách thành 2 bảng. MVD khác FD ở chỗ Y là <em>tập giá trị</em> chứ không phải 1 giá trị. Bài này dạy cách phát hiện."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 4NF", "columns": ["prof", "course", "hobby"], "rows": [["Dr. Lee", "DB", "Chess"], ["Dr. Lee", "DB", "Music"], ["Dr. Lee", "AI", "Chess"], ["Dr. Lee", "AI", "Music"]], "violations": {"0-2": true, "0-1": true}}, "after": {"title": "SAU — đã 4NF (tách 2 bảng)", "columns": ["prof", "course"], "rows": [["Dr. Lee", "DB"], ["Dr. Lee", "AI"]]}, "note": "Tách thành 2 bảng: prof_course + prof_hobby. Mỗi MVD 1 bảng riêng."},
@@ -2038,25 +2316,19 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {
-          title: 'Phân loại: tình huống nào vi phạm 4NF?',
-          instruction: 'Kéo mỗi tình huống vào ô tương ứng.<br><strong style="color:var(--success)">Vi phạm 4NF</strong> (≥ 2 MVD độc lập) · <strong style="color:var(--text-400)">Không vi phạm</strong> (chỉ 1 MVD hoặc không có).',
-          chips: [
-            { id: 'mv1', label: 'course_id →→ textbook AND course_id →→ instructor' },
-            { id: 'mv2', label: 'user_id →→ email (1 user có nhiều email, không có MVD khác)' },
-            { id: 'mv3', label: 'movie_id →→ actor AND movie_id →→ director' },
-            { id: 'mv4', label: 'order_id → product (1 order có 1 product duy nhất)' }
-          ],
-          bins: [
-            { id: 'yes', label: 'Vi phạm 4NF',  correct: 'yes' },
-            { id: 'no',  label: 'Không vi phạm', correct: 'no' }
-          ],
-          solution: {
-            'mv1': 'yes',
-            'mv2': 'no',
-            'mv3': 'yes',
-            'mv4': 'no'
-          }
+        mini_game:         {
+          "type": "bug_spot",
+          "title": "Tìm Multivalued Dependency violation",
+          "instruction": "Bảng này có Cartesian explosion — đâu là dòng \"gây bão\"?",
+          "xp": 30,
+          "code": "prof_id | course     | hobby\nP01     | Database   | Chess\nP01     | Database   | Piano\nP01     | Networks   | Chess\nP01     | Networks   | Piano",
+          "bugType": "logic",
+          "bugs": [
+            {
+              "line": 2,
+              "description": "Dòng 2-5 là Cartesian product! prof →→ course và prof →→ hobby INDEPENDENT → tách thành 2 bảng: prof_course(prof_id, course) + prof_hobby(prof_id, hobby). 12 dòng → 7 dòng."
+            }
+          ]
         }
       },
 
@@ -2162,7 +2434,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'BOSS BATTLE! Bạn nhận được một bảng <code class="code">gamers_social</code> khổng lồ — mỗi dòng chứa thông tin user + post + game + tag + platform, lẫn lộn. Bạn sẽ trải qua <strong>4 vòng chiến</strong>, mỗi vòng áp dụng 1 dạng chuẩn lên bảng trung gian. Mỗi stage sẽ có một bảng nhỏ hơn, tập trung vào một tập con cột.',
           example: 'Sau 4 vòng, bạn sẽ có một schema sạch cho Mạng Xã Hội Gamers: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction. Đó là sản phẩm thực tế của một Database Engineer chuyên nghiệp.'
         },
-        concept_cards: [{"icon": "fa-crown", "title": "Boss Battle — Grand System", "body": "Thiết kế schema cho hệ thống Mạng Xã Hội Gamers hoàn chỉnh: users, posts, games, genres, platforms, friends, likes, comments. Áp dụng 1NF→BCNF cho toàn bộ."}, {"icon": "fa-trophy", "title": "Đáp án tham khảo", "body": "5 bảng chính (users, posts, games, genres, platforms) + 2-3 bảng junction (user_friends, post_likes, post_games). Mỗi game có thể thuộc nhiều genre → junction table."}],
+                intro: 'Bạn nhận brief: <em>"Thiết kế database cho MXH Gamers, scale 1 triệu user, 10 triệu post, 100 triệu like, query response &lt;100ms"</em>. 8 giờ deadline. Bạn bắt đầu từ đâu? Bài này là <strong>boss battle</strong> — tổng hợp 1NF → BCNF → M:N → indexing. Giải xong = pass môn.',
+concept_cards: [
+            {
+                  "icon": "fa-crown",
+                  "title": "Boss Battle — Hệ thống Mạng Xã Hội Gamers",
+                  "body": "Bạn được giao thiết kế schema cho MXH Gamers: users, posts, games, genres, platforms, friends, likes, comments. Áp lực: 1 triệu user, 10 triệu post, 100 triệu like. Bạn bắt đầu từ đâu? <strong>Liệt kê entity trước</strong> → xác định quan hệ → áp 1NF→BCNF → cuối cùng mới thêm junction table."
+            },
+            {
+                  "icon": "fa-trophy",
+                  "title": "Đáp án mẫu — 8 bảng chuẩn BCNF",
+                  "body": "5 bảng chính: <code>users, posts, games, genres, platforms</code>. 3 junction: <code>user_friends, post_likes, post_games</code>. Mỗi game thuộc nhiều genre → junction <code>game_genres</code>. <strong>Đã 4NF</strong> vì mỗi MVD được tách riêng. Tổng 8 bảng, query nhanh, không dư thừa."
+            }
+      ],
                 visual: {
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — bảng tổng (siêu vi phạm)", "columns": ["user_id", "username", "country", "is_premium", "post_id", "post_text", "game_name"], "rows": [["U01", "minh_gamer", "VN", "true", "P01", "Clear Elden Ring!", "Elden Ring"], ["U02", "yuki_99", "JP", "false", "P02", "Hades quá hay", "Hades"]], "violations": {"0-5": true, "0-6": true}}, "after": {"title": "SAU — schema sạch (sau 4 vòng)", "columns": ["user_id", "post_id", "game_id", "post_date"], "rows": [["U01", "P01", "G01", "2024-05-01"], ["U02", "P02", "G02", "2024-05-02"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           schema: {
@@ -2424,7 +2708,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bảng <code class="code">app_users</code> cần lưu <strong>settings của user</strong>: theme (dark/light), notifications (on/off), language (vi/en). Tạo 10 cột? Không — dùng <strong>JSONB</strong>: 1 cột lưu cả object, query bằng <code class="code">->></code> để trích xuất giá trị. PostgreSQL parse JSON binary → truy vấn cực nhanh.',
           example: 'Query <code class="code">settings->>\'theme\'</code> trả về <strong>text thuần</strong> (dark, light…). Dùng trong SELECT, WHERE, GROUP BY. Filter: <code class="code">WHERE settings->>\'notifications\' = \'true\'</code> — lưu ý: value là string, dùng nháy đơn.'
         },
-        concept_cards: [{"icon": "fa-brackets-curly", "title": "JSON in Relational DB", "body": "Lưu trữ cấu trúc linh hoạt (JSONB) trong cột quan hệ. Truy vấn qua toán tử <code>-&gt;&gt;</code> (text) hoặc <code>-&gt;</code> (json). Index bằng GIN index cho tốc độ."}, {"icon": "fa-database", "title": "Khi nào dùng JSON?", "body": "Settings, preferences, tags, metadata thay đổi liên tục. KHÔNG dùng cho dữ liệu có quan hệ chặt (orders, users) — tách bảng thường."}],
+                intro: 'Điều gì xảy ra khi 1 user có 30 settings (theme, language, notification, font_size, ...)? Tạo 30 cột? Thêm setting mới = ALTER TABLE = downtime 5 phút. Hay lưu vào 1 cột <code>JSONB</code>? 1 lần INSERT, schema không đổi. PostgreSQL cho query JSON cực nhanh với GIN index. Bài này dạy <strong>JSON in Relational</strong>.',
+concept_cards: [
+            {
+                  "icon": "fa-brackets-curly",
+                  "title": "JSONB — Tủ đồ cá nhân",
+                  "body": "Hãy nghĩ <strong>JSONB</strong> như tủ đồ trong phòng: bạn nhét gì cũng được — quần áo, sách, đồ chơi, không ai ép bạn theo khuôn. Còn cột quan hệ như nhà kho công ty: mỗi ô đều có nhãn, mọi thứ đúng chỗ. JSONB = linh hoạt cho settings, preferences, tags. Quan hệ = chặt chẽ cho orders, users."
+            },
+            {
+                  "icon": "fa-database",
+                  "title": "JSON Path Operators",
+                  "body": "<code>-&gt;</code> lấy element (trả JSON), <code>-&gt;&gt;</code> lấy element (trả TEXT), <code>#&gt;</code> lấy nested path, <code>@&gt;</code> kiểm tra contains. <strong>Index GIN</strong> trên JSONB column → query <code>WHERE settings @&gt; '{...}'</code> chạy nhanh như index B-tree trên cột thường."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
@@ -2470,7 +2766,56 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {"type": "classify", "title": "Phân loại: khi nào dùng JSON, khi nào tách bảng?", "instruction": "Kéo thẻ vào ô phù hợp.", "chips": [{"id": "c-theme", "label": "User settings.theme (dark/light/auto)"}, {"id": "c-tags", "label": "Post tags (rpg, indie, soulslike)"}, {"id": "c-email", "label": "User email"}, {"id": "c-meta", "label": "Product metadata (dimensions, weight)"}], "bins": [{"id": "json", "label": "Nên lưu JSON (linh hoạt)", "correct": "json"}, {"id": "tbl", "label": "Nên tách bảng (quan hệ chặt)", "correct": "tbl"}], "solution": {"c-theme": "json", "c-tags": "json", "c-email": "tbl", "c-meta": "json"}}
+        mini_game:         {
+          "type": "match",
+          "title": "Nối toán tử JSON → công dụng",
+          "instruction": "Mỗi toán tử PostgreSQL JSON dùng để làm gì?",
+          "xp": 25,
+          "pairs": [
+            {
+              "left": "->",
+              "leftId": "o1",
+              "rightId": "r1",
+              "right": {
+                "id": "r1",
+                "label": "Lấy JSON element (trả về JSON)"
+              }
+            },
+            {
+              "left": "->>",
+              "leftId": "o2",
+              "rightId": "r2",
+              "right": {
+                "id": "r2",
+                "label": "Lấy JSON element (trả về TEXT)"
+              }
+            },
+            {
+              "left": "#>",
+              "leftId": "o3",
+              "rightId": "r3",
+              "right": {
+                "id": "r3",
+                "label": "Lấy nested path (trả về JSON)"
+              }
+            },
+            {
+              "left": "@>",
+              "leftId": "o4",
+              "rightId": "r4",
+              "right": {
+                "id": "r4",
+                "label": "Contains (kiểm tra chứa giá trị)"
+              }
+            }
+          ],
+          "solution": {
+            "o1": "r1",
+            "o2": "r2",
+            "o3": "r3",
+            "o4": "r4"
+          }
+        }
       },
 
       step_3: {
@@ -2553,7 +2898,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Chuỗi cửa hàng <code class="code">shop_branches</code> lưu tọa độ GPS trong cột <code class="code">geo_location POINT</code>. Bạn cần tìm cửa hàng <strong>gần trung tâm nhất</strong>, hoặc lọc cửa hàng <strong>trong bán kính 5km</strong>. Dùng <code class="code">ST_Distance</code> và <code class="code">ST_DWithin</code> — hai spatial function phổ biến nhất.',
           example: '<code class="code">ST_Distance(geo_location, ST_MakePoint(106.7009, 10.7769))</code> tính khoảng cách từ mỗi cửa hàng đến Quảng trường 10/10. <code class="code">ST_DWithin(geo_location, ST_MakePoint(...), 5)</code> lọc nhanh bằng spatial index (GiST) — hiệu quả hơn ST_Distance.'
         },
-        concept_cards: [{"icon": "fa-location-dot", "title": "Spatial Data (PostGIS)", "body": "Lưu tọa độ địa lý dạng <code>POINT(lon, lat)</code>. Index bằng R-tree (spatial GIST) cho query khoảng cách cực nhanh (<code>ST_DWithin</code>, <code>ST_Distance</code>)."}, {"icon": "fa-globe", "title": "Tọa độ — kinh độ trước", "body": "<code>ST_MakePoint(lon, lat)</code> — <strong>longitude trước</strong> (X), latitude sau (Y). Sai 1 số thập phân = lệch cả km. Vietnam: lon ≈ 102-110, lat ≈ 8-23."}],
+                intro: 'Mỗi phút, Grab xử lý 50.000 request tìm tài xế gần nhất trong bán kính 5km. 100 triệu điểm lưu trong DB. Không có spatial index = query quét full table = chết server. Có <strong>R-tree (GIST) index</strong> + <code>ST_DWithin</code> = tìm trong 10ms. Sai 1 số thập phân = lệch cả km. Bài này dạy <strong>Spatial Data</strong>.',
+concept_cards: [
+            {
+                  "icon": "fa-location-dot",
+                  "title": "Spatial Data — 1 số thập phân = lệch cả km",
+                  "body": "Grab, Shopee, now lưu tọa độ 100 triệu điểm giao hàng. <strong>1 số thập phân longitude = ~11km tại xích đạo</strong>. Sai 2 số = lệch cả km → shipper đi lạc, khách hủy đơn, mất tiền. Spatial index (R-tree) tìm 10 quán gần nhất trong 10ms thay vì quét 100 triệu dòng."
+            },
+            {
+                  "icon": "fa-globe",
+                  "title": "POINT(lon, lat) — Sai thứ tự = lỗi im lặng",
+                  "body": "<code>ST_MakePoint(lon, lat)</code> — <strong>longitude TRƯỚC</strong> (X), latitude SAU (Y). Sai thứ tự → tọa độ rác nhưng DB không báo lỗi. VN: lon ≈ 102-110, lat ≈ 8-23. <code>ST_DWithin(geo, center, 5000)</code> = trong bán kính 5km, có index = nhanh."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
@@ -2601,7 +2958,36 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        mini_game: {"type": "classify", "title": "Phân loại: ST_* function nào dùng khi nào?", "instruction": "Kéo thẻ vào ô đúng.", "chips": [{"id": "c-dwithin", "label": "Tìm shop trong bán kính 5km"}, {"id": "c-distance", "label": "Tính khoảng cách 2 điểm"}, {"id": "c-contains", "label": "Kiểm tra điểm có nằm trong polygon không"}, {"id": "c-makepoint", "label": "Tạo POINT từ lat, lon"}], "bins": [{"id": "within", "label": "ST_DWithin (range query)", "correct": "within"}, {"id": "distance", "label": "ST_Distance (measure)", "correct": "distance"}, {"id": "contains", "label": "ST_Contains (containment)", "correct": "contains"}, {"id": "create", "label": "ST_MakePoint (create)", "correct": "create"}], "solution": {"c-dwithin": "within", "c-distance": "distance", "c-contains": "contains", "c-makepoint": "create"}}
+        mini_game:         {
+          "type": "order",
+          "title": "Thứ tự thực thi Spatial Query",
+          "instruction": "Sắp xếp theo thứ tự DB engine xử lý câu SQL spatial.",
+          "xp": 25,
+          "items": [
+            {
+              "id": "s1",
+              "label": "1. FROM shop_branches"
+            },
+            {
+              "id": "s2",
+              "label": "2. WHERE ST_DWithin(geo, center, 5000)"
+            },
+            {
+              "id": "s3",
+              "label": "3. SELECT name, ST_Distance(geo, center) AS distance"
+            },
+            {
+              "id": "s4",
+              "label": "4. ORDER BY distance ASC LIMIT 10"
+            }
+          ],
+          "solution": {
+            "s1": 1,
+            "s2": 2,
+            "s3": 3,
+            "s4": 4
+          }
+        }
       },
 
       step_3: {
@@ -2691,7 +3077,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Django tự tạo bảng <code class="code">log_events</code> từ class <code class="code">LogEvent</code>. Thay vì viết SQL, bạn gọi <code class="code">LogEvent.objects.filter(event_type=\'login\')</code>. ORM chuyển thành SQL: <code class="code">SELECT * FROM log_events WHERE event_type = \'login\'</code>. Không SQL thuần? Không sao — nhưng hiểu SQL giúp viết ORM tốt hơn.',
           example: '<code class="code">LogEvent.objects.filter(user__user_id=\'U01\', event_type=\'login\').select_related(\'user\').order_by(\'-timestamp\')[:10]</code> tương đương: <code>SELECT ... FROM log_events le JOIN app_users u ON ... WHERE user_id=\'U01\' AND event_type=\'login\' ORDER BY timestamp DESC LIMIT 10</code>'
         },
-        concept_cards: [{"icon": "fa-layer-group", "title": "ORM (Object-Relational Mapping)", "body": "Map table → class, row → object, column → attribute. Django ORM: <code>User.objects.filter(role=\"admin\")</code> thay vì <code>SELECT * FROM users WHERE role=\"admin\"</code>."}, {"icon": "fa-bolt", "title": "ORM ưu/nhược", "body": "<strong>Ưu</strong>: ít SQL, type-safe, auto migration. <strong>Nhược</strong>: N+1 query, raw SQL phức tạp. Dùng <code>select_related</code> + <code>prefetch_related</code> để tránh N+1."}],
+                intro: 'Team dev 1 startup fintech 5 người, mỗi người tự viết SQL cho module mình. 6 tháng sau: 1 người nghỉ, người thay phải đọc 200 query SQL viết tay, mất 3 tuần mới hiểu hết. Refactor sang <strong>Django ORM</strong> → 1 dev mới onboard trong 3 ngày. ORM = documentation sống. Nhưng có cạm bẫy N+1 — bài này dạy cả 2 mặt.',
+concept_cards: [
+            {
+                  "icon": "fa-layer-group",
+                  "title": "ORM — Câu chuyện team 3 người",
+                  "body": "Team A: 3 dev backend, ai cũng viết SQL thuần. 1 người nghỉ → 2 người còn lại đọc SQL của người nghỉ mất 2 tuần. Team B: 3 dev, dùng Django ORM. 1 người nghỉ → 2 người còn lại đọc <code>User.objects.filter(role=\"admin\")</code> hiểu ngay. <strong>ORM = code đọc gần như tiếng Anh</strong>."
+            },
+            {
+                  "icon": "fa-bolt",
+                  "title": "N+1 Query — Cạm bẫy ORM",
+                  "body": "1000 users, mỗi user có 5 posts. Code <code>for user in users: print(user.posts.all())</code> → <strong>1 + 1000 = 1001 queries</strong>! Fix: <code>users = User.objects.prefetch_related(\"posts\")</code> → chỉ 2 queries. <strong>Ưu</strong> ORM: ít SQL, type-safe. <strong>Nhược</strong>: dễ N+1, raw SQL phức tạp vẫn cần."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
@@ -2822,7 +3220,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: "Login form dùng <strong>string concatenation</strong>: <code>f\"SELECT * FROM user_accounts WHERE username = '{input}' AND password = '{pw}'\"</code>. Attacker nhập <code>' OR '1'='1' --</code> vào username. Query trở thành <code>SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND ...</code> → trả về <strong>TẤT CẢ user</strong> — đăng nhập không cần password!",
           example: "<code>' OR '1'='1' --</code> đóng chuỗi ('), thêm điều kiện luôn đúng ('1'='1'), comment out phần còn lại (--). Prepared Statement ngăn điều này: <code>WHERE username = %s</code> — giá trị được gửi riêng, không chạy như SQL."
         },
-        concept_cards: [{"icon": "fa-skull-crossbones", "title": "SQL Injection", "body": "Attacker chèn SQL code vào input để thay đổi logic query. Kinh điển: <code>' OR '1'='1' --</code> đóng chuỗi, thêm điều kiện always-true, comment phần sau."}, {"icon": "fa-shield-virus", "title": "Prepared Statement", "body": "Phòng chống: <code>WHERE username = %s</code> + params gửi riêng. Input KHÔNG BAO GIỜ chạy như SQL — DB engine biết đó là literal, escape tự động."}],
+                intro: 'Thử tưởng tượng app của bạn bị hack. Attacker gõ 1 dòng vào ô login → lấy được toàn bộ database user, bao gồm admin. Mất 2 tuần fix + tổn thất 500 triệu + mất trust khách hàng. Lỗ hổng này có từ 1998, vẫn còn trong 30% app mới deploy 2026. Tên nó: <strong>SQL Injection</strong>. Bài này dạy cách phòng.',
+concept_cards: [
+            {
+                  "icon": "fa-skull-crossbones",
+                  "title": "SQL Injection — Thử hack thử nào",
+                  "body": "Thử thách: nhập <code>' OR '1'='1' --</code> vào ô login username. Query biến thành <code>WHERE username='' OR '1'='1'</code> → luôn TRUE → bypass login hoàn toàn. 90% web app mới deploy có lỗ hổng này. <strong>Bạn có thể tìm được chỗ nào cần fix không?</strong> (Gợi ý: đọc tiếp card 2)"
+            },
+            {
+                  "icon": "fa-shield-virus",
+                  "title": "Prepared Statement — Khiên chắn",
+                  "body": "Phòng chống: <code>SELECT * FROM users WHERE username = %s AND password = %s</code> với params gửi <strong>riêng</strong>. DB engine biết đó là literal, escape tự động, attacker chèn thêm dấu nháy cũng vô dụng. <strong>NGUYÊN TẮC</strong>: input KHÔNG BAO GIỜ ghép chuỗi thành SQL."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
@@ -2955,7 +3365,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bảng <code class="code">security_users_vault</code> lưu <code>password_hash</code> và <code>salt</code> riêng biệt. <strong>Salt</strong> = chuỗi ngẫu nhiên gắn vào password trước khi hash → cùng password của 2 user sẽ có hash khác nhau. md5("pass") → rainbow table tra được ngay. bcrypt("pass") → cần brute force với cost factor cao → mất nhiều năm.',
           example: 'md5 hash bắt đầu bằng chuỗi hex 32 ký tự (5f4dcc3b5aa...). bcrypt hash bắt đầu bằng <code>$2a$</code> hoặc <code>$2b$</code>. Nhìn format là biết thuật toán — và biết cần migrate ngay!'
         },
-        concept_cards: [{"icon": "fa-lock", "title": "Password Hashing", "body": "KHÔNG lưu plain text password. Hash = hàm 1 chiều, biết hash không suy ngược ra password. <code>bcrypt</code>, <code>argon2</code> là recommended."}, {"icon": "fa-key", "title": "Salt — chống rainbow table", "body": "<strong>Salt</strong> = chuỗi ngẫu nhiên gắn vào password trước khi hash. Cùng password → hash khác nhau (do salt khác). <strong>md5/sha1</strong> quá yếu + không có salt → bị crack trong vài giây."}],
+                intro: '<strong>Trước 2010</strong>: web app lưu password plain text. Hacker SQL injection → đọc hết password → login vào mọi nơi user dùng cùng password. LinkedIn 2012 mất 6.5M password, bán công khai. <strong>Sau 2010</strong>: hash + salt. Hacker lấy DB → chỉ thấy <code>$2b$12$...</code> vô nghĩa. Bài này dạy <strong>bcrypt + salt</strong>.',
+concept_cards: [
+            {
+                  "icon": "fa-lock",
+                  "title": "Trước vs Sau — Password Storage",
+                  "body": "<strong>Trước 2010</strong>: lưu plain text. Hacker đánh cắp DB → đọc hết. LinkedIn 2012 bị hack 6.5M password, bán công khai. <strong>Sau 2010</strong>: hash + salt. Hacker đánh cắp DB → chỉ thấy <code>$2b$12$...</code> chuỗi vô nghĩa. Crack 1 password cần 10^12 lần thử = nhiều năm."
+            },
+            {
+                  "icon": "fa-key",
+                  "title": "bcrypt + Salt — Công thức chuẩn",
+                  "body": "<strong>bcrypt</strong>: hash 1 chiều, có cost factor (mỗi +1 = gấp đôi thời gian). <strong>Salt</strong>: chuỗi ngẫu nhiên gắn vào password trước khi hash. Cùng password \"123456\" → hash khác nhau (do salt khác) → rainbow table vô dụng. <strong>md5/sha1</strong> quá yếu, không có salt → crack trong vài giây. Dùng bcrypt hoặc argon2."
+            }
+      ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},

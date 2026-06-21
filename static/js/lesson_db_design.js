@@ -118,6 +118,21 @@
       document.documentElement.style.setProperty('--primary', data.accent_color);
     }
 
+    // R5-T2.1: Set module accent color (Amber/Indigo/Emerald) per module
+    // Module 1 (B1-B6)  ER Mapping     → Amber  #F59E0B
+    // Module 2 (B7-B13) Normalization → Indigo #8B5CF6
+    // Module 3 (B14-18) App Design    → Emerald #10B981
+    const MODULE_COLORS = {
+      1: { accent: '#F59E0B', softAlpha: '1a', glowAlpha: '59' },  // Amber
+      2: { accent: '#8B5CF6', softAlpha: '1a', glowAlpha: '59' },  // Indigo
+      3: { accent: '#10B981', softAlpha: '1a', glowAlpha: '59' }   // Emerald
+    };
+    const mod = state.currentLesson.module;
+    const mc = MODULE_COLORS[mod] || { accent: data.accent_color || '#06B6D4', softAlpha: '1a', glowAlpha: '59' };
+    document.documentElement.style.setProperty('--module-accent', mc.accent);
+    document.documentElement.style.setProperty('--module-accent-soft', mc.accent + mc.softAlpha);
+    document.documentElement.style.setProperty('--module-accent-glow', mc.accent + mc.glowAlpha);
+
     // Bind Step 4 LeetCode-style tabs
     bindLeetCodeTabs();
     // Bind inline hint button for MCQ (if user clicks an option that needs hint)
@@ -254,8 +269,9 @@
     // Mission
     document.getElementById('mission-text').innerHTML = s1.mission || '';
 
-    // R4-B: Map Font Awesome icon name → custom SVG symbol id (inline SVG illustrations)
+    // R4-B + R5-T2.3: Map Font Awesome icon name → custom SVG symbol id (22+ mappings)
     const ICON_MAP = {
+      // R4-B (16 mappings ban đầu)
       'fa-key':        'i-key',
       'fa-cube':       'i-cube',
       'fa-link':       'i-link',
@@ -272,7 +288,28 @@
       'fa-skull-crossbones': 'i-bug',
       'fa-bug':        'i-bug',
       'fa-table':      'i-database',
-      'fa-lightbulb':  'i-zap'
+      'fa-lightbulb':  'i-zap',
+      // R5-T2.3 (mở rộng — 14 mappings mới)
+      'fa-calculator':        'i-zap',
+      'fa-object-group':      'i-stack',
+      'fa-table-list':        'i-table',
+      'fa-link-slash':        'i-link',
+      'fa-arrow-right-arrow-left': 'i-arrow-split',
+      'fa-diagram-project':   'i-stack',
+      'fa-arrows-to-dot':     'i-git-branch',
+      'fa-atom':              'i-atom',
+      'fa-list':              'i-stack',
+      'fa-scissors':          'i-scissors',
+      'fa-cubes-stacked':     'i-stack',
+      'fa-explosion':         'i-explosion',
+      'fa-brackets-curly':    'i-brackets',
+      'fa-location-dot':      'i-location',
+      'fa-globe':             'i-globe',
+      'fa-shield-virus':      'i-shield',
+      'fa-arrows-left-right': 'i-arrow-split',
+      'fa-lightbulb-on':      'i-zap',
+      'fa-fire':              'i-zap',
+      'fa-circle-check':      'i-shield'
     };
 
     // Premium concept cards (shadcn Card-inspired) — opt-in
