@@ -2142,32 +2142,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /* -- giaodien -- */
 
-  function runMission() {
-            const cond = document.getElementById('code-cond').innerText;
-  const act = document.getElementById('code-act').innerText;
-  const output = document.getElementById('output-text');
-  const hint = document.getElementById('hint-box');
-
-  if(cond === 'pin < 20' && act === 'charge()') {
-    output.innerHTML = "<span class='text-green-400 font-bold'>> [OK] Pin đang ở mức 15%. Robot đang di chuyển về trạm sạc... VROOM VROOM!</span>";
-  confetti({
-    particleCount: 150,
-  spread: 70,
-  origin: {y: 0.6 },
-  colors: ['#58CC02', '#1CB0F6', '#FF4B4B']
-                });
-                setTimeout(() => {
-    document.getElementById('success-modal').classList.remove('hidden');
-                }, 1000);
-            } else if (cond === '________' || act === '________') {
-    output.innerHTML = "<span class='text-yellow-400'>> [Hệ thống] Bạn chưa lấp đầy các ô trống kìa!</span>";
-            } else {
-    output.innerHTML = "<span class='text-red-400'>> [LỖI] Ối! Pin đang yếu mà bạn bắt Robot đi ngủ/tắt nguồn là hỏng đấy. Thử lại nhé!</span>";
-  hint.innerText = "Gợi ý: Hãy chọn 'Pin < 20' và 'Về trạm sạc'!";
-  hint.classList.remove('text-white/30');
-  hint.classList.add('text-red-400');
-            }
-        }
 
   function closeModal() {
     document.getElementById('success-modal').classList.add('hidden');
