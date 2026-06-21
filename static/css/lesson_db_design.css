@@ -32,10 +32,11 @@
   --module-accent-glow: var(--primary-glow);
 
   /* Animation duration + easing tokens (chuan hoa) */
-  --anim-fast:    0.15s;
-  --anim-normal:  0.3s;
-  --anim-slow:    0.5s;
-  --anim-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --anim-fast:    var(--anim-fast);
+  --anim-medium:  var(--anim-medium);
+  --anim-normal:  var(--anim-normal);
+  --anim-slow:    var(--anim-slow);
+  --anim-spring:  var(--anim-spring);
   --anim-ease:    cubic-bezier(0.4, 0, 0.2, 1);
 
   --success:       #10B981;
@@ -114,7 +115,7 @@ body.lesson-focus-mode::before {
   background: transparent; border: none; cursor: pointer;
   color: var(--text-400);
   border-radius: 10px;
-  transition: all 0.15s;
+  transition: all var(--anim-fast);
 }
 
 .exit-btn:hover, .report-btn:hover {
@@ -140,7 +141,7 @@ body.lesson-focus-mode::before {
     border-radius: 100px;
     border: 1px solid rgba(148, 163, 184, 0.08);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.25s ease;
+    transition: all var(--anim-fast) ease;
   }
 }
 
@@ -151,7 +152,7 @@ body.lesson-focus-mode::before {
   background: rgba(148, 163, 184, 0.06);
   color: var(--text-500);
   font-size: 12px; font-weight: 600;
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
   white-space: nowrap;
 }
 
@@ -161,7 +162,7 @@ body.lesson-focus-mode::before {
   background: var(--ide-surface-2);
   border-radius: 50%;
   font-size: 11px; font-weight: 800;
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
 }
 
 .progress-step .step-label-tiny {
@@ -182,7 +183,7 @@ body.lesson-focus-mode::before {
   background: linear-gradient(90deg, var(--primary), var(--success));
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.4s;
+  transition: transform var(--anim-medium);
 }
 
 .progress-step.active {
@@ -234,7 +235,7 @@ body.lesson-focus-mode::before {
   border: 1px solid rgba(6, 182, 212, 0.18);
   height: 40px;
   cursor: default;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
 }
 .player-pill:hover {
   background: rgba(11, 17, 33, 0.75);
@@ -305,7 +306,7 @@ body.lesson-focus-mode::before {
   overflow-y: auto;
   opacity: 0; pointer-events: none;
   transform: translateX(20px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition: opacity var(--anim-normal) ease, transform var(--anim-normal) ease;
 }
 
 .step-pane.active {
@@ -633,7 +634,7 @@ body.lesson-focus-mode::before {
   border: none; border-radius: var(--radius);
   font-size: 15px; font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--anim-fast);
   font-family: 'Inter', sans-serif;
 }
 
@@ -695,7 +696,7 @@ body.lesson-focus-mode::before {
   background: var(--ide-surface);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--anim-fast);
   text-align: left;
   font-family: 'Inter', sans-serif;
   color: var(--text-200);
@@ -729,7 +730,7 @@ body.lesson-focus-mode::before {
   font-size: 13px; font-weight: 800;
   font-family: 'JetBrains Mono', monospace;
   flex-shrink: 0;
-  transition: all 0.2s;
+  transition: all var(--anim-fast);
 }
 
 .mcq-option:hover:not(.disabled) .opt-letter {
@@ -742,7 +743,7 @@ body.lesson-focus-mode::before {
   color: #fff;
   box-shadow: 0 0 0 1px var(--success), 0 0 24px var(--success-glow);
   transform: scale(1.02);
-  animation: correct-bounce 0.5s ease;
+  animation: correct-bounce var(--anim-slow) ease;
 }
 
 .mcq-option.correct .opt-letter {
@@ -755,7 +756,7 @@ body.lesson-focus-mode::before {
   background: var(--danger-soft);
   color: #FCA5A5;
   box-shadow: 0 0 0 1px var(--danger), 0 0 24px var(--danger-glow);
-  animation: wrong-shake 0.5s ease;
+  animation: wrong-shake var(--anim-slow) ease;
 }
 
 .mcq-option.wrong .opt-letter {
@@ -786,7 +787,7 @@ body.lesson-focus-mode::before {
   color: var(--success);
   font-size: 14px; font-weight: 600;
   margin: 16px 0 20px;
-  animation: fade-in 0.4s ease;
+  animation: fade-in var(--anim-medium) ease;
 }
 
 .mcq-explain.hidden { display: none; }
@@ -841,15 +842,6 @@ body.lesson-focus-mode::before {
   gap: 8px;
   padding: 14px 16px 10px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-  overflow: hidden;
-}
-
-.truck-big-wrap {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex; flex-direction: column;
-  padding: 12px 14px 14px;
-  background: linear-gradient(180deg, rgba(11, 17, 33, 0.3), rgba(11, 17, 33, 0.55));
   overflow: hidden;
 }
 
@@ -918,15 +910,6 @@ body.lesson-focus-mode::before {
 .ide-pane .reveal-hint { display: none; }
 
 /* Big truck map wrapper — takes ~62% of left pane, prominent but bounded */
-.truck-big-wrap {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex; flex-direction: column;
-  padding: 12px 14px 14px;
-  background: linear-gradient(180deg, rgba(11, 17, 33, 0.3), rgba(11, 17, 33, 0.55));
-  overflow: hidden;
-}
-
 .truck-big-wrap .drag-map-wrap {
   width: 100%;
   flex: 1;
@@ -1163,7 +1146,7 @@ body.lesson-focus-mode::before {
   border-radius: 50%;
   border: 1px solid #0F172A;
   z-index: 3;
-  animation: wheel-spin 0.5s linear infinite;
+  animation: wheel-spin var(--anim-slow) linear infinite;
 }
 .pipeline-truck .truck-wheel::after {
   content: '';
@@ -1200,7 +1183,7 @@ body.lesson-focus-mode::before {
   opacity: 0;
 }
 .pipeline-truck .truck-smoke span:nth-child(1) { animation-delay: 0s;   left: 0;  bottom: 0; }
-.pipeline-truck .truck-smoke span:nth-child(2) { animation-delay: 0.4s; left: -4px; bottom: 2px; }
+.pipeline-truck .truck-smoke span:nth-child(2) { animation-delay: var(--anim-medium); left: -4px; bottom: 2px; }
 .pipeline-truck .truck-smoke span:nth-child(3) { animation-delay: 0.8s; left: -2px; bottom: -2px; }
 
 @keyframes smoke-puff {
@@ -1226,7 +1209,7 @@ body.lesson-focus-mode::before {
   display: flex; align-items: center; justify-content: center;
   z-index: 10;
   font-size: 14px;
-  transition: all 0.2s;
+  transition: all var(--anim-fast);
 }
 .pipeline-sound-toggle:hover {
   border-color: rgba(6, 182, 212, 0.5);
@@ -1270,7 +1253,7 @@ body.lesson-focus-mode::before {
 }
 
 .pipeline-truck.celebrate .truck-body {
-  animation: truck-celebrate 1.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: truck-celebrate 1.4s var(--anim-spring);
 }
 
 @keyframes truck-celebrate {
@@ -1292,7 +1275,7 @@ body.lesson-focus-mode::before {
   background: radial-gradient(ellipse, rgba(148, 163, 184, 0.4), transparent 70%);
   border-radius: 50%;
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity var(--anim-normal);
 }
 
 .pipeline-truck.driving .truck-trail {
@@ -1317,7 +1300,7 @@ body.lesson-focus-mode::before {
   box-shadow: 0 2px 4px rgba(0,0,0,0.4);
   opacity: 0;
   transform: scale(0);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all var(--anim-medium) var(--anim-spring);
 }
 
 .pipeline-truck.has-cargo .truck-cargo {
@@ -1355,7 +1338,7 @@ body.lesson-focus-mode::before {
   padding: 8px 6px;
   min-height: 0;
   cursor: pointer;
-  transition: border-color 0.3s, background 0.3s, transform 0.3s, box-shadow 0.3s;
+  transition: border-color var(--anim-normal), background var(--anim-normal), transform var(--anim-normal), box-shadow var(--anim-normal);
   user-select: none;
   overflow: hidden;
 }
@@ -1371,7 +1354,7 @@ body.lesson-focus-mode::before {
   border-radius: 10px;
   background: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.25), transparent 70%);
   opacity: 0;
-  transition: opacity 0.4s;
+  transition: opacity var(--anim-medium);
   pointer-events: none;
 }
 
@@ -1413,7 +1396,7 @@ body.lesson-focus-mode::before {
 .station-icon {
   font-size: 18px;
   filter: grayscale(0.4);
-  transition: filter 0.3s, transform 0.3s;
+  transition: filter var(--anim-normal), transform var(--anim-normal);
 }
 
 .pipeline-station.active .station-icon {
@@ -1427,7 +1410,7 @@ body.lesson-focus-mode::before {
   font-weight: 800;
   color: var(--text-300);
   letter-spacing: 0.04em;
-  transition: color 0.3s;
+  transition: color var(--anim-normal);
 }
 
 .pipeline-station.active .station-title { color: var(--primary); }
@@ -1486,7 +1469,7 @@ body.lesson-focus-mode::before {
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 6px;
   padding: 3px;
-  animation: table-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: table-pop 0.45s var(--anim-spring);
 }
 
 @keyframes table-pop {
@@ -1513,7 +1496,7 @@ body.lesson-focus-mode::before {
   text-align: center;
   padding: 1px;
   letter-spacing: 0.04em;
-  transition: opacity 0.4s, color 0.4s;
+  transition: opacity var(--anim-medium), color var(--anim-medium);
 }
 
 .mini-th.selected { color: var(--primary); }
@@ -1531,8 +1514,8 @@ body.lesson-focus-mode::before {
   grid-template-columns: repeat(4, 1fr);
   background: rgba(6, 182, 212, 0.06);
   border-radius: 3px;
-  transition: opacity 0.5s, background 0.5s, transform 0.3s;
-  animation: row-fade 0.4s ease backwards;
+  transition: opacity var(--anim-slow), background var(--anim-slow), transform var(--anim-normal);
+  animation: row-fade var(--anim-medium) ease backwards;
 }
 
 .mini-row:nth-child(1) { animation-delay: 0.05s; }
@@ -1572,7 +1555,7 @@ body.lesson-focus-mode::before {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
-  transition: opacity 0.4s, color 0.4s;
+  transition: opacity var(--anim-medium), color var(--anim-medium);
 }
 
 .mini-td.col-dimmed {
@@ -1614,7 +1597,7 @@ body.lesson-focus-mode::before {
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: 0 2px 6px rgba(6, 182, 212, 0.25);
-  animation: pill-drop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: pill-drop var(--anim-slow) var(--anim-spring);
 }
 
 @keyframes pill-drop {
@@ -1636,7 +1619,7 @@ body.lesson-focus-mode::before {
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--text-300);
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
 }
 
 .pipeline-status .status-dot {
@@ -1645,7 +1628,7 @@ body.lesson-focus-mode::before {
   background: var(--text-500);
   margin-top: 6px;
   flex-shrink: 0;
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
 }
 
 .pipeline-status .status-text {
@@ -1691,48 +1674,14 @@ body.lesson-focus-mode::before {
  * must reason about WHERE to drop, not match colors.
  * ──────────────────────────────────────────────────────────────────── */
 
-.logic-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: grab;
-  user-select: none;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 0.18s,
-              filter 0.15s,
-              opacity 0.2s,
-              border-color 0.2s;
-  position: relative;
-  /* Neutral dark slate base — same for ALL types */
-  background: rgba(30, 41, 59, 0.55);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-left-width: 3px;
-  color: var(--text-200);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
 /* Subtle type accent — just a colored left border, NO body tint.
  * Tells "loại dữ liệu" not "zone đích". */
-.logic-pill.pill-kw  { border-left-color: #C678DD; }   /* SQL keyword → purple */
-.logic-pill.pill-col { border-left-color: #94A3B8; }   /* column → slate (neutral) */
-.logic-pill.pill-tbl { border-left-color: #61AFEF; }   /* table → blue */
-.logic-pill.pill-op  { border-left-color: #F59E0B; }   /* operator → amber */
-.logic-pill.pill-val { border-left-color: #10B981; }   /* literal → green */
-.logic-pill.pill-fn  { border-left-color: #56B6C2; }   /* function → teal */
-
-.logic-pill:active { cursor: grabbing; }
-
-.logic-pill:hover {
-  transform: translateY(-2px);
-  border-color: rgba(6, 182, 212, 0.5);
-  filter: brightness(1.15);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(6, 182, 212, 0.2);
-}
+/* SQL keyword → purple */
+/* column → slate (neutral) */
+/* table → blue */
+/* operator → amber */
+/* literal → green */
+/* function → teal */
 
 /* Small "type tag" at the right side — VERY subtle, almost invisible */
 .logic-pill::after {
@@ -1748,13 +1697,6 @@ body.lesson-focus-mode::before {
   background: rgba(11, 17, 33, 0.5);
   border-radius: 3px;
   opacity: 0.6;
-}
-
-.logic-pill.error {
-  background: var(--danger-soft);
-  border-color: var(--danger);
-  color: var(--danger);
-  animation: wrong-shake 0.4s ease;
 }
 
 /* Pill hint tooltip (floating on click) */
@@ -1837,93 +1779,11 @@ body.lesson-focus-mode::before {
  * active drag interactions only (drag-over, drag-target-hint).
  * ──────────────────────────────────────────────────────────────────── */
 
-.drop-line {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 14px 18px 14px 18px;
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px dashed rgba(148, 163, 184, 0.18);
-  border-radius: 12px;
-  min-height: 64px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  transition: background 0.2s, box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.2s, border-color 0.2s;
-  position: relative;
-}
-
-.drop-line:hover {
-  background: rgba(15, 23, 42, 0.7);
-  border-color: rgba(148, 163, 184, 0.28);
-}
-
-.drop-line.drag-over {
-  background: rgba(6, 182, 212, 0.08);
-  border-color: var(--primary);
-  border-style: solid;
-  box-shadow: 0 0 0 2px var(--primary-soft), 0 8px 24px -8px var(--primary-glow);
-  transform: translateY(-1px);
-}
-
-.drop-line.drag-target-hint {
-  background: rgba(6, 182, 212, 0.12);
-  border-color: var(--primary);
-  border-style: solid;
-  box-shadow: 0 0 0 2px var(--primary), 0 0 24px -2px var(--primary-glow);
-  transform: translateY(-1px);
-}
-
-.drop-line-prompt {
-  color: var(--text-400);
-  font-weight: 800;
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  margin-right: 4px;
-  display: inline-flex; align-items: center; gap: 8px;
-  flex-shrink: 0;
-}
-
-.drop-line-prompt::before {
-  content: '';
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--text-500);
-  flex-shrink: 0;
-}
-
 /* Override old zone-color borders — keep neutral for all zones */
 .drop-line[data-zone] {
   --zone-color: rgba(148, 163, 184, 0.5);
   --zone-color-soft: rgba(148, 163, 184, 0.05);
 }
-
-.drop-line-slot {
-  display: inline-flex; align-items: center;
-  min-width: 100px; min-height: 36px;
-  padding: 6px 10px;
-  background: rgba(11, 17, 33, 0.45);
-  border-radius: 8px;
-  font-style: italic;
-  color: var(--text-500);
-  font-size: 13px;
-  flex: 1;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.drop-line-slot.filled {
-  background: transparent;
-  font-style: normal;
-  color: var(--text-100);
-  padding: 2px 0;
-  min-width: 0; min-height: 0;
-}
-
-.drop-line-slot .logic-pill { margin: 0; }
 
 /* v3 redesign: Subtle "broken" feedback when SQL doesn't match expected.
    Yellow tint + italic tooltip — gentle nudge, not aggressive. Shown when
@@ -1953,7 +1813,7 @@ body.lesson-focus-mode::before {
   margin-top: 6px;
   padding-left: 4px;
   letter-spacing: 0.01em;
-  animation: tooltip-fade-in 0.4s ease;
+  animation: tooltip-fade-in var(--anim-medium) ease;
 }
 
 .drop-line.broken .broken-tooltip {
@@ -1975,16 +1835,6 @@ body.lesson-focus-mode::before {
 }
 
 /* Drag area head — simplified (no zone legend) */
-.drag-area-head {
-  flex: 0 0 auto;
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 14px;
-  padding: 10px 18px 8px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
-  background: rgba(11, 17, 33, 0.35);
-  flex-shrink: 0;
-}
-
 .drag-hint {
   font-size: 11px;
   font-weight: 500;
@@ -2091,7 +1941,7 @@ body.lesson-focus-mode::before {
   min-height: 72px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 15px;
-  transition: background 0.2s, box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s, border-color 0.2s;
+  transition: background var(--anim-fast), box-shadow var(--anim-fast) cubic-bezier(0.4, 0, 0.2, 1), transform var(--anim-fast), border-color var(--anim-fast);
   position: relative;
 }
 
@@ -2173,10 +2023,6 @@ body.lesson-focus-mode::before {
   flex-wrap: wrap;
 }
 
-.drop-line-slot .logic-pill {
-  margin: 0;
-}
-
 /* Block bank — spacious A/Brilliant style, sits at bottom of right-pane drag area */
 .block-bank-wrap {
   border-top: 1px solid rgba(148, 163, 184, 0.08);
@@ -2256,14 +2102,12 @@ body.lesson-focus-mode::before {
   font-size: 14.5px; font-weight: 700;
   cursor: grab;
   user-select: none;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s, filter 0.15s, opacity 0.2s;
+  transition: transform 0.18s var(--anim-spring), box-shadow 0.18s, filter var(--anim-fast), opacity var(--anim-fast);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   position: relative;
   /* default anchor dot (overridden via --zone-color from JS) */
   --pill-anchor: rgba(148, 163, 184, 0.5);
 }
-
-.logic-pill:active { cursor: grabbing; }
 
 .logic-pill:active { cursor: grabbing; }
 
@@ -2282,7 +2126,7 @@ body.lesson-focus-mode::before {
   box-shadow: 0 0 8px var(--pill-anchor);
   margin-right: 10px;
   flex-shrink: 0;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition: background var(--anim-fast), box-shadow var(--anim-fast);
 }
 
 .logic-pill.pill-kw {
@@ -2325,7 +2169,7 @@ body.lesson-focus-mode::before {
   background: var(--danger-soft);
   box-shadow: 0 0 0 1px var(--danger);
   color: var(--danger);
-  animation: wrong-shake 0.4s ease;
+  animation: wrong-shake var(--anim-medium) ease;
 }
 
 /* Locked = already placed; user must drag from drop-zone back to bank to free it */
@@ -2532,7 +2376,7 @@ body.lesson-focus-mode::before {
   border: none; border-radius: 8px;
   font-size: 12px; font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--anim-fast);
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
   font-family: 'Inter', sans-serif;
 }
@@ -2572,7 +2416,7 @@ body.lesson-focus-mode::before {
   backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: center;
   z-index: 100;
-  animation: fade-in 0.3s ease;
+  animation: fade-in var(--anim-normal) ease;
 }
 
 .modal-overlay.hidden { display: none; }
@@ -2585,7 +2429,7 @@ body.lesson-focus-mode::before {
   text-align: center;
   box-shadow: var(--shadow-card), 0 0 60px var(--primary-glow);
   position: relative;
-  animation: success-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: success-pop var(--anim-slow) var(--anim-spring);
 }
 
 .success-card::before {
@@ -2711,7 +2555,7 @@ body.lesson-focus-mode::before {
   color: #EF4444;
   font-size: 14px;
   filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
 }
 
 .hearts i.lost {
@@ -2725,7 +2569,7 @@ body.lesson-focus-mode::before {
 }
 
 .hearts.shake {
-  animation: heart-shake 0.4s ease;
+  animation: heart-shake var(--anim-medium) ease;
 }
 
 @keyframes heart-shake {
@@ -2749,7 +2593,7 @@ body.lesson-focus-mode::before {
   border-radius: 16px;
   z-index: 50;
   box-shadow: var(--shadow-card), 0 0 0 1px rgba(6, 182, 212, 0.15);
-  transition: transform 0.3s;
+  transition: transform var(--anim-normal);
   max-width: 280px;
 }
 
@@ -2816,7 +2660,7 @@ body.lesson-focus-mode::before {
   background: linear-gradient(90deg, #06B6D4, #10B981);
   border-radius: 2px;
   box-shadow: 0 0 8px var(--primary-glow);
-  transition: width 0.5s;
+  transition: width var(--anim-slow);
 }
 
 .xp-text {
@@ -2896,7 +2740,7 @@ body.lesson-focus-mode::before {
   border-radius: 50%;
   background: rgba(148, 163, 184, 0.2);
   flex-shrink: 0;
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
 }
 
 .journey-dot.active {
@@ -2958,7 +2802,7 @@ body.lesson-focus-mode::before {
   font-size: 13.5px;
   color: var(--text-200);
   line-height: 1.6;
-  animation: fade-in 0.4s ease;
+  animation: fade-in var(--anim-medium) ease;
 }
 
 .inline-hint i { color: var(--warning); font-size: 16px; flex-shrink: 0; margin-top: 2px; }
@@ -3026,7 +2870,7 @@ body.lesson-focus-mode::before {
   cursor: pointer;
   position: relative;
   font-family: 'Inter', sans-serif;
-  transition: color 0.15s;
+  transition: color var(--anim-fast);
 }
 
 .lc-tab:hover { color: var(--text-200); }
@@ -3144,7 +2988,7 @@ body.lesson-focus-mode::before {
   cursor: pointer;
   border-radius: 6px;
   font-family: 'Inter', sans-serif;
-  transition: all 0.15s;
+  transition: all var(--anim-fast);
 }
 
 .lc-action-btn:hover {
@@ -3211,7 +3055,7 @@ body.lesson-focus-mode::before {
   color: var(--text-400);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--anim-fast);
 }
 
 .icon-btn:hover {
@@ -3237,7 +3081,7 @@ body.lesson-focus-mode::before {
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 9px;
-  transition: transform 0.3s;
+  transition: transform var(--anim-normal);
 }
 
 .progress-step.done .step-check {
@@ -3323,15 +3167,6 @@ body.lesson-focus-mode::before {
  * ════════════════════════════════════════════════════════════════════ */
 
 /* ── Step 2: Mini-game (drag chip → correct/wrong bin) ─────────── */
-.mini-game {
-  margin-top: 24px;
-  padding: 20px 22px;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(6, 182, 212, 0.04));
-  border: 1px solid rgba(245, 158, 11, 0.18);
-  border-radius: 16px;
-  position: relative;
-}
-
 .mini-game-head { margin-bottom: 14px; }
 
 .mini-game-tag {
@@ -3343,12 +3178,6 @@ body.lesson-focus-mode::before {
   font-size: 10.5px; font-weight: 800;
   letter-spacing: 0.06em; text-transform: uppercase;
   margin-bottom: 8px;
-}
-
-.mini-game-title {
-  font-size: 17px; font-weight: 700;
-  color: var(--text-100);
-  margin: 0 0 6px;
 }
 
 .mini-game-instruction {
@@ -3363,16 +3192,6 @@ body.lesson-focus-mode::before {
   margin-bottom: 14px;
 }
 
-.mini-game-chips {
-  display: flex; flex-wrap: wrap;
-  gap: 8px;
-  min-height: 50px;
-  padding: 12px;
-  background: rgba(11, 17, 33, 0.4);
-  border-radius: 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.15);
-}
-
 .mini-game-chips:empty::before {
   content: 'Kéo thẻ vào đây →';
   color: var(--text-600);
@@ -3383,82 +3202,13 @@ body.lesson-focus-mode::before {
   align-items: center; justify-content: center;
 }
 
-.mini-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px;
-  background: rgba(97, 175, 239, 0.15);
-  border: 1px solid rgba(97, 175, 239, 0.4);
-  color: var(--t-function);
-  border-radius: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px; font-weight: 700;
-  cursor: grab;
-  user-select: none;
-  transition: all 0.15s;
-}
-
-.mini-chip:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.mini-chip.placed {
-  background: rgba(148, 163, 184, 0.08);
-  border-color: rgba(148, 163, 184, 0.25);
-  color: var(--text-400);
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .mini-chip.dragging { opacity: 0.4; }
-
-.mini-game-bins {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.mini-bin {
-  padding: 14px;
-  background: rgba(11, 17, 33, 0.4);
-  border: 2px dashed rgba(148, 163, 184, 0.2);
-  border-radius: 12px;
-  min-height: 100px;
-  transition: all 0.2s;
-}
-
-.mini-bin.drag-over {
-  background: var(--primary-soft);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-soft);
-}
-
-.mini-bin-label {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
-}
 
 .mini-bin[data-correct="true"] .mini-bin-label { color: var(--success); }
 .mini-bin[data-correct="false"] .mini-bin-label { color: var(--danger); }
 
-.mini-bin-label .bin-icon {
-  width: 22px; height: 22px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  font-size: 11px;
-}
-
 .mini-bin[data-correct="true"] .bin-icon { background: var(--success-soft); color: var(--success); }
 .mini-bin[data-correct="false"] .bin-icon { background: var(--danger-soft); color: var(--danger); }
-
-.mini-bin-chips {
-  display: flex; flex-wrap: wrap;
-  gap: 6px;
-  min-height: 30px;
-}
 
 .mini-game-actions {
   display: flex; align-items: center; gap: 10px;
@@ -3470,7 +3220,7 @@ body.lesson-focus-mode::before {
   border-radius: 10px;
   font-size: 13.5px; font-weight: 600;
   display: flex; align-items: center; gap: 10px;
-  animation: fade-in 0.3s ease;
+  animation: fade-in var(--anim-normal) ease;
 }
 
 .mini-game-feedback.correct {
@@ -3536,7 +3286,7 @@ body.lesson-focus-mode::before {
   border: 1px solid rgba(148, 163, 184, 0.10);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--anim-fast);
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   color: var(--text-200);
@@ -3614,7 +3364,7 @@ body.lesson-focus-mode::before {
   font-size: 14px; font-weight: 700;
   outline: none;
   text-align: center;
-  transition: all 0.15s;
+  transition: all var(--anim-fast);
 }
 
 .fill-blank-input:focus {
@@ -3632,7 +3382,7 @@ body.lesson-focus-mode::before {
   border-color: var(--danger);
   background: var(--danger-soft);
   color: var(--danger);
-  animation: wrong-shake 0.4s ease;
+  animation: wrong-shake var(--anim-medium) ease;
 }
 
 .fill-blank-hint {
@@ -3676,7 +3426,7 @@ body.lesson-focus-mode::before {
 .bug-fix-editor[contenteditable="true"] {
   outline: none;
   cursor: text;
-  transition: border-color 0.15s;
+  transition: border-color var(--anim-fast);
 }
 
 .bug-fix-editor[contenteditable="true"]:focus {
@@ -3688,7 +3438,7 @@ body.lesson-focus-mode::before {
   display: block;
   padding: 0 4px;
   border-radius: 3px;
-  transition: background 0.15s;
+  transition: background var(--anim-fast);
 }
 
 .bug-fix-line.buggy {
@@ -4001,7 +3751,7 @@ body.lesson-focus-mode::before {
   font-size: 16px;
   font-weight: 800;
   text-shadow: 0 0 12px var(--primary-glow);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--anim-fast) var(--anim-spring);
 }
 
 .nav-step-current.bump { transform: scale(1.25); }
@@ -4122,7 +3872,7 @@ body.lesson-focus-mode::before {
   padding: 2px 8px;
   border-radius: 6px;
   background: rgba(148, 163, 184, 0.06);
-  transition: all 0.3s;
+  transition: all var(--anim-normal);
   white-space: nowrap;
   max-width: 180px;
   overflow: hidden;
@@ -4211,7 +3961,7 @@ body.lesson-focus-mode::before {
   font-size: 10px;
   font-weight: 700;
   color: var(--text-600);
-  transition: all 0.25s ease;
+  transition: all var(--anim-fast) ease;
   overflow: hidden;
   background: rgba(148, 163, 184, 0.025);
 }
@@ -4291,7 +4041,7 @@ body.lesson-focus-mode::before {
   top: 0; left: 0;
   width: 38px; height: 38px;
   pointer-events: none;
-  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.55s var(--anim-spring);
   z-index: 5;
 }
 
@@ -4319,7 +4069,7 @@ body.lesson-focus-mode::before {
 }
 
 .drag-truck.bounce .truck-body {
-  animation: truck-bounce 0.5s ease;
+  animation: truck-bounce var(--anim-slow) ease;
 }
 
 @keyframes truck-bounce {
@@ -4418,7 +4168,7 @@ body.lesson-focus-mode::before {
   background: radial-gradient(circle, rgba(6, 182, 212, 0.18), transparent 70%);
   z-index: 10;
   border-radius: var(--radius-lg);
-  animation: overlay-fade-in 0.4s ease;
+  animation: overlay-fade-in var(--anim-medium) ease;
   pointer-events: none;
 }
 
@@ -4430,7 +4180,7 @@ body.lesson-focus-mode::before {
   padding: 24px 28px;
   text-align: center;
   box-shadow: 0 0 0 1px var(--primary), 0 0 40px var(--primary-glow);
-  animation: success-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: success-pop var(--anim-slow) var(--anim-spring);
   max-width: 280px;
 }
 
@@ -4580,9 +4330,9 @@ body.lesson-focus-mode::before {
   font-family: 'JetBrains Mono', monospace;
   color: var(--text-200);
   transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-              border-color 0.2s,
+              border-color var(--anim-fast),
               box-shadow 0.32s,
-              background 0.2s;
+              background var(--anim-fast);
   transform-style: preserve-3d;
   will-change: transform;
   overflow: hidden;
@@ -4594,7 +4344,7 @@ body.lesson-focus-mode::before {
   width: 3px;
   background: linear-gradient(180deg, var(--primary), var(--primary-deep));
   opacity: 0.35;
-  transition: opacity 0.2s, width 0.2s;
+  transition: opacity var(--anim-fast), width var(--anim-fast);
 }
 
 .te-col:hover {
@@ -4756,7 +4506,7 @@ body.lesson-focus-mode::before {
   border-radius: 6px;
   cursor: pointer;
   font-size: 11px;
-  transition: all 0.15s;
+  transition: all var(--anim-fast);
   flex-shrink: 0;
 }
 
@@ -4844,7 +4594,7 @@ body.lesson-focus-mode::before {
   gap: 8px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
-  animation: te-bar-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation: te-bar-in var(--anim-slow) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
 .te-bar-row:nth-child(1) { animation-delay: 0.02s; }
@@ -4948,7 +4698,7 @@ body.lesson-focus-mode::before {
   background: rgba(11, 17, 33, 0.5);
   border-bottom: 1px solid rgba(148, 163, 184, 0.10);
   white-space: nowrap;
-  transition: color 0.15s, background 0.15s;
+  transition: color var(--anim-fast), background var(--anim-fast);
 }
 
 .te-data-table th:first-child { border-top-left-radius: 6px; }
@@ -5096,7 +4846,7 @@ body.lesson-focus-mode::before {
   border: 2px dashed rgba(239, 68, 68, 0.18);
   border-radius: 10px;
   margin-bottom: 12px;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--anim-fast), background var(--anim-fast);
 }
 .decomp-source-chips.drag-over {
   border-color: rgba(6, 182, 212, 0.5);
@@ -5138,7 +4888,7 @@ body.lesson-focus-mode::before {
   border-radius: 14px;
   padding: 12px 14px 14px;
   display: flex; flex-direction: column; gap: 8px;
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color var(--anim-fast), transform var(--anim-fast);
 }
 .decomp-target.target-ok {
   border-color: #10B981;
@@ -5165,7 +4915,7 @@ body.lesson-focus-mode::before {
   background: rgba(15, 23, 42, 0.45);
   border: 2px dashed rgba(16, 185, 129, 0.18);
   border-radius: 10px;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--anim-fast), background var(--anim-fast);
 }
 .decomp-target-cols.drag-over {
   border-color: rgba(6, 182, 212, 0.5);
@@ -5232,7 +4982,7 @@ body.lesson-focus-mode::before {
   color: var(--text-200);
   font-size: 13px; font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, transform 0.12s, border-color 0.15s;
+  transition: background var(--anim-fast), transform 0.12s, border-color var(--anim-fast);
 }
 .decomp-btn:hover { background: rgba(51, 65, 85, 0.7); transform: translateY(-1px); }
 .decomp-btn-primary {
@@ -5262,7 +5012,7 @@ body.lesson-focus-mode::before {
   padding: 14px 18px;
   border-radius: 12px;
   font-size: 14px;
-  animation: decomp-pop 0.3s ease-out;
+  animation: decomp-pop var(--anim-normal) ease-out;
 }
 .decomp-result.hidden { display: none; }
 .decomp-result.success {
@@ -5296,30 +5046,13 @@ body.lesson-focus-mode::before {
  * ============================================================================ */
 
 /* ── A.1 SVG Primer wrapper ─────────────────────────────────────── */
-.primer-svg {
-  background: linear-gradient(180deg, rgba(6,182,212,0.04), rgba(6,182,212,0.01));
-  border: 1px solid rgba(6,182,212,0.18);
-  border-radius: 14px;
-  padding: 18px 14px 12px;
-  margin: 18px 0 14px;
-  position: relative;
-  overflow: hidden;
-}
 .primer-svg::before {
   content: 'HÌNH MINH HỌA';
   position: absolute; top: 8px; left: 14px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
   color: var(--primary); opacity: 0.7;
 }
-.primer-svg svg { display: block; margin: 18px auto 0; max-width: 100%; height: auto; }
-
 /* ── A.2 ER Diagram SVG elements ───────────────────────────────── */
-.er-entity-rect {
-  fill: var(--ide-surface-2);
-  stroke: var(--primary);
-  stroke-width: 1.5;
-  rx: 8; ry: 8;
-}
 .er-entity-rect.weak { stroke-dasharray: 4 3; stroke: var(--warning); }
 .er-entity-title {
   fill: var(--text-100);
@@ -5334,7 +5067,6 @@ body.lesson-focus-mode::before {
 .er-col.pk { fill: var(--primary); font-weight: 700; }
 .er-col.derived { fill: var(--warning); font-style: italic; }
 .er-pk-icon { fill: var(--primary); }
-.er-connector { stroke: var(--text-500); stroke-width: 1.4; fill: none; }
 .er-connector-label {
   fill: var(--text-400);
   font: italic 10px 'Inter', system-ui, sans-serif;
@@ -5371,13 +5103,6 @@ body.lesson-focus-mode::before {
 
 /* ── A.4 Query Flow (Module 3) ─────────────────────────────────── */
 .qf-flow { display: flex; flex-direction: column; gap: 8px; }
-.qf-step {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, rgba(21,30,50,0.7), rgba(15,23,42,0.5));
-  border: 1px solid rgba(148,163,184,0.18);
-  border-radius: 10px;
-}
 .qf-step-icon {
   width: 32px; height: 32px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -5407,21 +5132,9 @@ body.lesson-focus-mode::before {
 }
 
 /* ── B.1 Concept Card (shadcn-inspired) ─────────────────────────── */
-.concept-card {
-  background: linear-gradient(180deg, rgba(21,30,50,0.6), rgba(15,23,42,0.4));
-  border: 1px solid rgba(148,163,184,0.12);
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin: 10px 0;
-}
 .concept-card-head {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 8px;
-}
-.concept-card-icon {
-  width: 32px; height: 32px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--module-accent-soft); color: var(--module-accent);
 }
 .concept-card-icon-svg {
   width: 18px; height: 18px;
@@ -5530,7 +5243,7 @@ body.lesson-focus-mode::before {
   background: rgba(148,163,184,0.1);
   color: var(--text-400);
   cursor: pointer; border: none;
-  transition: all 0.15s ease;
+  transition: all var(--anim-fast) ease;
 }
 .hint-level-tab.active { background: var(--warning); color: #1A1A1A; }
 .hint-level-tab:hover:not(.active) { background: rgba(148,163,184,0.2); }
@@ -5543,7 +5256,7 @@ body.lesson-focus-mode::before {
   background: rgba(15,23,42,0.6);
   border: 1px solid rgba(148,163,184,0.2);
   font-size: 12px; cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--anim-fast) ease;
 }
 .mg-match-item:hover { border-color: var(--primary); }
 .mg-match-item.selected { border-color: var(--primary); background: var(--primary-soft); }
@@ -5552,7 +5265,7 @@ body.lesson-focus-mode::before {
 .mg-match-line-col { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px; }
 .mg-match-line {
   font-size: 22px; color: var(--text-500);
-  transition: all 0.2s ease;
+  transition: all var(--anim-fast) ease;
 }
 .mg-match-line.matched { color: var(--success); }
 .mg-match-feedback {
@@ -5618,7 +5331,7 @@ body.lesson-focus-mode::before {
 .mg-bugspot-line {
   display: flex; gap: 8px;
   cursor: pointer; padding: 1px 6px; border-radius: 4px;
-  transition: all 0.15s ease;
+  transition: all var(--anim-fast) ease;
 }
 .mg-bugspot-line:hover { background: rgba(6,182,212,0.08); }
 .mg-bugspot-line.selected { background: var(--warning); color: #1A1A1A; }
@@ -5663,7 +5376,7 @@ body.lesson-focus-mode::before {
   background: var(--primary-soft); color: var(--primary);
   font-size: 12px; cursor: grab; user-select: none;
   border: 1px solid rgba(6,182,212,0.3);
-  transition: all 0.15s ease;
+  transition: all var(--anim-fast) ease;
 }
 .mini-chip:hover { background: rgba(6,182,212,0.18); }
 .mini-chip.placed { opacity: 0.55; }
@@ -5677,7 +5390,7 @@ body.lesson-focus-mode::before {
   border-radius: 10px;
   padding: 10px 12px;
   min-height: 80px;
-  transition: all 0.15s ease;
+  transition: all var(--anim-fast) ease;
 }
 .mini-bin.drag-over { border-style: solid; border-color: var(--primary); background: var(--primary-soft); }
 .mini-bin-label {
@@ -5693,42 +5406,39 @@ body.lesson-focus-mode::before {
   0% { transform: translateY(6px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
-.concept-card { animation: concept-pop 0.3s ease-out; }
-
 /* ── E.1 Phần 8: Animation cho SVG primer + concept cards ──────── */
 @keyframes svg-fade-in {
   0% { opacity: 0; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }
 }
-.primer-svg { animation: svg-fade-in 0.5s ease-out; }
-.primer-svg svg { animation: svg-fade-in 0.5s ease-out; }
+.primer-svg { animation: svg-fade-in var(--anim-slow) ease-out; }
+.primer-svg svg { animation: svg-fade-in var(--anim-slow) ease-out; }
 
 @keyframes entity-stagger {
   0% { opacity: 0; transform: translateX(-10px); }
   100% { opacity: 1; transform: translateX(0); }
 }
-.er-entity-rect, .nf-side { animation: entity-stagger 0.4s ease-out backwards; }
+.er-entity-rect, .nf-side { animation: entity-stagger var(--anim-medium) ease-out backwards; }
 .er-entity-rect:nth-child(1), .nf-side.before { animation-delay: 0.1s; }
-.er-entity-rect:nth-child(2), .nf-side.after { animation-delay: 0.25s; }
-.er-entity-rect:nth-child(3) { animation-delay: 0.4s; }
+.er-entity-rect:nth-child(2), .nf-side.after { animation-delay: var(--anim-fast); }
+.er-entity-rect:nth-child(3) { animation-delay: var(--anim-medium); }
 .er-entity-rect:nth-child(4) { animation-delay: 0.55s; }
 
 @keyframes connector-draw {
   0% { stroke-dashoffset: 200; }
   100% { stroke-dashoffset: 0; }
 }
-.er-connector { stroke-dasharray: 200; animation: connector-draw 0.8s ease-out 0.3s backwards; }
+.er-connector { stroke-dasharray: 200; animation: connector-draw 0.8s ease-out var(--anim-normal) backwards; }
 
 @keyframes flow-step-up {
   0% { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
 }
-.qf-step { animation: flow-step-up 0.35s ease-out backwards; }
 .qf-step:nth-child(1) { animation-delay: 0.1s; }
-.qf-step:nth-child(2) { animation-delay: 0.2s; }
-.qf-step:nth-child(3) { animation-delay: 0.3s; }
-.qf-step:nth-child(4) { animation-delay: 0.4s; }
-.qf-step:nth-child(5) { animation-delay: 0.5s; }
+.qf-step:nth-child(2) { animation-delay: var(--anim-fast); }
+.qf-step:nth-child(3) { animation-delay: var(--anim-normal); }
+.qf-step:nth-child(4) { animation-delay: var(--anim-medium); }
+.qf-step:nth-child(5) { animation-delay: var(--anim-slow); }
 
 @keyframes nf-arrow-bounce {
   0%, 100% { transform: translateX(0); }
@@ -5743,13 +5453,13 @@ body.lesson-focus-mode::before {
 .concept-card-icon { animation: glow-pulse-primary 2s ease-in-out infinite; }
 
 /* ── E.2 Hover effect cho các elements ─────────────────────── */
-.concept-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.concept-card { transition: transform var(--anim-fast) ease, box-shadow var(--anim-fast) ease; }
 .concept-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15); }
 
-.er-entity-rect { transition: filter 0.2s ease; }
+.er-entity-rect { transition: filter var(--anim-fast) ease; }
 .er-entity-rect:hover { filter: brightness(1.15); cursor: pointer; }
 
-.qf-step { transition: transform 0.2s ease; }
+.qf-step { transition: transform var(--anim-fast) ease; }
 .qf-step:hover { transform: translateX(4px); }
 
 /* Reduce motion preference */
@@ -5760,8 +5470,8 @@ body.lesson-focus-mode::before {
 }
 
 /* ── H. Step transition fade ────────────────────────────────────── */
-.step-pane.step-fade-out { opacity: 0; transition: opacity 0.15s ease; }
-.step-pane.step-fade-in  { animation: stepFadeIn 0.35s ease-out; }
+.step-pane.step-fade-out { opacity: 0; transition: opacity var(--anim-fast) ease; }
+.step-pane.step-fade-in  { animation: stepFadeIn var(--anim-normal) ease-out; }
 @keyframes stepFadeIn {
   0%   { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
