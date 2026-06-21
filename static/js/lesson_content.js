@@ -715,7 +715,7 @@ window.LESSON_CONTENT['db_design'] = {
 
       step_4: {
         prompt: 'Từ 3 bảng <code>player</code>, <code>player_game_library</code>, <code>game</code>: tìm <code>title</code> của các game mà player tên <em>DragonLord</em> đang sở hữu. Viết query SQL trong editor bên phải.',
-        starter: "-- Tìm title game của player 'DragonLord'\n-- JOIN 3 bảng: player ↔ player_game_library ↔ game\nSELECT g.\n  FROM player p\n  JOIN player_game_library l ON p. = l.\n  JOIN game g ON l. = g.\n WHERE p. = ;\n",
+        starter: "-- Tìm title game của player 'DragonLord'\n-- JOIN 3 bảng: player ↔ player_game_library ↔ game\nSELECT game.\n  FROM player\n  JOIN player_game_library ON player. = player_game_library.\n  JOIN game ON player_game_library. = game.\n WHERE player. = ;\n",
         schema: {
           table_name: 'player',
           columns: [
@@ -1223,6 +1223,21 @@ window.LESSON_CONTENT['db_design'] = {
         prompt: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> (USA). Viết query SQL trong editor bên phải.',
 
         starter: "-- Lấy tên các game do Valve phát triển\n-- Filter theo studio_name = 'Valve'\nSELECT \n  FROM game_studio_combined\n WHERE ;\n",
+        schema: {
+          table_name: 'game_studio_combined',
+          columns: [
+            { name: 'game_id',     type: 'INT',     key: 'PK', icon: '🔑' },
+            { name: 'game_name',   type: 'VARCHAR', key: '',   icon: '🎮' },
+            { name: 'studio_name', type: 'VARCHAR', key: '',   icon: '🏢' },
+            { name: 'st_country',  type: 'VARCHAR', key: '',   icon: '🌏' }
+          ],
+          data: [
+            ['55', 'Elden Ring',  'FromSoftware', 'Japan'],
+            ['56', 'Bloodborne',  'FromSoftware', 'Japan'],
+            ['57', 'Sekiro',      'FromSoftware', 'Japan'],
+            ['88', 'Portal 2',    'Valve',        'USA']
+          ]
+        },
         expected_sql: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
         hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 4 dòng của 2 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT game_name FROM game_studio_combined WHERE studio_name = \'Valve\';</code>'}],
         success_message: 'Bạn đã hiểu Redundancy + FD. Bài 8 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
@@ -1504,32 +1519,46 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Sau 2NF, tách thành 2 bảng <code>loans</code> và <code>members</code>. Lấy <code>book_id</code>, <code>copy_no</code>, <code>loan_date</code> của các lượt mượn <em>sau ngày 2024-06-05</em>. Viết query SQL trong editor bên phải.',
-        starter: "-- Lấy book_id, copy_no, loan_date của các lượt mượn sau 2024-06-05\n-- Filter: loan_date > '2024-06-05'\nSELECT , , \n  FROM loans\n WHERE ;\n",
+        prompt: 'Sau 2NF, tách thành 2 bảng <code>loans</code> và <code>members</code>. Tìm <strong>top 3 thành viên mượn nhiều sách nhất</strong>. Hiển thị <code>member_name</code> + số lượt mượn, sắp xếp giảm dần.',
+        starter: "-- Top 3 thành viên mượn nhiều sách nhất\n-- JOIN loans ↔ members + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT m., COUNT(*) AS \n  FROM members m\n  JOIN loans l ON l. = m.\n GROUP BY m., m.\n ORDER BY  DESC\n LIMIT 3;\n",
         schema: {
-          table_name: 'loans',
+          table_name: 'members',
           columns: [
-            { name: 'book_id',   type: 'INT',  key: 'PK' },
-            { name: 'copy_no',   type: 'INT',  key: 'PK' },
-            { name: 'member_id', type: 'INT',  key: 'FK' },
-            { name: 'loan_date', type: 'DATE', key: '' }
+            { name: 'member_id',   type: 'INT',     key: 'PK', icon: '🔑' },
+            { name: 'member_name', type: 'VARCHAR', key: '',   icon: '👤' },
+            { name: 'join_date',   type: 'DATE',    key: '',   icon: '📅' }
           ],
           data: [
-            ['B01', '1', 'M01', '2024-06-01'],
-            ['B01', '2', 'M01', '2024-06-03'],
-            ['B02', '1', 'M02', '2024-06-05'],
-            ['B03', '1', 'M01', '2024-06-07']
+            ['M01', 'Minh',     '2023-01-15'],
+            ['M02', 'Yuki',     '2023-05-20']
           ]
         },
-        expected_sql: "SELECT book_id, copy_no, loan_date FROM loans WHERE loan_date > '2024-06-05';",
-        hints: [
-          { level: 1, text: 'Cần 3 cột: <code>book_id</code>, <code>copy_no</code>, <code>loan_date</code>.' },
-          { level: 2, text: 'Bảng <code>loans</code>, lọc <code>loan_date > \'2024-06-05\'</code>.' },
-          { level: 3, text: 'Dùng <code>&gt;</code> cho "sau ngày" (lớn hơn).' },
-          { level: 4, text: "<code class=\"code\">SELECT book_id, copy_no, loan_date FROM loans WHERE loan_date > '2024-06-05';</code>" }
+        related_schemas: [
+          {
+            table_name: 'loans',
+            columns: [
+              { name: 'book_id',   type: 'INT',  key: 'PK' },
+              { name: 'copy_no',   type: 'INT',  key: 'PK' },
+              { name: 'member_id', type: 'INT',  key: 'FK' },
+              { name: 'loan_date', type: 'DATE', key: '' }
+            ],
+            data: [
+              ['B01', '1', 'M01', '2024-06-01'],
+              ['B01', '2', 'M01', '2024-06-03'],
+              ['B02', '1', 'M02', '2024-06-05'],
+              ['B03', '1', 'M01', '2024-06-07']
+            ]
+          }
         ],
-        success_message: 'Hoàn thành 2NF! Phụ thuộc bộ phận đã bị loại bỏ — member_name đã tách sang bảng members. Tiếp theo Bài 10 sẽ xét BCNF, phiên bản "nghiêm ngặt" hơn.',
-        xp_reward: 40
+        expected_sql: "SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;",
+        hints: [
+          { level: 1, text: 'Bạn cần <em>đếm sách mượn theo từng thành viên</em>. Hãy nghĩ: <strong>JOIN</strong> 2 bảng qua <code>member_id</code>, <strong>GROUP BY</strong> member, <strong>COUNT(*)</strong>, <strong>ORDER BY</strong> giảm dần, <strong>LIMIT</strong> top 3.' },
+          { level: 2, text: 'JOIN: <code>members m JOIN loans l ON l.member_id = m.member_id</code>.' },
+          { level: 3, text: 'GROUP BY theo cả 2 cột: <code>m.member_id, m.member_name</code>. COUNT(*) đếm số dòng loans.' },
+          { level: 4, text: "<code class=\"code\">SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;</code>" }
+        ],
+        success_message: 'Hoàn thành 2NF nâng cao! Phụ thuộc bộ phận đã được loại bỏ, và bạn đã JOIN + GROUP BY qua 2 bảng. Tiếp theo Bài 10 sẽ xét BCNF, phiên bản "nghiêm ngặt" hơn.',
+        xp_reward: 70
       }
     },
 
@@ -1658,31 +1687,58 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Từ bảng <code class="code">treatments</code> (đã BCNF), lấy <code class="code">treatment</code> và <code class="code">treatment_date</code> của các ca điều trị sau ngày <code class="code">2024-03-10</code>.',
-        starter: "-- Lấy treatment + treatment_date sau ngày 2024-03-10\n-- Filter: treatment_date > '2024-03-10'\nSELECT , \n  FROM treatments\n WHERE ;\n",
+        prompt: 'Sau BCNF, tách thành 3 bảng <code>doctors</code>, <code>patients</code>, <code>treatments</code>. Tìm <strong>top 3 chuyên khoa có nhiều ca điều trị nhất</strong>. Hiển thị chuyên khoa + số ca, sắp xếp giảm dần.',
+        starter: "-- Top 3 chuyên khoa có nhiều ca điều trị nhất\n-- JOIN treatments ↔ doctors + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT d., COUNT(*) AS \n  FROM treatments t\n  JOIN doctors d ON t. = d.\n GROUP BY d.\n ORDER BY  DESC\n LIMIT 3;\n",
         schema: {
-          table_name: 'treatments',
+          table_name: 'doctors',
           columns: [
-            { name: 'patient_id',     type: 'INT',     key: 'PK' },
-            { name: 'doctor_id',      type: 'INT',     key: '' },
-            { name: 'treatment',      type: 'VARCHAR', key: '' },
-            { name: 'treatment_date', type: 'DATE',    key: '' }
+            { name: 'doctor_id',      type: 'INT',     key: 'PK', icon: '🔑' },
+            { name: 'doctor_name',    type: 'VARCHAR', key: '',   icon: '👨‍⚕️' },
+            { name: 'doctor_specialty', type: 'VARCHAR', key: '',   icon: '⚕️' }
           ],
           data: [
-            ['P01', 'D01', 'Khám tổng quát',     '2024-03-01'],
-            ['P02', 'D02', 'Phẫu thuật ruột thừa','2024-03-05'],
-            ['P01', 'D03', 'Xét nghiệm máu',      '2024-03-10'],
-            ['P03', 'D01', 'Khám tim mạch',       '2024-03-12']
+            ['D01', 'BS. Hà',   'Tim mạch'],
+            ['D02', 'BS. Linh', 'Ngoại khoa'],
+            ['D03', 'BS. Khải', 'Huyết học']
           ]
         },
-        expected_sql: "SELECT treatment, treatment_date FROM treatments WHERE treatment_date > '2024-03-10';",
-        hints: [
-          { level: 1, text: 'Bạn cần lấy thông tin về <em>ca điều trị</em> sau một ngày cụ thể — tức là lọc theo ngày. Hãy nghĩ: cột nào lưu ngày điều trị?' },
-          { level: 2, text: 'Cần 2 cột: <code class="code">treatment</code> và <code class="code">treatment_date</code>' },
-          { level: 3, text: 'Bảng <code class="code">treatments</code>, lọc <code class="code">treatment_date > \'2024-03-10\'</code>' },
-          { level: 4, text: "<code class=\"code\">SELECT treatment, treatment_date FROM treatments WHERE treatment_date > '2024-03-10';</code>" }
+        related_schemas: [
+          {
+            table_name: 'patients',
+            columns: [
+              { name: 'patient_id', type: 'INT',     key: 'PK' },
+              { name: 'name',       type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['P01', 'Minh'],
+              ['P02', 'Yuki'],
+              ['P03', 'Sara']
+            ]
+          },
+          {
+            table_name: 'treatments',
+            columns: [
+              { name: 'patient_id',     type: 'INT',     key: 'FK' },
+              { name: 'doctor_id',      type: 'INT',     key: 'FK' },
+              { name: 'treatment',      type: 'VARCHAR', key: '' },
+              { name: 'treatment_date', type: 'DATE',    key: '' }
+            ],
+            data: [
+              ['P01', 'D01', 'Khám tổng quát',     '2024-03-01'],
+              ['P02', 'D02', 'Phẫu thuật ruột thừa','2024-03-05'],
+              ['P01', 'D03', 'Xét nghiệm máu',      '2024-03-10'],
+              ['P03', 'D01', 'Khám tim mạch',       '2024-03-12']
+            ]
+          }
         ],
-        success_message: 'Hoàn thành BCNF! Bảng treatments giờ chỉ chứa sự kiện (FK + hành động + ngày). Bác sĩ và chuyên khoa đã được cô lập — cập nhật 1 chỗ, dữ liệu luôn nhất quán.',
+        expected_sql: "SELECT d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;",
+        hints: [
+          { level: 1, text: 'Bạn cần <em>JOIN 2 bảng</em> (treatments + doctors) qua <code>doctor_id</code>, <strong>GROUP BY</strong> chuyên khoa, <strong>COUNT</strong>, <strong>ORDER BY DESC</strong> + <strong>LIMIT 3</strong>.' },
+          { level: 2, text: 'JOIN: <code>treatments t JOIN doctors d ON t.doctor_id = d.doctor_id</code>.' },
+          { level: 3, text: 'GROUP BY <code>d.doctor_specialty</code>. COUNT(*) đếm số treatment. ORDER BY DESC + LIMIT 3 lấy top 3.' },
+          { level: 4, text: "<code class=\"code\">SELECT d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;</code>" }
+        ],
+        success_message: 'Hoàn thành BCNF nâng cao! Bạn đã JOIN treatments + doctors + GROUP BY chuyên khoa. Bác sĩ và chuyên khoa đã được cô lập — cập nhật 1 chỗ, dữ liệu luôn nhất quán.',
         xp_reward: 80
       }
     },
@@ -1814,32 +1870,62 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Từ bảng <code class="code">orders</code> (đã 3NF), lấy <code class="code">order_id</code> và <code class="code">product_id</code> của các đơn hàng từ ngày <code class="code">2024-04-05</code> trở đi.',
-        starter: "-- Lấy order_id + product_id của đơn hàng từ 2024-04-05 trở đi\n-- Filter: order_date >= '2024-04-05'\nSELECT , \n  FROM orders\n WHERE ;\n",
+        prompt: 'Sau 3NF, tách thành 3 bảng <code>orders</code>, <code>products</code>, <code>categories</code>. Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code>. Hiển thị category + tổng tiền, sắp xếp giảm dần.',
+        starter: "-- Tổng doanh thu theo category từ 2024-04-05\n-- JOIN orders ↔ products ↔ categories + GROUP BY + SUM + ORDER BY\nSELECT c., SUM(o.qty * p.) AS \n  FROM orders o\n  JOIN products p ON o. = p.\n  JOIN categories c ON p. = c.\n WHERE o. >= '2024-04-05'\n GROUP BY c.\n ORDER BY  DESC;\n",
         schema: {
-          table_name: 'orders',
+          table_name: 'products',
           columns: [
-            { name: 'order_id',   type: 'INT',     key: 'PK' },
-            { name: 'product_id', type: 'INT',     key: '' },
-            { name: 'qty',        type: 'INT',     key: '' },
-            { name: 'order_date', type: 'DATE',    key: '' }
+            { name: 'product_id', type: 'INT',     key: 'PK', icon: '🔑' },
+            { name: 'product_name', type: 'VARCHAR', key: '',   icon: '📦' },
+            { name: 'category', type: 'VARCHAR', key: 'FK', icon: '🏷️' },
+            { name: 'price',     type: 'DECIMAL', key: '',   icon: '💰' }
           ],
           data: [
-            ['1001', 'P01', '2', '2024-04-01'],
-            ['1002', 'P02', '1', '2024-04-03'],
-            ['1003', 'P03', '3', '2024-04-05'],
-            ['1004', 'P01', '1', '2024-04-08']
+            ['P01', 'Elden Ring',  'Game', '60.00'],
+            ['P02', 'Hades',       'Game', '25.00'],
+            ['P03', 'Bàn phím cơ', 'Gear', '40.00'],
+            ['P04', 'Chuột gaming','Gear', '50.00'],
+            ['P05', 'Màn hình 27"','Gear', '450.00']
           ]
         },
-        expected_sql: "SELECT order_id, product_id FROM orders WHERE order_date >= '2024-04-05';",
-        hints: [
-          { level: 1, text: 'Bạn cần tìm đơn hàng trong một khoảng thời gian. Nghĩ về cột nào lưu ngày đặt hàng và toán tử so sánh "từ ngày X trở đi".' },
-          { level: 2, text: 'Cần 2 cột: <code class="code">order_id</code> và <code class="code">product_id</code>' },
-          { level: 3, text: 'Bảng <code class="code">orders</code>, lọc <code class="code">order_date >= \'2024-04-05\'</code>' },
-          { level: 4, text: "<code class=\"code\">SELECT order_id, product_id FROM orders WHERE order_date >= '2024-04-05';</code>" }
+        related_schemas: [
+          {
+            table_name: 'orders',
+            columns: [
+              { name: 'order_id',   type: 'INT',  key: 'PK' },
+              { name: 'product_id', type: 'INT',  key: 'FK' },
+              { name: 'qty',        type: 'INT',  key: '' },
+              { name: 'order_date', type: 'DATE', key: '' }
+            ],
+            data: [
+              ['1001', 'P01', '2', '2024-04-01'],
+              ['1002', 'P02', '1', '2024-04-03'],
+              ['1003', 'P03', '3', '2024-04-05'],
+              ['1004', 'P01', '1', '2024-04-08'],
+              ['1005', 'P04', '2', '2024-04-10']
+            ]
+          },
+          {
+            table_name: 'categories',
+            columns: [
+              { name: 'category',        type: 'VARCHAR', key: 'PK' },
+              { name: 'category_manager', type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['Game', 'An'],
+              ['Gear', 'Bình']
+            ]
+          }
         ],
-        success_message: 'Hoàn thành 3NF! Phụ thuộc bắc cầu đã bị loại bỏ. Thực tế: đôi khi ta chấp nhận 1 chút dư thừa (denormalize) để tăng tốc truy vấn — đó là nghệ thuật của database engineer.',
-        xp_reward: 80
+        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
+        hints: [
+          { level: 1, text: 'Bạn cần <em>JOIN 3 bảng</em> (orders ↔ products ↔ categories), tính <code>SUM(qty * price)</code> cho mỗi category, lọc theo ngày, GROUP BY + ORDER BY DESC.' },
+          { level: 2, text: 'JOIN chain: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category</code>.' },
+          { level: 3, text: '<code>SUM(o.qty * p.price) AS total_revenue</code> — nhân số lượng với giá. WHERE <code>order_date >= \'2024-04-05\'</code>.' },
+          { level: 4, text: "<code class=\"code\">SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;</code>" }
+        ],
+        success_message: 'Hoàn thành 3NF nâng cao! Phụ thuộc bắc cầu đã được loại bỏ. Bạn đã tính tổng doanh thu qua 3 bảng — đây là pattern quan trọng trong business intelligence.',
+        xp_reward: 90
       }
     },
 
@@ -1971,29 +2057,45 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Sau 4NF, tách thành 2 bảng <code>course_textbook</code> và <code>course_instructor</code>. Lấy <code>instructor</code> của khóa học <code>CS202</code>. Viết query SQL trong editor bên phải.',
-        starter: "-- Lấy instructor của khóa học CS202\n-- Filter: course_id = 'CS202'\nSELECT \n  FROM course_instructor\n WHERE ;\n",
+        prompt: 'Sau 4NF, tách thành 2 bảng <code>course_textbook</code> và <code>course_instructor</code>. Tìm <strong>top khóa học có nhiều textbook nhất</strong>. Hiển thị course_id + số textbook, sắp xếp giảm dần.',
+        starter: "-- Top khóa học có nhiều textbook nhất\n-- GROUP BY course_id + COUNT + ORDER BY DESC\nSELECT , COUNT(*) AS \n  FROM course_textbook\n GROUP BY \n ORDER BY  DESC;\n",
         schema: {
-          table_name: 'course_instructor',
+          table_name: 'course_textbook',
           columns: [
-            { name: 'course_id',  type: 'VARCHAR', key: 'PK' },
-            { name: 'instructor', type: 'VARCHAR', key: '' }
+            { name: 'course_id', type: 'VARCHAR', key: 'PK', icon: '🔑' },
+            { name: 'textbook',  type: 'VARCHAR', key: '',   icon: '📚' }
           ],
           data: [
-            ['CS101', 'Dr. Trần'],
-            ['CS101', 'Dr. Lê'],
-            ['CS202', 'Dr. Phạm']
+            ['CS101', 'Database Concepts'],
+            ['CS101', 'SQL Performance'],
+            ['CS202', 'Clean Code'],
+            ['CS202', 'Refactoring'],
+            ['CS303', 'Design Patterns']
           ]
         },
-        expected_sql: "SELECT instructor FROM course_instructor WHERE course_id = 'CS202';",
-        hints: [
-          { level: 1, text: 'Cần 1 cột: <code>instructor</code>.' },
-          { level: 2, text: 'Bảng <code>course_instructor</code> (bảng 4NF thứ 2).' },
-          { level: 3, text: "WHERE <code>course_id = 'CS202'</code>." },
-          { level: 4, text: "<code class=\"code\">SELECT instructor FROM course_instructor WHERE course_id = 'CS202';</code>" }
+        related_schemas: [
+          {
+            table_name: 'course_instructor',
+            columns: [
+              { name: 'course_id',  type: 'VARCHAR', key: 'PK' },
+              { name: 'instructor', type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['CS101', 'Dr. Trần'],
+              ['CS101', 'Dr. Lê'],
+              ['CS202', 'Dr. Phạm']
+            ]
+          }
         ],
-        success_message: 'Hoàn thành 4NF! Phụ thuộc đa trị đã được tách — không còn tổ hợp Cartesian lặp. Bài 13 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
-        xp_reward: 45
+        expected_sql: "SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC;",
+        hints: [
+          { level: 1, text: 'Bạn cần <em>đếm số textbook theo từng course</em>. Hãy nghĩ: <strong>GROUP BY course_id</strong> + <strong>COUNT(*)</strong> + <strong>ORDER BY DESC</strong>.' },
+          { level: 2, text: 'SELECT 2 cột: <code>course_id</code> và <code>COUNT(*) AS textbook_count</code>.' },
+          { level: 3, text: 'GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook.' },
+          { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC;</code>" }
+        ],
+        success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 13 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
+        xp_reward: 75
       }
     },
 
@@ -2628,11 +2730,15 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'kw',  token: '[:10]',                slot: 'op-limit' }
         ],
         drop_zones: [
-          { id: 'orm-line', placeholder: "LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]", accepts: ['tbl','kw','op'], multi: true }
+          { id: 'setup-zone',  placeholder: 'LogEvent.objects',                                       accepts: ['tbl','op'],  multi: true },
+          { id: 'chain-zone',  placeholder: ".filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')", accepts: ['kw','op'], multi: true },
+          { id: 'slice-zone',  placeholder: '[:10]',                                                  accepts: ['kw'],      multi: false }
         ],
         expected_sql: "LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]",
         reveal_hints: {
-          'orm-line': '<code>user__user_id</code> = filter qua FK. <code>event_type=\'login\'</code> = AND. <code>select_related(\'user\')</code> = INNER JOIN tự động. <code>order_by(\'-timestamp\')</code> = DESC. <code>[:10]</code> = LIMIT 10.'
+          'setup-zone': '<strong>Setup:</strong> <code>LogEvent</code> = Django model class, <code>.objects</code> = manager trả về QuerySet.',
+          'chain-zone': '<strong>Chain methods:</strong> <code>.filter(...)</code> = WHERE, <code>.select_related(\'user\')</code> = INNER JOIN, <code>.order_by(\'-timestamp\')</code> = ORDER BY DESC.',
+          'slice-zone': '<strong>Slice:</strong> <code>[:10]</code> = LIMIT 10 (Python list slice syntax cho QuerySet).'
         }
       },
 
@@ -2757,11 +2863,13 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'op',  token: " AND password_hash = '_ignored'", slot: 'op-ignore' }
         ],
         drop_zones: [
-          { id: 'query-line', placeholder: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND ...", accepts: ['kw','col','tbl','op'], multi: true }
+          { id: 'select-zone',   placeholder: "SELECT * FROM user_accounts WHERE username = ''",         accepts: ['kw','op','tbl','col'], multi: true },
+          { id: 'inject-zone',   placeholder: "OR '1'='1' --' AND password_hash = '_ignored'",         accepts: ['kw','op'], multi: true }
         ],
         expected_sql: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND password_hash = 'hashed_pw_abc'",
         reveal_hints: {
-          'query-line': "<code>'</code> đóng chuỗi. <code>OR '1'='1'</code> thêm điều kiện luôn đúng. <code>--</code> comment out toàn bộ phần còn lại. Query trở thành <code>SELECT * FROM user_accounts</code> — trả về TẤT CẢ!"
+          'select-zone': '<strong>Query ban đầu:</strong> SELECT * FROM user_accounts WHERE username = \'\'',
+          'inject-zone': '<strong>Phần inject:</strong> <code>OR \'1\'=\'1\'</code> thêm điều kiện luôn đúng. <code>--</code> comment out phần password. Query cuối = <code>SELECT * FROM user_accounts</code> — trả TẤT CẢ!'
         }
       },
 

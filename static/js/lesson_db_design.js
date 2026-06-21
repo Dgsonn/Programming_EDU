@@ -1727,9 +1727,15 @@
   /* ── Challenge type: full_ide (CodeMirror) ─────────────────────── */
   function initChallengeFullIDE(s4, pane) {
     pane.innerHTML = '<div id="code-editor" style="flex:1;display:flex;flex-direction:column;min-height:0;"></div>';
+    // R3-E4: Auto-save draft — load từ localStorage nếu có
+    const lessonId = state.currentLesson && state.currentLesson.id;
+    const draftKey = `pe_draft_${lessonId}`;
+    const savedDraft = lessonId ? localStorage.getItem(draftKey) : null;
+    const initialValue = savedDraft || (s4.starter || '-- Viết query của bạn ở đây\n');
+    let saveTimer = null;
     if (window.CodeMirror) {
       state.cmEditor = CodeMirror(pane.querySelector('#code-editor'), {
-        value: s4.starter || '-- Viết query của bạn ở đây\n',
+        value: initialValue,
         mode: 'text/x-sql',
         theme: 'material-darker',
         lineNumbers: true,
@@ -1743,10 +1749,23 @@
           state.hintLevel = 0;
           document.getElementById('step4-hint-card').classList.add('hidden');
         }
+        // R3-E4: Debounced auto-save (1s sau khi ngừng gõ)
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          if (lessonId) localStorage.setItem(draftKey, state.cmEditor.getValue());
+        }, 1000);
       });
+      // R3-E4: Hiển thị indicator "đã khôi phục draft"
+      if (savedDraft && savedDraft !== (s4.starter || '')) {
+        setTimeout(() => {
+          if (window.showToast) {
+            window.showToast('info', '🔄 Đã khôi phục bản nháp từ lần trước');
+          }
+        }, 500);
+      }
     } else {
       pane.querySelector('#code-editor').innerHTML =
-        `<textarea id="cm-fallback" style="flex:1;width:100%;background:#0F172A;color:#F1F5F9;font-family:'JetBrains Mono',monospace;font-size:14px;padding:16px;border:none;outline:none;resize:none;line-height:1.7;">${s4.starter || ''}</textarea>`;
+        `<textarea id="cm-fallback" style="flex:1;width:100%;background:#0F172A;color:#F1F5F9;font-family:'JetBrains Mono',monospace;font-size:14px;padding:16px;border:none;outline:none;resize:none;line-height:1.7;">${initialValue}</textarea>`;
     }
   }
 
@@ -1880,6 +1899,10 @@
       if (result.correct) {
         flashTerminal('success', `✓ Accepted! (0.04s)\n\n${result.feedback || 'Đáp án đúng 100%.'}\n\n→ ${s4.xp_reward || 50} XP + 10 Gems!`);
         addXP(s4.xp_reward || 50);
+        // R3-E4: Xóa draft khi submit đúng
+        if (isSubmit && state.currentLesson && state.currentLesson.id) {
+          localStorage.removeItem(`pe_draft_${state.currentLesson.id}`);
+        }
         if (isSubmit) { celebrate(); setTimeout(showSuccess, 1200); }
       } else {
         flashTerminal('error', `✗ Wrong Answer\n\n${result.error || 'Query chưa đúng.'}\n\n${result.suggestion || ''}`);
@@ -1939,6 +1962,33 @@
     const cls = kind === 'success' ? 'success-line' : kind === 'error' ? 'error-line' : 'info-line';
     term.innerHTML = `<span class="${cls}">${escapeHtml(text)}</span>`;
   }
+
+  // R3-E1/E4: Toast Sonner-style notification (góc trên-phải, auto-dismiss sau 3s)
+  window.showToast = function(kind, message, durationMs = 3000) {
+    const existing = document.getElementById('pe-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'pe-toast';
+    const colors = {
+      success: 'rgba(16,185,129,0.95)',
+      error:   'rgba(239,68,68,0.95)',
+      info:    'rgba(6,182,212,0.95)',
+      warning: 'rgba(245,158,11,0.95)'
+    };
+    toast.style.cssText = `position:fixed;top:20px;right:20px;z-index:10001;
+      background:${colors[kind] || colors.info};color:#fff;padding:12px 18px;
+      border-radius:10px;font-size:13px;font-weight:600;
+      box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:380px;
+      animation:pe-toast-in 0.25s ease-out;`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.3s, transform 0.3s';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(20px)';
+      setTimeout(() => toast.remove(), 300);
+    }, durationMs);
+  };
 
   function validateSQL(userSQL, expectedSQL) {
     const u = normalizeSQL(userSQL);
@@ -2101,9 +2151,20 @@
   window.goToStep = function (step) {
     if (step < 1 || step > TOTAL_STEPS) return;
 
-    // Update panes
-    document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
-    document.querySelector(`.step-pane[data-step="${step}"]`).classList.add('active');
+    // R3-E3: Fade transition giữa các step
+    const currentActive = document.querySelector('.step-pane.active');
+    const nextPane = document.querySelector(`.step-pane[data-step="${step}"]`);
+    if (currentActive && currentActive !== nextPane) {
+      currentActive.classList.add('step-fade-out');
+      setTimeout(() => {
+        currentActive.classList.remove('active', 'step-fade-out');
+        nextPane.classList.add('active', 'step-fade-in');
+        setTimeout(() => nextPane.classList.remove('step-fade-in'), 350);
+      }, 150);
+    } else if (!currentActive) {
+      nextPane.classList.add('active', 'step-fade-in');
+      setTimeout(() => nextPane.classList.remove('step-fade-in'), 350);
+    }
 
     // Update progress track
     document.querySelectorAll('.progress-step').forEach((el, i) => {
@@ -2181,7 +2242,22 @@
     state.xpEarned += amount;
     const el = document.getElementById('xp-current');
     if (!el) return;
-    el.textContent = state.xpEarned;
+    // R3-E2: Number counter animation (countup từ giá trị cũ → giá trị mới)
+    const oldVal = parseInt(el.textContent, 10) || 0;
+    const newVal = state.xpEarned;
+    const duration = 600;
+    const startTs = performance.now();
+    function tick(ts) {
+      const elapsed = ts - startTs;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(oldVal + (newVal - oldVal) * eased);
+      el.textContent = current;
+      if (progress < 1) requestAnimationFrame(tick);
+      else el.textContent = newVal;
+    }
+    requestAnimationFrame(tick);
     el.parentElement.style.transform = 'scale(1.15)';
     setTimeout(() => { el.parentElement.style.transform = 'scale(1)'; }, 200);
   }

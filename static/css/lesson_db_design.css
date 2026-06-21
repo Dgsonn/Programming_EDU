@@ -115,6 +115,18 @@ body.lesson-focus-mode::before {
 .progress-track {
   display: flex; align-items: center; gap: 8px;
 }
+/* R3-E6: Sticky progress khi scroll xuống dưới */
+@media (min-width: 1024px) {
+  .lesson-header.is-scrolled .progress-track {
+    padding: 4px 12px;
+    background: rgba(11, 17, 33, 0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 100px;
+    border: 1px solid rgba(148, 163, 184, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.25s ease;
+  }
+}
 
 .progress-step {
   display: flex; align-items: center; gap: 8px;
@@ -2042,15 +2054,6 @@ body.lesson-focus-mode::before {
   margin-left: 0;
 }
 
-.drag-hint {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-500);
-  text-align: right;
-  flex: 1;
-  min-width: 0;
-}
-
 /* ── Color anchor: each zone gets a unique hue, used in border, glow, and pill tag ── */
 .drop-line[data-zone="select-line"]  { --zone-color: #06B6D4; --zone-color-soft: rgba(6, 182, 212, 0.12); }
 .drop-line[data-zone="from-line"]    { --zone-color: #F59E0B; --zone-color-soft: rgba(245, 158, 11, 0.12); }
@@ -2185,15 +2188,6 @@ body.lesson-focus-mode::before {
   box-shadow: 0 0 6px var(--primary);
 }
 
-.bank-label::before {
-  content: '';
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 6px var(--primary);
-}
-
 .bank-hint {
   margin-left: auto;
   font-size: 10.5px;
@@ -2256,6 +2250,8 @@ body.lesson-focus-mode::before {
 
 .logic-pill:active { cursor: grabbing; }
 
+.logic-pill:active { cursor: grabbing; }
+
 .logic-pill:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
@@ -2264,7 +2260,6 @@ body.lesson-focus-mode::before {
 
 /* The colored anchor dot — the "arrow" linking pill → its target zone */
 .logic-pill::before {
-  content: '';
   display: inline-block;
   width: 10px; height: 10px;
   border-radius: 50%;
@@ -5642,7 +5637,6 @@ body.lesson-focus-mode::before {
   transition: all 0.15s ease;
 }
 .mini-chip:hover { background: rgba(6,182,212,0.18); }
-.mini-chip.dragging { opacity: 0.4; }
 .mini-chip.placed { opacity: 0.55; }
 .mini-chip.correct { background: var(--success-soft); color: var(--success); border-color: var(--success); }
 .mini-chip.wrong { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
@@ -5734,6 +5728,18 @@ body.lesson-focus-mode::before {
   .primer-svg, .primer-svg svg, .er-entity-rect, .nf-side, .er-connector, .qf-step, .concept-card-icon, .nf-arrow i {
     animation: none !important;
   }
+}
+
+/* ── H. Step transition fade (R3-E3) ───────────────────────────── */
+.step-pane.step-fade-out { opacity: 0; transition: opacity 0.15s ease; }
+.step-pane.step-fade-in  { animation: stepFadeIn 0.35s ease-out; }
+@keyframes stepFadeIn {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes pe-toast-in {
+  0%   { opacity: 0; transform: translateX(20px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 
 /* ── G. Accessibility — :focus-visible rings ─────────────────────── */
