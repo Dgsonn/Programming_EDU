@@ -22,7 +22,7 @@
   --primary-soft:  rgba(6, 182, 212, 0.10);
   --primary-deep:  #0E7490;
 
-  /* R5-T2.1: Module accent colors (override per module from JS)
+  /* Module accent colors (override per module from JS)
      Module 1 (B1-B6) ER Mapping       → Amber  #F59E0B
      Module 2 (B7-B13) Normalization   → Indigo #8B5CF6
      Module 3 (B14-B18) App Design     → Emerald #10B981
@@ -31,7 +31,7 @@
   --module-accent-soft: var(--primary-soft);
   --module-accent-glow: var(--primary-glow);
 
-  /* R5-T2.4: Animation duration + easing tokens (chuan hoa) */
+  /* Animation duration + easing tokens (chuan hoa) */
   --anim-fast:    0.15s;
   --anim-normal:  0.3s;
   --anim-slow:    0.5s;
@@ -131,7 +131,7 @@ body.lesson-focus-mode::before {
 .progress-track {
   display: flex; align-items: center; gap: 8px;
 }
-/* R3-E6: Sticky progress khi scroll xuống dưới */
+/* Sticky progress khi scroll xuống dưới (toggle .is-scrolled qua IntersectionObserver ở JS) */
 @media (min-width: 1024px) {
   .lesson-header.is-scrolled .progress-track {
     padding: 4px 12px;
@@ -368,7 +368,7 @@ body.lesson-focus-mode::before {
   margin-bottom: 24px;
   position: relative;
   overflow: hidden;
-  /* R5-T2.2: removed backdrop-filter blur for solid surface */
+  /* Solid surface (no backdrop blur) */
 }
 
 .primer-card::before {
@@ -509,10 +509,9 @@ body.lesson-focus-mode::before {
 }
 
 .db-panel {
-  background: var(--ide-glass);
+  background: var(--ide-surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  backdrop-filter: blur(20px);
   position: relative;
 }
 
@@ -704,7 +703,7 @@ body.lesson-focus-mode::before {
   font-weight: 500;
   position: relative;
   overflow: hidden;
-  /* R5-T2.2: removed backdrop-filter blur for solid surface */
+  /* Solid surface (no backdrop blur) */
 }
 
 .mcq-option::before {
@@ -2184,7 +2183,7 @@ body.lesson-focus-mode::before {
   padding: 12px 24px 16px;
   background: var(--ide-bg-2);
   flex-shrink: 0;
-  /* R5-T2.2: removed backdrop-filter blur for solid surface */
+  /* Solid surface (no backdrop blur) */
 }
 
 .bank-label {
@@ -2737,12 +2736,7 @@ body.lesson-focus-mode::before {
 
 .streak-fire {
   font-size: 13px;
-  animation: fire-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes fire-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.15); }
+  /* Removed fire-pulse animation (streakActive chưa implement) */
 }
 
 /* ── Player Card (Codedex RPG-style, floating) ──────────────────── */
@@ -2751,9 +2745,7 @@ body.lesson-focus-mode::before {
   top: 80px; right: 24px;
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px 12px 12px;
-  background: var(--ide-glass);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  background: var(--ide-surface);
   border-radius: 16px;
   z-index: 50;
   box-shadow: var(--shadow-card), 0 0 0 1px rgba(6, 182, 212, 0.15);
@@ -2868,10 +2860,13 @@ body.lesson-focus-mode::before {
   position: absolute; inset: -20px;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent 60%);
   z-index: -1;
-  animation: glow-pulse 3s ease-in-out infinite;
+  animation: icon-glow-pulse 3s ease-in-out infinite;
 }
 
-@keyframes glow-pulse {
+/* Rename duplicate glow-pulse keyframe — keyframe dưới đây chỉ dùng cho .icon-glow
+   (chỉ có scale, không có translate). Keyframe `glow-pulse` (line ~1134) giữ nguyên
+   cho .truck-big-wrap (cần translate(-50%, -50%) để center). */
+@keyframes icon-glow-pulse {
   0%, 100% { opacity: 0.5; transform: scale(1); }
   50%      { opacity: 0.8; transform: scale(1.1); }
 }
@@ -4080,10 +4075,9 @@ body.lesson-focus-mode::before {
 
 /* ── Status bar ───────────────────────────────────────────────── */
 .drag-status-bar {
-  background: var(--ide-glass);
+  background: var(--ide-surface);
   border-radius: var(--radius);
   padding: 10px 14px;
-  backdrop-filter: blur(20px);
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -4422,7 +4416,6 @@ body.lesson-focus-mode::before {
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.18), transparent 70%);
-  backdrop-filter: blur(4px);
   z-index: 10;
   border-radius: var(--radius-lg);
   animation: overlay-fade-in 0.4s ease;
@@ -4500,11 +4493,9 @@ body.lesson-focus-mode::before {
 }
 
 .te-pane {
-  background: var(--ide-glass);
+  background: var(--ide-surface);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  overflow: hidden;
+  padding: 16px;
   position: relative;
   min-width: 0;
 }
@@ -5441,7 +5432,7 @@ body.lesson-focus-mode::before {
 .concept-card-title { color: var(--text-100); font-weight: 600; font-size: 14px; flex: 1; }
 .concept-card-body { color: var(--text-300); font-size: 13px; line-height: 1.6; }
 
-/* ── R4-A: Success modal — lesson tag ──────────────────────────── */
+/* ── Success modal — lesson tag ─────────────────────────────────── */
 .success-lesson-tag {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   margin: 4px auto 12px; padding: 6px 14px;
@@ -5768,7 +5759,7 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── H. Step transition fade (R3-E3) ───────────────────────────── */
+/* ── H. Step transition fade ────────────────────────────────────── */
 .step-pane.step-fade-out { opacity: 0; transition: opacity 0.15s ease; }
 .step-pane.step-fade-in  { animation: stepFadeIn 0.35s ease-out; }
 @keyframes stepFadeIn {
@@ -5779,6 +5770,24 @@ body.lesson-focus-mode::before {
   0%   { opacity: 0; transform: translateX(20px); }
   100% { opacity: 1; transform: translateX(0); }
 }
+@keyframes pe-toast-out {
+  0%   { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(20px); }
+}
+
+/* Toast notification (Sonner-style) — CSS class thay inline cssText */
+.pe-toast {
+  position: fixed; top: 20px; right: 20px; z-index: 10001;
+  color: #fff; padding: 12px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: pe-toast-in var(--anim-fast) var(--anim-ease);
+}
+.pe-toast--success { background: rgba(16, 185, 129, 0.95); }
+.pe-toast--error   { background: rgba(239, 68, 68, 0.95); }
+.pe-toast--info    { background: rgba(6, 182, 212, 0.95); }
+.pe-toast--warning { background: rgba(245, 158, 11, 0.95); }
+.pe-toast--leaving { animation: pe-toast-out var(--anim-normal) var(--anim-ease) forwards; }
 
 /* ── G. Accessibility — :focus-visible rings ─────────────────────── */
 /* Chỉ hiện outline khi dùng bàn phím (Tab), không hiện khi click chuột */
@@ -5802,22 +5811,5 @@ a:focus:not(:focus-visible) {
   outline: none;
 }
 
-/* ── F. Sonner-style success toast (overlay top-right) ─────────── */
-.toast-premium {
-  position: fixed; top: 20px; right: 20px;
-  z-index: 10000;
-  background: linear-gradient(180deg, rgba(16,185,129,0.95), rgba(5,150,105,0.95));
-  color: white; padding: 14px 20px;
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(16,185,129,0.4);
-  display: flex; align-items: center; gap: 10px;
-  font-weight: 600; font-size: 14px;
-  animation: toast-slide 0.3s ease-out;
-  max-width: 360px;
-}
-.toast-premium .toast-icon { font-size: 20px; }
-.toast-premium .toast-xp { background: rgba(0,0,0,0.25); padding: 2px 8px; border-radius: 6px; font-size: 12px; }
-@keyframes toast-slide {
-  0% { transform: translateX(100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
+/* Removed .toast-premium rule + @keyframes toast-slide (không có JS nào tạo element này;
+   showToast dùng .pe-toast class thay thế — xem CSS class ở đầu file) */

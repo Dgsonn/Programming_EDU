@@ -101,8 +101,7 @@
       return;
     }
 
-    // R4-A: URL param ?lesson=N là 1-BASED (số bài hiển thị cho user)
-    // Tương thích ngược: ?lesson_idx=N vẫn 0-based nếu backend dùng
+    // URL param ?lesson=N là 1-based (cho user), ?lesson_idx=N là 0-based (cho backend)
     const params = new URLSearchParams(window.location.search);
     let idx;
     if (params.has('lesson_idx')) {
@@ -118,7 +117,7 @@
       document.documentElement.style.setProperty('--primary', data.accent_color);
     }
 
-    // R5-T2.1: Set module accent color (Amber/Indigo/Emerald) per module
+    // Set module accent color (Amber/Indigo/Emerald) dựa trên module number
     // Module 1 (B1-B6)  ER Mapping     → Amber  #F59E0B
     // Module 2 (B7-B13) Normalization → Indigo #8B5CF6
     // Module 3 (B14-18) App Design    → Emerald #10B981
@@ -132,6 +131,18 @@
     document.documentElement.style.setProperty('--module-accent', mc.accent);
     document.documentElement.style.setProperty('--module-accent-soft', mc.accent + mc.softAlpha);
     document.documentElement.style.setProperty('--module-accent-glow', mc.accent + mc.glowAlpha);
+
+    // Sticky progress bar — glassmorphism khi scroll qua header
+    // (toggle .is-scrolled class trên .lesson-header khi sentinel trên đầu ra khỏi viewport)
+    const headerEl = document.querySelector('.lesson-header');
+    if (headerEl) {
+      const sentinel = document.createElement('div');
+      sentinel.style.cssText = 'height:1px;width:100%;pointer-events:none;';
+      headerEl.before(sentinel);
+      new IntersectionObserver(([entry]) => {
+        headerEl.classList.toggle('is-scrolled', !entry.isIntersecting);
+      }, { threshold: 0 }).observe(sentinel);
+    }
 
     // Bind Step 4 LeetCode-style tabs
     bindLeetCodeTabs();
@@ -269,9 +280,8 @@
     // Mission
     document.getElementById('mission-text').innerHTML = s1.mission || '';
 
-    // R4-B + R5-T2.3: Map Font Awesome icon name → custom SVG symbol id (22+ mappings)
+    // Map Font Awesome icon name → custom SVG symbol id (35 mappings)
     const ICON_MAP = {
-      // R4-B (16 mappings ban đầu)
       'fa-key':        'i-key',
       'fa-cube':       'i-cube',
       'fa-link':       'i-link',
@@ -289,7 +299,6 @@
       'fa-bug':        'i-bug',
       'fa-table':      'i-database',
       'fa-lightbulb':  'i-zap',
-      // R5-T2.3 (mở rộng — 14 mappings mới)
       'fa-calculator':        'i-zap',
       'fa-object-group':      'i-stack',
       'fa-table-list':        'i-table',
@@ -1407,7 +1416,7 @@
       .find(p => p.dataset.token === token);
     if (!pill) return;
 
-    /* R4-D: Validate type + keyword.
+    /* Validate block type + keyword trước khi cho vào zone
        - zone.accepts (cũ): nhóm lớn ('kw', 'col', 'tbl', ...)
        - zone.acceptedKeywords (mới): keyword CỤ THỂ được chấp nhận, vd select-line chỉ nhận 'SELECT'
        → pill không match → bounce back với message rõ ràng */
@@ -1813,7 +1822,7 @@
   /* ── Challenge type: full_ide (CodeMirror) ─────────────────────── */
   function initChallengeFullIDE(s4, pane) {
     pane.innerHTML = '<div id="code-editor" style="flex:1;display:flex;flex-direction:column;min-height:0;"></div>';
-    // R3-E4: Auto-save draft — load từ localStorage nếu có
+    // Auto-save draft vào localStorage (load + save)
     const lessonId = state.currentLesson && state.currentLesson.id;
     const draftKey = `pe_draft_${lessonId}`;
     const savedDraft = lessonId ? localStorage.getItem(draftKey) : null;
@@ -1835,13 +1844,13 @@
           state.hintLevel = 0;
           document.getElementById('step4-hint-card').classList.add('hidden');
         }
-        // R3-E4: Debounced auto-save (1s sau khi ngừng gõ)
+        // Debounced auto-save (1s sau khi ngừng gõ)
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
           if (lessonId) localStorage.setItem(draftKey, state.cmEditor.getValue());
         }, 1000);
       });
-      // R3-E4: Hiển thị indicator "đã khôi phục draft"
+      // Toast notification khi khôi phục draft
       if (savedDraft && savedDraft !== (s4.starter || '')) {
         setTimeout(() => {
           if (window.showToast) {
@@ -1985,7 +1994,7 @@
       if (result.correct) {
         flashTerminal('success', `✓ Accepted! (0.04s)\n\n${result.feedback || 'Đáp án đúng 100%.'}\n\n→ ${s4.xp_reward || 50} XP + 10 Gems!`);
         addXP(s4.xp_reward || 50);
-        // R3-E4: Xóa draft khi submit đúng
+        // Xóa draft khi submit đúng
         if (isSubmit && state.currentLesson && state.currentLesson.id) {
           localStorage.removeItem(`pe_draft_${state.currentLesson.id}`);
         }
@@ -2049,29 +2058,18 @@
     term.innerHTML = `<span class="${cls}">${escapeHtml(text)}</span>`;
   }
 
-  // R3-E1/E4: Toast Sonner-style notification (góc trên-phải, auto-dismiss sau 3s)
+  // Toast Sonner-style notification (góc trên-phải, auto-dismiss sau durationMs)
+  // Background + animation đi qua CSS class .pe-toast--{kind} (xem lesson_db_design.css)
   window.showToast = function(kind, message, durationMs = 3000) {
     const existing = document.getElementById('pe-toast');
     if (existing) existing.remove();
     const toast = document.createElement('div');
     toast.id = 'pe-toast';
-    const colors = {
-      success: 'rgba(16,185,129,0.95)',
-      error:   'rgba(239,68,68,0.95)',
-      info:    'rgba(6,182,212,0.95)',
-      warning: 'rgba(245,158,11,0.95)'
-    };
-    toast.style.cssText = `position:fixed;top:20px;right:20px;z-index:10001;
-      background:${colors[kind] || colors.info};color:#fff;padding:12px 18px;
-      border-radius:10px;font-size:13px;font-weight:600;
-      box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:380px;
-      animation:pe-toast-in 0.25s ease-out;`;
+    toast.className = 'pe-toast pe-toast--' + (kind || 'info');
     toast.textContent = message;
     document.body.appendChild(toast);
     setTimeout(() => {
-      toast.style.transition = 'opacity 0.3s, transform 0.3s';
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(20px)';
+      toast.classList.add('pe-toast--leaving');
       setTimeout(() => toast.remove(), 300);
     }, durationMs);
   };
@@ -2237,7 +2235,7 @@
   window.goToStep = function (step) {
     if (step < 1 || step > TOTAL_STEPS) return;
 
-    // R3-E3: Fade transition giữa các step
+    // Fade transition giữa các step
     const currentActive = document.querySelector('.step-pane.active');
     const nextPane = document.querySelector(`.step-pane[data-step="${step}"]`);
     if (currentActive && currentActive !== nextPane) {
@@ -2304,7 +2302,6 @@
     const l = state.currentLesson;
     const s4 = l.step_4;
     const lessonNum = state.currentLessonIdx + 1;
-    // R4-A: Hiển thị tên bài rõ ràng + số bài để user biết đang hoàn thành bài nào
     document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/18`;
     document.getElementById('success-lesson-title').textContent = l.title;
     document.getElementById('success-message').textContent =
@@ -2334,7 +2331,7 @@
     state.xpEarned += amount;
     const el = document.getElementById('xp-current');
     if (!el) return;
-    // R3-E2: Number counter animation (countup từ giá trị cũ → giá trị mới)
+    // Countup animation (ease-out cubic, 600ms)
     const oldVal = parseInt(el.textContent, 10) || 0;
     const newVal = state.xpEarned;
     const duration = 600;
