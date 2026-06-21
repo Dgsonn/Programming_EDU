@@ -383,6 +383,96 @@ body.lesson-focus-mode::before {
 
 .lesson-intro strong, .lesson-example strong { color: var(--text-100); }
 
+/* Theory extended (Step 1) — thêm lý thuyết sâu hơn sau primer */
+.theory-extended {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(139, 92, 246, 0.06));
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+.theory-extended::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary), #8B5CF6);
+}
+.theory-extended-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.theory-extended-content {
+  font-size: 14.5px; color: var(--text-300);
+  line-height: 1.7;
+}
+.theory-extended-content p { margin: 0 0 10px; }
+.theory-extended-content p:last-child { margin-bottom: 0; }
+.theory-extended-content strong { color: var(--text-100); }
+.theory-extended-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  padding: 2px 8px; border-radius: 6px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* Syntax example (Step 1) — 1 ví dụ SQL cụ thể trước MCQ/drag */
+.syntax-example {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(236, 72, 153, 0.06));
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+.syntax-example::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--warning), #EC4899);
+}
+.syntax-example-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--warning);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.syntax-example-code {
+  background: rgba(11, 17, 33, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-100);
+  margin: 10px 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.syntax-example-code .sk-kw { color: var(--primary); font-weight: 700; }
+.syntax-example-code .sk-str { color: #F472B6; }
+.syntax-example-code .sk-comment { color: var(--text-400); font-style: italic; }
+.syntax-example-code .sk-num { color: #FBBF24; }
+.syntax-example-explain {
+  font-size: 14px; color: var(--text-300);
+  line-height: 1.7;
+  margin-top: 10px;
+}
+.syntax-example-explain strong { color: var(--text-100); }
+.syntax-example-explain code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+
 /* Visual DB */
 .visual-db {
   display: grid; grid-template-columns: 1fr 1fr;
@@ -1026,7 +1116,101 @@ body.lesson-focus-mode::before {
     drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))
     drop-shadow(0 0 8px rgba(6, 182, 212, 0.5));
   animation: truck-idle 2.4s ease-in-out infinite;
+  width: 56px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
 }
+
+.pipeline-truck .truck-cab {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.pipeline-truck .truck-wheel {
+  position: absolute;
+  bottom: -2px;
+  width: 10px; height: 10px;
+  background: radial-gradient(circle, #1F2937 35%, #4B5563 38%, #1F2937 42%, #6B7280 60%, #1F2937 65%);
+  border-radius: 50%;
+  border: 1px solid #0F172A;
+  z-index: 3;
+  animation: wheel-spin 0.5s linear infinite;
+}
+.pipeline-truck .truck-wheel::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px; height: 6px;
+  background: #FBBF24;
+  border-radius: 1px;
+}
+.pipeline-truck .truck-wheel-front { right: 4px; }
+.pipeline-truck .truck-wheel-rear  { left: 4px; }
+
+@keyframes wheel-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.pipeline-truck .truck-smoke {
+  position: absolute;
+  bottom: 0;
+  left: -8px;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  z-index: 1;
+}
+.pipeline-truck .truck-smoke span {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: radial-gradient(circle, rgba(148, 163, 184, 0.5), transparent 70%);
+  border-radius: 50%;
+  animation: smoke-puff 1.4s ease-out infinite;
+  opacity: 0;
+}
+.pipeline-truck .truck-smoke span:nth-child(1) { animation-delay: 0s;   left: 0;  bottom: 0; }
+.pipeline-truck .truck-smoke span:nth-child(2) { animation-delay: 0.4s; left: -4px; bottom: 2px; }
+.pipeline-truck .truck-smoke span:nth-child(3) { animation-delay: 0.8s; left: -2px; bottom: -2px; }
+
+@keyframes smoke-puff {
+  0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+  20%  { opacity: 0.6; }
+  100% { transform: translate(-22px, -14px) scale(1.4); opacity: 0; }
+}
+
+.truck-dust {
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.pipeline-sound-toggle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 32px; height: 32px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 50%;
+  color: rgba(226, 232, 240, 0.7);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.pipeline-sound-toggle:hover {
+  border-color: rgba(6, 182, 212, 0.5);
+  color: var(--primary);
+  transform: scale(1.08);
+}
+.pipeline-sound-toggle.muted {
+  color: rgba(239, 68, 68, 0.8);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 
 @keyframes truck-idle {
   0%, 100% { transform: translateY(0) rotate(0); }
@@ -5096,4 +5280,500 @@ body.lesson-focus-mode::before {
 @keyframes decomp-pop {
   0% { transform: translateY(8px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================================================================
+ * PREMIUM DESIGN SYSTEM — shadcn/ui + Brilliant.org inspired
+ * Added: 2026-06-21 (Premium rebuild)
+ *
+ * 4 nhóm mới:
+ *   A. SVG Primer diagrams (ER / before-after / query flow)
+ *   B. Mini-game 4 loại (classify / match / order / bug_spot)
+ *   C. Step 4 schema + starter + hints panel
+ *   D. Concept cards (shadcn Card pattern) + badges
+ * ============================================================================ */
+
+/* ── A.1 SVG Primer wrapper ─────────────────────────────────────── */
+.primer-svg {
+  background: linear-gradient(180deg, rgba(6,182,212,0.04), rgba(6,182,212,0.01));
+  border: 1px solid rgba(6,182,212,0.18);
+  border-radius: 14px;
+  padding: 18px 14px 12px;
+  margin: 18px 0 14px;
+  position: relative;
+  overflow: hidden;
+}
+.primer-svg::before {
+  content: 'HÌNH MINH HỌA';
+  position: absolute; top: 8px; left: 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--primary); opacity: 0.7;
+}
+.primer-svg svg { display: block; margin: 18px auto 0; max-width: 100%; height: auto; }
+
+/* ── A.2 ER Diagram SVG elements ───────────────────────────────── */
+.er-entity-rect {
+  fill: var(--ide-surface-2);
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  rx: 8; ry: 8;
+}
+.er-entity-rect.weak { stroke-dasharray: 4 3; stroke: var(--warning); }
+.er-entity-title {
+  fill: var(--text-100);
+  font: 600 13px 'Inter', system-ui, sans-serif;
+  text-anchor: middle;
+}
+.er-col {
+  fill: var(--text-300);
+  font: 400 11px 'JetBrains Mono', 'Fira Code', monospace;
+  text-anchor: start;
+}
+.er-col.pk { fill: var(--primary); font-weight: 700; }
+.er-col.derived { fill: var(--warning); font-style: italic; }
+.er-pk-icon { fill: var(--primary); }
+.er-connector { stroke: var(--text-500); stroke-width: 1.4; fill: none; }
+.er-connector-label {
+  fill: var(--text-400);
+  font: italic 10px 'Inter', system-ui, sans-serif;
+  text-anchor: middle;
+}
+.er-cardinality {
+  fill: var(--text-300);
+  font: 700 11px 'JetBrains Mono', monospace;
+  text-anchor: middle;
+}
+
+/* ── A.3 Normalization before/after ────────────────────────────── */
+.nf-pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; }
+.nf-side { padding: 10px 12px; background: rgba(15,23,42,0.55); border-radius: 10px; }
+.nf-side.before { border: 1px solid rgba(239,68,68,0.35); }
+.nf-side.after  { border: 1px solid rgba(16,185,129,0.35); }
+.nf-side-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 6px; }
+.nf-side.before .nf-side-label { color: var(--danger); }
+.nf-side.after  .nf-side-label { color: var(--success); }
+.nf-arrow {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--primary-soft);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--primary);
+}
+.nf-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.nf-table th, .nf-table td {
+  border: 1px solid rgba(148,163,184,0.2);
+  padding: 4px 6px; text-align: left;
+}
+.nf-table th { background: rgba(6,182,212,0.08); color: var(--text-100); font-weight: 600; }
+.nf-table td.violation { background: rgba(239,68,68,0.18); color: var(--danger); font-weight: 600; }
+.nf-table td.fixed { background: rgba(16,185,129,0.18); color: var(--success); font-weight: 600; }
+
+/* ── A.4 Query Flow (Module 3) ─────────────────────────────────── */
+.qf-flow { display: flex; flex-direction: column; gap: 8px; }
+.qf-step {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(21,30,50,0.7), rgba(15,23,42,0.5));
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 10px;
+}
+.qf-step-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary-soft); color: var(--primary);
+  font-size: 14px;
+}
+.qf-step-label { flex: 1; }
+.qf-step-label strong { color: var(--text-100); font-size: 13px; display: block; }
+.qf-step-label span { color: var(--text-400); font-size: 11px; }
+.qf-arrow-down {
+  width: 2px; height: 14px; margin: 0 auto;
+  background: linear-gradient(180deg, var(--primary), transparent);
+  position: relative;
+}
+.qf-arrow-down::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--primary);
+}
+.qf-payload {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(6,182,212,0.12);
+  border: 1px solid rgba(6,182,212,0.3);
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--primary);
+}
+
+/* ── B.1 Concept Card (shadcn-inspired) ─────────────────────────── */
+.concept-card {
+  background: linear-gradient(180deg, rgba(21,30,50,0.6), rgba(15,23,42,0.4));
+  border: 1px solid rgba(148,163,184,0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 10px 0;
+}
+.concept-card-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.concept-card-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary-soft); color: var(--primary);
+  font-size: 13px;
+}
+.concept-card-title { color: var(--text-100); font-weight: 600; font-size: 14px; flex: 1; }
+.concept-card-body { color: var(--text-300); font-size: 13px; line-height: 1.6; }
+
+/* ── B.2 Badge (shadcn Badge) ──────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.badge-primary { background: var(--primary-soft); color: var(--primary); }
+.badge-success { background: var(--success-soft); color: var(--success); }
+.badge-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+.badge-danger  { background: var(--danger-soft);  color: var(--danger); }
+.badge-muted   { background: rgba(148,163,184,0.15); color: var(--text-400); }
+
+/* ── C.1 Step 4 schema panel (mở rộng) ─────────────────────────── */
+.step4-schema-card {
+  background: linear-gradient(180deg, rgba(21,30,50,0.7), rgba(15,23,42,0.5));
+  border: 1px solid rgba(148,163,184,0.15);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.step4-schema-card .schema-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-500);
+  margin-bottom: 10px;
+}
+.step4-schema-card .schema-head .table-name { color: var(--primary); }
+.step4-schema-card .schema-head .row-count { color: var(--text-400); margin-left: auto; }
+.step4-schema-card .schema-rows { display: flex; flex-direction: column; gap: 4px; }
+.step4-schema-card .schema-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px;
+  background: rgba(15,23,42,0.5);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+}
+.step4-schema-card .schema-row .col-name { color: var(--text-100); flex: 1; }
+.step4-schema-card .schema-row .col-type { color: var(--text-400); font-size: 11px; }
+.step4-schema-card .schema-row .col-key {
+  background: var(--primary-soft); color: var(--primary);
+  padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;
+}
+.step4-schema-card .data-preview {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px dashed rgba(148,163,184,0.18);
+}
+.step4-schema-card .data-preview .data-table {
+  width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+}
+.step4-schema-card .data-preview .data-table th,
+.step4-schema-card .data-preview .data-table td {
+  padding: 4px 6px; text-align: left;
+  border-bottom: 1px solid rgba(148,163,184,0.1);
+}
+.step4-schema-card .data-preview .data-table th { color: var(--text-500); font-weight: 600; font-size: 10px; }
+.step4-schema-card .data-preview .data-table td.pk-cell { color: var(--primary); }
+
+/* ── C.2 Hint panel (4 levels, progressive reveal) ─────────────── */
+.hint-panel {
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+.hint-panel-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; color: var(--warning);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.hint-panel-body { color: var(--text-300); font-size: 12px; line-height: 1.5; }
+.hint-level-tabs { display: flex; gap: 4px; margin-bottom: 6px; }
+.hint-level-tab {
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 600;
+  background: rgba(148,163,184,0.1);
+  color: var(--text-400);
+  cursor: pointer; border: none;
+  transition: all 0.15s ease;
+}
+.hint-level-tab.active { background: var(--warning); color: #1A1A1A; }
+.hint-level-tab:hover:not(.active) { background: rgba(148,163,184,0.2); }
+
+/* ── D.1 Mini-game Match (nối cặp) ─────────────────────────────── */
+.mg-match-board { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 8px; align-items: center; }
+.mg-match-col { display: flex; flex-direction: column; gap: 8px; }
+.mg-match-item {
+  padding: 8px 12px; border-radius: 8px;
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(148,163,184,0.2);
+  font-size: 12px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mg-match-item:hover { border-color: var(--primary); }
+.mg-match-item.selected { border-color: var(--primary); background: var(--primary-soft); }
+.mg-match-item.matched { background: var(--success-soft); border-color: var(--success); }
+.mg-match-item.wrong { background: var(--danger-soft); border-color: var(--danger); }
+.mg-match-line-col { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px; }
+.mg-match-line {
+  font-size: 22px; color: var(--text-500);
+  transition: all 0.2s ease;
+}
+.mg-match-line.matched { color: var(--success); }
+.mg-match-feedback {
+  margin-top: 10px; padding: 8px 12px;
+  background: var(--success-soft); color: var(--success);
+  border-radius: 8px; font-size: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.mg-match-feedback.wrong { background: var(--danger-soft); color: var(--danger); }
+
+/* ── D.2 Mini-game Order (kéo thả sắp xếp) ────────────────────── */
+.mg-order-list {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 10px;
+}
+.mg-order-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(148,163,184,0.2);
+  border-radius: 8px;
+  cursor: grab; user-select: none;
+  font-size: 13px;
+}
+.mg-order-item:active { cursor: grabbing; }
+.mg-order-item.dragging { opacity: 0.4; }
+.mg-order-item.drag-over { border-color: var(--primary); background: var(--primary-soft); }
+.mg-order-item.correct { background: var(--success-soft); border-color: var(--success); }
+.mg-order-item.wrong { background: var(--danger-soft); border-color: var(--danger); }
+.mg-order-num {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: var(--primary-soft); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px;
+}
+.mg-order-item.correct .mg-order-num { background: var(--success); color: white; }
+.mg-order-item.wrong .mg-order-num { background: var(--danger); color: white; }
+.mg-order-grip { color: var(--text-500); font-size: 14px; }
+.mg-order-label { flex: 1; color: var(--text-200); }
+.mg-order-btn {
+  margin-top: 10px; padding: 8px 16px;
+  background: var(--primary); color: #0B1121;
+  border: none; border-radius: 8px;
+  font-weight: 700; font-size: 12px; cursor: pointer;
+}
+.mg-order-btn:hover { background: #22D3EE; }
+.mg-order-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── D.3 Mini-game Bug Spot (tìm lỗi trong code) ───────────────── */
+.mg-bugspot {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.mg-bugspot-code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px; line-height: 1.7;
+  background: rgba(11,17,33,0.9);
+  border: 1px solid rgba(148,163,184,0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  white-space: pre;
+  overflow-x: auto;
+}
+.mg-bugspot-line {
+  display: flex; gap: 8px;
+  cursor: pointer; padding: 1px 6px; border-radius: 4px;
+  transition: all 0.15s ease;
+}
+.mg-bugspot-line:hover { background: rgba(6,182,212,0.08); }
+.mg-bugspot-line.selected { background: var(--warning); color: #1A1A1A; }
+.mg-bugspot-line.correct { background: var(--success-soft); color: var(--success); }
+.mg-bugspot-line.wrong { background: var(--danger-soft); color: var(--danger); }
+.mg-bugspot-lineno {
+  color: var(--text-500); min-width: 22px; text-align: right;
+  user-select: none;
+}
+.mg-bugspot-instr {
+  font-size: 12px; color: var(--text-300); padding: 8px 12px;
+  background: rgba(245,158,11,0.08);
+  border-left: 3px solid var(--warning);
+  border-radius: 0 6px 6px 0;
+}
+.mg-bugspot-actions { display: flex; gap: 8px; align-items: center; }
+.mg-bugspot-btn {
+  padding: 6px 14px; background: var(--primary); color: #0B1121;
+  border: none; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;
+}
+.mg-bugspot-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.mg-bugspot-btn.secondary { background: rgba(148,163,184,0.2); color: var(--text-200); }
+
+/* ── D.4 Mini-game Classify (cải tiến) ─────────────────────────── */
+.mini-game {
+  background: linear-gradient(180deg, rgba(21,30,50,0.5), rgba(15,23,42,0.3));
+  border: 1px solid rgba(148,163,184,0.12);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 18px;
+}
+.mini-game-title {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-100); font-weight: 700; font-size: 14px;
+  margin-bottom: 6px;
+}
+.mini-game-instr { color: var(--text-300); font-size: 12px; line-height: 1.5; margin-bottom: 14px; }
+.mini-game-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; padding: 8px 4px; }
+.mini-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px;
+  background: var(--primary-soft); color: var(--primary);
+  font-size: 12px; cursor: grab; user-select: none;
+  border: 1px solid rgba(6,182,212,0.3);
+  transition: all 0.15s ease;
+}
+.mini-chip:hover { background: rgba(6,182,212,0.18); }
+.mini-chip.dragging { opacity: 0.4; }
+.mini-chip.placed { opacity: 0.55; }
+.mini-chip.correct { background: var(--success-soft); color: var(--success); border-color: var(--success); }
+.mini-chip.wrong { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.mini-game-bins { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.mini-bin {
+  flex: 1; min-width: 160px;
+  background: rgba(15,23,42,0.5);
+  border: 1.5px dashed rgba(148,163,184,0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 80px;
+  transition: all 0.15s ease;
+}
+.mini-bin.drag-over { border-style: solid; border-color: var(--primary); background: var(--primary-soft); }
+.mini-bin-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--text-200);
+  margin-bottom: 6px;
+}
+.mini-bin-label .bin-icon { font-size: 11px; }
+.mini-bin-chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; }
+
+/* ── E. Animation: pulse cho concept card khi vừa mount ────────── */
+@keyframes concept-pop {
+  0% { transform: translateY(6px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.concept-card { animation: concept-pop 0.3s ease-out; }
+
+/* ── E.1 Phần 8: Animation cho SVG primer + concept cards ──────── */
+@keyframes svg-fade-in {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.primer-svg { animation: svg-fade-in 0.5s ease-out; }
+.primer-svg svg { animation: svg-fade-in 0.5s ease-out; }
+
+@keyframes entity-stagger {
+  0% { opacity: 0; transform: translateX(-10px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.er-entity-rect, .nf-side { animation: entity-stagger 0.4s ease-out backwards; }
+.er-entity-rect:nth-child(1), .nf-side.before { animation-delay: 0.1s; }
+.er-entity-rect:nth-child(2), .nf-side.after { animation-delay: 0.25s; }
+.er-entity-rect:nth-child(3) { animation-delay: 0.4s; }
+.er-entity-rect:nth-child(4) { animation-delay: 0.55s; }
+
+@keyframes connector-draw {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: 0; }
+}
+.er-connector { stroke-dasharray: 200; animation: connector-draw 0.8s ease-out 0.3s backwards; }
+
+@keyframes flow-step-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.qf-step { animation: flow-step-up 0.35s ease-out backwards; }
+.qf-step:nth-child(1) { animation-delay: 0.1s; }
+.qf-step:nth-child(2) { animation-delay: 0.2s; }
+.qf-step:nth-child(3) { animation-delay: 0.3s; }
+.qf-step:nth-child(4) { animation-delay: 0.4s; }
+.qf-step:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes nf-arrow-bounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+.nf-arrow i { animation: nf-arrow-bounce 1.5s ease-in-out infinite; }
+
+@keyframes glow-pulse-primary {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(6, 182, 212, 0); }
+}
+.concept-card-icon { animation: glow-pulse-primary 2s ease-in-out infinite; }
+
+/* ── E.2 Hover effect cho các elements ─────────────────────── */
+.concept-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.concept-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15); }
+
+.er-entity-rect { transition: filter 0.2s ease; }
+.er-entity-rect:hover { filter: brightness(1.15); cursor: pointer; }
+
+.qf-step { transition: transform 0.2s ease; }
+.qf-step:hover { transform: translateX(4px); }
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .primer-svg, .primer-svg svg, .er-entity-rect, .nf-side, .er-connector, .qf-step, .concept-card-icon, .nf-arrow i {
+    animation: none !important;
+  }
+}
+
+/* ── G. Accessibility — :focus-visible rings ─────────────────────── */
+/* Chỉ hiện outline khi dùng bàn phím (Tab), không hiện khi click chuột */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+.lc-tab:focus-visible,
+.run-btn:focus-visible,
+.next-btn:focus-visible,
+.mcq-option:focus-visible,
+.mcq-code-option:focus-visible {
+  outline: 2px solid var(--primary, #06b6d4);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25);
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── F. Sonner-style success toast (overlay top-right) ─────────── */
+.toast-premium {
+  position: fixed; top: 20px; right: 20px;
+  z-index: 10000;
+  background: linear-gradient(180deg, rgba(16,185,129,0.95), rgba(5,150,105,0.95));
+  color: white; padding: 14px 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 600; font-size: 14px;
+  animation: toast-slide 0.3s ease-out;
+  max-width: 360px;
+}
+.toast-premium .toast-icon { font-size: 20px; }
+.toast-premium .toast-xp { background: rgba(0,0,0,0.25); padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+@keyframes toast-slide {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
 }

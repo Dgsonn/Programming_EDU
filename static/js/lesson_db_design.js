@@ -169,6 +169,28 @@
     document.getElementById('lesson-intro').innerHTML = s1.primer.intro || '';
     document.getElementById('lesson-example').innerHTML = s1.primer.example || '';
 
+    // Theory extended (optional field — only show when present in data)
+    const theoryEl = document.getElementById('theory-extended');
+    const theoryContentEl = document.getElementById('theory-extended-content');
+    if (s1.theory_extended && theoryEl && theoryContentEl) {
+      theoryContentEl.innerHTML = s1.theory_extended;
+      theoryEl.hidden = false;
+    } else if (theoryEl) {
+      theoryEl.hidden = true;
+    }
+
+    // Syntax example (optional field — only show when present in data)
+    const syntaxEl = document.getElementById('syntax-example');
+    const syntaxCodeEl = document.getElementById('syntax-example-code');
+    const syntaxExplainEl = document.getElementById('syntax-example-explain');
+    if (s1.syntax_example && syntaxEl && syntaxCodeEl && syntaxExplainEl) {
+      syntaxCodeEl.innerHTML = highlightSimpleSQL(s1.syntax_example.code || '');
+      syntaxExplainEl.innerHTML = s1.syntax_example.explain || '';
+      syntaxEl.hidden = false;
+    } else if (syntaxEl) {
+      syntaxEl.hidden = true;
+    }
+
     // Visual DB — Interactive Table Explorer (3D schema + linked data table)
     if (window.TableExplorer && s1.visual && s1.visual.schema) {
       window.TableExplorer.mount('#visual-db-panel', {
@@ -179,6 +201,21 @@
       // Fallback to plain tables (only if visual is provided)
       renderSchemaTable(s1.visual.schema);
       renderDataTable(s1.visual.data_preview, s1.visual.schema);
+    }
+
+    // ── SVG Primer diagram (Premium — opt-in, không phá fallback) ──
+    if (s1.visual && s1.visual.svg) {
+      const svgMount = document.getElementById('primer-svg-mount');
+      if (svgMount) {
+        renderSVGPrimer(svgMount, s1.visual);
+      }
+    } else if (s1.visual && s1.visual.diagram) {
+      // Diagram-as-data: {type: 'er'|'nf'|'flow', ...}
+      const svgMount = document.getElementById('primer-svg-mount');
+      if (svgMount) renderDiagramFromData(svgMount, s1.visual.diagram);
+    } else {
+      const svgMount = document.getElementById('primer-svg-mount');
+      if (svgMount) svgMount.innerHTML = '';
     }
     // If neither, the panel will be hidden by the decomp-game block below
 
@@ -210,6 +247,24 @@
 
     // Mission
     document.getElementById('mission-text').innerHTML = s1.mission || '';
+
+    // Premium concept cards (shadcn Card-inspired) — opt-in
+    const conceptMount = document.getElementById('concept-cards-mount');
+    if (conceptMount) {
+      if (s1.concept_cards && s1.concept_cards.length) {
+        conceptMount.innerHTML = s1.concept_cards.map(c => `
+          <div class="concept-card">
+            <div class="concept-card-head">
+              <div class="concept-card-icon"><i class="fa-solid ${escapeHtml(c.icon || 'fa-lightbulb')}"></i></div>
+              <div class="concept-card-title">${c.title || ''}</div>
+            </div>
+            <div class="concept-card-body">${c.body || ''}</div>
+          </div>
+        `).join('');
+      } else {
+        conceptMount.innerHTML = '';
+      }
+    }
   }
 
   function renderSchemaTable(schema) {
@@ -380,6 +435,9 @@
   function isMiniGameSolved() {
     const mg = state.currentLesson.step_2 && state.currentLesson.step_2.mini_game;
     if (!mg) return true; // no mini-game → "solved" trivially
+    // Premium: dùng cờ chung (match/order/bug_spot set khi solve)
+    if (state.miniGameSolved === true) return true;
+    // Classify (cũ): check placements
     const sol = mg.solution || {};
     const placements = state.miniGamePlacements;
     for (const chipId in sol) {
@@ -395,6 +453,11 @@
       wrap.hidden = true;
       return;
     }
+    // Premium dispatch: nếu có type, route sang renderer tương ứng
+    if (mg.type === 'match') return renderMiniGameMatch(wrap, mg);
+    if (mg.type === 'order') return renderMiniGameOrder(wrap, mg);
+    if (mg.type === 'bug_spot') return renderMiniGameBugSpot(wrap, mg);
+    // Mặc định: classify (backward compat — cũ không có type)
     wrap.hidden = false;
     state.miniGamePlacements = {};
     state.miniGameLocked = false;
@@ -673,11 +736,17 @@
     const s3 = l.step_3;
 
     if (!s3) {
-      document.querySelector('#step-3 .split-pane').innerHTML = `
+      document.querySelector('section[data-step="3"] .split-pane').innerHTML = `
         <div style="padding:40px;color:var(--text-400);text-align:center;width:100%;">
           Nội dung kéo thả đang cập nhật.
         </div>
       `;
+      return;
+    }
+
+    // Branch: flagship mechanic nếu có step_3.flagship
+    if (s3.flagship) {
+      renderFlagshipStep3(s3.flagship);
       return;
     }
 
@@ -692,6 +761,7 @@
     state.step3Blocks = {};   // zoneId -> array of {token, type}
     state.step3Placed = new Set();
     state.step3History = [];
+    state.step3XPAwarded = false;  // A4: reset XP guard cho Step 3 completion mới
     updateUndoButton();
 
     // Build Truck Grid map (big, in bottom of left pane, always visible)
@@ -707,6 +777,155 @@
     if (rightPane) rightPane.scrollTop = 0;
 
     updateIDEFromBlocks();
+  }
+
+  /* ── Flagship Step 3 mechanics (6 bài đặc biệt) ─────────────────────── */
+  function renderFlagshipStep3(f) {
+    const splitPane = document.querySelector('section[data-step="3"] .split-pane');
+    const instruction = `<div class="flagship-banner" style="background:linear-gradient(135deg,#06b6d4,#a855f7);padding:14px 18px;border-radius:10px;color:#fff;margin-bottom:16px;line-height:1.6;">
+      <div style="font-size:12px;letter-spacing:1.5px;opacity:0.85;margin-bottom:4px;">🏆 FLAGSHIP MECHANIC</div>
+      <div style="font-size:14px;font-weight:500;">${f.instruction || ''}</div>
+    </div>`;
+
+    // A2 fix: dispatcher pattern + auto-init DnD theo type
+    if (f.type === 'match_game') {
+      splitPane.innerHTML = instruction + renderFlagshipMatch(f);
+      setTimeout(() => initFlagshipMatchDnD(), 100);
+    } else if (f.type === 'split_game') {
+      splitPane.innerHTML = instruction + renderFlagshipSplit(f);
+      setTimeout(() => initFlagshipSplitDnD(), 100);
+    } else if (f.type === 'bug_spot') {
+      splitPane.innerHTML = instruction + renderFlagshipBugSpot(f);
+      setTimeout(() => initFlagshipBugSpotDnD(), 100);
+    } else if (f.type === 'join_builder') {
+      splitPane.innerHTML = instruction + renderFlagshipJoin(f);
+      setTimeout(() => initFlagshipJoinDnD(), 100);
+    } else {
+      splitPane.innerHTML = instruction + '<div>Mechanic chưa hỗ trợ.</div>';
+    }
+  }
+
+  /* ── Match Game (Bài 6 — Mapping ER) ────────────────────────────────── */
+  function renderFlagshipMatch(f) {
+    const sortedCards = [...f.cards].sort(() => Math.random() - 0.5);
+    return `
+      <div class="match-game" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;">
+        ${sortedCards.map(c => `
+          <div class="match-slot" data-slot-order="${c.order}" data-card-id="${c.id}"
+               style="background:rgba(6,182,212,0.08);border:2px dashed var(--primary);border-radius:8px;padding:14px 8px;text-align:center;min-height:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:11px;color:var(--text-400);margin-bottom:6px;">Bước ${c.order}</div>
+            <div class="match-card-text" style="font-size:12px;line-height:1.4;">${c.text}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="match-bank" style="margin-top:18px;padding:14px;background:rgba(168,85,247,0.06);border:2px solid #a855f7;border-radius:8px;display:flex;flex-wrap:wrap;gap:8px;">
+        ${sortedCards.map(c => `
+          <div class="match-card" data-card-id="${c.id}" draggable="true"
+               style="background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;padding:10px 12px;border-radius:6px;cursor:grab;font-size:12px;line-height:1.4;user-select:none;">
+            ${c.text}
+          </div>
+        `).join('')}
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-primary" onclick="checkFlagshipMatch()">Kiểm tra</button>
+        <button class="btn-secondary" onclick="resetFlagshipMatch()">Reset</button>
+        <div id="flagship-match-result" style="margin-left:auto;font-weight:600;"></div>
+      </div>
+    `;
+  }
+
+  /* ── Split Game (Bài 9, 12 — 2NF, 4NF) ─────────────────────────────── */
+  function renderFlagshipSplit(f) {
+    return `
+      <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:18px;margin-top:12px;">
+        <div class="split-source" style="background:rgba(239,68,68,0.06);border:2px solid #ef4444;border-radius:8px;padding:14px;">
+          <div style="font-size:12px;font-weight:600;color:#ef4444;margin-bottom:10px;">📦 BẢNG NGUỒN: ${f.source.name}</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+            ${f.source.columns.map(c => `
+              <div class="split-col" data-col-name="${c.name}" draggable="true"
+                   style="background:#1f2937;border:1px solid #ef4444;border-radius:6px;padding:8px 10px;cursor:grab;font-size:12px;">
+                ${c.icon} ${c.name}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${f.targets.map(t => `
+            <div class="split-target" data-target-name="${t.name}"
+                 style="background:rgba(34,197,94,0.06);border:2px dashed #22c55e;border-radius:8px;padding:14px;min-height:80px;">
+              <div style="font-size:12px;font-weight:600;color:#22c55e;margin-bottom:4px;">${t.icon} BẢNG ĐÍCH: ${t.name}</div>
+              <div style="font-size:11px;color:var(--text-400);margin-bottom:10px;">${t.description}</div>
+              <div class="split-target-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-primary" onclick="checkFlagshipSplit()">Kiểm tra</button>
+        <button class="btn-secondary" onclick="resetFlagshipSplit()">Reset</button>
+        <button class="btn-secondary" onclick="showFlagshipSplitHint()">💡 Gợi ý</button>
+        <div id="flagship-split-result" style="margin-left:auto;font-weight:600;"></div>
+      </div>
+    `;
+  }
+
+  /* ── Bug Spot (Bài 17, 18 — SQLi, Password) ────────────────────────── */
+  function renderFlagshipBugSpot(f) {
+    return `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px;">
+        <div class="bug-bank" style="display:flex;flex-direction:column;gap:8px;">
+          ${f.chips.map(c => `
+            <div class="bug-chip" data-chip-id="${c.id}" draggable="true"
+                 style="background:rgba(168,85,247,0.08);border:2px solid #a855f7;border-radius:8px;padding:12px;cursor:grab;font-size:13px;line-height:1.5;font-family:'JetBrains Mono',monospace;">
+              ${c.label}
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          ${f.bins.map(b => `
+            <div class="bug-bin" data-bin-id="${b.id}"
+                 style="background:rgba(34,197,94,${b.id === 'safe' ? '0.06' : '0.06'});border:2px dashed ${b.id === 'safe' ? '#22c55e' : '#ef4444'};border-radius:8px;padding:14px;min-height:120px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:${b.id === 'safe' ? '#22c55e' : '#ef4444'};">${b.label}</div>
+              <div class="bug-bin-chips" data-bin-chips style="display:flex;flex-direction:column;gap:6px;min-height:40px;"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-primary" onclick="checkFlagshipBugSpot()">Kiểm tra</button>
+        <button class="btn-secondary" onclick="resetFlagshipBugSpot()">Reset</button>
+        <button class="btn-secondary" onclick="showFlagshipBugSpotHint()">💡 Gợi ý</button>
+        <div id="flagship-bugspot-result" style="margin-left:auto;font-weight:600;"></div>
+      </div>
+    `;
+  }
+
+  /* ── Join Builder (Bài 13 — Boss Battle 4-table JOIN) ─────────────── */
+  function renderFlagshipJoin(f) {
+    return `
+      <div style="background:rgba(6,182,212,0.04);border:1px solid rgba(6,182,212,0.2);border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.6;">
+        <strong style="color:var(--primary);">📊 Schema:</strong>
+        <code class="code">gamer(g_id PK, nickname)</code> ·
+        <code class="code">inventory_bridge(g_id, game_id, purchase_date) PK composite</code> ·
+        <code class="code">game(game_id PK, title, st_id)</code> ·
+        <code class="code">studio(st_id PK, st_name)</code>
+      </div>
+      <div class="join-blocks" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;padding:10px;background:rgba(168,85,247,0.05);border-radius:6px;">
+        ${[...f.blocks].sort(() => Math.random() - 0.5).map((b, i) => `
+          <span class="join-block" data-block-idx="${i}" draggable="true"
+                style="background:linear-gradient(135deg,#1f2937,#374151);color:#fff;padding:6px 10px;border-radius:5px;cursor:grab;font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid rgba(255,255,255,0.1);">${b.token}</span>
+        `).join('')}
+      </div>
+      <div class="join-target" id="join-target"
+           style="background:#0a0e1a;border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:18px;min-height:140px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2;color:#cbd5e1;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start;">
+        <span style="color:var(--text-400);font-size:12px;">↓ Kéo các thẻ SQL vào đây theo đúng thứ tự...</span>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;">
+        <button class="btn-primary" onclick="checkFlagshipJoin()">Kiểm tra</button>
+        <button class="btn-secondary" onclick="resetFlagshipJoin()">Reset</button>
+        <div id="flagship-join-result" style="margin-left:auto;font-weight:600;"></div>
+      </div>
+    `;
   }
 
   function renderDropZones(s3) {
@@ -1349,7 +1568,11 @@
         hintEl.parentElement.style.background = 'rgba(16, 185, 129, 0.08)';
         hintEl.parentElement.style.borderTopColor = 'rgba(16, 185, 129, 0.25)';
         hintEl.parentElement.style.color = 'var(--success)';
-        addXP(30);
+        // Guard A4: chỉ cộng XP Step 3 đúng 1 lần mỗi completion
+        if (!state.step3XPAwarded) {
+          state.step3XPAwarded = true;
+          addXP(30);
+        }
       } else {
         hintEl.innerHTML = '⚠️ Cú pháp gần đúng nhưng chưa khớp. Kiểm tra lại thứ tự hoặc dấu phẩy giữa các cột.';
         hintEl.parentElement.style.background = 'rgba(245, 158, 11, 0.08)';
@@ -1378,6 +1601,23 @@
       if (/^[=<>!+\-*/]/.test(t)) return `<span class="t-operator">${escapeHtml(t)}</span>`;
       return escapeHtml(t);
     }).join('');
+  }
+
+  /* Simple SQL highlighter for static syntax example display (Step 1).
+     Lighter than highlightSQL — only colors keywords, strings, numbers, comments. */
+  function highlightSimpleSQL(code) {
+    if (!code) return '';
+    let html = escapeHtml(code);
+    // Comments first (-- and #) so they don't get touched by keyword regex
+    html = html.replace(/(--[^\n]*)/g, '<span class="sk-comment">$1</span>');
+    // Keywords (case-insensitive, word boundary)
+    const kwRe = new RegExp('\\b(' + SYNTAX_KEYWORDS.join('|') + ')\\b', 'gi');
+    html = html.replace(kwRe, '<span class="sk-kw">$1</span>');
+    // String literals
+    html = html.replace(/('[^']*')/g, '<span class="sk-str">$1</span>');
+    // Numbers (skip those already inside a span)
+    html = html.replace(/(?<![>])\b(\d+\.?\d*)\b(?![<])/g, '<span class="sk-num">$1</span>');
+    return html;
   }
 
   function escapeHtml(s) {
@@ -1414,6 +1654,20 @@
     // Schema (left side) — common across all types
     renderStep4Schema(s4);
 
+    // Premium enhanced: nếu có s4.schema thì render với CSS mới (ghi đè fallback)
+    const schemaMount = document.getElementById('step4-schema');
+    if (schemaMount && s4.schema && s4.schema.table_name) {
+      enhanceStep4Schema(schemaMount, s4);
+    }
+
+    // Premium: hint panel với 4 levels (progressive)
+    const hintMount = document.getElementById('step4-hint-mount');
+    if (hintMount && s4.hints && s4.hints.length) {
+      enhanceHintPanel(hintMount, s4);
+    } else if (hintMount) {
+      hintMount.innerHTML = '';
+    }
+
     // Hide ALL challenge panes first
     document.querySelectorAll('.challenge-pane').forEach(p => { p.hidden = true; });
 
@@ -1434,6 +1688,12 @@
 
   function renderStep4Schema(s4) {
     const schemaEl = document.getElementById('step4-schema');
+    if (!schemaEl) return;
+    // Guard: data có thể thiếu schema (vd: bài mcq_code không cần schema panel)
+    if (!s4 || !s4.schema || !s4.schema.table_name) {
+      schemaEl.innerHTML = '<div style="font-size:12px;color:var(--text-400);font-style:italic;padding:12px;">Không có schema cho bài này.</div>';
+      return;
+    }
     schemaEl.innerHTML = `
       <div style="font-size:11px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">
         <i class="fa-solid fa-table"></i> ${s4.schema.table_name}
@@ -1890,10 +2150,6 @@
     window.location.href = `mailto:support@programming-edu.com?subject=${subject}`;
   };
 
-  window.runCode = runCode;
-
-  window.showNextHint = showNextHint;
-
   /* ═══════════════════════════════════════════════════════════════
    * Success modal
    * ═══════════════════════════════════════════════════════════════ */
@@ -1929,4 +2185,804 @@
     el.parentElement.style.transform = 'scale(1.15)';
     setTimeout(() => { el.parentElement.style.transform = 'scale(1)'; }, 200);
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+   * FLAGSHIP STEP 3 HANDLERS — INSIDE IIFE (A1+A3 fix)
+   * Was outside IIFE before → ReferenceError khi truy cập state/renderStep3
+   * Now lives inside IIFE → có thể truy cập state, renderStep3, goToStep, addXP
+   * ═══════════════════════════════════════════════════════════════ */
+
+  // A3: completeStep wrapper — chuyển sang Step 4 + cộng XP (1 lần)
+  function completeStep3() {
+    if (!state.step3XPAwarded) {
+      state.step3XPAwarded = true;
+      addXP(30);
+    }
+    goToStep(4);
+  }
+
+  /* ── Match Game (Bài 6 — Mapping ER) ────────────────────────────────── */
+  function initFlagshipMatchDnD() {
+    document.querySelectorAll('.match-card').forEach(card => {
+      card.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', card.dataset.cardId);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+    });
+    document.querySelectorAll('.match-slot').forEach(slot => {
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.style.background = 'rgba(168,85,247,0.15)'; });
+      slot.addEventListener('dragleave', e => { slot.style.background = ''; });
+      slot.addEventListener('drop', e => {
+        e.preventDefault();
+        slot.style.background = '';
+        const cardId = e.dataTransfer.getData('text/plain');
+        const card = document.querySelector(`.match-card[data-card-id="${cardId}"]`);
+        if (card) {
+          const prev = card.parentElement;
+          if (prev.classList.contains('match-slot')) {
+            prev.querySelector('.match-card-text').textContent = prev.dataset.cardId;
+            prev.style.background = '';
+          }
+          slot.innerHTML = `<div style="font-size:11px;color:var(--text-400);margin-bottom:6px;">Bước ${slot.dataset.slotOrder}</div>`;
+          slot.appendChild(card);
+          card.style.width = '100%';
+        }
+      });
+    });
+    document.querySelectorAll('.match-slot').forEach(slot => {
+      slot.addEventListener('click', e => {
+        const card = slot.querySelector('.match-card');
+        if (card) {
+          const bank = document.querySelector('.match-bank');
+          bank.appendChild(card);
+          card.style.width = 'auto';
+          slot.innerHTML = `<div style="font-size:11px;color:var(--text-400);margin-bottom:6px;">Bước ${slot.dataset.slotOrder}</div><div class="match-card-text" style="font-size:12px;line-height:1.4;color:var(--text-400);">(trống)</div>`;
+        }
+      });
+    });
+  }
+
+  window.checkFlagshipMatch = function() {
+    initFlagshipMatchDnD();
+    const slots = document.querySelectorAll('.match-slot');
+    let correct = 0, total = slots.length;
+    const f = state.currentLesson.step_3.flagship;
+    slots.forEach(slot => {
+      const expectedOrder = parseInt(slot.dataset.slotOrder);
+      const card = slot.querySelector('.match-card');
+      if (card) {
+        const cardOrder = f.cards.find(c => c.id === card.dataset.cardId)?.order;
+        if (cardOrder === expectedOrder) {
+          correct++;
+          slot.style.background = 'rgba(34,197,94,0.15)';
+          slot.style.borderColor = '#22c55e';
+          slot.style.borderStyle = 'solid';
+        } else {
+          slot.style.background = 'rgba(239,68,68,0.15)';
+          slot.style.borderColor = '#ef4444';
+          slot.style.borderStyle = 'solid';
+        }
+      } else {
+        slot.style.background = 'rgba(239,68,68,0.15)';
+        slot.style.borderColor = '#ef4444';
+        slot.style.borderStyle = 'solid';
+      }
+    });
+    const result = document.getElementById('flagship-match-result');
+    if (correct === total) {
+      result.textContent = `🎉 Hoàn hảo! ${correct}/${total} bước đúng thứ tự.`;
+      result.style.color = 'var(--success)';
+      completeStep3();
+    } else {
+      result.textContent = `${correct}/${total} đúng. Thử lại!`;
+      result.style.color = 'var(--danger)';
+    }
+  };
+
+  window.resetFlagshipMatch = function() {
+    const f = state.currentLesson.step_3.flagship;
+    const bank = document.querySelector('.match-bank');
+    const slots = document.querySelectorAll('.match-slot');
+    if (!bank) return;
+    bank.innerHTML = '';
+    slots.forEach(slot => {
+      slot.innerHTML = `<div style="font-size:11px;color:var(--text-400);margin-bottom:6px;">Bước ${slot.dataset.slotOrder}</div><div class="match-card-text" style="font-size:12px;line-height:1.4;color:var(--text-400);">(trống)</div>`;
+      slot.style.background = '';
+      slot.style.borderColor = '';
+      slot.style.borderStyle = '';
+    });
+    // Fisher-Yates shuffle (fix biased sort)
+    const cards = [...f.cards];
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+    cards.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'match-card';
+      div.dataset.cardId = c.id;
+      div.setAttribute('draggable', 'true');
+      div.style.cssText = 'background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;padding:10px 12px;border-radius:6px;cursor:grab;font-size:12px;line-height:1.4;user-select:none;';
+      div.textContent = c.text;
+      div.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', c.id); e.dataTransfer.effectAllowed = 'move'; });
+      bank.appendChild(div);
+    });
+    const r = document.getElementById('flagship-match-result');
+    if (r) { r.textContent = ''; }
+  };
+
+  /* ── Split Game (Bài 9, 12 — 2NF, 4NF) ─────────────────────────────── */
+  function initFlagshipSplitDnD() {
+    document.querySelectorAll('.split-col').forEach(col => {
+      col.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', col.dataset.colName);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+    });
+    document.querySelectorAll('.split-target').forEach(target => {
+      target.addEventListener('dragover', e => { e.preventDefault(); target.style.background = 'rgba(34,197,94,0.15)'; });
+      target.addEventListener('dragleave', e => { target.style.background = ''; });
+      target.addEventListener('drop', e => {
+        e.preventDefault();
+        target.style.background = '';
+        const colName = e.dataTransfer.getData('text/plain');
+        const col = document.querySelector(`.split-col[data-col-name="${colName}"]`);
+        if (col) {
+          const chipsHost = target.querySelector('.split-target-chips');
+          const span = document.createElement('span');
+          span.className = 'split-target-chip';
+          span.dataset.colName = colName;
+          span.textContent = col.textContent;
+          span.style.cssText = 'background:#1f2937;border:1px solid #22c55e;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;';
+          span.addEventListener('click', () => {
+            const source = document.querySelector('.split-source > div:last-child');
+            if (source) source.appendChild(col);
+            span.remove();
+          });
+          chipsHost.appendChild(span);
+          col.remove();
+        }
+      });
+    });
+  }
+
+  window.checkFlagshipSplit = function() {
+    initFlagshipSplitDnD();
+    const f = state.currentLesson.step_3.flagship;
+    let correct = 0, total = 0;
+    f.solution && Object.entries(f.solution).forEach(([target, cols]) => total += cols.length);
+
+    f.solution && Object.entries(f.solution).forEach(([targetName, expectedCols]) => {
+      const target = document.querySelector(`.split-target[data-target-name="${targetName}"]`);
+      if (!target) return;
+      const placedChips = target.querySelectorAll('.split-target-chip');
+      const placedNames = Array.from(placedChips).map(c => c.dataset.colName);
+      expectedCols.forEach(c => {
+        if (placedNames.includes(c)) correct++;
+      });
+    });
+    const result = document.getElementById('flagship-split-result');
+    if (correct === total && total > 0) {
+      result.textContent = `🎉 Hoàn hảo! ${correct}/${total} cột đúng chỗ.`;
+      result.style.color = 'var(--success)';
+      completeStep3();
+    } else {
+      result.textContent = `${correct}/${total} cột đúng. Thử lại!`;
+      result.style.color = 'var(--danger)';
+    }
+  };
+
+  window.resetFlagshipSplit = function() {
+    renderStep3();
+    const r = document.getElementById('flagship-split-result');
+    if (r) r.textContent = '';
+  };
+
+  window.showFlagshipSplitHint = function() {
+    const f = state.currentLesson.step_3.flagship;
+    alert('💡 Gợi ý: ' + (f.hint || 'Xem lại lý thuyết trong Step 1.'));
+  };
+
+  /* ── Bug Spot (Bài 17, 18 — SQLi, Password) ────────────────────────── */
+  function initFlagshipBugSpotDnD() {
+    document.querySelectorAll('.bug-chip').forEach(chip => {
+      chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', chip.dataset.chipId);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+    });
+    document.querySelectorAll('.bug-bin').forEach(bin => {
+      bin.addEventListener('dragover', e => { e.preventDefault(); bin.style.background = 'rgba(168,85,247,0.15)'; });
+      bin.addEventListener('dragleave', e => { bin.style.background = ''; });
+      bin.addEventListener('drop', e => {
+        e.preventDefault();
+        bin.style.background = '';
+        const chipId = e.dataTransfer.getData('text/plain');
+        const chip = document.querySelector(`.bug-chip[data-chip-id="${chipId}"]`);
+        if (chip) {
+          const chipsHost = bin.querySelector('.bug-bin-chips');
+          const clone = chip.cloneNode(true);
+          clone.style.cursor = 'pointer';
+          clone.addEventListener('click', () => {
+            document.querySelector('.bug-bank').appendChild(chip);
+            clone.remove();
+          });
+          chipsHost.appendChild(clone);
+          chip.remove();
+        }
+      });
+    });
+  }
+
+  window.checkFlagshipBugSpot = function() {
+    initFlagshipBugSpotDnD();
+    const f = state.currentLesson.step_3.flagship;
+    let correct = 0, total = f.chips.length;
+    f.chips.forEach(c => {
+      const placed = document.querySelector(`.bug-bin .bug-chip[data-chip-id="${c.id}"]`);
+      if (placed && f.solution[c.id] === placed.closest('.bug-bin').dataset.binId) {
+        correct++;
+        placed.style.background = 'rgba(34,197,94,0.2)';
+        placed.style.borderColor = '#22c55e';
+      } else if (placed) {
+        placed.style.background = 'rgba(239,68,68,0.2)';
+        placed.style.borderColor = '#ef4444';
+      }
+    });
+    const result = document.getElementById('flagship-bugspot-result');
+    if (correct === total && total > 0) {
+      result.textContent = `🎉 Hoàn hảo! Phân loại đúng cả ${total}.`;
+      result.style.color = 'var(--success)';
+      completeStep3();
+    } else {
+      result.textContent = `${correct}/${total} đúng. Thử lại!`;
+      result.style.color = 'var(--danger)';
+    }
+  };
+
+  window.resetFlagshipBugSpot = function() {
+    renderStep3();
+    const r = document.getElementById('flagship-bugspot-result');
+    if (r) r.textContent = '';
+  };
+
+  window.showFlagshipBugSpotHint = function() {
+    const f = state.currentLesson.step_3.flagship;
+    alert('💡 Gợi ý: ' + (f.hint || 'Xem lại lý thuyết trong Step 1.'));
+  };
+
+  /* ── Join Builder (Bài 13 — Boss Battle 4-table JOIN) ─────────────── */
+  function initFlagshipJoinDnD() {
+    const target = document.getElementById('join-target');
+    if (!target) return;
+    document.querySelectorAll('.join-block').forEach(b => {
+      b.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', b.dataset.blockIdx);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      b.addEventListener('dblclick', () => {
+        target.appendChild(b);
+        updateJoinIDE();
+      });
+    });
+    target.addEventListener('dragover', e => { e.preventDefault(); target.style.background = '#0e1424'; });
+    target.addEventListener('dragleave', e => { target.style.background = ''; });
+    target.addEventListener('drop', e => {
+      e.preventDefault();
+      target.style.background = '';
+      const idx = e.dataTransfer.getData('text/plain');
+      const b = document.querySelector(`.join-block[data-block-idx="${idx}"]`);
+      if (b) {
+        target.appendChild(b);
+        updateJoinIDE();
+      }
+    });
+  }
+
+  function updateJoinIDE() {
+    const target = document.getElementById('join-target');
+    if (!target) return;
+    const blocks = target.querySelectorAll('.join-block');
+    const sql = Array.from(blocks).map(b => b.textContent).join(' ');
+    const ide = document.querySelector('.code-editor textarea, .ide-textarea');
+    if (ide) ide.value = sql;
+  }
+
+  window.checkFlagshipJoin = function() {
+    const f = state.currentLesson.step_3.flagship;
+    const target = document.getElementById('join-target');
+    const placed = target.querySelectorAll('.join-block');
+    const placedTokens = Array.from(placed).map(b => b.textContent);
+    const expectedTokens = f.blocks.map(b => b.token);
+    const placedStr = placedTokens.join(' ').replace(/\s+/g, ' ').trim();
+    const expectedStr = expectedTokens.join(' ').replace(/\s+/g, ' ').trim();
+    const result = document.getElementById('flagship-join-result');
+    if (placedStr === expectedStr) {
+      result.textContent = '🎉 Hoàn hảo! 4-table JOIN đúng thứ tự!';
+      result.style.color = 'var(--success)';
+      completeStep3();
+    } else {
+      result.textContent = `Sai thứ tự hoặc thiếu thẻ. Đặt ${placed.length}/${expectedTokens.length}.`;
+      result.style.color = 'var(--danger)';
+    }
+  };
+
+  window.resetFlagshipJoin = function() {
+    renderStep3();
+    const r = document.getElementById('flagship-join-result');
+    if (r) r.textContent = '';
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+   * PREMIUM RENDERERS — shadcn/Brilliant inspired
+   * Thêm 2026-06-21: SVG primer + 3 mini-game mới + step4 enhanced
+   * ═══════════════════════════════════════════════════════════════ */
+
+  /* ── A. SVG Primer renderer ────────────────────────────────── */
+  // Mở SVG inline an toàn (chỉ chấp nhận trusted content từ lesson_content.js)
+  // Không user-input, không fetch từ external → safe.
+  function renderSVGPrimer(mountEl, visual) {
+    if (!mountEl) return;
+    if (visual.svg) {
+      // Direct SVG string
+      mountEl.innerHTML = `<div class="primer-svg">${visual.svg}</div>`;
+    } else {
+      mountEl.innerHTML = '';
+    }
+  }
+
+  // Render diagram từ data object (tiện cho editor — không phải raw SVG)
+  // Hỗ trợ 3 loại: 'er' | 'nf' | 'flow'
+  function renderDiagramFromData(mountEl, diagram) {
+    if (!mountEl || !diagram || !diagram.type) return;
+    let html = '';
+    if (diagram.type === 'er') {
+      html = buildERDiagramHTML(diagram);
+    } else if (diagram.type === 'nf') {
+      html = buildNormalizePairHTML(diagram);
+    } else if (diagram.type === 'flow') {
+      html = buildQueryFlowHTML(diagram);
+    } else {
+      mountEl.innerHTML = '';
+      return;
+    }
+    mountEl.innerHTML = `<div class="primer-svg">${html}</div>`;
+  }
+
+  // ER diagram: 1+ entities, mỗi entity có name + columns; optional connectors
+  function buildERDiagramHTML(d) {
+    const entities = d.entities || [];
+    const connectors = d.connectors || [];
+    const width = d.width || 600;
+    const height = d.height || 280;
+    const colW = 170;
+    const rowH = 22;
+    const headerH = 30;
+    const entityPositions = [];
+
+    // ARIA: Mô tả tổng quan sơ đồ cho screen reader
+    const ariaSummary = entities.map(e => `${e.name} (${(e.columns || []).length} cột)`).join(', ');
+    let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Sơ đồ ER gồm: ${ariaSummary}">`;
+
+    // Compute entity positions
+    const totalW = entities.length * (colW + 40) - 40;
+    const startX = (width - totalW) / 2;
+    entities.forEach((e, i) => {
+      const x = startX + i * (colW + 40);
+      const h = headerH + (e.columns || []).length * rowH + 14;
+      const y = (height - h) / 2;
+      entityPositions.push({ x, y, w: colW, h, name: e.name });
+    });
+
+    // Draw connectors first (behind entities)
+    connectors.forEach(c => {
+      const from = entityPositions.find(p => p.name === c.from);
+      const to = entityPositions.find(p => p.name === c.to);
+      if (!from || !to) return;
+      const x1 = from.x + from.w;
+      const y1 = from.y + from.h / 2;
+      const x2 = to.x;
+      const y2 = to.y + to.h / 2;
+      const midX = (x1 + x2) / 2;
+      svg += `<path class="er-connector" d="M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}" aria-label="Mối quan hệ giữa ${c.from} và ${c.to}${c.label ? ': ' + c.label : ''}" />`;
+      // Cardinality labels
+      svg += `<text class="er-cardinality" x="${x1 + 10}" y="${y1 - 6}">${c.fromCard || '1'}</text>`;
+      svg += `<text class="er-cardinality" x="${x2 - 10}" y="${y2 - 6}">${c.toCard || 'N'}</text>`;
+      // Label in middle
+      if (c.label) {
+        svg += `<text class="er-connector-label" x="${midX}" y="${(y1 + y2) / 2 - 6}">${escapeXml(c.label)}</text>`;
+      }
+    });
+
+    // Draw entities
+    entities.forEach((e, i) => {
+      const pos = entityPositions[i];
+      const cls = e.weak ? 'er-entity-rect weak' : 'er-entity-rect';
+      svg += `<rect class="${cls}" x="${pos.x}" y="${pos.y}" width="${pos.w}" height="${pos.h}" role="img" aria-label="Entity ${e.name} với ${(e.columns || []).length} cột" />`;
+      // Header
+      svg += `<rect x="${pos.x}" y="${pos.y}" width="${pos.w}" height="${headerH}" fill="rgba(6,182,212,0.18)" />`;
+      svg += `<text class="er-entity-title" x="${pos.x + pos.w / 2}" y="${pos.y + 20}">${escapeXml(e.name)}</text>`;
+      // Columns
+      (e.columns || []).forEach((col, j) => {
+        const cy = pos.y + headerH + 14 + j * rowH;
+        const isPk = col.key === 'PK';
+        const isDerived = col.derived === true;
+        let cls = 'er-col';
+        if (isPk) cls += ' pk';
+        if (isDerived) cls += ' derived';
+        const icon = isPk ? '🔑 ' : (col.icon ? col.icon + ' ' : '');
+        svg += `<text class="${cls}" x="${pos.x + 12}" y="${cy}">${icon}${escapeXml(col.name)}</text>`;
+        if (col.type) {
+          svg += `<text class="er-col" x="${pos.x + pos.w - 12}" y="${cy}" text-anchor="end" fill="var(--text-500)">${col.type}</text>`;
+        }
+      });
+    });
+
+    // Notes
+    if (d.note) {
+      svg += `<text class="er-connector-label" x="${width / 2}" y="${height - 8}">${escapeXml(d.note)}</text>`;
+    }
+
+    svg += `</svg>`;
+    return svg;
+  }
+
+  // Normalization before/after: d.before, d.after (mỗi cái là {title, columns, rows, violations, fixes})
+  function buildNormalizePairHTML(d) {
+    const before = d.before || {};
+    const after = d.after || {};
+    let html = `<div class="nf-pair">`;
+    html += `<div class="nf-side before">
+      <div class="nf-side-label">${escapeHtml(before.title || 'TRƯỚC')}</div>
+      <table class="nf-table">
+        <thead><tr>${(before.columns || []).map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody>${(before.rows || []).map((row, ri) =>
+          `<tr>${row.map((cell, ci) => {
+            const v = (before.violations || {})[`${ri}-${ci}`];
+            const cls = v ? 'violation' : '';
+            return `<td class="${cls}">${escapeHtml(String(cell))}${v ? ` ⚠️` : ''}</td>`;
+          }).join('')}</tr>`
+        ).join('')}</tbody>
+      </table>
+    </div>`;
+    html += `<div class="nf-arrow"><i class="fa-solid fa-arrow-right"></i></div>`;
+    html += `<div class="nf-side after">
+      <div class="nf-side-label">${escapeHtml(after.title || 'SAU')}</div>
+      <table class="nf-table">
+        <thead><tr>${(after.columns || []).map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+        <tbody>${(after.rows || []).map((row, ri) =>
+          `<tr>${row.map((cell, ci) => {
+            const f = (after.fixes || {})[`${ri}-${ci}`];
+            const cls = f ? 'fixed' : '';
+            return `<td class="${cls}">${escapeHtml(String(cell))}${f ? ` ✓` : ''}</td>`;
+          }).join('')}</tr>`
+        ).join('')}</tbody>
+      </table>
+    </div>`;
+    if (d.note) {
+      html += `<div style="grid-column: 1 / -1; font-size: 11px; color: var(--text-400); text-align: center; margin-top: 4px;">${escapeHtml(d.note)}</div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  // Query flow: vertical, 3-6 steps
+  function buildQueryFlowHTML(d) {
+    const steps = d.steps || [];
+    let html = `<div class="qf-flow">`;
+    steps.forEach((step, i) => {
+      html += `<div class="qf-step">
+        <div class="qf-step-icon"><i class="fa-solid ${escapeHtml(step.icon || 'fa-circle')}"></i></div>
+        <div class="qf-step-label">
+          <strong>${escapeHtml(step.title)}</strong>
+          <span>${escapeHtml(step.sub || '')}</span>
+        </div>
+        ${step.payload ? `<span class="qf-payload">${escapeHtml(step.payload)}</span>` : ''}
+      </div>`;
+      if (i < steps.length - 1) html += `<div class="qf-arrow-down"></div>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function escapeXml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* ── B. Mini-game: Match (nối cặp) ──────────────────────── */
+  // Data: { type:'match', title, instruction, pairs:[{left,right}], solution:{leftId:rightId} }
+  function renderMiniGameMatch(container, mg) {
+    if (!container || !mg) return;
+    const pairs = mg.pairs || [];
+    // Shuffle right column for game
+    const rights = pairs.map(p => p.right).slice();
+    for (let i = rights.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [rights[i], rights[j]] = [rights[j], rights[i]];
+    }
+    const matches = {}; // leftId -> rightId
+    let selectedLeft = null;
+
+    let html = `<div class="mini-game" data-mg-type="match">
+      <div class="mini-game-title"><i class="fa-solid fa-link"></i> ${escapeHtml(mg.title || 'Nối cặp')}</div>
+      <div class="mini-game-instr">${mg.instruction || 'Click chọn 1 ô bên trái, rồi click ô tương ứng bên phải để nối cặp.'}</div>
+      <div class="mg-match-board">
+        <div class="mg-match-col mg-match-left" id="mg-match-left">
+          ${pairs.map(p => `<div class="mg-match-item" data-left-id="${escapeHtml(p.leftId || p.left)}">${escapeHtml(p.left)}</div>`).join('')}
+        </div>
+        <div class="mg-match-line-col" id="mg-match-lines"></div>
+        <div class="mg-match-col mg-match-right" id="mg-match-right">
+          ${rights.map(r => `<div class="mg-match-item" data-right-id="${escapeHtml(r.id || r)}">${escapeHtml(r.label || r)}</div>`).join('')}
+        </div>
+      </div>
+      <div id="mg-match-feedback" class="mg-match-feedback" style="display:none;"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="mg-order-btn" id="mg-match-check">Kiểm tra</button>
+        <button class="mg-order-btn secondary" id="mg-match-reset">Làm lại</button>
+      </div>
+    </div>`;
+    container.innerHTML = html;
+
+    // Wire up click
+    container.querySelectorAll('#mg-match-left .mg-match-item').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.classList.contains('matched')) return;
+        container.querySelectorAll('#mg-match-left .mg-match-item.selected').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedLeft = el.dataset.leftId;
+      });
+    });
+    container.querySelectorAll('#mg-match-right .mg-match-item').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.classList.contains('matched')) return;
+        if (!selectedLeft) {
+          flashTip(container, 'Chọn 1 ô bên trái trước!');
+          return;
+        }
+        matches[selectedLeft] = el.dataset.rightId;
+        // Visual hint: highlight pair
+        const leftEl = container.querySelector(`#mg-match-left .mg-match-item[data-left-id="${selectedLeft}"]`);
+        leftEl.style.outline = '2px solid var(--primary)';
+        el.style.outline = '2px solid var(--primary)';
+        setTimeout(() => { leftEl.style.outline = ''; el.style.outline = ''; }, 600);
+        selectedLeft = null;
+        container.querySelectorAll('#mg-match-left .mg-match-item.selected').forEach(s => s.classList.remove('selected'));
+      });
+    });
+
+    container.querySelector('#mg-match-check').onclick = () => {
+      const sol = mg.solution || {};
+      let allCorrect = pairs.length === Object.keys(matches).length;
+      let correctCount = 0;
+      Object.keys(matches).forEach(leftId => {
+        if (sol[leftId] === matches[leftId]) correctCount++;
+      });
+      if (allCorrect && correctCount === pairs.length) {
+        // Mark all matched
+        container.querySelectorAll('.mg-match-item').forEach(el => el.classList.add('matched'));
+        showMiniFeedback(container, 'mg-match-feedback', true, `Hoàn hảo! Nối đúng ${correctCount}/${pairs.length} cặp. +${mg.xp || 20} XP`);
+        awardXP(mg.xp || 20);
+      } else {
+        showMiniFeedback(container, 'mg-match-feedback', false, `Sai ${pairs.length - correctCount} cặp. Thử lại nhé!`);
+      }
+    };
+    container.querySelector('#mg-match-reset').onclick = () => renderMiniGameMatch(container, mg);
+  }
+
+  /* ── C. Mini-game: Order (kéo thả sắp xếp) ─────────────── */
+  // Data: { type:'order', title, instruction, items:[{id,label}], solution:{id:order} }
+  function renderMiniGameOrder(container, mg) {
+    if (!container || !mg) return;
+    const items = (mg.items || []).slice();
+    // Shuffle
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    let html = `<div class="mini-game" data-mg-type="order">
+      <div class="mini-game-title"><i class="fa-solid fa-sort"></i> ${escapeHtml(mg.title || 'Sắp xếp thứ tự')}</div>
+      <div class="mini-game-instr">${mg.instruction || 'Kéo thả để sắp xếp theo đúng thứ tự.'}</div>
+      <div class="mg-order-list" id="mg-order-list">
+        ${items.map((it, i) => `<div class="mg-order-item" draggable="true" data-item-id="${escapeHtml(it.id)}">
+          <span class="mg-order-num">${i + 1}</span>
+          <span class="mg-order-label">${escapeHtml(it.label)}</span>
+          <span class="mg-order-grip"><i class="fa-solid fa-grip-vertical"></i></span>
+        </div>`).join('')}
+      </div>
+      <div id="mg-order-feedback" class="mg-match-feedback" style="display:none;"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="mg-order-btn" id="mg-order-check">Kiểm tra</button>
+        <button class="mg-order-btn secondary" id="mg-order-reset">Làm lại</button>
+      </div>
+    </div>`;
+    container.innerHTML = html;
+
+    // Drag-drop reordering
+    const list = container.querySelector('#mg-order-list');
+    let dragEl = null;
+    list.querySelectorAll('.mg-order-item').forEach(el => {
+      el.addEventListener('dragstart', e => {
+        dragEl = el;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => el.classList.add('dragging'), 0);
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        list.querySelectorAll('.mg-order-item').forEach(x => x.classList.remove('drag-over'));
+        // Renumber
+        list.querySelectorAll('.mg-order-num').forEach((n, i) => n.textContent = i + 1);
+      });
+      el.addEventListener('dragover', e => {
+        e.preventDefault();
+        el.classList.add('drag-over');
+      });
+      el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        if (dragEl && dragEl !== el) {
+          const allItems = [...list.querySelectorAll('.mg-order-item')];
+          const dragIdx = allItems.indexOf(dragEl);
+          const dropIdx = allItems.indexOf(el);
+          if (dragIdx < dropIdx) el.after(dragEl);
+          else el.before(dragEl);
+          list.querySelectorAll('.mg-order-num').forEach((n, i) => n.textContent = i + 1);
+        }
+      });
+    });
+
+    container.querySelector('#mg-order-check').onclick = () => {
+      const sol = mg.solution || {};
+      const order = [...list.querySelectorAll('.mg-order-item')].map((el, i) => ({ id: el.dataset.itemId, pos: i + 1 }));
+      let correct = 0;
+      order.forEach(o => { if (sol[o.id] === o.pos) correct++; });
+      list.querySelectorAll('.mg-order-item').forEach(el => {
+        const id = el.dataset.itemId;
+        if (sol[id] === [...list.querySelectorAll('.mg-order-item')].indexOf(el) + 1) {
+          el.classList.add('correct'); el.classList.remove('wrong');
+        } else {
+          el.classList.add('wrong'); el.classList.remove('correct');
+        }
+      });
+      if (correct === order.length) {
+        showMiniFeedback(container, 'mg-order-feedback', true, `Hoàn hảo! Đúng ${correct}/${order.length} vị trí. +${mg.xp || 20} XP`);
+        awardXP(mg.xp || 20);
+      } else {
+        showMiniFeedback(container, 'mg-order-feedback', false, `Sai ${order.length - correct} vị trí. Số đỏ = sai, xanh = đúng.`);
+      }
+    };
+    container.querySelector('#mg-order-reset').onclick = () => renderMiniGameOrder(container, mg);
+  }
+
+  /* ── D. Mini-game: Bug Spot (tìm lỗi trong code) ──────── */
+  // Data: { type:'bug_spot', title, instruction, code:'SELECT * FORM...', bugs:[{line, char, type, description}], xp }
+  function renderMiniGameBugSpot(container, mg) {
+    if (!container || !mg) return;
+    const code = mg.code || '';
+    const lines = code.split('\n');
+    let selectedLine = null;
+
+    let html = `<div class="mini-game" data-mg-type="bug_spot">
+      <div class="mini-game-title"><i class="fa-solid fa-bug"></i> ${escapeHtml(mg.title || 'Tìm lỗi')}</div>
+      <div class="mini-game-instr">${mg.instruction || 'Click vào dòng code có lỗi.'}</div>
+      <div class="mg-bugspot-instr"><strong>Số dòng:</strong> ${lines.length} · <strong>Loại lỗi cần tìm:</strong> ${escapeHtml(mg.bugType || 'syntax')}</div>
+      <div class="mg-bugspot-code">${lines.map((ln, i) =>
+        `<div class="mg-bugspot-line" data-line="${i + 1}"><span class="mg-bugspot-lineno">${i + 1}</span><span>${escapeHtml(ln) || '&nbsp;'}</span></div>`
+      ).join('')}</div>
+      <div class="mg-bugspot-actions" style="margin-top:10px;">
+        <button class="mg-bugspot-btn" id="mg-bug-check">Kiểm tra</button>
+        <button class="mg-bugspot-btn secondary" id="mg-bug-reset">Làm lại</button>
+      </div>
+      <div id="mg-bug-feedback" class="mg-match-feedback" style="display:none;"></div>
+    </div>`;
+    container.innerHTML = html;
+
+    container.querySelectorAll('.mg-bugspot-line').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.classList.contains('correct') || el.classList.contains('wrong')) return;
+        container.querySelectorAll('.mg-bugspot-line.selected').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedLine = parseInt(el.dataset.line);
+      });
+    });
+
+    container.querySelector('#mg-bug-check').onclick = () => {
+      if (!selectedLine) { flashTip(container, 'Chọn 1 dòng trước!'); return; }
+      const bugs = mg.bugs || [];
+      const hit = bugs.find(b => b.line === selectedLine);
+      if (hit) {
+        container.querySelector(`.mg-bugspot-line[data-line="${selectedLine}"]`).classList.remove('selected');
+        container.querySelector(`.mg-bugspot-line[data-line="${selectedLine}"]`).classList.add('correct');
+        showMiniFeedback(container, 'mg-bug-feedback', true, `Đúng rồi! ${hit.description || ''} +${mg.xp || 25} XP`);
+        awardXP(mg.xp || 25);
+      } else {
+        container.querySelector(`.mg-bugspot-line[data-line="${selectedLine}"]`).classList.remove('selected');
+        container.querySelector(`.mg-bugspot-line[data-line="${selectedLine}"]`).classList.add('wrong');
+        const correctLine = bugs[0]?.line;
+        showMiniFeedback(container, 'mg-bug-feedback', false, `Sai rồi. Dòng đúng là dòng ${correctLine}. Thử lại!`);
+      }
+    };
+    container.querySelector('#mg-bug-reset').onclick = () => renderMiniGameBugSpot(container, mg);
+  }
+
+  function showMiniFeedback(container, feedbackId, ok, msg) {
+    const el = container.querySelector('#' + feedbackId);
+    if (!el) return;
+    el.style.display = 'flex';
+    el.classList.toggle('wrong', !ok);
+    el.innerHTML = `<i class="fa-solid ${ok ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${msg}`;
+  }
+  function flashTip(container, msg) {
+    const tip = document.createElement('div');
+    tip.style.cssText = 'position:absolute;bottom:12px;right:12px;background:var(--warning);color:#1A1A1A;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;z-index:10;';
+    tip.textContent = msg;
+    container.style.position = 'relative';
+    container.appendChild(tip);
+    setTimeout(() => tip.remove(), 1800);
+  }
+
+  // Hook vào addXP (nếu chưa có thì stub)
+  function awardXP(n) {
+    if (typeof window.addXP === 'function') window.addXP(n);
+  }
+
+  /* ── E. Step 4 enhanced schema (dùng CSS mới) ───────────── */
+  function enhanceStep4Schema(container, s4) {
+    if (!container || !s4 || !s4.schema) return;
+    const schema = s4.schema;
+    const data = s4.schema.data || s4.data || [];
+    let html = `<div class="step4-schema-card">
+      <div class="schema-head">
+        <i class="fa-solid fa-table"></i>
+        <span class="table-name">${escapeHtml(schema.table_name)}</span>
+        <span class="row-count">${data.length} rows</span>
+      </div>
+      <div class="schema-rows">
+        ${(schema.columns || []).map(col => `
+          <div class="schema-row">
+            <span class="col-name">${col.icon ? col.icon + ' ' : ''}${escapeHtml(col.name)}</span>
+            <span class="col-type">${escapeHtml(col.type || '')}</span>
+            ${col.key ? `<span class="col-key">${escapeHtml(col.key)}</span>` : ''}
+          </div>
+        `).join('')}
+      </div>
+      ${data.length > 0 ? `
+        <div class="data-preview">
+          <table class="data-table">
+            <thead><tr>${(schema.columns || []).map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}</tr></thead>
+            <tbody>${data.map(row => `<tr>${row.map((cell, i) =>
+              `<td class="${schema.columns[i]?.key === 'PK' ? 'pk-cell' : ''}">${escapeHtml(String(cell))}</td>`
+            ).join('')}</tr>`).join('')}</tbody>
+          </table>
+        </div>
+      ` : ''}
+    </div>`;
+    container.innerHTML = html;
+  }
+
+  /* ── F. Hint panel 4 levels (progressive reveal) ──────────── */
+  function enhanceHintPanel(container, s4) {
+    if (!container || !s4 || !s4.hints) return;
+    const hints = s4.hints;
+    let currentLevel = 0;
+    let html = `<div class="hint-panel" id="hint-panel">
+      <div class="hint-panel-head"><i class="fa-solid fa-lightbulb"></i> Gợi ý (${hints.length} cấp độ)</div>
+      <div class="hint-level-tabs" id="hint-level-tabs">
+        ${hints.map((h, i) => `<button class="hint-level-tab${i === 0 ? ' active' : ''}" data-level="${i}">Cấp ${i + 1}</button>`).join('')}
+      </div>
+      <div class="hint-panel-body" id="hint-body">${hints[0]?.text || ''}</div>
+    </div>`;
+    container.innerHTML = html;
+    container.querySelectorAll('.hint-level-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const lvl = parseInt(tab.dataset.level);
+        container.querySelectorAll('.hint-level-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        container.querySelector('#hint-body').innerHTML = hints[lvl]?.text || '';
+      });
+    });
+  }
 })();
+

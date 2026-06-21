@@ -3,9 +3,10 @@
  * 4-step pipeline data: Step 1 (Theory+Visual) → Step 2 (MCQ) →
  *                       Step 3 (Hybrid Drag-Query + Reveal) → Step 4 (Pure Code)
  *
- * Bài 1 (Entity Set & Primary Key) có content đầy đủ.
- * Bài 2-10 giữ skeleton (title + module + estimated_minutes) — team sẽ fill
- * content sau bằng cách copy pattern từ Bài 1.
+ * 18 bài (db_01..db_18) đều có content đầy đủ — curriculum chia 3 module:
+ *   - Module 1 (db_01..db_06): ER Model & Mapping — Silberschatz Ch 6
+ *   - Module 2 (db_07..db_13): Normalization (FD, 1NF→BCNF, Boss Battle) — Ch 7
+ *   - Module 3 (db_14..db_18): Application Design (JSON, Spatial, ORM, SQLi, Password) — Ch 8-9
  *
  * Schema cho mỗi step:
  *   step_1: { primer: {goal, intro, example}, visual: {schema, data_preview}, mission }
@@ -23,7 +24,7 @@ window.LESSON_CONTENT['db_design'] = {
   course_title: 'Database Design',
   accent_color: '#06B6D4',
   module_color: '#06B6D4',
-  total_lessons: 10,
+  total_lessons: 18,
   lessons: [
     /* ========================================================================
      * BÀI 1 — Entity Set & Primary Key [REALIGN v3]
@@ -42,9 +43,9 @@ window.LESSON_CONTENT['db_design'] = {
       xp_reward: 50,
       project_piece: '🗝️ Mở khóa "Huy hiệu Lập trình viên Cơ sở"',
       drag_type: 'chip',
-      challenge_type: 'mcq_code',
+      challenge_type: 'full_ide',
 
-      /* ----- STEP 1: Theory (Layer 0 + Layer 1) ----- */
+      /* ----- STEP 1: Theory (Layer 0 + Layer 1) — Premium v4 ----- */
       step_1: {
         primer: {
           goal: [
@@ -55,7 +56,35 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong CSDL quan hệ, mỗi <strong>Entity Set</strong> = 1 table. Mỗi dòng = 1 thực thể (entity), mỗi cột = 1 thuộc tính (attribute). <strong>Primary Key (PK)</strong> là cột đảm bảo mỗi dòng có giá trị <em>DUY NHẤT</em> — không trùng, không NULL.',
           example: 'Bảng <code class="code">game_catalog</code> dưới đây có cột <code class="code">id</code> làm PK. Hai game có thể trùng tên (Elden Ring xuất hiện 2 lần ở 2 thể loại), nhưng <code class="code">id</code> thì không bao giờ trùng — vì vậy dùng <code class="code">id</code> trong WHERE sẽ chốt được đúng 1 dòng.'
         },
+        concept_cards: [
+          {
+            icon: 'fa-cube',
+            title: 'Entity Set (Tập thực thể)',
+            body: 'Một nhóm các thực thể cùng loại. Trong CSDL, entity set ↔ 1 table. Mỗi entity (dòng) là 1 thể hiện cụ thể của tập đó.'
+          },
+          {
+            icon: 'fa-key',
+            title: 'Primary Key (Khóa chính)',
+            body: 'Cột có giá trị DUY NHẤT cho mỗi dòng. Không trùng, không NULL. Khi truy vấn với <code>WHERE pk = X</code>, chỉ chọn đúng 1 record.'
+          }
+        ],
         visual: {
+          diagram: {
+            type: 'er',
+            width: 600, height: 220,
+            entities: [
+              {
+                name: 'game_catalog',
+                columns: [
+                  { name: 'id',     type: 'INT',      key: 'PK' },
+                  { name: 'name',   type: 'VARCHAR' },
+                  { name: 'genre',  type: 'VARCHAR' },
+                  { name: 'price',  type: 'INT' }
+                ]
+              }
+            ],
+            note: 'Bài 1: 1 entity đơn. Bài 3+ sẽ thêm connector giữa các entity.'
+          },
           schema: {
             table_name: 'game_catalog',
             columns: [
@@ -145,31 +174,32 @@ window.LESSON_CONTENT['db_design'] = {
         }
       },
 
-      /* ----- STEP 4: MCQ code (chọn SQL đúng từ 4 options) ----- */
+      /* ----- STEP 4: Pure code (Premium v4 — schema + starter đầy đủ) ----- */
       step_4: {
-        prompt: 'Khách muốn biết <strong>name</strong> và <strong>price</strong> của game có <code>id = 101</code>. Câu SQL nào dưới đây là ĐÚNG?',
+        prompt: 'Khách muốn biết <strong>name</strong> và <strong>price</strong> của game có <code>id = 101</code>. Viết query SQL trong editor bên phải.',
         schema: {
           table_name: 'game_catalog',
           columns: [
-            { name: 'id',     type: 'INT',     key: 'PK' },
-            { name: 'name',   type: 'VARCHAR', key: '' },
-            { name: 'genre',  type: 'VARCHAR', key: '' },
-            { name: 'price',  type: 'INT',     key: '' }
+            { name: 'id',     type: 'INT',      key: 'PK', icon: '🔑' },
+            { name: 'name',   type: 'VARCHAR',  key: '',   icon: '' },
+            { name: 'genre',  type: 'VARCHAR',  key: '',   icon: '' },
+            { name: 'price',  type: 'INT',      key: '',   icon: '' }
           ],
           data: [
-            ['101', 'Elden Ring',  'Action RPG',  '60'],
-            ['102', 'God of War',  'Action',      '50'],
-            ['103', 'Hades',       'Rogue-like',  '25'],
-            ['104', 'Elden Ring',  'Card Game',   '15']
+            ['101','Elden Ring','Action RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','Rogue-like','25'],
+            ['104','Elden Ring','Card Game','15']
           ]
         },
-        options: [
-          { id: 'a', text: "SELECT * FROM game_catalog;", correct: false, explain: 'Sai: lấy hết cột (*) và KHÔNG có WHERE → trả về cả 4 dòng thay vì 1 dòng Elden Ring id=101.' },
-          { id: 'b', text: "SELECT name, price FROM game_catalog WHERE id = 101;", correct: true, explain: 'Đúng! Lấy 2 cột cần + WHERE theo PK → đúng 1 dòng Elden Ring Action RPG giá 60.' },
-          { id: 'c', text: "SELECT name FROM game_catalog WHERE id = 101;", correct: false, explain: 'Sai logic: chỉ lấy name, thiếu price. Khách cần cả 2 cột.' },
-          { id: 'd', text: "SELECT name, price FROM game_catalog WHERE name = 'Elden Ring';", correct: false, explain: 'Sai logic: WHERE theo name (không phải PK) sẽ trả về CẢ 2 dòng Elden Ring (id 101 + 104).' }
+        starter: '-- Tìm name + price của game có id = 101\n-- Gợi ý: SELECT <cột> FROM <bảng> WHERE <điều kiện>;\n',
+        expected_sql: 'SELECT name, price FROM game_catalog WHERE id = 101;',
+        hints: [
+          { level: 1, text: 'Cần lấy 2 cột: <code>name</code> và <code>price</code>.' },
+          { level: 2, text: 'Lọc đúng 1 dòng bằng PK: <code>WHERE id = 101</code>.' },
+          { level: 3, text: 'Cú pháp: <code>SELECT col1, col2 FROM table WHERE pk = value;</code>' },
+          { level: 4, text: '<code>SELECT name, price FROM game_catalog WHERE id = 101;</code>' }
         ],
-        expected_sql: "SELECT name, price FROM game_catalog WHERE id = 101;",
         success_message: 'Xuất sắc! Bạn đã nắm vững SELECT-FROM-WHERE — bộ 3 SQL cơ bản nhất. Bài 2 sẽ học cách tách cột phức hợp (địa chỉ) và tính cột dẫn xuất (tuổi từ năm sinh).',
         xp_reward: 30
       }
@@ -188,7 +218,7 @@ window.LESSON_CONTENT['db_design'] = {
       estimated_minutes: 22, xp_reward: 50,
       project_piece: '🧬 Mở khóa "Hệ thống Hồ sơ Người chơi"',
       drag_type: 'box',
-      challenge_type: 'fill_blank',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'player_profile',
@@ -205,13 +235,16 @@ window.LESSON_CONTENT['db_design'] = {
         primer: {
           goal: [
             'Composite Attribute = cột ghép từ nhiều cột nhỏ (vd: address = city + district)',
-            'Derived Attribute = cột KHÔNG lưu, hệ thống tự tính khi truy vấn (vd: age = 2024 - birth_year)',
+            'Derived Attribute = cột KHÔNG lưu, hệ thống tự tính khi truy vấn (vd: age = currentYear - birthYear)',
             'Dùng AS để đặt tên cột ảo cho giá trị dẫn xuất'
           ],
           intro: 'Trong ER diagram, một thuộc tính có thể là <strong>Composite</strong> (gồm nhiều mảnh: address = city + district + street) hoặc <strong>Derived</strong> (tính toán từ thuộc tính khác: age = currentYear - birthYear). Khi chuyển sang bảng vật lý, ta <em>tách</em> composite thành nhiều cột độc lập, và <em>không lưu</em> derived — chỉ tính khi SELECT.',
-          example: 'Bảng <code class="code">player_profile</code> dưới đây đã tách address thành <code>address_city</code> + <code>address_dist</code>. Cột <code>age</code> KHÔNG tồn tại vật lý — sẽ được tính bằng <code>(2024 - birth_year) AS age</code>.'
+          example: 'Bảng <code class="code">player_profile</code> dưới đây đã tách address thành <code>address_city</code> + <code>address_dist</code>. Cột <code>age</code> KHÔNG tồn tại vật lý — sẽ được tính bằng <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code>.'
         },
-        visual: {
+        concept_cards: [{'icon': 'fa-puzzle-piece', 'title': 'Composite Attribute (Phức hợp)', 'body': 'Một thuộc tính ghép từ nhiều mảnh nhỏ. <code>address = city + district + street</code>. Khi chuyển sang bảng, tách thành nhiều cột độc lập.'}, {'icon': 'fa-calculator', 'title': 'Derived Attribute (Dẫn xuất)', 'body': 'Giá trị TÍNH TOÁN từ thuộc tính khác. <code>age = currentYear - birthYear</code>. <strong>KHÔNG lưu</strong> vật lý — chỉ tính khi <code>SELECT</code> với <code>AS</code>.'}],
+                visual: {
+          
+          diagram: {'type': 'er', 'width': 600, 'height': 240, 'entities': [{'name': 'player_profile', 'columns': [{'name': 'p_id', 'type': 'INT', 'key': 'PK'}, {'name': 'username', 'type': 'VARCHAR'}, {'name': 'address_city', 'type': 'VARCHAR'}, {'name': 'address_dist', 'type': 'VARCHAR'}, {'name': 'birth_year', 'type': 'INT', 'derived': true, 'note': 'age'}]}], 'note': 'address = composite (city + dist) · age = derived (KHÔNG lưu)'},
           schema: {
             table_name: 'player_profile',
             columns: [
@@ -281,7 +314,7 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'col', token: 'username',         slot: 'col-1' },
           { type: 'col', token: 'address_city',     slot: 'col-2' },
           { type: 'col', token: 'address_dist',     slot: 'col-3' },
-          { type: 'fn',  token: '(2024 - birth_year) AS age', slot: 'col-4' },
+          { type: 'fn',  token: '(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age', slot: 'col-4' },
           { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
           { type: 'tbl', token: 'player_profile',   slot: 'tbl' },
           { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
@@ -294,9 +327,9 @@ window.LESSON_CONTENT['db_design'] = {
           { id: 'from-line',   placeholder: 'FROM ____',                          accepts: ['kw', 'tbl'],     multi: true },
           { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',               accepts: ['kw', 'col', 'op', 'val'], multi: true }
         ],
-        expected_sql: 'SELECT username, address_city, address_dist, (2024 - birth_year) AS age FROM player_profile WHERE p_id = 7;',
+        expected_sql: 'SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;',
         reveal_hints: {
-          'select-line': 'SELECT 4 thứ: <strong>username</strong>, 2 mảnh địa chỉ (<strong>address_city</strong>, <strong>address_dist</strong>), và cụm tính tuổi (<strong>(2024 - birth_year) AS age</strong>).',
+          'select-line': 'SELECT 4 thứ: <strong>username</strong>, 2 mảnh địa chỉ (<strong>address_city</strong>, <strong>address_dist</strong>), và cụm tính tuổi (<strong>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</strong>).',
           'from-line':   'FROM bảng <strong>player_profile</strong>.',
           'where-line':  'WHERE chốt đúng 1 người: <strong>p_id = 7</strong>.'
         }
@@ -304,6 +337,7 @@ window.LESSON_CONTENT['db_design'] = {
 
       step_4: {
         prompt: 'Hoàn thiện câu SQL dưới đây — điền các từ/cột còn thiếu vào ô trống:',
+        starter: '-- Tính username + 2 mảnh địa chỉ + cột ảo age\n-- AS dùng để đặt tên cột ảo\nSELECT username, address_city, address_dist, ____\n  FROM player_profile\n WHERE ____ = 7;',
         schema: {
           table_name: 'player_profile',
           columns: [
@@ -319,7 +353,7 @@ window.LESSON_CONTENT['db_design'] = {
             ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999']
           ]
         },
-        template: 'SELECT username, ____, ____, (2024 - ____) ____ age FROM player_profile WHERE ____ = 7;',
+        template: 'SELECT username, ____, ____, (EXTRACT(YEAR FROM CURRENT_DATE) - ____) ____ age FROM player_profile WHERE ____ = 7;',
         blanks: [
           { id: 'b1', expected: 'address_city', hint: 'thành phố' },
           { id: 'b2', expected: 'address_dist', hint: 'quận/huyện' },
@@ -327,7 +361,7 @@ window.LESSON_CONTENT['db_design'] = {
           { id: 'b4', expected: 'AS',           hint: 'đặt bí danh' },
           { id: 'b5', expected: 'p_id',         hint: 'khóa chính' }
         ],
-        expected_sql: 'SELECT username, address_city, address_dist, (2024 - birth_year) AS age FROM player_profile WHERE p_id = 7;',
+        expected_sql: 'SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;',
         success_message: 'Tuyệt! Bạn đã nắm Composite (tách cột) + Derived (tính cột ảo với AS). Bài 3 sẽ học cách nối 2 bảng bằng Foreign Key + JOIN.',
         xp_reward: 50
       }
@@ -370,7 +404,10 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong thực tế, dữ liệu nằm rải rác ở nhiều bảng. <strong>Foreign Key (FK)</strong> là cột lưu <em>bản sao</em> Khóa chính của bảng khác — đánh dấu quan hệ. <strong>JOIN ... ON</strong> là cú pháp nối 2 bảng qua FK ↔ PK để tạo "siêu bảng" tạm thời phục vụ truy vấn.',
           example: 'Bảng <code>game</code> có cột <code>pub_id</code> (FK) trỏ sang <code>publisher.id</code> (PK). Khi muốn biết game nào do Nintendo sản xuất, ta JOIN 2 bảng rồi WHERE theo <code>publisher.name</code>.'
         },
-        visual: {
+        concept_cards: [{'icon': 'fa-link', 'title': 'Foreign Key (Khóa ngoại)', 'body': 'Cột trong bảng này <em>tham chiếu</em> đến PK của bảng khác. <code>game.pub_id → publisher.pub_id</code>. Đảm bảo <strong>referential integrity</strong>.'}, {'icon': 'fa-object-group', 'title': 'JOIN — nối 2 bảng', 'body': 'Dùng <code>JOIN ... ON</code> để nối bảng qua FK. <code>SELECT g.title, p.name FROM game g JOIN publisher p ON g.pub_id = p.pub_id</code>.'}],
+                visual: {
+          
+          diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'game', 'columns': [{'name': 'game_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}, {'name': 'pub_id', 'type': 'INT', 'key': 'FK'}]}, {'name': 'publisher', 'columns': [{'name': 'pub_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}, {'name': 'country', 'type': 'VARCHAR'}]}], 'connectors': [{'from': 'game', 'to': 'publisher', 'label': 'published_by', 'fromCard': 'N', 'toCard': '1'}], 'note': 'N game thuộc về 1 publisher. Mũi tên từ game.pub_id → publisher.pub_id'},
           schema: {
             table_name: 'game',
             columns: [
@@ -524,13 +561,13 @@ window.LESSON_CONTENT['db_design'] = {
      * ======================================================================== */
     {
       id: 'db_04', index: 4,
-      title: 'M:N & Bảng trung gian (Junction Table)',
-      subtitle: 'Quan hệ Nhiều-Nhiều qua bảng cầu nối — Double JOIN chuỗi',
+      title: 'Foreign Key & Mối quan hệ 1:N',
+      subtitle: 'Khóa ngoại — cầu nối giữa các entity',
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
-      estimated_minutes: 25, xp_reward: 70,
-      project_piece: '🛒 Mở khóa "Hệ thống Giỏ hàng Tài khoản ↔ Kho Game"',
+      estimated_minutes: 22, xp_reward: 55,
+      project_piece: '🌉 Khởi động "Cầu nối Liên Bảng"',
       drag_type: 'connector',
-      challenge_type: 'bug_fix',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'player',
@@ -553,7 +590,10 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Quan hệ M:N xuất hiện khắp nơi: SV học nhiều môn, môn có nhiều SV; khách mua nhiều game, game bán cho nhiều khách. Không thể đặt FK vào bên nào (sẽ lặp). Giải pháp: <strong>Bảng trung gian (Junction Table)</strong> chỉ chứa 2 FK, tạo 1 dòng cho mỗi cặp. Truy vấn M:N nghĩa là <strong>Double JOIN chuỗi</strong> qua bảng trung gian.',
           example: 'Bảng <code>player_game_library</code> ở giữa chỉ chứa <code>ref_p_id</code> + <code>ref_game_id</code>. Khi DragonLord (p_id=7) mua Elden Ring (game_id=101) → 1 dòng (7, 101) trong library. Khi cùng DragonLord mua Hades (game_id=103) → 1 dòng (7, 103). Khi NoobMaster (p_id=8) cũng mua Elden Ring → 1 dòng (8, 101).'
         },
-        visual: {
+        concept_cards: [{'icon': 'fa-arrows-left-right', 'title': 'M:N — Many-to-Many', 'body': '1 học sinh học N môn. 1 môn có N học sinh. Không thể lưu trực tiếp — cần <strong>1 bảng trung gian (junction table)</strong>.'}, {'icon': 'fa-table-list', 'title': 'Junction Table', 'body': 'Bảng chỉ chứa 2 FK (đôi khi + thuộc tính riêng như <code>enrolled_at</code>). PK thường là cặp 2 FK ghép. <code>enrollment(student_id, course_id)</code>.'}],
+                visual: {
+          
+          diagram: {'type': 'er', 'width': 620, 'height': 280, 'entities': [{'name': 'student', 'columns': [{'name': 'student_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}]}, {'name': 'course', 'columns': [{'name': 'course_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}]}, {'name': 'enrollment', 'columns': [{'name': 'student_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'course_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'enrolled_at', 'type': 'DATE'}]}], 'connectors': [{'from': 'student', 'to': 'enrollment', 'fromCard': '1', 'toCard': 'N', 'label': 'enrolls'}, {'from': 'course', 'to': 'enrollment', 'fromCard': '1', 'toCard': 'N', 'label': 'has'}], 'note': 'M:N qua bảng trung gian. 2 FK + PK ghép.'},
           schema: {
             table_name: 'player',
             columns: [
@@ -677,6 +717,7 @@ window.LESSON_CONTENT['db_design'] = {
 
       step_4: {
         prompt: '<strong>Bug:</strong> Query dưới đây <em>quên JOIN bảng game</em>, nên chỉ trả về mã game chứ không trả về tên game. Sửa cho ra kết quả đúng. (Click vào dòng lỗi để edit)',
+        starter: '-- Tìm tên sinh viên + tên khóa học đã đăng ký\n-- JOIN 3 bảng: student ↔ enrollment ↔ course\nSELECT s.name, c.title\n  FROM student s\n  JOIN ____ e ON s.____ = e.____\n  JOIN course c ON e.____ = c.____\n WHERE s.____ = 7;',
         schema: {
           table_name: 'player',
           columns: [
@@ -725,13 +766,13 @@ window.LESSON_CONTENT['db_design'] = {
      * ======================================================================== */
     {
       id: 'db_05', index: 5,
-      title: 'Thực thể yếu (Weak Entity)',
-      subtitle: 'Thực thể cần "cha" để tồn tại — Khóa chính tổng hợp FK + Discriminator',
+      title: 'Mối quan hệ M:N & Bảng trung gian',
+      subtitle: 'Nhiều-nhiều — chia trung gian để về 1:N',
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
-      estimated_minutes: 20, xp_reward: 60,
-      project_piece: '🎮 Mở khóa "Kho nội dung mở rộng (DLC)" cho Game Shop',
+      estimated_minutes: 24, xp_reward: 60,
+      project_piece: '🧩 Khởi động "Máy Chia Trung Gian"',
       drag_type: 'chip',
-      challenge_type: 'mcq_code',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'dlc_content',
@@ -755,7 +796,10 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Có những thực thể không thể tự tồn tại nếu thiếu "cha". Ví dụ: bản mở rộng (DLC) <em>"Gói số 1"</em> — chưa biết của game nào. Nó cần kết hợp với <code>ref_game_id</code> mới định danh được. <strong>Thực thể yếu</strong> dùng Khóa chính tổng hợp: FK (trỏ về cha) + Discriminator (cột phân biệt trong phạm vi cha).',
           example: 'Trong bảng <code>dlc_content</code>, không có cột <code>dlc_id</code> riêng. Khóa chính là 2 cột cộng lại: <code>ref_game_id</code> (FK) + <code>dlc_no</code> (Discriminator). Truy vấn cần dùng <code>AND</code>: <code>WHERE dlc_no = 1 AND ref_game_id = 400</code>.'
         },
-        visual: {
+        concept_cards: [{'icon': 'fa-link-slash', 'title': 'Weak Entity (Thực thể yếu)', 'body': 'Thực thể <strong>không có PK riêng</strong>, phải dựa vào owner entity để định danh. VD: <code>room</code> trong <code>building</code> — phòng 101 KHÔNG duy nhất nếu không biết building nào.'}, {'icon': 'fa-key', 'title': 'Partial Key + Identifying Relationship', 'body': '<strong>Partial key</strong> = khóa phân biệt trong phạm vi owner (vd: <code>room_number</code>). <strong>Identifying relationship</strong> = đường nét đôi trong ER, FK gồm cả PK của owner.'}],
+                visual: {
+          
+          diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'building', 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'PK'}, {'name': 'address', 'type': 'VARCHAR'}]}, {'name': 'room', 'weak': true, 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'room_number', 'type': 'INT', 'key': 'PK(partial)'}, {'name': 'capacity', 'type': 'INT'}]}], 'connectors': [{'from': 'building', 'to': 'room', 'label': 'contains', 'fromCard': '1', 'toCard': 'N'}], 'note': 'room là WEAK entity (viền đứt nét). PK ghép: (bld_id, room_number)'},
           schema: {
             table_name: 'dlc_content',
             columns: [
@@ -845,47 +889,220 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Lấy <code>dlc_name</code> của gói DLC số <strong>2</strong> thuộc game id <strong>300</strong>. Câu SQL nào dưới đây là ĐÚNG?',
+        prompt: 'Lấy <code>dlc_name</code> của gói DLC số <strong>2</strong> thuộc game id <strong>300</strong>. Viết query SQL trong editor bên phải.',
+        starter: "-- Lấy dlc_name của DLC #2 thuộc game id 300\n-- Filter: dlc_no = 2 AND ref_game_id = 300\nSELECT \n  FROM \n WHERE  = \n   AND  = ;\n",
         schema: {
           table_name: 'dlc_content',
           columns: [
-            { name: 'ref_game_id', type: 'INT',     key: 'PK+FK' },
-            { name: 'dlc_no',     type: 'INT',     key: 'PK' },
-            { name: 'dlc_name',   type: 'VARCHAR', key: '' }
+            { name: 'dlc_id',       type: 'INT',     key: 'PK' },
+            { name: 'ref_game_id',  type: 'INT',     key: 'FK' },
+            { name: 'dlc_no',       type: 'INT',     key: '' },
+            { name: 'dlc_name',     type: 'VARCHAR', key: '' }
           ],
           data: [
-            ['300', '1', 'Hearts of Stone'],
-            ['300', '2', 'Blood and Wine'],
-            ['400', '1', 'Phantom Liberty'],
-            ['400', '2', 'Corpo Gear Pack']
+            ['1', '300', '1', 'Elden Ring - DLC 1'],
+            ['2', '300', '2', 'Elden Ring - DLC 2'],
+            ['3', '400', '1', 'Hades - DLC 1'],
+            ['4', '400', '2', 'Hades - DLC 2']
           ]
         },
-        options: [
-          { id: 'a', text: "SELECT dlc_name FROM dlc_content WHERE dlc_no = 2;", correct: false, explain: 'Sai: thiếu ref_game_id nên trả về cả 2 dòng DLC #2 (của game 300 + 400).' },
-          { id: 'b', text: "SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;", correct: true, explain: 'Đúng! Khóa chính tổng hợp = 2 cột cộng lại. AND nối cả 2 vế → chỉ trả về 1 dòng "Blood and Wine".' },
-          { id: 'c', text: "SELECT dlc_name FROM dlc_content WHERE ref_game_id = 300;", correct: false, explain: 'Sai: ref_game_id chỉ đủ để biết là DLC của game 300, nhưng không định danh được DLC #1 hay #2 → trả về cả 2 dòng.' },
-          { id: 'd', text: "SELECT dlc_name FROM dlc_content WHERE dlc_name = 'Blood and Wine';", correct: false, explain: 'Sai logic: lọc theo name (không phải PK) sẽ đúng trong data này nhưng phá vỡ tính định danh — không dùng tên làm định danh được.' }
-        ],
-        expected_sql: "SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;",
+        expected_sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;',
+        hints: [{'level': 1, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_no = 2;</code> — Sai: thiếu ref_game_id nên trả về cả 2 dòng DLC #2 (của game 300 + 400).'}, {'level': 2, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE ref_game_id = 300;</code> — Sai: ref_game_id chỉ đủ để biết là DLC của game 300, nhưng không định danh được DLC #1 hay #2 → trả về cả 2 dòng.'}, {'level': 3, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_name = </code> — Sai logic: lọc theo name (không phải PK) sẽ đúng trong data này nhưng phá vỡ tính định danh — không dùng tên làm định danh được.'}, {'level': 4, 'text': '<code class="code">SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;</code>'}],
         success_message: 'Bài 6 sẽ bắt đầu Module 2 — phát hiện dư thừa (Redundancy) & Phụ thuộc hàm (Functional Dependency) — nền tảng của chuẩn hóa dữ liệu.',
         xp_reward: 30
       }
     },
 
     /* ========================================================================
-     * BÀI 6 — Redundancy & Functional Dependency [REALIGN v3]
-     * Concept: PDF Bài 6 — data: game_studio_combined
-     * drag_type: box | challenge_type: mcq_code
+     * BÀI 6 — Mapping ER → Relational Tables
+     * Concept: Quy tắc ánh xạ từ ER Diagram sang bảng vật lý
      * ======================================================================== */
     {
       id: 'db_06', index: 6,
+      title: 'Mapping ER → Bảng quan hệ',
+      subtitle: 'Quy tắc ánh xạ Entity Set, Relationship, Multi-valued sang bảng vật lý',
+      module: 1, module_title: 'Giới thiệu & Nền tảng Database',
+      estimated_minutes: 22, xp_reward: 65,
+      project_piece: '🗺️ Mở khóa "Bản đồ dịch ER → Bảng"',
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'game_mapping_demo',
+          columns: ['game_id', 'title', 'pub_id', 'genre'],
+          dataRows: [
+            ['101', 'Elden Ring',     '10', 'Soulslike'],
+            ['102', 'God of War',     '20', 'Action'],
+            ['103', 'Hades',          '30', 'Roguelike']
+          ]
+        }
+      },
+
+      step_1: {
+        primer: {
+          goal: [
+            'Mỗi Entity Set → 1 bảng quan hệ',
+            'Mỗi Attribute đơn → 1 cột trong bảng',
+            'Quan hệ 1:N đặt FK ở phía N; M:N tạo Junction Table; Weak Entity dùng composite PK'
+          ],
+          intro: 'Có ER Diagram đẹp đẽ nhưng DB không hiểu hình vẽ — phải <strong>ánh xạ (mapping)</strong> sang bảng vật lý. Silberschatz định nghĩa 7 quy tắc mapping trong Ch 6.7: <em>Mỗi entity set mạnh → 1 bảng; mỗi weak entity set → 1 bảng với PK tổng hợp; mỗi 1:1 → FK ở 1 bên; 1:N → FK ở phía N; M:N → junction table riêng; multi-valued attribute → bảng riêng.</em>',
+          example: 'ER có <code>Game</code> (entity mạnh) + <code>Publisher</code> (entity mạnh) + quan hệ <em>publishes</em> (1:N — 1 publisher xuất bản nhiều game). Mapping: tạo bảng <code>game(game_id PK, title, pub_id FK)</code> và <code>publisher(id PK, name)</code>. FK <code>pub_id</code> nằm phía N (game) — đúng quy tắc.'
+        },
+        concept_cards: [{'icon': 'fa-arrow-right-arrow-left', 'title': 'ER → Relational Mapping', 'body': 'Quy tắc: <strong>Entity set → Table</strong>. Mỗi attribute đơn → cột. PK của entity → PK của table. M:N + multivalued → bảng riêng.'}, {'icon': 'fa-diagram-project', 'title': '7 bước mapping (Silberschatz Ch 6.7)', 'body': 'B1: Entity mạnh → table. B2: Weak entity → table có FK + partial key. B3: Binary 1:1 → FK ở 1 bên. B4: Binary 1:N → FK ở bên N. B5: Binary M:N → bảng riêng. B6: Multivalued → bảng riêng. B7: Derived → KHÔNG lưu.'}],
+                visual: {
+          
+          diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'employee', 'columns': [{'name': 'emp_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}, {'name': 'dept_id', 'type': 'INT', 'key': 'FK'}]}, {'name': 'department', 'columns': [{'name': 'dept_id', 'type': 'INT', 'key': 'PK'}, {'name': 'dept_name', 'type': 'VARCHAR'}]}, {'name': 'project', 'columns': [{'name': 'proj_id', 'type': 'INT', 'key': 'PK'}, {'name': 'proj_name', 'type': 'VARCHAR'}]}, {'name': 'works_on', 'columns': [{'name': 'emp_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'proj_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'hours', 'type': 'INT'}]}], 'connectors': [{'from': 'employee', 'to': 'department', 'label': 'belongs_to', 'fromCard': 'N', 'toCard': '1'}, {'from': 'employee', 'to': 'works_on', 'label': 'works', 'fromCard': '1', 'toCard': 'N'}, {'from': 'project', 'to': 'works_on', 'label': 'has', 'fromCard': '1', 'toCard': 'N'}], 'note': '3 entity + 1 junction. Bài 6: áp dụng 7 bước mapping để tạo table vật lý.'},
+          schema: {
+            table_name: 'game',
+            columns: [
+              { name: 'game_id',  type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'title',    type: 'VARCHAR', key: '',   icon: '🎮' },
+              { name: 'pub_id',   type: 'INT',     key: 'FK', icon: '🔗' },
+              { name: 'genre',    type: 'VARCHAR', key: '',   icon: '🏷️' }
+            ]
+          },
+          data_preview: [
+            ['101', 'Elden Ring',  '10', 'Soulslike'],
+            ['102', 'God of War',  '20', 'Action'],
+            ['103', 'Hades',       '30', 'Roguelike'],
+            ['104', 'Stardew',     '40', 'Cozy']
+          ],
+          related_tables: [
+            {
+              name: 'publisher',
+              columns: [
+                { name: 'id',   type: 'INT',     key: 'PK', icon: '🔑' },
+                { name: 'name', type: 'VARCHAR', key: '',   icon: '🏢' }
+              ],
+              data: [
+                ['10', 'FromSoftware'],
+                ['20', 'Sony Santa Monica'],
+                ['30', 'Supergiant'],
+                ['40', 'ConcernedApe']
+              ]
+            }
+          ]
+        },
+        mission: 'Lấy <code>title</code> của tất cả game do <code>FromSoftware</code> xuất bản — quan sát FK <code>pub_id</code> ánh xạ từ quan hệ 1:N.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Khi mapping quan hệ 1:N từ ER sang bảng quan hệ, Foreign Key nên đặt ở đâu?',
+            options: [
+              { id: 'a', text: 'Đặt FK ở phía "1" (bảng bên nhiều quan hệ)', correct: false },
+              { id: 'b', text: 'Đặt FK ở phía "N" (bảng chứa nhiều record ứng với 1 record bên kia)', correct: true },
+              { id: 'c', text: 'Tạo bảng trung gian junction table', correct: false },
+              { id: 'd', text: 'Không cần FK vì quan hệ đã rõ trong ER diagram', correct: false }
+            ]
+          },
+          {
+            question: 'Multi-valued attribute (vd: 1 user có nhiều số điện thoại) nên mapping thế nào?',
+            options: [
+              { id: 'a', text: 'Nhét tất cả số điện thoại vào 1 cột VARCHAR ngăn cách bằng dấu phẩy', correct: false },
+              { id: 'b', text: 'Tạo bảng riêng (user_id FK, phone_number) — mỗi số là 1 dòng', correct: true },
+              { id: 'c', text: 'Tạo nhiều cột phone_1, phone_2, phone_3', correct: false },
+              { id: 'd', text: 'Bỏ qua multi-valued attribute khi mapping', correct: false }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Phân loại: quy tắc mapping nào đúng cho tình huống này?',
+          instruction: 'Mỗi thẻ là 1 tình huống ER. Kéo vào ô quy tắc mapping tương ứng.<br><strong style="color:var(--success)">Entity Set → 1 bảng</strong> · <strong style="color:var(--primary)">1:N → FK ở phía N</strong> · <strong style="color:var(--warning)">M:N → Junction Table</strong> · <strong style="color:var(--text-400)">Multi-valued → Bảng riêng</strong>.',
+          chips: [
+            { id: 'm1', label: 'Game (entity mạnh)' },
+            { id: 'm2', label: '1 Publisher xuất bản nhiều Game (1:N)' },
+            { id: 'm3', label: 'Player chơi nhiều Game, Game có nhiều Player (M:N)' },
+            { id: 'm4', label: 'User có nhiều email (multi-valued)' }
+          ],
+          bins: [
+            { id: 'entity',   label: 'Entity Set → 1 bảng',       correct: 'entity' },
+            { id: 'one_n',    label: '1:N → FK ở phía N',          correct: 'one_n' },
+            { id: 'm_n',      label: 'M:N → Junction Table',       correct: 'm_n' },
+            { id: 'multi',    label: 'Multi-valued → Bảng riêng',  correct: 'multi' }
+          ],
+          solution: {
+            'm1': 'entity',
+            'm2': 'one_n',
+            'm3': 'm_n',
+            'm4': 'multi'
+          }
+        }
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',         slot: 'kw-select' },
+          { type: 'col', token: 'title',          slot: 'col-1' },
+          { type: 'kw',  token: 'FROM',           slot: 'kw-from' },
+          { type: 'tbl', token: 'game',           slot: 'tbl' },
+          { type: 'kw',  token: 'JOIN',           slot: 'kw-join' },
+          { type: 'tbl', token: 'publisher',      slot: 'tbl2' },
+          { type: 'kw',  token: 'ON',             slot: 'kw-on' },
+          { type: 'col', token: 'game.pub_id = publisher.id', slot: 'col-on' },
+          { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
+          { type: 'col', token: 'publisher.name', slot: 'wcol-1' },
+          { type: 'op',  token: '=',              slot: 'op-1' },
+          { type: 'val', token: "'FromSoftware'", slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], multi: true }
+        ],
+        expected_sql: "SELECT title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware';",
+        reveal_hints: {
+          'select-line': 'SELECT 1 cột: <strong>title</strong>.',
+          'from-line':   'FROM <strong>game</strong> JOIN <strong>publisher</strong> ON <strong>game.pub_id = publisher.id</strong> — FK ánh xạ từ quan hệ 1:N.',
+          'where-line':  "WHERE lọc hãng: <strong>publisher.name = 'FromSoftware'</strong>."
+        }
+      },
+
+      step_4: {
+        prompt: 'Lấy <code>title</code> và <code>genre</code> của mọi game do <code>Supergiant</code> xuất bản. Viết query SQL trong editor bên phải.',
+        starter: "-- Lấy title + genre của game do Supergiant xuất bản\n-- JOIN game ↔ publisher ON game.pub_id = publisher.id\nSELECT g., g.\n  FROM  g\n  JOIN  p ON g. = p.\n WHERE p. = ;\n",
+        schema: {
+          table_name: 'game',
+          columns: [
+            { name: 'id',     type: 'INT',     key: 'PK' },
+            { name: 'title',  type: 'VARCHAR', key: '' },
+            { name: 'genre',  type: 'VARCHAR', key: '' },
+            { name: 'pub_id', type: 'INT',     key: 'FK' }
+          ],
+          data: [
+            ['1', 'Hades',    'Roguelike', '101'],
+            ['2', 'Bastion',  'Action',    '101'],
+            ['3', 'GTA V',    'Open World','102'],
+            ['4', 'Red Dead', 'Open World','102']
+          ]
+        },
+        expected_sql: "SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';",
+        hints: [
+          { level: 1, text: 'Cần 2 cột: <code>title</code> và <code>genre</code>.' },
+          { level: 2, text: 'Bảng <code>game</code> JOIN <code>publisher</code> ON <code>game.pub_id = publisher.id</code>.' },
+          { level: 3, text: "WHERE <code>publisher.name = 'Supergiant'</code>." },
+          { level: 4, text: "<code class=\"code\">SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';</code>" }
+        ],
+        success_message: 'Xuất sắc! Bạn đã nắm vững quy tắc mapping ER → Bảng quan hệ. Bài 7 sẽ dùng FD để phát hiện dư thừa trong bảng đã mapping xong.',
+        xp_reward: 35
+      }
+    },
+
+    /* ========================================================================
+     * BÀI 7 — Redundancy & Functional Dependency [REALIGN v3]
+     * Concept: PDF Bài 7 — data: game_studio_combined
+     * drag_type: box | challenge_type: mcq_code
+     * ======================================================================== */
+    {
+      id: 'db_07', index: 7,
       title: 'Redundancy & Phụ thuộc hàm (FD)',
       subtitle: 'Phát hiện dữ liệu lặp và quy tắc X → Y ẩn trong bảng',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 22, xp_reward: 70,
       project_piece: '🛰️ Khởi động "Còi báo động Hệ thống Dọn Rác"',
       drag_type: 'box',
-      challenge_type: 'mcq_code',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'game_studio_combined',
@@ -909,7 +1126,10 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bảng <code>game_studio_combined</code> dưới đây có vấn đề: <em>FromSoftware</em> xuất hiện 3 lần, mỗi lần lặp lại "Japan". Đó là <strong>Redundancy</strong> (dư thừa) — tốn ổ cứng, dễ sinh mâu thuẫn. <strong>Phụ thuộc hàm (Functional Dependency)</strong> là quy tắc: nếu biết <code>studio_name</code> thì biết <code>st_country</code> (mỗi studio chỉ ở 1 nước). Viết: <code>studio_name → st_country</code>.',
           example: 'Bạn phát hiện FD: <code>studio_name → st_country</code>. Đây là quy tắc toán học — không phải syntax SQL — nhưng là gốc rễ để biết bảng "có vấn đề" và cần tách. Có 3 dạng chuẩn sẽ dùng FD để phát hiện vi phạm: 1NF, 2NF, 3NF, BCNF.'
         },
-        visual: {
+        concept_cards: [{"icon": "fa-arrows-to-dot", "title": "Redundancy (Dư thừa)", "body": "Cùng 1 thông tin lặp lại ở nhiều dòng. VD: <code>studio_country</code> lặp ở mỗi game → tốn storage + dễ sai khi update."}, {"icon": "fa-arrows-left-right", "title": "Functional Dependency (FD)", "body": "Quy tắc <code>X → Y</code>: biết X thì xác định được Y duy nhất. <code>game_id → title, genre, price</code>. Mọi FD đều từ PK."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — chưa tách", "columns": ["game_id", "title", "studio", "studio_country"], "rows": [["1", "Mario", "Nintendo", "Japan"], ["2", "Zelda", "Nintendo", "Japan"], ["3", "Hades", "Supergiant", "USA"]], "violations": {"1-3": true, "2-3": true}}, "after": {"title": "SAU — tách studio", "columns": ["game_id", "title", "studio"], "rows": [["1", "Mario", "Nintendo"], ["2", "Zelda", "Nintendo"], ["3", "Hades", "Supergiant"]]}, "note": "Tách thành 2 bảng: game + studio. studio_country lưu 1 lần duy nhất."},
           schema: {
             table_name: 'game_studio_combined',
             columns: [
@@ -998,53 +1218,180 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> (USA). Câu SQL nào dưới đây là ĐÚNG?',
-        schema: {
-          table_name: 'game_studio_combined',
-          columns: [
-            { name: 'game_id',     type: 'INT',     key: 'PK' },
-            { name: 'game_name',   type: 'VARCHAR', key: '' },
-            { name: 'studio_name', type: 'VARCHAR', key: '' },
-            { name: 'st_country',  type: 'VARCHAR', key: '' }
-          ],
-          data: [
-            ['55', 'Elden Ring',  'FromSoftware', 'Japan'],
-            ['56', 'Bloodborne',  'FromSoftware', 'Japan'],
-            ['88', 'Portal 2',    'Valve',        'USA'],
-            ['89', 'Half-Life 2', 'Valve',        'USA']
-          ]
-        },
-        options: [
-          { id: 'a', text: "SELECT game_name FROM game_studio_combined WHERE st_country = 'USA';", correct: false, explain: 'Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể — nếu 2 studio cùng ở USA thì sẽ trả nhầm.' },
-          { id: 'b', text: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';", correct: true, explain: 'Đúng! WHERE theo studio_name (PK trong bảng studios) → chỉ trả 2 dòng Portal 2 + Half-Life 2.' },
-          { id: 'c', text: "SELECT * FROM game_studio_combined;", correct: false, explain: 'Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 4 dòng của 2 studio khác nhau.' },
-          { id: 'd', text: "SELECT game_name FROM game_studio_combined WHERE game_name = 'Portal 2';", correct: false, explain: 'Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu Half-Life 2.' }
-        ],
+        prompt: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> (USA). Viết query SQL trong editor bên phải.',
+
+        starter: "-- Lấy tên các game do Valve phát triển\n-- Filter theo studio_name = 'Valve'\nSELECT \n  FROM game_studio_combined\n WHERE ;\n",
         expected_sql: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
-        success_message: 'Bạn đã hiểu Redundancy + FD. Bài 7 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
+        hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 4 dòng của 2 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT game_name FROM game_studio_combined WHERE studio_name = \'Valve\';</code>'}],
+        success_message: 'Bạn đã hiểu Redundancy + FD. Bài 8 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
         xp_reward: 30
       }
     },
 
     /* ========================================================================
-     * BÀI 7 — 2NF: Phụ thuộc hàm đầy đủ (Full FD) — School domain
+     * BÀI 8 — 1NF: Nguyên tử hóa dữ liệu (Atomic Domains)
      * ======================================================================== */
     {
-      id: 'db_07', index: 7,
-      title: 'Dạng chuẩn 1 (1NF) — Nguyên tử hóa dữ liệu',
-      subtitle: 'Loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp',
-      module: 5, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
-      estimated_minutes: 25, xp_reward: 80,
-      project_piece: '🔬 Thu thập "Kính hiển vi Phụ thuộc hàm"',
+      id: 'db_08', index: 8,
+      title: 'Dạng chuẩn 1 (1NF) — Atomic Domains',
+      subtitle: 'Mỗi ô chỉ chứa 1 giá trị nguyên tử (không multivalued, không composite)',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
+      estimated_minutes: 22, xp_reward: 70,
+      project_piece: '🧪 Thu thập "Bộ Chia Nguyên tử"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
-          name: 'enrollments', col: 0, row: 5, width: 4, height: 1,
-          columns: ['student_id', 'course_id', 'grade', 'semester'],
+          name: 'student_raw', col: 0, row: 4, width: 3, height: 1,
+          columns: ['student_id', 'name', 'phones'],
           dataRows: [
-            ['S01', 'C101', '8.5', '2024-1'],
-            ['S02', 'C101', '9.0', '2024-1'],
-            ['S03', 'C202', '7.0', '2024-1'],
-            ['S04', 'C303', '6.5', '2024-1']
+            ['S01', 'Minh', '0901-111-111, 0902-222-222'],
+            ['S02', 'Yuki', '0903-333-333'],
+            ['S03', 'Sara', '0904-444-444, 0905-555-555, 0906-666-666']
+          ]
+        }
+      },
+
+      step_1: {
+        primer: {
+          goal: [
+            '1NF yêu cầu mỗi attribute có domain nguyên tử (atomic — không chia nhỏ được)',
+            'Vi phạm 1NF: MULTIVALUED attr (nhiều giá trị trong 1 ô) hoặc COMPOSITE attr (gộp nhiều mảnh)',
+            'Fix: tách multivalued thành bảng riêng; tách composite thành nhiều cột độc lập'
+          ],
+          intro: 'Bảng <code class="code">student_raw</code> dưới đây VI PHẠM 1NF: cột <code class="code">phones</code> chứa <strong>nhiều số điện thoại</strong> trong 1 ô (vd: <code>"0901-xxx, 0902-yyy"</code>). Đây là <em>multivalued attribute</em> — không nguyên tử. Theo Silberschatz Ch 7.8: <strong>1NF yêu cầu mỗi attribute phải có domain nguyên tử — không thể chia nhỏ thành nhiều giá trị có ý nghĩa</strong>.',
+          example: 'Nếu muốn tìm TẤT CẢ sinh viên có số "0901-xxx" — bạn không thể <code>WHERE phones = \'0901-xxx\'</code> (vì ô chứa "0901-xxx, 0902-yyy" không bằng). Phải dùng <code>LIKE \'%0901-xxx%\'</code> → chậm và sai (vd: cũng match "0901-xxx-old"). Tách <code>phones</code> thành bảng riêng thì query đúng & nhanh: <code>WHERE phone = \'0901-xxx\'</code>.'
+        },
+        concept_cards: [{"icon": "fa-atom", "title": "1NF — Atomic Domains", "body": "Mỗi cell chỉ chứa <strong>1 giá trị nguyên tử</strong> (không list, không nested). Multivalued → tách thành nhiều dòng. Composite → tách thành nhiều cột."}, {"icon": "fa-list", "title": "Multivalued vs Composite", "body": "<strong>Multivalued</strong>: 1 cell chứa N giá trị cùng loại (vd: <code>phones = \"0901,0902\"</code>) → tách thành nhiều dòng. <strong>Composite</strong>: 1 cell chứa nhiều mảnh khác loại (vd: <code>address</code>) → tách thành nhiều cột."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 1NF", "columns": ["member_id", "name", "phones"], "rows": [["1", "Alice", "0901,0902"], ["2", "Bob", "0903"]], "violations": {"0-2": true, "1-2": true}}, "after": {"title": "SAU — đã 1NF (tách dòng)", "columns": ["member_id", "name", "phone"], "rows": [["1", "Alice", "0901"], ["1", "Alice", "0902"], ["2", "Bob", "0903"]], "fixes": {"0-2": true, "1-2": true, "2-2": true}}, "note": "1NF yêu cầu atomic: tách \"0901,0902\" thành 2 dòng riêng."},
+          schema: {
+            table_name: 'student_raw',
+            columns: [
+              { name: 'student_id', type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'name',       type: 'VARCHAR', key: '',   icon: '👤' },
+              { name: 'phones',     type: 'VARCHAR', key: '',   icon: '⚠️' }
+            ]
+          },
+          data_preview: [
+            ['S01', 'Minh', '0901-111-111, 0902-222-222'],
+            ['S02', 'Yuki', '0903-333-333'],
+            ['S03', 'Sara', '0904-444-444, 0905-555-555, 0906-666-666']
+          ]
+        },
+        mission: 'Tách cột <code>phones</code> (multivalued) thành bảng riêng <code>student_phone(student_id, phone)</code> để đạt 1NF — mỗi ô chỉ chứa 1 giá trị.'
+      },
+
+        step_2: {
+        mcq: [{"question": "1NF (Dạng chuẩn 1) yêu cầu điều gì?", "options": [{"id": "a", "text": "Mỗi cell chỉ chứa 1 giá trị nguyên tử (atomic)", "correct": true}, {"id": "b", "text": "Bảng phải có ít nhất 3 cột", "correct": false}, {"id": "c", "text": "Mỗi dòng phải có giá trị NULL", "correct": false}, {"id": "d", "text": "Bảng phải có đúng 1 khóa chính", "correct": false}]}, {"question": "Bảng <code>student_raw</code> có cột <code>phones = \"0901-111, 0902-222\"</code>. Cách fix đúng?", "options": [{"id": "a", "text": "Tách thành bảng riêng (1 dòng / số điện thoại)", "correct": true}, {"id": "b", "text": "Đổi VARCHAR thành TEXT", "correct": false}, {"id": "c", "text": "Thêm cột phone2, phone3", "correct": false}, {"id": "d", "text": "Không cần fix", "correct": false}]}],
+        decomp_game: {
+          rule_label: '1NF — Atomic Domains',
+          rule: 'Mỗi attribute phải có domain nguyên tử (không thể chia nhỏ thành nhiều giá trị có ý nghĩa). Cột phones chứa NHIỀU số điện thoại trong 1 ô → multivalued → tách thành bảng riêng (mỗi phone 1 dòng).',
+          mission: 'Kéo các cột từ bảng <code>student_raw</code> vào 2 bảng mục tiêu. Cột multivalued <code>phones</code> phải rời đi thành bảng riêng.',
+          source_table: {
+            name: 'student_raw',
+            columns: [
+              { name: 'student_id', type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'name',       type: 'VARCHAR', key: '',   icon: '👤' },
+              { name: 'phones',     type: 'VARCHAR', key: '',   icon: '⚠️' }
+            ],
+            data: [
+              ['S01', 'Minh', '0901-111-111'],
+              ['S01', 'Minh', '0902-222-222'],
+              ['S02', 'Yuki', '0903-333-333'],
+              ['S03', 'Sara', '0904-444-444'],
+              ['S03', 'Sara', '0905-555-555'],
+              ['S03', 'Sara', '0906-666-666']
+            ]
+          },
+          target_tables: [
+            { name: 'student',       icon: '🧑‍🎓', description: 'Bảng sinh viên (giữ student_id + name, KHÔNG có phones)' },
+            { name: 'student_phone', icon: '📞', description: 'Bảng số điện thoại (mỗi phone 1 dòng riêng)' }
+          ],
+          solution: {
+            'student':       ['student_id', 'name'],
+            'student_phone': ['student_id', 'phone']
+          },
+          hint: 'Cột phones chứa nhiều giá trị → tách thành bảng riêng (mỗi phone 1 dòng). Cột name chỉ phụ thuộc student_id → ở lại bảng student.'
+        },
+        mini_game: {"type": "classify", "title": "Phân loại: bảng nào vi phạm 1NF?", "instruction": "Mỗi thẻ là 1 bảng mẫu. Kéo vào ô <strong style=\"color:var(--danger)\">Vi phạm 1NF</strong> hoặc <strong style=\"color:var(--success)\">Đạt 1NF</strong>.", "chips": [{"id": "t-phones", "label": "phones = \"0901,0902\""}, {"id": "t-age", "label": "age = 25 (số nguyên)"}, {"id": "t-addr", "label": "address = \"Hanoi, Cầu Giấy\" (composite)"}, {"id": "t-name", "label": "name = \"Alice\""}], "bins": [{"id": "bad", "label": "Vi phạm 1NF (multivalued)", "correct": "bad"}, {"id": "good", "label": "Đạt 1NF (atomic)", "correct": "good"}], "solution": {"t-phones": "bad", "t-age": "good", "t-addr": "bad", "t-name": "good"}}
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',      slot: 'kw-select' },
+          { type: 'col', token: 'student_id',  slot: 'col-1' },
+          { type: 'kw',  token: 'FROM',        slot: 'kw-from' },
+          { type: 'tbl', token: 'student_phone',slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',       slot: 'kw-where' },
+          { type: 'col', token: 'phone',       slot: 'wcol-1' },
+          { type: 'op',  token: '=',           slot: 'op-1' },
+          { type: 'val', token: "'0901-111-111'", slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____',           accepts: ['kw', 'col'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',             accepts: ['kw', 'tbl'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',  accepts: ['kw', 'col', 'op', 'val'], multi: true }
+        ],
+        expected_sql: "SELECT student_id FROM student_phone WHERE phone = '0901-111-111';",
+        reveal_hints: {
+          'select-line': 'SELECT 1 cột: <strong>student_id</strong> (sinh viên nào có số này).',
+          'from-line':   'FROM bảng <strong>student_phone</strong> (bảng đã tách theo 1NF — mỗi phone 1 dòng).',
+          'where-line':  "WHERE lọc theo <strong>phone = '0901-111-111'</strong> — đây là điều KHÔNG THỂ làm với bảng student_raw gốc (1 ô chứa nhiều số)."
+        }
+      },
+
+      step_4: {
+        prompt: 'Sau khi tách theo 1NF: bảng <code>student(student_id, name)</code> và bảng <code>student_phone(student_id, phone)</code>. Tìm <code>name</code> của sinh viên có số điện thoại <code>\'0901-111-111\'</code>.',
+        schema: {
+          table_name: 'student_phone',
+          columns: [
+            { name: 'student_id', type: 'INT',     key: 'FK' },
+            { name: 'phone',      type: 'VARCHAR', key: '' }
+          ],
+          data: [
+            ['S01', '0901-111-111'],
+            ['S01', '0902-222-222'],
+            ['S02', '0903-333-333'],
+            ['S03', '0904-444-444'],
+            ['S03', '0905-555-555'],
+            ['S03', '0906-666-666']
+          ]
+        },
+        starter: "-- Tìm tên SV có số ĐT '0901-111-111'\n-- Gợi ý: dùng WHERE student_id IN (subquery)\nSELECT \n  FROM student\n WHERE student_id  (\n   SELECT student_id FROM student_phone WHERE \n );\n",
+        expected_sql: "SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');",
+        hints: [
+          { level: 1, text: 'Cần lấy <code>name</code> từ bảng <code>student</code> — nơi có tên sinh viên.' },
+          { level: 2, text: 'Dùng <code>IN (subquery)</code>: <code>WHERE student_id IN (...)</code> với subquery tìm student_id từ bảng <code>student_phone</code>.' },
+          { level: 3, text: 'Subquery: <code>(SELECT student_id FROM student_phone WHERE phone = \'0901-111-111\')</code>' },
+          { level: 4, text: "<code class=\"code\">SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');</code>" }
+        ],
+        success_message: 'Hoàn thành 1NF! Dữ liệu đã nguyên tử hóa — mỗi ô chỉ chứa 1 giá trị, query đơn giản không cần LIKE. Tiếp theo: 2NF loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp!',
+        xp_reward: 50
+      }
+    },
+
+    /* ========================================================================
+     * BÀI 9 — 2NF: Phụ thuộc hàm đầy đủ (Full FD) — Library domain
+     * ======================================================================== */
+    {
+      id: 'db_09', index: 9,
+      title: 'Dạng chuẩn 2 (2NF) — Phụ thuộc hàm đầy đủ',
+      subtitle: 'Loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
+      estimated_minutes: 22, xp_reward: 70,
+      project_piece: '🔬 Thu thập "Kính hiển vi Phụ thuộc hàm"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'book_loan_raw',
+          columns: ['book_id', 'copy_no', 'loan_date', 'member_name'],
+          dataRows: [
+            ['B01', '1', '2024-06-01', 'Minh'],
+            ['B01', '2', '2024-06-03', 'Minh'],
+            ['B02', '1', '2024-06-05', 'Yuki']
           ]
         }
       },
@@ -1056,124 +1403,146 @@ window.LESSON_CONTENT['db_design'] = {
             'Mỗi cột non-key phải phụ thuộc vào TOÀN BỘ khóa, không chỉ một phần',
             'Vi phạm = phụ thuộc bộ phận (partial dependency) → tách thành bảng riêng'
           ],
-          intro: 'Bạn quản lý <strong>bảng điểm sinh viên</strong>. Bảng <code class="code">enrollments</code> ban đầu có khóa chính tổng hợp <code class="code">(student_id, course_id)</code>. Vấn đề: <code class="code">student_name</code> chỉ phụ thuộc vào <code class="code">student_id</code> (một phần khóa) — không phụ thuộc vào <code class="code">course_id</code>. <strong>2NF</strong> yêu cầu mỗi cột non-key phải phụ thuộc <em>toàn bộ</em> khóa.',
-          example: 'Nếu đổi tên sinh viên từ "Nguyễn Minh" → "Minh Nguyễn", bạn phải sửa MỌI DÒNG có student_id = S01 (vì mỗi sinh viên học nhiều môn → có nhiều dòng). Đó là update anomaly. Tách sinh viên ra bảng riêng → sửa 1 chỗ là xong.'
+          intro: 'Bạn quản lý <strong>thư viện sách</strong>. Bảng <code class="code">book_loan_raw</code> có khóa chính tổng hợp <code class="code">(book_id, copy_no)</code> (mỗi cuốn sách có thể có nhiều bản copy). Vấn đề: <code class="code">member_name</code> chỉ phụ thuộc vào <code class="code">member_id</code> (một phần khóa qua loan) — không phụ thuộc <code class="code">copy_no</code>. <strong>2NF</strong> yêu cầu mỗi cột non-key phải phụ thuộc <em>toàn bộ</em> khóa.',
+          example: 'Nếu đổi tên người mượn từ "Minh" → "Minh Nguyễn", bạn phải sửa MỌI DÒNG có member_name = "Minh" (vì Minh mượn nhiều sách → có nhiều dòng). Đó là <strong>update anomaly</strong>. Tách member ra bảng riêng → sửa 1 chỗ là xong.'
         },
-        decomp_game: {
-          rule_label: '2NF — Phụ thuộc hàm đầy đủ',
-          rule: 'Bảng enrollments có composite key (student_id, course_id). Cột nào chỉ phụ thuộc MỘT phần khóa → tách ra bảng riêng. Cột nào phụ thuộc TOÀN BỘ khóa (grade) → ở lại.',
-          mission: 'Kéo các cột từ bảng <code>enrollments</code> vào 3 bảng mục tiêu. Cột <em>chỉ phụ thuộc 1 phần khóa</em> phải rời đi.',
-          source_table: {
-            name: 'enrollments',
+        concept_cards: [{"icon": "fa-puzzle-piece", "title": "2NF — No Partial Dependency", "body": "Mọi cột non-key phải phụ thuộc CẢ PK (không phụ thuộc 1 phần PK). Với composite PK (a,b): <code>{a,b} → c</code> OK, <code>a → c</code> SAI → tách ra bảng riêng."}, {"icon": "fa-scissors", "title": "Cách fix 2NF", "body": "Tách phần PK gây phụ thuộc ra bảng riêng. PK gốc giữ lại. VD: <code>loans(book_id, copy_no, member_id)</code> có <code>member_id → member_name</code> → tách thành <code>member</code> riêng."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 2NF", "columns": ["book_id", "copy_no", "member_id", "member_name", "loan_date"], "rows": [["B1", "1", "M01", "Alice", "2026-01-01"], ["B1", "2", "M01", "Alice", "2026-01-05"], ["B2", "1", "M02", "Bob", "2026-01-03"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 2NF (tách member)", "columns": ["book_id", "copy_no", "member_id", "loan_date"], "rows": [["B1", "1", "M01", "2026-01-01"], ["B1", "2", "M01", "2026-01-05"], ["B2", "1", "M02", "2026-01-03"]]}, "note": "PK (book_id, copy_no) nhưng member_name chỉ phụ thuộc member_id → tách member riêng."},
+          schema: {
+            table_name: 'book_loan_raw',
             columns: [
-              { name: 'student_id',   type: 'INT',     key: 'PK', icon: '🔑' },
-              { name: 'course_id',    type: 'INT',     key: 'PK', icon: '🔑' },
-              { name: 'student_name', type: 'VARCHAR', key: '',   icon: '⚠️' },
-              { name: 'student_dob',  type: 'DATE',    key: '',   icon: '⚠️' },
-              { name: 'course_name',  type: 'VARCHAR', key: '',   icon: '⚠️' },
-              { name: 'instructor',   type: 'VARCHAR', key: '',   icon: '⚠️' },
-              { name: 'grade',        type: 'DECIMAL', key: '',   icon: '🎯' },
-              { name: 'semester',     type: 'VARCHAR', key: '',   icon: '📅' },
-              { name: 'student_id',   type: 'INT',     key: '',   icon: '🔗' },
-              { name: 'course_id',    type: 'INT',     key: '',   icon: '🔗' }
-            ],
-            data: [
-              ['S01', 'C101', 'Nguyễn Minh', '2003-05-12', 'Database',  'TS. Trần',  '8.5', '2024-1'],
-              ['S01', 'C202', 'Nguyễn Minh', '2003-05-12', 'Java OOP',  'ThS. Lê',   '7.5', '2024-1'],
-              ['S02', 'C101', 'Trần Yuki',   '2003-08-21', 'Database',  'TS. Trần',  '9.0', '2024-1'],
-              ['S02', 'C303', 'Trần Yuki',   '2003-08-21', 'Web Dev',   'ThS. Phạm', '8.0', '2024-1'],
-              ['S03', 'C202', 'Lê Sara',     '2004-01-15', 'Java OOP',  'ThS. Lê',   '7.0', '2024-1'],
-              ['S04', 'C303', 'Phạm Alex',   '2003-11-30', 'Web Dev',   'ThS. Phạm', '6.5', '2024-1']
+              { name: 'book_id',     type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'copy_no',     type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'member_id',   type: 'INT',     key: '',   icon: '🔗' },
+              { name: 'member_name', type: 'VARCHAR', key: '',   icon: '⚠️' },
+              { name: 'loan_date',   type: 'DATE',    key: '',   icon: '📅' }
             ]
           },
-          target_tables: [
-            { name: 'students',   icon: '🧑‍🎓', description: 'Bảng sinh viên (chỉ phụ thuộc student_id)' },
-            { name: 'courses',    icon: '📘', description: 'Bảng môn học (chỉ phụ thuộc course_id)' },
-            { name: 'enrollments',icon: '📝', description: 'Bảng điểm (phụ thuộc cả student_id + course_id)' }
-          ],
-          solution: {
-            'students':    ['student_id', 'student_name', 'student_dob'],
-            'courses':     ['course_id', 'course_name', 'instructor'],
-            'enrollments': ['student_id', 'course_id', 'grade', 'semester']
-          },
-          hint: 'Hỏi: cột này phụ thuộc TOÀN BỘ khóa (student_id + course_id) hay chỉ MỘT phần? grade phụ thuộc cả 2 (cùng sv học môn khác → điểm khác) → ở lại. Tên SV chỉ cần student_id → rời đi.'
+          data_preview: [
+            ['B01', '1', 'M01', 'Minh', '2024-06-01'],
+            ['B01', '2', 'M01', 'Minh', '2024-06-03'],
+            ['B02', '1', 'M02', 'Yuki', '2024-06-05'],
+            ['B03', '1', 'M01', 'Minh', '2024-06-07']
+          ]
         },
-        mission: 'Hoàn thành game kéo-thả để tách bảng <code class="code">enrollments</code> thành <code class="code">students</code>, <code class="code">courses</code>, và <code class="code">enrollments</code>.'
+        mission: 'Quan sát bảng: <code>member_name</code> chỉ phụ thuộc <code>member_id</code> — không phụ thuộc <code>copy_no</code>. Đây là phụ thuộc bộ phận → vi phạm 2NF.'
       },
 
       step_2: {
-        question: 'Trong bảng <code class="code">enrollments(student_id, course_id, student_name, grade)</code> với PK là <code class="code">(student_id, course_id)</code>, cột nào VI PHẠM 2NF?',
-        options: [
-          { id: 'a', text: '<code class="code">student_id</code> — vì là một phần khóa', correct: false },
-          { id: 'b', text: '<code class="code">grade</code> — vì phụ thuộc cả 2 cột khóa', correct: false },
-          { id: 'c', text: '<code class="code">student_name</code> — vì chỉ phụ thuộc <code class="code">student_id</code> (một phần khóa)', correct: true },
-          { id: 'd', text: '<code class="code">course_id</code> — vì là khóa ngoại', correct: false }
-        ]
+        mcq: [
+          {
+            question: 'Trong bảng <code>book_loan_raw(book_id, copy_no, member_id, member_name)</code> với PK là <code>(book_id, copy_no)</code>, cột nào VI PHẠM 2NF?',
+            options: [
+              { id: 'a', text: '<code>member_id</code> — vì là một phần quan hệ', correct: false },
+              { id: 'b', text: '<code>member_name</code> — vì chỉ phụ thuộc <code>member_id</code> (một phần của khóa qua loan)', correct: true },
+              { id: 'c', text: '<code>loan_date</code> — vì là cột ngày tháng', correct: false },
+              { id: 'd', text: '<code>copy_no</code> — vì là một phần khóa', correct: false }
+            ]
+          },
+          {
+            question: 'Để sửa vi phạm 2NF (phụ thuộc bộ phận), cần làm gì?',
+            options: [
+              { id: 'a', text: 'Thêm cột member_id vào làm PK', correct: false },
+              { id: 'b', text: 'Tách thành 2 bảng: <code>loans(book_id, copy_no, member_id, loan_date)</code> và <code>members(member_id, member_name)</code>', correct: true },
+              { id: 'c', text: 'Xóa cột copy_no khỏi bảng', correct: false },
+              { id: 'd', text: 'Đổi tên member_name thành member_full_name', correct: false }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Phân loại: cột nào phụ thuộc TOÀN BỘ khóa vs MỘT PHẦN khóa?',
+          instruction: 'Bảng <code>book_loan_raw</code> với PK <code>(book_id, copy_no)</code>. Kéo mỗi cột vào ô tương ứng.<br><strong style="color:var(--success)">Toàn bộ khóa</strong> · <strong style="color:var(--warning)">Một phần khóa (vi phạm 2NF)</strong> · <strong style="color:var(--text-400)">Không liên quan</strong>.',
+          chips: [
+            { id: 'c-bid',    label: 'book_id' },
+            { id: 'c-cno',    label: 'copy_no' },
+            { id: 'c-mid',    label: 'member_id' },
+            { id: 'c-mname',  label: 'member_name' },
+            { id: 'c-ldate',  label: 'loan_date' }
+          ],
+          bins: [
+            { id: 'full',   label: 'Phụ thuộc TOÀN BỘ khóa',           correct: 'full' },
+            { id: 'part',   label: 'Phụ thuộc MỘT PHẦN khóa (2NF)',    correct: 'part' },
+            { id: 'none',   label: 'Là 1 phần của khóa / không liên quan', correct: 'none' }
+          ],
+          solution: {
+            'c-bid':   'none',
+            'c-cno':   'none',
+            'c-mid':   'none',
+            'c-mname': 'part',
+            'c-ldate': 'full'
+          }
+        }
       },
 
       step_3: {
         blocks: [
-          { type: 'kw',  token: 'SELECT',     slot: 'kw-select' },
-          { type: 'col', token: 'student_id', slot: 'col-1' },
-          { type: 'col', token: 'grade',      slot: 'col-2' },
-          { type: 'kw',  token: 'FROM',       slot: 'kw-from' },
-          { type: 'tbl', token: 'enrollments',slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',      slot: 'kw-where' },
-          { type: 'col', token: 'course_id',  slot: 'wcol-1' },
-          { type: 'op',  token: '=',          slot: 'op-1' },
-          { type: 'val', token: "'C101'",     slot: 'val-1' }
+          { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
+          { type: 'col', token: 'book_id',         slot: 'col-1' },
+          { type: 'col', token: 'copy_no',         slot: 'col-2' },
+          { type: 'kw',  token: 'FROM',            slot: 'kw-from' },
+          { type: 'tbl', token: 'loans',           slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',           slot: 'kw-where' },
+          { type: 'col', token: 'member_id',       slot: 'wcol-1' },
+          { type: 'op',  token: '=',               slot: 'op-1' },
+          { type: 'val', token: "'M01'",           slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], multi: true }
         ],
-        expected_sql: "SELECT student_id, grade FROM enrollments WHERE course_id = 'C101';",
+        expected_sql: "SELECT book_id, copy_no FROM loans WHERE member_id = 'M01';",
         reveal_hints: {
-          'select-line': 'SELECT 2 cột: student_id và grade',
-          'from-line':   'FROM enrollments',
-          'where-line':  "Lọc theo course_id = 'C101'"
+          'select-line': 'SELECT 2 cột: <strong>book_id</strong> và <strong>copy_no</strong> (composite key).',
+          'from-line':   'FROM bảng đã 2NF: <strong>loans</strong>.',
+          'where-line':  "WHERE lọc người mượn: <strong>member_id = 'M01'</strong>."
         }
       },
 
       step_4: {
-        prompt: 'Tự gõ SQL! Từ bảng <code class="code">enrollments</code> (đã 2NF), lấy <code class="code">student_id</code> và <code class="code">grade</code> của các sinh viên đạt <code class="code">grade >= 8.0</code>.',
+        prompt: 'Sau 2NF, tách thành 2 bảng <code>loans</code> và <code>members</code>. Lấy <code>book_id</code>, <code>copy_no</code>, <code>loan_date</code> của các lượt mượn <em>sau ngày 2024-06-05</em>. Viết query SQL trong editor bên phải.',
+        starter: "-- Lấy book_id, copy_no, loan_date của các lượt mượn sau 2024-06-05\n-- Filter: loan_date > '2024-06-05'\nSELECT , , \n  FROM loans\n WHERE ;\n",
         schema: {
-          table_name: 'enrollments',
+          table_name: 'loans',
           columns: [
-            { name: 'student_id', type: 'INT',     key: 'PK' },
-            { name: 'course_id',  type: 'INT',     key: 'PK' },
-            { name: 'grade',      type: 'DECIMAL', key: '' },
-            { name: 'semester',   type: 'VARCHAR', key: '' }
+            { name: 'book_id',   type: 'INT',  key: 'PK' },
+            { name: 'copy_no',   type: 'INT',  key: 'PK' },
+            { name: 'member_id', type: 'INT',  key: 'FK' },
+            { name: 'loan_date', type: 'DATE', key: '' }
           ],
           data: [
-            ['S01', 'C101', '8.5', '2024-1'],
-            ['S02', 'C101', '9.0', '2024-1'],
-            ['S03', 'C202', '7.0', '2024-1'],
-            ['S04', 'C303', '6.5', '2024-1']
+            ['B01', '1', 'M01', '2024-06-01'],
+            ['B01', '2', 'M01', '2024-06-03'],
+            ['B02', '1', 'M02', '2024-06-05'],
+            ['B03', '1', 'M01', '2024-06-07']
           ]
         },
-        expected_sql: "SELECT student_id, grade FROM enrollments WHERE grade >= 8.0;",
+        expected_sql: "SELECT book_id, copy_no, loan_date FROM loans WHERE loan_date > '2024-06-05';",
         hints: [
-          { level: 1, text: 'Cần 2 cột: <code class="code">student_id</code> và <code class="code">grade</code>' },
-          { level: 2, text: 'Bảng <code class="code">enrollments</code>, lọc <code class="code">grade >= 8.0</code>' },
-          { level: 3, text: "<code class=\"code\">SELECT student_id, grade FROM enrollments WHERE grade >= 8.0;</code>" }
+          { level: 1, text: 'Cần 3 cột: <code>book_id</code>, <code>copy_no</code>, <code>loan_date</code>.' },
+          { level: 2, text: 'Bảng <code>loans</code>, lọc <code>loan_date > \'2024-06-05\'</code>.' },
+          { level: 3, text: 'Dùng <code>&gt;</code> cho "sau ngày" (lớn hơn).' },
+          { level: 4, text: "<code class=\"code\">SELECT book_id, copy_no, loan_date FROM loans WHERE loan_date > '2024-06-05';</code>" }
         ],
-        success_message: 'Hoàn thành 1NF! Bảng loans giờ chỉ còn FK + ngày tháng — dữ liệu đã nguyên tử hóa. Tiếp theo: 2NF loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp!',
-        xp_reward: 80
+        success_message: 'Hoàn thành 2NF! Phụ thuộc bộ phận đã bị loại bỏ — member_name đã tách sang bảng members. Tiếp theo Bài 10 sẽ xét BCNF, phiên bản "nghiêm ngặt" hơn.',
+        xp_reward: 40
       }
     },
 
     /* ========================================================================
-     * BÀI 8 — BCNF: Phân rã phi tổn thất (Lossless Decomposition) — Hospital domain
+     * BÀI 10 — BCNF: Phân rã phi tổn thất (Lossless Decomposition) — Hospital domain
      * ======================================================================== */
     {
-      id: 'db_08', index: 8,
+      id: 'db_10', index: 10,
       title: 'Dạng chuẩn BCNF & Phân rã Phi tổn thất',
       subtitle: 'Chia bảng không mất dữ liệu nhờ khóa ngoại đúng vị trí',
-      module: 5, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 25, xp_reward: 80,
       project_piece: '🛰️ Thu thập "Máy Cưa Không Gian"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'treatments', col: 0, row: 5, width: 4, height: 1,
@@ -1197,6 +1566,30 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bạn quản lý <strong>hồ sơ bệnh viện</strong>. Bảng <code class="code">treatments</code> ghi lại: bệnh nhân nào, do bác sĩ nào, điều trị gì, ngày nào. Nhưng bạn cũng muốn biết <em>chuyên khoa</em> của bác sĩ. Vấn đề: <code class="code">doctor_id</code> quyết định <code class="code">doctor_specialty</code> (mỗi bác sĩ chỉ có 1 chuyên khoa), nhưng <code class="code">doctor_id</code> <em>không phải</em> siêu khóa của bảng treatments → <strong>vi phạm BCNF</strong>.',
           example: 'Cập nhật chuyên khoa bác sĩ D01 từ "Tim mạch" → "Nội tiết" → phải sửa nhiều dòng. Nếu 1 dòng bị sót → dữ liệu mâu thuẫn (inconsistency). Tách <code class="code">doctors</code> ra bảng riêng: sửa 1 chỗ, dữ liệu luôn nhất quán.'
         },
+        concept_cards: [{"icon": "fa-shield-halved", "title": "BCNF — Boyce-Codd Normal Form", "body": "Mọi FD <code>X → Y</code> phải có <code>X</code> là superkey. Nếu có FD mà vế trái KHÔNG phải superkey → vi phạm BCNF → tách bảng."}, {"icon": "fa-code-branch", "title": "Ví dụ kinh điển", "body": "Bảng <code>teaches(prof, course, dept)</code>. FD: <code>prof → dept</code>. Nhưng <code>{prof, course}</code> mới là PK → <code>prof</code> không phải superkey → vi phạm BCNF. Tách thành <code>prof_dept</code> riêng."}],
+                visual: {
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm BCNF", "columns": ["patient_id", "doctor_id", "treatment", "doctor_specialty"], "rows": [["P01", "D01", "Khám tổng quát", "Tim mạch"], ["P01", "D01", "Tái khám", "Tim mạch"], ["P02", "D02", "Phẫu thuật", "Ngoại khoa"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã BCNF (tách doctors)", "columns": ["patient_id", "doctor_id", "treatment"], "rows": [["P01", "D01", "Khám tổng quát"], ["P01", "D01", "Tái khám"], ["P02", "D02", "Phẫu thuật"]]}, "note": "Tách doctors(doctor_id, specialty) riêng. doctor_specialty lưu 1 lần."},
+          schema: {
+            table_name: 'treatments',
+            columns: [
+              { name: 'patient_id',     type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'doctor_id',      type: 'INT',     key: 'FK', icon: '🔗' },
+              { name: 'treatment',      type: 'VARCHAR', key: '',   icon: '💊' },
+              { name: 'treatment_date', type: 'DATE',    key: '',   icon: '📅' }
+            ]
+          },
+          data_preview: [
+            ['P01', 'D01', 'Khám tổng quát',     '2024-03-01'],
+            ['P02', 'D02', 'Phẫu thuật ruột thừa','2024-03-05'],
+            ['P01', 'D03', 'Xét nghiệm máu',      '2024-03-10'],
+            ['P03', 'D01', 'Khám tim mạch',       '2024-03-12']
+          ]
+        },
+                mission: 'Hoàn thành game kéo-thả để tách <code class="code">treatments</code> thành <code class="code">doctors</code>, <code class="code">patients</code>, và <code class="code">treatments</code>.'
+      },
+
+        step_2: {
+        mcq: [{"question": "BCNF yêu cầu điều gì?", "options": [{"id": "a", "text": "Mọi FD X → Y phải có X là superkey", "correct": true}, {"id": "b", "text": "Mọi cột phải có giá trị duy nhất", "correct": false}, {"id": "c", "text": "Bảng phải có composite key", "correct": false}, {"id": "d", "text": "Không có cột NULL", "correct": false}]}, {"question": "Bảng <code>teaches(prof, course, dept)</code> với FD <code>prof → dept</code> vi phạm chuẩn nào?", "options": [{"id": "a", "text": "1NF — vì có redundancy trong dept", "correct": false}, {"id": "b", "text": "BCNF — vì prof không phải superkey", "correct": true}, {"id": "c", "text": "Không vi phạm gì cả", "correct": false}, {"id": "d", "text": "2NF — vì thiếu partial dependency check", "correct": false}]}],
         decomp_game: {
           rule_label: 'BCNF — Siêu khóa là "thánh"',
           rule: 'Trong bảng treatments, doctor_id quyết định doctor_specialty, nhưng doctor_id KHÔNG PHẢI siêu khóa. Vi phạm BCNF! Tách doctors ra bảng riêng.',
@@ -1234,17 +1627,7 @@ window.LESSON_CONTENT['db_design'] = {
           },
           hint: 'Câu hỏi BCNF: "Cột X có phải siêu khóa không?" Nếu X quyết định Y mà X không phải siêu khóa → vi phạm → tách X-Y ra bảng riêng. Ở đây doctor_id quyết định doctor_specialty mà doctor_id không phải superkey.'
         },
-        mission: 'Hoàn thành game kéo-thả để tách <code class="code">treatments</code> thành <code class="code">doctors</code>, <code class="code">patients</code>, và <code class="code">treatments</code>.'
-      },
-
-      step_2: {
-        question: 'Khi nào một bảng VI PHẠM BCNF?',
-        options: [
-          { id: 'a', text: 'Khi bảng có khóa chính tổng hợp', correct: false },
-          { id: 'b', text: 'Khi có một cột non-superkey quyết định một cột khác', correct: true },
-          { id: 'c', text: 'Khi bảng có nhiều hơn 5 cột', correct: false },
-          { id: 'd', text: 'Khi bảng có cột <code class="code">date</code>', correct: false }
-        ]
+        mini_game: {"type": "classify", "title": "Phân loại: bảng nào vi phạm BCNF?", "instruction": "Mỗi thẻ là 1 tình huống FD. Kéo vào ô <strong style=\"color:var(--danger)\">Vi phạm BCNF</strong> hoặc <strong style=\"color:var(--success)\">Đạt BCNF</strong>.", "chips": [{"id": "t-teaches", "label": "teaches(prof, course, dept) — prof → dept"}, {"id": "t-enroll", "label": "enroll(student, course) — chỉ có PK"}, {"id": "t-borrow", "label": "borrow(book, member) — không có FD riêng"}, {"id": "t-publish", "label": "publish(prof, journal) — prof → dept + journal → prof"}], "bins": [{"id": "bad", "label": "Vi phạm BCNF", "correct": "bad"}, {"id": "good", "label": "Đạt BCNF", "correct": "good"}], "solution": {"t-teaches": "bad", "t-enroll": "good", "t-borrow": "good", "t-publish": "bad"}}
       },
 
       step_3: {
@@ -1273,7 +1656,8 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Tự gõ SQL! Từ bảng <code class="code">treatments</code> (đã BCNF), lấy <code class="code">treatment</code> và <code class="code">treatment_date</code> của các ca điều trị sau ngày <code class="code">2024-03-10</code>.',
+        prompt: 'Từ bảng <code class="code">treatments</code> (đã BCNF), lấy <code class="code">treatment</code> và <code class="code">treatment_date</code> của các ca điều trị sau ngày <code class="code">2024-03-10</code>.',
+        starter: "-- Lấy treatment + treatment_date sau ngày 2024-03-10\n-- Filter: treatment_date > '2024-03-10'\nSELECT , \n  FROM treatments\n WHERE ;\n",
         schema: {
           table_name: 'treatments',
           columns: [
@@ -1291,9 +1675,10 @@ window.LESSON_CONTENT['db_design'] = {
         },
         expected_sql: "SELECT treatment, treatment_date FROM treatments WHERE treatment_date > '2024-03-10';",
         hints: [
-          { level: 1, text: 'Cần 2 cột: <code class="code">treatment</code> và <code class="code">treatment_date</code>' },
-          { level: 2, text: 'Bảng <code class="code">treatments</code>, lọc <code class="code">treatment_date > \'2024-03-10\'</code>' },
-          { level: 3, text: "<code class=\"code\">SELECT treatment, treatment_date FROM treatments WHERE treatment_date > '2024-03-10';</code>" }
+          { level: 1, text: 'Bạn cần lấy thông tin về <em>ca điều trị</em> sau một ngày cụ thể — tức là lọc theo ngày. Hãy nghĩ: cột nào lưu ngày điều trị?' },
+          { level: 2, text: 'Cần 2 cột: <code class="code">treatment</code> và <code class="code">treatment_date</code>' },
+          { level: 3, text: 'Bảng <code class="code">treatments</code>, lọc <code class="code">treatment_date > \'2024-03-10\'</code>' },
+          { level: 4, text: "<code class=\"code\">SELECT treatment, treatment_date FROM treatments WHERE treatment_date > '2024-03-10';</code>" }
         ],
         success_message: 'Hoàn thành BCNF! Bảng treatments giờ chỉ chứa sự kiện (FK + hành động + ngày). Bác sĩ và chuyên khoa đã được cô lập — cập nhật 1 chỗ, dữ liệu luôn nhất quán.',
         xp_reward: 80
@@ -1301,15 +1686,17 @@ window.LESSON_CONTENT['db_design'] = {
     },
 
     /* ========================================================================
-     * BÀI 9 — 3NF & Sự thỏa hiệp (Compromise) — Store domain
+     * BÀI 11 — 3NF & Sự thỏa hiệp (Compromise) — Store domain
      * ======================================================================== */
     {
-      id: 'db_09', index: 9,
+      id: 'db_11', index: 11,
       title: 'Dạng chuẩn 3 (3NF) & Sự thỏa hiệp',
       subtitle: 'Khi nào chấp nhận dư thừa nhỏ để tăng tốc độ truy vấn',
-      module: 5, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 25, xp_reward: 80,
       project_piece: '🛡️ Phân hệ "Đặc vụ Guild tối ưu hệ thống"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'orders', col: 0, row: 5, width: 4, height: 1,
@@ -1333,6 +1720,30 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Bạn quản lý <strong>cửa hàng trực tuyến</strong>. Bảng <code class="code">orders</code> ghi: ai mua, mua gì, số lượng, giá, tổng. Bạn cũng muốn biết <em>quản lý</em> của <em>danh mục</em> sản phẩm. Vấn đề: <code class="code">order_id</code> → <code class="code">product_id</code> → <code class="code">category</code> → <code class="code">category_manager</code>. Cột <code class="code">category_manager</code> phụ thuộc BẮC CẦU vào <code class="code">order_id</code> qua trung gian <code class="code">category</code> → <strong>vi phạm 3NF</strong>.',
           example: '3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là <em>khóa của bảng khác</em>. Ví dụ: trong bảng orders, cột <code class="code">product_name</code> phụ thuộc <code class="code">product_id</code> (khóa của bảng products) — vẫn OK theo 3NF, dù không lý tưởng. Đó là sự "thỏa hiệp" giữa tính chuẩn và tốc độ truy vấn.'
         },
+        concept_cards: [{"icon": "fa-link", "title": "3NF — No Transitive Dependency", "body": "Không có chuỗi FD <code>X → Y → Z</code> với X là PK, Y không phải key, Z là non-key. Nếu có → tách Y-Z thành bảng riêng. 3NF <strong>cho phép</strong> FD non-superkey (khác BCNF)."}, {"icon": "fa-scale-balanced", "title": "3NF vs BCNF", "body": "<strong>BCNF</strong> nghiêm hơn 3NF. Nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd khi có 2+ candidate key overlap)."}],
+                visual: {
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 3NF", "columns": ["order_id", "product_id", "category", "category_manager"], "rows": [["1001", "P01", "Game", "An"], ["1002", "P02", "Game", "An"], ["1003", "P03", "Gear", "Bình"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 3NF (tách categories)", "columns": ["order_id", "product_id", "category"], "rows": [["1001", "P01", "Game"], ["1002", "P02", "Game"], ["1003", "P03", "Gear"]]}, "note": "Tách categories(category, manager) riêng. category_manager lưu 1 lần / category."},
+          schema: {
+            table_name: 'orders',
+            columns: [
+              { name: 'order_id',   type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'product_id', type: 'INT',     key: 'FK', icon: '🔗' },
+              { name: 'qty',        type: 'INT',     key: '',   icon: '#️⃣' },
+              { name: 'order_date', type: 'DATE',    key: '',   icon: '📅' }
+            ]
+          },
+          data_preview: [
+            ['1001', 'P01', '2', '2024-04-01'],
+            ['1002', 'P02', '1', '2024-04-03'],
+            ['1003', 'P03', '3', '2024-04-05'],
+            ['1004', 'P01', '1', '2024-04-08']
+          ]
+        },
+                mission: 'Hoàn thành game kéo-thả để tách <code class="code">orders</code> thành <code class="code">categories</code>, <code class="code">products</code>, và <code class="code">orders</code>.'
+      },
+
+        step_2: {
+        mcq: [{"question": "3NF phân biệt với BCNF ở điểm nào?", "options": [{"id": "a", "text": "3NF cho phép FD non-superkey, BCNF không", "correct": true}, {"id": "b", "text": "BCNF chỉ áp dụng cho bảng > 5 cột", "correct": false}, {"id": "c", "text": "3NF nghiêm hơn BCNF", "correct": false}, {"id": "d", "text": "BCNF là tên khác của 3NF", "correct": false}]}, {"question": "Transitive dependency là gì?", "options": [{"id": "a", "text": "FD X → Y → Z (Y quyết định Z, X quyết định Y)", "correct": true}, {"id": "b", "text": "FD ngược Y → X", "correct": false}, {"id": "c", "text": "Mọi cột đều phụ thuộc PK", "correct": false}, {"id": "d", "text": "Có 2 khóa chính", "correct": false}]}],
         decomp_game: {
           rule_label: '3NF — Không phụ thuộc bắc cầu',
           rule: 'Trong bảng orders, order_id → product_id → category → category_manager. Cột category_manager bị phụ thuộc BẮC CẦU. Tách categories ra bảng riêng.',
@@ -1372,17 +1783,7 @@ window.LESSON_CONTENT['db_design'] = {
           },
           hint: 'Phụ thuộc bắc cầu: order_id → product_id → category → category_manager. category_manager chỉ cần category để xác định → tách ra. products giữ category vì nó là "khóa ngoại" tự nhiên.'
         },
-        mission: 'Hoàn thành game kéo-thả để tách <code class="code">orders</code> thành <code class="code">categories</code>, <code class="code">products</code>, và <code class="code">orders</code>.'
-      },
-
-      step_2: {
-        question: 'Khi nào một phụ thuộc hàm được gọi là BẮC CẦU (transitive)?',
-        options: [
-          { id: 'a', text: 'Khi X → Y → Z, tức Z phụ thuộc Y và Y phụ thuộc X', correct: true },
-          { id: 'b', text: 'Khi cả X và Y đều là khóa chính', correct: false },
-          { id: 'c', text: 'Khi bảng có nhiều hơn 3 cột', correct: false },
-          { id: 'd', text: 'Khi bảng có khóa ngoại', correct: false }
-        ]
+        mini_game: {"type": "order", "title": "Sắp xếp thứ tự NF", "instruction": "Kéo thả để xếp theo thứ tự từ <strong>lỏng nhất → nghiêm nhất</strong>.", "items": [{"id": "1nf", "label": "1NF — atomic domains"}, {"id": "2nf", "label": "2NF — no partial dep"}, {"id": "3nf", "label": "3NF — no transitive dep"}, {"id": "bcnf", "label": "BCNF — every FD has superkey on LHS"}], "solution": {"1nf": 1, "2nf": 2, "3nf": 3, "bcnf": 4}}
       },
 
       step_3: {
@@ -1411,7 +1812,8 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Tự gõ SQL! Từ bảng <code class="code">orders</code> (đã 3NF), lấy <code class="code">order_id</code> và <code class="code">product_id</code> của các đơn hàng từ ngày <code class="code">2024-04-05</code> trở đi.',
+        prompt: 'Từ bảng <code class="code">orders</code> (đã 3NF), lấy <code class="code">order_id</code> và <code class="code">product_id</code> của các đơn hàng từ ngày <code class="code">2024-04-05</code> trở đi.',
+        starter: "-- Lấy order_id + product_id của đơn hàng từ 2024-04-05 trở đi\n-- Filter: order_date >= '2024-04-05'\nSELECT , \n  FROM orders\n WHERE ;\n",
         schema: {
           table_name: 'orders',
           columns: [
@@ -1429,9 +1831,10 @@ window.LESSON_CONTENT['db_design'] = {
         },
         expected_sql: "SELECT order_id, product_id FROM orders WHERE order_date >= '2024-04-05';",
         hints: [
-          { level: 1, text: 'Cần 2 cột: <code class="code">order_id</code> và <code class="code">product_id</code>' },
-          { level: 2, text: 'Bảng <code class="code">orders</code>, lọc <code class="code">order_date >= \'2024-04-05\'</code>' },
-          { level: 3, text: "<code class=\"code\">SELECT order_id, product_id FROM orders WHERE order_date >= '2024-04-05';</code>" }
+          { level: 1, text: 'Bạn cần tìm đơn hàng trong một khoảng thời gian. Nghĩ về cột nào lưu ngày đặt hàng và toán tử so sánh "từ ngày X trở đi".' },
+          { level: 2, text: 'Cần 2 cột: <code class="code">order_id</code> và <code class="code">product_id</code>' },
+          { level: 3, text: 'Bảng <code class="code">orders</code>, lọc <code class="code">order_date >= \'2024-04-05\'</code>' },
+          { level: 4, text: "<code class=\"code\">SELECT order_id, product_id FROM orders WHERE order_date >= '2024-04-05';</code>" }
         ],
         success_message: 'Hoàn thành 3NF! Phụ thuộc bắc cầu đã bị loại bỏ. Thực tế: đôi khi ta chấp nhận 1 chút dư thừa (denormalize) để tăng tốc truy vấn — đó là nghệ thuật của database engineer.',
         xp_reward: 80
@@ -1439,15 +1842,171 @@ window.LESSON_CONTENT['db_design'] = {
     },
 
     /* ========================================================================
-     * BÀI 10 — BOSS BATTLE: 4 stages trên Mạng Xã Hội Gamers
+     * BÀI 12 — 4NF: Phụ thuộc đa trị (Multivalued Dependency)
+     * Concept: 1 khóa quyết định NHIỀU giá trị độc lập của nhiều cột
      * ======================================================================== */
     {
-      id: 'db_10', index: 10,
+      id: 'db_12', index: 12,
+      title: 'Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị',
+      subtitle: 'Loại bỏ phụ thuộc đa trị độc lập — tránh lặp tổ hợp Cartesian',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
+      estimated_minutes: 22, xp_reward: 75,
+      project_piece: '🧬 Mở khóa "Máy Tách Tập Độc Lập"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'course_offering_raw',
+          columns: ['course_id', 'textbook', 'instructor'],
+          dataRows: [
+            ['CS101', 'Database Concepts', 'Dr. Trần'],
+            ['CS101', 'SQL Performance',   'Dr. Trần'],
+            ['CS101', 'Database Concepts', 'Dr. Lê'],
+            ['CS101', 'SQL Performance',   'Dr. Lê']
+          ]
+        }
+      },
+
+      step_1: {
+        primer: {
+          goal: [
+            'Phụ thuộc đa trị (MVD): X →→ Y — X quyết định NHIỀU giá trị Y độc lập',
+            'Vi phạm 4NF: bảng chứa ≥ 2 MVD độc lập từ cùng 1 khóa → tổ hợp Cartesian lặp',
+            'Sửa: tách thành 2 bảng, mỗi bảng chứa 1 MVD'
+          ],
+          intro: 'Trong <strong>hệ thống khóa học</strong>, một khóa học <code>CS101</code> có NHIỀU giáo trình (Database Concepts, SQL Performance) VÀ NHIỀU giảng viên (Dr. Trần, Dr. Lê). Hai tập này <em>độc lập</em> với nhau — nhưng khi nhét vào 1 bảng, ta buộc phải lặp tổ hợp Cartesian: 2 textbook × 2 instructor = 4 dòng, dù thực tế chỉ cần 2 + 2 = 4 dòng tách biệt.',
+          example: 'Bảng <code>course_offering_raw</code> có MVD: <code>course_id →→ textbook</code> và <code>course_id →→ instructor</code>. Hai MVD này độc lập → vi phạm 4NF. Sửa: tách thành <code>course_textbook(course_id, textbook)</code> và <code>course_instructor(course_id, instructor)</code>. Mỗi bảng chỉ chứa 1 MVD → không còn lặp Cartesian.'
+        },
+        concept_cards: [{"icon": "fa-cubes-stacked", "title": "4NF — No Multivalued Dependency", "body": "Khi 1 khóa X quyết định NHIỀU giá trị Y độc lập với các cột khác → <code>X →→ Y</code> (multivalued dep). Tách thành 2 bảng riêng."}, {"icon": "fa-explosion", "title": "Cartesian explosion", "body": "Nếu <code>prof →→ course</code> và <code>prof →→ hobby</code> mà không tách → bảng có số dòng = |course| × |hobby|. Vd: 4 course × 3 hobby = 12 dòng thay vì 4+3=7."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 4NF", "columns": ["prof", "course", "hobby"], "rows": [["Dr. Lee", "DB", "Chess"], ["Dr. Lee", "DB", "Music"], ["Dr. Lee", "AI", "Chess"], ["Dr. Lee", "AI", "Music"]], "violations": {"0-2": true, "0-1": true}}, "after": {"title": "SAU — đã 4NF (tách 2 bảng)", "columns": ["prof", "course"], "rows": [["Dr. Lee", "DB"], ["Dr. Lee", "AI"]]}, "note": "Tách thành 2 bảng: prof_course + prof_hobby. Mỗi MVD 1 bảng riêng."},
+          schema: {
+            table_name: 'course_offering_raw',
+            columns: [
+              { name: 'course_id',   type: 'VARCHAR', key: 'PK', icon: '🔑' },
+              { name: 'textbook',    type: 'VARCHAR', key: '',   icon: '📚' },
+              { name: 'instructor',  type: 'VARCHAR', key: '',   icon: '👨‍🏫' }
+            ]
+          },
+          data_preview: [
+            ['CS101', 'Database Concepts', 'Dr. Trần'],
+            ['CS101', 'SQL Performance',   'Dr. Trần'],
+            ['CS101', 'Database Concepts', 'Dr. Lê'],
+            ['CS101', 'SQL Performance',   'Dr. Lê'],
+            ['CS202', 'Clean Code',        'Dr. Phạm'],
+            ['CS202', 'Refactoring',       'Dr. Phạm']
+          ]
+        },
+        mission: 'Quan sát: CS101 có 2 textbook × 2 instructor = 4 dòng lặp tổ hợp. Nếu thêm 1 instructor nữa → thêm 2 dòng mới (mỗi textbook). Đó là dấu hiệu vi phạm 4NF.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Phụ thuộc đa trị (Multivalued Dependency) X →→ Y nghĩa là gì?',
+            options: [
+              { id: 'a', text: 'X quyết định đúng 1 giá trị Y', correct: false },
+              { id: 'b', text: 'X quyết định NHIỀU giá trị Y, và tập Y độc lập với các cột khác', correct: true },
+              { id: 'c', text: 'Y quyết định X', correct: false },
+              { id: 'd', text: 'X và Y là cùng 1 cột', correct: false }
+            ]
+          },
+          {
+            question: 'Khi nào một bảng VI PHẠM 4NF?',
+            options: [
+              { id: 'a', text: 'Khi bảng có khóa chính tổng hợp', correct: false },
+              { id: 'b', text: 'Khi bảng có ≥ 2 MVD độc lập từ cùng 1 khóa → sinh tổ hợp Cartesian lặp', correct: true },
+              { id: 'c', text: 'Khi bảng có cột JSON', correct: false },
+              { id: 'd', text: 'Khi bảng có hơn 3 cột', correct: false }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Phân loại: tình huống nào vi phạm 4NF?',
+          instruction: 'Kéo mỗi tình huống vào ô tương ứng.<br><strong style="color:var(--success)">Vi phạm 4NF</strong> (≥ 2 MVD độc lập) · <strong style="color:var(--text-400)">Không vi phạm</strong> (chỉ 1 MVD hoặc không có).',
+          chips: [
+            { id: 'mv1', label: 'course_id →→ textbook AND course_id →→ instructor' },
+            { id: 'mv2', label: 'user_id →→ email (1 user có nhiều email, không có MVD khác)' },
+            { id: 'mv3', label: 'movie_id →→ actor AND movie_id →→ director' },
+            { id: 'mv4', label: 'order_id → product (1 order có 1 product duy nhất)' }
+          ],
+          bins: [
+            { id: 'yes', label: 'Vi phạm 4NF',  correct: 'yes' },
+            { id: 'no',  label: 'Không vi phạm', correct: 'no' }
+          ],
+          solution: {
+            'mv1': 'yes',
+            'mv2': 'no',
+            'mv3': 'yes',
+            'mv4': 'no'
+          }
+        }
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
+          { type: 'col', token: 'textbook',        slot: 'col-1' },
+          { type: 'kw',  token: 'FROM',            slot: 'kw-from' },
+          { type: 'tbl', token: 'course_textbook', slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',           slot: 'kw-where' },
+          { type: 'col', token: 'course_id',       slot: 'wcol-1' },
+          { type: 'op',  token: '=',               slot: 'op-1' },
+          { type: 'val', token: "'CS101'",         slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____',                accepts: ['kw', 'col'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',                  accepts: ['kw', 'tbl'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',       accepts: ['kw', 'col', 'op', 'val'], multi: true }
+        ],
+        expected_sql: "SELECT textbook FROM course_textbook WHERE course_id = 'CS101';",
+        reveal_hints: {
+          'select-line': 'SELECT 1 cột: <strong>textbook</strong>.',
+          'from-line':   'FROM bảng đã tách 4NF: <strong>course_textbook</strong>.',
+          'where-line':  "WHERE lọc course: <strong>course_id = 'CS101'</strong>."
+        }
+      },
+
+      step_4: {
+        prompt: 'Sau 4NF, tách thành 2 bảng <code>course_textbook</code> và <code>course_instructor</code>. Lấy <code>instructor</code> của khóa học <code>CS202</code>. Viết query SQL trong editor bên phải.',
+        starter: "-- Lấy instructor của khóa học CS202\n-- Filter: course_id = 'CS202'\nSELECT \n  FROM course_instructor\n WHERE ;\n",
+        schema: {
+          table_name: 'course_instructor',
+          columns: [
+            { name: 'course_id',  type: 'VARCHAR', key: 'PK' },
+            { name: 'instructor', type: 'VARCHAR', key: '' }
+          ],
+          data: [
+            ['CS101', 'Dr. Trần'],
+            ['CS101', 'Dr. Lê'],
+            ['CS202', 'Dr. Phạm']
+          ]
+        },
+        expected_sql: "SELECT instructor FROM course_instructor WHERE course_id = 'CS202';",
+        hints: [
+          { level: 1, text: 'Cần 1 cột: <code>instructor</code>.' },
+          { level: 2, text: 'Bảng <code>course_instructor</code> (bảng 4NF thứ 2).' },
+          { level: 3, text: "WHERE <code>course_id = 'CS202'</code>." },
+          { level: 4, text: "<code class=\"code\">SELECT instructor FROM course_instructor WHERE course_id = 'CS202';</code>" }
+        ],
+        success_message: 'Hoàn thành 4NF! Phụ thuộc đa trị đã được tách — không còn tổ hợp Cartesian lặp. Bài 13 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
+        xp_reward: 45
+      }
+    },
+
+    /* ========================================================================
+     * BÀI 13 — BOSS BATTLE: 4 stages trên Mạng Xã Hội Gamers
+     * ======================================================================== */
+    {
+      id: 'db_13', index: 13,
       title: 'Trận chiến cuối — Siêu hệ thống chuẩn hóa',
       subtitle: 'Tổng hợp mọi quy tắc — Boss battle Mạng Xã Hội Gamers',
-      module: 6, module_title: 'Thiết kế hệ thống thực tế & Tối ưu hóa',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 30, xp_reward: 100,
       project_piece: '👑 Mở khóa Vương Miện "Kiến Trúc Sư CSDL Nội tại"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
       drag_map: {
         table: {
           name: 'users', col: 0, row: 5, width: 4, height: 1,
@@ -1471,6 +2030,50 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'BOSS BATTLE! Bạn nhận được một bảng <code class="code">gamers_social</code> khổng lồ — mỗi dòng chứa thông tin user + post + game + tag + platform, lẫn lộn. Bạn sẽ trải qua <strong>4 vòng chiến</strong>, mỗi vòng áp dụng 1 dạng chuẩn lên bảng trung gian. Mỗi stage sẽ có một bảng nhỏ hơn, tập trung vào một tập con cột.',
           example: 'Sau 4 vòng, bạn sẽ có một schema sạch cho Mạng Xã Hội Gamers: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction. Đó là sản phẩm thực tế của một Database Engineer chuyên nghiệp.'
         },
+        concept_cards: [{"icon": "fa-crown", "title": "Boss Battle — Grand System", "body": "Thiết kế schema cho hệ thống Mạng Xã Hội Gamers hoàn chỉnh: users, posts, games, genres, platforms, friends, likes, comments. Áp dụng 1NF→BCNF cho toàn bộ."}, {"icon": "fa-trophy", "title": "Đáp án tham khảo", "body": "5 bảng chính (users, posts, games, genres, platforms) + 2-3 bảng junction (user_friends, post_likes, post_games). Mỗi game có thể thuộc nhiều genre → junction table."}],
+                visual: {
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — bảng tổng (siêu vi phạm)", "columns": ["user_id", "username", "country", "is_premium", "post_id", "post_text", "game_name"], "rows": [["U01", "minh_gamer", "VN", "true", "P01", "Clear Elden Ring!", "Elden Ring"], ["U02", "yuki_99", "JP", "false", "P02", "Hades quá hay", "Hades"]], "violations": {"0-5": true, "0-6": true}}, "after": {"title": "SAU — schema sạch (sau 4 vòng)", "columns": ["user_id", "post_id", "game_id", "post_date"], "rows": [["U01", "P01", "G01", "2024-05-01"], ["U02", "P02", "G02", "2024-05-02"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          schema: {
+            table_name: 'users',
+            columns: [
+              { name: 'user_id',    type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'username',   type: 'VARCHAR', key: '',   icon: '👤' },
+              { name: 'user_email', type: 'VARCHAR', key: '',   icon: '📧' },
+              { name: 'country',    type: 'VARCHAR', key: '',   icon: '🌏' },
+              { name: 'is_premium', type: 'BOOLEAN', key: '',   icon: '👑' }
+            ]
+          },
+          data_preview: [
+            ['U01', 'minh_gamer', 'minh@x.com', 'VN', 'true'],
+            ['U02', 'yuki_99',    'yuki@x.com', 'JP', 'false'],
+            ['U03', 'sara_plays', 'sara@x.com', 'VN', 'true'],
+            ['U04', 'alex_pro',   'alex@x.com', 'US', 'true']
+          ]
+        },
+                mission: 'Hoàn thành 4 vòng chiến bằng cách tách dần bảng <code class="code">gamers_social</code> khổng lồ thành schema sạch: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Sau khi áp dụng đầy đủ 1NF → 2NF → 3NF → BCNF, Mạng Xã Hội Gamers nên có tối thiểu bao nhiêu bảng?',
+            options: [
+              { id: 'a', text: '1 bảng (gamers_social)', correct: false },
+              { id: 'b', text: '2 bảng (users + games)', correct: false },
+              { id: 'c', text: '5 bảng (users, posts, games, genres, platforms + 2-3 junction)', correct: true },
+              { id: 'd', text: '20 bảng (mỗi user một bảng riêng)', correct: false }
+            ]
+          },
+          {
+            question: 'Boss Battle — junction table dùng cho quan hệ nào?',
+            options: [
+              { id: 'a', text: 'user ↔ post (1:N — không cần junction)', correct: false },
+              { id: 'b', text: 'post ↔ game (M:N — mỗi post có thể nhắc nhiều game, mỗi game có thể ở nhiều post)', correct: true },
+              { id: 'c', text: 'user ↔ country (1:1 — không cần junction)', correct: false },
+              { id: 'd', text: 'post ↔ post_date (cùng bảng)', correct: false }
+            ]
+          }
+        ],
         decomp_game: {
           stages: [
             /* ═══ STAGE 1: 1NF — Tách post_tags (multi-value) ═══ */
@@ -1610,17 +2213,7 @@ window.LESSON_CONTENT['db_design'] = {
             }
           ]
         },
-        mission: 'Hoàn thành 4 vòng chiến bằng cách tách dần bảng <code class="code">gamers_social</code> khổng lồ thành schema sạch: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction.'
-      },
-
-      step_2: {
-        question: 'Sau khi áp dụng đầy đủ 1NF → 2NF → 3NF → BCNF, Mạng Xã Hội Gamers nên có tối thiểu bao nhiêu bảng?',
-        options: [
-          { id: 'a', text: '1 bảng (gamers_social)', correct: false },
-          { id: 'b', text: '2 bảng (users + games)', correct: false },
-          { id: 'c', text: '5 bảng (users, posts, games, genres, platforms + 2-3 junction)', correct: true },
-          { id: 'd', text: '20 bảng (mỗi user một bảng riêng)', correct: false }
-        ]
+        mini_game: {"type": "order", "title": "Thiết kế schema Boss Battle — sắp xếp thứ tự", "instruction": "Kéo thả theo thứ tự đúng để thiết kế Mạng Xã Hội Gamers.", "items": [{"id": "i1", "label": "1. Xác định entity: users, posts, games, genres, platforms"}, {"id": "i2", "label": "2. Tách game ↔ genre (M:N → junction table)"}, {"id": "i3", "label": "3. Tách post ↔ game (M:N → junction)"}, {"id": "i4", "label": "4. Kiểm tra BCNF cho từng bảng"}], "solution": {"i1": 1, "i2": 2, "i3": 3, "i4": 4}}
       },
 
       step_3: {
@@ -1649,7 +2242,8 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: 'Tự gõ SQL! Từ bảng <code class="code">users</code> (bảng đã chuẩn hóa sau 4 vòng), lấy <code class="code">username</code> và <code class="code">country</code> của người dùng <code class="code">is_premium = true</code>.',
+        prompt: 'BOSS BATTLE — Từ hệ thống Mạng Xã Hội Gamers (sau 4 vòng chuẩn hóa): tìm <strong>top 3 user premium</strong> có <strong>nhiều post nhất</strong>. Hiển thị username, country, và số post. Sắp xếp giảm dần theo post_count.',
+        starter: "-- BOSS BATTLE: Top 3 user premium có nhiều post nhất\n-- JOIN 2 bảng (users ↔ posts) + GROUP BY + ORDER BY + LIMIT\nSELECT u., u., COUNT(p.) AS post_count\n  FROM users u\n  JOIN posts p ON p. = u.\n WHERE u. = \n GROUP BY u., u., u.\n ORDER BY post_count DESC\n LIMIT 3;\n",
         schema: {
           table_name: 'users',
           columns: [
@@ -1666,15 +2260,703 @@ window.LESSON_CONTENT['db_design'] = {
             ['U04', 'alex_pro',   'alex@x.com', 'US', 'true']
           ]
         },
-        expected_sql: "SELECT username, country FROM users WHERE is_premium = true;",
+        expected_sql: "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
         hints: [
-          { level: 1, text: 'Cần 2 cột: <code class="code">username</code> và <code class="code">country</code>' },
-          { level: 2, text: 'Bảng <code class="code">users</code>, lọc <code class="code">is_premium = true</code> (boolean không cần nháy)' },
-          { level: 3, text: "<code class=\"code\">SELECT username, country FROM users WHERE is_premium = true;</code>" }
+          { level: 1, text: 'Boss Battle! Bạn cần <em>kết hợp dữ liệu từ 2 bảng</em> (users và posts), lọc theo điều kiện, đếm, sắp xếp, lấy top. Hãy nghĩ: dùng JOIN + GROUP BY + ORDER BY + LIMIT.' },
+          { level: 2, text: 'Cần <code>JOIN users ↔ posts</code> qua <code>user_id</code>.' },
+          { level: 3, text: '<code>WHERE is_premium = true</code> + <code>GROUP BY u.user_id, u.username, u.country</code>' },
+          { level: 4, text: "<code class=\"code\">SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;</code>" }
         ],
-        success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 10 bài, từ Entity/PK cơ bản đến chuẩn hóa nâng cao trên hệ thống Mạng Xã Hội Gamers phức tạp. Vương Miện Kiến Trúc Sư CSDL Nội tại đã thuộc về bạn!',
+        success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 13 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Mạng Xã Hội Gamers phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Bảo mật).',
         xp_reward: 100
       }
+    },
+
+    {
+      id: 'db_14', index: 14,
+      title: 'JSON trong Database — Path Expressions',
+      subtitle: 'Lưu và truy vấn JSON bên trong cột quan hệ',
+      module: 3, module_title: 'Application Design',
+      icon: '&#123;...&#125;', color: '#8B5CF6',
+      estimated_minutes: 18, xp_reward: 60,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+
+      step_1: {
+        primer: {
+          goal: [
+            'JSONB = cột lưu JSON thật, query bằng operator -> và ->>',
+            '->> trả về TEXT (chuỗi thuần), -> trả về JSON value',
+            'GROUP BY JSON key = phân tích dữ liệu linh hoạt không cần thêm cột'
+          ],
+          intro: 'Bảng <code class="code">app_users</code> cần lưu <strong>settings của user</strong>: theme (dark/light), notifications (on/off), language (vi/en). Tạo 10 cột? Không — dùng <strong>JSONB</strong>: 1 cột lưu cả object, query bằng <code class="code">->></code> để trích xuất giá trị. PostgreSQL parse JSON binary → truy vấn cực nhanh.',
+          example: 'Query <code class="code">settings->>\'theme\'</code> trả về <strong>text thuần</strong> (dark, light…). Dùng trong SELECT, WHERE, GROUP BY. Filter: <code class="code">WHERE settings->>\'notifications\' = \'true\'</code> — lưu ý: value là string, dùng nháy đơn.'
+        },
+        concept_cards: [{"icon": "fa-brackets-curly", "title": "JSON in Relational DB", "body": "Lưu trữ cấu trúc linh hoạt (JSONB) trong cột quan hệ. Truy vấn qua toán tử <code>-&gt;&gt;</code> (text) hoặc <code>-&gt;</code> (json). Index bằng GIN index cho tốc độ."}, {"icon": "fa-database", "title": "Khi nào dùng JSON?", "body": "Settings, preferences, tags, metadata thay đổi liên tục. KHÔNG dùng cho dữ liệu có quan hệ chặt (orders, users) — tách bảng thường."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          schema: {
+            table_name: 'app_users',
+            columns: [
+              { name: 'user_id',   type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+              { name: 'username',  type: 'VARCHAR', key: '',  icon: '' },
+              { name: 'settings',  type: 'JSONB',   key: '',  icon: '&#123;...&#125;' },
+              { name: 'last_login',type: 'TIMESTAMP',key: '',  icon: '' }
+            ]
+          },
+          data_preview: [
+            ['U01','minh_dev','{"theme":"dark","notifications":true,"lang":"vi"}','2026-01-10'],
+            ['U02','yuki_dev','{"theme":"light","notifications":false,"lang":"en"}','2026-01-11'],
+            ['U03','sara_dev','{"theme":"dark","notifications":true,"lang":"en"}','2026-01-12'],
+            ['U04','alex_dev','{"theme":"auto","notifications":true,"lang":"vi"}','2026-01-13']
+          ]
+        },
+        mission: 'Lấy <code class="code">username</code> và giá trị <code class="code">theme</code> từ JSON. Kéo thả khối lệnh ↓'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Query nào trả về giá trị <strong>text thuần</strong> (không có nháy) từ JSON?',
+            options: [
+              { id: 'a', text: "<code>settings->'theme'</code> — trả về <code>\"dark\"</code> (JSON value)", correct: false },
+              { id: 'b', text: "<code>settings->>'theme'</code> — trả về <code>dark</code> (text thuần)", correct: true },
+              { id: 'c', text: "<code>settings#>'{theme}'</code> — trả về <code>dark</code> (path lookup)", correct: false },
+              { id: 'd', text: "<code>SELECT theme FROM settings</code> — giả định cột theme tồn tại", correct: false }
+            ]
+          },
+          {
+            question: "Filter user có <code>notifications = true</code> trong JSONB. Cú pháp nào ĐÚNG?",
+            options: [
+              { id: 'a', text: "<code>WHERE settings->>notifications = true</code> — JSON value", correct: false },
+              { id: 'b', text: "<code>WHERE settings->>notifications = 'true'</code> — text với nháy đơn", correct: true },
+              { id: 'c', text: "<code>WHERE notifications = true</code> — cột thường", correct: false },
+              { id: 'd', text: "<code>WHERE settings LIKE '%notifications%'</code> — string match (chậm + sai)", correct: false }
+            ]
+          }
+        ],
+        mini_game: {"type": "classify", "title": "Phân loại: khi nào dùng JSON, khi nào tách bảng?", "instruction": "Kéo thẻ vào ô phù hợp.", "chips": [{"id": "c-theme", "label": "User settings.theme (dark/light/auto)"}, {"id": "c-tags", "label": "Post tags (rpg, indie, soulslike)"}, {"id": "c-email", "label": "User email"}, {"id": "c-meta", "label": "Product metadata (dimensions, weight)"}], "bins": [{"id": "json", "label": "Nên lưu JSON (linh hoạt)", "correct": "json"}, {"id": "tbl", "label": "Nên tách bảng (quan hệ chặt)", "correct": "tbl"}], "solution": {"c-theme": "json", "c-tags": "json", "c-email": "tbl", "c-meta": "json"}}
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',           slot: 'kw-select' },
+          { type: 'col', token: 'username',          slot: 'col-1' },
+          { type: 'kw',  token: ',',                 slot: 'op-comma1' },
+          { type: 'col', token: 'settings',           slot: 'col-2' },
+          { type: 'op',  token: "->>'theme'",        slot: 'op-extract1' },
+          { type: 'kw',  token: 'AS',                slot: 'kw-as' },
+          { type: 'col', token: 'theme',              slot: 'col-alias1' },
+          { type: 'kw',  token: 'FROM',              slot: 'kw-from' },
+          { type: 'tbl', token: 'app_users',          slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',             slot: 'kw-where' },
+          { type: 'col', token: 'settings',           slot: 'col-filter' },
+          { type: 'op',  token: "->>'notifications'", slot: 'op-extract2' },
+          { type: 'op',  token: "= 'true'",           slot: 'op-eq' }
+        ],
+        drop_zones: [
+          { id: 'select-line',  placeholder: "SELECT username, settings->>'theme' AS theme", accepts: ['kw','col','op'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM app_users', accepts: ['kw','tbl'], multi: true },
+          { id: 'where-line',   placeholder: "WHERE settings->>'notifications' = 'true'", accepts: ['kw','col','op'], multi: true }
+        ],
+        expected_sql: "SELECT username, settings->>'theme' AS theme FROM app_users WHERE settings->>'notifications' = 'true';",
+        reveal_hints: {
+          'select-line':  "<code>settings->>'theme'</code> trả về text thuần. <code>->></code> là toán tử trích xuất JSON.",
+          'from-line':    'Bảng <code>app_users</code> lưu settings dạng JSONB.',
+          'where-line':   "<code>settings->>'notifications' = 'true'</code> — giá trị JSON là string, dùng nháy đơn."
+        }
+      },
+
+      step_4: {
+        prompt: "Viết query đếm <strong>số user theo từng theme</strong> từ JSONB. Dùng <code>GROUP BY settings->>'theme'</code>. Đếm user, nhóm theo theme, sắp xếp giảm dần.",
+        starter: "-- Đếm user theo theme (extract từ JSONB)\n-- GROUP BY settings->>'theme' + ORDER BY count DESC\nSELECT settings->>'theme' AS , COUNT(*) AS \n  FROM app_users\n GROUP BY settings->>'theme'\n ORDER BY  DESC;\n",
+        schema: {
+          table_name: 'app_users',
+          columns: [
+            { name: 'user_id',  type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+            { name: 'username', type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'settings', type: 'JSONB',   key: '',  icon: '&#123;...&#125;' }
+          ],
+          data: [
+            ['U01','minh_dev','{"theme":"dark","notifications":true,"lang":"vi"}'],
+            ['U02','yuki_dev','{"theme":"light","notifications":false,"lang":"en"}'],
+            ['U03','sara_dev','{"theme":"dark","notifications":true,"lang":"en"}'],
+            ['U04','alex_dev','{"theme":"auto","notifications":true,"lang":"vi"}'],
+            ['U05','lisa_dev','{"theme":"light","notifications":true,"lang":"vi"}'],
+            ['U06','ken_dev', '{"theme":"dark","notifications":false,"lang":"en"}']
+          ]
+        },
+        expected_sql: "SELECT settings->>'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'theme' ORDER BY user_count DESC;",
+        hints: [
+          { level: 1, text: "Bạn muốn <em>phân tích dữ liệu JSON linh hoạt</em> — trích xuất 1 key từ JSON, đếm số lượng theo từng giá trị của key đó, sắp xếp giảm dần. Hãy nghĩ: trích key = <code>-&gt;&gt;</code>, đếm = <code>COUNT</code>, nhóm = <code>GROUP BY</code>." },
+          { level: 2, text: "<code>GROUP BY settings->>'theme'</code> — extract key từ JSON rồi GROUP như cột thường." },
+          { level: 3, text: "<code>SELECT settings->>'theme' AS theme, COUNT(*)</code> — alias cho dễ đọc." },
+          { level: 4, text: "<code>ORDER BY user_count DESC</code> — theme nào nhiều user nhất lên đầu." }
+        ],
+        success_message: 'JSONB + GROUP BY = phân tích dữ liệu linh hoạt. Không cần ALTER TABLE để thêm cột!',
+        xp_reward: 60
+      }
+    },
+
+    {
+      id: 'db_15', index: 15,
+      title: 'Spatial Data — Dữ liệu Không gian',
+      subtitle: 'Truy vấn tọa độ GPS, tìm điểm gần nhất',
+      module: 3, module_title: 'Application Design',
+      icon: '&#128205;', color: '#10B981',
+      estimated_minutes: 18, xp_reward: 60,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+
+      step_1: {
+        primer: {
+          goal: [
+            'POINT = kiểu dữ liệu lưu tọa độ (x, y) trong PostgreSQL',
+            'ST_Distance = tính khoảng cách Euclidean giữa 2 điểm',
+            'ST_DWithin = kiểm tra nằm trong bán kính (dùng spatial index → rất nhanh)'
+          ],
+          intro: 'Chuỗi cửa hàng <code class="code">shop_branches</code> lưu tọa độ GPS trong cột <code class="code">geo_location POINT</code>. Bạn cần tìm cửa hàng <strong>gần trung tâm nhất</strong>, hoặc lọc cửa hàng <strong>trong bán kính 5km</strong>. Dùng <code class="code">ST_Distance</code> và <code class="code">ST_DWithin</code> — hai spatial function phổ biến nhất.',
+          example: '<code class="code">ST_Distance(geo_location, ST_MakePoint(106.7009, 10.7769))</code> tính khoảng cách từ mỗi cửa hàng đến Quảng trường 10/10. <code class="code">ST_DWithin(geo_location, ST_MakePoint(...), 5)</code> lọc nhanh bằng spatial index (GiST) — hiệu quả hơn ST_Distance.'
+        },
+        concept_cards: [{"icon": "fa-location-dot", "title": "Spatial Data (PostGIS)", "body": "Lưu tọa độ địa lý dạng <code>POINT(lon, lat)</code>. Index bằng R-tree (spatial GIST) cho query khoảng cách cực nhanh (<code>ST_DWithin</code>, <code>ST_Distance</code>)."}, {"icon": "fa-globe", "title": "Tọa độ — kinh độ trước", "body": "<code>ST_MakePoint(lon, lat)</code> — <strong>longitude trước</strong> (X), latitude sau (Y). Sai 1 số thập phân = lệch cả km. Vietnam: lon ≈ 102-110, lat ≈ 8-23."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          schema: {
+            table_name: 'shop_branches',
+            columns: [
+              { name: 'branch_id',    type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+              { name: 'name',         type: 'VARCHAR', key: '',  icon: '' },
+              { name: 'geo_location', type: 'POINT',   key: '',  icon: '&#128205;' },
+              { name: 'city',         type: 'VARCHAR', key: '',  icon: '' }
+            ]
+          },
+          data_preview: [
+            ['B01','Quận 1 Center',    '(106.7009, 10.7769)','TP.HCM'],
+            ['B02','District 7 Hub',   '(106.7369, 10.7288)','TP.HCM'],
+            ['B03','Hanoi Old Quarter','(105.8542, 21.0285)','Hà Nội'],
+            ['B04','District 3 Store', '(106.6872, 10.7822)','TP.HCM']
+          ]
+        },
+        mission: 'Tính <code class="code">khoảng cách</code> từ mỗi cửa hàng đến trung tâm TP.HCM. Kéo thả khối lệnh ↓'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Khi tìm cửa hàng <strong>trong bán kính 5km</strong> từ một điểm, hàm nào hiệu quả hơn?',
+            options: [
+              { id: 'a', text: '<code>ST_Distance(geo, ST_MakePoint(...)) &lt; 5</code> — tính chính xác mọi điểm', correct: false },
+              { id: 'b', text: '<code>ST_DWithin(geo, ST_MakePoint(...), 5)</code> — dùng spatial index', correct: true },
+              { id: 'c', text: '<code>ST_Contains(ST_MakeEnvelope(...), geo)</code> — dùng cho polygon', correct: false },
+              { id: 'd', text: '<code>WHERE distance &lt; 5</code> — sai cú pháp, distance chưa tính', correct: false }
+            ]
+          },
+          {
+            question: 'ST_MakePoint(x, y) dùng thứ tự tọa độ nào?',
+            options: [
+              { id: 'a', text: 'ST_MakePoint(lat, lon) — latitude trước', correct: false },
+              { id: 'b', text: 'ST_MakePoint(lon, lat) — longitude trước (X, Y)', correct: true },
+              { id: 'c', text: 'ST_MakePoint(x, y) — thứ tự tùy database', correct: false },
+              { id: 'd', text: 'ST_MakePoint(utm_x, utm_y) — luôn dùng UTM', correct: false }
+            ]
+          }
+        ],
+        mini_game: {"type": "classify", "title": "Phân loại: ST_* function nào dùng khi nào?", "instruction": "Kéo thẻ vào ô đúng.", "chips": [{"id": "c-dwithin", "label": "Tìm shop trong bán kính 5km"}, {"id": "c-distance", "label": "Tính khoảng cách 2 điểm"}, {"id": "c-contains", "label": "Kiểm tra điểm có nằm trong polygon không"}, {"id": "c-makepoint", "label": "Tạo POINT từ lat, lon"}], "bins": [{"id": "within", "label": "ST_DWithin (range query)", "correct": "within"}, {"id": "distance", "label": "ST_Distance (measure)", "correct": "distance"}, {"id": "contains", "label": "ST_Contains (containment)", "correct": "contains"}, {"id": "create", "label": "ST_MakePoint (create)", "correct": "create"}], "solution": {"c-dwithin": "within", "c-distance": "distance", "c-contains": "contains", "c-makepoint": "create"}}
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',    slot: 'kw-select' },
+          { type: 'col', token: 'name',       slot: 'col-1' },
+          { type: 'kw',  token: ',',          slot: 'op-comma1' },
+          { type: 'fn',  token: 'ST_Distance', slot: 'fn-dist' },
+          { type: 'op',  token: '(geo_location, ST_MakePoint(106.7009, 10.7769))', slot: 'fn-args' },
+          { type: 'kw',  token: 'AS',         slot: 'kw-as' },
+          { type: 'col', token: 'distance',    slot: 'col-alias' },
+          { type: 'kw',  token: 'FROM',       slot: 'kw-from' },
+          { type: 'tbl', token: 'shop_branches', slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',      slot: 'kw-where' },
+          { type: 'fn',  token: 'ST_DWithin', slot: 'fn-dwithin' },
+          { type: 'op',  token: '(geo_location, ST_MakePoint(106.7009, 10.7769), 5)', slot: 'fn-dw-args' },
+          { type: 'kw',  token: 'ORDER BY',   slot: 'kw-order' },
+          { type: 'col', token: 'distance',   slot: 'col-order' },
+          { type: 'kw',  token: 'ASC',        slot: 'kw-asc' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT name, ST_Distance(geo_location, ST_MakePoint(...)) AS distance', accepts: ['kw','col','fn','op'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM shop_branches', accepts: ['kw','tbl'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ST_DWithin(geo_location, ST_MakePoint(...), 5)', accepts: ['kw','fn','op'], multi: true },
+          { id: 'order-line',  placeholder: 'ORDER BY distance ASC', accepts: ['kw','col'], multi: true }
+        ],
+        expected_sql: "SELECT name, ST_Distance(geo_location, ST_MakePoint(106.7009, 10.7769)) AS distance FROM shop_branches WHERE ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 5) ORDER BY distance ASC;",
+        reveal_hints: {
+          'select-line':  '<code>ST_Distance</code> tính khoảng cách từ mỗi cửa hàng đến trung tâm.',
+          'where-line':   '<code>ST_DWithin</code> lọc nhanh bằng spatial index. Bán kính 5 (đơn vị tọa độ ≈ km).',
+          'order-line':   'ASC = cửa hàng gần nhất lên đầu.'
+        }
+      },
+
+      step_4: {
+        prompt: 'Viết query đếm <strong>số cửa hàng theo từng zone</strong> trong TP.HCM, chỉ cửa hàng <strong>trong bán kính 10km</strong> từ trung tâm. GROUP BY zone, sắp xếp giảm dần.',
+        starter: "-- Đếm cửa hàng theo zone (TP.HCM, bán kính 10km từ trung tâm)\n-- ST_DWithin + GROUP BY zone + ORDER BY count DESC\nSELECT , COUNT(*) AS \n  FROM shop_branches\n WHERE city = 'TP.HCM'\n   AND ST_DWithin(geo_location, ST_MakePoint(, ), )\n GROUP BY \n ORDER BY  DESC;\n",
+        schema: {
+          table_name: 'shop_branches',
+          columns: [
+            { name: 'branch_id',    type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+            { name: 'name',         type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'geo_location', type: 'POINT',   key: '',  icon: '&#128205;' },
+            { name: 'city',         type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'zone',         type: 'VARCHAR', key: '',  icon: '' }
+          ],
+          data: [
+            ['B01','Quận 1 Center',    '(106.7009, 10.7769)','TP.HCM','Downtown'],
+            ['B02','District 7 Hub',   '(106.7369, 10.7288)','TP.HCM','South'],
+            ['B03','Hanoi Old Quarter','(105.8542, 21.0285)','Hà Nội','Old City'],
+            ['B04','District 3 Store', '(106.6872, 10.7822)','TP.HCM','Downtown'],
+            ['B05','Bình Thạnh Store', '(106.7200, 10.8034)','TP.HCM','North'],
+            ['B06','Thủ Đức Hub',      '(106.7800, 10.8782)','TP.HCM','East'],
+            ['B07','District 10 Store', '(106.6780, 10.7792)','TP.HCM','Downtown'],
+            ['B08','District 5 Store',  '(106.6500, 10.7500)','TP.HCM','West']
+          ]
+        },
+        expected_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;",
+        hints: [
+          { level: 1, text: "Bạn cần <em>kết hợp spatial filter + aggregation</em>. Lọc TP.HCM → lọc bán kính 10km quanh trung tâm → nhóm theo zone → đếm → sắp xếp. Hãy nghĩ: filter trước (WHERE), aggregate sau (GROUP BY)." },
+          { level: 2, text: "<code>WHERE city = 'TP.HCM'</code> — lọc TP.HCM trước." },
+          { level: 3, text: "<code>AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10)</code> — lọc bán kính 10km." },
+          { level: 4, text: "<code>GROUP BY zone ORDER BY branch_count DESC</code> — zone nào nhiều cửa hàng nhất lên đầu." }
+        ],
+        success_message: 'Spatial + GROUP BY = phân tích vùng phủ cửa hàng cực kỳ hiệu quả! ST_DWithin + GiST index = O(log n).',
+        xp_reward: 60
+      }
+    },
+
+    {
+      id: 'db_16', index: 16,
+      title: 'ORM với Django — Ánh xạ Class ↔ Table',
+      subtitle: 'Từ Python class đến SQL query tự động',
+      module: 3, module_title: 'Application Design',
+      icon: '&#9881;', color: '#F59E0B',
+      estimated_minutes: 18, xp_reward: 60,
+      drag_type: 'order',
+      challenge_type: 'full_ide',
+
+      step_1: {
+        primer: {
+          goal: [
+            'ORM = ánh xạ class Python ↔ bảng SQL, viết query = gọi method',
+            'select_related() = INNER JOIN tự động qua FK (1:1 / N:1)',
+            'filter / order_by / values / annotate = WHERE / ORDER BY / GROUP BY'
+          ],
+          intro: 'Django tự tạo bảng <code class="code">log_events</code> từ class <code class="code">LogEvent</code>. Thay vì viết SQL, bạn gọi <code class="code">LogEvent.objects.filter(event_type=\'login\')</code>. ORM chuyển thành SQL: <code class="code">SELECT * FROM log_events WHERE event_type = \'login\'</code>. Không SQL thuần? Không sao — nhưng hiểu SQL giúp viết ORM tốt hơn.',
+          example: '<code class="code">LogEvent.objects.filter(user__user_id=\'U01\', event_type=\'login\').select_related(\'user\').order_by(\'-timestamp\')[:10]</code> tương đương: <code>SELECT ... FROM log_events le JOIN app_users u ON ... WHERE user_id=\'U01\' AND event_type=\'login\' ORDER BY timestamp DESC LIMIT 10</code>'
+        },
+        concept_cards: [{"icon": "fa-layer-group", "title": "ORM (Object-Relational Mapping)", "body": "Map table → class, row → object, column → attribute. Django ORM: <code>User.objects.filter(role=\"admin\")</code> thay vì <code>SELECT * FROM users WHERE role=\"admin\"</code>."}, {"icon": "fa-bolt", "title": "ORM ưu/nhược", "body": "<strong>Ưu</strong>: ít SQL, type-safe, auto migration. <strong>Nhược</strong>: N+1 query, raw SQL phức tạp. Dùng <code>select_related</code> + <code>prefetch_related</code> để tránh N+1."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
+          schema: {
+            table_name: 'log_events',
+            columns: [
+              { name: 'event_id',    type: 'INT',       key: 'PK', icon: '&#128273;' },
+              { name: 'user_id',     type: 'INT',       key: 'FK', icon: '&#128279;' },
+              { name: 'event_type',  type: 'VARCHAR',   key: '',   icon: '' },
+              { name: 'event_data',  type: 'JSONB',     key: '',   icon: '&#123;...&#125;' },
+              { name: 'timestamp',   type: 'TIMESTAMP', key: '',   icon: '' }
+            ]
+          },
+          data_preview: [
+            ['E01','U01','login',   '{"ip":"1.1.1.1"}',   '2026-01-10 08:00:00'],
+            ['E02','U02','logout',  '{"session":"sess_abc"}','2026-01-10 09:30:00'],
+            ['E03','U01','purchase','{"amount":500000}',  '2026-01-10 10:00:00'],
+            ['E04','U01','login',   '{"ip":"1.1.1.2"}',   '2026-01-11 08:05:00']
+          ]
+        },
+        mission: 'Viết Django ORM query tương đương SQL. Kéo thả khối lệnh ↓'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: '<code>LogEvent.objects.select_related(\'user\')</code> sinh ra loại JOIN nào?',
+            options: [
+              { id: 'a', text: 'LEFT JOIN — lấy cả event không có user', correct: false },
+              { id: 'b', text: 'INNER JOIN — chỉ lấy event có user tồn tại', correct: true },
+              { id: 'c', text: 'OUTER JOIN — lấy tất cả kể cả user NULL', correct: false },
+              { id: 'd', text: 'CROSS JOIN — tổ hợp mọi cặp (hiếm dùng)', correct: false }
+            ]
+          },
+          {
+            question: 'Django ORM nào tương đương <code>GROUP BY event_type ORDER BY COUNT(*) DESC</code>?',
+            options: [
+              { id: 'a', text: "<code>.values('event_type').order_by('event_type')</code>", correct: false },
+              { id: 'b', text: "<code>.values('event_type').annotate(cnt=Count('id')).order_by('-cnt')</code>", correct: true },
+              { id: 'c', text: "<code>.filter().group_by('event_type')</code>", correct: false },
+              { id: 'd', text: "<code>.aggregate(Count('event_type'))</code> — sai, aggregate chỉ trả 1 dòng", correct: false }
+            ]
+          }
+        ],
+        mini_game: {"type": "order", "title": "Thứ tự ORM query (Django)", "instruction": "Sắp xếp theo thứ tự Django thực thi.", "items": [{"id": "i1", "label": "1. .filter(user__role=\"admin\")"}, {"id": "i2", "label": "2. .select_related(\"user\")"}, {"id": "i3", "label": "3. .order_by(\"-created_at\")"}, {"id": "i4", "label": "4. [:20] (slice)"}], "solution": {"i1": 1, "i2": 2, "i3": 3, "i4": 4}}
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'tbl', token: 'LogEvent',           slot: 'tbl-name' },
+          { type: 'op',  token: '.objects',            slot: 'op-obj' },
+          { type: 'kw',  token: '.filter',             slot: 'kw-filter' },
+          { type: 'op',  token: "(user__user_id='U01', event_type='login')", slot: 'op-args' },
+          { type: 'kw',  token: '.select_related',      slot: 'kw-selrel' },
+          { type: 'op',  token: "('user')",             slot: 'op-relarg' },
+          { type: 'kw',  token: '.order_by',            slot: 'kw-order' },
+          { type: 'op',  token: "('-timestamp')",       slot: 'op-orderarg' },
+          { type: 'kw',  token: '[:10]',                slot: 'op-limit' }
+        ],
+        drop_zones: [
+          { id: 'orm-line', placeholder: "LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]", accepts: ['tbl','kw','op'], multi: true }
+        ],
+        expected_sql: "LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]",
+        reveal_hints: {
+          'orm-line': '<code>user__user_id</code> = filter qua FK. <code>event_type=\'login\'</code> = AND. <code>select_related(\'user\')</code> = INNER JOIN tự động. <code>order_by(\'-timestamp\')</code> = DESC. <code>[:10]</code> = LIMIT 10.'
+        }
+      },
+
+      step_4: {
+        prompt: 'Viết Django ORM query đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values(\'event_type\').annotate(count=Count(\'event_id\')).order_by(\'-count\')</code>. Hoặc viết SQL tương đương.',
+        starter: "-- Đếm events theo event_type cho user U01\n-- WHERE user_id = 'U01' + GROUP BY event_type + ORDER BY count DESC\nSELECT , COUNT() AS \n  FROM log_events\n WHERE  = \n GROUP BY \n ORDER BY  DESC;\n",
+        schema: {
+          table_name: 'log_events',
+          columns: [
+            { name: 'event_id',   type: 'INT',       key: 'PK', icon: '&#128273;' },
+            { name: 'user_id',    type: 'INT',       key: 'FK', icon: '&#128279;' },
+            { name: 'event_type', type: 'VARCHAR',   key: '',   icon: '' },
+            { name: 'timestamp',   type: 'TIMESTAMP', key: '',   icon: '' }
+          ],
+          data: [
+            ['E01','U01','login',   '2026-01-10'],
+            ['E02','U01','purchase','2026-01-10'],
+            ['E03','U01','login',   '2026-01-11'],
+            ['E04','U01','login',   '2026-01-12'],
+            ['E05','U01','logout',  '2026-01-12'],
+            ['E06','U02','login',   '2026-01-10']
+          ]
+        },
+        expected_sql: "SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;",
+        hints: [
+          { level: 1, text: "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể. Hãy nghĩ: filter user trước, GROUP BY loại event, COUNT, ORDER BY giảm dần." },
+          { level: 2, text: "<code>WHERE user_id = 'U01'</code> — lọc events của user U01." },
+          { level: 3, text: "<code>GROUP BY event_type</code> — nhóm theo loại event." },
+          { level: 4, text: "<code>ORDER BY event_count DESC</code> — event nào nhiều nhất lên đầu." }
+        ],
+        success_message: 'values().annotate() = GROUP BY trong SQL. ORM và SQL luôn tương đương — hiểu SQL giúp bạn viết ORM tốt hơn!',
+        xp_reward: 60
+      }
+    },
+
+    {
+      id: 'db_17', index: 17,
+      title: 'SQL Injection — Lỗ hổng chết người',
+      subtitle: 'Tấn công bằng input độc hại và phòng chống',
+      module: 3, module_title: 'Application Design',
+      icon: '&#128128;', color: '#EF4444',
+      estimated_minutes: 18, xp_reward: 60,
+      drag_type: 'bug_spot',
+      challenge_type: 'full_ide',
+
+      step_1: {
+        primer: {
+          goal: [
+            'SQL Injection = chèn SQL code vào input để thay đổi logic query',
+            "Payload kinh điển: ' OR '1'='1' -- biến WHERE thành always-true",
+            'Phòng chống: Prepared Statement (%s placeholder) — input không bao giờ chạy như code'
+          ],
+          intro: "Login form dùng <strong>string concatenation</strong>: <code>f\"SELECT * FROM user_accounts WHERE username = '{input}' AND password = '{pw}'\"</code>. Attacker nhập <code>' OR '1'='1' --</code> vào username. Query trở thành <code>SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND ...</code> → trả về <strong>TẤT CẢ user</strong> — đăng nhập không cần password!",
+          example: "<code>' OR '1'='1' --</code> đóng chuỗi ('), thêm điều kiện luôn đúng ('1'='1'), comment out phần còn lại (--). Prepared Statement ngăn điều này: <code>WHERE username = %s</code> — giá trị được gửi riêng, không chạy như SQL."
+        },
+        concept_cards: [{"icon": "fa-skull-crossbones", "title": "SQL Injection", "body": "Attacker chèn SQL code vào input để thay đổi logic query. Kinh điển: <code>' OR '1'='1' --</code> đóng chuỗi, thêm điều kiện always-true, comment phần sau."}, {"icon": "fa-shield-virus", "title": "Prepared Statement", "body": "Phòng chống: <code>WHERE username = %s</code> + params gửi riêng. Input KHÔNG BAO GIỜ chạy như SQL — DB engine biết đó là literal, escape tự động."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user-secret", "title": "Attacker input", "sub": "username = ' OR '1'='1' --", "payload": "MALICIOUS_PAYLOAD"}, {"icon": "fa-bug", "title": "App build SQL (NGUY HIỂM)", "sub": "f\"SELECT * FROM users WHERE name='{input}'\"", "payload": "VULNERABLE"}, {"icon": "fa-server", "title": "DB execute", "sub": "Trả về TẤT CẢ users (không cần password!)", "payload": "ALL_ROWS_RETURNED"}, {"icon": "fa-shield-halved", "title": "FIX: Prepared Statement", "sub": "WHERE username = %s + params", "payload": "SAFE"}, {"icon": "fa-check", "title": "DB execute (SAFE)", "sub": "Input là literal, escape tự động", "payload": "NORMAL_QUERY"}]},
+          schema: {
+            table_name: 'user_accounts',
+            columns: [
+              { name: 'user_id',       type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+              { name: 'username',      type: 'VARCHAR', key: '',  icon: '' },
+              { name: 'password_hash', type: 'VARCHAR', key: '',  icon: '&#128272;' },
+              { name: 'email',         type: 'VARCHAR', key: '',  icon: '' },
+              { name: 'role',          type: 'VARCHAR', key: '',  icon: '' }
+            ]
+          },
+          data_preview: [
+            ['U01','minh_admin', 'hashed_abc', 'minh@x.com','admin'],
+            ['U02','yuki_user',  'hashed_xyz', 'yuki@x.com','user'],
+            ['U03','sara_mod',   'hashed_123', 'sara@x.com','moderator'],
+            ['U04','alex_guest', 'hashed_456', 'alex@x.com','guest']
+          ]
+        },
+        mission: 'Phân rã <strong>query bị SQL Injection</strong>. Kéo thả khối để xem query thực sự chạy gì ↓'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Input nào là <strong>SQL Injection</strong> trong trường username?',
+            options: [
+              { id: 'a', text: '<code>minh_admin</code> — username hợp lệ', correct: false },
+              { id: 'b', text: "<code>' OR '1'='1' --</code> — đóng chuỗi, thêm điều kiện đúng, comment out", correct: true },
+              { id: 'c', text: "<code>minh' --</code> — chỉ comment out phần sau, vẫn cần password đúng", correct: false },
+              { id: 'd', text: '<code>minh_admin; DROP TABLE users;</code> — chỉ là chuỗi dài, không phải injection nếu escape đúng', correct: false }
+            ]
+          },
+          {
+            question: 'Cách nào phòng chống SQL Injection hiệu quả nhất?',
+            options: [
+              { id: 'a', text: "<code>f\"WHERE username = '{input}'\"</code> — dùng f-string", correct: false },
+              { id: 'b', text: "<code>WHERE username = %s</code> — Prepared Statement (parameterized query)", correct: true },
+              { id: 'c', text: "<code>WHERE username = input.replace(\"'\", \"''\")</code> — escape thủ công", correct: false },
+              { id: 'd', text: 'Thêm CAPTCHA — chỉ giảm bot, không ngăn SQLi', correct: false }
+            ]
+          }
+        ],
+        mini_game: {"type": "bug_spot", "title": "Tìm lỗi SQL Injection", "instruction": "Click vào DÒNG có lỗ hổng SQL Injection. (Dòng build query bằng f-string).", "code": "def login(username, password):\n    query = f\"SELECT * FROM users WHERE name='{username}' AND pass='{password}'\"\n    cursor.execute(query)\n    return cursor.fetchone()\n\ndef safe_login(username, password):\n    cursor.execute(\"SELECT * FROM users WHERE name=%s AND pass=%s\", (username, password))\n    return cursor.fetchone()", "bugType": "security", "bugs": [{"line": 2, "description": "Dùng f-string nội suy user input trực tiếp vào SQL — cho phép SQL Injection. Fix: dùng %s placeholder."}], "xp": 25}
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
+          { type: 'op',  token: '*',                slot: 'op-star' },
+          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
+          { type: 'tbl', token: 'user_accounts',    slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
+          { type: 'col', token: 'username',         slot: 'col-user' },
+          { type: 'op',  token: "= '' OR '1'='1'", slot: 'op-inject' },
+          { type: 'kw',  token: '--',               slot: 'op-comment' },
+          { type: 'op',  token: " AND password_hash = '_ignored'", slot: 'op-ignore' }
+        ],
+        drop_zones: [
+          { id: 'query-line', placeholder: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND ...", accepts: ['kw','col','tbl','op'], multi: true }
+        ],
+        expected_sql: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND password_hash = 'hashed_pw_abc'",
+        reveal_hints: {
+          'query-line': "<code>'</code> đóng chuỗi. <code>OR '1'='1'</code> thêm điều kiện luôn đúng. <code>--</code> comment out toàn bộ phần còn lại. Query trở thành <code>SELECT * FROM user_accounts</code> — trả về TẤT CẢ!"
+        }
+      },
+
+      step_4: {
+        prompt: 'Viết lại login query bằng <strong>Prepared Statement</strong> với <code>%s</code> placeholder. Sau đó viết query đếm <strong>số user theo role</strong> (aggregation an toàn, không có input).',
+        starter: "-- Query 1: Login an toàn (Prepared Statement)\n-- WHERE username = %s AND password_hash = %s\n\n-- Query 2: Đếm user theo role\n-- SELECT role, COUNT(*) ... GROUP BY role ORDER BY count DESC\nSELECT , COUNT() AS \n  FROM user_accounts\n GROUP BY \n ORDER BY  DESC;\n",
+        schema: {
+          table_name: 'user_accounts',
+          columns: [
+            { name: 'user_id',  type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+            { name: 'username', type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'email',    type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'role',     type: 'VARCHAR', key: '',  icon: '' }
+          ],
+          data: [
+            ['U01','minh_admin','minh@x.com','admin'],
+            ['U02','yuki_user', 'yuki@x.com','user'],
+            ['U03','sara_mod',  'sara@x.com','moderator'],
+            ['U04','alex_guest','alex@x.com','guest'],
+            ['U05','lisa_user', 'lisa@x.com','user'],
+            ['U06','ken_mod',   'ken@x.com', 'moderator'],
+            ['U07','jen_guest', 'jen@x.com', 'guest'],
+            ['U08','bob_user',  'bob@x.com', 'user']
+          ]
+        },
+        expected_sql: "SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
+        hints: [
+          { level: 1, text: "Bạn cần <em>phòng chống SQL Injection</em> (Prepared Statement) + <em>đếm user theo role</em> (aggregation). Hãy nghĩ: <code>%s</code> placeholder cho input, GROUP BY role cho aggregation." },
+          { level: 2, text: "Prepared Statement: <code>WHERE username = %s AND password_hash = %s</code> — params gửi riêng." },
+          { level: 3, text: "<code>SELECT role, COUNT(user_id) AS user_count</code> — đếm theo role." },
+          { level: 4, text: "<code>GROUP BY role ORDER BY user_count DESC</code> — role nào nhiều user nhất lên đầu." }
+        ],
+        success_message: 'Prepared Statement là lá chắn! Input luôn là literal, không bao giờ chạy như SQL. Bài 18 sẽ học cách lưu password đúng cách.',
+        xp_reward: 60
+      }
+    },
+
+    {
+      id: 'db_18', index: 18,
+      title: 'Password Security — Salt & Hashing',
+      subtitle: 'Từ plain text đến bcrypt — chọn thuật toán nào?',
+      module: 3, module_title: 'Application Design',
+      icon: '&#128272;', color: '#6366F1',
+      estimated_minutes: 18, xp_reward: 70,
+      drag_type: 'classify',
+      challenge_type: 'full_ide',
+
+      step_1: {
+        primer: {
+          goal: [
+            'Không lưu plain text — hash password để attacker không đọc được',
+            'md5/sha1 quá yếu: GPU tính hàng tỷ hash/giây + rainbow table attack',
+            'bcrypt/scrypt = recommended: có salt tự động, cost factor chỉnh được'
+          ],
+          intro: 'Bảng <code class="code">security_users_vault</code> lưu <code>password_hash</code> và <code>salt</code> riêng biệt. <strong>Salt</strong> = chuỗi ngẫu nhiên gắn vào password trước khi hash → cùng password của 2 user sẽ có hash khác nhau. md5("pass") → rainbow table tra được ngay. bcrypt("pass") → cần brute force với cost factor cao → mất nhiều năm.',
+          example: 'md5 hash bắt đầu bằng chuỗi hex 32 ký tự (5f4dcc3b5aa...). bcrypt hash bắt đầu bằng <code>$2a$</code> hoặc <code>$2b$</code>. Nhìn format là biết thuật toán — và biết cần migrate ngay!'
+        },
+        concept_cards: [{"icon": "fa-lock", "title": "Password Hashing", "body": "KHÔNG lưu plain text password. Hash = hàm 1 chiều, biết hash không suy ngược ra password. <code>bcrypt</code>, <code>argon2</code> là recommended."}, {"icon": "fa-key", "title": "Salt — chống rainbow table", "body": "<strong>Salt</strong> = chuỗi ngẫu nhiên gắn vào password trước khi hash. Cùng password → hash khác nhau (do salt khác). <strong>md5/sha1</strong> quá yếu + không có salt → bị crack trong vài giây."}],
+                visual: {
+          
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-user-secret", "title": "Attacker input", "sub": "username = ' OR '1'='1' --", "payload": "MALICIOUS_PAYLOAD"}, {"icon": "fa-bug", "title": "App build SQL (NGUY HIỂM)", "sub": "f\"SELECT * FROM users WHERE name='{input}'\"", "payload": "VULNERABLE"}, {"icon": "fa-server", "title": "DB execute", "sub": "Trả về TẤT CẢ users (không cần password!)", "payload": "ALL_ROWS_RETURNED"}, {"icon": "fa-shield-halved", "title": "FIX: Prepared Statement", "sub": "WHERE username = %s + params", "payload": "SAFE"}, {"icon": "fa-check", "title": "DB execute (SAFE)", "sub": "Input là literal, escape tự động", "payload": "NORMAL_QUERY"}]},
+          
+          diagram: {"type": "flow", "steps": [{"icon": "fa-keyboard", "title": "User nhập password", "sub": "\"hunter2\" (plain text)", "payload": "hunter2"}, {"icon": "fa-plus", "title": "Server append salt", "sub": "salt = random 16 bytes", "payload": "hunter2 + \"rand_abc\""}, {"icon": "fa-cogs", "title": "bcrypt.hashpw (cost 12)", "sub": "Hash 2^12 lần SHA256 + bcrypt", "payload": "$2a$12$..."}, {"icon": "fa-database", "title": "Lưu vào DB", "sub": "password_hash + salt (2 cột)", "payload": "INSERT INTO security_users_vault"}, {"icon": "fa-shield-check", "title": "Verify: bcrypt.checkpw", "sub": "So sánh hash với input mới", "payload": "True / False"}]},
+          schema: {
+            table_name: 'security_users_vault',
+            columns: [
+              { name: 'user_id',        type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+              { name: 'username',        type: 'VARCHAR', key: '',  icon: '' },
+              { name: 'password_hash',  type: 'VARCHAR', key: '',  icon: '&#128272;' },
+              { name: 'salt',           type: 'VARCHAR', key: '',  icon: '&#129517;' },
+              { name: 'hash_algorithm', type: 'VARCHAR', key: '',  icon: '&#9881;' }
+            ]
+          },
+          data_preview: [
+            ['U01','minh_dev', '5f4dcc3b5aa765d61d8327deb882cf99','rand_abc','md5'],
+            ['U02','yuki_dev', 'e10adc3949ba59abbe56e057f20f883e','rand_xyz','md5'],
+            ['U03','sara_dev', '$2a$12$KIX...Y8Y8Y8Y8Y8Y8Y8Y8Y8','rand_123','bcrypt'],
+            ['U04','alex_dev', '$2b$12$vPZ...XzZxKIX...','rand_456','bcrypt']
+          ]
+        },
+        mission: 'Viết query phân loại <strong>mức độ bảo mật</strong> theo thuật toán. Kéo thả khối lệnh ↓'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Thuật toán nào <strong>KHÔNG nên dùng</strong> để lưu password?',
+            options: [
+              { id: 'a', text: 'md5 — quá nhanh + không có salt → rainbow table attack', correct: true },
+              { id: 'b', text: 'bcrypt — cost factor chỉnh được, salt tự động', correct: false },
+              { id: 'c', text: 'argon2 — winner của Password Hashing Competition 2015', correct: false },
+              { id: 'd', text: 'plain text — lưu nguyên password, không hash', correct: true }
+            ]
+          },
+          {
+            question: 'Salt trong password hashing có tác dụng gì?',
+            options: [
+              { id: 'a', text: 'Mã hóa password để không ai đọc được', correct: false },
+              { id: 'b', text: 'Chống rainbow table attack — cùng password sẽ có hash khác nhau', correct: true },
+              { id: 'c', text: 'Làm hash ngắn hơn để tiết kiệm storage', correct: false },
+              { id: 'd', text: 'Thay thế cho bcrypt — không cần thuật toán mạnh', correct: false }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Phân loại: thuật toán hash nào AN TOÀN?',
+          instruction: 'Mỗi thẻ là một hash algorithm. Kéo vào ô <strong style="color:var(--success)">AN TOÀN</strong> (recommended) hoặc <strong style="color:var(--danger)">KHÔNG AN TOÀN</strong> (lỗi thời, có thể crack).',
+          chips: [
+            { id: 'h-md5',    label: 'md5 (32 hex chars)' },
+            { id: 'h-sha1',   label: 'sha1 (40 hex chars)' },
+            { id: 'h-sha256', label: 'sha256 (64 hex chars, no salt)' },
+            { id: 'h-bcrypt', label: 'bcrypt ($2a$ / $2b$ prefix)' },
+            { id: 'h-argon2', label: 'argon2 (PHC winner 2015)' },
+            { id: 'h-scrypt', label: 'scrypt (memory-hard)' },
+            { id: 'h-plain',  label: 'plain text password' }
+          ],
+          bins: [
+            { id: 'safe',   label: 'AN TOÀN (recommended)', correct: 'safe' },
+            { id: 'unsafe', label: 'KHÔNG AN TOÀN (cần migrate)', correct: 'unsafe' }
+          ],
+          solution: {
+            'h-md5':    'unsafe',
+            'h-sha1':   'unsafe',
+            'h-sha256': 'unsafe',
+            'h-bcrypt': 'safe',
+            'h-argon2': 'safe',
+            'h-scrypt': 'safe',
+            'h-plain':  'unsafe'
+          }
+        }
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
+          { type: 'col', token: 'username',         slot: 'col-1' },
+          { type: 'kw',  token: ',',                slot: 'op-comma1' },
+          { type: 'col', token: 'hash_algorithm',   slot: 'col-2' },
+          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
+          { type: 'tbl', token: 'security_users_vault', slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
+          { type: 'col', token: 'hash_algorithm',   slot: 'col-filter' },
+          { type: 'kw',  token: 'IN',               slot: 'kw-in' },
+          { type: 'op',  token: "('bcrypt', 'argon2', 'scrypt')", slot: 'op-list' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: "SELECT username, hash_algorithm", accepts: ['kw','col'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM security_users_vault',        accepts: ['kw','tbl'], multi: true },
+          { id: 'where-line',  placeholder: "WHERE hash_algorithm IN ('bcrypt', 'argon2', 'scrypt')", accepts: ['kw','col','op'], multi: true }
+        ],
+        expected_sql: "SELECT username, hash_algorithm FROM security_users_vault WHERE hash_algorithm IN ('bcrypt','argon2','scrypt');",
+        reveal_hints: {
+          'select-line':  'Chọn username và hash_algorithm để xem user nào dùng thuật toán nào.',
+          'where-line':   "<code>IN ('bcrypt','argon2','scrypt')</code> — chỉ lấy thuật toán recommended. md5/sha1/sha256 không có trong danh sách."
+        }
+      },
+
+      step_4: {
+        prompt: "Viết query phân loại <strong>mức độ bảo mật</strong>: bcrypt/scrypt/argon2 = 'HIGH', sha256 = 'MEDIUM', md5/sha1 = 'LOW'. Dùng <code>CASE WHEN</code>. Đếm số user theo từng mức, sắp xếp giảm dần.",
+        starter: "-- CASE WHEN phân loại security level\n-- HIGH (bcrypt/argon2/scrypt), MEDIUM (sha256), LOW (md5/sha1)\nSELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN ''\n            WHEN hash_algorithm = '' THEN ''\n            ELSE '' END AS security_level,\n       COUNT() AS \n  FROM security_users_vault\n GROUP BY security_level\n ORDER BY  DESC;\n",
+        schema: {
+          table_name: 'security_users_vault',
+          columns: [
+            { name: 'user_id',        type: 'VARCHAR', key: 'PK', icon: '&#128273;' },
+            { name: 'username',        type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'hash_algorithm',  type: 'VARCHAR', key: '',  icon: '&#9881;' }
+          ],
+          data: [
+            ['U01','minh_dev','md5'],
+            ['U02','yuki_dev','bcrypt'],
+            ['U03','sara_dev','sha1'],
+            ['U04','alex_dev','argon2'],
+            ['U05','lisa_dev','sha256'],
+            ['U06','ken_dev', 'bcrypt'],
+            ['U07','jen_dev', 'scrypt']
+          ]
+        },
+        expected_sql: "SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;",
+        hints: [
+          { level: 1, text: "Bạn cần <em>phân loại security level</em> theo thuật toán, đếm user theo từng mức, sắp xếp giảm dần. Hãy nghĩ: <code>CASE WHEN</code> để gán nhãn, <code>GROUP BY</code> theo nhãn, <code>COUNT</code> + <code>ORDER BY</code>." },
+          { level: 2, text: "<code>CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH'</code> — recommended algorithms." },
+          { level: 3, text: "<code>WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code>." },
+          { level: 4, text: "<code>GROUP BY security_level ORDER BY user_count DESC</code>." }
+        ],
+        success_message: 'CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 18 bài Database Design Cơ bản!',
+        xp_reward: 70
+      }
     }
+
   ]
 };
