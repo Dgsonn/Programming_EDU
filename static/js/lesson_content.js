@@ -337,7 +337,7 @@ window.LESSON_CONTENT['db_design'] = {
 
       step_4: {
         prompt: 'Hoàn thiện câu SQL dưới đây — điền các từ/cột còn thiếu vào ô trống:',
-        starter: '-- Tính username + 2 mảnh địa chỉ + cột ảo age\n-- AS dùng để đặt tên cột ảo\nSELECT username, address_city, address_dist, ____\n  FROM player_profile\n WHERE ____ = 7;',
+        starter: '-- Tính username + 2 mảnh địa chỉ + cột ảo age\n-- AS dùng để đặt tên cột ảo\nSELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age\n  FROM player_profile\n WHERE p_id = 7;',
         schema: {
           table_name: 'player_profile',
           columns: [
@@ -353,13 +353,11 @@ window.LESSON_CONTENT['db_design'] = {
             ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999']
           ]
         },
-        template: 'SELECT username, ____, ____, (EXTRACT(YEAR FROM CURRENT_DATE) - ____) ____ age FROM player_profile WHERE ____ = 7;',
-        blanks: [
-          { id: 'b1', expected: 'address_city', hint: 'thành phố' },
-          { id: 'b2', expected: 'address_dist', hint: 'quận/huyện' },
-          { id: 'b3', expected: 'birth_year',   hint: 'cột gốc' },
-          { id: 'b4', expected: 'AS',           hint: 'đặt bí danh' },
-          { id: 'b5', expected: 'p_id',         hint: 'khóa chính' }
+        hints: [
+          { level: 1, text: 'Bạn cần lấy <em>nhiều cột</em> + tính <em>cột ảo</em> từ birth_year → tuổi. Hãy nghĩ: <code>EXTRACT(YEAR FROM CURRENT_DATE) - birth_year</code> cho ra tuổi hiện tại.' },
+          { level: 2, text: 'SELECT 4 cột: <code>username</code>, <code>address_city</code>, <code>address_dist</code>, và cột tính tuổi.' },
+          { level: 3, text: 'Cột ảo tuổi: <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code> — dùng <code>AS</code> để đặt tên.' },
+          { level: 4, text: '<code class="code">SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;</code>' }
         ],
         expected_sql: 'SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;',
         success_message: 'Tuyệt! Bạn đã nắm Composite (tách cột) + Derived (tính cột ảo với AS). Bài 3 sẽ học cách nối 2 bảng bằng Foreign Key + JOIN.',
@@ -716,8 +714,8 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_4: {
-        prompt: '<strong>Bug:</strong> Query dưới đây <em>quên JOIN bảng game</em>, nên chỉ trả về mã game chứ không trả về tên game. Sửa cho ra kết quả đúng. (Click vào dòng lỗi để edit)',
-        starter: '-- Tìm tên sinh viên + tên khóa học đã đăng ký\n-- JOIN 3 bảng: student ↔ enrollment ↔ course\nSELECT s.name, c.title\n  FROM student s\n  JOIN ____ e ON s.____ = e.____\n  JOIN course c ON e.____ = c.____\n WHERE s.____ = 7;',
+        prompt: 'Từ 3 bảng <code>player</code>, <code>player_game_library</code>, <code>game</code>: tìm <code>title</code> của các game mà player tên <em>DragonLord</em> đang sở hữu. Viết query SQL trong editor bên phải.',
+        starter: "-- Tìm title game của player 'DragonLord'\n-- JOIN 3 bảng: player ↔ player_game_library ↔ game\nSELECT g.\n  FROM player p\n  JOIN player_game_library l ON p. = l.\n  JOIN game g ON l. = g.\n WHERE p. = ;\n",
         schema: {
           table_name: 'player',
           columns: [
@@ -751,10 +749,14 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           }
         ],
-        buggy: "SELECT player_game_library.ref_game_id\nFROM player\nJOIN player_game_library ON player.p_id = player_game_library.ref_p_id\nWHERE player.username = 'DragonLord';",
-        buggy_line: 0,
+        hints: [
+          { level: 1, text: 'Bạn cần <em>nối 3 bảng</em> qua các FK: <code>player.p_id</code> ↔ <code>player_game_library.ref_p_id</code> ↔ <code>player_game_library.ref_game_id</code> ↔ <code>game.game_id</code>.' },
+          { level: 2, text: 'SELECT 1 cột: <code>game.title</code>. Filter username = \'DragonLord\'.' },
+          { level: 3, text: 'JOIN thứ 1: <code>player p JOIN player_game_library l ON p.p_id = l.ref_p_id</code>. JOIN thứ 2: <code>JOIN game g ON l.ref_game_id = g.game_id</code>.' },
+          { level: 4, text: '<code class="code">SELECT g.title FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE p.username = \'DragonLord\';</code>' }
+        ],
         expected_sql: "SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = 'DragonLord';",
-        success_message: 'Đỉnh! Bạn đã thêm JOIN bảng game. Bài 5 sẽ học về Thực thể yếu (Weak Entity) — loại thực thể cần cha để tồn tại.',
+        success_message: 'Đỉnh! Bạn đã JOIN 3 bảng thành thạo qua FK chain. Bài 5 sẽ học về Thực thể yếu (Weak Entity) — loại thực thể cần cha để tồn tại.',
         xp_reward: 70
       }
     },

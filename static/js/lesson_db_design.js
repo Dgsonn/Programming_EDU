@@ -2933,32 +2933,43 @@
     if (!container || !s4 || !s4.schema) return;
     const schema = s4.schema;
     const data = s4.schema.data || s4.data || [];
-    let html = `<div class="step4-schema-card">
-      <div class="schema-head">
-        <i class="fa-solid fa-table"></i>
-        <span class="table-name">${escapeHtml(schema.table_name)}</span>
-        <span class="row-count">${data.length} rows</span>
-      </div>
-      <div class="schema-rows">
-        ${(schema.columns || []).map(col => `
-          <div class="schema-row">
-            <span class="col-name">${col.icon ? col.icon + ' ' : ''}${escapeHtml(col.name)}</span>
-            <span class="col-type">${escapeHtml(col.type || '')}</span>
-            ${col.key ? `<span class="col-key">${escapeHtml(col.key)}</span>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      ${data.length > 0 ? `
-        <div class="data-preview">
-          <table class="data-table">
-            <thead><tr>${(schema.columns || []).map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}</tr></thead>
-            <tbody>${data.map(row => `<tr>${row.map((cell, i) =>
-              `<td class="${schema.columns[i]?.key === 'PK' ? 'pk-cell' : ''}">${escapeHtml(String(cell))}</td>`
-            ).join('')}</tr>`).join('')}</tbody>
-          </table>
+    // Render schema chính + related_schemas (nếu có) — user cần thấy tất cả bảng để JOIN
+    const renderOneTable = (tbl) => {
+      const tblData = tbl.data || [];
+      return `<div class="step4-schema-card">
+        <div class="schema-head">
+          <i class="fa-solid fa-table"></i>
+          <span class="table-name">${escapeHtml(tbl.table_name)}</span>
+          <span class="row-count">${tblData.length} rows</span>
         </div>
-      ` : ''}
-    </div>`;
+        <div class="schema-rows">
+          ${(tbl.columns || []).map(col => `
+            <div class="schema-row">
+              <span class="col-name">${col.icon ? col.icon + ' ' : ''}${escapeHtml(col.name)}</span>
+              <span class="col-type">${escapeHtml(col.type || '')}</span>
+              ${col.key ? `<span class="col-key">${escapeHtml(col.key)}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        ${tblData.length > 0 ? `
+          <div class="data-preview">
+            <table class="data-table">
+              <thead><tr>${(tbl.columns || []).map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}</tr></thead>
+              <tbody>${tblData.map(row => `<tr>${row.map((cell, i) =>
+                `<td class="${tbl.columns[i]?.key === 'PK' ? 'pk-cell' : ''}">${escapeHtml(String(cell))}</td>`
+              ).join('')}</tr>`).join('')}</tbody>
+            </table>
+          </div>
+        ` : ''}
+      </div>`;
+    };
+    let html = renderOneTable(schema);
+    // Nếu có related_schemas (vd: JOIN nhiều bảng), render thêm
+    if (s4.related_schemas && Array.isArray(s4.related_schemas)) {
+      s4.related_schemas.forEach(relSchema => {
+        html += renderOneTable(relSchema);
+      });
+    }
     container.innerHTML = html;
   }
 
