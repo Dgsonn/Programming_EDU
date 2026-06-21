@@ -5,7 +5,7 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=30" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=13" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}?v=1" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
@@ -19,28 +19,20 @@
 
       <div class="dash-grid">
 
-        <!-- ── TRÁI 1/2: welcome + stats + calendar + BXH ── -->
-        <div class="dash-col-left">
-
-          <!-- Welcome (full width cột trái = 1/2 viewport) -->
-          <div class="welcome-banner welcome-banner--slim">
-            <div class="banner-dots"></div>
-            <div class="banner-inner">
-              <div class="banner-text">
-                <span class="greeting" id="banner-greeting">Chào mừng trở lại! 👋</span>
-                <h2 id="banner-name">—</h2>
-              </div>
-              <div class="banner-code">&lt;/&gt;</div>
+        <!-- ── Welcome banner — span cả hai cột ── -->
+        <div class="welcome-banner welcome-banner--slim dash-banner">
+          <div class="banner-dots"></div>
+          <div class="banner-inner">
+            <div class="banner-text">
+              <span class="greeting" id="banner-greeting">Chào mừng trở lại! 👋</span>
+              <h2 id="banner-name">—</h2>
             </div>
+            <div class="banner-code">&lt;/&gt;</div>
           </div>
+        </div>
 
-          <!-- Stats: 4 thẻ dưới welcome -->
-          <div class="stats-grid" id="stats-grid">
-            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
-            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
-            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
-            <div class="skel-stat"><div class="skel-stat-icon skel"></div><div class="skel-stat-lines"><div class="skel-stat-val skel"></div><div class="skel-stat-lbl skel"></div></div></div>
-          </div>
+        <!-- ── TRÁI: calendar + BXH ── -->
+        <div class="dash-col-left">
 
           <!-- Calendar -->
           <div class="section-card study-cal-card">
@@ -448,6 +440,107 @@
       </div>
     </div>
 
+    <!-- ══════════ TRANG CỦA TÔI ══════════ -->
+    <div class="page" id="page-profile">
+      <div class="prof-wrap">
+
+        <!-- ── Hero card ── -->
+        <div class="prof-hero">
+          <div class="prof-hero-bg"></div>
+          <div class="prof-hero-body">
+            <div class="prof-avatar-wrap">
+              <img class="prof-avatar" src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+              <span class="prof-avatar-badge">🎓</span>
+            </div>
+            <div class="prof-hero-info">
+              <div class="prof-name" id="prof-name">—</div>
+              <div class="prof-email" id="prof-email">—</div>
+              <div class="prof-role-tag">Học viên</div>
+            </div>
+            <button class="prof-edit-btn" onclick="navigate('settings')">✏️ Chỉnh sửa hồ sơ</button>
+          </div>
+        </div>
+
+        <!-- ── Stats row (5 cards) ── -->
+        <div class="prof-stats-row">
+          <div class="prof-stat-card">
+            <div class="prof-stat-icon">🔥</div>
+            <div class="prof-stat-val" id="prof-streak">—</div>
+            <div class="prof-stat-lbl">Chuỗi ngày học</div>
+          </div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-icon">📖</div>
+            <div class="prof-stat-val" id="prof-enrolled">—</div>
+            <div class="prof-stat-lbl">Khóa học đang học</div>
+          </div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-icon">✅</div>
+            <div class="prof-stat-val" id="prof-done">—</div>
+            <div class="prof-stat-lbl">Bài học hoàn thành</div>
+          </div>
+          <div class="prof-stat-card">
+            <div class="prof-stat-icon">🏅</div>
+            <div class="prof-stat-val" id="prof-badges">—</div>
+            <div class="prof-stat-lbl">Huy hiệu đạt được</div>
+          </div>
+          <div class="prof-stat-card prof-stat-card--link" onclick="navigateToSkills()" title="Xem kỹ năng">
+            <div class="prof-stat-icon">💡</div>
+            <div class="prof-stat-val" id="prof-skills">—</div>
+            <div class="prof-stat-lbl">Kỹ năng</div>
+          </div>
+        </div>
+
+        <!-- ── Content grid ── -->
+        <div class="prof-grid">
+
+          <!-- Cột trái: Khóa học + XP card -->
+          <div class="prof-col-left">
+
+            <!-- Khóa học đang học -->
+            <div class="prof-section">
+              <div class="prof-section-hd">
+                <span class="prof-section-icon">📚</span>
+                <span class="prof-section-title">Khóa học đang học</span>
+              </div>
+              <div class="prof-course-list" id="prof-course-list">
+                <div class="prof-empty">Chưa đăng ký khóa học nào.</div>
+              </div>
+            </div>
+
+            <!-- Kinh nghiệm bài học -->
+            <div class="prof-xp-card">
+              <div class="prof-xp-label">kinh nghiệm bài học</div>
+              <div class="prof-xp-inner">
+                <div class="prof-xp-top">
+                  <span class="prof-xp-top-title">Subjects and languages</span>
+                  <span class="prof-xp-sort">Most progress ▾</span>
+                </div>
+                <div class="prof-xp-scale">
+                  <span>0</span><span>100</span><span>200</span><span>300</span><span>400</span>
+                </div>
+                <div class="prof-xp-rows" id="prof-xp-rows"></div>
+                <div class="prof-xp-footer">
+                  <span class="prof-xp-footer-link">Learn more about XP</span>
+                  <span class="prof-xp-footer-more">View more details ›</span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /prof-col-left -->
+
+          <!-- Bài đăng -->
+          <div class="prof-section prof-section--posts">
+            <h3 class="prof-posts-heading">bài đăng</h3>
+            <div class="prof-post-list" id="prof-post-list">
+              <div class="prof-empty">Chưa có bài đăng nào.</div>
+            </div>
+          </div>
+
+        </div><!-- /prof-grid -->
+
+      </div><!-- /prof-wrap -->
+    </div><!-- /page-profile -->
+
   </div><!-- /main -->
 
 
@@ -652,5 +745,5 @@
 
   {% include 'chatbot.html' %}
   <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=3"></script>
 {% endblock %}

@@ -104,3 +104,199 @@
   box-shadow: 0 4px 15px rgba(74,158,224,0.35); transition: all 0.2s;
 }
 .save-btn:hover { transform: scale(1.05); box-shadow: 0 8px 24px rgba(74,158,224,0.45); }
+
+/* ══════════════════════════════════════════════
+   TRANG CỦA TÔI  (page-profile)
+══════════════════════════════════════════════ */
+.prof-wrap {
+  padding: 0 0 48px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+/* ── Hero card ── */
+.prof-hero {
+  position: relative; border-radius: 20px; overflow: hidden;
+  background: #fff; border: 1px solid #F3F4F6;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.prof-hero-bg {
+  height: 90px;
+  background: linear-gradient(135deg, #4A9EE0 0%, #E84545 100%);
+}
+.prof-hero-body {
+  display: flex; align-items: flex-end; gap: 20px;
+  padding: 0 24px 24px; margin-top: -36px; flex-wrap: wrap;
+}
+.prof-avatar-wrap { position: relative; flex-shrink: 0; }
+.prof-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 4px solid #fff; background: #EEF6FD;
+  display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.prof-avatar-badge {
+  position: absolute; bottom: 2px; right: 2px;
+  font-size: 18px; line-height: 1;
+}
+.prof-hero-info { flex: 1; min-width: 0; padding-top: 40px; }
+.prof-name  { font-size: 20px; font-weight: 700; color: #111827; }
+.prof-email { font-size: 13px; color: #6B7280; margin-top: 2px; }
+.prof-role-tag {
+  display: inline-block; margin-top: 6px;
+  padding: 2px 10px; border-radius: 20px;
+  background: #EEF6FD; color: #4A9EE0; font-size: 11px; font-weight: 600;
+}
+.prof-edit-btn {
+  margin-left: auto; align-self: flex-end;
+  padding: 8px 16px; border-radius: 12px; border: 1.5px solid #E5E7EB;
+  background: #fff; font-size: 13px; font-weight: 500; color: #374151;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.prof-edit-btn:hover { border-color: #4A9EE0; color: #4A9EE0; }
+
+/* ── Stats row ── */
+.prof-stats-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+}
+.prof-stat-card {
+  background: #fff; border-radius: 16px; padding: 18px 12px;
+  border: 1px solid #F3F4F6; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  text-align: center; transition: box-shadow 0.2s;
+}
+.prof-stat-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.09); }
+.prof-stat-card--link { cursor: pointer; }
+.prof-stat-card--link:hover { box-shadow: 0 6px 20px rgba(74,158,224,0.25); border-color: #4A9EE0; }
+.prof-stat-icon { font-size: 24px; margin-bottom: 8px; }
+.prof-stat-val  { font-size: 26px; font-weight: 800; color: #111827; line-height: 1; }
+.prof-stat-lbl  { font-size: 11px; color: #9CA3AF; margin-top: 5px; }
+
+/* ── Content grid ── */
+.prof-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.prof-section {
+  background: #fff; border-radius: 16px; padding: 20px;
+  border: 1px solid #F3F4F6; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.prof-section-hd {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.prof-section-icon { font-size: 18px; }
+.prof-section-title { font-size: 15px; font-weight: 600; color: #1F2937; }
+
+/* khóa học đang học */
+.prof-course-list { display: flex; flex-direction: column; gap: 10px; }
+.prof-empty { font-size: 13px; color: #9CA3AF; text-align: center; padding: 20px 0; }
+
+/* course items trong profile */
+.prof-course-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px; border-radius: 12px; background: #F9FAFB;
+}
+.prof-ci-icon { font-size: 22px; flex-shrink: 0; }
+.prof-ci-body { flex: 1; min-width: 0; }
+.prof-ci-name { font-size: 13px; font-weight: 600; color: #1F2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prof-ci-bar  { height: 5px; background: #E5E7EB; border-radius: 99px; margin: 5px 0 3px; }
+.prof-ci-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #4A9EE0, #E84545); }
+.prof-ci-pct  { font-size: 11px; color: #9CA3AF; }
+
+/* bài đăng */
+.prof-posts-heading {
+  font-size: 28px; font-weight: 700; color: #111827;
+  margin: 0 0 16px;
+}
+.prof-post-list { display: flex; flex-direction: column; gap: 12px; }
+body.dark .prof-posts-heading { color: #F9FAFB; }
+
+body.dark .prof-course-item { background: #374151; }
+body.dark .prof-ci-name     { color: #F9FAFB; }
+body.dark .prof-ci-bar      { background: #4B5563; }
+
+/* ── Dark mode ── */
+body.dark .prof-hero,
+body.dark .prof-stat-card,
+body.dark .prof-section        { background: #1F2937; border-color: #374151; }
+body.dark .prof-name           { color: #F9FAFB; }
+body.dark .prof-email          { color: #9CA3AF; }
+body.dark .prof-stat-val       { color: #F9FAFB; }
+body.dark .prof-section-title  { color: #F9FAFB; }
+body.dark .prof-act-text       { color: #D1D5DB; }
+body.dark .prof-edit-btn       { background: #374151; border-color: #4B5563; color: #D1D5DB; }
+body.dark .prof-edit-btn:hover { border-color: #4A9EE0; color: #4A9EE0; }
+body.dark .prof-avatar         { border-color: #1F2937; }
+
+/* ── Kinh nghiệm bài học (XP card) ── */
+.prof-col-left { display: flex; flex-direction: column; gap: 16px; }
+
+.prof-xp-card {
+  background: #FFF7ED; border-radius: 16px; padding: 16px;
+  border: 1px solid #FED7AA;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.prof-xp-label {
+  font-size: 14px; font-weight: 700; color: #1F2937; margin-bottom: 12px;
+}
+.prof-xp-inner {
+  background: #fff; border-radius: 12px; padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+.prof-xp-top {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.prof-xp-top-title { font-size: 13px; font-weight: 600; color: #1F2937; }
+.prof-xp-sort {
+  font-size: 11px; color: #6B7280; padding: 3px 10px;
+  border: 1px solid #E5E7EB; border-radius: 8px; cursor: pointer;
+}
+.prof-xp-scale {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: #9CA3AF;
+  padding-left: 128px; margin-bottom: 4px;
+}
+.prof-xp-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 0; border-top: 1px solid #F9FAFB;
+}
+.prof-xp-row-icon { font-size: 15px; width: 20px; flex-shrink: 0; text-align: center; }
+.prof-xp-row-name {
+  font-size: 12px; color: #374151; width: 100px; flex-shrink: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.prof-xp-bar-wrap {
+  flex: 1; height: 14px; background: #F3F4F6; border-radius: 99px; overflow: hidden;
+}
+.prof-xp-bar-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, #FCD34D, #F59E0B);
+  transition: width 0.7s cubic-bezier(.4,0,.2,1);
+}
+.prof-xp-row-val { font-size: 11px; color: #6B7280; width: 42px; text-align: right; flex-shrink: 0; }
+.prof-xp-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid #F3F4F6;
+}
+.prof-xp-footer-link { font-size: 11px; color: #9CA3AF; cursor: pointer; }
+.prof-xp-footer-link:hover { color: #6B7280; }
+.prof-xp-footer-more { font-size: 11px; font-weight: 600; color: #4A9EE0; cursor: pointer; }
+.prof-xp-footer-more:hover { text-decoration: underline; }
+
+body.dark .prof-xp-card  { background: #1F2937; border-color: #374151; }
+body.dark .prof-xp-label { color: #F9FAFB; }
+body.dark .prof-xp-inner { background: #111827; box-shadow: none; }
+body.dark .prof-xp-top-title { color: #F9FAFB; }
+body.dark .prof-xp-sort  { border-color: #374151; color: #9CA3AF; }
+body.dark .prof-xp-row   { border-color: #1F2937; }
+body.dark .prof-xp-row-name { color: #D1D5DB; }
+body.dark .prof-xp-bar-wrap { background: #374151; }
+body.dark .prof-xp-footer { border-color: #374151; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .prof-stats-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .prof-stats-row { grid-template-columns: repeat(2, 1fr); }
+  .prof-grid      { grid-template-columns: 1fr; }
+  .prof-hero-body { flex-direction: column; align-items: flex-start; }
+  .prof-edit-btn  { margin-left: 0; }
+  .prof-chart-canvas { height: 160px !important; }
+}

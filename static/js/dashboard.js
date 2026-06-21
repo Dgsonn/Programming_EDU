@@ -426,6 +426,7 @@ function skSkillToggle(row) {
       }
     }
   };
+  window._loadSkillsGlobal = loadSkills;
 })();
 
 /* ═══════════════════════════════════════════════════════
@@ -1110,6 +1111,116 @@ function skSkillToggle(row) {
     if (page === 'forum') renderPosts();
   };
 
+})();
+
+/* ═══════════════════════════════════════════════════════
+   Trang của tôi — profile page hook
+   ═══════════════════════════════════════════════════════ */
+(function () {
+  var _origNavigateProfile = window.navigate;
+  window.navigate = function (page) {
+    _origNavigateProfile(page);
+    if (page === 'profile') _loadProfile();
+  };
+
+  /* ── Kinh nghiệm bài học (XP chart) ── */
+  var _xpSubjects = [
+    { icon: '📊', name: 'Data science',     xp: 388 },
+    { icon: '📈', name: 'Data analytics',   xp: 210 },
+    { icon: '🌐', name: 'Web development',  xp: 200 },
+    { icon: '🐍', name: 'Python',           xp: 170 },
+    { icon: '🎨', name: 'HTML & CSS',       xp: 165 },
+    { icon: '💻', name: 'Computer science', xp: 140 },
+  ];
+  var _XP_MAX = 400;
+
+  function _renderXPChart() {
+    var container = document.getElementById('prof-xp-rows');
+    if (!container) return;
+    container.innerHTML = _xpSubjects.map(function (s) {
+      var pct = Math.round(s.xp / _XP_MAX * 100);
+      return '<div class="prof-xp-row">'
+        + '<span class="prof-xp-row-icon">' + s.icon + '</span>'
+        + '<span class="prof-xp-row-name">' + s.name + '</span>'
+        + '<div class="prof-xp-bar-wrap">'
+        +   '<div class="prof-xp-bar-fill" style="width:0%"'
+        +     ' data-pct="' + pct + '"></div>'
+        + '</div>'
+        + '<span class="prof-xp-row-val">' + s.xp + ' XP</span>'
+        + '</div>';
+    }).join('');
+    /* animate bars after paint */
+    requestAnimationFrame(function () {
+      container.querySelectorAll('.prof-xp-bar-fill').forEach(function (bar) {
+        bar.style.width = bar.getAttribute('data-pct') + '%';
+      });
+    });
+  }
+
+  window.navigateToSkills = function () {
+    window.navigate('skills');
+    var skillsPage = document.getElementById('page-skills');
+    if (skillsPage && !skillsPage.classList.contains('active')) {
+      document.querySelectorAll('.page').forEach(function (p) {
+        p.classList.remove('active');
+      });
+      skillsPage.classList.add('active');
+      if (typeof window._loadSkillsGlobal === 'function') window._loadSkillsGlobal();
+    }
+  };
+
+  function _loadProfile() {
+    // Tên & email: lấy từ data đã load sẵn trong settings
+    var name  = (document.getElementById('chip-name') || {}).textContent || '—';
+    var email = (document.getElementById('settings-profile-email') || {}).textContent || '—';
+    _set('prof-name',  name  === '—' ? (document.getElementById('udh-name') || {}).textContent || '—' : name);
+    _set('prof-email', email);
+
+    // Số khóa đang học
+    _set('prof-enrolled', enrolledCourses ? enrolledCourses.length : '—');
+
+    // Số bài hoàn thành & streak: lấy từ stat cards dashboard nếu có
+    var streakEl = document.querySelector('.stat-val[data-stat="streak"], #stat-streak');
+    _set('prof-streak', streakEl ? streakEl.textContent : '—');
+
+    var doneEl = document.querySelector('.stat-val[data-stat="done"], #stat-done-lessons');
+    _set('prof-done', doneEl ? doneEl.textContent : '—');
+
+    // Kỹ năng: đếm sk-grid cards nếu đã load
+    var skillCards = document.querySelectorAll('#sk-grid .sk-card');
+    _set('prof-skills', skillCards.length > 0 ? skillCards.length : '—');
+
+    // Khóa học đang học: render từ enrolledCourses
+    _renderProfCourses();
+
+    // XP chart
+    _renderXPChart();
+  }
+
+  function _set(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function _renderProfCourses() {
+    var list = document.getElementById('prof-course-list');
+    if (!list) return;
+    if (!enrolledCourses || !enrolledCourses.length) {
+      list.innerHTML = '<div class="prof-empty">Chưa đăng ký khóa học nào.</div>';
+      return;
+    }
+    list.innerHTML = enrolledCourses.slice(0, 4).map(function (c) {
+      var pct = c.progress || 0;
+      return '<div class="prof-course-item">'
+        + '<div class="prof-ci-icon">' + (c.icon || '📖') + '</div>'
+        + '<div class="prof-ci-body">'
+        +   '<div class="prof-ci-name">' + (c.title || c.name || 'Khóa học') + '</div>'
+        +   '<div class="prof-ci-bar"><div class="prof-ci-fill" style="width:' + pct + '%"></div></div>'
+        +   '<div class="prof-ci-pct">' + pct + '% hoàn thành</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
 })();
 
 /* ═══════════════════════════════════════════════════════

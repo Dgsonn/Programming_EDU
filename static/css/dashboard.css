@@ -2961,12 +2961,15 @@ body.dark .page#page-dashboard .stat-lbl { color: #94A3B8; }
 .dash-col-left > .study-cal-card .study-cal-legend { display: none; }
 
 /* ── CỘT PHẢI: roadmap stretch full height ── */
+/* Banner span toàn bộ chiều rộng grid */
+.dash-banner { grid-column: 1 / -1; }
+
 .mini-rm-card--full {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 14px 18px 12px;
-  min-height: 600px;
+  min-height: 0;
 }
 .mini-rm-card--full .mini-rm-header {
   margin-bottom: 10px;
@@ -3201,6 +3204,7 @@ body.dark .mini-rm-arrow { stroke: #475569; }
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  -webkit-user-select: none;
   user-select: none;
   white-space: nowrap;
   max-width: 94%;
