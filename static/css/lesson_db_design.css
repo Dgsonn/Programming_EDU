@@ -5412,13 +5412,35 @@ body.lesson-focus-mode::before {
   margin-bottom: 8px;
 }
 .concept-card-icon {
-  width: 28px; height: 28px; border-radius: 8px;
+  width: 32px; height: 32px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   background: var(--primary-soft); color: var(--primary);
-  font-size: 13px;
+}
+.concept-card-icon-svg {
+  width: 18px; height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 .concept-card-title { color: var(--text-100); font-weight: 600; font-size: 14px; flex: 1; }
 .concept-card-body { color: var(--text-300); font-size: 13px; line-height: 1.6; }
+
+/* ── R4-A: Success modal — lesson tag ──────────────────────────── */
+.success-lesson-tag {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 4px auto 12px; padding: 6px 14px;
+  background: linear-gradient(90deg, rgba(6,182,212,0.12), rgba(168,85,247,0.12));
+  border: 1px solid rgba(6,182,212,0.3);
+  border-radius: 999px;
+  max-width: max-content;
+}
+.success-lesson-num {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--primary); text-transform: uppercase;
+}
+.success-lesson-title {
+  font-size: 14px; font-weight: 600; color: var(--text-100);
+}
 
 /* ── B.2 Badge (shadcn Badge) ──────────────────────────────────── */
 .badge {

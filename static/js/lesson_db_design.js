@@ -101,9 +101,15 @@
       return;
     }
 
-    // Get lesson index from URL or default to 0
+    // R4-A: URL param ?lesson=N là 1-BASED (số bài hiển thị cho user)
+    // Tương thích ngược: ?lesson_idx=N vẫn 0-based nếu backend dùng
     const params = new URLSearchParams(window.location.search);
-    const idx = parseInt(params.get('lesson') || '0', 10);
+    let idx;
+    if (params.has('lesson_idx')) {
+      idx = parseInt(params.get('lesson_idx'), 10);
+    } else {
+      idx = parseInt(params.get('lesson') || '1', 10) - 1;
+    }
     state.currentLessonIdx = Math.max(0, Math.min(idx, data.lessons.length - 1));
     state.currentLesson = data.lessons[state.currentLessonIdx];
 
@@ -248,19 +254,45 @@
     // Mission
     document.getElementById('mission-text').innerHTML = s1.mission || '';
 
+    // R4-B: Map Font Awesome icon name → custom SVG symbol id (inline SVG illustrations)
+    const ICON_MAP = {
+      'fa-key':        'i-key',
+      'fa-cube':       'i-cube',
+      'fa-link':       'i-link',
+      'fa-puzzle-piece': 'i-puzzle',
+      'fa-shield-halved': 'i-shield',
+      'fa-layer-group':'i-stack',
+      'fa-code-branch':'i-git-branch',
+      'fa-code':       'i-arrow-split',
+      'fa-crown':      'i-crown',
+      'fa-trophy':     'i-trophy',
+      'fa-bolt':       'i-zap',
+      'fa-database':   'i-database',
+      'fa-lock':       'i-lock',
+      'fa-skull-crossbones': 'i-bug',
+      'fa-bug':        'i-bug',
+      'fa-table':      'i-database',
+      'fa-lightbulb':  'i-zap'
+    };
+
     // Premium concept cards (shadcn Card-inspired) — opt-in
     const conceptMount = document.getElementById('concept-cards-mount');
     if (conceptMount) {
       if (s1.concept_cards && s1.concept_cards.length) {
-        conceptMount.innerHTML = s1.concept_cards.map(c => `
+        conceptMount.innerHTML = s1.concept_cards.map(c => {
+          // Resolve icon: data-icon field (SVG id) > icon field (fa-*) > fallback
+          const iconName = c.data_icon || ICON_MAP[c.icon || ''] || 'i-zap';
+          return `
           <div class="concept-card">
             <div class="concept-card-head">
-              <div class="concept-card-icon"><i class="fa-solid ${escapeHtml(c.icon || 'fa-lightbulb')}"></i></div>
+              <div class="concept-card-icon">
+                <svg class="concept-card-icon-svg" aria-hidden="true"><use href="#${iconName}"/></svg>
+              </div>
               <div class="concept-card-title">${c.title || ''}</div>
             </div>
             <div class="concept-card-body">${c.body || ''}</div>
           </div>
-        `).join('');
+        `;}).join('');
       } else {
         conceptMount.innerHTML = '';
       }
@@ -1338,14 +1370,31 @@
       .find(p => p.dataset.token === token);
     if (!pill) return;
 
-    /* Validate type — pills that don't match zone.accepts bounce back. */
+    /* R4-D: Validate type + keyword.
+       - zone.accepts (cũ): nhóm lớn ('kw', 'col', 'tbl', ...)
+       - zone.acceptedKeywords (mới): keyword CỤ THỂ được chấp nhận, vd select-line chỉ nhận 'SELECT'
+       → pill không match → bounce back với message rõ ràng */
     const s3 = state.currentLesson.step_3;
     const blockDef = s3.blocks.find(b => b.token === token);
     const zone = s3.drop_zones.find(z => z.id === zoneId);
-    if (blockDef && zone && !zone.accepts.includes(blockDef.type)) {
+    if (!blockDef || !zone) return;
+    // Check 1: type-level (nhóm lớn)
+    if (!zone.accepts.includes(blockDef.type)) {
       pill.classList.add('error');
       setTimeout(() => pill.classList.remove('error'), 500);
+      flashZoneHint(zoneId, `❌ Block "${blockDef.token}" không phù hợp zone này.`);
       return;
+    }
+    // Check 2: keyword-level (nếu zone khai báo acceptedKeywords)
+    if (zone.acceptedKeywords && zone.acceptedKeywords.length > 0 && blockDef.type === 'kw') {
+      if (!zone.acceptedKeywords.includes(blockDef.token)) {
+        pill.classList.add('error');
+        setTimeout(() => pill.classList.remove('error'), 500);
+        if (window.showToast) {
+          window.showToast('warning', `⚠️ Zone này chỉ nhận: ${zone.acceptedKeywords.join(', ')}`, 2500);
+        }
+        return;
+      }
     }
 
     pill.classList.add('locked');
@@ -2215,9 +2264,15 @@
    * Success modal
    * ═══════════════════════════════════════════════════════════════ */
   function showSuccess() {
+    const l = state.currentLesson;
+    const s4 = l.step_4;
+    const lessonNum = state.currentLessonIdx + 1;
+    // R4-A: Hiển thị tên bài rõ ràng + số bài để user biết đang hoàn thành bài nào
+    document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/18`;
+    document.getElementById('success-lesson-title').textContent = l.title;
     document.getElementById('success-message').textContent =
-      state.currentLesson.step_4.success_message || 'Bạn đã hoàn thành bài học!';
-    document.getElementById('reward-xp').textContent = `+${state.currentLesson.step_4.xp_reward || 50}`;
+      s4.success_message || 'Bạn đã hoàn thành bài học!';
+    document.getElementById('reward-xp').textContent = `+${s4.xp_reward || 50}`;
     document.getElementById('success-modal').classList.remove('hidden');
   }
 

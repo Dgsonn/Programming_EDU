@@ -336,17 +336,29 @@ CURRICULA = {
         ],
         'instructor': 'Lê Minh Tuấn',
         'modules': [
-            {'title': 'Module 1: Giới thiệu & Nền tảng Database', 'lessons': [
-                'Entity Set & Primary Key', 'Composite & Derived Attributes',
-                'Foreign Key & JOIN', 'M:N & Bảng trung gian (Junction Table)',
-                'Thực thể yếu (Weak Entity)',
+            {'title': 'Module 1: ER Model & Mapping', 'lessons': [
+                'Entity, Attribute & Keys (PK, Super, Candidate, FK) (Bài 1)',
+                'Composite & Derived Attribute (Bài 2)',
+                'Foreign Key & Cardinalities (1:1, 1:N, M:N) (Bài 3)',
+                'M:N & Bảng trung gian (Junction Table) (Bài 4)',
+                'Weak Entity & Specialization/Generalization (Bài 5)',
+                'Mapping ER → Bảng quan hệ (Mapping Algorithm) (Bài 6)',
             ]},
-            {'title': 'Module 2: Chuẩn hóa dữ liệu (Normal Forms)', 'lessons': [
-                'Redundancy & Phụ thuộc hàm (FD)', 'Dạng chuẩn 1 (1NF) — Nguyên tử hóa',
-                'Dạng chuẩn BCNF & Phân rã Phi tổn thất', 'Dạng chuẩn 3 (3NF) & Sự thỏa hiệp',
+            {'title': 'Module 2: Phụ thuộc hàm & Chuẩn hóa (FD & Normal Forms)', 'lessons': [
+                'Redundancy & Functional Dependency (FD) (Bài 7)',
+                'Dạng chuẩn 1 (1NF) — Nguyên tử hóa (Bài 8)',
+                'Dạng chuẩn 2 (2NF) — Phụ thuộc hàm đầy đủ (Bài 9)',
+                'Dạng chuẩn BCNF + Thuật toán tách bảng (Bài 10)',
+                'Dạng chuẩn 3 (3NF) — Phụ thuộc bắc cầu (Bài 11)',
+                'Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị (Bài 12)',
+                'Boss Battle — Siêu hệ thống chuẩn hóa (Bài 13)',
             ]},
-            {'title': 'Module 3: Thiết kế hệ thống thực tế', 'lessons': [
-                'Trận chiến cuối — Siêu hệ thống chuẩn hóa',
+            {'title': 'Module 3: Application Design', 'lessons': [
+                'JSON trong Relational DB (Path Expressions) (Bài 14)',
+                'Spatial Data & Truy vấn tọa độ (Bài 15)',
+                'ORM (Django) — Ánh xạ Lớp ↔ Bảng (Bài 16)',
+                'SQL Injection — Lỗ hổng chết người (Bài 17)',
+                'Password Security — Salt & Hashing (Bài 18)',
             ]},
         ],
     },
@@ -411,10 +423,14 @@ _LESSON_URLS = {
 @main_bp.route('/lesson/<course_id>')
 @login_required
 def lesson_view(course_id):
-    lesson_idx = request.args.get('lesson', 0, type=int)
+    # R4-A: ?lesson=N là 1-BASED (số bài hiển thị cho user).
+    # Tương thích ngược: ?lesson_idx=N là 0-BASED nếu backend cũ dùng.
+    if 'lesson_idx' in request.args:
+        lesson_idx = request.args.get('lesson_idx', 0, type=int)
+    else:
+        lesson_idx = request.args.get('lesson', 1, type=int) - 1
     template = _LESSON_TEMPLATES.get(course_id)
     if not template:
-        # cpp và các khóa chưa có trang lesson riêng → redirect đúng URL
         return redirect(_LESSON_URLS.get(course_id, f'/courses/{course_id}'))
     return render_template(template, lesson_idx=lesson_idx, **_user_stats())
 

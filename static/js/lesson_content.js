@@ -162,9 +162,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: '101',     slot: 'val' }
         ],
         drop_zones: [
-          { id: 'select-line',  placeholder: 'SELECT ____ , ____', accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',    placeholder: 'FROM ____',          accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',   placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____',          accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',   placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: 'SELECT name, price FROM game_catalog WHERE id = 101;',
         reveal_hints: {
@@ -323,9 +323,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: '7',                slot: 'val' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____ , ____ , ____', accepts: ['kw', 'col', 'fn'], multi: true },
+          { id: 'select-line', placeholder: 'SELECT ____ , ____ , ____ , ____', accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT'], multi: true },
           { id: 'from-line',   placeholder: 'FROM ____',                          accepts: ['kw', 'tbl'],     multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',               accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: 'SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;',
         reveal_hints: {
@@ -498,9 +498,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'Nintendo'",     slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Nintendo';",
         reveal_hints: {
@@ -701,9 +701,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'DragonLord'",   slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                 accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____ JOIN ____ ON ____', accepts: ['kw', 'tbl', 'col'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                                 accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____ JOIN ____ ON ____', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = 'DragonLord';",
         reveal_hints: {
@@ -878,9 +878,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: '400',            slot: 'val-2' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',                                     accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____ ____ ____ ____ ____',      accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',                                     accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____ ____ ____ ____ ____',      accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;",
         reveal_hints: {
@@ -1049,9 +1049,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'FromSoftware'", slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware';",
         reveal_hints: {
@@ -1152,6 +1152,34 @@ window.LESSON_CONTENT['db_design'] = {
       },
 
       step_2: {
+        decomp_game: {
+          rule_label: 'Tách dư thừa (Redundancy)',
+          rule: 'Bảng <code>game_studio_combined</code> có <em>studio_name</em> lặp 3 lần + <em>st_country</em> lặp 3 lần. Vi phạm FD <code>studio_name → st_country</code>. Tách thành 2 bảng để loại bỏ dư thừa.',
+          mission: 'Kéo các cột từ bảng <code>game_studio_combined</code> vào 2 bảng mục tiêu.',
+          source_table: {
+            name: 'game_studio_combined',
+            columns: [
+              { name: 'game_id',     type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'game_name',   type: 'VARCHAR', key: '',   icon: '🎮' },
+              { name: 'studio_name', type: 'VARCHAR', key: '',   icon: '🏢' },
+              { name: 'st_country',  type: 'VARCHAR', key: '',   icon: '🌏' }
+            ],
+            data: [
+              ['55', 'Elden Ring',  'FromSoftware', 'Japan'],
+              ['56', 'Bloodborne',  'FromSoftware', 'Japan'],
+              ['88', 'Portal 2',    'Valve',        'USA']
+            ]
+          },
+          target_tables: [
+            { name: 'games',   icon: '🎮', description: 'Bảng game (game_id, game_name, studio_name FK)' },
+            { name: 'studios', icon: '🏢', description: 'Bảng studio (studio_name PK, st_country)' }
+          ],
+          solution: {
+            'games':   ['game_id', 'game_name', 'studio_name'],
+            'studios': ['studio_name', 'st_country']
+          },
+          hint: 'Cột studio_name nên ở bảng studios (PK). Cột st_country chỉ phụ thuộc studio_name → ở studios. Cột game_id, game_name ở bảng games (FK studio_name tham chiếu studios).'
+        },
         mcq: [
           {
             question: 'Redundancy (dư thừa) trong bảng game_studio_combined là gì?',
@@ -1207,9 +1235,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'FromSoftware'", slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT studio_name, st_country FROM game_studio_combined WHERE studio_name = 'FromSoftware';",
         reveal_hints: {
@@ -1347,9 +1375,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'0901-111-111'", slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',           accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',             accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',  accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',           accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',             accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',  accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT student_id FROM student_phone WHERE phone = '0901-111-111';",
         reveal_hints: {
@@ -1506,9 +1534,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'M01'",           slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT book_id, copy_no FROM loans WHERE member_id = 'M01';",
         reveal_hints: {
@@ -1674,9 +1702,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'D01'",          slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT patient_id, treatment FROM treatments WHERE doctor_id = 'D01';",
         reveal_hints: {
@@ -1857,9 +1885,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: '2',          slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT product_id, qty FROM orders WHERE qty > 2;",
         reveal_hints: {
@@ -2044,9 +2072,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: "'CS101'",         slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',                  accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',       accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',                  accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',       accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT textbook FROM course_textbook WHERE course_id = 'CS101';",
         reveal_hints: {
@@ -2333,9 +2361,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'val', token: 'true',       slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT username, country FROM users WHERE is_premium = true;",
         reveal_hints: {
@@ -2462,9 +2490,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'op',  token: "= 'true'",           slot: 'op-eq' }
         ],
         drop_zones: [
-          { id: 'select-line',  placeholder: "SELECT username, settings->>'theme' AS theme", accepts: ['kw','col','op'], multi: true },
-          { id: 'from-line',    placeholder: 'FROM app_users', accepts: ['kw','tbl'], multi: true },
-          { id: 'where-line',   placeholder: "WHERE settings->>'notifications' = 'true'", accepts: ['kw','col','op'], multi: true }
+          { id: 'select-line',  placeholder: "SELECT username, settings->>'theme' AS theme", accepts: ['kw','col','op'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM app_users', accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',   placeholder: "WHERE settings->>'notifications' = 'true'", accepts: ['kw','col','op'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT username, settings->>'theme' AS theme FROM app_users WHERE settings->>'notifications' = 'true';",
         reveal_hints: {
@@ -2595,9 +2623,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'kw',  token: 'ASC',        slot: 'kw-asc' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT name, ST_Distance(geo_location, ST_MakePoint(...)) AS distance', accepts: ['kw','col','fn','op'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM shop_branches', accepts: ['kw','tbl'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ST_DWithin(geo_location, ST_MakePoint(...), 5)', accepts: ['kw','fn','op'], multi: true },
+          { id: 'select-line', placeholder: 'SELECT name, ST_Distance(geo_location, ST_MakePoint(...)) AS distance', accepts: ['kw','col','fn','op'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM shop_branches', accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ST_DWithin(geo_location, ST_MakePoint(...), 5)', accepts: ['kw','fn','op'], acceptedKeywords: ['WHERE'], multi: true },
           { id: 'order-line',  placeholder: 'ORDER BY distance ASC', accepts: ['kw','col'], multi: true }
         ],
         expected_sql: "SELECT name, ST_Distance(geo_location, ST_MakePoint(106.7009, 10.7769)) AS distance FROM shop_branches WHERE ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 5) ORDER BY distance ASC;",
@@ -2863,8 +2891,8 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'op',  token: " AND password_hash = '_ignored'", slot: 'op-ignore' }
         ],
         drop_zones: [
-          { id: 'select-zone',   placeholder: "SELECT * FROM user_accounts WHERE username = ''",         accepts: ['kw','op','tbl','col'], multi: true },
-          { id: 'inject-zone',   placeholder: "OR '1'='1' --' AND password_hash = '_ignored'",         accepts: ['kw','op'], multi: true }
+          { id: 'select-zone',   placeholder: "SELECT * FROM user_accounts WHERE username = ''",         accepts: ['kw','op','tbl','col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'inject-zone',   placeholder: "OR '1'='1' --' AND password_hash = '_ignored'",         accepts: ['kw','op'], acceptedKeywords: ['--', 'OR', '1=1'], multi: true }
         ],
         expected_sql: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND password_hash = 'hashed_pw_abc'",
         reveal_hints: {
@@ -3025,9 +3053,9 @@ window.LESSON_CONTENT['db_design'] = {
           { type: 'op',  token: "('bcrypt', 'argon2', 'scrypt')", slot: 'op-list' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: "SELECT username, hash_algorithm", accepts: ['kw','col'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM security_users_vault',        accepts: ['kw','tbl'], multi: true },
-          { id: 'where-line',  placeholder: "WHERE hash_algorithm IN ('bcrypt', 'argon2', 'scrypt')", accepts: ['kw','col','op'], multi: true }
+          { id: 'select-line', placeholder: "SELECT username, hash_algorithm", accepts: ['kw','col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM security_users_vault',        accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: "WHERE hash_algorithm IN ('bcrypt', 'argon2', 'scrypt')", accepts: ['kw','col','op'], acceptedKeywords: ['WHERE'], multi: true }
         ],
         expected_sql: "SELECT username, hash_algorithm FROM security_users_vault WHERE hash_algorithm IN ('bcrypt','argon2','scrypt');",
         reveal_hints: {
