@@ -829,8 +829,8 @@
       return;
     }
 
-    // Sticky mission banner
-    renderStep3Mission(l.step_1);
+    // Sticky mission banner — ưu tiên step_3.mission nếu có
+    renderStep3Mission(l.step_1, s3);
 
     // Compact data preview (schema) in top of left pane
     renderStep3DataPreview(l.step_1);
@@ -847,7 +847,8 @@
     if (window.DragGame) {
       window.DragGame.init({
         lesson: l,
-        expectedSql: s3.expected_sql
+        expectedSql: s3.expected_sql,
+        dropZones: s3.drop_zones
       });
     }
 
@@ -1137,11 +1138,10 @@
     updateIDEFromBlocks();
   }
 
-  // Populate Step 3 sticky mission banner from step_1.mission
-  function renderStep3Mission(s1) {
+  function renderStep3Mission(s1, s3) {
     const el = document.getElementById('step3-mission-text');
     if (!el) return;
-    el.innerHTML = s1.mission || 'Kéo thả các khối lệnh vào drop-zone để xây dựng câu SQL.';
+    el.innerHTML = (s3 && s3.mission) || s1.mission || 'Kéo thả các khối lệnh vào drop-zone để xây dựng câu SQL.';
   }
 
   // Populate compact schema preview in top of left pane (Step 3)
@@ -1562,37 +1562,38 @@
     });
   }
 
-  /* Extract a clean summary of placed blocks to feed DragGame.update().
-     Pulls: fromTable (FROM-zone tbl token), columns (SELECT-zone col tokens),
-     whereFilter (WHERE-zone reconstructed as "col op val"). Also returns
-     isComplete=true when the SQL matches expected exactly. */
+  /* Extract zone fill status for all drop_zones → feed DragGame.update(). */
   function updateTruckGrid() {
     if (!window.DragGame) return;
     const s3 = state.currentLesson.step_3;
     if (!s3) return;
 
-    const fromZone = state.step3Blocks['from-line'] || [];
-    const selZone = state.step3Blocks['select-line'] || [];
-    const whereZone = state.step3Blocks['where-line'] || [];
+    // Build zoneFills: for each zone, extract a summary string if it has blocks
+    const zoneFills = {};
+    (s3.drop_zones || []).forEach(zone => {
+      const blocks = state.step3Blocks[zone.id] || [];
+      if (!blocks.length) return;
 
-    const fromTable = fromZone.find(b => b.type === 'tbl')?.token || null;
-    const columns = selZone.filter(b => b.type === 'col').map(b => b.token);
+      // Build a readable summary from placed blocks (skip keywords for display)
+      const nonKw = blocks.filter(b => b.type !== 'kw').map(b => b.token);
+      if (zone.id === 'from-line') {
+        zoneFills[zone.id] = blocks.find(b => b.type === 'tbl')?.token || nonKw.join(' ');
+      } else if (zone.id === 'select-line') {
+        zoneFills[zone.id] = blocks.filter(b => b.type === 'col' || b.type === 'fn').map(b => b.token).join(', ');
+      } else if (zone.id === 'where-line') {
+        zoneFills[zone.id] = nonKw.join(' ');
+      } else {
+        zoneFills[zone.id] = nonKw.length ? nonKw.join(' ') : blocks.map(b => b.token).join(' ');
+      }
+    });
 
-    // Reconstruct WHERE expression: col op val (ignore the WHERE kw itself)
-    const whereParts = whereZone
-      .filter(b => b.type !== 'kw')
-      .map(b => b.token);
-    const whereFilter = whereParts.length ? whereParts.join(' ') : null;
-
-    // Check completion: full SQL matches expected_sql (case-insensitive)
+    // Check completion: full SQL matches expected_sql
     const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ').toUpperCase();
     const builtSQL = buildSQLString().replace(/\s+/g, ' ').toUpperCase();
     const isComplete = builtSQL === expected;
 
     window.DragGame.update({
-      fromTable: fromTable,
-      columns: columns,
-      whereFilter: whereFilter,
+      zoneFills: zoneFills,
       isComplete: isComplete
     });
   }

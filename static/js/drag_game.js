@@ -1,43 +1,32 @@
 /* ============================================================================
- * drag_game.js — Brilliant-style "Query Pipeline" (v4 redesign)
+ * drag_game.js — Brilliant-style "Query Pipeline" (v5 dynamic stations)
  *
- * Core insight (from Brilliant's design philosophy): animations must visualize
- * DATA TRANSFORMATION, not decorate a literal scene. So instead of a truck
- * driving on a road, we render the QUERY as a data pipeline where each
- * stage shows a mini-table of the data at that point:
+ * Stations are built dynamically from the lesson's drop_zones.
+ * Simple lessons (SELECT/FROM/WHERE) get 4 stations.
+ * Complex lessons (JOIN/GROUP BY/ORDER BY) get more stations automatically.
  *
- *   ┌─ Kho ─┐    ┌─ FROM ─┐    ┌─ WHERE ─┐    ┌─ SELECT ─┐
- *   │  ──   │ →  │ ████ │ →  │ █░░░ │ →  │ ██ │
- *   │       │    │ ████ │    │ ░░░░ │    │ ██ │
- *   │       │    │ ████ │    │ ░░░░ │    │ ░░ │
- *   │       │    │ ████ │    │ ░░░░ │    │    │
- *   └───────┘    └───────┘    └───────┘    └──────┘
- *     empty       full table    filtered     projected
- *
- * A small truck CURSOR slides above the stations, indicating WHERE the
- * query is currently executing. Each transition is choreographed:
- *
- *   1. Truck slides to next station (spring physics)
- *   2. Cells fill/dim/highlight with staggered timing (cell-by-cell)
- *   3. Connector particles flow from previous station to current
- *   4. On completion: result table pulses + confetti
- *
- * Public API (unchanged):
- *   window.DragGame.init({lesson, expectedSql})
- *   window.DragGame.update({fromTable, columns, whereFilter, isComplete})
+ * Public API:
+ *   window.DragGame.init({lesson, dropZones})
+ *   window.DragGame.update({zoneFills, isComplete})
  *   window.DragGame.reset()
  * ============================================================================ */
 
 (function () {
   'use strict';
 
-  /* ═════ Stations — the SQL execution pipeline ═════ */
-  const STATIONS = [
-    { id: 'start',  icon: '🏠', label: 'Kho',    sub: 'Bắt đầu',     zone: null },
-    { id: 'pickup', icon: '📦', label: 'FROM',   sub: 'Tải bảng',    zone: 'from-line'  },
-    { id: 'filter', icon: '🚧', label: 'WHERE',  sub: 'Lọc dòng',    zone: 'where-line' },
-    { id: 'output', icon: '📤', label: 'SELECT', sub: 'Xuất kết quả', zone: 'select-line'}
-  ];
+  /* ═════ Zone → Station mapping ═════ */
+  const ZONE_CONFIG = {
+    'select-line':  { icon: '📤', label: 'SELECT',   sub: 'Chọn cột',      hint: 'Chọn cột cần xuất. Cú pháp: <code>SELECT cột1, cột2</code>' },
+    'from-line':    { icon: '📦', label: 'FROM',     sub: 'Tải bảng',      hint: 'Toàn bộ bảng được nạp vào. Cú pháp: <code>FROM bảng JOIN bảng2 ON ...</code>' },
+    'where-line':   { icon: '🚧', label: 'WHERE',    sub: 'Lọc dòng',      hint: 'Chỉ giữ lại dòng thỏa điều kiện. Cú pháp: <code>WHERE cột = giá_trị</code>' },
+    'group-line':   { icon: '📊', label: 'GROUP BY', sub: 'Gom nhóm',      hint: 'Gom dòng theo cột + tính aggregate. Cú pháp: <code>GROUP BY cột</code>' },
+    'order-line':   { icon: '📈', label: 'ORDER BY', sub: 'Sắp xếp',      hint: 'Sắp xếp kết quả. Cú pháp: <code>ORDER BY cột DESC LIMIT n</code>' },
+    'setup-zone':   { icon: '⚙️', label: 'Setup',    sub: 'Khởi tạo',     hint: 'Khởi tạo model + manager.' },
+    'chain-zone':   { icon: '🔗', label: 'Chain',    sub: 'Nối methods',   hint: 'Nối các method: filter → select_related → order_by.' },
+    'slice-zone':   { icon: '✂️', label: 'Slice',    sub: 'Giới hạn',     hint: 'Giới hạn số kết quả: <code>[:10]</code> = LIMIT 10.' },
+    'select-zone':  { icon: '📤', label: 'SELECT',   sub: 'Chọn cột',     hint: 'Chọn cột cần xuất.' },
+    'inject-zone':  { icon: '💉', label: 'Inject',   sub: 'Chèn SQL',     hint: 'Phần SQL bị inject — quan sát cách attacker phá logic query.' },
+  };
 
   /* Default schema — Bài 1: Primary Key on game_catalog */
   const DEFAULT_TABLE = {
@@ -55,12 +44,13 @@
   let mountEl = null;
   let trackEl = null;
   let truckEl = null;
-  let stations = {};
+  let stationEls = {};
   let statusEl = null;
   let lastProgress = 0;
   let lastIsComplete = false;
+  let activeStations = [];
 
-  /* ═════ SOUND (Brilliant-style Web Audio) ═════ */
+  /* ═════ SOUND ═════ */
   let soundEnabled = (() => {
     try { return localStorage.getItem('truck-sound') !== 'off'; } catch(e) { return true; }
   })();
@@ -90,12 +80,11 @@
     osc.stop(ctx.currentTime + dur);
   }
 
-  function sfxEngine() { playTone(80, 0.4, 'sawtooth', 0.04); }      // low rumble
+  function sfxEngine() { playTone(80, 0.4, 'sawtooth', 0.04); }
   function sfxBump()   { playTone(180, 0.15, 'square', 0.18); setTimeout(() => playTone(90, 0.18, 'sawtooth', 0.12), 50); }
   function sfxChime()  { playTone(660, 0.12, 'sine', 0.15); setTimeout(() => playTone(880, 0.18, 'sine', 0.18), 80); setTimeout(() => playTone(1100, 0.25, 'sine', 0.12), 180); }
   function sfxCrash()  { playTone(120, 0.4, 'sawtooth', 0.2); setTimeout(() => playTone(60, 0.3, 'square', 0.15), 100); }
 
-  /* Expose to UI */
   window.DragGameSound = {
     toggle: () => {
       soundEnabled = !soundEnabled;
@@ -106,7 +95,28 @@
     isOn: () => soundEnabled,
   };
 
-  /* ═════ INIT — build the pipeline ═════ */
+  /* ═════ Build stations from drop_zones ═════ */
+  function buildStations(dropZones) {
+    const start = { id: 'start', icon: '🏠', label: 'Kho', sub: 'Bắt đầu', zone: null };
+
+    if (!dropZones || !dropZones.length) {
+      return [
+        start,
+        { id: 'from-line',   icon: '📦', label: 'FROM',   sub: 'Tải bảng',    zone: 'from-line' },
+        { id: 'where-line',  icon: '🚧', label: 'WHERE',  sub: 'Lọc dòng',    zone: 'where-line' },
+        { id: 'select-line', icon: '📤', label: 'SELECT', sub: 'Xuất kết quả', zone: 'select-line' }
+      ];
+    }
+
+    const zoneStations = dropZones.map(z => {
+      const cfg = ZONE_CONFIG[z.id] || { icon: '📋', label: z.id, sub: '' };
+      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, zone: z.id };
+    });
+
+    return [start, ...zoneStations];
+  }
+
+  /* ═════ INIT ═════ */
   function init(opts) {
     opts = opts || {};
     mountEl = document.getElementById('drag-game-mount');
@@ -115,20 +125,24 @@
 
     const lesson = opts.lesson || {};
     const table = (lesson.drag_map && lesson.drag_map.table) || DEFAULT_TABLE;
+    const dropZones = opts.dropZones || null;
 
-    /* Wrap the whole thing — provides scope for CSS scoping if needed */
+    activeStations = buildStations(dropZones);
+
     const root = document.createElement('div');
     root.className = 'pipeline-root';
     mountEl.appendChild(root);
 
-    /* The pipeline visualization */
     trackEl = document.createElement('div');
     trackEl.className = 'pipeline';
+
+    const stationCount = activeStations.length;
+    trackEl.style.setProperty('--station-count', stationCount);
 
     trackEl.innerHTML = `
       <div class="pipeline-truck-row">
         <div class="pipeline-rail">
-          ${STATIONS.slice(1).map((_, i) => `
+          ${activeStations.slice(1).map((_, i) => `
             <div class="rail-segment" data-rail="${i}">
               <div class="rail-line"></div>
               <div class="rail-flow"></div>
@@ -149,7 +163,7 @@
       </div>
 
       <div class="pipeline-stations">
-        ${STATIONS.map(s => `
+        ${activeStations.map(s => `
           <div class="pipeline-station" data-station="${s.id}">
             <div class="station-glow"></div>
             <div class="station-head">
@@ -168,50 +182,46 @@
 
     root.appendChild(trackEl);
 
-    /* Cache station refs */
-    stations = {};
-    STATIONS.forEach(s => {
-      stations[s.id] = trackEl.querySelector(`[data-station="${s.id}"]`);
+    stationEls = {};
+    activeStations.forEach(s => {
+      stationEls[s.id] = trackEl.querySelector(`[data-station="${s.id}"]`);
     });
     truckEl = trackEl.querySelector('[data-truck]');
 
-    /* Click station → educational hint */
-    STATIONS.forEach(s => {
-      stations[s.id].addEventListener('click', () => showStationHint(s));
+    activeStations.forEach(s => {
+      if (stationEls[s.id]) {
+        stationEls[s.id].addEventListener('click', () => showStationHint(s));
+      }
     });
 
-    /* Status bar (Brilliant-style narration) */
     statusEl = document.createElement('div');
     statusEl.className = 'pipeline-status';
     statusEl.innerHTML = `
       <span class="status-dot"></span>
-      <span class="status-text">Sẵn sàng. Kéo khối <strong>FROM</strong> vào drop-zone để bắt đầu truy vấn.</span>
+      <span class="status-text">Sẵn sàng. Kéo khối lệnh vào drop-zone để bắt đầu truy vấn.</span>
     `;
     root.appendChild(statusEl);
 
-    /* Sound toggle button (top-right of pipeline) */
     const soundBtn = document.createElement('button');
     soundBtn.className = 'pipeline-sound-toggle';
     if (!soundEnabled) soundBtn.classList.add('muted');
     soundBtn.innerHTML = soundEnabled ? '🔊' : '🔇';
-    soundBtn.title = soundEnabled ? 'Tắt âm thanh (Brilliant-style truck sound)' : 'Bật âm thanh';
+    soundBtn.title = soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh';
     soundBtn.addEventListener('click', () => {
       const on = window.DragGameSound.toggle();
       soundBtn.classList.toggle('muted', !on);
       soundBtn.innerHTML = on ? '🔊' : '🔇';
-      soundBtn.title = on ? 'Tắt âm thanh (Brilliant-style truck sound)' : 'Bật âm thanh';
+      soundBtn.title = on ? 'Tắt âm thanh' : 'Bật âm thanh';
     });
     root.appendChild(soundBtn);
-    /* Truck drive-in animation: start off-screen, slide to first station */
+
     if (truckEl) {
       truckEl.classList.add('driving');
       requestAnimationFrame(() => {
-        /* Place off-screen left, then move to station 0 */
         const startLeft = -80;
         truckEl.style.setProperty('--tx', startLeft + 'px');
-        requestAnimationFrame(() => moveTruckTo(0, /*instant=*/false));
+        requestAnimationFrame(() => moveTruckTo(0, false));
         setTimeout(() => truckEl.classList.remove('driving'), 900);
-        /* Engine sound on arrival */
         setTimeout(() => sfxEngine(), 200);
         setTimeout(() => sfxChime(), 1000);
       });
@@ -219,18 +229,9 @@
     lastProgress = 0;
     lastIsComplete = false;
 
-    /* Expose for debug */
-    window.__pipeline = { stations, table, STATIONS };
+    window.__pipeline = { stations: stationEls, table, activeStations };
   }
 
-  /* ═════ Render placeholder for station data ═════
-   * Each station gets a different initial visual — Brilliant-style:
-   * show what each stage WILL contain when activated.
-   *   start:  empty (just a dotted outline)
-   *   pickup: empty (will fill with table)
-   *   filter: empty (will show filtered table)
-   *   output: empty (will show projected columns)
-   */
   function renderStationDataPlaceholder(stationId, table) {
     return `<div class="data-empty">
       <span class="data-empty-dot"></span>
@@ -238,22 +239,18 @@
     </div>`;
   }
 
-  /* ═════ Render mini table inside a station ═════ */
   function renderMiniTable(table, opts) {
     opts = opts || {};
     const cols = table.columns;
     const rows = table.dataRows;
-
     const hasColFilter = opts.selectedCols && opts.selectedCols.length;
     const hasRowFilter = opts.matchedRows && opts.matchedRows.length !== undefined;
 
-    /* Headers — render all, but dim non-selected ones */
     const headersHTML = cols.map(c => {
       const isSelected = !hasColFilter || opts.selectedCols.includes(c);
       return `<span class="mini-th ${isSelected ? 'selected' : 'dimmed'}">${escapeHtml(c)}</span>`;
     }).join('');
 
-    /* Rows — render all, but dim non-matched ones */
     const rowsHTML = rows.map((row, i) => {
       const matched = !hasRowFilter || opts.matchedRows.includes(i);
       const dim = !matched;
@@ -274,17 +271,15 @@
     `;
   }
 
-  /* ═════ Truck movement — slide horizontally to target station ═════ */
   function moveTruckTo(stationIdx, instant) {
     if (!trackEl) return;
     if (!truckEl) truckEl = trackEl.querySelector('[data-truck]');
     if (!truckEl) return;
 
-    const stationEls = trackEl.querySelectorAll('.pipeline-station');
-    const target = stationEls[stationIdx];
+    const stationDomEls = trackEl.querySelectorAll('.pipeline-station');
+    const target = stationDomEls[stationIdx];
     if (!target) return;
 
-    /* Compute absolute X of station center relative to track */
     const trackRect = trackEl.getBoundingClientRect();
     const stationRect = target.getBoundingClientRect();
     const targetX = stationRect.left + stationRect.width / 2 - trackRect.left;
@@ -296,146 +291,118 @@
       return;
     }
 
-    /* Add driving state */
     truckEl.classList.add('driving');
 
-    /* Animate the rail flow between previous and new station */
     if (stationIdx > 0) {
       const rail = trackEl.querySelector(`[data-rail="${stationIdx - 1}"]`);
       if (rail) {
         rail.classList.remove('flowing');
-        void rail.offsetWidth;  /* restart animation */
+        void rail.offsetWidth;
         rail.classList.add('flowing');
         setTimeout(() => rail.classList.remove('flowing'), 900);
       }
     }
 
-    /* Slide truck */
     truckEl.style.setProperty('--tx', targetX + 'px');
-    /* Engine sound while driving */
     sfxEngine();
 
-    /* On arrival: bounce + station glow burst */
     const onArrival = (e) => {
       if (e.propertyName !== 'transform') return;
       truckEl.classList.remove('driving');
       truckEl.classList.add('arriving');
       target.classList.add('arriving');
-      /* Chime when arriving at a new station */
       sfxChime();
-
       setTimeout(() => {
         truckEl.classList.remove('arriving');
         target.classList.remove('arriving');
       }, 700);
-
       truckEl.removeEventListener('transitionend', onArrival);
     };
     truckEl.addEventListener('transitionend', onArrival);
   }
 
-  /* ═════ UPDATE — main entry called whenever blocks change ═════ */
+  /* ═════ UPDATE — dynamic zone-based progress ═════ */
   function update(state) {
     state = state || {};
     if (!trackEl) return;
 
-    const s3 = state.lessonStep3 || null;
     const table = (window.__pipeline && window.__pipeline.table) || DEFAULT_TABLE;
+    const zoneFills = state.zoneFills || {};
 
-    /* ── 1. Determine progress ───────────────────────────── */
-    const has = {
-      pickup: !!state.fromTable,
-      filter: !!state.whereFilter,
-      output: !!(state.columns && state.columns.length)
-    };
-
+    /* ── 1. Compute progress: count consecutive filled zones (skip 'start') ── */
     let progress = 0;
-    let blocked = null;
-    if (has.pickup) progress = 1;
-    if (has.filter) {
-      if (progress >= 1) progress = 2;
-      else blocked = 'filter';
-    }
-    if (has.output) {
-      if (progress >= 2) progress = 3;
-      else if (!blocked) blocked = 'output';
-    }
-
-    /* ── 2. Reset visual states ──────────────────────────── */
-    STATIONS.forEach(s => stations[s.id].classList.remove('active', 'completed', 'error', 'arriving'));
-
-    /* ── 3. Apply station states ─────────────────────────── */
-    STATIONS.forEach((s, i) => {
-      if (i <= progress) stations[s.id].classList.add('active');
-      if (s.id === 'pickup' && has.pickup) stations[s.id].classList.add('completed');
-      if (s.id === 'filter' && has.filter) {
-        stations[s.id].classList.add('completed');
-        if (blocked === 'filter') stations[s.id].classList.add('error');
+    for (let i = 1; i < activeStations.length; i++) {
+      const zoneId = activeStations[i].zone;
+      if (zoneId && zoneFills[zoneId]) {
+        progress = i;
+      } else {
+        break;
       }
-      if (s.id === 'output' && has.output) {
-        stations[s.id].classList.add('completed');
-        if (blocked === 'output') stations[s.id].classList.add('error');
+    }
+
+    /* ── 2. Reset visual states ── */
+    activeStations.forEach(s => {
+      if (stationEls[s.id]) stationEls[s.id].classList.remove('active', 'completed', 'error', 'arriving');
+    });
+
+    /* ── 3. Apply station states ── */
+    activeStations.forEach((s, i) => {
+      if (!stationEls[s.id]) return;
+      if (i <= progress) stationEls[s.id].classList.add('active');
+      if (s.zone && zoneFills[s.zone]) stationEls[s.id].classList.add('completed');
+    });
+
+    /* ── 4. Data visualizations (FROM, WHERE, SELECT get special treatment) ── */
+    updateStationData('start', table, { state: 'empty' });
+
+    activeStations.forEach(s => {
+      if (s.id === 'start') return;
+      if (!zoneFills[s.zone]) {
+        updateStationData(s.id, table, { state: 'empty' });
+        return;
+      }
+
+      const tag = zoneFills[s.zone];
+      if (s.zone === 'from-line') {
+        updateStationData(s.id, table, { state: 'loaded', selectedCols: null, matchedRows: null });
+      } else if (s.zone === 'where-line') {
+        const matchedIdx = parseWhereRows(tag, table);
+        updateStationData(s.id, table, { state: 'filtered', selectedCols: null, matchedRows: matchedIdx || [] });
+      } else if (s.zone === 'select-line') {
+        const cols = (typeof tag === 'string') ? tag.split(',').map(c => c.trim()) : [];
+        const whereTag = zoneFills['where-line'];
+        const matchedIdx = whereTag ? parseWhereRows(whereTag, table) : null;
+        updateStationData(s.id, table, { state: 'projected', selectedCols: cols, matchedRows: matchedIdx });
+      } else {
+        updateStationDataSimple(s.id, s.label, tag);
       }
     });
 
-    /* ── 4. Populate station DATA visualizations ──────────── */
-    /* 'start' always shows the empty placeholder (it never has data) */
-    updateStationData('start', table, { state: 'empty' });
-
-    if (has.pickup) {
-      updateStationData('pickup', table, { state: 'loaded', selectedCols: null, matchedRows: null });
-    } else {
-      updateStationData('pickup', table, { state: 'empty' });
-    }
-    if (has.filter) {
-      const matchedIdx = parseWhereRows(state.whereFilter, table);
-      updateStationData('filter', table, {
-        state: 'filtered',
-        selectedCols: null,
-        matchedRows: matchedIdx || []
-      });
-    } else {
-      updateStationData('filter', table, { state: 'empty' });
-    }
-    if (has.output) {
-      const matchedIdx = has.filter ? parseWhereRows(state.whereFilter, table) : null;
-      updateStationData('output', table, {
-        state: 'projected',
-        selectedCols: state.columns,
-        matchedRows: matchedIdx
-      });
-    } else {
-      updateStationData('output', table, { state: 'empty' });
-    }
-
-    /* ── 5. Cargo tag below stations ──────────────────────── */
+    /* ── 5. Cargo tags ── */
     updateStationTag('start', null);
-    updateStationTag('pickup', has.pickup ? state.fromTable : null);
-    updateStationTag('filter', has.filter ? state.whereFilter : null);
-    updateStationTag('output', has.output ? state.columns.join(', ') : null);
+    activeStations.forEach(s => {
+      if (s.id === 'start') return;
+      updateStationTag(s.id, zoneFills[s.zone] || null);
+    });
 
-    /* ── 6. Move truck (only if progress changed) ────────── */
+    /* ── 6. Move truck ── */
     if (progress !== lastProgress) {
-      moveTruckTo(progress, /*instant=*/false);
+      moveTruckTo(progress, false);
       lastProgress = progress;
     }
 
-    /* ── 7. Update narration ─────────────────────────────── */
-    updateNarration(state, progress, blocked);
+    /* ── 7. Narration ── */
+    updateNarration(state, progress);
 
-    /* ── 8. Wrong-order shake feedback ───────────────────── */
-    if (blocked) shakeTruck();
-
-    /* ── 9. Completion celebration ───────────────────────── */
+    /* ── 8. Completion celebration ── */
     if (state.isComplete && !lastIsComplete) {
       celebrate();
     }
     lastIsComplete = !!state.isComplete;
   }
 
-  /* ═════ Update a station's data visualization ═════ */
   function updateStationData(stationId, table, opts) {
-    const el = stations[stationId];
+    const el = stationEls[stationId];
     if (!el) return;
     const slot = el.querySelector(`[data-station-data="${stationId}"]`);
     if (!slot) return;
@@ -449,7 +416,6 @@
       return;
     }
 
-    /* Determine matched rows for filter preview */
     let matchedRows = null;
     if (opts.matchedRows !== null && opts.matchedRows !== undefined) {
       matchedRows = opts.matchedRows;
@@ -463,14 +429,25 @@
     slot.classList.add('has-data');
   }
 
-  /* ═════ Update cargo tag below a station ═════ */
+  function updateStationDataSimple(stationId, label, text) {
+    const el = stationEls[stationId];
+    if (!el) return;
+    const slot = el.querySelector(`[data-station-data="${stationId}"]`);
+    if (!slot) return;
+    slot.innerHTML = `<div class="data-simple">
+      <span class="data-simple-icon">✓</span>
+      <span class="data-simple-text">${escapeHtml(String(text).substring(0, 60))}</span>
+    </div>`;
+    slot.classList.add('has-data');
+  }
+
   function updateStationTag(stationId, text) {
-    const el = stations[stationId];
+    const el = stationEls[stationId];
     if (!el) return;
     const tag = el.querySelector(`[data-station-tag="${stationId}"]`);
     if (!tag) return;
     if (text) {
-      tag.innerHTML = `<span class="cargo-pill">${escapeHtml(text)}</span>`;
+      tag.innerHTML = `<span class="cargo-pill">${escapeHtml(String(text).substring(0, 50))}</span>`;
       tag.classList.add('has-text');
     } else {
       tag.innerHTML = '';
@@ -478,10 +455,6 @@
     }
   }
 
-  /* ═════ Parse WHERE expression to matched row indices ═════
-   * Handles simple patterns: "id = 101", "is_vip = true", "os = 'Linux'".
-   * Returns array of indices that match (or all if no parse).
-   */
   function parseWhereRows(filter, table) {
     if (!filter) return null;
     const m = /(\w+)\s*=\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(true|false))/i.exec(filter);
@@ -499,59 +472,40 @@
     return matches;
   }
 
-  /* ═════ Click station → educational hint ═════ */
   function showStationHint(station) {
     if (!statusEl) return;
     const text = statusEl.querySelector('.status-text');
-    const hints = {
-      'start':  'Điểm xuất phát — query chưa có dữ liệu nào. Bắt đầu bằng <strong>FROM tên_bảng</strong>.',
-      'pickup': 'Trạm lấy dữ liệu — toàn bộ bảng được nạp vào. Cú pháp: <code>FROM game_catalog</code>',
-      'filter': 'Bộ lọc — chỉ giữ lại các dòng thỏa điều kiện. Cú pháp: <code>WHERE cột = giá_trị</code>',
-      'output': 'Trạm cuối — chọn cột cần xuất. Cú pháp: <code>SELECT cột1, cột2</code>'
-    };
-    if (hints[station.id]) text.innerHTML = `💡 ${hints[station.id]}`;
+    const cfg = ZONE_CONFIG[station.zone || station.id];
+    if (cfg && cfg.hint) {
+      text.innerHTML = `💡 ${cfg.hint}`;
+    } else if (station.id === 'start') {
+      text.innerHTML = '💡 Điểm xuất phát — query chưa có dữ liệu nào. Bắt đầu bằng kéo khối lệnh vào drop-zone.';
+    }
   }
 
-  /* ═════ Narration — Brilliant-style teaching via plain text ═════ */
-  function updateNarration(state, progress, blocked) {
+  function updateNarration(state, progress) {
     if (!statusEl) return;
     const text = statusEl.querySelector('.status-text');
     if (!text) return;
 
-    if (blocked === 'filter') {
-      text.innerHTML = `⚠️ Bộ lọc <strong>WHERE</strong> đã có nhưng xe chưa biết lọc từ bảng nào. Đặt <strong>FROM</strong> trước đã.`;
-      statusEl.classList.add('warn');
-      statusEl.classList.remove('ok');
-      return;
-    }
-    if (blocked === 'output') {
-      text.innerHTML = `⚠️ Cột <strong>SELECT</strong> đã chọn nhưng xe chưa biết lấy từ đâu. Đặt <strong>FROM</strong> và <strong>WHERE</strong> trước.`;
-      statusEl.classList.add('warn');
-      statusEl.classList.remove('ok');
-      return;
-    }
-
-    statusEl.classList.remove('warn');
+    statusEl.classList.remove('warn', 'ok');
 
     if (progress === 0) {
-      text.innerHTML = `Sẵn sàng. Kéo khối <strong>FROM</strong> vào drop-zone để bắt đầu truy vấn.`;
-    } else if (progress === 1) {
-      text.innerHTML = `📦 Đã tải bảng <strong>${escapeHtml(state.fromTable)}</strong>. Tìm dòng cần lọc? Kéo <strong>WHERE</strong> vào.`;
-    } else if (progress === 2) {
-      text.innerHTML = `🔍 Đang lọc theo <strong>${escapeHtml(state.whereFilter)}</strong>. Cuối cùng: chọn cột <strong>SELECT</strong> cần xuất.`;
-    } else if (progress === 3) {
-      if (state.isComplete) {
-        const cols = state.columns.join(', ');
-        const sql = `<code>SELECT ${escapeHtml(cols)} FROM ${escapeHtml(state.fromTable)} WHERE ${escapeHtml(state.whereFilter)}</code>`;
-        text.innerHTML = `🎉 Query hoàn chỉnh! ${sql}`;
-        statusEl.classList.add('ok');
+      text.innerHTML = `Sẵn sàng. Kéo khối lệnh vào drop-zone để bắt đầu truy vấn.`;
+    } else if (state.isComplete) {
+      text.innerHTML = `🎉 Query hoàn chỉnh! Tất cả các phần đã khớp.`;
+      statusEl.classList.add('ok');
+    } else {
+      const current = activeStations[progress];
+      const next = activeStations[progress + 1];
+      if (next) {
+        text.innerHTML = `✅ Đã hoàn thành <strong>${current.label}</strong>. Tiếp theo: kéo <strong>${next.label}</strong> vào drop-zone.`;
       } else {
-        text.innerHTML = `📤 Đang chọn cột <strong>${escapeHtml(state.columns.join(', '))}</strong>. Kiểm tra query có khớp chưa.`;
+        text.innerHTML = `📤 Đang hoàn thiện query. Kiểm tra lại thứ tự các khối.`;
       }
     }
   }
 
-  /* ═════ Wrong-order physical feedback ═════ */
   function shakeTruck() {
     if (!truckEl) truckEl = trackEl.querySelector('[data-truck]');
     if (!truckEl) return;
@@ -559,14 +513,11 @@
     void truckEl.offsetWidth;
     truckEl.classList.add('shake');
     setTimeout(() => truckEl.classList.remove('shake'), 700);
-    /* Crash sound + bump */
     sfxBump();
     sfxCrash();
-    /* Spawn dust particles */
     spawnDustParticles();
   }
 
-  /* ═════ Dust particles on wrong drop ═════ */
   function spawnDustParticles() {
     if (!truckEl) return;
     const colors = ['#FBBF24', '#EF4444', '#F59E0B', '#94A3B8'];
@@ -597,34 +548,34 @@
     }
   }
 
-  /* ═════ Reset ═════ */
   function reset() {
-    STATIONS.forEach(s => {
-      if (stations[s.id]) stations[s.id].classList.remove('active', 'completed', 'error', 'arriving');
+    activeStations.forEach(s => {
+      if (stationEls[s.id]) stationEls[s.id].classList.remove('active', 'completed', 'error', 'arriving');
     });
-    trackEl.querySelectorAll('.rail-segment').forEach(r => r.classList.remove('activated', 'flowing'));
-    trackEl.querySelectorAll('[data-station-data]').forEach(slot => {
-      slot.innerHTML = `<div class="data-empty">
-        <span class="data-empty-dot"></span>
-        <span class="data-empty-text">chờ dữ liệu</span>
-      </div>`;
-      slot.classList.remove('has-data');
-    });
-    trackEl.querySelectorAll('[data-station-tag]').forEach(t => {
-      t.innerHTML = '';
-      t.classList.remove('has-text');
-    });
-    moveTruckTo(0, /*instant=*/true);
+    if (trackEl) {
+      trackEl.querySelectorAll('.rail-segment').forEach(r => r.classList.remove('activated', 'flowing'));
+      trackEl.querySelectorAll('[data-station-data]').forEach(slot => {
+        slot.innerHTML = `<div class="data-empty">
+          <span class="data-empty-dot"></span>
+          <span class="data-empty-text">chờ dữ liệu</span>
+        </div>`;
+        slot.classList.remove('has-data');
+      });
+      trackEl.querySelectorAll('[data-station-tag]').forEach(t => {
+        t.innerHTML = '';
+        t.classList.remove('has-text');
+      });
+    }
+    moveTruckTo(0, true);
     if (statusEl) {
       statusEl.classList.remove('warn', 'ok');
       statusEl.querySelector('.status-text').innerHTML =
-        `Sẵn sàng. Kéo khối <strong>FROM</strong> vào drop-zone để bắt đầu truy vấn.`;
+        `Sẵn sàng. Kéo khối lệnh vào drop-zone để bắt đầu truy vấn.`;
     }
     lastProgress = 0;
     lastIsComplete = false;
   }
 
-  /* ═════ Celebration ═════ */
   function celebrate() {
     if (typeof window.confetti === 'function') {
       window.confetti({
@@ -632,17 +583,15 @@
         colors: ['#06B6D4', '#10B981', '#F59E0B', '#FBBF24']
       });
     }
-    /* Triumphant chime */
     sfxChime();
     setTimeout(() => sfxChime(), 200);
     setTimeout(() => sfxChime(), 400);
 
-    /* Pulse all stations */
-    STATIONS.forEach((s, i) => {
+    activeStations.forEach((s, i) => {
       setTimeout(() => {
-        if (stations[s.id]) {
-          stations[s.id].classList.add('arriving');
-          setTimeout(() => stations[s.id].classList.remove('arriving'), 600);
+        if (stationEls[s.id]) {
+          stationEls[s.id].classList.add('arriving');
+          setTimeout(() => stationEls[s.id].classList.remove('arriving'), 600);
         }
       }, i * 120);
     });
@@ -658,7 +607,6 @@
     }[c]));
   }
 
-  /* ═════ Public API ═════ */
   window.DragGame = {
     init: init,
     update: update,

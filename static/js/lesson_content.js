@@ -165,7 +165,7 @@ concept_cards: [
         drop_zones: [
           { id: 'select-line',  placeholder: 'SELECT ____ , ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
           { id: 'from-line',    placeholder: 'FROM ____',          accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',   placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'where-line',   placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
         expected_sql: 'SELECT name, price FROM game_catalog WHERE id = 101;',
         reveal_hints: {
@@ -365,9 +365,9 @@ concept_cards: [
           { type: 'val', token: '7',                slot: 'val' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____ , ____ , ____', accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'select-line', placeholder: 'SELECT ____ , ____ , ____ , ____', accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
           { id: 'from-line',   placeholder: 'FROM ____',                          accepts: ['kw', 'tbl'],     multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
         expected_sql: 'SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;',
         reveal_hints: {
@@ -549,18 +549,18 @@ concept_cards: [
           { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
           { type: 'col', token: 'publisher.name',slot: 'wcol-1' },
           { type: 'op',  token: '=',              slot: 'op-1' },
-          { type: 'val', token: "'Nintendo'",     slot: 'val-1' }
+          { type: 'val', token: "'Rockstar'",     slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',            accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
-        expected_sql: "SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Nintendo';",
+        expected_sql: "SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Rockstar';",
         reveal_hints: {
           'select-line': 'SELECT 1 cột: <strong>game.title</strong> (chỉ rõ bảng để tránh nhầm với publisher).',
           'from-line':   'FROM <strong>game</strong> → <strong>JOIN publisher ON game.pub_id = publisher.id</strong> (nối qua FK ↔ PK).',
-          'where-line':  "WHERE lọc hãng: <strong>publisher.name = 'Nintendo'</strong>."
+          'where-line':  "WHERE lọc hãng: <strong>publisher.name = 'Rockstar'</strong>."
         }
       },
 
@@ -767,9 +767,9 @@ concept_cards: [
           { type: 'tbl', token: 'player_game_library', slot: 'tbl2' },
           { type: 'kw',  token: 'ON',             slot: 'kw-on' },
           { type: 'col', token: 'player.p_id = player_game_library.ref_p_id', slot: 'col-on' },
-          { type: 'kw',  token: 'JOIN',           slot: 'kw-join' },
+          { type: 'kw',  token: 'JOIN',           slot: 'kw-join2' },
           { type: 'tbl', token: 'game',           slot: 'tbl3' },
-          { type: 'kw',  token: 'ON',             slot: 'kw-on' },
+          { type: 'kw',  token: 'ON',             slot: 'kw-on2' },
           { type: 'col', token: 'player_game_library.ref_game_id = game.game_id', slot: 'col-on2' },
           { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
           { type: 'col', token: 'player.username',slot: 'wcol-1' },
@@ -777,9 +777,9 @@ concept_cards: [
           { type: 'val', token: "'DragonLord'",   slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                 accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____ JOIN ____ ON ____', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                        accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____ JOIN ____ ON ____', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
         expected_sql: "SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = 'DragonLord';",
         reveal_hints: {
@@ -954,22 +954,22 @@ concept_cards: [
           { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
           { type: 'col', token: 'dlc_no',         slot: 'wcol-1' },
           { type: 'op',  token: '=',              slot: 'op-1' },
-          { type: 'val', token: '1',              slot: 'val-1' },
+          { type: 'val', token: '2',              slot: 'val-1' },
           { type: 'kw',  token: 'AND',            slot: 'kw-and' },
           { type: 'col', token: 'ref_game_id',    slot: 'wcol-2' },
           { type: 'op',  token: '=',              slot: 'op-2' },
-          { type: 'val', token: '400',            slot: 'val-2' }
+          { type: 'val', token: '300',            slot: 'val-2' }
         ],
         drop_zones: [
           { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
           { id: 'from-line',   placeholder: 'FROM ____',                                     accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____ ____ ____ ____ ____',      accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____ ____ ____ ____ ____',      accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
-        expected_sql: "SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;",
+        expected_sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;',
         reveal_hints: {
           'select-line': 'SELECT 1 cột: <strong>dlc_name</strong>.',
           'from-line':   'FROM <strong>dlc_content</strong>.',
-          'where-line':  "WHERE khóa tổng hợp: <strong>dlc_no = 1 AND ref_game_id = 400</strong> (thiếu AND → trả về nhầm DLC của game khác)."
+          'where-line':  "WHERE khóa tổng hợp: <strong>dlc_no = 2 AND ref_game_id = 300</strong> (thiếu AND → trả về nhầm DLC của game khác)."
         }
       },
 
@@ -1157,9 +1157,11 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Lấy <code>title</code> và <code>genre</code> của tất cả game do <code>Supergiant</code> xuất bản — kéo thả SQL, JOIN qua FK.',
         blocks: [
           { type: 'kw',  token: 'SELECT',         slot: 'kw-select' },
           { type: 'col', token: 'title',          slot: 'col-1' },
+          { type: 'col', token: 'genre',          slot: 'col-2' },
           { type: 'kw',  token: 'FROM',           slot: 'kw-from' },
           { type: 'tbl', token: 'game',           slot: 'tbl' },
           { type: 'kw',  token: 'JOIN',           slot: 'kw-join' },
@@ -1169,18 +1171,18 @@ concept_cards: [
           { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
           { type: 'col', token: 'publisher.name', slot: 'wcol-1' },
           { type: 'op',  token: '=',              slot: 'op-1' },
-          { type: 'val', token: "'FromSoftware'", slot: 'val-1' }
+          { type: 'val', token: "'Supergiant'",   slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                                  accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',                  accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',                          accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____ , ____',              accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____ JOIN ____ ON ____',     accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',            accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
-        expected_sql: "SELECT title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware';",
+        expected_sql: "SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';",
         reveal_hints: {
-          'select-line': 'SELECT 1 cột: <strong>title</strong>.',
+          'select-line': 'SELECT 2 cột: <strong>title</strong> và <strong>genre</strong>.',
           'from-line':   'FROM <strong>game</strong> JOIN <strong>publisher</strong> ON <strong>game.pub_id = publisher.id</strong> — FK ánh xạ từ quan hệ 1:N.',
-          'where-line':  "WHERE lọc hãng: <strong>publisher.name = 'FromSoftware'</strong>."
+          'where-line':  "WHERE lọc hãng: <strong>publisher.name = 'Supergiant'</strong>."
         }
       },
 
@@ -1358,27 +1360,27 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> — kéo thả SQL từ bảng dư thừa.',
         blocks: [
           { type: 'kw',  token: 'SELECT',         slot: 'kw-select' },
-          { type: 'col', token: 'studio_name',    slot: 'col-1' },
-          { type: 'col', token: 'st_country',     slot: 'col-2' },
+          { type: 'col', token: 'game_name',      slot: 'col-1' },
           { type: 'kw',  token: 'FROM',           slot: 'kw-from' },
           { type: 'tbl', token: 'game_studio_combined', slot: 'tbl' },
           { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
           { type: 'col', token: 'studio_name',    slot: 'wcol-1' },
           { type: 'op',  token: '=',              slot: 'op-1' },
-          { type: 'val', token: "'FromSoftware'", slot: 'val-1' }
+          { type: 'val', token: "'Valve'",        slot: 'val-1' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'select-line', placeholder: 'SELECT ____',            accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
           { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
-        expected_sql: "SELECT studio_name, st_country FROM game_studio_combined WHERE studio_name = 'FromSoftware';",
+        expected_sql: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
         reveal_hints: {
-          'select-line': 'SELECT 2 cột: <strong>studio_name</strong> và <strong>st_country</strong>.',
+          'select-line': 'SELECT 1 cột: <strong>game_name</strong>.',
           'from-line':   'FROM bảng đang dư thừa: <strong>game_studio_combined</strong>.',
-          'where-line':  "WHERE lọc studio: <strong>studio_name = 'FromSoftware'</strong> (sẽ thấy cùng kết quả 'Japan' lặp 3 lần — minh chứng redundancy)."
+          'where-line':  "WHERE lọc studio: <strong>studio_name = 'Valve'</strong>."
         }
       },
 
@@ -1545,26 +1547,27 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Tìm <code>name</code> của sinh viên có số điện thoại <code>0901-111-111</code> — dùng subquery <code>IN</code> nối 2 bảng 1NF.',
         blocks: [
-          { type: 'kw',  token: 'SELECT',      slot: 'kw-select' },
-          { type: 'col', token: 'student_id',  slot: 'col-1' },
-          { type: 'kw',  token: 'FROM',        slot: 'kw-from' },
-          { type: 'tbl', token: 'student_phone',slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',       slot: 'kw-where' },
-          { type: 'col', token: 'phone',       slot: 'wcol-1' },
-          { type: 'op',  token: '=',           slot: 'op-1' },
-          { type: 'val', token: "'0901-111-111'", slot: 'val-1' }
+          { type: 'kw',  token: 'SELECT',       slot: 'kw-select' },
+          { type: 'col', token: 'name',          slot: 'col-1' },
+          { type: 'kw',  token: 'FROM',          slot: 'kw-from' },
+          { type: 'tbl', token: 'student',       slot: 'tbl' },
+          { type: 'kw',  token: 'WHERE',         slot: 'kw-where' },
+          { type: 'col', token: 'student_id',    slot: 'wcol-1' },
+          { type: 'kw',  token: 'IN',            slot: 'kw-in' },
+          { type: 'op',  token: "(SELECT student_id FROM student_phone WHERE phone = '0901-111-111')", slot: 'op-sub' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',           accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',             accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',  accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line', placeholder: 'SELECT ____',                              accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line',   placeholder: 'FROM ____',                                 accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',  placeholder: 'WHERE ____ IN (subquery)',                  accepts: ['kw', 'col', 'op'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
         ],
-        expected_sql: "SELECT student_id FROM student_phone WHERE phone = '0901-111-111';",
+        expected_sql: "SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');",
         reveal_hints: {
-          'select-line': 'SELECT 1 cột: <strong>student_id</strong> (sinh viên nào có số này).',
-          'from-line':   'FROM bảng <strong>student_phone</strong> (bảng đã tách theo 1NF — mỗi phone 1 dòng).',
-          'where-line':  "WHERE lọc theo <strong>phone = '0901-111-111'</strong> — đây là điều KHÔNG THỂ làm với bảng student_raw gốc (1 ô chứa nhiều số)."
+          'select-line': 'SELECT 1 cột: <strong>name</strong> — lấy tên sinh viên từ bảng student.',
+          'from-line':   'FROM bảng <strong>student</strong> (bảng chứa tên SV, không phải student_phone).',
+          'where-line':  "WHERE <strong>student_id IN (subquery)</strong> — subquery tìm student_id từ bảng student_phone theo phone. Đây là cách nối 2 bảng 1NF mà không dùng JOIN."
         }
       },
 
@@ -1715,27 +1718,39 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Tìm <strong>top 3 thành viên mượn nhiều sách nhất</strong> — JOIN <code>members</code> ↔ <code>loans</code>, đếm + sắp xếp giảm dần.',
         blocks: [
           { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
-          { type: 'col', token: 'book_id',         slot: 'col-1' },
-          { type: 'col', token: 'copy_no',         slot: 'col-2' },
+          { type: 'col', token: 'm.member_name',   slot: 'col-1' },
+          { type: 'fn',  token: 'COUNT(*)',        slot: 'fn-count' },
+          { type: 'kw',  token: 'AS',              slot: 'kw-as' },
+          { type: 'col', token: 'loan_count',      slot: 'col-alias' },
           { type: 'kw',  token: 'FROM',            slot: 'kw-from' },
-          { type: 'tbl', token: 'loans',           slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',           slot: 'kw-where' },
-          { type: 'col', token: 'member_id',       slot: 'wcol-1' },
-          { type: 'op',  token: '=',               slot: 'op-1' },
-          { type: 'val', token: "'M01'",           slot: 'val-1' }
+          { type: 'tbl', token: 'members m',       slot: 'tbl' },
+          { type: 'kw',  token: 'JOIN',            slot: 'kw-join' },
+          { type: 'tbl', token: 'loans l',         slot: 'tbl2' },
+          { type: 'kw',  token: 'ON',              slot: 'kw-on' },
+          { type: 'col', token: 'l.member_id = m.member_id', slot: 'col-on' },
+          { type: 'kw',  token: 'GROUP BY',        slot: 'kw-group' },
+          { type: 'col', token: 'm.member_id, m.member_name', slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',        slot: 'kw-order' },
+          { type: 'col', token: 'loan_count',      slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',            slot: 'kw-desc' },
+          { type: 'kw',  token: 'LIMIT',           slot: 'kw-limit' },
+          { type: 'val', token: '3',               slot: 'val-limit' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',     accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',              accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',   accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , COUNT(*) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____ JOIN ____ ON ____',       accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                     accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC LIMIT ____',     accepts: ['kw', 'col', 'val'], acceptedKeywords: ['ORDER BY', 'DESC', 'LIMIT'], multi: true }
         ],
-        expected_sql: "SELECT book_id, copy_no FROM loans WHERE member_id = 'M01';",
+        expected_sql: "SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;",
         reveal_hints: {
-          'select-line': 'SELECT 2 cột: <strong>book_id</strong> và <strong>copy_no</strong> (composite key).',
-          'from-line':   'FROM bảng đã 2NF: <strong>loans</strong>.',
-          'where-line':  "WHERE lọc người mượn: <strong>member_id = 'M01'</strong>."
+          'select-line':  'SELECT <strong>m.member_name</strong> + <strong>COUNT(*) AS loan_count</strong> — đếm số lượt mượn.',
+          'from-line':    'FROM <strong>members m</strong> JOIN <strong>loans l</strong> ON <strong>l.member_id = m.member_id</strong> — nối 2 bảng qua FK.',
+          'group-line':   'GROUP BY <strong>m.member_id, m.member_name</strong> — gom theo từng thành viên.',
+          'order-line':   'ORDER BY <strong>loan_count DESC</strong> + <strong>LIMIT 3</strong> — top 3 mượn nhiều nhất.'
         }
       },
 
@@ -1944,27 +1959,39 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Tìm <strong>top 3 chuyên khoa có nhiều ca điều trị nhất</strong> — JOIN <code>treatments</code> ↔ <code>doctors</code>, đếm + sắp xếp giảm dần.',
         blocks: [
-          { type: 'kw',  token: 'SELECT',         slot: 'kw-select' },
-          { type: 'col', token: 'patient_id',     slot: 'col-1' },
-          { type: 'col', token: 'treatment',      slot: 'col-2' },
-          { type: 'kw',  token: 'FROM',           slot: 'kw-from' },
-          { type: 'tbl', token: 'treatments',     slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',          slot: 'kw-where' },
-          { type: 'col', token: 'doctor_id',      slot: 'wcol-1' },
-          { type: 'op',  token: '=',              slot: 'op-1' },
-          { type: 'val', token: "'D01'",          slot: 'val-1' }
+          { type: 'kw',  token: 'SELECT',              slot: 'kw-select' },
+          { type: 'col', token: 'd.doctor_specialty',  slot: 'col-1' },
+          { type: 'fn',  token: 'COUNT(*)',            slot: 'fn-count' },
+          { type: 'kw',  token: 'AS',                  slot: 'kw-as' },
+          { type: 'col', token: 'treatment_count',     slot: 'col-alias' },
+          { type: 'kw',  token: 'FROM',                slot: 'kw-from' },
+          { type: 'tbl', token: 'treatments t',        slot: 'tbl' },
+          { type: 'kw',  token: 'JOIN',                slot: 'kw-join' },
+          { type: 'tbl', token: 'doctors d',           slot: 'tbl2' },
+          { type: 'kw',  token: 'ON',                  slot: 'kw-on' },
+          { type: 'col', token: 't.doctor_id = d.doctor_id', slot: 'col-on' },
+          { type: 'kw',  token: 'GROUP BY',            slot: 'kw-group' },
+          { type: 'col', token: 'd.doctor_specialty',  slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',            slot: 'kw-order' },
+          { type: 'col', token: 'treatment_count',     slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',                slot: 'kw-desc' },
+          { type: 'kw',  token: 'LIMIT',               slot: 'kw-limit' },
+          { type: 'val', token: '3',                   slot: 'val-limit' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , COUNT(*) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____ JOIN ____ ON ____',       accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                     accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC LIMIT ____',     accepts: ['kw', 'col', 'val'], acceptedKeywords: ['ORDER BY', 'DESC', 'LIMIT'], multi: true }
         ],
-        expected_sql: "SELECT patient_id, treatment FROM treatments WHERE doctor_id = 'D01';",
+        expected_sql: "SELECT d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;",
         reveal_hints: {
-          'select-line': 'SELECT 2 cột: patient_id và treatment',
-          'from-line':   'FROM treatments',
-          'where-line':  "Lọc theo doctor_id = 'D01'"
+          'select-line':  'SELECT <strong>d.doctor_specialty</strong> + <strong>COUNT(*) AS treatment_count</strong> — đếm số ca điều trị.',
+          'from-line':    'FROM <strong>treatments t</strong> JOIN <strong>doctors d</strong> ON <strong>t.doctor_id = d.doctor_id</strong> — nối 2 bảng qua FK.',
+          'group-line':   'GROUP BY <strong>d.doctor_specialty</strong> — gom theo chuyên khoa.',
+          'order-line':   'ORDER BY <strong>treatment_count DESC</strong> + <strong>LIMIT 3</strong> — top 3 chuyên khoa nhiều ca nhất.'
         }
       },
 
@@ -2139,27 +2166,47 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code> — JOIN 3 bảng <code>orders</code> ↔ <code>products</code> ↔ <code>categories</code>.',
         blocks: [
-          { type: 'kw',  token: 'SELECT',     slot: 'kw-select' },
-          { type: 'col', token: 'product_id', slot: 'col-1' },
-          { type: 'col', token: 'qty',        slot: 'col-2' },
-          { type: 'kw',  token: 'FROM',       slot: 'kw-from' },
-          { type: 'tbl', token: 'orders',     slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',      slot: 'kw-where' },
-          { type: 'col', token: 'qty',        slot: 'wcol-1' },
-          { type: 'op',  token: '>',          slot: 'op-1' },
-          { type: 'val', token: '2',          slot: 'val-1' }
+          { type: 'kw',  token: 'SELECT',           slot: 'kw-select' },
+          { type: 'col', token: 'c.category',       slot: 'col-1' },
+          { type: 'fn',  token: 'SUM(o.qty * p.price)', slot: 'fn-sum' },
+          { type: 'kw',  token: 'AS',               slot: 'kw-as' },
+          { type: 'col', token: 'total_revenue',     slot: 'col-alias' },
+          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
+          { type: 'tbl', token: 'orders o',          slot: 'tbl' },
+          { type: 'kw',  token: 'JOIN',             slot: 'kw-join1' },
+          { type: 'tbl', token: 'products p',        slot: 'tbl2' },
+          { type: 'kw',  token: 'ON',               slot: 'kw-on1' },
+          { type: 'col', token: 'o.product_id = p.product_id', slot: 'col-on1' },
+          { type: 'kw',  token: 'JOIN',             slot: 'kw-join2' },
+          { type: 'tbl', token: 'categories c',      slot: 'tbl3' },
+          { type: 'kw',  token: 'ON',               slot: 'kw-on2' },
+          { type: 'col', token: 'p.category = c.category', slot: 'col-on2' },
+          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
+          { type: 'col', token: 'o.order_date',      slot: 'wcol-1' },
+          { type: 'op',  token: '>=',               slot: 'op-1' },
+          { type: 'val', token: "'2024-04-05'",      slot: 'val-1' },
+          { type: 'kw',  token: 'GROUP BY',         slot: 'kw-group' },
+          { type: 'col', token: 'c.category',       slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',         slot: 'kw-order' },
+          { type: 'col', token: 'total_revenue',     slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',             slot: 'kw-desc' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , SUM(...) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____ JOIN ... ON ... JOIN ... ON ...', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'where-line',   placeholder: 'WHERE ____ >= ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                     accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC',                accepts: ['kw', 'col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
         ],
-        expected_sql: "SELECT product_id, qty FROM orders WHERE qty > 2;",
+        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
         reveal_hints: {
-          'select-line': 'SELECT 2 cột: product_id và qty',
-          'from-line':   'FROM orders',
-          'where-line':  'Lọc theo qty > 2'
+          'select-line':  'SELECT <strong>c.category</strong> + <strong>SUM(o.qty * p.price) AS total_revenue</strong> — tính tổng doanh thu.',
+          'from-line':    'FROM <strong>orders o</strong> + 2 khối JOIN...ON — chain 3 bảng qua FK.',
+          'where-line':   "WHERE <strong>o.order_date >= '2024-04-05'</strong> — lọc theo ngày.",
+          'group-line':   'GROUP BY <strong>c.category</strong> — gom theo danh mục.',
+          'order-line':   'ORDER BY <strong>total_revenue DESC</strong> — doanh thu cao nhất lên đầu.'
         }
       },
 
@@ -2333,26 +2380,33 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Tìm <strong>top khóa học có nhiều textbook nhất</strong> — đếm textbook theo <code>course_id</code>, sắp xếp giảm dần.',
         blocks: [
           { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
-          { type: 'col', token: 'textbook',        slot: 'col-1' },
+          { type: 'col', token: 'course_id',       slot: 'col-1' },
+          { type: 'fn',  token: 'COUNT(*)',        slot: 'fn-count' },
+          { type: 'kw',  token: 'AS',              slot: 'kw-as' },
+          { type: 'col', token: 'textbook_count',  slot: 'col-alias' },
           { type: 'kw',  token: 'FROM',            slot: 'kw-from' },
           { type: 'tbl', token: 'course_textbook', slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',           slot: 'kw-where' },
-          { type: 'col', token: 'course_id',       slot: 'wcol-1' },
-          { type: 'op',  token: '=',               slot: 'op-1' },
-          { type: 'val', token: "'CS101'",         slot: 'val-1' }
+          { type: 'kw',  token: 'GROUP BY',        slot: 'kw-group' },
+          { type: 'col', token: 'course_id',       slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',        slot: 'kw-order' },
+          { type: 'col', token: 'textbook_count',  slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',            slot: 'kw-desc' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____',                accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',                  accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____',       accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , COUNT(*) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____',                         accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                     accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC',                accepts: ['kw', 'col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
         ],
-        expected_sql: "SELECT textbook FROM course_textbook WHERE course_id = 'CS101';",
+        expected_sql: "SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC;",
         reveal_hints: {
-          'select-line': 'SELECT 1 cột: <strong>textbook</strong>.',
-          'from-line':   'FROM bảng đã tách 4NF: <strong>course_textbook</strong>.',
-          'where-line':  "WHERE lọc course: <strong>course_id = 'CS101'</strong>."
+          'select-line':  'SELECT <strong>course_id</strong> + <strong>COUNT(*) AS textbook_count</strong> — đếm số textbook.',
+          'from-line':    'FROM bảng đã tách 4NF: <strong>course_textbook</strong>.',
+          'group-line':   'GROUP BY <strong>course_id</strong> — gom theo khóa học.',
+          'order-line':   'ORDER BY <strong>textbook_count DESC</strong> — khóa nào nhiều textbook nhất lên đầu.'
         }
       },
 
@@ -2633,27 +2687,46 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'BOSS BATTLE — Tìm <strong>top 3 user premium có nhiều post nhất</strong> — JOIN <code>users</code> ↔ <code>posts</code>, lọc premium, đếm + sắp xếp giảm dần.',
         blocks: [
-          { type: 'kw',  token: 'SELECT',     slot: 'kw-select' },
-          { type: 'col', token: 'username',   slot: 'col-1' },
-          { type: 'col', token: 'country',    slot: 'col-2' },
-          { type: 'kw',  token: 'FROM',       slot: 'kw-from' },
-          { type: 'tbl', token: 'users',      slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',      slot: 'kw-where' },
-          { type: 'col', token: 'is_premium', slot: 'wcol-1' },
-          { type: 'op',  token: '=',          slot: 'op-1' },
-          { type: 'val', token: 'true',       slot: 'val-1' }
+          { type: 'kw',  token: 'SELECT',           slot: 'kw-select' },
+          { type: 'col', token: 'u.username',       slot: 'col-1' },
+          { type: 'col', token: 'u.country',        slot: 'col-2' },
+          { type: 'fn',  token: 'COUNT(p.post_id)', slot: 'fn-count' },
+          { type: 'kw',  token: 'AS',               slot: 'kw-as' },
+          { type: 'col', token: 'post_count',       slot: 'col-alias' },
+          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
+          { type: 'tbl', token: 'users u',          slot: 'tbl' },
+          { type: 'kw',  token: 'JOIN',             slot: 'kw-join' },
+          { type: 'tbl', token: 'posts p',          slot: 'tbl2' },
+          { type: 'kw',  token: 'ON',               slot: 'kw-on' },
+          { type: 'col', token: 'p.user_id = u.user_id', slot: 'col-on' },
+          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
+          { type: 'col', token: 'u.is_premium',     slot: 'wcol-1' },
+          { type: 'op',  token: '=',                slot: 'op-1' },
+          { type: 'val', token: 'true',             slot: 'val-1' },
+          { type: 'kw',  token: 'GROUP BY',         slot: 'kw-group' },
+          { type: 'col', token: 'u.user_id, u.username, u.country', slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',         slot: 'kw-order' },
+          { type: 'col', token: 'post_count',       slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',             slot: 'kw-desc' },
+          { type: 'kw',  token: 'LIMIT',            slot: 'kw-limit' },
+          { type: 'val', token: '3',                slot: 'val-limit' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____',   accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM ____',            accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , ____ , COUNT(...) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____ JOIN ____ ON ____',                accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'where-line',   placeholder: 'WHERE ____ ____ ____',                       accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                               accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC LIMIT ____',               accepts: ['kw', 'col', 'val'], acceptedKeywords: ['ORDER BY', 'DESC', 'LIMIT'], multi: true }
         ],
-        expected_sql: "SELECT username, country FROM users WHERE is_premium = true;",
+        expected_sql: "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
         reveal_hints: {
-          'select-line': 'SELECT 2 cột: username và country',
-          'from-line':   'FROM users',
-          'where-line':  'Lọc is_premium = true (boolean, không cần dấu nháy)'
+          'select-line':  'SELECT <strong>u.username</strong>, <strong>u.country</strong> + <strong>COUNT(p.post_id) AS post_count</strong> — đếm số post.',
+          'from-line':    'FROM <strong>users u</strong> JOIN <strong>posts p</strong> ON <strong>p.user_id = u.user_id</strong> — nối 2 bảng.',
+          'where-line':   'WHERE <strong>u.is_premium = true</strong> — chỉ lấy user premium.',
+          'group-line':   'GROUP BY <strong>u.user_id, u.username, u.country</strong> — gom theo user.',
+          'order-line':   'ORDER BY <strong>post_count DESC</strong> + <strong>LIMIT 3</strong> — top 3 post nhiều nhất.'
         }
       },
 
@@ -2819,31 +2892,36 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Đếm <strong>số user theo từng theme</strong> từ JSONB — dùng <code>GROUP BY settings->>\'theme\'</code>, sắp xếp giảm dần.',
         blocks: [
           { type: 'kw',  token: 'SELECT',           slot: 'kw-select' },
-          { type: 'col', token: 'username',          slot: 'col-1' },
-          { type: 'kw',  token: ',',                 slot: 'op-comma1' },
-          { type: 'col', token: 'settings',           slot: 'col-2' },
+          { type: 'col', token: 'settings',          slot: 'col-1' },
           { type: 'op',  token: "->>'theme'",        slot: 'op-extract1' },
           { type: 'kw',  token: 'AS',                slot: 'kw-as' },
-          { type: 'col', token: 'theme',              slot: 'col-alias1' },
+          { type: 'col', token: 'theme',             slot: 'col-alias1' },
+          { type: 'fn',  token: 'COUNT(*)',          slot: 'fn-count' },
+          { type: 'kw',  token: 'AS',                slot: 'kw-as2' },
+          { type: 'col', token: 'user_count',        slot: 'col-alias2' },
           { type: 'kw',  token: 'FROM',              slot: 'kw-from' },
-          { type: 'tbl', token: 'app_users',          slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',             slot: 'kw-where' },
-          { type: 'col', token: 'settings',           slot: 'col-filter' },
-          { type: 'op',  token: "->>'notifications'", slot: 'op-extract2' },
-          { type: 'op',  token: "= 'true'",           slot: 'op-eq' }
+          { type: 'tbl', token: 'app_users',         slot: 'tbl' },
+          { type: 'kw',  token: 'GROUP BY',          slot: 'kw-group' },
+          { type: 'col', token: "settings->>'theme'", slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',          slot: 'kw-order' },
+          { type: 'col', token: 'user_count',        slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',              slot: 'kw-desc' }
         ],
         drop_zones: [
-          { id: 'select-line',  placeholder: "SELECT username, settings->>'theme' AS theme", accepts: ['kw','col','op'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',    placeholder: 'FROM app_users', accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',   placeholder: "WHERE settings->>'notifications' = 'true'", accepts: ['kw','col','op'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'select-line',  placeholder: "SELECT settings->>'theme' AS theme, COUNT(*) AS ____", accepts: ['kw','col','op','fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM app_users',                                        accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'group-line',   placeholder: "GROUP BY settings->>'theme'",                           accepts: ['kw','col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC',                                    accepts: ['kw','col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
         ],
-        expected_sql: "SELECT username, settings->>'theme' AS theme FROM app_users WHERE settings->>'notifications' = 'true';",
+        expected_sql: "SELECT settings->>'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'theme' ORDER BY user_count DESC;",
         reveal_hints: {
-          'select-line':  "<code>settings->>'theme'</code> trả về text thuần. <code>->></code> là toán tử trích xuất JSON.",
+          'select-line':  "<code>settings->>'theme'</code> trích xuất key từ JSON + <code>COUNT(*)</code> đếm user.",
           'from-line':    'Bảng <code>app_users</code> lưu settings dạng JSONB.',
-          'where-line':   "<code>settings->>'notifications' = 'true'</code> — giá trị JSON là string, dùng nháy đơn."
+          'group-line':   "<code>GROUP BY settings->>'theme'</code> — nhóm theo giá trị theme từ JSON.",
+          'order-line':   '<code>ORDER BY user_count DESC</code> — theme nhiều user nhất lên đầu.'
         }
       },
 
@@ -2871,7 +2949,7 @@ concept_cards: [
           { level: 1, text: "Bạn muốn <em>phân tích dữ liệu JSON linh hoạt</em> — trích xuất 1 key từ JSON, đếm số lượng theo từng giá trị của key đó, sắp xếp giảm dần. Hãy nghĩ: trích key = <code>-&gt;&gt;</code>, đếm = <code>COUNT</code>, nhóm = <code>GROUP BY</code>." },
           { level: 2, text: "<code>GROUP BY settings->>'theme'</code> — extract key từ JSON rồi GROUP như cột thường." },
           { level: 3, text: "<code>SELECT settings->>'theme' AS theme, COUNT(*)</code> — alias cho dễ đọc." },
-          { level: 4, text: "<code>ORDER BY user_count DESC</code> — theme nào nhiều user nhất lên đầu." }
+          { level: 4, text: "<code class=\"code\">SELECT settings-&gt;&gt;'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings-&gt;&gt;'theme' ORDER BY user_count DESC;</code>" }
         ],
         success_message: 'JSONB + GROUP BY = phân tích dữ liệu linh hoạt. Không cần ALTER TABLE để thêm cột!',
         xp_reward: 60
@@ -2991,34 +3069,42 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Đếm <strong>số cửa hàng theo từng zone</strong> ở TP.HCM trong bán kính 10km — dùng <code>ST_DWithin</code> + <code>GROUP BY zone</code>.',
         blocks: [
           { type: 'kw',  token: 'SELECT',    slot: 'kw-select' },
-          { type: 'col', token: 'name',       slot: 'col-1' },
-          { type: 'kw',  token: ',',          slot: 'op-comma1' },
-          { type: 'fn',  token: 'ST_Distance', slot: 'fn-dist' },
-          { type: 'op',  token: '(geo_location, ST_MakePoint(106.7009, 10.7769))', slot: 'fn-args' },
+          { type: 'col', token: 'zone',       slot: 'col-1' },
+          { type: 'fn',  token: 'COUNT(*)',   slot: 'fn-count' },
           { type: 'kw',  token: 'AS',         slot: 'kw-as' },
-          { type: 'col', token: 'distance',    slot: 'col-alias' },
+          { type: 'col', token: 'branch_count', slot: 'col-alias' },
           { type: 'kw',  token: 'FROM',       slot: 'kw-from' },
           { type: 'tbl', token: 'shop_branches', slot: 'tbl' },
           { type: 'kw',  token: 'WHERE',      slot: 'kw-where' },
+          { type: 'col', token: 'city',        slot: 'wcol-1' },
+          { type: 'op',  token: '=',           slot: 'op-1' },
+          { type: 'val', token: "'TP.HCM'",   slot: 'val-1' },
+          { type: 'kw',  token: 'AND',        slot: 'kw-and' },
           { type: 'fn',  token: 'ST_DWithin', slot: 'fn-dwithin' },
-          { type: 'op',  token: '(geo_location, ST_MakePoint(106.7009, 10.7769), 5)', slot: 'fn-dw-args' },
+          { type: 'op',  token: '(geo_location, ST_MakePoint(106.7009, 10.7769), 10)', slot: 'fn-dw-args' },
+          { type: 'kw',  token: 'GROUP BY',   slot: 'kw-group' },
+          { type: 'col', token: 'zone',        slot: 'col-group' },
           { type: 'kw',  token: 'ORDER BY',   slot: 'kw-order' },
-          { type: 'col', token: 'distance',   slot: 'col-order' },
-          { type: 'kw',  token: 'ASC',        slot: 'kw-asc' }
+          { type: 'col', token: 'branch_count', slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',       slot: 'kw-desc' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT name, ST_Distance(geo_location, ST_MakePoint(...)) AS distance', accepts: ['kw','col','fn','op'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line',   placeholder: 'FROM shop_branches', accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: 'WHERE ST_DWithin(geo_location, ST_MakePoint(...), 5)', accepts: ['kw','fn','op'], acceptedKeywords: ['WHERE'], multi: true },
-          { id: 'order-line',  placeholder: 'ORDER BY distance ASC', accepts: ['kw','col'], multi: true }
+          { id: 'select-line',  placeholder: 'SELECT ____ , COUNT(*) AS ____',                     accepts: ['kw','col','fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM shop_branches',                                  accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line',   placeholder: "WHERE city = ____ AND ST_DWithin(..., 10)",           accepts: ['kw','col','op','val','fn'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                                       accepts: ['kw','col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC',                                  accepts: ['kw','col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
         ],
-        expected_sql: "SELECT name, ST_Distance(geo_location, ST_MakePoint(106.7009, 10.7769)) AS distance FROM shop_branches WHERE ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 5) ORDER BY distance ASC;",
+        expected_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;",
         reveal_hints: {
-          'select-line':  '<code>ST_Distance</code> tính khoảng cách từ mỗi cửa hàng đến trung tâm.',
-          'where-line':   '<code>ST_DWithin</code> lọc nhanh bằng spatial index. Bán kính 5 (đơn vị tọa độ ≈ km).',
-          'order-line':   'ASC = cửa hàng gần nhất lên đầu.'
+          'select-line':  'SELECT <strong>zone</strong> + <strong>COUNT(*) AS branch_count</strong> — đếm cửa hàng theo zone.',
+          'from-line':    'FROM <strong>shop_branches</strong>.',
+          'where-line':   "WHERE <strong>city = 'TP.HCM'</strong> AND <strong>ST_DWithin(..., 10)</strong> — lọc TP.HCM + bán kính 10km.",
+          'group-line':   'GROUP BY <strong>zone</strong> — gom theo khu vực.',
+          'order-line':   'ORDER BY <strong>branch_count DESC</strong> — zone nhiều cửa hàng nhất lên đầu.'
         }
       },
 
@@ -3050,7 +3136,7 @@ concept_cards: [
           { level: 1, text: "Bạn cần <em>kết hợp spatial filter + aggregation</em>. Lọc TP.HCM → lọc bán kính 10km quanh trung tâm → nhóm theo zone → đếm → sắp xếp. Hãy nghĩ: filter trước (WHERE), aggregate sau (GROUP BY)." },
           { level: 2, text: "<code>WHERE city = 'TP.HCM'</code> — lọc TP.HCM trước." },
           { level: 3, text: "<code>AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10)</code> — lọc bán kính 10km." },
-          { level: 4, text: "<code>GROUP BY zone ORDER BY branch_count DESC</code> — zone nào nhiều cửa hàng nhất lên đầu." }
+          { level: 4, text: "<code class=\"code\">SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;</code>" }
         ],
         success_message: 'Spatial + GROUP BY = phân tích vùng phủ cửa hàng cực kỳ hiệu quả! ST_DWithin + GiST index = O(log n).',
         xp_reward: 60
@@ -3193,7 +3279,7 @@ concept_cards: [
           { level: 1, text: "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể. Hãy nghĩ: filter user trước, GROUP BY loại event, COUNT, ORDER BY giảm dần." },
           { level: 2, text: "<code>WHERE user_id = 'U01'</code> — lọc events của user U01." },
           { level: 3, text: "<code>GROUP BY event_type</code> — nhóm theo loại event." },
-          { level: 4, text: "<code>ORDER BY event_count DESC</code> — event nào nhiều nhất lên đầu." }
+          { level: 4, text: "<code class=\"code\">SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;</code>" }
         ],
         success_message: 'values().annotate() = GROUP BY trong SQL. ORM và SQL luôn tương đương — hiểu SQL giúp bạn viết ORM tốt hơn!',
         xp_reward: 60
@@ -3338,7 +3424,7 @@ concept_cards: [
           { level: 1, text: "Bạn cần <em>phòng chống SQL Injection</em> (Prepared Statement) + <em>đếm user theo role</em> (aggregation). Hãy nghĩ: <code>%s</code> placeholder cho input, GROUP BY role cho aggregation." },
           { level: 2, text: "Prepared Statement: <code>WHERE username = %s AND password_hash = %s</code> — params gửi riêng." },
           { level: 3, text: "<code>SELECT role, COUNT(user_id) AS user_count</code> — đếm theo role." },
-          { level: 4, text: "<code>GROUP BY role ORDER BY user_count DESC</code> — role nào nhiều user nhất lên đầu." }
+          { level: 4, text: "<code class=\"code\">SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;</code>" }
         ],
         success_message: 'Prepared Statement là lá chắn! Input luôn là literal, không bao giờ chạy như SQL. Bài 18 sẽ học cách lưu password đúng cách.',
         xp_reward: 60
@@ -3462,27 +3548,35 @@ concept_cards: [
       },
 
       step_3: {
+        mission: 'Phân loại <strong>mức độ bảo mật</strong> theo thuật toán hash — dùng <code>CASE WHEN</code> + <code>GROUP BY</code> + <code>COUNT</code>.',
         blocks: [
           { type: 'kw',  token: 'SELECT',          slot: 'kw-select' },
-          { type: 'col', token: 'username',         slot: 'col-1' },
-          { type: 'kw',  token: ',',                slot: 'op-comma1' },
-          { type: 'col', token: 'hash_algorithm',   slot: 'col-2' },
-          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
+          { type: 'fn',  token: "CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END", slot: 'fn-case' },
+          { type: 'kw',  token: 'AS',              slot: 'kw-as' },
+          { type: 'col', token: 'security_level',  slot: 'col-alias' },
+          { type: 'fn',  token: 'COUNT(user_id)',  slot: 'fn-count' },
+          { type: 'kw',  token: 'AS',              slot: 'kw-as2' },
+          { type: 'col', token: 'user_count',      slot: 'col-alias2' },
+          { type: 'kw',  token: 'FROM',            slot: 'kw-from' },
           { type: 'tbl', token: 'security_users_vault', slot: 'tbl' },
-          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
-          { type: 'col', token: 'hash_algorithm',   slot: 'col-filter' },
-          { type: 'kw',  token: 'IN',               slot: 'kw-in' },
-          { type: 'op',  token: "('bcrypt', 'argon2', 'scrypt')", slot: 'op-list' }
+          { type: 'kw',  token: 'GROUP BY',        slot: 'kw-group' },
+          { type: 'col', token: 'security_level',  slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',        slot: 'kw-order' },
+          { type: 'col', token: 'user_count',      slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',            slot: 'kw-desc' }
         ],
         drop_zones: [
-          { id: 'select-line', placeholder: "SELECT username, hash_algorithm", accepts: ['kw','col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'select-line', placeholder: "SELECT CASE WHEN ... END AS ____, COUNT(...) AS ____", accepts: ['kw','col','fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
           { id: 'from-line',   placeholder: 'FROM security_users_vault',        accepts: ['kw','tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line',  placeholder: "WHERE hash_algorithm IN ('bcrypt', 'argon2', 'scrypt')", accepts: ['kw','col','op'], acceptedKeywords: ['WHERE'], multi: true }
+          { id: 'group-line',  placeholder: 'GROUP BY ____',                    accepts: ['kw','col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',  placeholder: 'ORDER BY ____ DESC',               accepts: ['kw','col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
         ],
-        expected_sql: "SELECT username, hash_algorithm FROM security_users_vault WHERE hash_algorithm IN ('bcrypt','argon2','scrypt');",
+        expected_sql: "SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;",
         reveal_hints: {
-          'select-line':  'Chọn username và hash_algorithm để xem user nào dùng thuật toán nào.',
-          'where-line':   "<code>IN ('bcrypt','argon2','scrypt')</code> — chỉ lấy thuật toán recommended. md5/sha1/sha256 không có trong danh sách."
+          'select-line':  '<strong>CASE WHEN</strong> phân loại thuật toán → HIGH/MEDIUM/LOW + <strong>COUNT</strong> đếm user.',
+          'from-line':    'FROM <strong>security_users_vault</strong>.',
+          'group-line':   'GROUP BY <strong>security_level</strong> — gom theo mức bảo mật.',
+          'order-line':   'ORDER BY <strong>user_count DESC</strong> — mức nào nhiều user nhất lên đầu.'
         }
       },
 
@@ -3511,7 +3605,7 @@ concept_cards: [
           { level: 1, text: "Bạn cần <em>phân loại security level</em> theo thuật toán, đếm user theo từng mức, sắp xếp giảm dần. Hãy nghĩ: <code>CASE WHEN</code> để gán nhãn, <code>GROUP BY</code> theo nhãn, <code>COUNT</code> + <code>ORDER BY</code>." },
           { level: 2, text: "<code>CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH'</code> — recommended algorithms." },
           { level: 3, text: "<code>WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code>." },
-          { level: 4, text: "<code>GROUP BY security_level ORDER BY user_count DESC</code>." }
+          { level: 4, text: "<code class=\"code\">SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;</code>" }
         ],
         success_message: 'CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 18 bài Database Design Cơ bản!',
         xp_reward: 70
