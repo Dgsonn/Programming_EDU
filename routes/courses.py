@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request
 from db import get_db
 from utils import api_login_required, current_user_id
@@ -199,6 +201,68 @@ def unenroll(course_id):
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
+
+
+@courses_bp.route('/api/course/rating', methods=['POST'])
+@api_login_required
+def rate_course():
+    uid = current_user_id()
+    data = request.get_json(silent=True) or {}
+    course_id = data.get('course_id')
+    rating = data.get('rating')
+
+    if not course_id:
+        return jsonify({'error': 'Thiếu course_id'}), 400
+
+    conn = get_db()
+    try:
+        course = conn.execute('SELECT id FROM courses WHERE id=%s', (course_id,)).fetchone()
+        if not course:
+            return jsonify({'error': 'Không tìm thấy khóa học'}), 404
+
+        enrolled = conn.execute(
+            'SELECT 1 FROM enrollments WHERE user_id=%s AND course_id=%s',
+            (uid, course_id)
+        ).fetchone()
+        if not enrolled:
+            return jsonify({'error': 'Bạn chưa đăng ký khóa học này'}), 403
+
+        if not isinstance(rating, int) or isinstance(rating, bool) or rating < 1 or rating > 5:
+            return jsonify({'error': 'Đánh giá phải là số nguyên từ 1 đến 5'}), 400
+
+        conn.execute(
+            '''INSERT INTO course_ratings (user_id, course_id, rating, created_at)
+               VALUES (%s, %s, %s, %s)
+               ON CONFLICT (user_id, course_id)
+               DO UPDATE SET rating = EXCLUDED.rating, created_at = EXCLUDED.created_at''',
+            (uid, course_id, rating, datetime.utcnow().isoformat())
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return jsonify({'ok': True})
+
+
+@courses_bp.route('/api/course/<course_id>/rating', methods=['GET'])
+@api_login_required
+def get_course_rating(course_id):
+    conn = get_db()
+    course = conn.execute('SELECT id FROM courses WHERE id=%s', (course_id,)).fetchone()
+    if not course:
+        conn.close()
+        return jsonify({'error': 'Không tìm thấy khóa học'}), 404
+
+    row = conn.execute(
+        'SELECT AVG(rating) AS avg_rating, COUNT(*) AS rating_count '
+        'FROM course_ratings WHERE course_id=%s',
+        (course_id,)
+    ).fetchone()
+    conn.close()
+
+    avg_raw = row['avg_rating']
+    average = round(float(avg_raw), 1) if avg_raw is not None else None
+    return jsonify({'average': average, 'count': row['rating_count']})
 
 
 _MOCK_SKILLS = [

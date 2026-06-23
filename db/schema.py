@@ -89,6 +89,17 @@ def init_db():
         c.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_user_id ON enrollments(user_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_course_id ON enrollments(course_id)')
 
+        c.execute('''CREATE TABLE IF NOT EXISTS course_ratings (
+            user_id    INTEGER,
+            course_id  TEXT,
+            rating     INTEGER NOT NULL,
+            created_at TEXT,
+            PRIMARY KEY (user_id, course_id)
+        )''')
+
+        c.execute('CREATE INDEX IF NOT EXISTS idx_course_ratings_course_id ON course_ratings(course_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_course_ratings_user_id ON course_ratings(user_id)')
+
         c.execute('''CREATE TABLE IF NOT EXISTS missions (
             id                SERIAL PRIMARY KEY,
             title             TEXT NOT NULL,
