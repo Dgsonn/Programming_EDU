@@ -109,3 +109,19 @@ def complete_mission():
         'streak':       user['streak'],
         'streak_active': True,
     })
+
+
+@stats_bp.route('/api/streak/review-quiz-status', methods=['GET'])
+@api_login_required
+def review_quiz_status():
+    uid  = current_user_id()
+    conn = get_db()
+    user = conn.execute('SELECT streak FROM users WHERE id=%s', (uid,)).fetchone()
+    conn.close()
+
+    streak = user['streak'] if user else 0
+    return jsonify({
+        'streak':         streak,
+        'is_unlocked':    streak >= 5,
+        'days_remaining': max(0, 5 - streak),
+    })
