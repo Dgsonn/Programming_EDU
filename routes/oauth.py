@@ -4,7 +4,7 @@ from flask import Blueprint, redirect, session, url_for, current_app
 from flask_dance.contrib.facebook import facebook, make_facebook_blueprint
 from flask_dance.contrib.google import google, make_google_blueprint
 
-from models import get_db
+from db import get_db
 
 google_bp = make_google_blueprint(
     client_id=os.environ.get("GOOGLE_CLIENT_ID"),

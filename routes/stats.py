@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from datetime import date, timedelta
-from models import get_db, MissionRepository
+from db import get_db, MissionRepository
 from utils import api_login_required, current_user_id
 
 stats_bp = Blueprint('stats', __name__)

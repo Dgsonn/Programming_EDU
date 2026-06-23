@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import get_db
+from db import get_db
 from validators import validate_email_field, validate_password_field, validate_name_field, validate_phone_field
 from extensions import limiter
 

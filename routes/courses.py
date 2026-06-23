@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import get_db
+from db import get_db
 from utils import api_login_required, current_user_id
 
 courses_bp = Blueprint('courses', __name__)

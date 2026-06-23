@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import get_db
+from db import get_db
 from utils import api_login_required, current_user_id
 from validators import validate_name_field, validate_email_field, validate_phone_field, validate_password_field
 

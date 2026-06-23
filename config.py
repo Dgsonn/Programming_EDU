@@ -1,8 +1,12 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:9000').split(',')
 WTF_CSRF_TIME_LIMIT = 3600
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 class Config:
     DB_PATH    = os.path.join(os.path.dirname(__file__), 'database', 'edu.db')

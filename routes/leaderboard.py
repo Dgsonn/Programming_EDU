@@ -10,7 +10,7 @@ GET /api/leaderboard?type=weekly|streak|friends
 """
 from flask import Blueprint, request, jsonify
 
-from models import get_db
+from db import get_db
 from utils import api_login_required, current_user_id
 
 leaderboard_bp = Blueprint('leaderboard', __name__)

@@ -6,7 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from config import Config, ALLOWED_ORIGINS
 from extensions import limiter
-from models import init_db
+from db import init_db
 from routes import register_blueprints
 from routes.auth import auth_bp
 from routes.oauth import google_bp, facebook_bp, _oauth_callback
