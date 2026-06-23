@@ -34,13 +34,13 @@
   };
 
   const SYNTAX_KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE',
-                           'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON', 'AS',
-                           'AND', 'OR', 'NOT', 'NULL', 'IS', 'IN', 'LIKE', 'BETWEEN',
-                           'ORDER', 'BY', 'GROUP', 'HAVING', 'LIMIT', 'OFFSET',
-                           'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX',
-                           'CREATE', 'TABLE', 'DROP', 'ALTER', 'INDEX', 'VIEW',
-                           'PRIMARY', 'KEY', 'FOREIGN', 'REFERENCES', 'UNIQUE',
-                           'CHECK', 'DEFAULT', 'AUTO_INCREMENT', 'SERIAL'];
+    'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON', 'AS',
+    'AND', 'OR', 'NOT', 'NULL', 'IS', 'IN', 'LIKE', 'BETWEEN',
+    'ORDER', 'BY', 'GROUP', 'HAVING', 'LIMIT', 'OFFSET',
+    'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX',
+    'CREATE', 'TABLE', 'DROP', 'ALTER', 'INDEX', 'VIEW',
+    'PRIMARY', 'KEY', 'FOREIGN', 'REFERENCES', 'UNIQUE',
+    'CHECK', 'DEFAULT', 'AUTO_INCREMENT', 'SERIAL'];
 
   /* ─── Init ────────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', init);
@@ -282,43 +282,43 @@
 
     // Map Font Awesome icon name → custom SVG symbol id (35 mappings)
     const ICON_MAP = {
-      'fa-key':        'i-key',
-      'fa-cube':       'i-cube',
-      'fa-link':       'i-link',
+      'fa-key': 'i-key',
+      'fa-cube': 'i-cube',
+      'fa-link': 'i-link',
       'fa-puzzle-piece': 'i-puzzle',
       'fa-shield-halved': 'i-shield',
-      'fa-layer-group':'i-stack',
-      'fa-code-branch':'i-git-branch',
-      'fa-code':       'i-arrow-split',
-      'fa-crown':      'i-crown',
-      'fa-trophy':     'i-trophy',
-      'fa-bolt':       'i-zap',
-      'fa-database':   'i-database',
-      'fa-lock':       'i-lock',
+      'fa-layer-group': 'i-stack',
+      'fa-code-branch': 'i-git-branch',
+      'fa-code': 'i-arrow-split',
+      'fa-crown': 'i-crown',
+      'fa-trophy': 'i-trophy',
+      'fa-bolt': 'i-zap',
+      'fa-database': 'i-database',
+      'fa-lock': 'i-lock',
       'fa-skull-crossbones': 'i-bug',
-      'fa-bug':        'i-bug',
-      'fa-table':      'i-database',
-      'fa-lightbulb':  'i-zap',
-      'fa-calculator':        'i-zap',
-      'fa-object-group':      'i-stack',
-      'fa-table-list':        'i-table',
-      'fa-link-slash':        'i-link',
+      'fa-bug': 'i-bug',
+      'fa-table': 'i-database',
+      'fa-lightbulb': 'i-zap',
+      'fa-calculator': 'i-zap',
+      'fa-object-group': 'i-stack',
+      'fa-table-list': 'i-table',
+      'fa-link-slash': 'i-link',
       'fa-arrow-right-arrow-left': 'i-arrow-split',
-      'fa-diagram-project':   'i-stack',
-      'fa-arrows-to-dot':     'i-git-branch',
-      'fa-atom':              'i-atom',
-      'fa-list':              'i-stack',
-      'fa-scissors':          'i-scissors',
-      'fa-cubes-stacked':     'i-stack',
-      'fa-explosion':         'i-explosion',
-      'fa-brackets-curly':    'i-brackets',
-      'fa-location-dot':      'i-location',
-      'fa-globe':             'i-globe',
-      'fa-shield-virus':      'i-shield',
+      'fa-diagram-project': 'i-stack',
+      'fa-arrows-to-dot': 'i-git-branch',
+      'fa-atom': 'i-atom',
+      'fa-list': 'i-stack',
+      'fa-scissors': 'i-scissors',
+      'fa-cubes-stacked': 'i-stack',
+      'fa-explosion': 'i-explosion',
+      'fa-brackets-curly': 'i-brackets',
+      'fa-location-dot': 'i-location',
+      'fa-globe': 'i-globe',
+      'fa-shield-virus': 'i-shield',
       'fa-arrows-left-right': 'i-arrow-split',
-      'fa-lightbulb-on':      'i-zap',
-      'fa-fire':              'i-zap',
-      'fa-circle-check':      'i-shield'
+      'fa-lightbulb-on': 'i-zap',
+      'fa-fire': 'i-zap',
+      'fa-circle-check': 'i-shield'
     };
 
     // Premium concept cards (shadcn Card-inspired) — opt-in
@@ -338,7 +338,8 @@
             </div>
             <div class="concept-card-body">${c.body || ''}</div>
           </div>
-        `;}).join('');
+        `;
+        }).join('');
       } else {
         conceptMount.innerHTML = '';
       }
@@ -643,7 +644,7 @@
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
   }
 
-  window.checkMiniGame = function() {
+  window.checkMiniGame = function () {
     const mg = state.currentLesson.step_2 && state.currentLesson.step_2.mini_game;
     if (!mg || state.miniGameLocked) return;
     state.miniGameLocked = true;
@@ -710,12 +711,12 @@
     tip.className = 'pill-hint-tooltip';
 
     const typeNames = {
-      'kw':  'SQL keyword',
+      'kw': 'SQL keyword',
       'col': 'tên cột',
       'tbl': 'tên bảng',
-      'op':  'toán tử so sánh',
+      'op': 'toán tử so sánh',
       'val': 'giá trị',
-      'fn':  'hàm SQL'
+      'fn': 'hàm SQL'
     };
     const typeName = typeNames[blockType] || 'khối lệnh';
 
@@ -735,7 +736,7 @@
     // Position above pill
     const rect = pill.getBoundingClientRect();
     tip.style.left = (rect.left + rect.width / 2) + 'px';
-    tip.style.top  = (rect.top - 8 + window.scrollY) + 'px';
+    tip.style.top = (rect.top - 8 + window.scrollY) + 'px';
     requestAnimationFrame(() => tip.classList.add('visible'));
 
     // Auto-dismiss after 2.4s or on next click anywhere
@@ -751,15 +752,15 @@
   /* Map zone id → friendly Vietnamese name for the pill hint tooltip */
   function zoneIdToName(zoneId, s3) {
     const map = {
-      'select-line':  'SELECT (cột cần lấy)',
-      'from-line':    'FROM (bảng nguồn)',
-      'where-line':   'WHERE (điều kiện lọc)',
-      'join-line':    'JOIN (kết bảng)',
-      'on-line':      'ON (điều kiện nối)',
+      'select-line': 'SELECT (cột cần lấy)',
+      'from-line': 'FROM (bảng nguồn)',
+      'where-line': 'WHERE (điều kiện lọc)',
+      'join-line': 'JOIN (kết bảng)',
+      'on-line': 'ON (điều kiện nối)',
       'groupby-line': 'GROUP BY (nhóm)',
-      'having-line':  'HAVING (lọc nhóm)',
+      'having-line': 'HAVING (lọc nhóm)',
       'orderby-line': 'ORDER BY (sắp xếp)',
-      'limit-line':   'LIMIT (giới hạn)'
+      'limit-line': 'LIMIT (giới hạn)'
     };
     if (map[zoneId]) return map[zoneId];
     // Fallback to lesson config
@@ -1173,30 +1174,30 @@
   function slotToZone(slot, s3) {
     const map = {
       'kw-select': 'select-line',
-      'kw-from':   'from-line',
-      'kw-where':  'where-line',
-      'kw-join':   'from-line',
-      'kw-on':     'from-line',
-      'kw-and':    'where-line',
-      'kw-or':     'where-line',
-      'col-1':     'select-line',
-      'col-2':     'select-line',
-      'col-3':     'select-line',
-      'col-4':     'select-line',
-      'col-on':    'from-line',
-      'col-on2':   'from-line',
-      'tbl':       'from-line',
-      'tbl2':      'from-line',
-      'tbl3':      'from-line',
-      'wcol':      'where-line',
-      'wcol-1':    'where-line',
-      'wcol-2':    'where-line',
-      'op':        'where-line',
-      'op-1':      'where-line',
-      'op-2':      'where-line',
-      'val':       'where-line',
-      'val-1':     'where-line',
-      'val-2':     'where-line'
+      'kw-from': 'from-line',
+      'kw-where': 'where-line',
+      'kw-join': 'from-line',
+      'kw-on': 'from-line',
+      'kw-and': 'where-line',
+      'kw-or': 'where-line',
+      'col-1': 'select-line',
+      'col-2': 'select-line',
+      'col-3': 'select-line',
+      'col-4': 'select-line',
+      'col-on': 'from-line',
+      'col-on2': 'from-line',
+      'tbl': 'from-line',
+      'tbl2': 'from-line',
+      'tbl3': 'from-line',
+      'wcol': 'where-line',
+      'wcol-1': 'where-line',
+      'wcol-2': 'where-line',
+      'op': 'where-line',
+      'op-1': 'where-line',
+      'op-2': 'where-line',
+      'val': 'where-line',
+      'val-1': 'where-line',
+      'val-2': 'where-line'
     };
     if (map[slot]) return map[slot];
 
@@ -1218,15 +1219,15 @@
   /** Color for the anchor dot on bank pills and the matching zone border.
    *  Must match the --zone-color values in lesson_db_design.css. */
   const ZONE_COLORS = {
-    'select-line':  '#06B6D4',
-    'from-line':    '#F59E0B',
-    'join-line':    '#F59E0B',
-    'on-line':      '#A855F7',
-    'where-line':   '#10B981',
+    'select-line': '#06B6D4',
+    'from-line': '#F59E0B',
+    'join-line': '#F59E0B',
+    'on-line': '#A855F7',
+    'where-line': '#10B981',
     'groupby-line': '#8B5CF6',
-    'having-line':  '#14B8A6',
+    'having-line': '#14B8A6',
     'orderby-line': '#EC4899',
-    'limit-line':   '#FBBF24'
+    'limit-line': '#FBBF24'
   };
 
   function getZoneColor(zoneId) {
@@ -1463,7 +1464,7 @@
   // (Undo removed — use drag-back to bank to remove individual blocks,
   //  or click Reset to clear everything.)
 
-  window.handleDragReset = function() {
+  window.handleDragReset = function () {
     if (!state.currentLesson) return;
     state.step3Blocks = {};
     state.step3Placed = new Set();
@@ -1570,12 +1571,12 @@
     const s3 = state.currentLesson.step_3;
     if (!s3) return;
 
-    const fromZone  = state.step3Blocks['from-line']  || [];
-    const selZone   = state.step3Blocks['select-line']|| [];
+    const fromZone = state.step3Blocks['from-line'] || [];
+    const selZone = state.step3Blocks['select-line'] || [];
     const whereZone = state.step3Blocks['where-line'] || [];
 
     const fromTable = fromZone.find(b => b.type === 'tbl')?.token || null;
-    const columns   = selZone.filter(b => b.type === 'col').map(b => b.token);
+    const columns = selZone.filter(b => b.type === 'col').map(b => b.token);
 
     // Reconstruct WHERE expression: col op val (ignore the WHERE kw itself)
     const whereParts = whereZone
@@ -1959,7 +1960,7 @@
   }
 
   /* ── Dispatcher: Run / Submit (used by onclick) ────────────────── */
-  window.handleChallengeRun = function(isSubmit) {
+  window.handleChallengeRun = function (isSubmit) {
     const s4 = state.currentLesson.step_4;
     const type = state.challengeState && state.challengeState.type || 'full_ide';
     if (type === 'full_ide') return runCodeIDE(isSubmit);
@@ -1972,7 +1973,7 @@
     if (type === 'bug_fix') return runCodeBugFix(isSubmit);
   };
 
-  window.handleChallengeReset = function() {
+  window.handleChallengeReset = function () {
     initStep4();
   };
 
@@ -2060,7 +2061,7 @@
 
   // Toast Sonner-style notification (góc trên-phải, auto-dismiss sau durationMs)
   // Background + animation đi qua CSS class .pe-toast--{kind} (xem lesson_db_design.css)
-  window.showToast = function(kind, message, durationMs = 3000) {
+  window.showToast = function (kind, message, durationMs = 3000) {
     const existing = document.getElementById('pe-toast');
     if (existing) existing.remove();
     const toast = document.createElement('div');
@@ -2407,7 +2408,7 @@
     });
   }
 
-  window.checkFlagshipMatch = function() {
+  window.checkFlagshipMatch = function () {
     initFlagshipMatchDnD();
     const slots = document.querySelectorAll('.match-slot');
     let correct = 0, total = slots.length;
@@ -2444,7 +2445,7 @@
     }
   };
 
-  window.resetFlagshipMatch = function() {
+  window.resetFlagshipMatch = function () {
     const f = state.currentLesson.step_3.flagship;
     const bank = document.querySelector('.match-bank');
     const slots = document.querySelectorAll('.match-slot');
@@ -2511,7 +2512,7 @@
     });
   }
 
-  window.checkFlagshipSplit = function() {
+  window.checkFlagshipSplit = function () {
     initFlagshipSplitDnD();
     const f = state.currentLesson.step_3.flagship;
     let correct = 0, total = 0;
@@ -2537,13 +2538,13 @@
     }
   };
 
-  window.resetFlagshipSplit = function() {
+  window.resetFlagshipSplit = function () {
     renderStep3();
     const r = document.getElementById('flagship-split-result');
     if (r) r.textContent = '';
   };
 
-  window.showFlagshipSplitHint = function() {
+  window.showFlagshipSplitHint = function () {
     const f = state.currentLesson.step_3.flagship;
     alert('💡 Gợi ý: ' + (f.hint || 'Xem lại lý thuyết trong Step 1.'));
   };
@@ -2579,7 +2580,7 @@
     });
   }
 
-  window.checkFlagshipBugSpot = function() {
+  window.checkFlagshipBugSpot = function () {
     initFlagshipBugSpotDnD();
     const f = state.currentLesson.step_3.flagship;
     let correct = 0, total = f.chips.length;
@@ -2605,13 +2606,13 @@
     }
   };
 
-  window.resetFlagshipBugSpot = function() {
+  window.resetFlagshipBugSpot = function () {
     renderStep3();
     const r = document.getElementById('flagship-bugspot-result');
     if (r) r.textContent = '';
   };
 
-  window.showFlagshipBugSpotHint = function() {
+  window.showFlagshipBugSpotHint = function () {
     const f = state.currentLesson.step_3.flagship;
     alert('💡 Gợi ý: ' + (f.hint || 'Xem lại lý thuyết trong Step 1.'));
   };
@@ -2653,7 +2654,7 @@
     if (ide) ide.value = sql;
   }
 
-  window.checkFlagshipJoin = function() {
+  window.checkFlagshipJoin = function () {
     const f = state.currentLesson.step_3.flagship;
     const target = document.getElementById('join-target');
     const placed = target.querySelectorAll('.join-block');
@@ -2672,7 +2673,7 @@
     }
   };
 
-  window.resetFlagshipJoin = function() {
+  window.resetFlagshipJoin = function () {
     renderStep3();
     const r = document.getElementById('flagship-join-result');
     if (r) r.textContent = '';
@@ -2802,12 +2803,12 @@
       <table class="nf-table">
         <thead><tr>${(before.columns || []).map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
         <tbody>${(before.rows || []).map((row, ri) =>
-          `<tr>${row.map((cell, ci) => {
-            const v = (before.violations || {})[`${ri}-${ci}`];
-            const cls = v ? 'violation' : '';
-            return `<td class="${cls}">${escapeHtml(String(cell))}${v ? ` ⚠️` : ''}</td>`;
-          }).join('')}</tr>`
-        ).join('')}</tbody>
+      `<tr>${row.map((cell, ci) => {
+        const v = (before.violations || {})[`${ri}-${ci}`];
+        const cls = v ? 'violation' : '';
+        return `<td class="${cls}">${escapeHtml(String(cell))}${v ? ` ⚠️` : ''}</td>`;
+      }).join('')}</tr>`
+    ).join('')}</tbody>
       </table>
     </div>`;
     html += `<div class="nf-arrow"><i class="fa-solid fa-arrow-right"></i></div>`;
@@ -2816,12 +2817,12 @@
       <table class="nf-table">
         <thead><tr>${(after.columns || []).map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
         <tbody>${(after.rows || []).map((row, ri) =>
-          `<tr>${row.map((cell, ci) => {
-            const f = (after.fixes || {})[`${ri}-${ci}`];
-            const cls = f ? 'fixed' : '';
-            return `<td class="${cls}">${escapeHtml(String(cell))}${f ? ` ✓` : ''}</td>`;
-          }).join('')}</tr>`
-        ).join('')}</tbody>
+      `<tr>${row.map((cell, ci) => {
+        const f = (after.fixes || {})[`${ri}-${ci}`];
+        const cls = f ? 'fixed' : '';
+        return `<td class="${cls}">${escapeHtml(String(cell))}${f ? ` ✓` : ''}</td>`;
+      }).join('')}</tr>`
+    ).join('')}</tbody>
       </table>
     </div>`;
     if (d.note) {
@@ -2861,6 +2862,7 @@
   // Data: { type:'match', title, instruction, pairs:[{left,right}], solution:{leftId:rightId} }
   function renderMiniGameMatch(container, mg) {
     if (!container || !mg) return;
+    container.hidden = false;
     const pairs = mg.pairs || [];
     // Shuffle right column for game
     const rights = pairs.map(p => p.right).slice();
@@ -2882,6 +2884,7 @@
         <div class="mg-match-col mg-match-right" id="mg-match-right">
           ${rights.map(r => `<div class="mg-match-item" data-right-id="${escapeHtml(r.id || r)}">${escapeHtml(r.label || r)}</div>`).join('')}
         </div>
+        <svg class="mg-match-svg" id="mg-match-svg"></svg>
       </div>
       <div id="mg-match-feedback" class="mg-match-feedback" style="display:none;"></div>
       <div style="margin-top:12px;display:flex;gap:8px;">
@@ -2890,6 +2893,28 @@
       </div>
     </div>`;
     container.innerHTML = html;
+
+    // Draw SVG line between two elements
+    function drawMatchLine(leftEl, rightEl) {
+      const svg = container.querySelector('#mg-match-svg');
+      const board = container.querySelector('.mg-match-board');
+      const boardRect = board.getBoundingClientRect();
+      const leftRect = leftEl.getBoundingClientRect();
+      const rightRect = rightEl.getBoundingClientRect();
+
+      const x1 = leftRect.right - boardRect.left;
+      const y1 = leftRect.top + leftRect.height / 2 - boardRect.top;
+      const x2 = rightRect.left - boardRect.left;
+      const y2 = rightRect.top + rightRect.height / 2 - boardRect.top;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('class', 'matched');
+      svg.appendChild(line);
+    }
 
     // Wire up click
     container.querySelectorAll('#mg-match-left .mg-match-item').forEach(el => {
@@ -2908,11 +2933,15 @@
           return;
         }
         matches[selectedLeft] = el.dataset.rightId;
-        // Visual hint: highlight pair
+
+        // Add matched class and draw line
         const leftEl = container.querySelector(`#mg-match-left .mg-match-item[data-left-id="${selectedLeft}"]`);
-        leftEl.style.outline = '2px solid var(--primary)';
-        el.style.outline = '2px solid var(--primary)';
-        setTimeout(() => { leftEl.style.outline = ''; el.style.outline = ''; }, 600);
+        leftEl.classList.add('matched');
+        el.classList.add('matched');
+
+        // Draw the connecting line
+        drawMatchLine(leftEl, el);
+
         selectedLeft = null;
         container.querySelectorAll('#mg-match-left .mg-match-item.selected').forEach(s => s.classList.remove('selected'));
       });
@@ -2926,8 +2955,6 @@
         if (sol[leftId] === matches[leftId]) correctCount++;
       });
       if (allCorrect && correctCount === pairs.length) {
-        // Mark all matched
-        container.querySelectorAll('.mg-match-item').forEach(el => el.classList.add('matched'));
         showMiniFeedback(container, 'mg-match-feedback', true, `Hoàn hảo! Nối đúng ${correctCount}/${pairs.length} cặp. +${mg.xp || 20} XP`);
         awardXP(mg.xp || 20);
       } else {
@@ -2941,6 +2968,7 @@
   // Data: { type:'order', title, instruction, items:[{id,label}], solution:{id:order} }
   function renderMiniGameOrder(container, mg) {
     if (!container || !mg) return;
+    container.hidden = false;
     const items = (mg.items || []).slice();
     // Shuffle
     for (let i = items.length - 1; i > 0; i--) {
@@ -3025,6 +3053,7 @@
   // Data: { type:'bug_spot', title, instruction, code:'SELECT * FORM...', bugs:[{line, char, type, description}], xp }
   function renderMiniGameBugSpot(container, mg) {
     if (!container || !mg) return;
+    container.hidden = false;
     const code = mg.code || '';
     const lines = code.split('\n');
     let selectedLine = null;
@@ -3034,8 +3063,8 @@
       <div class="mini-game-instr">${mg.instruction || 'Click vào dòng code có lỗi.'}</div>
       <div class="mg-bugspot-instr"><strong>Số dòng:</strong> ${lines.length} · <strong>Loại lỗi cần tìm:</strong> ${escapeHtml(mg.bugType || 'syntax')}</div>
       <div class="mg-bugspot-code">${lines.map((ln, i) =>
-        `<div class="mg-bugspot-line" data-line="${i + 1}"><span class="mg-bugspot-lineno">${i + 1}</span><span>${escapeHtml(ln) || '&nbsp;'}</span></div>`
-      ).join('')}</div>
+      `<div class="mg-bugspot-line" data-line="${i + 1}"><span class="mg-bugspot-lineno">${i + 1}</span><span>${escapeHtml(ln) || '&nbsp;'}</span></div>`
+    ).join('')}</div>
       <div class="mg-bugspot-actions" style="margin-top:10px;">
         <button class="mg-bugspot-btn" id="mg-bug-check">Kiểm tra</button>
         <button class="mg-bugspot-btn secondary" id="mg-bug-reset">Làm lại</button>
@@ -3121,8 +3150,8 @@
             <table class="data-table">
               <thead><tr>${(tbl.columns || []).map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}</tr></thead>
               <tbody>${tblData.map(row => `<tr>${row.map((cell, i) =>
-                `<td class="${tbl.columns[i]?.key === 'PK' ? 'pk-cell' : ''}">${escapeHtml(String(cell))}</td>`
-              ).join('')}</tr>`).join('')}</tbody>
+        `<td class="${tbl.columns[i]?.key === 'PK' ? 'pk-cell' : ''}">${escapeHtml(String(cell))}</td>`
+      ).join('')}</tr>`).join('')}</tbody>
             </table>
           </div>
         ` : ''}
