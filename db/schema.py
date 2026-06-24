@@ -69,6 +69,17 @@ def init_db():
             tag          TEXT
         )''')
 
+        c.execute('''CREATE TABLE IF NOT EXISTS lessons (
+            id         SERIAL PRIMARY KEY,
+            course_id  TEXT REFERENCES courses(id) ON DELETE CASCADE,
+            module     TEXT      DEFAULT '',
+            title      TEXT NOT NULL,
+            content    TEXT      DEFAULT '',
+            sort_order INTEGER   DEFAULT 0,
+            created_at TIMESTAMP DEFAULT now()
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_lessons_course_id ON lessons(course_id)')
+
         c.execute('CREATE EXTENSION IF NOT EXISTS pg_trgm')
         c.execute('CREATE INDEX IF NOT EXISTS idx_courses_level ON courses(level)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_courses_title_trgm ON courses USING gin(title gin_trgm_ops)')

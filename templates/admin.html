@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản trị | Programming EDU</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0; background: #0f172a; color: #e2e8f0;
+    }
+    header {
+      background: #1e293b; padding: 16px 24px; display: flex;
+      align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+    header h1 { font-size: 18px; margin: 0; }
+    header a { color: #94a3b8; text-decoration: none; font-size: 14px; }
+    .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px; }
+    @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+    section {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; padding: 20px;
+    }
+    section h2 { margin: 0 0 16px; font-size: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; font-weight: 600; }
+    tr.sel { background: #334155; }
+    tr[data-course] { cursor: pointer; }
+    input, textarea {
+      width: 100%; padding: 8px 10px; margin: 4px 0; background: #0f172a;
+      border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button {
+      padding: 7px 14px; border: none; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 600; margin-right: 6px;
+    }
+    .btn-primary { background: #6366f1; color: #fff; }
+    .btn-danger  { background: #ef4444; color: #fff; }
+    .btn-ghost   { background: #334155; color: #e2e8f0; }
+    .hint { color: #64748b; font-size: 13px; margin: 4px 0 14px; }
+    .form-box { margin-top: 16px; padding-top: 16px; border-top: 1px solid #334155; }
+    .form-box h3 { font-size: 14px; margin: 0 0 8px; }
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #334155; padding: 10px 18px; border-radius: 8px;
+      font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠️ Trang quản trị</h1>
+    <a href="/dashboard">← Về dashboard</a>
+  </header>
+
+  <div class="wrap">
+    <!-- KHÓA HỌC -->
+    <section>
+      <h2>Khóa học</h2>
+      <table>
+        <thead><tr><th>Id</th><th>Tiêu đề</th><th>Bài</th><th></th></tr></thead>
+        <tbody id="courseRows"></tbody>
+      </table>
+
+      <div class="form-box">
+        <h3 id="courseFormTitle">Thêm khóa học</h3>
+        <input id="cId" placeholder="id (vd: python)">
+        <input id="cTitle" placeholder="Tiêu đề">
+        <input id="cSubtitle" placeholder="Phụ đề">
+        <textarea id="cDescription" placeholder="Mô tả"></textarea>
+        <div class="row">
+          <input id="cLevel" placeholder="Cấp độ">
+          <input id="cDuration" placeholder="Thời lượng">
+        </div>
+        <div class="row">
+          <input id="cTag" placeholder="Tag">
+          <input id="cImage" placeholder="Đường dẫn ảnh">
+        </div>
+        <div class="row">
+          <input id="cColor" placeholder="color">
+          <input id="cAccentColor" placeholder="accent_color">
+        </div>
+        <button class="btn-primary" onclick="saveCourse()">Lưu</button>
+        <button class="btn-ghost" onclick="resetCourseForm()">Hủy</button>
+      </div>
+    </section>
+
+    <!-- BÀI GIẢNG -->
+    <section>
+      <h2 id="lessonTitle">Bài giảng</h2>
+      <p class="hint" id="lessonHint">Chọn một khóa học để xem bài giảng.</p>
+      <table>
+        <thead><tr><th>#</th><th>Module</th><th>Tiêu đề</th><th></th></tr></thead>
+        <tbody id="lessonRows"></tbody>
+      </table>
+
+      <div class="form-box" id="lessonFormBox" style="display:none">
+        <h3 id="lessonFormTitle">Thêm bài giảng</h3>
+        <input id="lModule" placeholder="Module">
+        <input id="lLessonTitle" placeholder="Tiêu đề bài giảng">
+        <textarea id="lContent" placeholder="Nội dung"></textarea>
+        <input id="lSort" type="number" placeholder="Thứ tự" value="0">
+        <button class="btn-primary" onclick="saveLesson()">Lưu</button>
+        <button class="btn-ghost" onclick="resetLessonForm()">Hủy</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    let editCourseId = null;   // null = đang tạo mới
+    let editLessonId = null;
+    let activeCourse = null;   // course_id đang xem bài giảng
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    async function api(url, opts) {
+      const res = await fetch(url, opts);
+      let data = {};
+      try { data = await res.json(); } catch (e) {}
+      if (!res.ok) throw new Error(data.error || 'Lỗi không xác định');
+      return data;
+    }
+
+    // ───── Khóa học ─────
+    async function loadCourses() {
+      const { courses } = await api('/api/admin/courses');
+      const tb = document.getElementById('courseRows');
+      tb.innerHTML = '';
+      courses.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.dataset.course = c.id;
+        if (c.id === activeCourse) tr.classList.add('sel');
+        tr.innerHTML = `
+          <td>${esc(c.id)}</td>
+          <td>${esc(c.title || '')}</td>
+          <td>${c.lessons ?? 0}</td>
+          <td style="white-space:nowrap">
+            <button class="btn-ghost" onclick="editCourse(event, '${esc(c.id)}')">Sửa</button>
+            <button class="btn-danger" onclick="delCourse(event, '${esc(c.id)}')">Xóa</button>
+          </td>`;
+        tr.onclick = () => selectCourse(c.id, c.title);
+        tr.dataset.json = JSON.stringify(c);
+        tb.appendChild(tr);
+      });
+    }
+
+    async function saveCourse() {
+      const body = {
+        id: val('cId'), title: val('cTitle'), subtitle: val('cSubtitle'),
+        description: val('cDescription'), level: val('cLevel'),
+        duration: val('cDuration'), tag: val('cTag'), image: val('cImage'),
+        color: val('cColor'), accent_color: val('cAccentColor'),
+      };
+      try {
+        if (editCourseId) {
+          await api('/api/admin/courses/' + encodeURIComponent(editCourseId), {
+            method: 'PUT', headers: json(), body: JSON.stringify(body)
+          });
+          toast('Đã cập nhật khóa học');
+        } else {
+          await api('/api/admin/courses', {
+            method: 'POST', headers: json(), body: JSON.stringify(body)
+          });
+          toast('Đã thêm khóa học');
+        }
+        resetCourseForm();
+        loadCourses();
+      } catch (e) { toast(e.message); }
+    }
+
+    function editCourse(ev, id) {
+      ev.stopPropagation();
+      const tr = document.querySelector(`tr[data-course="${id}"]`);
+      const c = JSON.parse(tr.dataset.json);
+      editCourseId = id;
+      document.getElementById('courseFormTitle').textContent = 'Sửa khóa học: ' + id;
+      set('cId', c.id); document.getElementById('cId').disabled = true;
+      set('cTitle', c.title); set('cSubtitle', c.subtitle); set('cDescription', c.description);
+      set('cLevel', c.level); set('cDuration', c.duration); set('cTag', c.tag);
+      set('cImage', c.image); set('cColor', c.color); set('cAccentColor', c.accent_color);
+    }
+
+    async function delCourse(ev, id) {
+      ev.stopPropagation();
+      if (!confirm('Xóa khóa học "' + id + '"? Toàn bộ bài giảng của khóa cũng bị xóa.')) return;
+      try {
+        await api('/api/admin/courses/' + encodeURIComponent(id), { method: 'DELETE' });
+        toast('Đã xóa khóa học');
+        if (activeCourse === id) clearLessons();
+        loadCourses();
+      } catch (e) { toast(e.message); }
+    }
+
+    function resetCourseForm() {
+      editCourseId = null;
+      document.getElementById('courseFormTitle').textContent = 'Thêm khóa học';
+      document.getElementById('cId').disabled = false;
+      ['cId','cTitle','cSubtitle','cDescription','cLevel','cDuration','cTag','cImage','cColor','cAccentColor']
+        .forEach(id => set(id, ''));
+    }
+
+    // ───── Bài giảng ─────
+    function selectCourse(id, title) {
+      activeCourse = id;
+      document.querySelectorAll('tr[data-course]').forEach(tr =>
+        tr.classList.toggle('sel', tr.dataset.course === id));
+      document.getElementById('lessonTitle').textContent = 'Bài giảng — ' + (title || id);
+      document.getElementById('lessonHint').style.display = 'none';
+      document.getElementById('lessonFormBox').style.display = 'block';
+      resetLessonForm();
+      loadLessons();
+    }
+
+    function clearLessons() {
+      activeCourse = null;
+      document.getElementById('lessonRows').innerHTML = '';
+      document.getElementById('lessonTitle').textContent = 'Bài giảng';
+      document.getElementById('lessonHint').style.display = 'block';
+      document.getElementById('lessonFormBox').style.display = 'none';
+    }
+
+    async function loadLessons() {
+      const { lessons } = await api('/api/admin/courses/' + encodeURIComponent(activeCourse) + '/lessons');
+      const tb = document.getElementById('lessonRows');
+      tb.innerHTML = '';
+      lessons.forEach(l => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${l.sort_order ?? 0}</td>
+          <td>${esc(l.module || '')}</td>
+          <td>${esc(l.title || '')}</td>
+          <td style="white-space:nowrap">
+            <button class="btn-ghost" onclick="editLesson(${l.id})">Sửa</button>
+            <button class="btn-danger" onclick="delLesson(${l.id})">Xóa</button>
+          </td>`;
+        tr.dataset.json = JSON.stringify(l);
+        tb.appendChild(tr);
+      });
+    }
+
+    async function saveLesson() {
+      const body = {
+        course_id: activeCourse, module: val('lModule'),
+        title: val('lLessonTitle'), content: val('lContent'),
+        sort_order: parseInt(val('lSort') || '0', 10),
+      };
+      try {
+        if (editLessonId) {
+          await api('/api/admin/lessons/' + editLessonId, {
+            method: 'PUT', headers: json(), body: JSON.stringify(body)
+          });
+          toast('Đã cập nhật bài giảng');
+        } else {
+          await api('/api/admin/lessons', {
+            method: 'POST', headers: json(), body: JSON.stringify(body)
+          });
+          toast('Đã thêm bài giảng');
+        }
+        resetLessonForm();
+        loadLessons();
+        loadCourses();
+      } catch (e) { toast(e.message); }
+    }
+
+    function editLesson(id) {
+      const tr = [...document.querySelectorAll('#lessonRows tr')]
+        .find(t => JSON.parse(t.dataset.json).id === id);
+      const l = JSON.parse(tr.dataset.json);
+      editLessonId = id;
+      document.getElementById('lessonFormTitle').textContent = 'Sửa bài giảng';
+      set('lModule', l.module); set('lLessonTitle', l.title);
+      set('lContent', l.content); set('lSort', l.sort_order ?? 0);
+    }
+
+    async function delLesson(id) {
+      if (!confirm('Xóa bài giảng này?')) return;
+      try {
+        await api('/api/admin/lessons/' + id, { method: 'DELETE' });
+        toast('Đã xóa bài giảng');
+        loadLessons();
+        loadCourses();
+      } catch (e) { toast(e.message); }
+    }
+
+    function resetLessonForm() {
+      editLessonId = null;
+      document.getElementById('lessonFormTitle').textContent = 'Thêm bài giảng';
+      ['lModule','lLessonTitle','lContent'].forEach(id => set(id, ''));
+      set('lSort', '0');
+    }
+
+    // ───── Helpers ─────
+    function val(id) { return document.getElementById(id).value.trim(); }
+    function set(id, v) { document.getElementById(id).value = v == null ? '' : v; }
+    function json() { return { 'Content-Type': 'application/json' }; }
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, m =>
+        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    loadCourses();
+  </script>
+</body>
+</html>

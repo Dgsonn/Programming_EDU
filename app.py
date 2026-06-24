@@ -6,7 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from config import Config, ALLOWED_ORIGINS
 from extensions import limiter
-from db import init_db
+from db import init_db, start_keepalive
 from routes import register_blueprints
 from routes.auth import auth_bp
 from routes.oauth import google_bp, facebook_bp, _oauth_callback
@@ -38,6 +38,8 @@ csrf.exempt(google_bp)
 csrf.exempt(facebook_bp)
 csrf.exempt(_oauth_callback)
 init_db()
+# Giữ compute Neon luôn "ấm" để tránh cold-start 5-10s ở request đầu sau khi idle.
+start_keepalive()
 
 # ── Logger dùng trong module này ───────────────────────────────────────────
 logger = logging.getLogger(__name__)
