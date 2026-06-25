@@ -5,7 +5,7 @@
 /* ── User avatar dropdown ── */
 function toggleUserMenu() {
   var wrap = document.getElementById('user-chip-wrap');
-  var btn  = document.getElementById('user-chip-btn');
+  var btn = document.getElementById('user-chip-btn');
   var menu = document.getElementById('user-dropdown');
   var open = menu.classList.contains('open');
   if (open) {
@@ -20,25 +20,25 @@ function toggleUserMenu() {
 }
 
 function closeUserMenu() {
-  var btn  = document.getElementById('user-chip-btn');
+  var btn = document.getElementById('user-chip-btn');
   var menu = document.getElementById('user-dropdown');
   menu.classList.remove('open');
   btn.classList.remove('open');
   btn.setAttribute('aria-expanded', 'false');
 }
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   var wrap = document.getElementById('user-chip-wrap');
   if (wrap && !wrap.contains(e.target)) closeUserMenu();
 });
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') closeUserMenu();
 });
 
 /* Sync tên hiển thị trong dropdown header khi mở */
 var _origToggleUserMenu = toggleUserMenu;
-toggleUserMenu = function() {
+toggleUserMenu = function () {
   var n = document.getElementById('chip-name');
   var d = document.getElementById('udh-name');
   if (n && d) d.textContent = n.textContent;
@@ -61,7 +61,7 @@ function _renderBellItems() {
     body.innerHTML = '<div class="bell-empty"><div class="bell-empty-icon">🔕</div><div>Chưa có thông báo nào</div></div>';
     return;
   }
-  body.innerHTML = _bellNotifs.map(function(n, i) {
+  body.innerHTML = _bellNotifs.map(function (n, i) {
     return '<div class="bell-item' + (n.unread ? ' unread' : '') + '" onclick="readBellItem(' + i + ')" role="menuitem" tabindex="0">'
       + '<div class="bell-item-icon">' + n.icon + '</div>'
       + '<div class="bell-item-body">'
@@ -76,14 +76,14 @@ function _renderBellItems() {
 function _updateBellDot() {
   var dot = document.getElementById('bell-dot');
   if (!dot) return;
-  var hasUnread = _bellNotifs.some(function(n) { return n.unread; });
+  var hasUnread = _bellNotifs.some(function (n) { return n.unread; });
   dot.style.display = hasUnread ? '' : 'none';
 }
 
 function toggleBellPanel() {
   var panel = document.getElementById('bell-panel');
-  var btn   = document.getElementById('bell-btn');
-  var open  = panel.classList.contains('open');
+  var btn = document.getElementById('bell-btn');
+  var open = panel.classList.contains('open');
   if (open) {
     panel.classList.remove('open');
     btn.setAttribute('aria-expanded', 'false');
@@ -97,9 +97,9 @@ function toggleBellPanel() {
 
 function closeBellPanel() {
   var panel = document.getElementById('bell-panel');
-  var btn   = document.getElementById('bell-btn');
+  var btn = document.getElementById('bell-btn');
   if (panel) panel.classList.remove('open');
-  if (btn)   btn.setAttribute('aria-expanded', 'false');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
 function readBellItem(idx) {
@@ -111,16 +111,16 @@ function readBellItem(idx) {
 }
 
 function markAllBellRead() {
-  _bellNotifs.forEach(function(n) { n.unread = false; });
+  _bellNotifs.forEach(function (n) { n.unread = false; });
   _renderBellItems();
   _updateBellDot();
 }
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   var wrap = document.getElementById('bell-wrap');
   if (wrap && !wrap.contains(e.target)) closeBellPanel();
 });
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') closeBellPanel();
 });
 
@@ -331,7 +331,7 @@ function skSkillToggle(row) {
     var bg = 'conic-gradient(' + color + ' ' + pct + '%, #E5E7EB ' + pct + '% 100%)';
     return '<div class="sk-donut" style="background:' + bg + '">' +
       '<div class="sk-donut-inner"><span class="sk-donut-pct">' + pct + '%</span></div>' +
-    '</div>';
+      '</div>';
   }
 
   function renderSkills(data) {
@@ -367,34 +367,34 @@ function skSkillToggle(row) {
         }).join('');
         return '<div class="sk-skill">' +
           '<div class="sk-skill-row" onclick="skSkillToggle(this)">' +
-            '<div class="sk-skill-top">' +
-              '<span class="sk-skill-name">' + sk.title + '</span>' +
-              '<span class="sk-skill-pct">' + sk.progress + '%</span>' +
-              badge(sk.progress) +
-            '</div>' +
-            '<div class="sk-skill-bar-wrap">' +
-              '<div class="sk-skill-bar"><div class="sk-skill-fill" style="width:' + sk.progress + '%;background:' + fillColor(sk.progress) + '"></div></div>' +
-            '</div>' +
+          '<div class="sk-skill-top">' +
+          '<span class="sk-skill-name">' + sk.title + '</span>' +
+          '<span class="sk-skill-pct">' + sk.progress + '%</span>' +
+          badge(sk.progress) +
+          '</div>' +
+          '<div class="sk-skill-bar-wrap">' +
+          '<div class="sk-skill-bar"><div class="sk-skill-fill" style="width:' + sk.progress + '%;background:' + fillColor(sk.progress) + '"></div></div>' +
+          '</div>' +
           '</div>' +
           '<div class="sk-sub-list" style="display:none">' + subItems + '</div>' +
-        '</div>';
+          '</div>';
       }).join('');
 
-      var setAchieved = bs.skills.filter(function(sk){ return sk.progress >= 70; }).length;
+      var setAchieved = bs.skills.filter(function (sk) { return sk.progress >= 70; }).length;
       var setTotal = bs.skills.length;
       return '<div class="sk-set">' +
         '<div class="sk-set-hd" onclick="skSetToggle(this)">' +
-          '<span class="sk-set-icon">' + bs.icon + '</span>' +
-          '<div class="sk-set-info">' +
-            '<div class="sk-set-title">' + bs.title + '</div>' +
-            '<div class="sk-set-meta">' + setAchieved + '/' + setTotal + ' kỹ năng đạt</div>' +
-          '</div>' +
-          badge(bs.progress) +
-          donutChart(bs.progress) +
-          '<span class="sk-arrow">▶</span>' +
+        '<span class="sk-set-icon">' + bs.icon + '</span>' +
+        '<div class="sk-set-info">' +
+        '<div class="sk-set-title">' + bs.title + '</div>' +
+        '<div class="sk-set-meta">' + setAchieved + '/' + setTotal + ' kỹ năng đạt</div>' +
+        '</div>' +
+        badge(bs.progress) +
+        donutChart(bs.progress) +
+        '<span class="sk-arrow">▶</span>' +
         '</div>' +
         '<div class="sk-body" style="display:none">' + skillRows + '</div>' +
-      '</div>';
+        '</div>';
     }).join('');
   }
 
@@ -422,7 +422,7 @@ function skSkillToggle(row) {
           renderEduInteractiveRoadmap();
         }
       } else if (typeof loadEduRoadmaps === 'function') {
-        loadEduRoadmaps().then(function() { renderEduInteractiveRoadmap(); });
+        loadEduRoadmaps().then(function () { renderEduInteractiveRoadmap(); });
       }
     }
   };
@@ -436,19 +436,79 @@ function skSkillToggle(row) {
 
   var STORAGE_KEY = 'edu_forum_posts';
 
+  /* ── Forum API Layer ────────────────────────────────
+     Currently uses localStorage with mock data.
+     Ready to swap to real API by updating these functions.
+  ─────────────────────────────────────────────────── */
+  var forumApi = {
+    getPosts: function () {
+      // TODO: Replace with real API call
+      // return fetch('/api/forum/posts').then(r => r.json());
+      return Promise.resolve().then(function () {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      });
+    },
+
+    createPost: function (postData) {
+      // TODO: Replace with real API call
+      // return fetch('/api/forum/posts', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(postData)
+      // }).then(r => r.json());
+      return Promise.resolve().then(function () {
+        var posts = [];
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          posts = raw ? JSON.parse(raw) : [];
+        } catch (e) { }
+        posts.unshift(postData);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+        return postData;
+      });
+    },
+
+    react: function (postId, reactionKey) {
+      // TODO: Replace with real API call
+      // return fetch('/api/forum/posts/' + postId + '/react', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ reaction: reactionKey })
+      // }).then(r => r.json());
+      return Promise.resolve({ success: true });
+    },
+
+    addComment: function (postId, comment) {
+      // TODO: Replace with real API call
+      // return fetch('/api/forum/posts/' + postId + '/comments', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(comment)
+      // }).then(r => r.json());
+      return Promise.resolve(comment);
+    },
+
+    deletePost: function (postId) {
+      // TODO: Replace with real API call
+      // return fetch('/api/forum/posts/' + postId, { method: 'DELETE' }).then(r => r.json());
+      return Promise.resolve({ success: true });
+    }
+  };
+
   var CAT_LABELS = { question: '❓ Câu hỏi', share: '💡 Chia sẻ', discuss: '🗣️ Thảo luận' };
   var CAT_COLORS = { question: '#3B82F6', share: '#10B981', discuss: '#8B5CF6' };
-  var CAT_BG     = { question: '#EFF6FF', share: '#ECFDF5', discuss: '#F5F3FF' };
+  var CAT_BG = { question: '#EFF6FF', share: '#ECFDF5', discuss: '#F5F3FF' };
 
-  var REACT_EMOJIS  = { like:'👍', love:'❤️', haha:'😂', wow:'😮', sad:'😢', angry:'😡' };
-  var REACT_LABELS  = { like:'Thích', love:'Yêu thích', haha:'Haha', wow:'Wow', sad:'Buồn', angry:'Phẫn nộ' };
+  var REACT_EMOJIS = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+  var REACT_LABELS = { like: 'Thích', love: 'Yêu thích', haha: 'Haha', wow: 'Wow', sad: 'Buồn', angry: 'Phẫn nộ' };
 
   var _forumMediaFiles = [];
 
-  var _currentCat  = 'all';
+  var _currentCat = 'all';
   var _currentSort = 'newest';
   var _selectedCat = 'question';
-  var _cmtSortMap  = {};
+  var _cmtSortMap = {};
 
   var MOCK_POSTS = [
     {
@@ -460,9 +520,9 @@ function skSkillToggle(row) {
       reactions: { like: 10, love: 2, haha: 0, wow: 2, sad: 0, angry: 0 }, myReaction: null,
       comments: 3,
       commentList: [
-        { id: 'c1a', author: 'Nguyễn Văn An', avatar: '👨‍💻', time: Date.now() - 100*60*1000, text: 'Con trỏ đôi về bản chất là một con trỏ trỏ tới một con trỏ khác. Bạn thử hình dung bộ nhớ như một dãy ô, mỗi ô có địa chỉ riêng — con trỏ chỉ là biến lưu địa chỉ đó thôi!', reactions:{like:4,love:1,haha:0,wow:0,sad:0,angry:0}, myReaction:null, replies:[{id:'r1a',author:'Trần Minh Tuấn',avatar:'🧑‍💻',time:Date.now()-85*60*1000,text:'Cảm ơn bạn! Cách so sánh với dãy ô bộ nhớ dễ hình dung lắm, mình hiểu ngay rồi!',replyTo:'Nguyễn Văn An'}] },
-        { id: 'c1b', author: 'Lê Thị Hoa', avatar: '👩‍🏫', time: Date.now() - 60*60*1000, text: 'Mình học từ sách "C Programming Language" của Kernighan & Ritchie, phần con trỏ giải thích rất trực quan. Bạn nên thử debug từng bước để thấy giá trị thay đổi.', reactions:{like:2,love:0,haha:0,wow:1,sad:0,angry:0}, myReaction:null, replies:[] },
-        { id: 'c1c', author: 'Phạm Đức Huy', avatar: '🧑‍🎓', time: Date.now() - 20*60*1000, text: 'Series C++ của The Cherno trên YouTube giải thích con trỏ bằng hình ảnh rất dễ hiểu. Mình đã học từ đó và hiểu ngay sau 2 video!', reactions:{like:6,love:2,haha:0,wow:0,sad:0,angry:0}, myReaction:null, replies:[] },
+        { id: 'c1a', author: 'Nguyễn Văn An', avatar: '👨‍💻', time: Date.now() - 100 * 60 * 1000, text: 'Con trỏ đôi về bản chất là một con trỏ trỏ tới một con trỏ khác. Bạn thử hình dung bộ nhớ như một dãy ô, mỗi ô có địa chỉ riêng — con trỏ chỉ là biến lưu địa chỉ đó thôi!', reactions: { like: 4, love: 1, haha: 0, wow: 0, sad: 0, angry: 0 }, myReaction: null, replies: [{ id: 'r1a', author: 'Trần Minh Tuấn', avatar: '🧑‍💻', time: Date.now() - 85 * 60 * 1000, text: 'Cảm ơn bạn! Cách so sánh với dãy ô bộ nhớ dễ hình dung lắm, mình hiểu ngay rồi!', replyTo: 'Nguyễn Văn An' }] },
+        { id: 'c1b', author: 'Lê Thị Hoa', avatar: '👩‍🏫', time: Date.now() - 60 * 60 * 1000, text: 'Mình học từ sách "C Programming Language" của Kernighan & Ritchie, phần con trỏ giải thích rất trực quan. Bạn nên thử debug từng bước để thấy giá trị thay đổi.', reactions: { like: 2, love: 0, haha: 0, wow: 1, sad: 0, angry: 0 }, myReaction: null, replies: [] },
+        { id: 'c1c', author: 'Phạm Đức Huy', avatar: '🧑‍🎓', time: Date.now() - 20 * 60 * 1000, text: 'Series C++ của The Cherno trên YouTube giải thích con trỏ bằng hình ảnh rất dễ hiểu. Mình đã học từ đó và hiểu ngay sau 2 video!', reactions: { like: 6, love: 2, haha: 0, wow: 0, sad: 0, angry: 0 }, myReaction: null, replies: [] },
       ],
     },
     {
@@ -474,8 +534,8 @@ function skSkillToggle(row) {
       reactions: { like: 25, love: 7, haha: 0, wow: 0, sad: 0, angry: 0 }, myReaction: null,
       comments: 2,
       commentList: [
-        { id: 'c2a', author: 'Trần Bình', avatar: '🧑‍💻', time: Date.now() - 3*3600*1000, text: 'Mình thêm GitLens vào danh sách nhé, siêu hữu ích khi làm việc nhóm, xem ai commit gì ngay trong editor.' },
-        { id: 'c2b', author: 'Mai Anh', avatar: '👩‍🎓', time: Date.now() - 1*3600*1000, text: 'Docker extension cũng rất tiện nếu bạn hay dùng container. Quản lý image và container ngay trong VSCode luôn.' },
+        { id: 'c2a', author: 'Trần Bình', avatar: '🧑‍💻', time: Date.now() - 3 * 3600 * 1000, text: 'Mình thêm GitLens vào danh sách nhé, siêu hữu ích khi làm việc nhóm, xem ai commit gì ngay trong editor.' },
+        { id: 'c2b', author: 'Mai Anh', avatar: '👩‍🎓', time: Date.now() - 1 * 3600 * 1000, text: 'Docker extension cũng rất tiện nếu bạn hay dùng container. Quản lý image và container ngay trong VSCode luôn.' },
       ],
     },
     {
@@ -487,9 +547,9 @@ function skSkillToggle(row) {
       reactions: { like: 14, love: 3, haha: 1, wow: 3, sad: 0, angry: 0 }, myReaction: null,
       comments: 3,
       commentList: [
-        { id: 'c3a', author: 'Hoàng Nam', avatar: '👨‍💻', time: Date.now() - 20*3600*1000, text: 'Python chắc chắn rồi! Hầu hết thư viện ML như TensorFlow, PyTorch, scikit-learn đều Python-first. Java không có hệ sinh thái ML mạnh như vậy.' },
-        { id: 'c3b', author: 'Thu Hương', avatar: '👩‍💻', time: Date.now() - 15*3600*1000, text: 'Mình cũng từng phân vân như bạn, cuối cùng chọn Python và không hối hận. NumPy + Pandas là bộ đôi không thể thiếu, học Python để dùng được 2 thư viện này.' },
-        { id: 'c3c', author: 'Việt Anh', avatar: '🧑', time: Date.now() - 5*3600*1000, text: 'Java mạnh về enterprise và Android, nhưng cho ML thì Python win tuyệt đối. Bắt đầu Python đi bạn, 2-3 tháng là dùng được thư viện cơ bản rồi.' },
+        { id: 'c3a', author: 'Hoàng Nam', avatar: '👨‍💻', time: Date.now() - 20 * 3600 * 1000, text: 'Python chắc chắn rồi! Hầu hết thư viện ML như TensorFlow, PyTorch, scikit-learn đều Python-first. Java không có hệ sinh thái ML mạnh như vậy.' },
+        { id: 'c3b', author: 'Thu Hương', avatar: '👩‍💻', time: Date.now() - 15 * 3600 * 1000, text: 'Mình cũng từng phân vân như bạn, cuối cùng chọn Python và không hối hận. NumPy + Pandas là bộ đôi không thể thiếu, học Python để dùng được 2 thư viện này.' },
+        { id: 'c3c', author: 'Việt Anh', avatar: '🧑', time: Date.now() - 5 * 3600 * 1000, text: 'Java mạnh về enterprise và Android, nhưng cho ML thì Python win tuyệt đối. Bắt đầu Python đi bạn, 2-3 tháng là dùng được thư viện cơ bản rồi.' },
       ],
     },
     {
@@ -501,8 +561,8 @@ function skSkillToggle(row) {
       reactions: { like: 30, love: 12, haha: 0, wow: 5, sad: 0, angry: 0 }, myReaction: null,
       comments: 2,
       commentList: [
-        { id: 'c4a', author: 'Minh Khoa', avatar: '🧑‍💻', time: Date.now() - 40*3600*1000, text: 'Chúc mừng bạn! 3 tuần là rất nhanh đó. Bước tiếp theo bạn định học JavaScript hay framework nào không?' },
-        { id: 'c4b', author: 'Ngọc Linh', avatar: '👩‍🎓', time: Date.now() - 30*3600*1000, text: 'Làm project nhỏ sau mỗi bài là cách hay nhất để nhớ kiến thức lâu dài. Mình cũng áp dụng phương pháp này và tiến bộ rất nhanh!' },
+        { id: 'c4a', author: 'Minh Khoa', avatar: '🧑‍💻', time: Date.now() - 40 * 3600 * 1000, text: 'Chúc mừng bạn! 3 tuần là rất nhanh đó. Bước tiếp theo bạn định học JavaScript hay framework nào không?' },
+        { id: 'c4b', author: 'Ngọc Linh', avatar: '👩‍🎓', time: Date.now() - 30 * 3600 * 1000, text: 'Làm project nhỏ sau mỗi bài là cách hay nhất để nhớ kiến thức lâu dài. Mình cũng áp dụng phương pháp này và tiến bộ rất nhanh!' },
       ],
     },
     {
@@ -514,52 +574,84 @@ function skSkillToggle(row) {
       reactions: { like: 7, love: 1, haha: 0, wow: 1, sad: 0, angry: 0 }, myReaction: null,
       comments: 2,
       commentList: [
-        { id: 'c5a', author: 'Đức Thịnh', avatar: '👨‍💻', time: Date.now() - 60*3600*1000, text: 'Merge giữ lại lịch sử đầy đủ, thích hợp cho feature branch lớn. Rebase tạo lịch sử linear sạch hơn, hay dùng trước khi merge vào main để commit gọn gàng.' },
-        { id: 'c5b', author: 'Khánh An', avatar: '👩‍💻', time: Date.now() - 48*3600*1000, text: 'Rule of thumb: không rebase nhánh public đã push lên remote vì sẽ thay đổi lịch sử ảnh hưởng người khác. Chỉ rebase nhánh local của mình thôi nhé!' },
+        { id: 'c5a', author: 'Đức Thịnh', avatar: '👨‍💻', time: Date.now() - 60 * 3600 * 1000, text: 'Merge giữ lại lịch sử đầy đủ, thích hợp cho feature branch lớn. Rebase tạo lịch sử linear sạch hơn, hay dùng trước khi merge vào main để commit gọn gàng.' },
+        { id: 'c5b', author: 'Khánh An', avatar: '👩‍💻', time: Date.now() - 48 * 3600 * 1000, text: 'Rule of thumb: không rebase nhánh public đã push lên remote vì sẽ thay đổi lịch sử ảnh hưởng người khác. Chỉ rebase nhánh local của mình thôi nhé!' },
       ],
     },
   ];
 
   function loadPosts() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) { return []; }
+    // Returns Promise - use async/await or .then()
+    return forumApi.getPosts();
   }
 
   function savePosts(posts) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); } catch (e) {}
+    // Returns Promise - use async/await or .then()
+    if (!posts.length) return Promise.resolve();
+    return forumApi.createPost(posts[0]); // Save first user post
   }
 
   function allPosts() {
-    var user = loadPosts();
+    // NOTE: This is sync for backward compat with some functions.
+    // For async loading, use getAllPostsAsync() instead.
+    var user = [];
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      user = raw ? JSON.parse(raw) : [];
+    } catch (e) { }
     return MOCK_POSTS.concat(user);
   }
 
-  function filteredSorted() {
-    var posts = allPosts();
-    if (_currentCat !== 'all') posts = posts.filter(function(p){ return p.cat === _currentCat; });
+  // Async version - use this for API-first loading
+  function getAllPostsAsync() {
+    return loadPosts().then(function (userPosts) {
+      return MOCK_POSTS.concat(userPosts);
+    });
+  }
+
+  function filteredSorted(posts) {
+    if (_currentCat !== 'all') posts = posts.filter(function (p) { return p.cat === _currentCat; });
     var q = (typeof _forumTextQ !== 'undefined' && _forumTextQ) ? _forumTextQ : '';
-    if (q) posts = posts.filter(function(p){
+    if (q) posts = posts.filter(function (p) {
       return p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q);
     });
-    if (_currentSort === 'likes')   posts.sort(function(a,b){ return b.likes - a.likes; });
-    else if (_currentSort === 'oldest') posts.sort(function(a,b){ return a.time - b.time; });
-    else posts.sort(function(a,b){ return b.time - a.time; });
+    if (_currentSort === 'likes') posts.sort(function (a, b) { return (b.reactions?.like || 0) - (a.reactions?.like || 0); });
+    else if (_currentSort === 'oldest') posts.sort(function (a, b) { return a.time - b.time; });
+    else posts.sort(function (a, b) { return b.time - a.time; });
     return posts;
   }
 
   function timeAgo(ts) {
     var diff = Math.floor((Date.now() - ts) / 1000);
-    if (diff < 60)   return 'vừa xong';
-    if (diff < 3600) return Math.floor(diff/60) + ' phút trước';
-    if (diff < 86400) return Math.floor(diff/3600) + ' giờ trước';
-    return Math.floor(diff/86400) + ' ngày trước';
+    if (diff < 60) return 'vừa xong';
+    if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
+    return Math.floor(diff / 86400) + ' ngày trước';
+  }
+
+  // Reload posts from API and re-render
+  function reloadPosts() {
+    getAllPostsAsync().then(function (allP) {
+      var posts = filteredSorted(allP);
+      _renderPosts(posts);
+    });
   }
 
   function renderPosts() {
-    var posts = filteredSorted();
-    var list  = document.getElementById('forum-list');
+    // Show loading state
+    var list = document.getElementById('forum-list');
+    var empty = document.getElementById('forum-empty');
+    if (list) list.innerHTML = '<div class="forum-loading">Đang tải...</div>';
+
+    // Load from API (uses forumApi which can be swapped to real API)
+    getAllPostsAsync().then(function (allP) {
+      var posts = filteredSorted(allP);
+      _renderPosts(posts);
+    });
+  }
+
+  function _renderPosts(posts) {
+    var list = document.getElementById('forum-list');
     var empty = document.getElementById('forum-empty');
     if (!list) return;
 
@@ -570,33 +662,33 @@ function skSkillToggle(row) {
     }
     empty && empty.classList.add('hidden');
 
-    list.innerHTML = posts.map(function(p) {
+    list.innerHTML = posts.map(function (p) {
       var catColor = CAT_COLORS[p.cat] || '#6B7280';
-      var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
+      var catBg = CAT_BG[p.cat] || '#F3F4F6';
       var catLabel = CAT_LABELS[p.cat] || p.cat;
-      var excerpt  = p.body.length > 160 ? p.body.slice(0, 157) + '...' : p.body;
+      var excerpt = p.body.length > 160 ? p.body.slice(0, 157) + '...' : p.body;
 
-      var reactions   = p.reactions || { like: p.likes || 0 };
-      var myReaction  = p.myReaction || null;
-      var totalR      = Object.values(reactions).reduce(function(a,b){return a+b;},0);
-      var reactEmoji  = myReaction ? REACT_EMOJIS[myReaction] : '👍';
-      var reactLabel  = myReaction ? REACT_LABELS[myReaction] : 'Thích';
-      var reactClass  = myReaction ? ('reacted-' + myReaction) : '';
+      var reactions = p.reactions || { like: p.likes || 0 };
+      var myReaction = p.myReaction || null;
+      var totalR = Object.values(reactions).reduce(function (a, b) { return a + b; }, 0);
+      var reactEmoji = myReaction ? REACT_EMOJIS[myReaction] : '👍';
+      var reactLabel = myReaction ? REACT_LABELS[myReaction] : 'Thích';
+      var reactClass = myReaction ? ('reacted-' + myReaction) : '';
 
       var reactSummary = Object.keys(reactions)
-        .filter(function(k){ return reactions[k] > 0; })
-        .sort(function(a,b){ return reactions[b]-reactions[a]; })
-        .slice(0,3)
-        .map(function(k){ return REACT_EMOJIS[k]; })
+        .filter(function (k) { return reactions[k] > 0; })
+        .sort(function (a, b) { return reactions[b] - reactions[a]; })
+        .slice(0, 3)
+        .map(function (k) { return REACT_EMOJIS[k]; })
         .join('');
 
-      var pickerItems = Object.keys(REACT_EMOJIS).map(function(k) {
+      var pickerItems = Object.keys(REACT_EMOJIS).map(function (k) {
         return '<span class="reaction-item" onclick="forumSetReaction(\'' + p.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
       }).join('');
 
       var mediaPart = '';
       if (p.media && p.media.length) {
-        mediaPart = '<div class="fpc-media-row">' + p.media.map(function(m) {
+        mediaPart = '<div class="fpc-media-row">' + p.media.map(function (m) {
           if (m.type === 'video') {
             return '<video src="' + m.url + '" class="fpc-media-item" controls muted></video>';
           }
@@ -606,76 +698,76 @@ function skSkillToggle(row) {
 
       return (
         '<div class="forum-post-card" id="fpc-' + p.id + '">' +
-          '<div class="fpc-top">' +
-            '<div class="fpc-avatar">' + (p.avatar || '🧑') + '</div>' +
-            '<div class="fpc-meta">' +
-              '<span class="fpc-author">' + p.author + '</span>' +
-              '<span class="fpc-time">' + timeAgo(p.time) + '</span>' +
-            '</div>' +
-            '<span class="fpc-cat-tag" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
-          '</div>' +
-          '<div class="fpc-title">' + escHtml(p.title) + '</div>' +
-          '<div class="fpc-excerpt">' + escHtml(excerpt) + '</div>' +
-          mediaPart +
-          '<div class="fpc-actions">' +
-            '<div class="fpc-react-wrap">' +
-              '<button class="fpc-react-btn ' + reactClass + '" onclick="forumSetReaction(\'' + p.id + '\',\'' + (myReaction || 'like') + '\')">' +
-                reactEmoji + ' <span>' + reactLabel + '</span>' +
-                (totalR > 0 ? ' <span style="opacity:.55;font-weight:400">· ' + totalR + '</span>' : '') +
-              '</button>' +
-              '<div class="reaction-picker">' + pickerItems + '</div>' +
-            '</div>' +
-            (reactSummary && totalR > 0 ? '<span class="fpc-react-summary">' + reactSummary + ' ' + totalR + '</span>' : '') +
-            '<button class="fpc-comment-btn" id="fpc-cmtbtn-' + p.id + '" onclick="forumToggleComments(\'' + p.id + '\')">' +
-              '💬 ' + p.comments + ' bình luận' +
-            '</button>' +
-          '</div>' +
-          '<div class="fpc-comments" id="fpc-cmt-' + p.id + '">' +
-            '<div class="fpc-cmt-sort-bar">' +
-              '<span class="fpc-cmt-sort-label">Bình luận</span>' +
-              '<div class="fpc-cmt-sort-btns">' +
-                '<button class="fpc-cmt-sort-btn active" id="fpc-csort-newest-' + p.id + '" onclick="forumSetCmtSort(\'' + p.id + '\',\'newest\')">↓ Mới nhất</button>' +
-                '<button class="fpc-cmt-sort-btn" id="fpc-csort-oldest-' + p.id + '" onclick="forumSetCmtSort(\'' + p.id + '\',\'oldest\')">↑ Cũ nhất</button>' +
-              '</div>' +
-            '</div>' +
-            '<div class="fpc-cmt-list" id="fpc-cmt-list-' + p.id + '"></div>' +
-            '<div class="fpc-cmt-input-row">' +
-              '<div class="fpc-cmt-avatar-col">' +
-                '<div class="fpc-cmt-avatar fpc-cmt-me">🧑</div>' +
-              '</div>' +
-              '<div class="fpc-cmt-compose">' +
-                '<input class="fpc-cmt-input" id="fpc-cmt-inp-' + p.id + '" placeholder="Viết bình luận..." ' +
-                  'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();forumAddComment(\'' + p.id + '\');}" />' +
-                '<button class="fpc-cmt-send" onclick="forumAddComment(\'' + p.id + '\')" title="Gửi (Enter)">↑</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
+        '<div class="fpc-top">' +
+        '<div class="fpc-avatar">' + (p.avatar || '🧑') + '</div>' +
+        '<div class="fpc-meta">' +
+        '<span class="fpc-author">' + p.author + '</span>' +
+        '<span class="fpc-time">' + timeAgo(p.time) + '</span>' +
+        '</div>' +
+        '<span class="fpc-cat-tag" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
+        '</div>' +
+        '<div class="fpc-title">' + escHtml(p.title) + '</div>' +
+        '<div class="fpc-excerpt">' + escHtml(excerpt) + '</div>' +
+        mediaPart +
+        '<div class="fpc-actions">' +
+        '<div class="fpc-react-wrap">' +
+        '<button class="fpc-react-btn ' + reactClass + '" onclick="forumSetReaction(\'' + p.id + '\',\'' + (myReaction || 'like') + '\')">' +
+        reactEmoji + ' <span>' + reactLabel + '</span>' +
+        (totalR > 0 ? ' <span style="opacity:.55;font-weight:400">· ' + totalR + '</span>' : '') +
+        '</button>' +
+        '<div class="reaction-picker">' + pickerItems + '</div>' +
+        '</div>' +
+        (reactSummary && totalR > 0 ? '<span class="fpc-react-summary">' + reactSummary + ' ' + totalR + '</span>' : '') +
+        '<button class="fpc-comment-btn" id="fpc-cmtbtn-' + p.id + '" onclick="forumToggleComments(\'' + p.id + '\')">' +
+        '💬 ' + p.comments + ' bình luận' +
+        '</button>' +
+        '</div>' +
+        '<div class="fpc-comments" id="fpc-cmt-' + p.id + '">' +
+        '<div class="fpc-cmt-sort-bar">' +
+        '<span class="fpc-cmt-sort-label">Bình luận</span>' +
+        '<div class="fpc-cmt-sort-btns">' +
+        '<button class="fpc-cmt-sort-btn active" id="fpc-csort-newest-' + p.id + '" onclick="forumSetCmtSort(\'' + p.id + '\',\'newest\')">↓ Mới nhất</button>' +
+        '<button class="fpc-cmt-sort-btn" id="fpc-csort-oldest-' + p.id + '" onclick="forumSetCmtSort(\'' + p.id + '\',\'oldest\')">↑ Cũ nhất</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="fpc-cmt-list" id="fpc-cmt-list-' + p.id + '"></div>' +
+        '<div class="fpc-cmt-input-row">' +
+        '<div class="fpc-cmt-avatar-col">' +
+        '<div class="fpc-cmt-avatar fpc-cmt-me">🧑</div>' +
+        '</div>' +
+        '<div class="fpc-cmt-compose">' +
+        '<input class="fpc-cmt-input" id="fpc-cmt-inp-' + p.id + '" placeholder="Viết bình luận..." ' +
+        'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();forumAddComment(\'' + p.id + '\');}" />' +
+        '<button class="fpc-cmt-send" onclick="forumAddComment(\'' + p.id + '\')" title="Gửi (Enter)">↑</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
         '</div>'
       );
     }).join('');
   }
 
   function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  window.forumSetCat = function(btn, cat) {
-    document.querySelectorAll('#forum-tabs .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  window.forumSetCat = function (btn, cat) {
+    document.querySelectorAll('#forum-tabs .filter-btn').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
     _currentCat = cat;
     renderPosts();
   };
 
-  window.forumSetSort = function(val) {
+  window.forumSetSort = function (val) {
     _currentSort = val;
     renderPosts();
   };
 
-  window.forumToggleLike = function(postId) {
+  window.forumToggleLike = function (postId) {
     forumSetReaction(postId, 'like');
   };
 
-  window.forumSetReaction = function(postId, key) {
+  window.forumSetReaction = function (postId, key) {
     function applyReaction(post) {
       if (!post.reactions) {
         post.reactions = { like: post.likes || 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
@@ -691,42 +783,49 @@ function skSkillToggle(row) {
         post.reactions[key] = (post.reactions[key] || 0) + 1;
       }
     }
-    var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+    var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
     if (mockIdx !== -1) {
+      // MOCK_POSTS - just apply locally
       applyReaction(MOCK_POSTS[mockIdx]);
+      renderPosts();
     } else {
-      var userPosts = loadPosts();
-      var uIdx = userPosts.findIndex(function(p){ return p.id === postId; });
-      if (uIdx !== -1) { applyReaction(userPosts[uIdx]); savePosts(userPosts); }
+      // User post - call API then reload
+      forumApi.react(postId, key).then(function () {
+        // Apply reaction locally for immediate feedback
+        loadPosts().then(function (userPosts) {
+          var uIdx = userPosts.findIndex(function (p) { return p.id === postId; });
+          if (uIdx !== -1) { applyReaction(userPosts[uIdx]); }
+          reloadPosts();
+        });
+      });
     }
-    renderPosts();
   };
 
-  window.forumOpenCreate = function() {
+  window.forumOpenCreate = function () {
     document.getElementById('forumCreateModal').classList.add('active');
     document.body.style.overflow = 'hidden';
   };
 
-  window.forumOpenCreateWithMedia = function() {
+  window.forumOpenCreateWithMedia = function () {
     forumOpenCreate();
-    setTimeout(function() {
+    setTimeout(function () {
       document.getElementById('forum-img-input').click();
     }, 300);
   };
 
-  window.forumOpenCreateCat = function(cat) {
+  window.forumOpenCreateCat = function (cat) {
     forumOpenCreate();
-    setTimeout(function() {
-      document.querySelectorAll('.forum-cat-pick').forEach(function(b){
+    setTimeout(function () {
+      document.querySelectorAll('.forum-cat-pick').forEach(function (b) {
         b.classList.toggle('active', b.dataset.val === cat);
       });
       _selectedCat = cat;
     }, 50);
   };
 
-  window.forumHandleMedia = function(e, type) {
+  window.forumHandleMedia = function (e, type) {
     var files = Array.from(e.target.files);
-    files.forEach(function(file) {
+    files.forEach(function (file) {
       var url = URL.createObjectURL(file);
       _forumMediaFiles.push({ type: type, url: url, name: file.name });
     });
@@ -737,57 +836,56 @@ function skSkillToggle(row) {
   function renderMediaPreview() {
     var container = document.getElementById('forum-media-preview');
     if (!container) return;
-    container.innerHTML = _forumMediaFiles.map(function(m, i) {
+    container.innerHTML = _forumMediaFiles.map(function (m, i) {
       var thumb = m.type === 'video'
         ? '<video src="' + m.url + '" muted></video>'
         : '<img src="' + m.url + '" alt="' + m.name + '" />';
       return '<div class="forum-media-thumb">' +
         thumb +
         '<button class="forum-thumb-remove" onclick="forumRemoveMedia(' + i + ')" title="Xóa">✕</button>' +
-      '</div>';
+        '</div>';
     }).join('');
   }
 
-  window.forumRemoveMedia = function(idx) {
+  window.forumRemoveMedia = function (idx) {
     URL.revokeObjectURL(_forumMediaFiles[idx].url);
     _forumMediaFiles.splice(idx, 1);
     renderMediaPreview();
   };
 
-  window.forumCloseCreate = function() {
+  window.forumCloseCreate = function () {
     document.getElementById('forumCreateModal').classList.remove('active');
     document.body.style.overflow = '';
     document.getElementById('forum-input-title').value = '';
     document.getElementById('forum-input-body').value = '';
     document.getElementById('forum-title-count').textContent = '0 / 120';
-    document.getElementById('forum-body-count').textContent  = '0 / 2000';
+    document.getElementById('forum-body-count').textContent = '0 / 2000';
     _selectedCat = 'question';
-    document.querySelectorAll('.forum-cat-pick').forEach(function(b){
+    document.querySelectorAll('.forum-cat-pick').forEach(function (b) {
       b.classList.toggle('active', b.dataset.val === 'question');
     });
-    _forumMediaFiles.forEach(function(m){ URL.revokeObjectURL(m.url); });
+    _forumMediaFiles.forEach(function (m) { URL.revokeObjectURL(m.url); });
     _forumMediaFiles = [];
     renderMediaPreview();
   };
 
-  window.forumOverlayClick = function(e) {
+  window.forumOverlayClick = function (e) {
     if (e.target.id === 'forumCreateModal') forumCloseCreate();
   };
 
-  window.forumPickCat = function(btn) {
-    document.querySelectorAll('.forum-cat-pick').forEach(function(b){ b.classList.remove('active'); });
+  window.forumPickCat = function (btn) {
+    document.querySelectorAll('.forum-cat-pick').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
     _selectedCat = btn.dataset.val;
   };
 
-  window.forumSubmitPost = function() {
+  window.forumSubmitPost = function () {
     var title = document.getElementById('forum-input-title').value.trim();
-    var body  = document.getElementById('forum-input-body').value.trim();
+    var body = document.getElementById('forum-input-body').value.trim();
     if (!title) { alert('Vui lòng nhập tiêu đề bài viết.'); return; }
-    if (!body)  { alert('Vui lòng nhập nội dung bài viết.'); return; }
+    if (!body) { alert('Vui lòng nhập nội dung bài viết.'); return; }
 
-    var userPosts = loadPosts();
-    var userName  = document.getElementById('sidebar-name').textContent || 'Bạn';
+    var userName = document.getElementById('sidebar-name').textContent || 'Bạn';
     var newPost = {
       id: 'u' + Date.now(),
       cat: _selectedCat,
@@ -801,25 +899,28 @@ function skSkillToggle(row) {
       comments: 0,
       media: _forumMediaFiles.slice(),
     };
-    userPosts.unshift(newPost);
-    savePosts(userPosts);
-    forumCloseCreate();
-    _currentCat  = 'all';
-    _currentSort = 'newest';
-    document.querySelectorAll('#forum-tabs .filter-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.cat === 'all');
+
+    // Call API to create post, then reload all posts
+    forumApi.createPost(newPost).then(function () {
+      forumCloseCreate();
+      _currentCat = 'all';
+      _currentSort = 'newest';
+      document.querySelectorAll('#forum-tabs .filter-btn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.cat === 'all');
+      });
+      // Reload posts from API
+      reloadPosts();
     });
-    renderPosts();
   };
 
-  document.getElementById('forum-input-title').addEventListener('input', function() {
+  document.getElementById('forum-input-title').addEventListener('input', function () {
     document.getElementById('forum-title-count').textContent = this.value.length + ' / 120';
   });
-  document.getElementById('forum-input-body').addEventListener('input', function() {
+  document.getElementById('forum-input-body').addEventListener('input', function () {
     document.getElementById('forum-body-count').textContent = this.value.length + ' / 2000';
   });
 
-  window.forumToggleComments = function(postId) {
+  window.forumToggleComments = function (postId) {
     var section = document.getElementById('fpc-cmt-' + postId);
     var btn = document.getElementById('fpc-cmtbtn-' + postId);
     if (!section) return;
@@ -827,129 +928,129 @@ function skSkillToggle(row) {
     if (btn) btn.classList.toggle('active', isOpen);
     if (isOpen) {
       forumRenderComments(postId);
-      setTimeout(function() {
+      setTimeout(function () {
         var inp = document.getElementById('fpc-cmt-inp-' + postId);
         if (inp) inp.focus();
       }, 80);
     }
   };
 
-  window.forumRenderComments = function(postId) {
+  window.forumRenderComments = function (postId) {
     var list = document.getElementById('fpc-cmt-list-' + postId);
     if (!list) return;
-    var post = MOCK_POSTS.find(function(p){ return p.id === postId; });
-    if (!post) post = loadPosts().find(function(p){ return p.id === postId; });
+    var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
+    if (!post) post = loadPosts().find(function (p) { return p.id === postId; });
     var cmts = (post && post.commentList) ? post.commentList.slice() : [];
     var sortDir = _cmtSortMap[postId] || 'newest';
-    cmts.sort(function(a, b){ return sortDir === 'oldest' ? a.time - b.time : b.time - a.time; });
+    cmts.sort(function (a, b) { return sortDir === 'oldest' ? a.time - b.time : b.time - a.time; });
     if (!cmts.length) {
       list.innerHTML = '<p class="fpc-cmt-empty">Chưa có bình luận nào. Hãy là người đầu tiên! 👋</p>';
       return;
     }
-    list.innerHTML = cmts.map(function(c, i) {
+    list.innerHTML = cmts.map(function (c, i) {
       var isLast = (i === cmts.length - 1);
-      var reactions  = c.reactions  || {};
+      var reactions = c.reactions || {};
       var myReaction = c.myReaction || null;
-      var totalR = Object.values(reactions).reduce(function(a,b){ return a+b; }, 0);
+      var totalR = Object.values(reactions).reduce(function (a, b) { return a + b; }, 0);
       var reactEmoji = myReaction ? REACT_EMOJIS[myReaction] : '👍';
       var reactLabel = myReaction ? REACT_LABELS[myReaction] : 'Thích';
-      var reactCls   = myReaction ? 'cmt-reacted-' + myReaction : '';
-      var replies    = c.replies || [];
+      var reactCls = myReaction ? 'cmt-reacted-' + myReaction : '';
+      var replies = c.replies || [];
 
-      var pickerHtml = Object.keys(REACT_EMOJIS).map(function(k) {
+      var pickerHtml = Object.keys(REACT_EMOJIS).map(function (k) {
         return '<span class="fpc-cmt-react-item" onclick="forumSetCmtReaction(\'' + postId + '\',\'' + c.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
       }).join('');
 
       var reactSummaryHtml = '';
       if (totalR > 0) {
         var topEmojis = Object.keys(reactions)
-          .filter(function(k){ return reactions[k] > 0; })
-          .sort(function(a,b){ return reactions[b]-reactions[a]; })
-          .slice(0,2).map(function(k){ return REACT_EMOJIS[k]; }).join('');
+          .filter(function (k) { return reactions[k] > 0; })
+          .sort(function (a, b) { return reactions[b] - reactions[a]; })
+          .slice(0, 2).map(function (k) { return REACT_EMOJIS[k]; }).join('');
         reactSummaryHtml = '<span class="fpc-cmt-react-summary">' + topEmojis + ' ' + totalR + '</span>';
       }
 
-      var repliesHtml = replies.map(function(r) {
-        var rReactions  = r.reactions  || {};
+      var repliesHtml = replies.map(function (r) {
+        var rReactions = r.reactions || {};
         var rMyReaction = r.myReaction || null;
-        var rTotalR = Object.values(rReactions).reduce(function(a,b){ return a+b; }, 0);
+        var rTotalR = Object.values(rReactions).reduce(function (a, b) { return a + b; }, 0);
         var rReactEmoji = rMyReaction ? REACT_EMOJIS[rMyReaction] : '👍';
         var rReactLabel = rMyReaction ? REACT_LABELS[rMyReaction] : 'Thích';
-        var rReactCls   = rMyReaction ? 'cmt-reacted-' + rMyReaction : '';
-        var rPickerHtml = Object.keys(REACT_EMOJIS).map(function(k) {
+        var rReactCls = rMyReaction ? 'cmt-reacted-' + rMyReaction : '';
+        var rPickerHtml = Object.keys(REACT_EMOJIS).map(function (k) {
           return '<span class="fpc-cmt-react-item" onclick="forumSetReplyReaction(\'' + postId + '\',\'' + c.id + '\',\'' + r.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
         }).join('');
         var rSummaryHtml = '';
         if (rTotalR > 0) {
           var rTopEmojis = Object.keys(rReactions)
-            .filter(function(k){ return rReactions[k] > 0; })
-            .sort(function(a,b){ return rReactions[b]-rReactions[a]; })
-            .slice(0,2).map(function(k){ return REACT_EMOJIS[k]; }).join('');
+            .filter(function (k) { return rReactions[k] > 0; })
+            .sort(function (a, b) { return rReactions[b] - rReactions[a]; })
+            .slice(0, 2).map(function (k) { return REACT_EMOJIS[k]; }).join('');
           rSummaryHtml = '<span class="fpc-cmt-react-summary">' + rTopEmojis + ' ' + rTotalR + '</span>';
         }
         return (
           '<div class="fpc-reply-item">' +
-            '<div class="fpc-reply-avatar">' + (r.avatar || '🧑') + '</div>' +
-            '<div class="fpc-reply-body">' +
-              '<div class="fpc-cmt-bubble">' +
-                '<span class="fpc-cmt-author">' + escHtml(r.author) + '</span>' +
-                (r.replyTo ? '<span class="fpc-reply-to"> @' + escHtml(r.replyTo) + '</span> ' : '') +
-                '<p class="fpc-cmt-text">' + escHtml(r.text) + '</p>' +
-              '</div>' +
-              '<div class="fpc-cmt-actions">' +
-                '<span class="fpc-cmt-time-inline">' + timeAgo(r.time) + '</span>' +
-                '<div class="fpc-cmt-react-wrap">' +
-                  '<button class="fpc-cmt-act-btn fpc-cmt-like-btn ' + rReactCls + '" onclick="forumSetReplyReaction(\'' + postId + '\',\'' + c.id + '\',\'' + r.id + '\',\'' + (rMyReaction || 'like') + '\')">' +
-                    rReactEmoji + ' ' + rReactLabel +
-                  '</button>' +
-                  '<div class="fpc-cmt-reaction-picker">' + rPickerHtml + '</div>' +
-                '</div>' +
-                rSummaryHtml +
-                '<button class="fpc-cmt-act-btn fpc-cmt-reply-btn" onclick="forumToggleReply(\'' + postId + '\',\'' + c.id + '\',\'' + escHtml(r.author) + '\')">Trả lời</button>' +
-              '</div>' +
-            '</div>' +
+          '<div class="fpc-reply-avatar">' + (r.avatar || '🧑') + '</div>' +
+          '<div class="fpc-reply-body">' +
+          '<div class="fpc-cmt-bubble">' +
+          '<span class="fpc-cmt-author">' + escHtml(r.author) + '</span>' +
+          (r.replyTo ? '<span class="fpc-reply-to"> @' + escHtml(r.replyTo) + '</span> ' : '') +
+          '<p class="fpc-cmt-text">' + escHtml(r.text) + '</p>' +
+          '</div>' +
+          '<div class="fpc-cmt-actions">' +
+          '<span class="fpc-cmt-time-inline">' + timeAgo(r.time) + '</span>' +
+          '<div class="fpc-cmt-react-wrap">' +
+          '<button class="fpc-cmt-act-btn fpc-cmt-like-btn ' + rReactCls + '" onclick="forumSetReplyReaction(\'' + postId + '\',\'' + c.id + '\',\'' + r.id + '\',\'' + (rMyReaction || 'like') + '\')">' +
+          rReactEmoji + ' ' + rReactLabel +
+          '</button>' +
+          '<div class="fpc-cmt-reaction-picker">' + rPickerHtml + '</div>' +
+          '</div>' +
+          rSummaryHtml +
+          '<button class="fpc-cmt-act-btn fpc-cmt-reply-btn" onclick="forumToggleReply(\'' + postId + '\',\'' + c.id + '\',\'' + escHtml(r.author) + '\')">Trả lời</button>' +
+          '</div>' +
+          '</div>' +
           '</div>'
         );
       }).join('');
 
       return (
         '<div class="fpc-cmt-item" id="fpc-ci-' + postId + '-' + c.id + '">' +
-          '<div class="fpc-cmt-avatar-col">' +
-            '<div class="fpc-cmt-avatar">' + (c.avatar || '🧑') + '</div>' +
-            '<div class="fpc-cmt-vline"></div>' +
-          '</div>' +
-          '<div class="fpc-cmt-body">' +
-            '<div class="fpc-cmt-bubble">' +
-              '<span class="fpc-cmt-author">' + escHtml(c.author) + '</span>' +
-              '<p class="fpc-cmt-text">' + escHtml(c.text) + '</p>' +
-            '</div>' +
-            '<div class="fpc-cmt-actions">' +
-              '<span class="fpc-cmt-time-inline">' + timeAgo(c.time) + '</span>' +
-              '<div class="fpc-cmt-react-wrap">' +
-                '<button class="fpc-cmt-act-btn fpc-cmt-like-btn ' + reactCls + '" onclick="forumSetCmtReaction(\'' + postId + '\',\'' + c.id + '\',\'' + (myReaction || 'like') + '\')">' +
-                  reactEmoji + ' ' + reactLabel +
-                '</button>' +
-                '<div class="fpc-cmt-reaction-picker">' + pickerHtml + '</div>' +
-              '</div>' +
-              reactSummaryHtml +
-              '<button class="fpc-cmt-act-btn fpc-cmt-reply-btn" onclick="forumToggleReply(\'' + postId + '\',\'' + c.id + '\',\'' + escHtml(c.author) + '\')">Trả lời</button>' +
-            '</div>' +
-            (repliesHtml ? '<div class="fpc-replies-list">' + repliesHtml + '</div>' : '') +
-            '<div class="fpc-reply-input-row" id="fpc-reply-row-' + postId + '-' + c.id + '" style="display:none">' +
-              '<div class="fpc-reply-avatar">🧑</div>' +
-              '<div class="fpc-cmt-compose">' +
-                '<input class="fpc-cmt-input" id="fpc-reply-inp-' + postId + '-' + c.id + '" placeholder="Trả lời ' + escHtml(c.author) + '..." ' +
-                  'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();forumAddReply(\'' + postId + '\',\'' + c.id + '\');}" />' +
-                '<button class="fpc-cmt-send" onclick="forumAddReply(\'' + postId + '\',\'' + c.id + '\')" title="Gửi">↑</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
+        '<div class="fpc-cmt-avatar-col">' +
+        '<div class="fpc-cmt-avatar">' + (c.avatar || '🧑') + '</div>' +
+        '<div class="fpc-cmt-vline"></div>' +
+        '</div>' +
+        '<div class="fpc-cmt-body">' +
+        '<div class="fpc-cmt-bubble">' +
+        '<span class="fpc-cmt-author">' + escHtml(c.author) + '</span>' +
+        '<p class="fpc-cmt-text">' + escHtml(c.text) + '</p>' +
+        '</div>' +
+        '<div class="fpc-cmt-actions">' +
+        '<span class="fpc-cmt-time-inline">' + timeAgo(c.time) + '</span>' +
+        '<div class="fpc-cmt-react-wrap">' +
+        '<button class="fpc-cmt-act-btn fpc-cmt-like-btn ' + reactCls + '" onclick="forumSetCmtReaction(\'' + postId + '\',\'' + c.id + '\',\'' + (myReaction || 'like') + '\')">' +
+        reactEmoji + ' ' + reactLabel +
+        '</button>' +
+        '<div class="fpc-cmt-reaction-picker">' + pickerHtml + '</div>' +
+        '</div>' +
+        reactSummaryHtml +
+        '<button class="fpc-cmt-act-btn fpc-cmt-reply-btn" onclick="forumToggleReply(\'' + postId + '\',\'' + c.id + '\',\'' + escHtml(c.author) + '\')">Trả lời</button>' +
+        '</div>' +
+        (repliesHtml ? '<div class="fpc-replies-list">' + repliesHtml + '</div>' : '') +
+        '<div class="fpc-reply-input-row" id="fpc-reply-row-' + postId + '-' + c.id + '" style="display:none">' +
+        '<div class="fpc-reply-avatar">🧑</div>' +
+        '<div class="fpc-cmt-compose">' +
+        '<input class="fpc-cmt-input" id="fpc-reply-inp-' + postId + '-' + c.id + '" placeholder="Trả lời ' + escHtml(c.author) + '..." ' +
+        'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();forumAddReply(\'' + postId + '\',\'' + c.id + '\');}" />' +
+        '<button class="fpc-cmt-send" onclick="forumAddReply(\'' + postId + '\',\'' + c.id + '\')" title="Gửi">↑</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
         '</div>'
       );
     }).join('');
   };
 
-  window.forumAddComment = function(postId) {
+  window.forumAddComment = function (postId) {
     var inp = document.getElementById('fpc-cmt-inp-' + postId);
     if (!inp) return;
     var text = inp.value.trim();
@@ -962,48 +1063,58 @@ function skSkillToggle(row) {
       time: Date.now(),
       text: text,
     };
-    var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+    var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
+
     if (mockIdx !== -1) {
+      // MOCK_POSTS - just apply locally
       if (!MOCK_POSTS[mockIdx].commentList) MOCK_POSTS[mockIdx].commentList = [];
       MOCK_POSTS[mockIdx].commentList.push(comment);
       MOCK_POSTS[mockIdx].comments = MOCK_POSTS[mockIdx].commentList.length;
+      inp.value = '';
+      forumRenderComments(postId);
+      updateCommentCount(postId);
     } else {
-      var posts = loadPosts();
-      var uIdx = posts.findIndex(function(p){ return p.id === postId; });
-      if (uIdx !== -1) {
-        if (!posts[uIdx].commentList) posts[uIdx].commentList = [];
-        posts[uIdx].commentList.push(comment);
-        posts[uIdx].comments = posts[uIdx].commentList.length;
-        savePosts(posts);
-      }
-    }
-    inp.value = '';
-    forumRenderComments(postId);
-    var btn = document.getElementById('fpc-cmtbtn-' + postId);
-    if (btn) {
-      var count = mockIdx !== -1 ? MOCK_POSTS[mockIdx].comments :
-        (loadPosts().find(function(p){ return p.id === postId; }) || {}).comments || 0;
-      btn.textContent = '💬 ' + count + ' bình luận';
+      // User post - call API then reload
+      forumApi.addComment(postId, comment).then(function () {
+        inp.value = '';
+        // Reload comments from API
+        forumRenderComments(postId);
+        // Update comment count by reloading posts
+        reloadPosts().then(function () {
+          updateCommentCount(postId);
+        });
+      });
     }
     var listEl = document.getElementById('fpc-cmt-list-' + postId);
     if (listEl && listEl.lastElementChild)
       listEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
-  window.forumSetCmtSort = function(postId, dir) {
+  function updateCommentCount(postId) {
+    var btn = document.getElementById('fpc-cmtbtn-' + postId);
+    if (!btn) return;
+    getAllPostsAsync().then(function (allP) {
+      var post = allP.find(function (p) { return p.id === postId; });
+      if (post) {
+        btn.textContent = '💬 ' + (post.comments || 0) + ' bình luận';
+      }
+    });
+  }
+
+  window.forumSetCmtSort = function (postId, dir) {
     _cmtSortMap[postId] = dir;
-    ['newest','oldest'].forEach(function(d) {
+    ['newest', 'oldest'].forEach(function (d) {
       var btn = document.getElementById('fpc-csort-' + d + '-' + postId);
       if (btn) btn.classList.toggle('active', d === dir);
     });
     forumRenderComments(postId);
   };
 
-  window.forumSetCmtReaction = function(postId, cmtId, key) {
+  window.forumSetCmtReaction = function (postId, cmtId, key) {
     function apply(post) {
-      var cmt = (post.commentList || []).find(function(c){ return c.id === cmtId; });
+      var cmt = (post.commentList || []).find(function (c) { return c.id === cmtId; });
       if (!cmt) return;
-      if (!cmt.reactions) cmt.reactions = { like:0, love:0, haha:0, wow:0, sad:0, angry:0 };
+      if (!cmt.reactions) cmt.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
       var prev = cmt.myReaction || null;
       if (prev === key) {
         cmt.myReaction = null;
@@ -1014,23 +1125,30 @@ function skSkillToggle(row) {
         cmt.reactions[key] = (cmt.reactions[key] || 0) + 1;
       }
     }
-    var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
-    if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
-    else {
-      var posts = loadPosts();
-      var uIdx = posts.findIndex(function(p){ return p.id === postId; });
-      if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
+    var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
+    if (mockIdx !== -1) {
+      apply(MOCK_POSTS[mockIdx]);
+      forumRenderComments(postId);
     }
-    forumRenderComments(postId);
+    else {
+      // Call API then reload
+      forumApi.react(postId, key).then(function () {
+        loadPosts().then(function (posts) {
+          var uIdx = posts.findIndex(function (p) { return p.id === postId; });
+          if (uIdx !== -1) { apply(posts[uIdx]); }
+          forumRenderComments(postId);
+        });
+      });
+    }
   };
 
-  window.forumSetReplyReaction = function(postId, cmtId, replyId, key) {
+  window.forumSetReplyReaction = function (postId, cmtId, replyId, key) {
     function apply(post) {
-      var cmt = (post.commentList || []).find(function(c){ return c.id === cmtId; });
+      var cmt = (post.commentList || []).find(function (c) { return c.id === cmtId; });
       if (!cmt) return;
-      var reply = (cmt.replies || []).find(function(r){ return r.id === replyId; });
+      var reply = (cmt.replies || []).find(function (r) { return r.id === replyId; });
       if (!reply) return;
-      if (!reply.reactions) reply.reactions = { like:0, love:0, haha:0, wow:0, sad:0, angry:0 };
+      if (!reply.reactions) reply.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
       var prev = reply.myReaction || null;
       if (prev === key) {
         reply.myReaction = null;
@@ -1041,17 +1159,24 @@ function skSkillToggle(row) {
         reply.reactions[key] = (reply.reactions[key] || 0) + 1;
       }
     }
-    var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
-    if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
-    else {
-      var posts = loadPosts();
-      var uIdx = posts.findIndex(function(p){ return p.id === postId; });
-      if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
+    var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
+    if (mockIdx !== -1) {
+      apply(MOCK_POSTS[mockIdx]);
+      forumRenderComments(postId);
     }
-    forumRenderComments(postId);
+    else {
+      // Call API then reload
+      forumApi.react(postId, key).then(function () {
+        loadPosts().then(function (posts) {
+          var uIdx = posts.findIndex(function (p) { return p.id === postId; });
+          if (uIdx !== -1) { apply(posts[uIdx]); }
+          forumRenderComments(postId);
+        });
+      });
+    }
   };
 
-  window.forumToggleReply = function(postId, cmtId, mentionName) {
+  window.forumToggleReply = function (postId, cmtId, mentionName) {
     var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
     if (!row) return;
     var inp = document.getElementById('fpc-reply-inp-' + postId + '-' + cmtId);
@@ -1066,11 +1191,11 @@ function skSkillToggle(row) {
     row.dataset.mention = mentionName;
     if (inp) {
       inp.placeholder = 'Trả lời ' + mentionName + '...';
-      setTimeout(function(){ inp.focus(); }, 30);
+      setTimeout(function () { inp.focus(); }, 30);
     }
   };
 
-  window.forumAddReply = function(postId, cmtId) {
+  window.forumAddReply = function (postId, cmtId) {
     var inp = document.getElementById('fpc-reply-inp-' + postId + '-' + cmtId);
     if (!inp) return;
     var text = inp.value.trim();
@@ -1080,33 +1205,33 @@ function skSkillToggle(row) {
     var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
     var replyTo = (row && row.dataset.mention) || '';
     function apply(post) {
-      var cmt = (post.commentList || []).find(function(c){ return c.id === cmtId; });
+      var cmt = (post.commentList || []).find(function (c) { return c.id === cmtId; });
       if (!cmt) return;
       if (!cmt.replies) cmt.replies = [];
-      cmt.replies.push({ id:'r'+Date.now(), author:myName, avatar:'🧑', time:Date.now(), text:text, replyTo: replyTo || cmt.author });
+      cmt.replies.push({ id: 'r' + Date.now(), author: myName, avatar: '🧑', time: Date.now(), text: text, replyTo: replyTo || cmt.author });
     }
-    var mockIdx = MOCK_POSTS.findIndex(function(p){ return p.id === postId; });
+    var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
     if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
     else {
       var posts = loadPosts();
-      var uIdx = posts.findIndex(function(p){ return p.id === postId; });
+      var uIdx = posts.findIndex(function (p) { return p.id === postId; });
       if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
     }
     inp.value = '';
     forumRenderComments(postId);
-    setTimeout(function(){
+    setTimeout(function () {
       var item = document.getElementById('fpc-ci-' + postId + '-' + cmtId);
-      if (item) item.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 50);
   };
 
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && document.getElementById('forumCreateModal').classList.contains('active'))
       forumCloseCreate();
   });
 
   var _origNavigateForum = window.navigate;
-  window.navigate = function(page) {
+  window.navigate = function (page) {
     _origNavigateForum(page);
     if (page === 'forum') renderPosts();
   };
@@ -1125,11 +1250,11 @@ function skSkillToggle(row) {
 
   /* ── Kinh nghiệm bài học (XP chart) ── */
   var _xpSubjects = [
-    { icon: '📊', name: 'Data science',     xp: 388 },
-    { icon: '📈', name: 'Data analytics',   xp: 210 },
-    { icon: '🌐', name: 'Web development',  xp: 200 },
-    { icon: '🐍', name: 'Python',           xp: 170 },
-    { icon: '🎨', name: 'HTML & CSS',       xp: 165 },
+    { icon: '📊', name: 'Data science', xp: 388 },
+    { icon: '📈', name: 'Data analytics', xp: 210 },
+    { icon: '🌐', name: 'Web development', xp: 200 },
+    { icon: '🐍', name: 'Python', xp: 170 },
+    { icon: '🎨', name: 'HTML & CSS', xp: 165 },
     { icon: '💻', name: 'Computer science', xp: 140 },
   ];
   var _XP_MAX = 400;
@@ -1143,8 +1268,8 @@ function skSkillToggle(row) {
         + '<span class="prof-xp-row-icon">' + s.icon + '</span>'
         + '<span class="prof-xp-row-name">' + s.name + '</span>'
         + '<div class="prof-xp-bar-wrap">'
-        +   '<div class="prof-xp-bar-fill" style="width:0%"'
-        +     ' data-pct="' + pct + '"></div>'
+        + '<div class="prof-xp-bar-fill" style="width:0%"'
+        + ' data-pct="' + pct + '"></div>'
         + '</div>'
         + '<span class="prof-xp-row-val">' + s.xp + ' XP</span>'
         + '</div>';
@@ -1171,9 +1296,9 @@ function skSkillToggle(row) {
 
   function _loadProfile() {
     // Tên & email: lấy từ data đã load sẵn trong settings
-    var name  = (document.getElementById('chip-name') || {}).textContent || '—';
+    var name = (document.getElementById('chip-name') || {}).textContent || '—';
     var email = (document.getElementById('settings-profile-email') || {}).textContent || '—';
-    _set('prof-name',  name  === '—' ? (document.getElementById('udh-name') || {}).textContent || '—' : name);
+    _set('prof-name', name === '—' ? (document.getElementById('udh-name') || {}).textContent || '—' : name);
     _set('prof-email', email);
 
     // Số khóa đang học
@@ -1195,6 +1320,9 @@ function skSkillToggle(row) {
 
     // XP chart
     _renderXPChart();
+
+    // Forum posts của user
+    _renderProfPosts();
   }
 
   function _set(id, val) {
@@ -1214,11 +1342,111 @@ function skSkillToggle(row) {
       return '<div class="prof-course-item">'
         + '<div class="prof-ci-icon">' + (c.icon || '📖') + '</div>'
         + '<div class="prof-ci-body">'
-        +   '<div class="prof-ci-name">' + (c.title || c.name || 'Khóa học') + '</div>'
-        +   '<div class="prof-ci-bar"><div class="prof-ci-fill" style="width:' + pct + '%"></div></div>'
-        +   '<div class="prof-ci-pct">' + pct + '% hoàn thành</div>'
+        + '<div class="prof-ci-name">' + (c.title || c.name || 'Khóa học') + '</div>'
+        + '<div class="prof-ci-bar"><div class="prof-ci-fill" style="width:' + pct + '%"></div></div>'
+        + '<div class="prof-ci-pct">' + pct + '% hoàn thành</div>'
         + '</div>'
         + '</div>';
+    }).join('');
+  }
+
+  /* ── Forum posts của user trên profile ── */
+  function _renderProfPosts() {
+    var list = document.getElementById('prof-post-list');
+    if (!list) return;
+
+    /*
+    ═══════════════════════════════════════════════════════════════════════════
+    [KHI CÓ BACKEND] — Uncomment đoạn dưới và comment đoạn localStorage
+    Endpoint: GET /api/forum/my-posts
+    Response: Array of post objects (giống cấu trúc localStorage)
+    ═══════════════════════════════════════════════════════════════════════════
+    
+    fetch('/api/forum/my-posts')
+      .then(function(r) { return r.json(); })
+      .then(function(myPosts) {
+        if (!myPosts || !myPosts.length) {
+          list.innerHTML = '<div class="prof-empty">Chưa có bài đăng nào.</div>';
+          return;
+        }
+        list.innerHTML = renderPostsHtml(myPosts);
+      })
+      .catch(function(err) {
+        console.error('Error loading profile posts:', err);
+        list.innerHTML = '<div class="prof-empty">Không thể tải bài đăng.</div>';
+      });
+    
+    // Helper function để render posts HTML (reuse cho cả 2 version)
+    function renderPostsHtml(myPosts) {
+      return myPosts.map(function(p) {
+        var catColor = CAT_COLORS[p.cat] || '#6B7280';
+        var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
+        var catLabel = CAT_LABELS[p.cat] || p.cat;
+        var excerpt  = p.body.length > 120 ? p.body.slice(0, 117) + '...' : p.body;
+        var totalR   = Object.values(p.reactions || {}).reduce(function(a, b) { return a + b; }, 0);
+        return (
+          '<div class="prof-post-card" onclick="window.navigate && window.navigate(\'forum\')" style="cursor:pointer;">' +
+            '<div class="prof-post-top">' +
+              '<span class="prof-post-cat" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
+              '<span class="prof-post-time">' + timeAgo(p.time) + '</span>' +
+            '</div>' +
+            '<div class="prof-post-title">' + escHtml(p.title) + '</div>' +
+            '<div class="prof-post-excerpt">' + escHtml(excerpt) + '</div>' +
+            '<div class="prof-post-stats">' +
+              '<span>👍 ' + totalR + '</span>' +
+              '<span>💬 ' + (p.comments || 0) + '</span>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+    ═══════════════════════════════════════════════════════════════════════════
+    */
+
+    // [HIỆN TẠI] — Lấy posts từ localStorage
+    var userPosts = [];
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      userPosts = raw ? JSON.parse(raw) : [];
+    } catch (e) {}
+
+    // Lấy tên user hiện tại để filter
+    var currentUser = document.getElementById('chip-name').textContent.trim() || '';
+
+    // Filter posts của user hiện tại
+    var myPosts = userPosts.filter(function(p) {
+      return p.author === currentUser;
+    });
+
+    // Sắp xếp mới nhất lên đầu
+    myPosts.sort(function(a, b) { return b.time - a.time; });
+
+    if (!myPosts.length) {
+      list.innerHTML = '<div class="prof-empty">Chưa có bài đăng nào.</div>';
+      return;
+    }
+
+    list.innerHTML = myPosts.map(function(p) {
+      var catColor = CAT_COLORS[p.cat] || '#6B7280';
+      var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
+      var catLabel = CAT_LABELS[p.cat] || p.cat;
+      var excerpt  = p.body.length > 120 ? p.body.slice(0, 117) + '...' : p.body;
+      var totalR   = Object.values(p.reactions || {}).reduce(function(a, b) { return a + b; }, 0);
+
+      return (
+        '<div class="prof-post-card" onclick="window.navigate && window.navigate(\'forum\')" style="cursor:pointer;">' +
+          '<div class="prof-post-top">' +
+            '<span class="prof-post-cat" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
+            '<span class="prof-post-time">' + timeAgo(p.time) + '</span>' +
+          '</div>' +
+          '<div class="prof-post-title">' + escHtml(p.title) + '</div>' +
+          '<div class="prof-post-excerpt">' + escHtml(excerpt) + '</div>' +
+          '<div class="prof-post-stats">' +
+            '<span>👍 ' + totalR + '</span>' +
+            '<span>💬 ' + (p.comments || 0) + '</span>' +
+          '</div>' +
+        '</div>'
+      );
     }).join('');
   }
 })();
@@ -1236,9 +1464,9 @@ function dashSearch(val) {
   var q = val.trim().toLowerCase();
   var cards = document.querySelectorAll('#enrolled-list .enrolled-card');
   var hasVisible = false;
-  cards.forEach(function(card) {
+  cards.forEach(function (card) {
     var title = (card.querySelector('h3') || {}).textContent || '';
-    var sub   = (card.querySelector('.subtitle') || {}).textContent || '';
+    var sub = (card.querySelector('.subtitle') || {}).textContent || '';
     var match = !q || title.toLowerCase().includes(q) || sub.toLowerCase().includes(q);
     card.style.display = match ? '' : 'none';
     if (match) hasVisible = true;
@@ -1258,7 +1486,7 @@ function roadmapSearch(val) {
   if (!q) return;
   var tabs = document.querySelectorAll('#roadmap-tabs .filter-btn');
   var matched = null;
-  tabs.forEach(function(tab) {
+  tabs.forEach(function (tab) {
     if (!matched && tab.textContent.toLowerCase().includes(q)) matched = tab;
   });
   if (matched) matched.click();
@@ -1274,11 +1502,11 @@ function skillsSearch(val) {
   var q = val.trim().toLowerCase();
   var sets = document.querySelectorAll('#sk-grid .sk-set');
   var hasVisible = false;
-  sets.forEach(function(set) {
+  sets.forEach(function (set) {
     var setTitle = (set.querySelector('.sk-set-title') || {}).textContent || '';
-    var skills   = set.querySelectorAll('.sk-skill-name');
+    var skills = set.querySelectorAll('.sk-skill-name');
     var skillMatch = false;
-    skills.forEach(function(sk) {
+    skills.forEach(function (sk) {
       if (sk.textContent.toLowerCase().includes(q)) skillMatch = true;
     });
     var match = !q || setTitle.toLowerCase().includes(q) || skillMatch;
@@ -1371,7 +1599,7 @@ function forumClearSearch() {
 (function () {
   var _currentLbType = 'weekly';
   var _lbLoaded = { weekly: false, streak: false, friends: false };
-  var _lbData   = { weekly: null, streak: null, friends: null };
+  var _lbData = { weekly: null, streak: null, friends: null };
   var _miniRmLoaded = false;
 
   /* ─── Leaderboard ─── */
@@ -1384,7 +1612,7 @@ function forumClearSearch() {
   function renderLeaderboard(data) {
     var meta = document.getElementById('lb-meta');
     var list = document.getElementById('lb-list');
-    var me   = document.getElementById('lb-me');
+    var me = document.getElementById('lb-me');
     if (!list) return;
 
     if (!data || !data.entries) {
@@ -1394,7 +1622,7 @@ function forumClearSearch() {
       return;
     }
 
-    var unit  = data.unit  || 'XP';
+    var unit = data.unit || 'XP';
     var label = data.label || '';
     var meInfo = data.me;
 
@@ -1406,7 +1634,7 @@ function forumClearSearch() {
         }
         // mock friends không có id thật, fallback so sánh name + value
         if (data.type === 'friends' && data.entries[i].name === meInfo.name
-            && data.entries[i].value === meInfo.value) {
+          && data.entries[i].value === meInfo.value) {
           inTop = true; break;
         }
       }
@@ -1427,15 +1655,15 @@ function forumClearSearch() {
       var medal = e.medal || '';
       return (
         '<li class="lb-row ' + rankCls + (isMe ? ' lb-row-me' : '') + '">' +
-          '<div class="lb-rank">' +
-            '<span class="lb-rank-text">' + escHtml(medal) + '</span>' +
-            '<span class="lb-rank-num">#' + e.rank + '</span>' +
-          '</div>' +
-          '<div class="lb-avatar">' + escHtml(e.avatar || '🧑') + '</div>' +
-          '<div class="lb-info">' +
-            '<div class="lb-name">' + escHtml(e.name) + (isMe ? ' (Bạn)' : '') + '</div>' +
-          '</div>' +
-          '<div class="lb-value">' + formatValue(e.value, unit) + '</div>' +
+        '<div class="lb-rank">' +
+        '<span class="lb-rank-text">' + escHtml(medal) + '</span>' +
+        '<span class="lb-rank-num">#' + e.rank + '</span>' +
+        '</div>' +
+        '<div class="lb-avatar">' + escHtml(e.avatar || '🧑') + '</div>' +
+        '<div class="lb-info">' +
+        '<div class="lb-name">' + escHtml(e.name) + (isMe ? ' (Bạn)' : '') + '</div>' +
+        '</div>' +
+        '<div class="lb-value">' + formatValue(e.value, unit) + '</div>' +
         '</li>'
       );
     }).join('');
@@ -1445,12 +1673,12 @@ function forumClearSearch() {
       me.innerHTML =
         '<div class="lb-me-label">Vị trí của bạn</div>' +
         '<li class="lb-row lb-row-me">' +
-          '<div class="lb-rank"><span class="lb-rank-num">#' + meInfo.rank + '</span></div>' +
-          '<div class="lb-avatar">' + escHtml(meInfo.avatar || '🧑') + '</div>' +
-          '<div class="lb-info">' +
-            '<div class="lb-name">' + escHtml(meInfo.name) + ' (Bạn)</div>' +
-          '</div>' +
-          '<div class="lb-value">' + formatValue(meInfo.value, unit) + '</div>' +
+        '<div class="lb-rank"><span class="lb-rank-num">#' + meInfo.rank + '</span></div>' +
+        '<div class="lb-avatar">' + escHtml(meInfo.avatar || '🧑') + '</div>' +
+        '<div class="lb-info">' +
+        '<div class="lb-name">' + escHtml(meInfo.name) + ' (Bạn)</div>' +
+        '</div>' +
+        '<div class="lb-value">' + formatValue(meInfo.value, unit) + '</div>' +
         '</li>';
     } else if (me) {
       me.hidden = true;
@@ -1468,7 +1696,7 @@ function forumClearSearch() {
     _currentLbType = type;
     var list = document.getElementById('lb-list');
     var meta = document.getElementById('lb-meta');
-    var me   = document.getElementById('lb-me');
+    var me = document.getElementById('lb-me');
     if (!list) return;
     if (meta) meta.textContent = 'Đang tải…';
     list.innerHTML = '<li class="lb-skel">Đang tải bảng xếp hạng…</li>';
@@ -1531,7 +1759,7 @@ function forumClearSearch() {
     if (!c) return 'locked';
     var p = Number(c.progress || 0);
     if (p >= 100) return 'done';
-    if (p > 0)    return 'current';
+    if (p > 0) return 'current';
     return 'locked';
   }
 
@@ -1542,9 +1770,9 @@ function forumClearSearch() {
     if (!courses || !courses.length) {
       canvas.innerHTML =
         '<div class="mini-rm-empty">' +
-          '<div class="mini-rm-empty-icon">🗺</div>' +
-          '<div>Bạn chưa đăng ký khóa học nào.<br>Hãy bắt đầu hành trình học lập trình nhé!</div>' +
-          '<a class="mini-rm-empty-cta" href="#" onclick="navigate(\'courses\');return false;">Khám phá khóa học</a>' +
+        '<div class="mini-rm-empty-icon">🗺</div>' +
+        '<div>Bạn chưa đăng ký khóa học nào.<br>Hãy bắt đầu hành trình học lập trình nhé!</div>' +
+        '<a class="mini-rm-empty-cta" href="#" onclick="navigate(\'courses\');return false;">Khám phá khóa học</a>' +
         '</div>';
       return;
     }
@@ -1572,21 +1800,21 @@ function forumClearSearch() {
       var status = classifyNode(c);
       var lessons = (c.completedLessons != null ? c.completedLessons : 0) + '/' + (c.totalLessons || 0);
       var sub = status === 'done' ? '✓ Hoàn thành'
-              : status === 'current' ? (c.progress || 0) + '% · ' + lessons
-              : 'Bấm để bắt đầu';
+        : status === 'current' ? (c.progress || 0) + '% · ' + lessons
+          : 'Bấm để bắt đầu';
       var onClick = "window.location.href='" + (window.COURSE_URLS && window.COURSE_URLS[c.id]
-                       ? window.COURSE_URLS[c.id]
-                       : '/interface') + "'";
+        ? window.COURSE_URLS[c.id]
+        : '/interface') + "'";
       html +=
         '<div class="mini-rm-node mini-rm-node--' + status + '"' +
         ' style="left:' + pos.x + '%; top:' + pos.y + '%;"' +
         ' onclick="' + onClick + '"' +
         ' title="' + escHtml(c.title || '') + '">' +
-          '<div class="mini-rm-node-icon">' + escHtml(c.icon || '📘') + '</div>' +
-          '<div class="mini-rm-node-body">' +
-            '<div class="mini-rm-node-title">' + escHtml(c.title || 'Khóa học') + '</div>' +
-            '<div class="mini-rm-node-sub">' + escHtml(sub) + '</div>' +
-          '</div>' +
+        '<div class="mini-rm-node-icon">' + escHtml(c.icon || '📘') + '</div>' +
+        '<div class="mini-rm-node-body">' +
+        '<div class="mini-rm-node-title">' + escHtml(c.title || 'Khóa học') + '</div>' +
+        '<div class="mini-rm-node-sub">' + escHtml(sub) + '</div>' +
+        '</div>' +
         '</div>';
     });
 
