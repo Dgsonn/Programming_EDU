@@ -159,6 +159,32 @@ def init_db():
             mermaid_def TEXT DEFAULT ''
         )''')
 
+        # ── Diễn đàn: bài viết + bình luận ──
+        c.execute('''CREATE TABLE IF NOT EXISTS posts (
+            id         SERIAL PRIMARY KEY,
+            user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            category   TEXT      DEFAULT 'discuss',
+            title      TEXT      DEFAULT '',
+            content    TEXT NOT NULL,
+            like_count INTEGER   DEFAULT 0,
+            created_at TIMESTAMP DEFAULT now(),
+            updated_at TIMESTAMP DEFAULT now()
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC)')
+
+        c.execute('''CREATE TABLE IF NOT EXISTS comments (
+            id         SERIAL PRIMARY KEY,
+            post_id    INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+            user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            content    TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT now(),
+            updated_at TIMESTAMP DEFAULT now()
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)')
+
         try:
             c.execute("ALTER TABLE roadmaps ADD COLUMN IF NOT EXISTS nodes_json TEXT DEFAULT '{}'")
         except Exception:
