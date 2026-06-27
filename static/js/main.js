@@ -2136,7 +2136,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Xử lý hash navigation từ các trang khác (vd: /dashboard#roadmap)
   var hash = window.location.hash.replace('#', '');
-  var validPages = ['dashboard', 'courses', 'roadmap', 'skills', 'forum', 'settings'];
+  var validPages = ['dashboard', 'courses', 'roadmap', 'skills', 'forum', 'settings', 'profile', 'my-courses'];
   if (hash && validPages.includes(hash)) {
     navigate(hash);
   }

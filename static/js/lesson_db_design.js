@@ -74,23 +74,81 @@
 
   /* ── Duolingo-style celebration (confetti) ────────────────────── */
   function celebrate() {
-    if (typeof window.confetti === 'function') {
-      // Fire from both sides for a "burst" feel
-      confetti({
-        particleCount: 80,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.7 },
-        colors: ['#06B6D4', '#10B981', '#F59E0B', '#F97316']
-      });
-      confetti({
-        particleCount: 80,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.7 },
-        colors: ['#06B6D4', '#10B981', '#F59E0B', '#F97316']
-      });
+    if (typeof window.confetti !== 'function') return;
+    // C3: Perfect score (hearts === 3 = no hearts lost) → rainbow palette
+    var isPerfect = state && state.hearts === 3;
+    var palette = isPerfect
+      ? ['#EF4444', '#F59E0B', '#10B981', '#06B6D4', '#8B5CF6', '#EC4899']  // 6-color rainbow
+      : ['#06B6D4', '#10B981', '#F59E0B', '#F97316'];                       // default 4-color
+    var count = isPerfect ? 120 : 80;
+    // Fire from both sides for a "burst" feel
+    confetti({
+      particleCount: count,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors: palette
+    });
+    confetti({
+      particleCount: count,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors: palette
+    });
+  }
+
+  /* ── C3: Sparkle rain (golden particles falling from top) ─────── */
+  function triggerSparkleRain(count) {
+    count = count || 24;
+    var container = document.body;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for (var i = 0; i < count; i++) {
+      var p = document.createElement('div');
+      p.className = 'sparkle-particle';
+      p.style.left = (Math.random() * 100) + 'vw';
+      // Randomize size 4-8px for variety
+      var size = 4 + Math.random() * 4;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      // Stagger delay 0-0.5s
+      p.style.animationDelay = (Math.random() * 0.5) + 's';
+      // Slight color variation: gold / amber / orange
+      var colors = ['#F59E0B', '#FBBF24', '#F97316', '#FCD34D'];
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      container.appendChild(p);
+      // Auto-remove after animation + buffer
+      var lifetime = reduced ? 200 : 2000;
+      setTimeout(function (el) { return function () {
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      }; }(p), lifetime);
     }
+  }
+
+  /* ── C3: Module / Course completion celebration ─────────────── */
+  function triggerModuleCelebration() {
+    var lessonNum = (state.currentLessonIdx || 0) + 1;
+    var isGraduation = (lessonNum === 18);  // B18 = course complete
+    var isTrophy    = (lessonNum === 6 || lessonNum === 13);
+    if (!isGraduation && !isTrophy) return;
+    var el = document.createElement('div');
+    el.className = isGraduation ? 'graduation-celebration' : 'trophy-celebration';
+    el.textContent = isGraduation ? '🎓' : '🏆';
+    document.body.appendChild(el);
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var lifetime = reduced ? 1000 : 2200;
+    setTimeout(function () {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    }, lifetime);
+    // B18 graduation also triggers rainbow confetti explicitly (in case hearts < 3)
+    if (isGraduation) celebrate();
+  }
+
+  /* ── C3: Combined Step 4 success hook ────────────────────────── */
+  function triggerStep4Success() {
+    celebrate();                       // confetti (rainbow if perfect)
+    triggerSparkleRain(24);            // golden sparkle rain
+    triggerModuleCelebration();        // trophy B6/B13 OR graduation B18
   }
 
   function init() {
@@ -131,6 +189,31 @@
     document.documentElement.style.setProperty('--module-accent', mc.accent);
     document.documentElement.style.setProperty('--module-accent-soft', mc.accent + mc.softAlpha);
     document.documentElement.style.setProperty('--module-accent-glow', mc.accent + mc.glowAlpha);
+    // Apply theme-* class to body for per-module sub-themes (Phase 2.3b)
+    const THEME_SLUG = { 1: 'amber', 2: 'indigo', 3: 'emerald' };
+    const themeSlug = THEME_SLUG[mod] || '';
+    document.body.classList.remove('theme-amber', 'theme-indigo', 'theme-emerald');
+    if (themeSlug) document.body.classList.add('theme-' + themeSlug);
+
+    // 4.8 Scroll progress bar — thin colored bar at top tracks scroll within active step
+    const scrollBar = document.getElementById('scroll-progress');
+    if (scrollBar) {
+      const activePane = () => document.querySelector('.step-pane.active');
+      const updateScroll = () => {
+        const pane = activePane();
+        if (!pane) return;
+        const max = pane.scrollHeight - pane.clientHeight;
+        const pct = max > 0 ? pane.scrollTop / max * 100 : 0;
+        // Use setProperty instead of .style.width to avoid inline styles
+        scrollBar.style.setProperty('--scroll-pct', Math.min(100, Math.max(0, pct)) + '%');
+      };
+      // Listen on the lesson-stage container (which is the scroll root for steps)
+      const stage = document.querySelector('.lesson-stage') || document;
+      stage.addEventListener('scroll', updateScroll, true);
+      // Also poll on resize (step content may change)
+      window.addEventListener('resize', updateScroll);
+      updateScroll();
+    }
 
     // Sticky progress bar — glassmorphism khi scroll qua header
     // (toggle .is-scrolled class trên .lesson-header khi sentinel trên đầu ra khỏi viewport)
@@ -156,6 +239,9 @@
 
     // Default to step 1
     goToStep(1);
+
+    // B7 — Init mobile notice button handlers
+    initMobileStep3Buttons();
   }
 
   function showError(msg) {
@@ -183,7 +269,7 @@
         <p class="lesson-intro" style="opacity:0.5;font-style:italic;">
           Nội dung bài học này đang được cập nhật. Hãy thử bài khác trong roadmap.
         </p>
-        <button class="next-btn primary" onclick="goToStep(2)">Tạm bỏ qua, tiếp tục <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="next-btn primary btn btn-primary" onclick="goToStep(2)">Tạm bỏ qua, tiếp tục <i class="fa-solid fa-arrow-right"></i></button>
       `;
       return;
     }
@@ -267,11 +353,11 @@
       // Hide the redundant static schema/data panels for Normal Form lessons —
       // the decomp game is the visual focus.
       const visualDbPanel = document.getElementById('visual-db-panel');
-      if (visualDbPanel) visualDbPanel.style.display = 'none';
+      if (visualDbPanel) visualDbPanel.classList.add('flagship-panel-hidden');
     } else {
       // Ensure the visual DB panel is visible for non-NF lessons
       const visualDbPanel = document.getElementById('visual-db-panel');
-      if (visualDbPanel) visualDbPanel.style.display = '';
+      if (visualDbPanel) visualDbPanel.classList.remove('flagship-panel-hidden');
       // Clear any leftover decomp mount
       const decMount = document.getElementById('decomp-game-mount');
       if (decMount) decMount.innerHTML = '';
@@ -325,25 +411,96 @@
     const conceptMount = document.getElementById('concept-cards-mount');
     if (conceptMount) {
       if (s1.concept_cards && s1.concept_cards.length) {
-        conceptMount.innerHTML = s1.concept_cards.map(c => {
+        conceptMount.innerHTML = s1.concept_cards.map((c, idx) => {
           // Resolve icon: data-icon field (SVG id) > icon field (fa-*) > fallback
           const iconName = c.data_icon || ICON_MAP[c.icon || ''] || 'i-zap';
+          // C6: variant takes precedence over idx-based default (highlight/default)
+          const variant = c.variant || (idx === 0 ? 'highlight' : 'default');
+          const variantCls = 'card-' + variant;
+          // Quote variant: extra .card-source element
+          const sourceHTML = (variant === 'quote' && c.source)
+            ? `<span class="card-source">${escapeHtml(c.source)}</span>`
+            : '';
+          // Interactive variant: extra body + expand hint
+          const extraHTML = (variant === 'interactive' && c.extra)
+            ? `<div class="card-body-extra">${c.extra}</div><span class="card-expand-hint">Click để xem thêm</span>`
+            : '';
           return `
-          <div class="concept-card">
+          <div class="concept-card ${variantCls}" data-variant="${variant}">
             <div class="concept-card-head">
               <div class="concept-card-icon">
                 <svg class="concept-card-icon-svg" aria-hidden="true"><use href="#${iconName}"/></svg>
               </div>
               <div class="concept-card-title">${c.title || ''}</div>
             </div>
-            <div class="concept-card-body">${c.body || ''}</div>
+            <div class="concept-card-body">${c.body || ''}${sourceHTML}</div>
+            ${extraHTML}
           </div>
         `;
         }).join('');
+        // C6: attach click handler for interactive cards (toggle expanded)
+        const interactiveCards = conceptMount.querySelectorAll('.concept-card.card-interactive');
+        interactiveCards.forEach(function (card) {
+          card.addEventListener('click', function () {
+            card.classList.toggle('expanded');
+            const hint = card.querySelector('.card-expand-hint');
+            // CSS rule: .concept-card.card-interactive.expanded .card-expand-hint { display: none; }
+            // The classList toggle on card already controls hint visibility via CSS.
+          });
+        });
       } else {
         conceptMount.innerHTML = '';
       }
     }
+
+    // C7: Progressive disclosure — wrap concept cards, diagram, visual panel
+    // so they fade in on scroll instead of all appearing at once.
+    wrapStep1RevealSections();
+  }
+
+  /* ── C7: Progressive Disclosure — scroll-triggered fade-in ────── */
+  function wrapStep1RevealSections() {
+    var sections = [
+      { el: document.getElementById('concept-cards-mount'),  i: 0 },
+      { el: document.getElementById('primer-svg-mount'),     i: 1 },
+      { el: document.getElementById('visual-db-panel'),      i: 2 }
+    ];
+    sections.forEach(function (s) {
+      if (!s.el) return;
+      // Reset (avoid stale state when re-rendering same lesson)
+      s.el.classList.remove('step1-reveal', 'is-visible');
+      s.el.style.removeProperty('--i');
+      // Add step1-reveal only if element has content (skip empty containers)
+      if (s.el.children.length === 0 && !s.el.textContent.trim()) return;
+      s.el.classList.add('step1-reveal');
+      s.el.style.setProperty('--i', String(s.i));
+    });
+    initStep1Reveal();
+  }
+
+  function initStep1Reveal() {
+    var sections = document.querySelectorAll('.step1-reveal:not(.is-visible)');
+    if (!sections.length) return;
+    // Respect reduced-motion: show all immediately
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      sections.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+    if (typeof IntersectionObserver === 'undefined') {
+      // Fallback: show all immediately
+      sections.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          observer.unobserve(e.target);  // only trigger once
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+    sections.forEach(function (s) { observer.observe(s); });
   }
 
   function renderSchemaTable(schema) {
@@ -451,10 +608,21 @@
       btn.dataset.qIdx = qIdx;
       btn.dataset.optIdx = i;
       const letter = String.fromCharCode(65 + i);
-      btn.innerHTML = `
-        <span class="opt-letter">${letter}</span>
-        <span>${opt.text}</span>
-      `;
+
+      // C4: variant option rendering based on opt.format
+      let bodyHTML;
+      if (opt.format === 'code') {
+        // Syntax-highlighted SQL in <pre><code>
+        bodyHTML = `<pre class="mcq-code-option"><code>${highlightSQL(opt.text || '')}</code></pre>`;
+      } else if (opt.format === 'diagram') {
+        // ASCII (string) OR HTML table (array of arrays)
+        bodyHTML = renderDiagramOption(opt.diagram);
+      } else {
+        // Default text rendering
+        bodyHTML = `<span>${escapeHtml(opt.text || '')}</span>`;
+      }
+
+      btn.innerHTML = `<span class="opt-letter">${letter}</span>${bodyHTML}`;
       btn.addEventListener('click', () => handleMCQClick(btn, opt, qIdx, mcqList));
       wrap.appendChild(btn);
     });
@@ -463,6 +631,37 @@
     document.getElementById('mcq-explain').classList.add('hidden');
     document.getElementById('inline-hint').classList.add('hidden');
     document.getElementById('btn-next-step3').classList.add('hidden');
+  }
+
+  /* ── C4: Diagram MCQ option renderer ────────────────────────
+     Accepts string (ASCII art) or array-of-arrays (HTML table) */
+  function renderDiagramOption(diagram) {
+    if (!diagram) return '<span>(empty)</span>';
+    if (typeof diagram === 'string') {
+      // ASCII art — render in <pre>, preserve whitespace
+      return `<pre class="mcq-diagram-option">${escapeHtml(diagram)}</pre>`;
+    }
+    if (Array.isArray(diagram) && diagram.length > 0) {
+      // Array of arrays → HTML table
+      const headerRow = diagram[0];
+      const bodyRows = diagram.slice(1);
+      let html = '<table class="mcq-diagram-table"><thead><tr>';
+      headerRow.forEach(function (cell) {
+        html += '<th>' + escapeHtml(String(cell)) + '</th>';
+      });
+      html += '</tr></thead><tbody>';
+      bodyRows.forEach(function (row) {
+        html += '<tr>';
+        row.forEach(function (cell) {
+          html += '<td>' + escapeHtml(String(cell)) + '</td>';
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return `<div class="mcq-diagram-option">${html}</div>`;
+    }
+    // Fallback
+    return `<span>${escapeHtml(String(diagram))}</span>`;
   }
 
   function handleMCQClick(btn, opt, qIdx, mcqList) {
@@ -479,6 +678,18 @@
       celebrate();
     } else {
       btn.classList.add('wrong');
+      // C1 Wrong-answer exploration (Brilliant pattern) — show why wrong + correct hint
+      const correctOpt = mcqList[qIdx] && mcqList[qIdx].options && mcqList[qIdx].options.find(o => o.correct);
+      const wrongExpl = opt.explanation || 'Xem lại lý thuyết ở trên.';
+      const correctExpl = correctOpt && correctOpt.explanation ? correctOpt.explanation : '';
+      const tip = document.createElement('div');
+      tip.className = 'mcq-wrong-tip mcq-wrong-explore';
+      tip.innerHTML =
+        '<div class="mcq-wrong-why">' + escapeHtml(wrongExpl) + '</div>' +
+        (correctExpl ? '<div class="mcq-correct-hint">💡 ' + escapeHtml(correctExpl) + '</div>' : '');
+      // Note: .mcq-option already has position: relative — tip will be positioned inside it.
+      btn.appendChild(tip);
+      setTimeout(() => tip.remove(), 5000);  // 5s instead of 3s — give user time to read
       loseHeart();
       setTimeout(() => {
         options.forEach(o => {
@@ -667,15 +878,10 @@
       const chipEls = binEl.querySelectorAll('.mini-bin-chips .mini-chip');
       chipEls.forEach(chipEl => {
         const chipId = chipEl.dataset.chipId;
-        if (sol[chipId] === binId) {
-          chipEl.style.background = 'var(--success-soft)';
-          chipEl.style.borderColor = 'var(--success)';
-          chipEl.style.color = 'var(--success)';
-        } else {
-          chipEl.style.background = 'var(--danger-soft)';
-          chipEl.style.borderColor = 'var(--danger)';
-          chipEl.style.color = 'var(--danger)';
-        }
+        // CSS classes mini-chip-correct / mini-chip-wrong replace 6 inline assignments
+        // (--success-soft/--success, --danger-soft/--danger). See lesson_db_design.css.
+        chipEl.classList.remove('mini-chip-correct', 'mini-chip-wrong');
+        chipEl.classList.add(sol[chipId] === binId ? 'mini-chip-correct' : 'mini-chip-wrong');
       });
     });
 
@@ -767,13 +973,6 @@
     const z = s3.drop_zones.find(z => z.id === zoneId);
     if (z) return z.label || zoneId;
     return zoneId || null;
-  }
-
-  function showInlineHint(text) {
-    const el = document.getElementById('inline-hint');
-    if (!el) return;
-    document.getElementById('inline-hint-text').textContent = text;
-    el.classList.remove('hidden');
   }
 
   function bindMCQInlineHints() {
@@ -1080,6 +1279,7 @@
       pill.addEventListener('dragstart', e => {
         e.dataTransfer.setData('text/plain', b.token);
         e.dataTransfer.effectAllowed = 'move';
+        pill.classList.add('dragging'); // 4.4 pill drag-start visual
         const zoneId = slotToZone(b.slot, s3);
         if (zoneId) {
           const zoneEl = document.querySelector(`.drop-line[data-zone="${zoneId}"]`);
@@ -1087,6 +1287,7 @@
         }
       });
       pill.addEventListener('dragend', () => {
+        pill.classList.remove('dragging'); // 4.4 pill drag-end cleanup
         document.querySelectorAll('.drop-line.drag-target-hint')
           .forEach(el => el.classList.remove('drag-target-hint'));
       });
@@ -1229,39 +1430,6 @@
     'orderby-line': '#EC4899',
     'limit-line': '#FBBF24'
   };
-
-  function getZoneColor(zoneId) {
-    return ZONE_COLORS[zoneId] || null;
-  }
-
-  function placeBlockInSlot(pill, zoneId, slotEl) {
-    pill.classList.add('locked');
-
-    slotEl.classList.add('filled');
-
-    // Clear placeholder text (keep for re-rendering)
-    if (slotEl.children.length === 0 && slotEl.textContent.trim() !== '') {
-      slotEl.innerHTML = '';
-    }
-
-    /* v3 redesign: NO auto-sort.
-     * User's drop order is preserved exactly. If the order is wrong (e.g. WHERE: 101 then =)
-     * the IDE will show the broken SQL and the subtle "broken" tooltip will guide them.
-     * This forces the user to think about clause structure instead of being rescued by
-     * a magical re-sorter.
-     */
-    const s3 = state.currentLesson.step_3;
-    const newBlock = { token: pill.dataset.token, type: pill.dataset.type };
-
-    if (!state.step3Blocks[zoneId]) state.step3Blocks[zoneId] = [];
-    const arr = state.step3Blocks[zoneId];
-    /* Always append at end — preserve drop order */
-    arr.push(newBlock);
-    state.step3Placed.add(pill.dataset.token);
-
-    renderZone(zoneId, slotEl);
-    updateIDEFromBlocks();
-  }
 
   /** Re-render a drop-zone slot from state.step3Blocks[zoneId].
    *  Each placed pill is BOTH draggable (to swap/move/remove) AND a drop
@@ -1459,6 +1627,13 @@
 
     renderZone(zoneId, null);
     updateIDEFromBlocks();
+
+    // 4.5 Drop zone accept flash — green flash 240ms when a block lands in a zone
+    const zoneEl = document.querySelector(`.drop-line[data-zone="${zoneId}"]`);
+    if (zoneEl) {
+      zoneEl.classList.add('zone-accepted');
+      setTimeout(() => zoneEl.classList.remove('zone-accepted'), 240);
+    }
   }
 
   // (Undo removed — use drag-back to bank to remove individual blocks,
@@ -1662,9 +1837,11 @@
 
       if (genNorm.toUpperCase() === expNorm.toUpperCase()) {
         hintEl.innerHTML = '🎉 Hoàn hảo! Câu SQL khớp 100%. Bấm <strong>Tới Tự Code</strong> để sang bước 4.';
-        hintEl.parentElement.style.background = 'rgba(16, 185, 129, 0.08)';
-        hintEl.parentElement.style.borderTopColor = 'rgba(16, 185, 129, 0.25)';
-        hintEl.parentElement.style.color = 'var(--success)';
+        // CSS classes step3-feedback-success / step3-feedback-warn replace
+        // 6 inline assignments on the parent (background, border-top, color).
+        // See lesson_db_design.css.
+        hintEl.parentElement.classList.remove('step3-feedback-warn');
+        hintEl.parentElement.classList.add('step3-feedback-success');
         // Guard A4: chỉ cộng XP Step 3 đúng 1 lần mỗi completion
         if (!state.step3XPAwarded) {
           state.step3XPAwarded = true;
@@ -1672,9 +1849,8 @@
         }
       } else {
         hintEl.innerHTML = '⚠️ Cú pháp gần đúng nhưng chưa khớp. Kiểm tra lại thứ tự hoặc dấu phẩy giữa các cột.';
-        hintEl.parentElement.style.background = 'rgba(245, 158, 11, 0.08)';
-        hintEl.parentElement.style.borderTopColor = 'rgba(245, 158, 11, 0.25)';
-        hintEl.parentElement.style.color = 'var(--warning)';
+        hintEl.parentElement.classList.remove('step3-feedback-success');
+        hintEl.parentElement.classList.add('step3-feedback-warn');
       }
     }
   }
@@ -1809,7 +1985,7 @@
     });
     if (s4.schema.data && s4.schema.data.length) {
       const dataWrap = document.createElement('div');
-      dataWrap.style.marginTop = '12px';
+      dataWrap.classList.add('flagship-data-wrap');
       dataWrap.innerHTML = `
         <div style="font-size:10px;font-weight:700;color:var(--text-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Sample Data</div>
         <table class="data-table" style="font-size:11px;">
@@ -1901,6 +2077,7 @@
       addXP(15);
       celebrate();
       flashTerminal('success', `✓ Đúng rồi! Đáp án chính là option này.\n\n→ ${s4.xp_reward || 50} XP + 10 Gems!`);
+      triggerStep4Success();
       setTimeout(showSuccess, 1000);
     } else {
       btn.classList.add('wrong');
@@ -2000,7 +2177,7 @@
         if (isSubmit && state.currentLesson && state.currentLesson.id) {
           localStorage.removeItem(`pe_draft_${state.currentLesson.id}`);
         }
-        if (isSubmit) { celebrate(); setTimeout(showSuccess, 1200); }
+        if (isSubmit) { triggerStep4Success(); setTimeout(showSuccess, 1200); }
       } else {
         flashTerminal('error', `✗ Wrong Answer\n\n${result.error || 'Query chưa đúng.'}\n\n${result.suggestion || ''}`);
         if (isSubmit) loseHeart();
@@ -2030,7 +2207,7 @@
     if (correct === inputs.length) {
       flashTerminal('success', `✓ Tuyệt vời! Bạn đã điền đúng ${correct}/${inputs.length} ô.\n\n→ ${s4.xp_reward || 50} XP!`);
       addXP(s4.xp_reward || 50);
-      if (isSubmit) { celebrate(); setTimeout(showSuccess, 1200); }
+      if (isSubmit) { triggerStep4Success(); setTimeout(showSuccess, 1200); }
     } else {
       flashTerminal('error', `✗ Đúng ${correct}/${inputs.length}. Kiểm tra lại các ô tô đỏ.`);
       if (isSubmit) loseHeart();
@@ -2047,7 +2224,7 @@
     if (result.correct) {
       flashTerminal('success', `✓ Đã sửa xong! Query giờ trả về kết quả đúng.\n\n→ ${s4.xp_reward || 50} XP!`);
       addXP(s4.xp_reward || 50);
-      if (isSubmit) { celebrate(); setTimeout(showSuccess, 1200); }
+      if (isSubmit) { triggerStep4Success(); setTimeout(showSuccess, 1200); }
     } else {
       flashTerminal('error', `✗ Vẫn còn lỗi. ${result.error || 'Kiểm tra lại từng dòng.'}`);
       if (isSubmit) loseHeart();
@@ -2079,6 +2256,36 @@
   function validateSQL(userSQL, expectedSQL) {
     const u = normalizeSQL(userSQL);
     const e = normalizeSQL(expectedSQL);
+
+    // === Multi-query support (B17 SQL Injection: prepared statement + count) ===
+    // Split by semicolon, compare as unordered SET
+    const uQueries = u.split(';').map(q => q.trim()).filter(q => q.length > 0);
+    const eQueries = e.split(';').map(q => q.trim()).filter(q => q.length > 0);
+
+    if (eQueries.length > 1) {
+      // Expected has multiple queries (e.g. B17 needs prepared statement + count)
+      // User MUST provide all queries
+      if (uQueries.length === 0) {
+        return { correct: false, error: `Cần ${eQueries.length} câu query, bạn chưa viết câu nào.` };
+      }
+      if (uQueries.length < eQueries.length) {
+        return { correct: false, error: `Thiếu query — cần ${eQueries.length} câu, bạn chỉ viết ${uQueries.length}.` };
+      }
+      if (uQueries.length > eQueries.length) {
+        return { correct: false, error: `Thừa query — chỉ cần ${eQueries.length} câu, bạn viết ${uQueries.length}.` };
+      }
+      const uSet = new Set(uQueries);
+      const eSet = new Set(eQueries);
+      if ([...eSet].every(q => uSet.has(q))) {
+        return { correct: true, feedback: `Đúng — đủ ${eQueries.length} câu query khớp với đáp án.` };
+      }
+      // Right count, wrong content — give specific error
+      return {
+        correct: false,
+        error: `Có ${uQueries.length} câu query nhưng nội dung chưa khớp. Kiểm tra lại từng câu.`,
+        suggestion: 'So sánh với gợi ý level 4 hoặc đáp án.'
+      };
+    }
 
     // Exact match (case-insensitive, whitespace-insensitive)
     if (u === e) {
@@ -2284,7 +2491,39 @@
         // CodeMirror refresh already handled above
       }
     }
+
+    // B7 — Mobile Step 3 drag-drop fallback notice (Option A)
+    updateMobileStep3Notice(step);
   };
+
+  // B7 — Mobile Step 3 drag-drop fallback notice logic (Option A per Claude v7 Part 11.4)
+  function updateMobileStep3Notice(step) {
+    const notice = document.getElementById('mobile-step3-notice');
+    if (!notice) return;
+    // Detect touch/mobile device (no hover, coarse pointer)
+    const isMobile = window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const shouldShow = isMobile && step === 3;
+    notice.classList.toggle('is-visible', shouldShow);
+  }
+
+  // B7 — Wire up mobile notice buttons (close + skip)
+  function initMobileStep3Buttons() {
+    const notice = document.getElementById('mobile-step3-notice');
+    if (!notice) return;
+    const closeBtn = document.getElementById('mobile-step3-close-btn');
+    const skipBtn = document.getElementById('mobile-step3-skip-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => notice.classList.remove('is-visible'));
+    }
+    if (skipBtn) {
+      skipBtn.addEventListener('click', () => {
+        notice.classList.remove('is-visible');
+        if (typeof window.goToStep === 'function') {
+          window.goToStep(4);
+        }
+      });
+    }
+  }
 
   window.exitLesson = function () {
     if (confirm('Bạn có chắc muốn thoát? Tiến độ bài này sẽ KHÔNG được lưu (chưa hoàn thành).')) {
@@ -2310,6 +2549,55 @@
       s4.success_message || 'Bạn đã hoàn thành bài học!';
     document.getElementById('reward-xp').textContent = `+${s4.xp_reward || 50}`;
     document.getElementById('success-modal').classList.remove('hidden');
+
+    // 5.1 XP breakdown — show code XP + countup total
+    const codeXP = s4.xp_reward || 50;
+    const codeEl = document.getElementById('success-xp-code');
+    if (codeEl) codeEl.textContent = `+${codeXP} XP`;
+    const totalXP = 15 + 15 + 30 + codeXP;
+    const xpTotalEl = document.getElementById('success-xp-total');
+    if (xpTotalEl) {
+      let cur = 0;
+      const step = Math.max(1, Math.ceil(totalXP / 20));
+      const iv = setInterval(() => {
+        cur = Math.min(cur + step, totalXP);
+        xpTotalEl.textContent = '+' + cur + ' XP';
+        if (cur >= totalXP) clearInterval(iv);
+      }, 30);
+    }
+
+    // 5.1 Next lesson preview
+    const data = window.LESSON_CONTENT['db_design'];
+    const nextIdx = state.currentLessonIdx + 1;
+    const nextLesson = nextIdx < data.lessons.length ? data.lessons[nextIdx] : null;
+    const nextTitleEl = document.getElementById('success-next-title');
+    const nextPreviewEl = document.getElementById('success-next-preview');
+    if (nextTitleEl && nextPreviewEl) {
+      if (nextLesson) {
+        nextTitleEl.textContent = nextLesson.title;
+        // nextPreviewEl uses CSS default display:flex — no inline override needed
+        nextPreviewEl.onclick = () => window.nextLesson && window.nextLesson();
+      } else {
+        nextTitleEl.textContent = 'Bạn đã hoàn thành toàn bộ khóa học! 🎓';
+        nextPreviewEl.classList.add('flagship-cursor-default');
+        nextPreviewEl.onclick = null;
+      }
+    }
+
+    // 5.3 Boss Battle fireworks (db_13 only)
+    if (l.id === 'db_13') {
+      const colors = ['#F59E0B','#EF4444','#8B5CF6','#06B6D4','#10B981'];
+      for (let i = 0; i < 30; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'firework';
+        dot.style.left = (20 + Math.random() * 60) + 'vw';
+        dot.style.top = (10 + Math.random() * 40) + 'vh';
+        dot.style.background = colors[i % colors.length];
+        dot.style.animationDelay = (Math.random() * 0.5) + 's';
+        document.body.appendChild(dot);
+        setTimeout(() => dot.remove(), 1500);
+      }
+    }
   }
 
   window.closeSuccess = function () {
@@ -2349,8 +2637,15 @@
       else el.textContent = newVal;
     }
     requestAnimationFrame(tick);
-    el.parentElement.style.transform = 'scale(1.15)';
-    setTimeout(() => { el.parentElement.style.transform = 'scale(1)'; }, 200);
+    // 4.6 XP award sparkle — golden ring around XP counter (replaces inline transform)
+    const parent = el.parentElement;
+    parent.classList.add('xp-pulse');
+    setTimeout(() => parent.classList.remove('xp-pulse'), 240);
+    // 4.6 XP award ring — golden ring around the parent
+    const sparkle = document.createElement('div');
+    sparkle.className = 'xp-sparkle ring';
+    parent.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 260);
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -2377,22 +2672,22 @@
       });
     });
     document.querySelectorAll('.match-slot').forEach(slot => {
-      slot.addEventListener('dragover', e => { e.preventDefault(); slot.style.background = 'rgba(168,85,247,0.15)'; });
-      slot.addEventListener('dragleave', e => { slot.style.background = ''; });
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('flagship-hover-purple'); });
+      slot.addEventListener('dragleave', e => { slot.classList.remove('flagship-hover-purple'); });
       slot.addEventListener('drop', e => {
         e.preventDefault();
-        slot.style.background = '';
+        slot.classList.remove('flagship-hover-purple');
         const cardId = e.dataTransfer.getData('text/plain');
         const card = document.querySelector(`.match-card[data-card-id="${cardId}"]`);
         if (card) {
           const prev = card.parentElement;
           if (prev.classList.contains('match-slot')) {
             prev.querySelector('.match-card-text').textContent = prev.dataset.cardId;
-            prev.style.background = '';
+            prev.classList.remove('flagship-hover-purple');
           }
           slot.innerHTML = `<div style="font-size:11px;color:var(--text-400);margin-bottom:6px;">Bước ${slot.dataset.slotOrder}</div>`;
           slot.appendChild(card);
-          card.style.width = '100%';
+          card.classList.add('flagship-card-full');
         }
       });
     });
@@ -2402,7 +2697,7 @@
         if (card) {
           const bank = document.querySelector('.match-bank');
           bank.appendChild(card);
-          card.style.width = 'auto';
+          card.classList.add('flagship-card-auto');
           slot.innerHTML = `<div style="font-size:11px;color:var(--text-400);margin-bottom:6px;">Bước ${slot.dataset.slotOrder}</div><div class="match-card-text" style="font-size:12px;line-height:1.4;color:var(--text-400);">(trống)</div>`;
         }
       });
@@ -2421,28 +2716,22 @@
         const cardOrder = f.cards.find(c => c.id === card.dataset.cardId)?.order;
         if (cardOrder === expectedOrder) {
           correct++;
-          slot.style.background = 'rgba(34,197,94,0.15)';
-          slot.style.borderColor = '#22c55e';
-          slot.style.borderStyle = 'solid';
+          slot.classList.add('flagship-zone-correct');
         } else {
-          slot.style.background = 'rgba(239,68,68,0.15)';
-          slot.style.borderColor = '#ef4444';
-          slot.style.borderStyle = 'solid';
+          slot.classList.add('flagship-zone-wrong');
         }
       } else {
-        slot.style.background = 'rgba(239,68,68,0.15)';
-        slot.style.borderColor = '#ef4444';
-        slot.style.borderStyle = 'solid';
+        slot.classList.add('flagship-zone-wrong');
       }
     });
     const result = document.getElementById('flagship-match-result');
     if (correct === total) {
       result.textContent = `🎉 Hoàn hảo! ${correct}/${total} bước đúng thứ tự.`;
-      result.style.color = 'var(--success)';
+      result.classList.add('flagship-result-success');
       completeStep3();
     } else {
       result.textContent = `${correct}/${total} đúng. Thử lại!`;
-      result.style.color = 'var(--danger)';
+      result.classList.add('flagship-result-danger');
     }
   };
 
@@ -2469,7 +2758,7 @@
       div.className = 'match-card';
       div.dataset.cardId = c.id;
       div.setAttribute('draggable', 'true');
-      div.style.cssText = 'background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;padding:10px 12px;border-radius:6px;cursor:grab;font-size:12px;line-height:1.4;user-select:none;';
+      div.className = 'match-card flagship-match-card';
       div.textContent = c.text;
       div.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', c.id); e.dataTransfer.effectAllowed = 'move'; });
       bank.appendChild(div);
@@ -2487,11 +2776,11 @@
       });
     });
     document.querySelectorAll('.split-target').forEach(target => {
-      target.addEventListener('dragover', e => { e.preventDefault(); target.style.background = 'rgba(34,197,94,0.15)'; });
-      target.addEventListener('dragleave', e => { target.style.background = ''; });
+      target.addEventListener('dragover', e => { e.preventDefault(); target.classList.add('flagship-hover-green'); });
+      target.addEventListener('dragleave', e => { target.classList.remove('flagship-hover-green'); });
       target.addEventListener('drop', e => {
         e.preventDefault();
-        target.style.background = '';
+        target.classList.remove('flagship-hover-green');
         const colName = e.dataTransfer.getData('text/plain');
         const col = document.querySelector(`.split-col[data-col-name="${colName}"]`);
         if (col) {
@@ -2500,7 +2789,7 @@
           span.className = 'split-target-chip';
           span.dataset.colName = colName;
           span.textContent = col.textContent;
-          span.style.cssText = 'background:#1f2937;border:1px solid #22c55e;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;';
+          span.className = 'split-target-chip flagship-split-chip';
           span.addEventListener('click', () => {
             const source = document.querySelector('.split-source > div:last-child');
             if (source) source.appendChild(col);
@@ -2531,11 +2820,11 @@
     const result = document.getElementById('flagship-split-result');
     if (correct === total && total > 0) {
       result.textContent = `🎉 Hoàn hảo! ${correct}/${total} cột đúng chỗ.`;
-      result.style.color = 'var(--success)';
+      result.classList.add('flagship-result-success');
       completeStep3();
     } else {
       result.textContent = `${correct}/${total} cột đúng. Thử lại!`;
-      result.style.color = 'var(--danger)';
+      result.classList.add('flagship-result-danger');
     }
   };
 
@@ -2559,17 +2848,17 @@
       });
     });
     document.querySelectorAll('.bug-bin').forEach(bin => {
-      bin.addEventListener('dragover', e => { e.preventDefault(); bin.style.background = 'rgba(168,85,247,0.15)'; });
-      bin.addEventListener('dragleave', e => { bin.style.background = ''; });
+      bin.addEventListener('dragover', e => { e.preventDefault(); bin.classList.add('flagship-hover-purple'); });
+      bin.addEventListener('dragleave', e => { bin.classList.remove('flagship-hover-purple'); });
       bin.addEventListener('drop', e => {
         e.preventDefault();
-        bin.style.background = '';
+        bin.classList.remove('flagship-hover-purple');
         const chipId = e.dataTransfer.getData('text/plain');
         const chip = document.querySelector(`.bug-chip[data-chip-id="${chipId}"]`);
         if (chip) {
           const chipsHost = bin.querySelector('.bug-bin-chips');
           const clone = chip.cloneNode(true);
-          clone.style.cursor = 'pointer';
+          clone.classList.add('flagship-cursor-pointer');
           clone.addEventListener('click', () => {
             document.querySelector('.bug-bank').appendChild(chip);
             clone.remove();
@@ -2589,21 +2878,19 @@
       const placed = document.querySelector(`.bug-bin .bug-chip[data-chip-id="${c.id}"]`);
       if (placed && f.solution[c.id] === placed.closest('.bug-bin').dataset.binId) {
         correct++;
-        placed.style.background = 'rgba(34,197,94,0.2)';
-        placed.style.borderColor = '#22c55e';
+        placed.classList.add('flagship-placed-correct');
       } else if (placed) {
-        placed.style.background = 'rgba(239,68,68,0.2)';
-        placed.style.borderColor = '#ef4444';
+        placed.classList.add('flagship-placed-wrong');
       }
     });
     const result = document.getElementById('flagship-bugspot-result');
     if (correct === total && total > 0) {
       result.textContent = `🎉 Hoàn hảo! Phân loại đúng cả ${total}.`;
-      result.style.color = 'var(--success)';
+      result.classList.add('flagship-result-success');
       completeStep3();
     } else {
       result.textContent = `${correct}/${total} đúng. Thử lại!`;
-      result.style.color = 'var(--danger)';
+      result.classList.add('flagship-result-danger');
     }
   };
 
@@ -2632,12 +2919,12 @@
         updateJoinIDE();
       });
     });
-    target.addEventListener('dragover', e => { e.preventDefault(); target.style.background = '#0e1424'; });
-    target.addEventListener('dragleave', e => { target.style.background = ''; });
-    target.addEventListener('drop', e => {
-      e.preventDefault();
-      target.style.background = '';
-      const idx = e.dataTransfer.getData('text/plain');
+target.addEventListener('dragover', e => { e.preventDefault(); target.classList.add('flagship-hover-dark'); });
+      target.addEventListener('dragleave', e => { target.classList.remove('flagship-hover-dark'); });
+      target.addEventListener('drop', e => {
+        e.preventDefault();
+        target.classList.remove('flagship-hover-dark');
+        const idx = e.dataTransfer.getData('text/plain');
       const b = document.querySelector(`.join-block[data-block-idx="${idx}"]`);
       if (b) {
         target.appendChild(b);
@@ -2666,11 +2953,11 @@
     const result = document.getElementById('flagship-join-result');
     if (placedStr === expectedStr) {
       result.textContent = '🎉 Hoàn hảo! 4-table JOIN đúng thứ tự!';
-      result.style.color = 'var(--success)';
+      result.classList.add('flagship-result-success');
       completeStep3();
     } else {
       result.textContent = `Sai thứ tự hoặc thiếu thẻ. Đặt ${placed.length}/${expectedTokens.length}.`;
-      result.style.color = 'var(--danger)';
+      result.classList.add('flagship-result-danger');
     }
   };
 
@@ -3105,15 +3392,15 @@
   function showMiniFeedback(container, feedbackId, ok, msg) {
     const el = container.querySelector('#' + feedbackId);
     if (!el) return;
-    el.style.display = 'flex';
+    el.classList.add('flagship-feedback-flex');
     el.classList.toggle('wrong', !ok);
     el.innerHTML = `<i class="fa-solid ${ok ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${msg}`;
   }
   function flashTip(container, msg) {
     const tip = document.createElement('div');
-    tip.style.cssText = 'position:absolute;bottom:12px;right:12px;background:var(--warning);color:#1A1A1A;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;z-index:10;';
+    tip.className = 'flagship-flash-tip';
     tip.textContent = msg;
-    container.style.position = 'relative';
+    container.classList.add('flagship-container-rel');
     container.appendChild(tip);
     setTimeout(() => tip.remove(), 1800);
   }

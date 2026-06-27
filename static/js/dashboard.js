@@ -1791,10 +1791,26 @@ function forumClearSearch() {
       var midX = (x1 + x2) / 2;
       var path = 'M ' + x1 + ' ' + y1 + ' C ' + midX + ' ' + y1 + ', ' + midX + ' ' + y2 + ', ' + x2 + ' ' + y2;
       var isActive = classifyNode(nodes[i]) === 'done' || classifyNode(nodes[i]) === 'current';
-      svgPaths += '<path class="mini-rm-arrow ' + (isActive ? 'mini-rm-arrow--solid' : '') + '" d="' + path + '"></path>';
+      svgPaths += '<path id="mini-rm-path-' + i + '" class="mini-rm-arrow ' + (isActive ? 'mini-rm-arrow--solid' : '') + '" d="' + path + '"></path>';
     }
 
-    var html = '<svg class="mini-rm-arrows" viewBox="0 0 ' + svgW + ' ' + svgH + '" preserveAspectRatio="none">' + svgPaths + '</svg>';
+    // Truck animation: chạy từ current node đến next node. Tìm index current.
+    var currentIdx = -1;
+    nodes.forEach(function (c, i) {
+      if (classifyNode(c) === 'current') currentIdx = i;
+    });
+
+    var html = '<svg class="mini-rm-arrows" viewBox="0 0 ' + svgW + ' ' + svgH + '" preserveAspectRatio="none">' + svgPaths;
+    if (currentIdx >= 0 && currentIdx < nodes.length - 1) {
+      html += '<g class="mini-rm-truck">' +
+              '<circle r="11" fill="#FCD34D" stroke="#F59E0B" stroke-width="2"/>' +
+              '<text x="0" y="5" text-anchor="middle" font-size="14">🚚</text>' +
+              '<animateMotion dur="6s" repeatCount="indefinite" rotate="auto">' +
+              '<mpath href="#mini-rm-path-' + currentIdx + '"/>' +
+              '</animateMotion>' +
+              '</g>';
+    }
+    html += '</svg>';
     nodes.forEach(function (c, i) {
       var pos = POSITIONS[i];
       var status = classifyNode(c);
@@ -1822,13 +1838,13 @@ function forumClearSearch() {
   }
 
   function loadMiniRoadmap() {
-    if (_miniRmLoaded) {
-      // nếu data enrolledCourses đã có sẵn (main.js load) thì render luôn
-      if (window.enrolledCourses && window.enrolledCourses.length) {
-        renderMiniCanvas(window.enrolledCourses);
-      }
+    // Nếu main.js đã load enrolledCourses → render luôn
+    if (window.enrolledCourses && window.enrolledCourses.length) {
+      renderMiniCanvas(window.enrolledCourses);
+      _miniRmLoaded = true;
       return;
     }
+    if (_miniRmLoaded) return;
     _miniRmLoaded = true;
 
     // 1) Ưu tiên dùng cache enrolledCourses của main.js
@@ -1842,6 +1858,17 @@ function forumClearSearch() {
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (data) {
         renderMiniCanvas(data || []);
+        // Watch: main.js may load enrolledCourses sau → re-render khi có
+        var tries = 0;
+        var iv = setInterval(function () {
+          tries++;
+          if (window.enrolledCourses && window.enrolledCourses.length) {
+            renderMiniCanvas(window.enrolledCourses);
+            clearInterval(iv);
+          } else if (tries > 20) {
+            clearInterval(iv);
+          }
+        }, 500);
       })
       .catch(function () {
         renderMiniCanvas([]);

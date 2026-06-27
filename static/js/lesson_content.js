@@ -56,19 +56,19 @@ window.LESSON_CONTENT['db_design'] = {
           intro: 'Trong CSDL quan hệ, mỗi <strong>Entity Set</strong> = 1 table. Mỗi dòng = 1 thực thể (entity), mỗi cột = 1 thuộc tính (attribute). <strong>Primary Key (PK)</strong> là cột đảm bảo mỗi dòng có giá trị <em>DUY NHẤT</em> — không trùng, không NULL.',
           example: 'Bảng <code class="code">game_catalog</code> dưới đây có cột <code class="code">id</code> làm PK. Hai game có thể trùng tên (Elden Ring xuất hiện 2 lần ở 2 thể loại), nhưng <code class="code">id</code> thì không bao giờ trùng — vì vậy dùng <code class="code">id</code> trong WHERE sẽ chốt được đúng 1 dòng.'
         },
-                intro: 'Bạn vừa nhận việc ở 1 shop game online. Sếp bảo: <em>"Tổ chức lại kho 5000 game cho gọn gàng"</em>. Bước đầu tiên? Tạo 1 <strong>bảng</strong> (table) — nơi mỗi game là 1 dòng, mỗi thuộc tính (tên, giá, thể loại) là 1 cột. Đây chính là <strong>Entity Set</strong> trong database design.',
-concept_cards: [
+        intro: 'Bạn vừa nhận việc ở 1 shop game online. Sếp bảo: <em>"Tổ chức lại kho 5000 game cho gọn gàng"</em>. Bước đầu tiên? Tạo 1 <strong>bảng</strong> (table) — nơi mỗi game là 1 dòng, mỗi thuộc tính (tên, giá, thể loại) là 1 cột. Đây chính là <strong>Entity Set</strong> trong database design.',
+        concept_cards: [
             {
-                  "icon": "fa-cube",
-                  "title": "Entity Set (Tập thực thể)",
-                  "body": "Bạn có 1000 game trong shop. Lưu vào đâu? Mỗi <strong>Entity Set</strong> = 1 bảng chứa mọi thứ cùng loại. Bảng <code>game_catalog</code> = nơi 1000 game đó sống — mỗi dòng là 1 game, mỗi cột là 1 thuộc tính."
+              "icon": "fa-cube",
+              "title": "Entity Set (Tập thực thể)",
+              "body": "Bạn có 1000 game trong shop. Lưu vào đâu? Mỗi <strong>Entity Set</strong> = 1 bảng chứa mọi thứ cùng loại. Bảng <code>game_catalog</code> = nơi 1000 game đó sống — mỗi dòng là 1 game, mỗi cột là 1 thuộc tính."
             },
             {
-                  "icon": "fa-key",
-                  "title": "Primary Key (Khóa chính)",
-                  "body": "Hai game đều tên \"Elden Ring\" — làm sao DB biết bạn muốn game nào? <strong>Primary Key</strong> giải quyết: mỗi dòng có 1 số ID riêng, không ai giống ai. <code>WHERE id = 101</code> → chính xác 1 dòng, không bao giờ nhầm."
+              "icon": "fa-key",
+              "title": "Primary Key (Khóa chính)",
+              "body": "Hai game đều tên \"Elden Ring\" — làm sao DB biết bạn muốn game nào? <strong>Primary Key</strong> giải quyết: mỗi dòng có 1 số ID riêng, không ai giống ai. <code>WHERE id = 101</code> → chính xác 1 dòng, không bao giờ nhầm."
             }
-      ],
+        ],
         visual: {
           diagram: {
             type: 'er',
@@ -111,19 +111,19 @@ concept_cards: [
           {
             question: 'Tại sao cần Primary Key trong một table?',
             options: [
-              { id: 'a', text: 'Để format bảng đẹp hơn trên giao diện web', correct: false },
-              { id: 'b', text: 'Để đảm bảo mỗi record có định danh duy nhất, không trùng lặp', correct: true },
-              { id: 'c', text: 'Để tăng tốc độ hiển thị bảng trên browser', correct: false },
-              { id: 'd', text: 'Để giảm dung lượng lưu trữ database', correct: false }
+              { id: 'a', text: 'Để format bảng đẹp hơn trên giao diện web', correct: false, explanation: 'PK không liên quan đến hiển thị web. PK là ràng buộc ở database layer để đảm bảo tính duy nhất.' },
+              { id: 'b', text: 'Để đảm bảo mỗi record có định danh duy nhất, không trùng lặp', correct: true, explanation: 'Đúng — PK guarantee giá trị DUY NHẤT, không NULL, không trùng. Cho phép WHERE chốt đúng 1 record.' },
+              { id: 'c', text: 'Để tăng tốc độ hiển thị bảng trên browser', correct: false, explanation: 'Tốc độ hiển thị phụ thuộc frontend rendering, không phải PK. PK là database constraint.' },
+              { id: 'd', text: 'Để giảm dung lượng lưu trữ database', correct: false, explanation: 'PK không ảnh hưởng dung lượng đáng kể (chỉ thêm index). Mục đích chính là uniqueness + identity.' }
             ]
           },
           {
             question: 'Bảng <code>game_catalog</code> có 2 dòng tên "Elden Ring" (id 101 và 104). Để chỉ lấy bản Action RPG giá 60$ bạn dùng:',
             options: [
-              { id: 'a', text: '<code>WHERE name = "Elden Ring"</code> — vì tên phân biệt được', correct: false },
-              { id: 'b', text: '<code>WHERE id = 101</code> — dùng PK để chốt đúng 1 record', correct: true },
-              { id: 'c', text: '<code>WHERE price = 60</code> — lọc theo giá là đủ', correct: false },
-              { id: 'd', text: 'Không cần WHERE — SELECT trả về hết cũng được', correct: false }
+              { id: 'a', text: '<code>WHERE name = "Elden Ring"</code> — vì tên phân biệt được', correct: false, explanation: 'name KHÔNG unique — có 2 dòng trùng tên. WHERE name sẽ trả về 2 dòng chứ không phải 1.' },
+              { id: 'b', text: '<code>WHERE id = 101</code> — dùng PK để chốt đúng 1 record', correct: true, explanation: 'Chính xác — id là PK nên unique. WHERE id = 101 chốt đúng 1 record cần tìm.' },
+              { id: 'c', text: '<code>WHERE price = 60</code> — lọc theo giá là đủ', correct: false, explanation: 'price có thể trùng (nhiều game cùng giá 60$). WHERE price = 60 có thể trả về nhiều dòng — không chốt được đúng 1.' },
+              { id: 'd', text: 'Không cần WHERE — SELECT trả về hết cũng được', correct: false, explanation: 'SELECT không có WHERE trả về TOÀN BỘ table. Vi phạm nguyên tắc truy vấn — không lọc kết quả.' }
             ]
           }
         ],
@@ -282,19 +282,19 @@ concept_cards: [
           {
             question: 'Thuộc tính Composite (Phức hợp) là gì?',
             options: [
-              { id: 'a', text: 'Cột được lưu nhiều giá trị ngăn cách bằng dấu phẩy', correct: false },
-              { id: 'b', text: 'Thuộc tính có thể tách thành nhiều thuộc tính nhỏ hơn (vd: address → city + district)', correct: true },
-              { id: 'c', text: 'Cột được mã hóa để bảo mật', correct: false },
-              { id: 'd', text: 'Cột có giá trị NULL mặc định', correct: false }
+              { id: 'a', text: 'Cột được lưu nhiều giá trị ngăn cách bằng dấu phẩy', correct: false, explanation: 'Sai — đó là multivalued attribute, không phải composite. Multivalue = NHIỀU giá trị riêng biệt; composite = 1 giá trị chia nhỏ được thành nhiều sub-attribute có ý nghĩa.' },
+              { id: 'b', text: 'Thuộc tính có thể tách thành nhiều thuộc tính nhỏ hơn (vd: address → city + district)', correct: true, explanation: 'Đúng — composite có thể phân rã thành nhiều thuộc tính nhỏ hơn có ý nghĩa độc lập. address = street + city + district + zip_code, mỗi phần dùng query riêng được.' },
+              { id: 'c', text: 'Cột được mã hóa để bảo mật', correct: false, explanation: 'Sai — composite không liên quan đến bảo mật. Mã hóa là encryption, là attribute khác (encrypted vs plain).' },
+              { id: 'd', text: 'Cột có giá trị NULL mặc định', correct: false, explanation: 'Sai — composite có thể có giá trị hoặc NULL. NULL mặc định không phải đặc trưng — composite nói về CẤU TRÚC phân rã được, không nói về giá trị.' }
             ]
           },
           {
             question: 'Tại sao KHÔNG lưu cột <code>age</code> trong bảng mà tính mỗi lần truy vấn?',
             options: [
-              { id: 'a', text: 'Vì cột age quá ngắn, không đáng lưu', correct: false },
-              { id: 'b', text: 'Vì age thay đổi theo thời gian — lưu sẽ phải cập nhật liên tục, dễ sai', correct: true },
-              { id: 'c', text: 'Vì age không phải số nguyên', correct: false },
-              { id: 'd', text: 'Vì age là khóa chính', correct: false }
+              { id: 'a', text: 'Vì cột age quá ngắn, không đáng lưu', correct: false, explanation: 'Sai — age chỉ 4 bytes (INT). Kích thước không phải lý do. Hàng triệu row × 4 bytes vẫn không đáng kể.' },
+              { id: 'b', text: 'Vì age thay đổi theo thời gian — lưu sẽ phải cập nhật liên tục, dễ sai', correct: true, explanation: 'Đúng — age = derived attribute từ (current_date - birth_year). Lưu age = phải UPDATE mỗi năm (cron job) → dễ stale, sai logic. Tính lúc query = luôn đúng với current_date.' },
+              { id: 'c', text: 'Vì age không phải số nguyên', correct: false, explanation: 'Sai — age = INT (3 bytes). Hoàn toàn lưu được. Lý do không liên quan kiểu dữ liệu.' },
+              { id: 'd', text: 'Vì age là khóa chính', correct: false, explanation: 'Sai — age không thể là PK (2 user cùng tuổi). PK phải unique + not null. age vi phạm cả 2.' }
             ]
           }
         ],
@@ -495,19 +495,19 @@ concept_cards: [
           {
             question: 'Foreign Key (FK) dùng để làm gì?',
             options: [
-              { id: 'a', text: 'Lưu giá trị Khóa chính của bảng khác để tạo liên kết', correct: true },
-              { id: 'b', text: 'Mã hóa dữ liệu nhạy cảm', correct: false },
-              { id: 'c', text: 'Tăng tốc độ truy vấn bằng index', correct: false },
-              { id: 'd', text: 'Đánh dấu cột được phép NULL', correct: false }
+              { id: 'a', text: 'Lưu giá trị Khóa chính của bảng khác để tạo liên kết', correct: true, explanation: 'Đúng — FK lưu giá trị PK từ bảng khác (hoặc cùng bảng) để tạo liên kết. DB engine enforce referential integrity: FK phải tồn tại trong bảng tham chiếu.' },
+              { id: 'b', text: 'Mã hóa dữ liệu nhạy cảm', correct: false, explanation: 'Sai — mã hóa là encryption (AES, bcrypt). FK không liên quan security — nó chỉ là 1 cột integer tham chiếu PK.' },
+              { id: 'c', text: 'Tăng tốc độ truy vấn bằng index', correct: false, explanation: 'Sai — PK có index tự động (clustered). FK CÓ THỂ có index (best practice) nhưng bản chất FK là constraint, không phải performance tool.' },
+              { id: 'd', text: 'Đánh dấu cột được phép NULL', correct: false, explanation: 'Sai — NULLability là property độc lập với FK. FK có thể NULL hoặc NOT NULL tuỳ design. NULL = "không có liên kết" trong quan hệ 1:N optional.' }
             ]
           },
           {
             question: 'Khi 2 bảng cùng có cột <code>id</code> và bạn SELECT cả 2, làm sao phân biệt?',
             options: [
-              { id: 'a', text: 'Dùng <code>id1</code> và <code>id2</code>', correct: false },
-              { id: 'b', text: 'Dùng <code>table.column</code> (vd: <code>game.id</code>, <code>publisher.id</code>)', correct: true },
-              { id: 'c', text: 'Không thể SELECT cả 2 bảng có cùng tên cột', correct: false },
-              { id: 'd', text: 'DB tự động đổi tên cột thành id_a và id_b', correct: false }
+{ id: 'a', text: 'SELECT id FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — cột `id` xuất hiện ở cả 2 bảng mà không qualify → ambiguous column error. SQL không tự hiểu ý bạn.' },
+          { id: 'b', text: 'SELECT game.id, publisher.id FROM game JOIN publisher ON game.pub_id = publisher.id', correct: true, format: 'code', explanation: 'Đúng — qualify bằng `<table>.<column>` (game.id, publisher.id). Khi JOIN, dùng ON để chỉ định FK relationship (game.pub_id = publisher.id).' },
+          { id: 'c', text: 'SELECT * FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — `*` chọn tất cả cột của CẢ 2 bảng → 2 cột `id` đều được trả về với cùng tên → phía client không phân biệt được đâu là `game.id`, đâu là `publisher.id`.' },
+          { id: 'd', text: 'SELECT game.id AS game_id, publisher.id AS pub_id FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — alias chỉ đổi tên cột OUTPUT, không giải quyết ambiguity lúc query. Câu này KHÔNG có JOIN nên cross product — kết quả vẫn ambiguous giữa 2 cột id.' }
             ]
           }
         ],
@@ -704,19 +704,19 @@ concept_cards: [
           {
             question: 'Tại sao quan hệ M:N KHÔNG thể chỉ dùng 1 FK ở 1 bảng?',
             options: [
-              { id: 'a', text: 'Vì FK chỉ được lưu 1 lần duy nhất trong bảng', correct: false },
-              { id: 'b', text: 'Vì nhét FK vào 1 bên sẽ sinh lặp dữ liệu vô tận (mỗi record cần 1 dòng)', correct: true },
-              { id: 'c', text: 'Vì M:N không được phép trong SQL', correct: false },
-              { id: 'd', text: 'Vì FK phải là số nguyên dương', correct: false }
+              { id: 'a', text: 'Vì FK chỉ được lưu 1 lần duy nhất trong bảng', correct: false, explanation: 'Sai — FK có thể xuất hiện nhiều lần trong bảng. Mỗi row có thể có FK riêng. Vấn đề M:N nằm ở chỗ khác.' },
+              { id: 'b', text: 'Vì nhét FK vào 1 bên sẽ sinh lặp dữ liệu vô tận (mỗi record cần 1 dòng)', correct: true, explanation: 'Đúng — nếu Player có 1 cột games (FK), mỗi game mua thêm = thêm 1 dòng player (lặp username). Ngược lại cũng vậy. Lặp vô tận → cần junction table.' },
+              { id: 'c', text: 'Vì M:N không được phép trong SQL', correct: false, explanation: 'Sai — SQL cho phép M:N qua junction table. Không có cấm.' },
+              { id: 'd', text: 'Vì FK phải là số nguyên dương', correct: false, explanation: 'Sai — FK chỉ cần cùng kiểu với PK được tham chiếu. Không có ràng buộc dương.' }
             ]
           },
           {
             question: 'Bảng trung gian (Junction Table) trong quan hệ M:N chứa gì?',
             options: [
-              { id: 'a', text: 'Chỉ 1 cột FK trỏ về bảng chính', correct: false },
-              { id: 'b', text: '2 cột FK — mỗi cột trỏ về 1 bảng ở 2 phía quan hệ', correct: true },
-              { id: 'c', text: 'Tất cả thuộc tính của cả 2 bảng gộp lại', correct: false },
-              { id: 'd', text: 'Không có cột nào, chỉ là bảng "ảo"', correct: false }
+              { id: 'a', text: 'Chỉ 1 cột FK trỏ về bảng chính', correct: false, explanation: 'Sai — chỉ 1 FK tạo quan hệ 1:N, không phải M:N. Cần 2 FK (mỗi bên 1).' },
+              { id: 'b', text: '2 cột FK — mỗi cột trỏ về 1 bảng ở 2 phía quan hệ', correct: true, explanation: 'Đúng — junction table chứa 2 FK + (optional) PK ghép. Mỗi dòng = 1 cặp (entityA_id, entityB_id).' },
+              { id: 'c', text: 'Tất cả thuộc tính của cả 2 bảng gộp lại', correct: false, explanation: 'Sai — gộp hết thuộc tính gây lặp dữ liệu (violates 1NF). Junction chỉ giữ 2 FK + metadata tùy chọn.' },
+              { id: 'd', text: 'Không có cột nào, chỉ là bảng "ảo"', correct: false, explanation: 'Sai — junction table là bảng THẬT trong database, chỉ là nó chỉ có 2 FK + PK ghép.' }
             ]
           }
         ],
@@ -913,19 +913,19 @@ concept_cards: [
           {
             question: 'Thực thể yếu (Weak Entity) khác thực thể thường ở điểm nào?',
             options: [
-              { id: 'a', text: 'Có nhiều cột hơn các thực thể khác', correct: false },
-              { id: 'b', text: 'Không có Khóa chính độc lập — cần kết hợp với FK từ thực thể cha', correct: true },
-              { id: 'c', text: 'Không thể lưu dữ liệu số, chỉ lưu chuỗi', correct: false },
-              { id: 'd', text: 'Tự động xóa khi database tắt', correct: false }
+              { id: 'a', text: 'Có nhiều cột hơn các thực thể khác', correct: false, explanation: 'Sai — weak entity thường ÍT cột hơn (chỉ partial key + FK). Số cột không phải đặc trưng phân biệt.' },
+              { id: 'b', text: 'Không có Khóa chính độc lập — cần kết hợp với FK từ thực thể cha', correct: true, explanation: 'Đúng — weak entity không có PK riêng; PK phải là composite (FK từ entity cha + partial key vd: dlc_no). VD: dlc_content cần (game_id, dlc_no) để định danh duy nhất.' },
+              { id: 'c', text: 'Không thể lưu dữ liệu số, chỉ lưu chuỗi', correct: false, explanation: 'Sai — weak entity có thể lưu INT, VARCHAR, DECIMAL... tất cả kiểu SQL. Đặc trưng là về IDENTITY, không phải data type.' },
+              { id: 'd', text: 'Tự động xóa khi database tắt', correct: false, explanation: 'Sai — dữ liệu persistent khi DB tắt (ghi vào disk). Weak entity là khái niệm ER, không liên quan persistence hay session.' }
             ]
           },
           {
             question: 'Trong <code>dlc_content(ref_game_id, dlc_no, dlc_name)</code>, khóa chính là cột nào?',
             options: [
-              { id: 'a', text: 'Chỉ <code>ref_game_id</code>', correct: false },
-              { id: 'b', text: 'Chỉ <code>dlc_no</code>', correct: false },
-              { id: 'c', text: '<code>(ref_game_id, dlc_no)</code> — cả 2 cột cộng lại mới định danh duy nhất', correct: true },
-              { id: 'd', text: 'Không có khóa chính (bảng lỗi)', correct: false }
+              { id: 'a', text: 'Chỉ <code>ref_game_id</code>', correct: false, explanation: 'Sai — ref_game_id lặp lại cho mỗi DLC của 1 game (1 game có nhiều DLC). Không unique.' },
+              { id: 'b', text: 'Chỉ <code>dlc_no</code>', correct: false, explanation: 'Sai — dlc_no = 1 có ở game khác nhau (Elden Ring DLC1 ≠ Hades DLC1). Không unique across games.' },
+              { id: 'c', text: '<code>(ref_game_id, dlc_no)</code> — cả 2 cột cộng lại mới định danh duy nhất', correct: true, explanation: 'Đúng — composite key: (game, số DLC) là duy nhất. DLC1 của game101 ≠ DLC1 của game102. Đây là pattern classic của weak entity.' },
+              { id: 'd', text: 'Không có khóa chính (bảng lỗi)', correct: false, explanation: 'Sai — mọi bảng chuẩn đều có PK (nguyên tắc entity integrity). Bảng này có composite PK (ref_game_id, dlc_no).' }
             ]
           }
         ],
@@ -1043,7 +1043,9 @@ concept_cards: [
             {
                   "icon": "fa-diagram-project",
                   "title": "Bảng 7 quy tắc Mapping",
-                  "body": "<strong>Strong entity</strong> → table có PK. <strong>Weak entity</strong> → table có FK + partial key = composite PK. <strong>1:1</strong> → FK ở 1 bên. <strong>1:N</strong> → FK ở bên N. <strong>M:N</strong> → bảng riêng. <strong>Multivalued</strong> → bảng riêng. <strong>Derived</strong> → KHÔNG lưu. Hết!"
+                  "body": "<strong>Strong entity</strong> → table có PK. <strong>Weak entity</strong> → table có FK + partial key = composite PK. <strong>1:1</strong> → FK ở 1 bên. <strong>1:N</strong> → FK ở bên N. <strong>M:N</strong> → bảng riêng. <strong>Multivalued</strong> → bảng riêng. <strong>Derived</strong> → KHÔNG lưu. Hết!",
+                  "variant": "quote",
+                  "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 6.7 — Mapping E-R to Relational"
             }
       ],
                 visual: {
@@ -1088,19 +1090,19 @@ concept_cards: [
           {
             question: 'Khi mapping quan hệ 1:N từ ER sang bảng quan hệ, Foreign Key nên đặt ở đâu?',
             options: [
-              { id: 'a', text: 'Đặt FK ở phía "1" (bảng bên nhiều quan hệ)', correct: false },
-              { id: 'b', text: 'Đặt FK ở phía "N" (bảng chứa nhiều record ứng với 1 record bên kia)', correct: true },
-              { id: 'c', text: 'Tạo bảng trung gian junction table', correct: false },
-              { id: 'd', text: 'Không cần FK vì quan hệ đã rõ trong ER diagram', correct: false }
+              { id: 'a', text: 'Đặt FK ở phía "1" (bảng bên nhiều quan hệ)', correct: false, explanation: 'Sai — phía 1 có nhiều records bên N (vd: 1 game có N DLC). Nếu đặt FK ở phía 1, mỗi record phía 1 chỉ giữ 1 FK → mất quan hệ N (không biết game nào có DLC nào).' },
+              { id: 'b', text: 'Đặt FK ở phía "N" (bảng chứa nhiều record ứng với 1 record bên kia)', correct: true, explanation: 'Đúng — phía N có nhiều records per 1 (vd: N DLC của 1 game → mỗi DLC có game_id FK). Mỗi record N giữ 1 FK trỏ về đúng 1 record phía 1.' },
+              { id: 'c', text: 'Tạo bảng trung gian junction table', correct: false, explanation: 'Sai — junction table dùng cho quan hệ M:N, không phải 1:N. Dùng junction cho 1:N = overkill (1 bảng thừa, query phức tạp hơn).' },
+              { id: 'd', text: 'Không cần FK vì quan hệ đã rõ trong ER diagram', correct: false, explanation: 'Sai — ER diagram chỉ là design tool. Khi implement vào relational, FK là cách enforce quan hệ. Không có FK = không có constraint ở DB level.' }
             ]
           },
           {
             question: 'Multi-valued attribute (vd: 1 user có nhiều số điện thoại) nên mapping thế nào?',
             options: [
-              { id: 'a', text: 'Nhét tất cả số điện thoại vào 1 cột VARCHAR ngăn cách bằng dấu phẩy', correct: false },
-              { id: 'b', text: 'Tạo bảng riêng (user_id FK, phone_number) — mỗi số là 1 dòng', correct: true },
-              { id: 'c', text: 'Tạo nhiều cột phone_1, phone_2, phone_3', correct: false },
-              { id: 'd', text: 'Bỏ qua multi-valued attribute khi mapping', correct: false }
+{ id: 'a', text: 'Schema A (vi phạm 1NF — comma-separated)', correct: false, format: 'diagram', diagram: '┌─────────┬────────────────────────┐\n│ user_id │ phones                 │\n├─────────┼────────────────────────┤\n│    1    │ 0901-xxx, 0902-yyy     │\n│    2    │ 0903-aaa               │\n└─────────┴────────────────────────┘', explanation: 'Sai — multivalue trong 1 cột = vi phạm 1NF. Query rất khó (WHERE phones LIKE \'0901%\' sẽ miss phones = "0901-xxx, 0902-yyy").' },
+          { id: 'b', text: 'Schema B (chuẩn 1NF — bảng riêng)', correct: true, format: 'diagram', diagram: '┌─────────┬────────────┐     ┌─────────┬────────────┐\n│ user_id │ name       │     │ user_id │ phone      │\n├─────────┼────────────┤     ├─────────┼────────────┤\n│    1    │ Alice      │     │    1    │ 0901-xxx   │\n│    2    │ Bob        │     │    1    │ 0902-yyy   │\n└─────────┴────────────┘     │    2    │ 0903-aaa   │\n                              └─────────┴────────────┘', explanation: 'Đúng — tách thành bảng phụ user_phone (user_id FK, phone). Mỗi số là 1 dòng → atomic, đạt 1NF. Query dễ: WHERE phone = \'0901...\'.' },
+          { id: 'c', text: 'Schema C (nhiều cột — giới hạn)', correct: false, format: 'diagram', diagram: '┌─────────┬──────────┬──────────┬──────────┐\n│ user_id │ phone_1  │ phone_2  │ phone_3  │\n├─────────┼──────────┼──────────┼──────────┤\n│    1    │ 0901-xxx │ 0902-yyy │ NULL     │\n│    2    │ 0903-aaa │ NULL     │ NULL     │\n└─────────┴──────────┴──────────┴──────────┘', explanation: 'Sai — giới hạn số phone (max N?). User có số phone khác nhau (Alice 2 số, Bob 5 số). Cứng nhắc + lãng phí NULL cho user ít phone.' },
+          { id: 'd', text: 'Schema D (bỏ qua — mất data)', correct: false, format: 'diagram', diagram: '┌─────────┬────────┐\n│ user_id │ name   │\n├─────────┼────────┤\n│    1    │ Alice  │\n│    2    │ Bob    │\n└─────────┴────────┘\n\n⚠️ Mất toàn bộ số điện thoại!', explanation: 'Sai — mất dữ liệu quan trọng. Mỗi attribute trong ER đều phải được reflect trong relational model (theo mapping rules).' }
             ]
           }
         ],
@@ -1321,19 +1323,19 @@ concept_cards: [
           {
             question: 'Redundancy (dư thừa) trong bảng game_studio_combined là gì?',
             options: [
-              { id: 'a', text: 'Cột game_id xuất hiện ở tất cả các dòng', correct: false },
-              { id: 'b', text: 'Cùng một studio + country lặp lại ở nhiều dòng, dù đã biết qua FD studio_name → st_country', correct: true },
-              { id: 'c', text: 'Bảng có quá nhiều cột so với cần thiết', correct: false },
-              { id: 'd', text: 'Dòng dữ liệu bị thiếu cột', correct: false }
+              { id: 'a', text: 'Cột game_id xuất hiện ở tất cả các dòng', correct: false, explanation: 'Sai — PK (game_id) bắt buộc xuất hiện ở mỗi dòng — đó là identity, không phải redundancy. Redundancy là giá trị LẶP LẠI không cần thiết.' },
+              { id: 'b', text: 'Cùng một studio + country lặp lại ở nhiều dòng, dù đã biết qua FD studio_name → st_country', correct: true, explanation: 'Đúng — FromSoftware + Japan lặp 2 dòng, Valve + USA lặp 1 dòng. Mỗi lần insert 1 game FromSoftware mới = phải nhập lại "Japan" → dễ typo (Japan thành "Japna").' },
+              { id: 'c', text: 'Bảng có quá nhiều cột so với cần thiết', correct: false, explanation: 'Sai — số cột không liên quan redundancy. Redundancy là giá trị lặp lại, không phải số cột. Bảng 100 cột không có redundancy nếu mỗi giá trị unique.' },
+              { id: 'd', text: 'Dòng dữ liệu bị thiếu cột', correct: false, explanation: 'Sai — thiếu cột = NULL. Redundancy là thừa dữ liệu (lặp), không phải thiếu. Đây là 2 vấn đề NGƯỢC nhau.' }
             ]
           },
           {
             question: 'Phụ thuộc hàm <code>studio_name → st_country</code> nghĩa là:',
             options: [
-              { id: 'a', text: 'Mỗi studio có thể ở nhiều quốc gia', correct: false },
-              { id: 'b', text: 'Biết tên studio thì xác định được duy nhất quốc gia của studio đó', correct: true },
-              { id: 'c', text: 'Biết tên game thì biết được studio', correct: false },
-              { id: 'd', text: 'Country quyết định studio', correct: false }
+              { id: 'a', text: 'Mỗi studio có thể ở nhiều quốc gia', correct: false, explanation: 'Sai — nếu 1 studio ở N quốc gia, FD ngược lại (country → studio) mới đúng. FD studio → country = 1 studio ở ĐÚNG 1 country.' },
+              { id: 'b', text: 'Biết tên studio thì xác định được duy nhất quốc gia của studio đó', correct: true, explanation: 'Đúng — studio_name làm determinant (X bên trái FD), mỗi studio_name xác định DUY NHẤT 1 st_country. Đó chính là FD.' },
+              { id: 'c', text: 'Biết tên game thì biết được studio', correct: false, explanation: 'Sai — đó là FD game_id → studio_name (khác). Câu này hỏi về studio_name → st_country, không phải game → studio.' },
+              { id: 'd', text: 'Country quyết định studio', correct: false, explanation: 'Sai — country → studio là FD NGƯỢC. FromSoftware (Japan) ≠ Sony (Japan) cùng country nhưng khác studio. Country KHÔNG quyết định studio.' }
             ]
           }
         ],
@@ -1478,7 +1480,26 @@ concept_cards: [
       },
 
         step_2: {
-        mcq: [{"question": "1NF (Dạng chuẩn 1) yêu cầu điều gì?", "options": [{"id": "a", "text": "Mỗi cell chỉ chứa 1 giá trị nguyên tử (atomic)", "correct": true}, {"id": "b", "text": "Bảng phải có ít nhất 3 cột", "correct": false}, {"id": "c", "text": "Mỗi dòng phải có giá trị NULL", "correct": false}, {"id": "d", "text": "Bảng phải có đúng 1 khóa chính", "correct": false}]}, {"question": "Bảng <code>student_raw</code> có cột <code>phones = \"0901-111, 0902-222\"</code>. Cách fix đúng?", "options": [{"id": "a", "text": "Tách thành bảng riêng (1 dòng / số điện thoại)", "correct": true}, {"id": "b", "text": "Đổi VARCHAR thành TEXT", "correct": false}, {"id": "c", "text": "Thêm cột phone2, phone3", "correct": false}, {"id": "d", "text": "Không cần fix", "correct": false}]}],
+        mcq: [
+          {
+            question: "1NF (Dạng chuẩn 1) yêu cầu điều gì?",
+            options: [
+              { id: "a", text: "Mỗi cell chỉ chứa 1 giá trị nguyên tử (atomic)", correct: true, explanation: "Đúng — 1NF yêu cầu mỗi ô = 1 giá trị không chia nhỏ được. '0901-111, 0902-222' = 2 giá trị trong 1 ô = vi phạm." },
+              { id: "b", text: "Bảng phải có ít nhất 3 cột", correct: false, explanation: "Sai — 1NF không quan tâm số cột. Bảng 2 cột vẫn OK nếu atomic." },
+              { id: "c", text: "Mỗi dòng phải có giá trị NULL", correct: false, explanation: "Sai — NULL là thiếu dữ liệu. 1NF không bắt buộc NULL." },
+              { id: "d", text: "Bảng phải có đúng 1 khóa chính", correct: false, explanation: "Sai — 1NF không quy định số PK. Composite key vẫn OK (vd: enrollment(student_id, course_id))." }
+            ]
+          },
+          {
+            question: "Bảng <code>student_raw</code> có cột <code>phones = \"0901-111, 0902-222\"</code>. Cách fix đúng?",
+            options: [
+              { id: "a", text: "Tách thành bảng riêng (1 dòng / số điện thoại)", correct: true, explanation: "Đúng — tách phones thành bảng student_phone với cột phone riêng. Mỗi phone 1 dòng → atomic, đạt 1NF." },
+              { id: "b", text: "Đổi VARCHAR thành TEXT", correct: false, explanation: "Sai — TEXT chỉ tăng dung lượng lưu, không fix multivalued. phones vẫn chứa NHIỀU giá trị." },
+              { id: "c", text: "Thêm cột phone2, phone3", correct: false, explanation: "Sai — thêm cột giới hạn số phone (max 3?). Mỗi user có số phone khác nhau. Tách bảng là giải pháp đúng." },
+              { id: "d", text: "Không cần fix", correct: false, explanation: "Sai — multivalued vi phạm 1NF rõ ràng. Truy vấn phones cụ thể rất khó (WHERE phones LIKE '0901%' = sai). Phải fix." }
+            ]
+          }
+        ],
         decomp_game: {
           rule_label: '1NF — Atomic Domains',
           rule: 'Mỗi attribute phải có domain nguyên tử (không thể chia nhỏ thành nhiều giá trị có ý nghĩa). Cột phones chứa NHIỀU số điện thoại trong 1 ô → multivalued → tách thành bảng riêng (mỗi phone 1 dòng).',
@@ -1676,19 +1697,19 @@ concept_cards: [
           {
             question: 'Trong bảng <code>book_loan_raw(book_id, copy_no, member_id, member_name)</code> với PK là <code>(book_id, copy_no)</code>, cột nào VI PHẠM 2NF?',
             options: [
-              { id: 'a', text: '<code>member_id</code> — vì là một phần quan hệ', correct: false },
-              { id: 'b', text: '<code>member_name</code> — vì chỉ phụ thuộc <code>member_id</code> (một phần của khóa qua loan)', correct: true },
-              { id: 'c', text: '<code>loan_date</code> — vì là cột ngày tháng', correct: false },
-              { id: 'd', text: '<code>copy_no</code> — vì là một phần khóa', correct: false }
+              { id: 'a', text: '<code>member_id</code> — vì là một phần quan hệ', correct: false, explanation: 'Sai — member_id là FK (tham chiếu members.member_id). Nó phụ thuộc 1 phần khóa nhưng vẫn cần thiết trong loans. member_name mới là cần tách, không phải member_id.' },
+              { id: 'b', text: '<code>member_name</code> — vì chỉ phụ thuộc <code>member_id</code> (một phần của khóa qua loan)', correct: true, explanation: 'Đúng — member_name chỉ phụ thuộc member_id, KHÔNG phụ thuộc book_id hay copy_no. Đây là partial dependency classic: Y chỉ phụ thuộc 1 PHẦN của composite key.' },
+              { id: 'c', text: '<code>loan_date</code> — vì là cột ngày tháng', correct: false, explanation: 'Sai — loan_date phụ thuộc TOÀN BỘ PK (cần biết cả book_id + copy_no để biết ngày mượn bản cụ thể). Đó là full functional dependency, không vi phạm 2NF.' },
+              { id: 'd', text: '<code>copy_no</code> — vì là một phần khóa', correct: false, explanation: 'Sai — copy_no là 1 phần PK (composite key). Các phần của PK không vi phạm 2NF — chúng định nghĩa identity, không phụ thuộc ai.' }
             ]
           },
           {
             question: 'Để sửa vi phạm 2NF (phụ thuộc bộ phận), cần làm gì?',
             options: [
-              { id: 'a', text: 'Thêm cột member_id vào làm PK', correct: false },
-              { id: 'b', text: 'Tách thành 2 bảng: <code>loans(book_id, copy_no, member_id, loan_date)</code> và <code>members(member_id, member_name)</code>', correct: true },
-              { id: 'c', text: 'Xóa cột copy_no khỏi bảng', correct: false },
-              { id: 'd', text: 'Đổi tên member_name thành member_full_name', correct: false }
+{ id: 'a', text: 'ALTER TABLE book_loan_raw ADD PRIMARY KEY (member_id)', correct: false, format: 'code', explanation: 'Sai — PK hiện tại (book_id, copy_no) đã đúng (mỗi cuốn sách có nhiều copy, mỗi copy có thể mượn nhiều lần). member_id KHÔNG thuộc PK — nó là FK.' },
+          { id: 'b', text: 'CREATE TABLE loans (book_id INT, copy_no INT, member_id INT, loan_date DATE, PRIMARY KEY (book_id, copy_no), FOREIGN KEY (member_id) REFERENCES members);\n\nCREATE TABLE members (member_id INT PRIMARY KEY, member_name VARCHAR(100));', correct: true, format: 'code', explanation: 'Đúng — tách member_name về bảng members riêng → ở members, member_name chỉ phụ thuộc member_id (PK). member_id ở loans là FK tham chiếu members. Mỗi bảng đạt 2NF.' },
+          { id: 'c', text: 'ALTER TABLE book_loan_raw DROP COLUMN copy_no', correct: false, format: 'code', explanation: 'Sai — mất data. copy_no cần để phân biệt nhiều bản copy cùng book_id (VD: 2 bản "Harry Potter 1" có copy_no=1 và copy_no=2, mượn riêng).' },
+          { id: 'd', text: 'ALTER TABLE book_loan_raw RENAME COLUMN member_name TO member_full_name', correct: false, format: 'code', explanation: 'Sai — đổi tên không fix partial dependency. member_name vẫn chỉ phụ thuộc member_id → vẫn vi phạm 2NF. Phải tách bảng.' }
             ]
           }
         ],
@@ -1843,7 +1864,9 @@ concept_cards: [
             {
                   "icon": "fa-code-branch",
                   "title": "BCNF vi phạm & cách tách",
-                  "body": "FD: <code>prof → dept</code>. Nhưng <code>{prof, course}</code> mới là PK → <code>prof</code> không phải superkey → vi phạm BCNF. Tách: <code>prof_dept(prof, dept)</code> + <code>teaches(prof, course)</code>. Giờ Smith chuyển dept = UPDATE 1 dòng, không phụ thuộc số môn dạy."
+                  "body": "FD: <code>prof → dept</code>. Nhưng <code>{prof, course}</code> mới là PK → <code>prof</code> không phải superkey → vi phạm BCNF. Tách: <code>prof_dept(prof, dept)</code> + <code>teaches(prof, course)</code>. Giờ Smith chuyển dept = UPDATE 1 dòng, không phụ thuộc số môn dạy.",
+                  "variant": "quote",
+                  "source": "BCNF Theorem — Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 7.5"
             }
       ],
                 visual: {
@@ -1868,7 +1891,26 @@ concept_cards: [
       },
 
         step_2: {
-        mcq: [{"question": "BCNF yêu cầu điều gì?", "options": [{"id": "a", "text": "Mọi FD X → Y phải có X là superkey", "correct": true}, {"id": "b", "text": "Mọi cột phải có giá trị duy nhất", "correct": false}, {"id": "c", "text": "Bảng phải có composite key", "correct": false}, {"id": "d", "text": "Không có cột NULL", "correct": false}]}, {"question": "Bảng <code>teaches(prof, course, dept)</code> với FD <code>prof → dept</code> vi phạm chuẩn nào?", "options": [{"id": "a", "text": "1NF — vì có redundancy trong dept", "correct": false}, {"id": "b", "text": "BCNF — vì prof không phải superkey", "correct": true}, {"id": "c", "text": "Không vi phạm gì cả", "correct": false}, {"id": "d", "text": "2NF — vì thiếu partial dependency check", "correct": false}]}],
+        mcq: [
+          {
+            question: "BCNF yêu cầu điều gì?",
+            options: [
+              { id: "a", text: "Mọi FD X → Y phải có X là superkey", correct: true, explanation: "Đúng — BCNF strict hơn 3NF. Với MỌI FD X → Y trong bảng, X (bên trái) phải là superkey. Nếu X không phải superkey → vi phạm BCNF." },
+              { id: "b", text: "Mọi cột phải có giá trị duy nhất", correct: false, explanation: "Sai — BCNF không yêu cầu unique. Mỗi cell = atomic (1NF) là khái niệm khác. UNIQUE là constraint riêng." },
+              { id: "c", text: "Bảng phải có composite key", correct: false, explanation: "Sai — BCNF áp dụng cho MỌI bảng, không cần composite PK. Bảng 1-column PK vẫn phải đạt BCNF." },
+              { id: "d", text: "Không có cột NULL", correct: false, explanation: "Sai — BCNF cho phép NULL. NULL chỉ bị cấm bởi NOT NULL constraint. NF tập trung vào FD, không vào NULL." }
+            ]
+          },
+          {
+            question: "Bảng <code>teaches(prof, course, dept)</code> với FD <code>prof → dept</code> vi phạm chuẩn nào?",
+            options: [
+{ id: "a", text: "1NF — vì có redundancy trong dept", correct: false, explanation: "Sai — 1NF chỉ về atomic values. Redundancy là vấn đề normalization khác (2NF/3NF/BCNF), không phải 1NF." },
+          { id: "b", text: "BCNF — tách thành 2 bảng", correct: true, format: "diagram", diagram: "┌──────┬─────────┬──────┐     ┌──────┬──────┐\n│ prof │ course  │ dept │  →  │ prof │ dept │\n├──────┼─────────┼──────┤     ├──────┼──────┤\n│ An   │ DB101   │ CS   │     │ An   │ CS   │\n│ An   │ AI201   │ CS   │     │ Bình │ Math │\n│ Bình │ DB101   │ Math │     └──────┴──────┘\n└──────┴─────────┴──────┘     ┌──────┬─────────┐\n                             │ prof │ course  │\n (dept lặp ở mỗi dòng)       ├──────┼─────────┤\n  ← VI PHẠM BCNF             │ An   │ DB101   │\n                             │ An   │ AI201   │\n                             │ Bình │ DB101   │\n                             └──────┴─────────┘", explanation: "Đúng — prof → dept, nhưng prof KHÔNG phải superkey (1 prof dạy N courses, không unique). Theo định nghĩa BCNF, X bên trái FD phải là superkey → vi phạm. Tách thành 2 bảng: profs(prof, dept) + teaches(prof, course) → không còn redundancy." },
+          { id: "c", text: "Không vi phạm gì cả", correct: false, explanation: "Sai — bảng có redundant dept (cùng prof luôn cùng dept). Phải tách thành profs(prof_id, dept) + teaches(prof, course) để tránh dư thừa." },
+          { id: "d", text: "2NF — vì thiếu partial dependency check", correct: false, explanation: "Sai — 2NF chỉ áp dụng khi có composite PK. teaches có PK = (prof, course) composite. 2NF: mọi non-prime attribute phải phụ thuộc TOÀN BỘ PK. dept phụ thuộc prof (1 phần PK) → cũng vi phạm 2NF, nhưng BCNF là cấp strict hơn." }
+            ]
+          }
+        ],
         decomp_game: {
           rule_label: 'BCNF — Siêu khóa là "thánh"',
           rule: 'Trong bảng treatments, doctor_id quyết định doctor_specialty, nhưng doctor_id KHÔNG PHẢI siêu khóa. Vi phạm BCNF! Tách doctors ra bảng riêng.',
@@ -2122,7 +2164,26 @@ concept_cards: [
       },
 
         step_2: {
-        mcq: [{"question": "3NF phân biệt với BCNF ở điểm nào?", "options": [{"id": "a", "text": "3NF cho phép FD non-superkey, BCNF không", "correct": true}, {"id": "b", "text": "BCNF chỉ áp dụng cho bảng > 5 cột", "correct": false}, {"id": "c", "text": "3NF nghiêm hơn BCNF", "correct": false}, {"id": "d", "text": "BCNF là tên khác của 3NF", "correct": false}]}, {"question": "Transitive dependency là gì?", "options": [{"id": "a", "text": "FD X → Y → Z (Y quyết định Z, X quyết định Y)", "correct": true}, {"id": "b", "text": "FD ngược Y → X", "correct": false}, {"id": "c", "text": "Mọi cột đều phụ thuộc PK", "correct": false}, {"id": "d", "text": "Có 2 khóa chính", "correct": false}]}],
+        mcq: [
+          {
+            question: "3NF phân biệt với BCNF ở điểm nào?",
+            options: [
+              { id: "a", text: "3NF cho phép FD non-superkey, BCNF không", correct: true, explanation: "Đúng — 3NF cho phép FD X → Y trong 1 trường hợp: Y là prime attribute (thuộc candidate key). BCNF cấm MỌI FD có X không phải superkey, không có ngoại lệ." },
+              { id: "b", text: "BCNF chỉ áp dụng cho bảng > 5 cột", correct: false, explanation: "Sai — BCNF áp dụng cho mọi bảng, không phụ thuộc số cột. Bảng 3 cột vẫn phải check BCNF." },
+              { id: "c", text: "3NF nghiêm hơn BCNF", correct: false, explanation: "Sai — BCNF nghiêm hơn 3NF. Mọi bảng BCNF đều đạt 3NF, nhưng ngược lại thì không. BCNF là tier cao hơn trong normalization hierarchy." },
+              { id: "d", text: "BCNF là tên khác của 3NF", correct: false, explanation: "Sai — BCNF (Boyce-Codd Normal Form) là chuẩn RIÊNG, do Boyce & Codd đề xuất sau 3NF để fix các edge cases mà 3NF chưa xử lý." }
+            ]
+          },
+          {
+            question: "Transitive dependency là gì?",
+            options: [
+              { id: "a", text: "FD X → Y → Z (Y quyết định Z, X quyết định Y)", correct: true, explanation: "Đúng — transitive: A → B và B → C thì A → C (transitively). VD: order_id → product_id → category → category_manager. category_manager bị phụ thuộc BẮC CẦU qua product_id → vi phạm 3NF." },
+              { id: "b", text: "FD ngược Y → X", correct: false, explanation: "Sai — đó là reverse FD (Y → X), không phải transitive. Reverse là đảo chiều, transitive là nối tiếp qua trung gian." },
+              { id: "c", text: "Mọi cột đều phụ thuộc PK", correct: false, explanation: "Sai — đó là full functional dependency (FF) hoặc 2NF. Mọi cột phụ thuộc TOÀN BỘ PK là điều kiện của 2NF, không phải transitive." },
+              { id: "d", text: "Có 2 khóa chính", correct: false, explanation: "Sai — 1 bảng chỉ có 1 PRIMARY KEY (có thể composite nhiều cột). Bảng có thể có nhiều candidate keys nhưng chỉ chọn 1 làm PK." }
+            ]
+          }
+        ],
         decomp_game: {
           rule_label: '3NF — Không phụ thuộc bắc cầu',
           rule: 'Trong bảng orders, order_id → product_id → category → category_manager. Cột category_manager bị phụ thuộc BẮC CẦU. Tách categories ra bảng riêng.',
@@ -2347,19 +2408,19 @@ concept_cards: [
           {
             question: 'Phụ thuộc đa trị (Multivalued Dependency) X →→ Y nghĩa là gì?',
             options: [
-              { id: 'a', text: 'X quyết định đúng 1 giá trị Y', correct: false },
-              { id: 'b', text: 'X quyết định NHIỀU giá trị Y, và tập Y độc lập với các cột khác', correct: true },
-              { id: 'c', text: 'Y quyết định X', correct: false },
-              { id: 'd', text: 'X và Y là cùng 1 cột', correct: false }
+              { id: 'a', text: 'X quyết định đúng 1 giá trị Y', correct: false, explanation: 'Sai — đó là FD thường (functional dependency, ký hiệu X → Y). MVD (multivalued, ký hiệu X →→ Y với 2 mũi tên) cho phép NHIỀU giá trị Y.' },
+              { id: 'b', text: 'X quyết định NHIỀU giá trị Y, và tập Y độc lập với các cột khác', correct: true, explanation: 'Đúng — MVD: 1 giá trị X có thể kết hợp với NHIỀU giá trị Y, và tập Y độc lập với các cột khác. VD: prof P01 dạy {Database, Networks} + có hobby {Chess, Piano}, course và hobby độc lập nhau.' },
+              { id: 'c', text: 'Y quyết định X', correct: false, explanation: 'Sai — MVD chỉ định hướng X →→ Y. Y →→ X là MVD NGƯỢC (nếu tồn tại). Mỗi chiều là 1 MVD riêng.' },
+              { id: 'd', text: 'X và Y là cùng 1 cột', correct: false, explanation: 'Sai — MVD phân biệt X (determinant) và Y (dependent). Nếu X = Y → trivial MVD (luôn đúng về mặt logic nhưng không có ý nghĩa thực tế).' }
             ]
           },
           {
             question: 'Khi nào một bảng VI PHẠM 4NF?',
             options: [
-              { id: 'a', text: 'Khi bảng có khóa chính tổng hợp', correct: false },
-              { id: 'b', text: 'Khi bảng có ≥ 2 MVD độc lập từ cùng 1 khóa → sinh tổ hợp Cartesian lặp', correct: true },
-              { id: 'c', text: 'Khi bảng có cột JSON', correct: false },
-              { id: 'd', text: 'Khi bảng có hơn 3 cột', correct: false }
+              { id: 'a', text: 'Khi bảng có khóa chính tổng hợp', correct: false, explanation: 'Sai — composite PK không tự động vi phạm 4NF. Nhiều bảng có composite PK vẫn đạt 4NF nếu không có MVD độc lập.' },
+              { id: 'b', text: 'Khi bảng có ≥ 2 MVD độc lập từ cùng 1 khóa → sinh tổ hợp Cartesian lặp', correct: true, explanation: 'Đúng — 4NF vi phạm khi có ít nhất 2 MVD độc lập từ cùng 1 X. VD: prof →→ course và prof →→ hobby → 1 prof × m courses × n hobbies = m*n rows (Cartesian explosion).' },
+              { id: 'c', text: 'Khi bảng có cột JSON', correct: false, explanation: 'Sai — JSON column là về storage type (PostgreSQL JSONB). Không liên quan MVD hay 4NF. JSONB có thể chứa array → có thể vi phạm 1NF nhưng không phải 4NF.' },
+              { id: 'd', text: 'Khi bảng có hơn 3 cột', correct: false, explanation: 'Sai — số cột không liên quan 4NF. Bảng 2 cột vẫn có thể vi phạm 4NF (nếu có MVD). Bảng 20 cột vẫn đạt 4NF (nếu không có MVD độc lập).' }
             ]
           }
         ],
@@ -2411,7 +2472,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Sau 4NF, tách thành 2 bảng <code>course_textbook</code> và <code>course_instructor</code>. Tìm <strong>top khóa học có nhiều textbook nhất</strong>. Hiển thị course_id + số textbook, sắp xếp giảm dần.',
+        prompt: 'Sau 4NF, tách thành 2 bảng <code>course_textbook</code> và <code>course_instructor</code>. Tìm <strong>top 5 khóa học có nhiều textbook nhất</strong>. Hiển thị course_id + số textbook, sắp xếp giảm dần, lấy 5 kết quả đầu.',
         starter: "-- Top khóa học có nhiều textbook nhất\n-- GROUP BY course_id + COUNT + ORDER BY DESC\nSELECT , COUNT(*) AS \n  FROM course_textbook\n GROUP BY \n ORDER BY  DESC;\n",
         schema: {
           table_name: 'course_textbook',
@@ -2441,12 +2502,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC;",
+        expected_sql: "SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC LIMIT 5;",
         hints: [
-          { level: 1, text: 'Bạn cần <em>đếm số textbook theo từng course</em>. Hãy nghĩ: <strong>GROUP BY course_id</strong> + <strong>COUNT(*)</strong> + <strong>ORDER BY DESC</strong>.' },
+          { level: 1, text: 'Bạn cần <em>đếm số textbook theo từng course</em>, lấy <strong>top 5</strong>. Hãy nghĩ: <strong>GROUP BY course_id</strong> + <strong>COUNT(*)</strong> + <strong>ORDER BY DESC</strong> + <strong>LIMIT 5</strong>.' },
           { level: 2, text: 'SELECT 2 cột: <code>course_id</code> và <code>COUNT(*) AS textbook_count</code>.' },
-          { level: 3, text: 'GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook.' },
-          { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC;</code>" }
+          { level: 3, text: 'GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook. ORDER BY DESC sắp xếp giảm dần. LIMIT 5 lấy top 5.' },
+          { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC LIMIT 5;</code>" }
         ],
         success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 13 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
         xp_reward: 75
@@ -2493,12 +2554,14 @@ concept_cards: [
             {
                   "icon": "fa-crown",
                   "title": "Boss Battle — Hệ thống Mạng Xã Hội Gamers",
-                  "body": "Bạn được giao thiết kế schema cho MXH Gamers: users, posts, games, genres, platforms, friends, likes, comments. Áp lực: 1 triệu user, 10 triệu post, 100 triệu like. Bạn bắt đầu từ đâu? <strong>Liệt kê entity trước</strong> → xác định quan hệ → áp 1NF→BCNF → cuối cùng mới thêm junction table."
+                  "body": "Bạn được giao thiết kế schema cho MXH Gamers: users, posts, games, genres, platforms, friends, likes, comments. Áp lực: 1 triệu user, 10 triệu post, 100 triệu like. <strong>Bạn bắt đầu từ đâu?</strong>",
+                  "extra": "<strong>Liệt kê entity trước</strong> → xác định quan hệ → áp 1NF → BCNF → cuối cùng mới thêm junction table. Bắt đầu bằng entity giúp bạn không bỏ sót concept nào trước khi vẽ quan hệ.",
+                  "variant": "interactive"
             },
             {
                   "icon": "fa-trophy",
-                  "title": "Đáp án mẫu — 8 bảng chuẩn BCNF",
-                  "body": "5 bảng chính: <code>users, posts, games, genres, platforms</code>. 3 junction: <code>user_friends, post_likes, post_games</code>. Mỗi game thuộc nhiều genre → junction <code>game_genres</code>. <strong>Đã 4NF</strong> vì mỗi MVD được tách riêng. Tổng 8 bảng, query nhanh, không dư thừa."
+                  "title": "Đáp án mẫu — 7 bảng cốt lõi chuẩn BCNF",
+                  "body": "5 bảng chính: <code>users, posts, games, genres, platforms</code>. 2 junction cốt lõi: <code>post_games</code> (post ↔ game) và <code>game_genres</code> (game ↔ genre, tránh MVD). <strong>Đã 4NF</strong> vì mỗi MVD được tách riêng. <em>(Mở rộng tùy use-case: thêm <code>user_friends</code> cho follow, <code>post_likes</code> cho like — không bắt buộc cho schema cốt lõi.)</em> Tổng 7 bảng cốt lõi, query nhanh, không dư thừa."
             }
       ],
                 visual: {
@@ -2528,19 +2591,19 @@ concept_cards: [
           {
             question: 'Sau khi áp dụng đầy đủ 1NF → 2NF → 3NF → BCNF, Mạng Xã Hội Gamers nên có tối thiểu bao nhiêu bảng?',
             options: [
-              { id: 'a', text: '1 bảng (gamers_social)', correct: false },
-              { id: 'b', text: '2 bảng (users + games)', correct: false },
-              { id: 'c', text: '5 bảng (users, posts, games, genres, platforms + 2-3 junction)', correct: true },
-              { id: 'd', text: '20 bảng (mỗi user một bảng riêng)', correct: false }
+              { id: 'a', text: '1 bảng (gamers_social)', correct: false, explanation: 'Sai — 1 bảng chứa hết = vi phạm mọi NF (multivalued, partial dep, transitive dep). Schema nguyên thủy của Boss Battle.' },
+              { id: 'b', text: '2 bảng (users + games)', correct: false, explanation: 'Sai — quá ít. Thiếu posts (1:N từ users), genres, platforms (M:N qua junction), và các junction tables.' },
+              { id: 'c', text: '5 bảng chính (users, posts, games, genres, platforms) + 2 junction cốt lõi = 7 bảng', correct: true, explanation: 'Đúng — 5 entity chính (users, posts, games, genres, platforms) + 2 junction (post_game, post_genre). Đủ để cover M:N, 1:N, đạt BCNF.' },
+              { id: 'd', text: '20 bảng (mỗi user một bảng riêng)', correct: false, explanation: 'Sai — 20 bảng là quá nhiều, gây over-engineering. Schema chuẩn BCNF cần ~7-10 bảng cho bài toán này.' }
             ]
           },
           {
             question: 'Boss Battle — junction table dùng cho quan hệ nào?',
             options: [
-              { id: 'a', text: 'user ↔ post (1:N — không cần junction)', correct: false },
-              { id: 'b', text: 'post ↔ game (M:N — mỗi post có thể nhắc nhiều game, mỗi game có thể ở nhiều post)', correct: true },
-              { id: 'c', text: 'user ↔ country (1:1 — không cần junction)', correct: false },
-              { id: 'd', text: 'post ↔ post_date (cùng bảng)', correct: false }
+              { id: 'a', text: 'user ↔ post (1:N — không cần junction)', correct: false, explanation: 'Sai — 1:N chỉ cần FK ở bên N (post.user_id), không cần junction.' },
+              { id: 'b', text: 'post ↔ game (M:N — mỗi post có thể nhắc nhiều game, mỗi game có thể ở nhiều post)', correct: true, explanation: 'Đúng — quan hệ M:N giữa post và game cần junction post_game(post_id, game_id). Mỗi dòng = 1 lần nhắc game trong post.' },
+              { id: 'c', text: 'user ↔ country (1:1 — không cần junction)', correct: false, explanation: 'Sai — 1:1 hiếm gặp, thường gộp vào 1 bảng hoặc FK ở 1 bên. Không cần junction.' },
+              { id: 'd', text: 'post ↔ post_date (cùng bảng)', correct: false, explanation: 'Sai — post_date là cột của post, không phải entity riêng. Cùng bảng, không cần junction.' }
             ]
           }
         ],
@@ -2554,6 +2617,12 @@ concept_cards: [
               mission: 'Kéo các cột từ bảng <code>posts</code> vào 2 bảng mục tiêu.',
               source_table: {
                 name: 'posts',
+                // NOTE on duplicate `post_id` column (index 0 PK 🔑 vs index 5 FK 🔗):
+                // INTENTIONAL — decomp_game uses the same source column as TWO draggable
+                // chips: one chip for the `posts` PK slot, another chip for the
+                // `post_tags` junction FK slot. The icon difference (🔑 PK vs 🔗 FK)
+                // signals the dual use. See decomp_game.js `chipCounter` for shared-FK
+                // support. Do not "deduplicate" without rewriting the chip model.
                 columns: [
                   { name: 'post_id',    type: 'INT',     key: 'PK', icon: '🔑' },
                   { name: 'user_id',    type: 'INT',     key: '',   icon: '👤' },
@@ -2795,8 +2864,13 @@ concept_cards: [
             }
       ],
                 visual: {
+          // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
+          // from earlier lessons. The render loop reads only `diagram:` (last one wins).
+          // Do NOT add new `diagram:` keys at the end of this block; doing so will silently
+          // swap the rendered diagram. Use `diagram:` (single key) or refactor to `diagrams: [...]`.
           
-          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram_legacy_1: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
           diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
           schema: {
@@ -2823,19 +2897,19 @@ concept_cards: [
           {
             question: 'Query nào trả về giá trị <strong>text thuần</strong> (không có nháy) từ JSON?',
             options: [
-              { id: 'a', text: "<code>settings->'theme'</code> — trả về <code>\"dark\"</code> (JSON value)", correct: false },
-              { id: 'b', text: "<code>settings->>'theme'</code> — trả về <code>dark</code> (text thuần)", correct: true },
-              { id: 'c', text: "<code>settings#>'{theme}'</code> — trả về <code>dark</code> (path lookup)", correct: false },
-              { id: 'd', text: "<code>SELECT theme FROM settings</code> — giả định cột theme tồn tại", correct: false }
+{ id: 'a', text: "SELECT settings->'theme' FROM app_users;", correct: false, format: 'code', explanation: 'Sai — toán tử -> trả về JSON value (có nháy kép). Muốn text thuần cần ->>.' },
+          { id: 'b', text: "SELECT settings->>'theme' FROM app_users;", correct: true, format: 'code', explanation: 'Đúng — toán tử ->> trả về text (varchar). Nháy kép bị strip. Dùng để compare với string.' },
+          { id: 'c', text: "SELECT settings#>'{theme}' FROM app_users;", correct: false, format: 'code', explanation: 'Sai — #> dùng cho path lookup (nested JSON), vẫn trả về JSON value. Để lấy text dùng #>>.' },
+          { id: 'd', text: "SELECT theme FROM app_users;", correct: false, format: 'code', explanation: 'Sai — không có cột \'theme\' trong bảng. settings là JSONB column, cần ->> để extract.' }
             ]
           },
           {
             question: "Filter user có <code>notifications = true</code> trong JSONB. Cú pháp nào ĐÚNG?",
             options: [
-              { id: 'a', text: "<code>WHERE settings->>notifications = true</code> — JSON value", correct: false },
-              { id: 'b', text: "<code>WHERE settings->>notifications = 'true'</code> — text với nháy đơn", correct: true },
-              { id: 'c', text: "<code>WHERE notifications = true</code> — cột thường", correct: false },
-              { id: 'd', text: "<code>WHERE settings LIKE '%notifications%'</code> — string match (chậm + sai)", correct: false }
+              { id: 'a', text: "<code>WHERE settings->>notifications = true</code> — JSON value", correct: false, explanation: 'Sai — không có nháy quanh \'notifications\'. JSONB path yêu cầu chuỗi trong nháy. Và so sánh với true (boolean) không khớp với text \'true\'.' },
+              { id: 'b', text: "<code>WHERE settings->>notifications = 'true'</code> — text với nháy đơn", correct: true, explanation: 'Đúng — ->> trả text, so sánh với \'true\' (string có nháy). Trong JSONB path \'notifications\' cần nháy đơn.' },
+              { id: 'c', text: "<code>WHERE notifications = true</code> — cột thường", correct: false, explanation: 'Sai — không có cột \'notifications\' (chỉ có \'settings\' JSONB). Phải dùng ->> để extract field.' },
+              { id: 'd', text: "<code>WHERE settings LIKE '%notifications%'</code> — string match (chậm + sai)", correct: false, explanation: 'Sai — LIKE chỉ match substring trong text representation. Không hiệu quả, sai ngữ nghĩa. Dùng ->>.' }
             ]
           }
         ],
@@ -2990,10 +3064,15 @@ concept_cards: [
             }
       ],
                 visual: {
+          // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
+          // from earlier lessons. The render loop reads only `diagram:` (last one wins).
+          // Do NOT add new `diagram:` keys at the end of this block; doing so will silently
+          // swap the rendered diagram. Use `diagram:` (single key) or refactor to `diagrams: [...]`.
           
-          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          diagram_legacy_2: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
+          
+          diagram_legacy_1: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
           
           diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
           schema: {
@@ -3020,19 +3099,19 @@ concept_cards: [
           {
             question: 'Khi tìm cửa hàng <strong>trong bán kính 5km</strong> từ một điểm, hàm nào hiệu quả hơn?',
             options: [
-              { id: 'a', text: '<code>ST_Distance(geo, ST_MakePoint(...)) &lt; 5</code> — tính chính xác mọi điểm', correct: false },
-              { id: 'b', text: '<code>ST_DWithin(geo, ST_MakePoint(...), 5)</code> — dùng spatial index', correct: true },
-              { id: 'c', text: '<code>ST_Contains(ST_MakeEnvelope(...), geo)</code> — dùng cho polygon', correct: false },
-              { id: 'd', text: '<code>WHERE distance &lt; 5</code> — sai cú pháp, distance chưa tính', correct: false }
+              { id: 'a', text: '<code>ST_Distance(geo, ST_MakePoint(...)) &lt; 5</code> — tính chính xác mọi điểm', correct: false, explanation: 'Sai — ST_Distance tính chính xác cho MỌI cặp điểm, không dùng spatial index. Chậm trên dataset lớn (full table scan O(N)).' },
+              { id: 'b', text: '<code>ST_DWithin(geo, ST_MakePoint(...), 5)</code> — dùng spatial index', correct: true, explanation: 'Đúng — ST_DWithin có tích hợp bounding box check trước → dùng spatial index (GIST) để nhanh loại điểm xa. Sau đó mới tính chính xác cho candidates. Nhanh hơn ~100x trên 1M rows.' },
+              { id: 'c', text: '<code>ST_Contains(ST_MakeEnvelope(...), geo)</code> — dùng cho polygon', correct: false, explanation: 'Sai — ST_MakeEnvelope tạo bounding box HÌNH CHỮ NHẬT (4 góc lat/lon), không phải hình tròn. Dùng cho rectangular query, không match "bán kính" (circle).' },
+              { id: 'd', text: '<code>WHERE distance &lt; 5</code> — sai cú pháp, distance chưa tính', correct: false, explanation: 'Sai — "distance" là alias cần define trước (SELECT ST_Distance(...) AS distance). Cú pháp đúng phải tính distance trong SELECT hoặc dùng ST_Distance inline.' }
             ]
           },
           {
             question: 'ST_MakePoint(x, y) dùng thứ tự tọa độ nào?',
             options: [
-              { id: 'a', text: 'ST_MakePoint(lat, lon) — latitude trước', correct: false },
-              { id: 'b', text: 'ST_MakePoint(lon, lat) — longitude trước (X, Y)', correct: true },
-              { id: 'c', text: 'ST_MakePoint(x, y) — thứ tự tùy database', correct: false },
-              { id: 'd', text: 'ST_MakePoint(utm_x, utm_y) — luôn dùng UTM', correct: false }
+              { id: 'a', text: 'ST_MakePoint(lat, lon) — latitude trước', correct: false, explanation: 'Sai — PostGIS dùng lon, lat (theo chuẩn X, Y). Lat trước sẽ swap kinh độ/vĩ độ → điểm rơi vào chỗ SAI (vd: TP.HCM ở đại dương).' },
+              { id: 'b', text: 'ST_MakePoint(lon, lat) — longitude trước (X, Y)', correct: true, explanation: 'Đúng — PostGIS theo chuẩn X (longitude) trước, Y (latitude) sau. SRID 4326 (WGS84) dùng (lon, lat). Đây là chuẩn ISO 6709.' },
+              { id: 'c', text: 'ST_MakePoint(x, y) — thứ tự tùy database', correct: false, explanation: 'Sai — PostGIS deterministic — luôn (X=lon, Y=lat). Có thể tạo POINT với SRID khác (UTM, Mercator) nhưng thứ tự vẫn X-Y.' },
+              { id: 'd', text: 'ST_MakePoint(utm_x, utm_y) — luôn dùng UTM', correct: false, explanation: 'Sai — ST_MakePoint dùng cho POINT trong bất kỳ SRID nào. UTM chỉ là 1 SRID, không phải mặc định. SRID 4326 (lat/lon) là phổ biến nhất.' }
             ]
           }
         ],
@@ -3177,12 +3256,17 @@ concept_cards: [
             }
       ],
                 visual: {
+          // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
+          // from earlier lessons. The render loop reads only `diagram:` (last one wins).
+          // Do NOT add new `diagram:` keys at the end of this block; doing so will silently
+          // swap the rendered diagram. Use `diagram:` (single key) or refactor to `diagrams: [...]`.
           
-          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          diagram_legacy_3: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          diagram_legacy_2: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          
+          diagram_legacy_1: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
           
           diagram: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
           schema: {
@@ -3210,19 +3294,19 @@ concept_cards: [
           {
             question: '<code>LogEvent.objects.select_related(\'user\')</code> sinh ra loại JOIN nào?',
             options: [
-              { id: 'a', text: 'LEFT JOIN — lấy cả event không có user', correct: false },
-              { id: 'b', text: 'INNER JOIN — chỉ lấy event có user tồn tại', correct: true },
-              { id: 'c', text: 'OUTER JOIN — lấy tất cả kể cả user NULL', correct: false },
-              { id: 'd', text: 'CROSS JOIN — tổ hợp mọi cặp (hiếm dùng)', correct: false }
+              { id: 'a', text: 'LEFT JOIN — lấy cả event không có user', correct: false, explanation: 'Sai — select_related mặc định INNER JOIN. LEFT JOIN chỉ khi explicit dùng prefetch_related hoặc custom raw SQL.' },
+              { id: 'b', text: 'INNER JOIN — chỉ lấy event có user tồn tại', correct: true, explanation: 'Đúng — select_related dùng SQL JOIN INNER mặc định. Event không có user (FK NULL hoặc user bị xóa) sẽ bị loại khỏi kết quả.' },
+              { id: 'c', text: 'OUTER JOIN — lấy tất cả kể cả user NULL', correct: false, explanation: 'Sai — OUTER JOIN không phải default của select_related. Cần explicit annotation (vd: .annotate(user_name=F(\'user__username\')) với LEFT JOIN logic).' },
+              { id: 'd', text: 'CROSS JOIN — tổ hợp mọi cặp (hiếm dùng)', correct: false, explanation: 'Sai — select_related không tạo CROSS JOIN. Nó follow FK relationship → 1 JOIN cụ thể. CROSS JOIN rất hiếm, không phải pattern này.' }
             ]
           },
           {
             question: 'Django ORM nào tương đương <code>GROUP BY event_type ORDER BY COUNT(*) DESC</code>?',
             options: [
-              { id: 'a', text: "<code>.values('event_type').order_by('event_type')</code>", correct: false },
-              { id: 'b', text: "<code>.values('event_type').annotate(cnt=Count('id')).order_by('-cnt')</code>", correct: true },
-              { id: 'c', text: "<code>.filter().group_by('event_type')</code>", correct: false },
-              { id: 'd', text: "<code>.aggregate(Count('event_type'))</code> — sai, aggregate chỉ trả 1 dòng", correct: false }
+              { id: 'a', text: "<code>.values('event_type').order_by('event_type')</code>", correct: false, explanation: 'Sai — order_by không có annotate Count → không có COUNT trong query. Chỉ SELECT event_type, ORDER BY event_type ASC. Thiếu GROUP BY và aggregate.' },
+              { id: 'b', text: "<code>.values('event_type').annotate(cnt=Count('id')).order_by('-cnt')</code>", correct: true, explanation: 'Đúng — values(\'event_type\') → GROUP BY event_type, annotate(cnt=Count(\'id\')) → COUNT(id) AS cnt, order_by(\'-cnt\') → DESC theo cnt. Đây là pattern Django ORM chuẩn cho GROUP BY + ORDER BY COUNT.' },
+              { id: 'c', text: "<code>.filter().group_by('event_type')</code>", correct: false, explanation: 'Sai — Django ORM KHÔNG có method .group_by(). GROUP BY được implicit qua .values() + .annotate(). Đây là khác biệt với SQL thuần.' },
+              { id: 'd', text: "<code>.aggregate(Count('event_type'))</code> — sai, aggregate chỉ trả 1 dòng", correct: false, explanation: 'Sai — aggregate trả 1 scalar value (tổng tất cả events), KHÔNG group theo event_type. Để group theo từng event_type → dùng annotate() kết hợp values().' }
             ]
           }
         ],
@@ -3255,8 +3339,8 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Viết Django ORM query đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values(\'event_type\').annotate(count=Count(\'event_id\')).order_by(\'-count\')</code>. Hoặc viết SQL tương đương.',
-        starter: "-- Đếm events theo event_type cho user U01\n-- WHERE user_id = 'U01' + GROUP BY event_type + ORDER BY count DESC\nSELECT , COUNT() AS \n  FROM log_events\n WHERE  = \n GROUP BY \n ORDER BY  DESC;\n",
+        prompt: 'Viết <strong>Django ORM query</strong> đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values(\'event_type\').annotate(count=Count(\'event_id\')).order_by(\'-count\')</code>. ORM Django — không viết SQL thuần.',
+        starter: "# Đếm events theo event_type cho user U01 (Django ORM)\n# filter(user_id='U01') + values('event_type') + annotate(count=Count('event_id')) + order_by('-count')\nLogEvent.objects.__________________________________\n",
         schema: {
           table_name: 'log_events',
           columns: [
@@ -3274,7 +3358,7 @@ concept_cards: [
             ['E06','U02','login',   '2026-01-10']
           ]
         },
-        expected_sql: "SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;",
+        expected_sql: "LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')",
         hints: [
           { level: 1, text: "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể. Hãy nghĩ: filter user trước, GROUP BY loại event, COUNT, ORDER BY giảm dần." },
           { level: 2, text: "<code>WHERE user_id = 'U01'</code> — lọc events của user U01." },
@@ -3311,7 +3395,9 @@ concept_cards: [
             {
                   "icon": "fa-skull-crossbones",
                   "title": "SQL Injection — Thử hack thử nào",
-                  "body": "Thử thách: nhập <code>' OR '1'='1' --</code> vào ô login username. Query biến thành <code>WHERE username='' OR '1'='1'</code> → luôn TRUE → bypass login hoàn toàn. 90% web app mới deploy có lỗ hổng này. <strong>Bạn có thể tìm được chỗ nào cần fix không?</strong> (Gợi ý: đọc tiếp card 2)"
+                  "body": "Thử thách: nhập <code>' OR '1'='1' --</code> vào ô login username. <strong>Bạn có thể bypass login không?</strong> (Gợi ý: đọc tiếp card 2 để tìm cách phòng chống)",
+                  "extra": "Query biến thành <code>WHERE username='' OR '1'='1'</code> → luôn TRUE → bypass login hoàn toàn. 90% web app mới deploy có lỗ hổng này — bug này đã từng làm sập cả hệ thống Yahoo, Sony, và hàng trăm site lớn.",
+                  "variant": "interactive"
             },
             {
                   "icon": "fa-shield-virus",
@@ -3320,14 +3406,19 @@ concept_cards: [
             }
       ],
                 visual: {
+          // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
+          // from earlier lessons. The render loop reads only `diagram:` (last one wins).
+          // Do NOT add new `diagram:` keys at the end of this block; doing so will silently
+          // swap the rendered diagram. Use `diagram:` (single key) or refactor to `diagrams: [...]`.
           
-          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          diagram_legacy_4: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          diagram_legacy_3: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
+          diagram_legacy_2: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          
+          diagram_legacy_1: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
           
           diagram: {"type": "flow", "steps": [{"icon": "fa-user-secret", "title": "Attacker input", "sub": "username = ' OR '1'='1' --", "payload": "MALICIOUS_PAYLOAD"}, {"icon": "fa-bug", "title": "App build SQL (NGUY HIỂM)", "sub": "f\"SELECT * FROM users WHERE name='{input}'\"", "payload": "VULNERABLE"}, {"icon": "fa-server", "title": "DB execute", "sub": "Trả về TẤT CẢ users (không cần password!)", "payload": "ALL_ROWS_RETURNED"}, {"icon": "fa-shield-halved", "title": "FIX: Prepared Statement", "sub": "WHERE username = %s + params", "payload": "SAFE"}, {"icon": "fa-check", "title": "DB execute (SAFE)", "sub": "Input là literal, escape tự động", "payload": "NORMAL_QUERY"}]},
           schema: {
@@ -3355,19 +3446,19 @@ concept_cards: [
           {
             question: 'Input nào là <strong>SQL Injection</strong> trong trường username?',
             options: [
-              { id: 'a', text: '<code>minh_admin</code> — username hợp lệ', correct: false },
-              { id: 'b', text: "<code>' OR '1'='1' --</code> — đóng chuỗi, thêm điều kiện đúng, comment out", correct: true },
-              { id: 'c', text: "<code>minh' --</code> — chỉ comment out phần sau, vẫn cần password đúng", correct: false },
-              { id: 'd', text: '<code>minh_admin; DROP TABLE users;</code> — chỉ là chuỗi dài, không phải injection nếu escape đúng', correct: false }
+              { id: 'a', text: '<code>minh_admin</code> — username hợp lệ', correct: false, explanation: 'Sai — đây là username hợp lệ, không chứa ký tự SQL đặc biệt. An toàn.' },
+              { id: 'b', text: "<code>' OR '1'='1' --</code> — đóng chuỗi, thêm điều kiện đúng, comment out", correct: true, explanation: 'Đúng — đóng chuỗi (\'), thêm điều kiện luôn đúng (OR \'1\'=\'1\'), comment phần password (--). Đây là SQL Injection classic.' },
+              { id: 'c', text: "<code>minh' --</code> — chỉ comment out phần sau, vẫn cần password đúng", correct: false, explanation: 'Sai — chỉ comment out phần password check. Nhưng vẫn cần username đúng. Nếu username không tồn tại → trả về 0 rows. Không phải full bypass.' },
+              { id: 'd', text: '<code>minh_admin; DROP TABLE users;</code> — chỉ là chuỗi dài, không phải injection nếu escape đúng', correct: false, explanation: 'Sai — chuỗi này chỉ nguy hiểm nếu APP build SQL bằng f-string không escape. Nếu dùng Prepared Statement, DB xem như literal string, không execute DROP.' }
             ]
           },
           {
             question: 'Cách nào phòng chống SQL Injection hiệu quả nhất?',
             options: [
-              { id: 'a', text: "<code>f\"WHERE username = '{input}'\"</code> — dùng f-string", correct: false },
-              { id: 'b', text: "<code>WHERE username = %s</code> — Prepared Statement (parameterized query)", correct: true },
-              { id: 'c', text: "<code>WHERE username = input.replace(\"'\", \"''\")</code> — escape thủ công", correct: false },
-              { id: 'd', text: 'Thêm CAPTCHA — chỉ giảm bot, không ngăn SQLi', correct: false }
+              { id: 'a', text: "<code>f\"WHERE username = '{input}'\"</code> — dùng f-string", correct: false, explanation: 'Sai — f-string nội suy input trực tiếp vào SQL = chính là nguyên nhân gây SQL Injection. Không phải cách phòng chống.' },
+              { id: 'b', text: "<code>WHERE username = %s</code> — Prepared Statement (parameterized query)", correct: true, explanation: 'Đúng — Prepared Statement dùng placeholder (%s, ?, $1) + bind param riêng. DB engine phân biệt code vs data, escape tự động. Cách chuẩn nhất.' },
+              { id: 'c', text: "<code>WHERE username = input.replace(\"'\", \"''\")</code> — escape thủ công", correct: false, explanation: 'Sai — escape thủ công dễ sai (thiếu edge case). Chuẩn industry là Prepared Statement. Đừng tự roll security.' },
+              { id: 'd', text: 'Thêm CAPTCHA — chỉ giảm bot, không ngăn SQLi', correct: false, explanation: 'Sai — CAPTCHA giảm bot nhưng attacker vẫn submit thủ công. Không ngăn SQLi. CAPTCHA bổ sung, không thay thế Prepared Statement.' }
             ]
           }
         ],
@@ -3419,7 +3510,7 @@ concept_cards: [
             ['U08','bob_user',  'bob@x.com', 'user']
           ]
         },
-        expected_sql: "SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
+        expected_sql: "SELECT * FROM user_accounts WHERE username = %s AND password_hash = %s; SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
         hints: [
           { level: 1, text: "Bạn cần <em>phòng chống SQL Injection</em> (Prepared Statement) + <em>đếm user theo role</em> (aggregation). Hãy nghĩ: <code>%s</code> placeholder cho input, GROUP BY role cho aggregation." },
           { level: 2, text: "Prepared Statement: <code>WHERE username = %s AND password_hash = %s</code> — params gửi riêng." },
@@ -3465,16 +3556,21 @@ concept_cards: [
             }
       ],
                 visual: {
+          // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
+          // from earlier lessons. The render loop reads only `diagram:` (last one wins).
+          // Do NOT add new `diagram:` keys at the end of this block; doing so will silently
+          // swap the rendered diagram. Use `diagram:` (single key) or refactor to `diagrams: [...]`.
           
-          diagram: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
+          diagram_legacy_5: {"type": "nf", "before": {"title": "TRƯỚC — 1 bảng tổng (BAD)", "columns": ["user_id", "username", "post_id", "post_text", "game_name", "genre"], "rows": [["U1", "alice", "P1", "My first post", "Elden Ring", "RPG"], ["U1", "alice", "P1", "My first post", "Elden Ring", "Action"], ["U2", "bob", "P2", "Check this", "Hades", "Rogue"]], "violations": {"0-5": true, "0-4": true, "1-5": true, "1-4": true}}, "after": {"title": "SAU — 5 bảng + 2 junction", "columns": ["user_id", "post_id", "game_id", "genre_id", "platform_id"], "rows": [["U1", "P1", "G1", "G_RPG", "PC"], ["U1", "P1", "G1", "G_Act", "PC"], ["U2", "P2", "G2", "G_Rog", "PS5"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
+          diagram_legacy_4: {"type": "flow", "steps": [{"icon": "fa-user", "title": "Web App / Form", "sub": "User thay đổi setting (theme: dark)", "payload": "POST /api/settings"}, {"icon": "fa-code", "title": "Python / Django ORM", "sub": "Validate + serialize sang JSONB", "payload": "settings = {'theme': 'dark'}"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Lưu JSONB vào cột settings", "payload": "INSERT INTO app_users (..., settings) VALUES (...)"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python dict", "sub": "Đọc lại: settings->>theme = \"dark\"", "payload": "SELECT settings->>'theme' FROM app_users"}, {"icon": "fa-display", "title": "HTML Response", "sub": "Render UI với theme mới", "payload": "<html data-theme=\"dark\">"}]},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
+          diagram_legacy_3: {"type": "flow", "steps": [{"icon": "fa-map-pin", "title": "User location", "sub": "Browser geolocation API", "payload": "(106.7, 10.78)"}, {"icon": "fa-mobile", "title": "Mobile App", "sub": "POST /api/nearest?lat=10.78&lon=106.7", "payload": "GET /nearest"}, {"icon": "fa-code", "title": "Django + GeoDjango", "sub": "Build query PostGIS", "payload": "ST_DWithin(geo, point, 5000)"}, {"icon": "fa-server", "title": "PostgreSQL + PostGIS", "sub": "Spatial index (GIST)", "payload": "shop_branches WHERE ST_DWithin(...)"}, {"icon": "fa-list", "title": "Sorted by distance", "sub": "ST_Distance ORDER BY", "payload": "ORDER BY dist ASC LIMIT 5"}]},
           
-          diagram: {"type": "flow", "steps": [{"icon": "fa-user-secret", "title": "Attacker input", "sub": "username = ' OR '1'='1' --", "payload": "MALICIOUS_PAYLOAD"}, {"icon": "fa-bug", "title": "App build SQL (NGUY HIỂM)", "sub": "f\"SELECT * FROM users WHERE name='{input}'\"", "payload": "VULNERABLE"}, {"icon": "fa-server", "title": "DB execute", "sub": "Trả về TẤT CẢ users (không cần password!)", "payload": "ALL_ROWS_RETURNED"}, {"icon": "fa-shield-halved", "title": "FIX: Prepared Statement", "sub": "WHERE username = %s + params", "payload": "SAFE"}, {"icon": "fa-check", "title": "DB execute (SAFE)", "sub": "Input là literal, escape tự động", "payload": "NORMAL_QUERY"}]},
+          diagram_legacy_2: {"type": "flow", "steps": [{"icon": "fa-code", "title": "Python code (ORM)", "sub": "LogEvent.objects.filter(...)", "payload": "Event.objects.all()[:20]"}, {"icon": "fa-cogs", "title": "Django ORM Layer", "sub": "Build SQL từ queryset", "payload": "SELECT * FROM log_events LIMIT 20"}, {"icon": "fa-server", "title": "PostgreSQL", "sub": "Execute SQL", "payload": "20 rows"}, {"icon": "fa-arrow-rotate-left", "title": "ORM → Python list", "sub": "Map row → LogEvent object", "payload": "events = [LogEvent(...), ...]"}, {"icon": "fa-display", "title": "Template render", "sub": "events truyền vào template", "payload": "{% for e in events %}"}]},
+          
+          diagram_legacy_1: {"type": "flow", "steps": [{"icon": "fa-user-secret", "title": "Attacker input", "sub": "username = ' OR '1'='1' --", "payload": "MALICIOUS_PAYLOAD"}, {"icon": "fa-bug", "title": "App build SQL (NGUY HIỂM)", "sub": "f\"SELECT * FROM users WHERE name='{input}'\"", "payload": "VULNERABLE"}, {"icon": "fa-server", "title": "DB execute", "sub": "Trả về TẤT CẢ users (không cần password!)", "payload": "ALL_ROWS_RETURNED"}, {"icon": "fa-shield-halved", "title": "FIX: Prepared Statement", "sub": "WHERE username = %s + params", "payload": "SAFE"}, {"icon": "fa-check", "title": "DB execute (SAFE)", "sub": "Input là literal, escape tự động", "payload": "NORMAL_QUERY"}]},
           
           diagram: {"type": "flow", "steps": [{"icon": "fa-keyboard", "title": "User nhập password", "sub": "\"hunter2\" (plain text)", "payload": "hunter2"}, {"icon": "fa-plus", "title": "Server append salt", "sub": "salt = random 16 bytes", "payload": "hunter2 + \"rand_abc\""}, {"icon": "fa-cogs", "title": "bcrypt.hashpw (cost 12)", "sub": "Hash 2^12 lần SHA256 + bcrypt", "payload": "$2a$12$..."}, {"icon": "fa-database", "title": "Lưu vào DB", "sub": "password_hash + salt (2 cột)", "payload": "INSERT INTO security_users_vault"}, {"icon": "fa-shield-check", "title": "Verify: bcrypt.checkpw", "sub": "So sánh hash với input mới", "payload": "True / False"}]},
           schema: {
@@ -3502,19 +3598,19 @@ concept_cards: [
           {
             question: 'Thuật toán nào <strong>KHÔNG nên dùng</strong> để lưu password?',
             options: [
-              { id: 'a', text: 'md5 — quá nhanh + không có salt → rainbow table attack', correct: true },
-              { id: 'b', text: 'bcrypt — cost factor chỉnh được, salt tự động', correct: false },
-              { id: 'c', text: 'argon2 — winner của Password Hashing Competition 2015', correct: false },
-              { id: 'd', text: 'plain text — lưu nguyên password, không hash', correct: true }
+              { id: 'a', text: 'md5 — quá nhanh + không có salt → rainbow table attack', correct: true, explanation: 'Đúng — md5 là cryptographic hash bị broken (collision attacks từ 2004) + không có salt built-in → rainbow table attack trivial. 1 GPU crack md5 ~50 GH/s.' },
+              { id: 'b', text: 'bcrypt — cost factor chỉnh được, salt tự động', correct: false, explanation: 'Sai — bcrypt là thuật toán hash password AN TOÀN hiện đại. cost factor làm chậm brute-force (1 hash ~100ms), salt tự động 16-byte chống rainbow table. Bcrypt = recommended.' },
+              { id: 'c', text: 'argon2 — winner của Password Hashing Competition 2015', correct: false, explanation: 'Sai — argon2 là winner PHC 2015, hiện đại nhất. Memory-hard → chống GPU/ASIC attack (parallel crack khó hơn bcrypt). Recommended cho new systems.' },
+              { id: 'd', text: 'plain text — lưu nguyên password, không hash', correct: true, explanation: 'Đúng — plain text = KHÔNG có bảo mật. DB compromise → lộ toàn bộ password. Nguyên tắc #1: KHÔNG BAO GIỜ lưu plain text password. Luôn hash dù là user demo.' }
             ]
           },
           {
             question: 'Salt trong password hashing có tác dụng gì?',
             options: [
-              { id: 'a', text: 'Mã hóa password để không ai đọc được', correct: false },
-              { id: 'b', text: 'Chống rainbow table attack — cùng password sẽ có hash khác nhau', correct: true },
-              { id: 'c', text: 'Làm hash ngắn hơn để tiết kiệm storage', correct: false },
-              { id: 'd', text: 'Thay thế cho bcrypt — không cần thuật toán mạnh', correct: false }
+              { id: 'a', text: 'Mã hóa password để không ai đọc được', correct: false, explanation: 'Sai — hash function (bcrypt/argon2) mã hóa. Salt là random data thêm vào TRƯỚC khi hash, không phải encryption.' },
+              { id: 'b', text: 'Chống rainbow table attack — cùng password sẽ có hash khác nhau', correct: true, explanation: 'Đúng — Salt random → cùng "password123" nhưng user A và user B có hash khác nhau. Attacker không thể dùng 1 rainbow table pre-compute cho tất cả users. Mỗi user phải crack riêng.' },
+              { id: 'c', text: 'Làm hash ngắn hơn để tiết kiệm storage', correct: false, explanation: 'Sai — Salt thêm bytes vào input (bcrypt salt = 16 bytes) → hash output dài hơn (60 chars cho $2a$ format). Không làm hash ngắn hơn.' },
+              { id: 'd', text: 'Thay thế cho bcrypt — không cần thuật toán mạnh', correct: false, explanation: 'Sai — Salt là PHỤ TRỢ, không thay thế. Vẫn cần bcrypt/argon2/scrypt làm hash function mạnh. Salt yếu + md5 = vẫn crack được.' }
             ]
           }
         ],

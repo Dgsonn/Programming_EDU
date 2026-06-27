@@ -38,6 +38,274 @@ function toggleModule(hd) {
   hd.nextElementSibling.classList.toggle('open');
 }
 
+/* ============================================================================
+ * C8 — Course Detail Improvements
+ * - Hero time: compute total minutes from lessons.min, update #cd-hero-time
+ * - Skills: progressive unlock animation when module completed
+ * - Prereq: green ✓ if user enrolled in any cpp/java/python course (proxy for SQL basics)
+ * Files: course_db_design.html + .css + .js
+ * ========================================================================== */
+
+/** Course lesson data (shared with C2 roadmap + C8 hero time) */
+var COURSE_LESSONS = [
+  // Module 1 — ER Mapping (B1-B6)
+  { n: 1,  m: 1, t: 'Entity Set & PK',                  min: 15 },
+  { n: 2,  m: 1, t: 'Composite & Derived',              min: 12 },
+  { n: 3,  m: 1, t: 'Foreign Key & JOIN',               min: 15 },
+  { n: 4,  m: 1, t: 'M:N & Junction Table',             min: 15 },
+  { n: 5,  m: 1, t: 'Weak Entity',                      min: 12 },
+  { n: 6,  m: 1, t: 'Mapping ER → Tables',              min: 18 },
+  // Module 2 — Normalization (B7-B13)
+  { n: 7,  m: 2, t: 'Redundancy & FD',                  min: 18 },
+  { n: 8,  m: 2, t: '1NF — Atomic',                     min: 15 },
+  { n: 9,  m: 2, t: '2NF — Full Dep',                   min: 15 },
+  { n: 10, m: 2, t: 'BCNF — Decomposition',             min: 20 },
+  { n: 11, m: 2, t: '3NF — Transitive',                 min: 15 },
+  { n: 12, m: 2, t: '4NF — Multi-valued',               min: 15 },
+  { n: 13, m: 2, t: 'Boss Battle', boss: true,          min: 30 },
+  // Module 3 — App Design (B14-B18)
+  { n: 14, m: 3, t: 'JSON in DB',                       min: 18 },
+  { n: 15, m: 3, t: 'Spatial Data',                     min: 18 },
+  { n: 16, m: 3, t: 'Django ORM',                       min: 18 },
+  { n: 17, m: 3, t: 'SQL Injection',                    min: 18 },
+  { n: 18, m: 3, t: 'Password Hashing',                 min: 20 }
+];
+
+/** Format minutes → Vietnamese-friendly time string */
+function formatCourseTime(totalMin) {
+  if (!totalMin || totalMin <= 0) return '—';
+  var h = Math.floor(totalMin / 60);
+  var m = totalMin % 60;
+  if (h === 0) return '~' + m + ' phút';
+  if (m === 0) return '~' + h + ' giờ';
+  return '~' + h + ' giờ ' + m + ' phút';
+}
+
+/** C8-1: Update hero time from lessons.min (sync, runs on page load) */
+(function updateHeroTime() {
+  var totalMin = COURSE_LESSONS.reduce(function (s, l) { return s + (l.min || 0); }, 0);
+  var el = document.getElementById('cd-hero-time');
+  if (el) el.textContent = formatCourseTime(totalMin);
+})();
+
+/** Determine which modules are completed given a set of completed lesson numbers */
+function computeModuleCompletion(completedSet) {
+  return {
+    m1: [1,2,3,4,5,6].every(function (n) { return completedSet.has(n); }),
+    m2: [7,8,9,10,11,12,13].every(function (n) { return completedSet.has(n); }),
+    m3: [14,15,16,17,18].every(function (n) { return completedSet.has(n); })
+  };
+}
+
+/** C8-2: Apply progressive unlock to .cd-skill-item based on module completion */
+function applySkillUnlocks(completedSet) {
+  var skills = document.querySelectorAll('.cd-skill-item');
+  if (!skills.length) return;
+  var mod = computeModuleCompletion(completedSet);
+
+  // Track stagger index per module (so M1 unlocks animate first, M2 next, etc.)
+  var staggerByModule = { 1: 0, 2: 0, 3: 0 };
+
+  skills.forEach(function (el) {
+    var m = parseInt(el.dataset.module, 10);
+    var unlocked = (m === 1 && mod.m1) || (m === 2 && mod.m2) || (m === 3 && mod.m3);
+
+    el.classList.remove('is-locked', 'is-unlocked');
+    if (unlocked) {
+      el.classList.add('is-unlocked');
+      el.style.setProperty('--i', String(staggerByModule[m]));
+      staggerByModule[m] += 1;
+    } else {
+      el.classList.add('is-locked');
+    }
+  });
+}
+
+/** C8-3: Prereq indicator — green ✓ if user has SQL basics (proxy: enrolled in cpp/java/python) */
+function applyPrereqStatus(enrolledList) {
+  var hasProgrammingBasics = (enrolledList || []).some(function (e) {
+    return e && (e.id === 'cpp' || e.id === 'java' || e.id === 'python');
+  });
+
+  var item = document.querySelector('[data-prereq="sql"]');
+  if (!item) return;
+  var status = item.querySelector('.cd-req-status');
+  if (!status) return;
+
+  status.classList.remove('is-unmet', 'is-met');
+  if (hasProgrammingBasics) {
+    status.classList.add('is-met');
+    var icon = status.querySelector('i');
+    if (icon) {
+      icon.className = 'fas fa-check';
+    }
+  } else {
+    status.classList.add('is-unmet');
+    // Keep lock icon (default)
+  }
+}
+
+/** Shared progress resolver: tries API → localStorage → server fallback */
+function resolveUserProgress() {
+  return new Promise(function (resolve) {
+    fetch('/api/courses-enrolled', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var enrolled = (data && data.enrolled) || [];
+        var me = enrolled.find(function (e) { return e.id === 'db_design'; });
+        var apiCompletedCount = me ? (me.completedLessons || 0) : 0;
+        var serverCurrent = (typeof CURRENT_LESSON_IDX === 'number')
+          ? (CURRENT_LESSON_IDX + 1)
+          : 1;
+
+        var stored = [];
+        try { stored = JSON.parse(localStorage.getItem('pe_progress_db_design') || '[]'); } catch (e) {}
+        var completedSet = new Set();
+        if (Array.isArray(stored)) {
+          stored.forEach(function (n) { if (typeof n === 'number') completedSet.add(n); });
+        }
+        for (var i = 1; i <= apiCompletedCount; i++) completedSet.add(i);
+
+        var lsMax = 0;
+        completedSet.forEach(function (n) { if (n > lsMax) lsMax = n; });
+        var currentIdx = Math.max(serverCurrent, lsMax + 1, apiCompletedCount + 1);
+
+        resolve({
+          completedSet: completedSet,
+          currentIdx: currentIdx,
+          enrolledList: enrolled
+        });
+      })
+      .catch(function () {
+        // Network error fallback
+        var stored = [];
+        try { stored = JSON.parse(localStorage.getItem('pe_progress_db_design') || '[]'); } catch (e) {}
+        var completedSet = new Set(stored.filter(function (n) { return typeof n === 'number'; }));
+        var lsMax = 0;
+        completedSet.forEach(function (n) { if (n > lsMax) lsMax = n; });
+        var currentIdx = (typeof CURRENT_LESSON_IDX === 'number')
+          ? Math.max(CURRENT_LESSON_IDX + 1, lsMax + 1)
+          : Math.max(1, lsMax + 1);
+
+        resolve({
+          completedSet: completedSet,
+          currentIdx: currentIdx,
+          enrolledList: []
+        });
+      });
+  });
+}
+
+/* ============================================================================
+ * C2 — Course Roadmap Visual (Brilliant-style node path)
+ * Renders 18 nodes in snake layout, 3 module zones, B13 = boss hexagon.
+ * State: backend API (/api/courses-enrolled) → localStorage → CURRENT_LESSON_IDX
+ * ========================================================================== */
+(function renderRoadmap() {
+  var container = document.getElementById('cd-roadmap');
+  if (!container) return;
+
+  // Lesson data — use shared COURSE_LESSONS (with .min field for C8 hero time)
+  var lessons = COURSE_LESSONS;
+
+  var moduleNames = {
+    1: 'ER Model & Mapping',
+    2: 'FD & Normalization',
+    3: 'Application Design'
+  };
+
+  // Group by module
+  var byModule = { 1: [], 2: [], 3: [] };
+  lessons.forEach(function (l) { byModule[l.m].push(l); });
+
+  // Split each module into rows of 3 (snake alternating)
+  function splitRows(arr) {
+    var rows = [];
+    for (var i = 0; i < arr.length; i += 3) {
+      rows.push(arr.slice(i, i + 3));
+    }
+    return rows;
+  }
+
+  // Build HTML
+  var html = '';
+  [1, 2, 3].forEach(function (mIdx) {
+    var lessonsM = byModule[mIdx];
+    var rows = splitRows(lessonsM);
+    html += '<div class="cd-roadmap-module" data-module="' + mIdx + '">';
+    html += '<div class="cd-roadmap-module-hd">';
+    html += '<span class="cd-roadmap-module-hd-num">MODULE ' + mIdx + '</span>';
+    html += '<span class="cd-roadmap-module-hd-name">' + moduleNames[mIdx] + '</span>';
+    html += '<span class="cd-roadmap-module-hd-meta">' + lessonsM.length + ' bài</span>';
+    html += '</div>';
+    rows.forEach(function (row, rowIdx) {
+      var reverse = (rowIdx % 2 === 1) ? ' reverse' : '';
+      html += '<div class="cd-roadmap-row' + reverse + '">';
+      row.forEach(function (lesson) {
+        var bossCls = lesson.boss ? ' boss' : '';
+        html += '<a href="/lesson/db_design?lesson=' + lesson.n + '" class="cd-roadmap-node js-roadmap-node" data-lesson="' + lesson.n + '" data-module="' + lesson.m + '" data-boss="' + (lesson.boss ? '1' : '0') + '">';
+        html += '<div class="cd-roadmap-node-circle' + bossCls + '">';
+        html += '<span class="cd-roadmap-node-num">' + lesson.n + '</span>';
+        html += '</div>';
+        html += '<div class="cd-roadmap-node-title">Bài ' + lesson.n + ': ' + escapeHtml(lesson.t) + '</div>';
+        html += '</a>';
+      });
+      // Pad empty slots for last row if < 3
+      for (var p = row.length; p < 3; p++) {
+        html += '<div class="cd-roadmap-empty"></div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+
+  // Fetch progress: try API first, fallback localStorage, fallback server CURRENT_LESSON_IDX
+  function applyStates(completedSet, currentIdx) {
+    var nodes = container.querySelectorAll('.js-roadmap-node');
+    nodes.forEach(function (node) {
+      var n = parseInt(node.dataset.lesson, 10);
+      node.classList.remove('completed', 'current', 'locked');
+      if (completedSet.has(n)) {
+        node.classList.add('completed');
+      } else if (n === currentIdx) {
+        node.classList.add('current');
+      } else if (n < currentIdx) {
+        // Server says they're at currentIdx, so earlier = completed
+        node.classList.add('completed');
+      } else {
+        node.classList.add('locked');
+        node.removeAttribute('href');
+      }
+    });
+  }
+
+  // C8: Use shared progress resolver + apply skills + prereq
+  resolveUserProgress().then(function (progress) {
+    applyStates(progress.completedSet, progress.currentIdx);
+    applySkillUnlocks(progress.completedSet);     // C8-2: progressive unlock
+    applyPrereqStatus(progress.enrolledList);     // C8-3: prereq indicator
+  });
+
+  // Save lesson as completed when user clicks (best-effort, local only)
+  container.addEventListener('click', function (e) {
+    var node = e.target.closest('.js-roadmap-node');
+    if (!node) return;
+    var n = parseInt(node.dataset.lesson, 10);
+    try {
+      var stored = JSON.parse(localStorage.getItem('pe_progress_db_design') || '[]');
+      if (!stored.includes(n)) stored.push(n);
+      localStorage.setItem('pe_progress_db_design', JSON.stringify(stored));
+    } catch (e) {}
+  });
+})();
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
 function goLesson() {
   var el = document.getElementById('current-lesson');
   if (el) { el.click(); return; }

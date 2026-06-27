@@ -24,6 +24,9 @@
 </head>
 <body class="lesson-focus-mode">
 
+  <!-- Scroll progress bar (4.8) — fixed at top, width tracks scroll within active step -->
+  <div class="scroll-progress" id="scroll-progress"></div>
+
   <!-- ════════════ FOCUS HEADER (Codedex player card + Duolingo hearts) ════════════ -->
   <header class="lesson-header">
     <button class="exit-btn" onclick="exitLesson()" title="Thoát bài học">
@@ -604,10 +607,10 @@
                 <i class="fa-solid fa-terminal"></i> Console
               </span>
               <div class="run-actions">
-                <button class="run-btn secondary" id="btn-run" onclick="window.handleChallengeRun && window.handleChallengeRun(false)">
+                <button class="run-btn secondary btn btn-ghost" id="btn-run" onclick="window.handleChallengeRun && window.handleChallengeRun(false)">
                   <i class="fa-solid fa-play"></i> Run
                 </button>
-                <button class="run-btn primary" id="btn-submit" onclick="window.handleChallengeRun && window.handleChallengeRun(true)">
+                <button class="run-btn primary btn btn-primary" id="btn-submit" onclick="window.handleChallengeRun && window.handleChallengeRun(true)">
                   <i class="fa-solid fa-paper-plane"></i> Submit
                 </button>
               </div>
@@ -635,6 +638,21 @@
         <span class="success-lesson-title" id="success-lesson-title">Entity Set &amp; Primary Key</span>
       </div>
       <p class="success-message" id="success-message"></p>
+
+      <!-- 5.1 XP breakdown — countup animated -->
+      <div class="success-xp-breakdown" id="success-xp-breakdown">
+        <div class="success-xp-row"><span>Trắc nghiệm</span><span>+15 XP</span></div>
+        <div class="success-xp-row"><span>Mini-game</span><span>+15 XP</span></div>
+        <div class="success-xp-row"><span>Kéo thả SQL</span><span>+30 XP</span></div>
+        <div class="success-xp-row"><span>Viết code</span><span id="success-xp-code">+50 XP</span></div>
+        <div class="success-xp-total"><span>Tổng</span><span class="success-xp-num" id="success-xp-total">+0</span></div>
+      </div>
+
+      <!-- 5.1 Next lesson preview card -->
+      <div class="success-next-preview" id="success-next-preview">
+        <span class="success-next-label">Bài tiếp theo</span>
+        <span class="success-next-title" id="success-next-title">—</span>
+      </div>
 
       <!-- Achievement unlock (Codedex-inspired) -->
       <div class="achievement-unlock">
@@ -685,5 +703,19 @@
   <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/decomp_game.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=11"></script>
+
+  <!-- B7 Mobile: Step 3 drag-drop fallback notice (shown via JS only on mobile + step 3) -->
+  <div id="mobile-step3-notice" class="mobile-step3-notice" role="alertdialog" aria-labelledby="mobile-step3-title">
+    <div class="mobile-step3-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+    <div class="mobile-step3-content">
+      <h3 id="mobile-step3-title" class="mobile-step3-title">Kéo-thả không hỗ trợ trên mobile</h3>
+      <p class="mobile-step3-text">Step 3 cần thao tác chuột (kéo thả). Bạn có thể bỏ qua Step 3 để xem Step 4, hoặc dùng máy tính.</p>
+      <div class="mobile-step3-actions">
+        <button class="btn btn-ghost" type="button" id="mobile-step3-close-btn">Đóng</button>
+        <button class="btn btn-primary" type="button" id="mobile-step3-skip-btn">Bỏ qua → Step 4</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

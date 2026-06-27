@@ -13,6 +13,8 @@
     --blue-dark: #0D47A1;
     --red: #C62828;
     --red-light: #EF5350;
+    --red-mid: #D32F2F;
+    --red-dark: #B71C1C;
     --white: #FFFFFF;
 }
 
@@ -379,19 +381,19 @@ body {
 }
 
 .btn-bg {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 50%, var(--blue-dark) 100%);
-    transition: opacity 0.3s;
-}
+     position: absolute;
+     inset: 0;
+     background: linear-gradient(135deg, var(--red) 0%, var(--red-mid, #D32F2F) 50%, var(--red-dark, #B71C1C) 100%);
+     transition: opacity 0.3s;
+ }
 
-.btn-bg-hover {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--blue-mid), var(--blue-light));
-    opacity: 0;
-    transition: opacity 0.3s;
-}
+ .btn-bg-hover {
+     position: absolute;
+     inset: 0;
+     background: linear-gradient(135deg, var(--red-mid, #D32F2F), var(--red-light, #EF5350));
+     opacity: 0;
+     transition: opacity 0.3s;
+ }
 
 .btn-main:hover .btn-bg-hover {
     opacity: 1;
@@ -399,7 +401,7 @@ body {
 
 .btn-main:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(21, 101, 192, 0.45);
+    box-shadow: 0 8px 28px rgba(198, 40, 40, 0.45);
 }
 
 .btn-main:active {

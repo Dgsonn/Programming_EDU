@@ -3222,6 +3222,19 @@ body.dark .mini-rm-canvas {
 body.dark .mini-rm-arrow { stroke: #475569; }
 .mini-rm-arrow--solid { stroke-dasharray: none; }
 
+/* Truck animation on roadmap path */
+.mini-rm-truck {
+  /* drop-shadow on a small static element is cheap, but we use will-change to
+     hint the compositor that the truck + its shadow may move along a path. */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.20));
+  z-index: 5;
+  will-change: transform;
+  /* Promote the truck to its own GPU layer (cheap on modern GPUs; avoids
+     re-rasterization on each animateMotion frame). */
+  transform: translateZ(0);
+}
+body.dark .mini-rm-truck circle { fill: #FBBF24; stroke: #D97706; }
+
 .mini-rm-node {
   position: absolute;
   transform: translate(-50%, -50%);

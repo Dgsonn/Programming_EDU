@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
  * lesson_db_design.css — Database Design lesson page
  * Design: Focus mode | Dark-first | No borders | Glassmorphism | Cyan accent
  *
@@ -10,12 +10,7 @@
  * ============================================================================ */
 
 :root {
-  --ide-bg: #0B1121;
-  --ide-bg-2: #0F172A;
-  --ide-surface: #151E32;
-  --ide-surface-2: #1A2744;
   --ide-glass: rgba(21, 30, 50, 0.65);
-  --ide-glass-2: rgba(15, 23, 42, 0.85);
 
   --primary: #06B6D4;
   --primary-glow: rgba(6, 182, 212, 0.35);
@@ -38,6 +33,15 @@
   --anim-slow: 0.5s;
   --anim-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --anim-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Phase 1+2 tokens (spacing, typography, surface, shadow, motion) */
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-7:32px;--space-8:40px;
+  --text-xs:11px;--text-sm:13px;--text-md:15px;--text-lg:18px;
+  --surface-0:#0B1121;--surface-1:#0F172A;--surface-2:#151E32;--surface-3:#1A2744;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 8px 24px rgba(0,0,0,.35);
+  --dur-instant:80ms;--dur-fast:150ms;--dur-base:240ms;--dur-slow:400ms;--dur-snappy:180ms;
+  --ease-out-quart:cubic-bezier(0.25,1,0.5,1);
+  --radius:12px;--radius-sm:8px;
 
   --success: #10B981;
   --success-soft: rgba(16, 185, 129, 0.15);
@@ -63,14 +67,11 @@
   --text-500: #64748B;
   --text-600: #475569;
 
-  --shadow-glow: 0 0 24px rgba(6, 182, 212, 0.25);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.40);
-  --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.25);
 
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
-  --radius-xl: 20px;
   --radius-2xl: 28px;
 }
 
@@ -80,7 +81,7 @@
 
 body.lesson-focus-mode {
   margin: 0;
-  background: var(--ide-bg);
+  background: var(--surface-0);
   color: var(--text-300);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   height: 100vh;
@@ -101,7 +102,7 @@ body.lesson-focus-mode::before {
   z-index: 0;
 }
 
-/* ── Focus Header ───────────────────────────────────────────────── */
+/* Focus Header */
 .lesson-header {
   height: 64px;
   flex-shrink: 0;
@@ -152,7 +153,7 @@ body.lesson-focus-mode::before {
 .progress-track {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 /* Sticky progress khi scroll xuống dưới (toggle .is-scrolled qua IntersectionObserver ở JS) */
@@ -160,7 +161,7 @@ body.lesson-focus-mode::before {
 .progress-step {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 6px 14px 6px 6px;
   border-radius: 100px;
   background: rgba(148, 163, 184, 0.06);
@@ -177,7 +178,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ide-surface-2);
+  background: var(--surface-3);
   border-radius: 50%;
   font-size: 11px;
   font-weight: 800;
@@ -216,7 +217,7 @@ body.lesson-focus-mode::before {
 
 .progress-step.active .step-num {
   background: var(--module-accent);
-  color: var(--ide-bg);
+  color: var(--surface-0);
   box-shadow: 0 0 12px var(--module-accent-glow);
 }
 
@@ -237,7 +238,7 @@ body.lesson-focus-mode::before {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .xp-pill {
@@ -257,11 +258,11 @@ body.lesson-focus-mode::before {
   font-size: 11px;
 }
 
-/* ── Player Pill (in header, compact) ───────────────────────────── */
+/* Player Pill (in header, compact) */
 .player-pill {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 4px 12px 4px 4px;
   background: rgba(11, 17, 33, 0.5);
   border-radius: 100px;
@@ -285,7 +286,7 @@ body.lesson-focus-mode::before {
   background: linear-gradient(135deg, #06B6D4, #10B981);
   border-radius: 50%;
   font-size: 14px;
-  color: var(--ide-bg);
+  color: var(--surface-0);
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.35);
   flex-shrink: 0;
 }
@@ -316,7 +317,7 @@ body.lesson-focus-mode::before {
   font-weight: 800;
   padding: 1px 4px;
   background: linear-gradient(135deg, #06B6D4, #0E7490);
-  color: var(--ide-bg);
+  color: var(--surface-0);
   border-radius: 3px;
   letter-spacing: 0.02em;
   font-size: 9px;
@@ -336,7 +337,7 @@ body.lesson-focus-mode::before {
   font-size: 9px;
 }
 
-/* ── Stage ──────────────────────────────────────────────────────── */
+/* Stage */
 .lesson-stage {
   flex: 1;
   position: relative;
@@ -362,7 +363,7 @@ body.lesson-focus-mode::before {
   transform: translateX(0);
 }
 
-/* ── Step 1: Theory ─────────────────────────────────────────────── */
+/* Step 1: Theory */
 .step-1-content {
   max-width: 880px;
   width: 100%;
@@ -373,8 +374,8 @@ body.lesson-focus-mode::before {
 .eyebrow-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
   flex-wrap: wrap;
 }
 
@@ -428,10 +429,10 @@ body.lesson-focus-mode::before {
 }
 
 .primer-card {
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  margin-bottom: 24px;
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-6);
   position: relative;
   overflow: hidden;
   /* Solid surface (no backdrop blur) */
@@ -478,7 +479,7 @@ body.lesson-focus-mode::before {
   content: '✦';
   color: var(--primary);
   font-size: 12px;
-  margin-top: 4px;
+  margin-top: var(--space-1);
   flex-shrink: 0;
 }
 
@@ -499,7 +500,7 @@ body.lesson-focus-mode::before {
 .theory-extended {
   background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(139, 92, 246, 0.06));
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   margin: 20px 0;
   position: relative;
   overflow: hidden;
@@ -558,7 +559,7 @@ body.lesson-focus-mode::before {
 .syntax-example {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(236, 72, 153, 0.06));
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   margin: 20px 0;
   position: relative;
   overflow: hidden;
@@ -642,12 +643,12 @@ body.lesson-focus-mode::before {
 .visual-db {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--space-4);
   margin: 28px 0;
 }
 
 .db-panel {
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
@@ -670,7 +671,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   background: rgba(11, 17, 33, 0.5);
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
 }
@@ -678,7 +679,7 @@ body.lesson-focus-mode::before {
 .panel-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 12px;
   font-weight: 700;
   color: var(--text-100);
@@ -697,15 +698,15 @@ body.lesson-focus-mode::before {
 }
 
 .schema-table {
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .schema-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  margin-bottom: 4px;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-1);
   background: rgba(11, 17, 33, 0.4);
   border-radius: var(--radius-sm);
   font-family: 'JetBrains Mono', monospace;
@@ -739,7 +740,7 @@ body.lesson-focus-mode::before {
 }
 
 .data-table-wrap {
-  padding: 16px;
+  padding: var(--space-4);
   overflow-x: auto;
 }
 
@@ -751,7 +752,7 @@ body.lesson-focus-mode::before {
 }
 
 .data-table th {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   text-align: left;
   color: var(--text-400);
   font-weight: 600;
@@ -762,7 +763,7 @@ body.lesson-focus-mode::before {
 }
 
 .data-table td {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   color: var(--text-200);
   border-bottom: 1px solid rgba(148, 163, 184, 0.04);
 }
@@ -783,7 +784,7 @@ body.lesson-focus-mode::before {
 .mission-card {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.10), rgba(6, 182, 212, 0.08));
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   margin: 28px 0;
   position: relative;
   overflow: hidden;
@@ -805,7 +806,7 @@ body.lesson-focus-mode::before {
   color: var(--success);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .mission-text {
@@ -832,10 +833,10 @@ body.lesson-focus-mode::before {
 
 .next-btn.primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-deep));
-  color: var(--ide-bg);
+  color: var(--surface-0);
   box-shadow: 0 4px 20px var(--primary-glow);
   width: 100%;
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .next-btn.primary:hover {
@@ -849,7 +850,7 @@ body.lesson-focus-mode::before {
 
 .next-btn.primary.small {
   width: auto;
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   font-size: 13px;
   margin-top: 0;
 }
@@ -864,10 +865,10 @@ body.lesson-focus-mode::before {
 }
 
 .next-btn.hidden {
-  display: none !important;
+  display: none;
 }
 
-/* ── Step 2: MCQ ────────────────────────────────────────────────── */
+/* Step 2: MCQ */
 .step-2-content {
   max-width: 720px;
   width: 100%;
@@ -887,16 +888,16 @@ body.lesson-focus-mode::before {
 .mcq-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .mcq-option {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
   padding: 18px 20px;
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--anim-fast);
@@ -934,7 +935,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ide-surface-2);
+  background: var(--surface-3);
   color: var(--text-400);
   border-radius: 50%;
   font-size: 13px;
@@ -946,7 +947,7 @@ body.lesson-focus-mode::before {
 
 .mcq-option:hover:not(.disabled) .opt-letter {
   background: var(--primary);
-  color: var(--ide-bg);
+  color: var(--surface-0);
 }
 
 .mcq-option.correct {
@@ -954,7 +955,7 @@ body.lesson-focus-mode::before {
   color: #fff;
   box-shadow: 0 0 0 1px var(--success), 0 0 24px var(--success-glow);
   transform: scale(1.02);
-  animation: correct-bounce var(--anim-slow) ease;
+  animation: correct-bounce var(--anim-slow) ease, mcq-correct-pulse var(--dur-base) var(--ease-out-quart);
 }
 
 .mcq-option.correct .opt-letter {
@@ -1050,7 +1051,7 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Step 3 & 4: Split Pane ─────────────────────────────────────── */
+/* Step 3 & 4: Split Pane */
 .split-pane {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1067,11 +1068,11 @@ body.lesson-focus-mode::before {
 }
 
 .pane-left {
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   border-right: 1px solid rgba(148, 163, 184, 0.06);
 }
 
-/* ── Step 3 Hybrid layout — TWO-PANE: Trái 45% (truck+mission) | Phải 55% (drag 72% + IDE 28%) ── */
+/* Step 3 Hybrid layout — TWO-PANE: Trái 45% (truck+mission) | Phải 55% (drag 72% + IDE 28%) */
 .hybrid-layout {
   grid-template-columns: minmax(320px, 45fr) minmax(0, 55fr);
   gap: 0;
@@ -1081,7 +1082,7 @@ body.lesson-focus-mode::before {
 
 /* LEFT pane: mission/data on top (~17%) + truck map (big, ~83%) */
 .hybrid-layout .pane-left {
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(148, 163, 184, 0.08);
@@ -1094,7 +1095,7 @@ body.lesson-focus-mode::before {
   max-height: 38%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 14px 16px 10px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   overflow: hidden;
@@ -1103,7 +1104,7 @@ body.lesson-focus-mode::before {
 .truck-big-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 600;
@@ -1141,13 +1142,13 @@ body.lesson-focus-mode::before {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
 }
 
 .ide-pane {
   flex: 0 0 28%;
-  background: var(--ide-bg);
+  background: var(--surface-0);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1169,136 +1170,19 @@ body.lesson-focus-mode::before {
   white-space: pre;
 }
 
-.ide-pane .reveal-hint {
-  display: none;
-}
-
-/* Big truck map wrapper — takes ~62% of left pane, prominent but bounded */
-.truck-big-wrap .drag-map-wrap {
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.truck-big-wrap .drag-map {
-  width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
-  /* Scale down the whole map so it fits the available area */
-  transform-origin: center center;
-}
-
-.truck-big-wrap .drag-truck {
-  width: 28px;
-  height: 28px;
-}
-
-.truck-big-wrap .drag-truck .truck-body {
-  font-size: 14px;
-}
-
-.truck-big-wrap .drag-status-bar {
-  font-size: 11px;
-  padding: 6px 8px;
-  gap: 4px;
-}
+/* Big truck map wrapper — takes ~62% of left pane, prominent but bounded *
 
 .truck-big-wrap .status-cell {
-  padding: 4px 8px;
-}
-
-.truck-big-wrap .status-label {
-  font-size: 9px;
-}
-
-.truck-big-wrap .status-val {
-  font-size: 11px;
+  padding: var(--space-1) var(--space-2);
 }
 
 .truck-big-wrap .status-arrow {
   font-size: 11px;
 }
 
-.truck-big-wrap .drag-legend {
-  font-size: 9.5px;
-  padding: 4px 8px;
-  gap: 4px 10px;
-}
+/* Compact truck grid wrapper — small enough to keep block bank in view *
 
-/* Compact truck grid wrapper — small enough to keep block bank in view */
-.truck-compact-wrap {
-  background: rgba(11, 17, 33, 0.4);
-  border: 1px solid rgba(148, 163, 184, 0.08);
-  border-radius: 12px;
-  padding: 8px 10px;
-  flex-shrink: 0;
-}
-
-.truck-compact-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--text-400);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 4px;
-  padding: 0 2px;
-}
-
-.truck-compact-label i {
-  color: var(--primary);
-}
-
-/* Compact map: much smaller — keep under 110px total so bank stays in view */
-.truck-compact-wrap .drag-map {
-  width: 100%;
-  max-width: 360px;
-  margin: 0 auto;
-}
-
-.truck-compact-wrap .drag-truck {
-  width: 24px;
-  height: 24px;
-}
-
-.truck-compact-wrap .drag-truck .truck-body {
-  font-size: 12px;
-}
-
-.truck-compact-wrap .drag-status-bar {
-  font-size: 10px;
-  padding: 4px 6px;
-  gap: 4px;
-}
-
-.truck-compact-wrap .status-cell {
-  padding: 3px 6px;
-}
-
-.truck-compact-wrap .status-label {
-  font-size: 8.5px;
-}
-
-.truck-compact-wrap .status-val {
-  font-size: 10px;
-}
-
-.truck-compact-wrap .status-arrow {
-  font-size: 10px;
-}
-
-.truck-compact-wrap .drag-legend {
-  font-size: 9px;
-  padding: 4px 6px;
-  gap: 4px 8px;
-  display: none;
-}
+/* Compact map: much smaller — keep under 110px total so bank stays in view *
 
 /* ============================================================================
  * QUERY PIPELINE (v4 redesign — Brilliant-style data transformation viz)
@@ -1328,10 +1212,10 @@ body.lesson-focus-mode::before {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
-/* ── Main pipeline: vertical stack of truck-row + stations ───────────── */
+/* Main pipeline: vertical stack of truck-row + stations */
 .pipeline {
   flex: 1;
   min-height: 0;
@@ -1347,7 +1231,7 @@ body.lesson-focus-mode::before {
   position: relative;
 }
 
-/* ── Top row: truck cursor + rail connectors ────────────────────────── */
+/* Top row: truck cursor + rail connectors */
 .pipeline-truck-row {
   position: relative;
   height: 44px;
@@ -1359,7 +1243,7 @@ body.lesson-focus-mode::before {
   position: absolute;
   inset: 22px 56px auto 56px;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   height: 4px;
   z-index: 1;
 }
@@ -1427,7 +1311,7 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Truck cursor (slides between stations via --tx var) ────────────── */
+/* Truck cursor (slides between stations via --tx var) */
 .pipeline-truck {
   position: absolute;
   top: 0;
@@ -1501,7 +1385,7 @@ body.lesson-focus-mode::before {
   height: 10px;
   background: radial-gradient(circle, #1F2937 35%, #4B5563 38%, #1F2937 42%, #6B7280 60%, #1F2937 65%);
   border-radius: 50%;
-  border: 1px solid #0F172A;
+  border: 1px solid var(--surface-1);
   z-index: 3;
   animation: wheel-spin var(--anim-slow) linear infinite;
 }
@@ -1776,11 +1660,6 @@ body.lesson-focus-mode::before {
   transition: all var(--anim-medium) var(--anim-spring);
 }
 
-.pipeline-truck.has-cargo .truck-cargo {
-  opacity: 1;
-  transform: scale(1);
-}
-
 /* Wrong-order shake */
 .pipeline-truck.shake .truck-body {
   animation: truck-shake 0.6s ease;
@@ -1804,13 +1683,13 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Stations row: 4 cards with mini-table data ────────────────────── */
+/* Stations row: 4 cards with mini-table data */
 .pipeline-stations {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .pipeline-station {
@@ -1888,7 +1767,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .station-icon {
@@ -1931,7 +1810,7 @@ body.lesson-focus-mode::before {
   letter-spacing: 0.04em;
 }
 
-/* ── Data slot inside station: shows mini table when active ─────────── */
+/* Data slot inside station: shows mini table when active */
 .station-data {
   flex: 1;
   min-height: 0;
@@ -1993,7 +1872,7 @@ body.lesson-focus-mode::before {
   max-width: 100%;
 }
 
-/* ── Mini data table (the core of Brilliant-style viz) ──────────────── */
+/* Mini data table (the core of Brilliant-style viz) */
 .mini-table {
   width: 100%;
   display: flex;
@@ -2151,7 +2030,7 @@ body.lesson-focus-mode::before {
   opacity: 0.15;
 }
 
-/* ── Cargo pill below stations ──────────────────────────────────────── */
+/* Cargo pill below stations */
 .station-tag {
   position: absolute;
   bottom: -2px;
@@ -2201,12 +2080,12 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Status narration bar (below pipeline) ──────────────────────────── */
+/* Status narration bar (below pipeline) */
 .pipeline-status {
   flex-shrink: 0;
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 9px 12px;
   background: rgba(11, 17, 33, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.10);
@@ -2290,7 +2169,7 @@ body.lesson-focus-mode::before {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-600);
-  margin-left: 4px;
+  margin-left: var(--space-1);
   padding: 0 3px;
   background: rgba(11, 17, 33, 0.5);
   border-radius: 3px;
@@ -2302,7 +2181,7 @@ body.lesson-focus-mode::before {
 .pill-hint-tooltip {
   position: absolute;
   transform: translate(-50%, -100%);
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border: 1px solid rgba(6, 182, 212, 0.4);
   border-radius: 10px;
   padding: 10px 14px;
@@ -2313,7 +2192,7 @@ body.lesson-focus-mode::before {
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity var(--dur-snappy) ease, transform var(--dur-snappy) ease;
 }
 
 .pill-hint-tooltip.visible {
@@ -2329,7 +2208,7 @@ body.lesson-focus-mode::before {
   transform: translateX(-50%) rotate(45deg);
   width: 10px;
   height: 10px;
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-right: 1px solid rgba(6, 182, 212, 0.4);
   border-bottom: 1px solid rgba(6, 182, 212, 0.4);
 }
@@ -2337,8 +2216,8 @@ body.lesson-focus-mode::before {
 .pill-hint-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
 }
 
 .pill-hint-row:last-of-type {
@@ -2367,8 +2246,8 @@ body.lesson-focus-mode::before {
 }
 
 .pill-hint-foot {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
   border-top: 1px dashed rgba(148, 163, 184, 0.15);
   font-size: 10.5px;
   color: var(--text-500);
@@ -2402,7 +2281,7 @@ body.lesson-focus-mode::before {
 
 .drop-line.broken .drop-line-slot {
   border: 1px dashed rgba(245, 158, 11, 0.35);
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
 }
 
 .broken-tooltip {
@@ -2413,7 +2292,7 @@ body.lesson-focus-mode::before {
   font-style: italic;
   color: var(--warning);
   margin-top: 6px;
-  padding-left: 4px;
+  padding-left: var(--space-1);
   letter-spacing: 0.01em;
   animation: tooltip-fade-in var(--anim-medium) ease;
 }
@@ -2458,22 +2337,22 @@ body.lesson-focus-mode::before {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10.5px;
   color: var(--text-500);
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   background: rgba(11, 17, 33, 0.5);
   border-radius: 6px;
   border: 1px solid rgba(148, 163, 184, 0.08);
 }
 
 .pane-right {
-  background: var(--ide-bg);
+  background: var(--surface-0);
 }
 
 .pane-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
   background: rgba(11, 17, 33, 0.6);
   border-bottom: 1px solid rgba(148, 163, 184, 0.06);
   flex-shrink: 0;
@@ -2486,27 +2365,6 @@ body.lesson-focus-mode::before {
   margin: 4px 0 0;
 }
 
-.hint-text {
-  font-size: 12px;
-  color: var(--text-500);
-  font-weight: 500;
-  margin-left: 6px;
-}
-
-.sync-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  background: var(--primary-soft);
-  color: var(--primary);
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
 /* Drop zones (Step 3 right) — spacious A/Brilliant style with color anchors */
 .drop-zone-stack {
   flex: 1 1 auto;
@@ -2514,7 +2372,7 @@ body.lesson-focus-mode::before {
   padding: 8px 12px 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-height: 0;
 }
 
@@ -2531,13 +2389,7 @@ body.lesson-focus-mode::before {
   flex-shrink: 0;
 }
 
-.drag-area-head .zone-legend {
-  border-left: none;
-  padding-left: 0;
-  margin-left: 0;
-}
-
-/* ── Color anchor: each zone gets a unique hue, used in border, glow, and pill tag ── */
+/* Color anchor: each zone gets a unique hue, used in border, glow, and pill tag */
 .drop-line[data-zone="select-line"] {
   --zone-color: #06B6D4;
   --zone-color-soft: rgba(6, 182, 212, 0.12);
@@ -2613,10 +2465,7 @@ body.lesson-focus-mode::before {
 }
 
 /* Hint pulse: when user clicks (not drags) a pill, target zone gets a brief pulse.
-   This is the A-style "nudge" — teaches where it goes, but doesn't auto-place. */
-.drop-line.zone-hint-pulse {
-  animation: zone-pulse 0.8s ease-out;
-}
+   This is the A-style "nudge" — teaches where it goes, but doesn't auto-place. *
 
 @keyframes zone-pulse {
   0% {
@@ -2654,7 +2503,7 @@ body.lesson-focus-mode::before {
   margin-right: 2px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   flex-shrink: 0;
   white-space: nowrap;
   padding-top: 3px;
@@ -2677,7 +2526,7 @@ body.lesson-focus-mode::before {
   align-items: center;
   min-width: 60px;
   min-height: 26px;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   background: rgba(11, 17, 33, 0.45);
   border-radius: 8px;
   font-style: italic;
@@ -2703,7 +2552,7 @@ body.lesson-focus-mode::before {
 .block-bank-wrap {
   border-top: 1px solid rgba(148, 163, 184, 0.08);
   padding: 8px 16px 10px;
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   flex-shrink: 0;
   max-height: 40%;
   overflow-y: auto;
@@ -2718,7 +2567,7 @@ body.lesson-focus-mode::before {
   margin-bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .bank-label::before {
@@ -2731,45 +2580,7 @@ body.lesson-focus-mode::before {
   box-shadow: 0 0 6px var(--primary);
 }
 
-.bank-hint {
-  margin-left: auto;
-  font-size: 10.5px;
-  font-weight: 500;
-  color: var(--text-600);
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-/* Truck toggle button — sit in the bank-label row, far right */
-.truck-toggle {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(11, 17, 33, 0.5);
-  color: var(--text-500);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.18s;
-  margin-left: 8px;
-  flex-shrink: 0;
-}
-
-.truck-toggle:hover {
-  background: rgba(6, 182, 212, 0.12);
-  border-color: rgba(6, 182, 212, 0.35);
-  color: var(--primary);
-}
-
-.truck-toggle.active {
-  background: var(--primary-soft);
-  border-color: var(--primary);
-  color: var(--primary);
-  box-shadow: 0 0 12px -2px var(--primary);
-}
+/* Truck toggle button — sit in the bank-label row, far right *
 
 .block-bank {
   display: flex;
@@ -2790,7 +2601,7 @@ body.lesson-focus-mode::before {
   font-weight: 700;
   cursor: grab;
   user-select: none;
-  transition: transform 0.18s var(--anim-spring), box-shadow 0.18s, filter var(--anim-fast), opacity var(--anim-fast);
+  transition: transform var(--dur-snappy) var(--anim-spring), box-shadow var(--dur-snappy), filter var(--anim-fast), opacity var(--anim-fast);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
   --pill-anchor: rgba(148, 163, 184, 0.5);
@@ -2823,42 +2634,6 @@ body.lesson-focus-mode::before {
   transition: background var(--anim-fast), box-shadow var(--anim-fast);
 }
 
-.logic-pill.pill-kw {
-  background: rgba(198, 120, 221, 0.15);
-  box-shadow: 0 0 0 1px rgba(198, 120, 221, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-  color: var(--t-keyword);
-}
-
-.logic-pill.pill-col {
-  background: rgba(226, 226, 226, 0.06);
-  box-shadow: 0 0 0 1px rgba(226, 226, 226, 0.15), 0 2px 6px rgba(0, 0, 0, 0.2);
-  color: var(--text-200);
-}
-
-.logic-pill.pill-tbl {
-  background: rgba(97, 175, 239, 0.15);
-  box-shadow: 0 0 0 1px rgba(97, 175, 239, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-  color: var(--t-function);
-}
-
-.logic-pill.pill-op {
-  background: rgba(86, 182, 194, 0.15);
-  box-shadow: 0 0 0 1px rgba(86, 182, 194, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-  color: var(--t-operator);
-}
-
-.logic-pill.pill-val {
-  background: rgba(209, 154, 102, 0.15);
-  box-shadow: 0 0 0 1px rgba(209, 154, 102, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-  color: var(--t-number);
-}
-
-.logic-pill.pill-fn {
-  background: rgba(97, 175, 239, 0.15);
-  box-shadow: 0 0 0 1px rgba(97, 175, 239, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-  color: var(--t-function);
-}
-
 .logic-pill.error {
   background: var(--danger-soft);
   box-shadow: 0 0 0 1px var(--danger);
@@ -2881,9 +2656,9 @@ body.lesson-focus-mode::before {
 .filename-tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 6px 12px;
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-radius: 8px 8px 0 0;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
@@ -2898,7 +2673,7 @@ body.lesson-focus-mode::before {
 .ide-tools {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .tool-label {
@@ -2910,7 +2685,7 @@ body.lesson-focus-mode::before {
 .ide-display {
   flex: 1;
   display: flex;
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   line-height: 1.7;
@@ -2930,7 +2705,7 @@ body.lesson-focus-mode::before {
 
 .ide-content {
   flex: 1;
-  padding: 20px;
+  padding: var(--space-5);
   color: var(--text-200);
   white-space: pre-wrap;
   word-break: break-word;
@@ -2939,10 +2714,6 @@ body.lesson-focus-mode::before {
 .ide-content .t-keyword {
   color: var(--t-keyword);
   font-weight: 700;
-}
-
-.ide-content .t-function {
-  color: var(--t-function);
 }
 
 .ide-content .t-string {
@@ -2985,28 +2756,7 @@ body.lesson-focus-mode::before {
   }
 }
 
-.reveal-hint {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  background: rgba(245, 158, 11, 0.06);
-  border-top: 1px solid rgba(245, 158, 11, 0.15);
-  color: var(--warning);
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-.reveal-hint i {
-  font-size: 14px;
-}
-
-/* ── Step 4: Pure Code ─────────────────────────────────────────── */
-.step4-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
+/* Step 4: Pure Code *
 
 .prompt-block {
   font-size: 14.5px;
@@ -3045,13 +2795,13 @@ body.lesson-focus-mode::before {
 .hint-card-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 11px;
   font-weight: 700;
   color: var(--warning);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .hint-card-body {
@@ -3069,30 +2819,7 @@ body.lesson-focus-mode::before {
   border-radius: 4px;
 }
 
-/* CodeMirror overrides for IDE feel */
-.CodeMirror {
-  flex: 1;
-  height: auto !important;
-  background: var(--ide-bg-2) !important;
-  color: var(--text-200);
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 14px !important;
-  line-height: 1.7 !important;
-  padding: 16px 0;
-}
-
-.CodeMirror-gutters {
-  background: transparent !important;
-  border-right: 1px solid rgba(148, 163, 184, 0.06) !important;
-}
-
-.CodeMirror-linenumber {
-  color: var(--text-600) !important;
-}
-
-.CodeMirror-cursor {
-  border-left: 2px solid var(--primary) !important;
-}
+/* CodeMirror overrides for IDE feel *
 
 /* Terminal */
 .terminal {
@@ -3108,7 +2835,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   background: rgba(11, 17, 33, 0.5);
   border-bottom: 1px solid rgba(148, 163, 184, 0.06);
 }
@@ -3116,7 +2843,7 @@ body.lesson-focus-mode::before {
 .terminal-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 11px;
   font-weight: 700;
   color: var(--text-500);
@@ -3167,7 +2894,7 @@ body.lesson-focus-mode::before {
 
 .prompt-arrow {
   color: var(--primary);
-  margin-right: 8px;
+  margin-right: var(--space-2);
   font-weight: 700;
 }
 
@@ -3179,11 +2906,7 @@ body.lesson-focus-mode::before {
   color: var(--danger);
 }
 
-.terminal-output .info-line {
-  color: var(--primary);
-}
-
-/* ── Success Modal ──────────────────────────────────────────────── */
+/* Success Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -3201,7 +2924,7 @@ body.lesson-focus-mode::before {
 }
 
 .success-card {
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-radius: var(--radius-2xl);
   padding: 40px 32px 28px;
   max-width: 420px;
@@ -3247,7 +2970,7 @@ body.lesson-focus-mode::before {
   background: linear-gradient(135deg, var(--primary), var(--success));
   border-radius: 50%;
   font-size: 36px;
-  color: var(--ide-bg);
+  color: var(--surface-0);
   box-shadow: 0 0 32px var(--primary-glow);
   animation: success-bounce 0.8s ease;
 }
@@ -3284,9 +3007,9 @@ body.lesson-focus-mode::before {
 
 .success-rewards {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .reward {
@@ -3305,7 +3028,7 @@ body.lesson-focus-mode::before {
   align-items: center;
   justify-content: center;
   background: var(--warning);
-  color: var(--ide-bg);
+  color: var(--surface-0);
   border-radius: 50%;
   font-size: 14px;
 }
@@ -3338,7 +3061,7 @@ body.lesson-focus-mode::before {
   margin-top: 0;
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────────── */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -3357,18 +3080,18 @@ body.lesson-focus-mode::before {
   background: rgba(148, 163, 184, 0.25);
 }
 
-/* ── Responsive ─────────────────────────────────────────────────── */
+/* Responsive */
 
 /* ════════════════════════════════════════════════════════════════════
  * REDESIGN v2 — Patterns from Brilliant, Codecademy, Codedex,
  *                LeetCode, Duolingo
  * ════════════════════════════════════════════════════════════════════ */
 
-/* ── Hearts (Duolingo-style) ────────────────────────────────────── */
+/* Hearts (Duolingo-style) */
 .hearts {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 6px 10px;
   background: rgba(239, 68, 68, 0.08);
   border-radius: 100px;
@@ -3430,39 +3153,7 @@ body.lesson-focus-mode::before {
   /* Removed fire-pulse animation (streakActive chưa implement) */
 }
 
-/* ── Player Card (Codedex RPG-style, floating) ──────────────────── */
-.player-card {
-  position: fixed;
-  top: 80px;
-  right: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px 12px 12px;
-  background: var(--ide-surface);
-  border-radius: 16px;
-  z-index: 50;
-  box-shadow: var(--shadow-card), 0 0 0 1px rgba(6, 182, 212, 0.15);
-  transition: transform var(--anim-normal);
-  max-width: 280px;
-}
-
-.player-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.15));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.player-card:hover {
-  transform: translateY(-3px);
-}
+/* Player Card (Codedex RPG-style, floating) *
 
 .player-avatar {
   width: 44px;
@@ -3473,7 +3164,7 @@ body.lesson-focus-mode::before {
   background: linear-gradient(135deg, #06B6D4, #10B981);
   border-radius: 12px;
   font-size: 20px;
-  color: var(--ide-bg);
+  color: var(--surface-0);
   box-shadow: 0 0 16px rgba(6, 182, 212, 0.4);
 }
 
@@ -3501,7 +3192,7 @@ body.lesson-focus-mode::before {
   font-weight: 800;
   padding: 2px 6px;
   background: linear-gradient(135deg, #06B6D4, #0E7490);
-  color: var(--ide-bg);
+  color: var(--surface-0);
   border-radius: 4px;
   letter-spacing: 0.04em;
 }
@@ -3514,22 +3205,6 @@ body.lesson-focus-mode::before {
   letter-spacing: 0.04em;
 }
 
-.xp-bar-mini {
-  height: 4px;
-  background: rgba(148, 163, 184, 0.15);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 3px;
-}
-
-.xp-fill-mini {
-  height: 100%;
-  background: linear-gradient(90deg, #06B6D4, #10B981);
-  border-radius: 2px;
-  box-shadow: 0 0 8px var(--primary-glow);
-  transition: width var(--anim-slow);
-}
-
 .xp-text {
   font-size: 9px;
   color: var(--text-500);
@@ -3537,11 +3212,11 @@ body.lesson-focus-mode::before {
   text-align: right;
 }
 
-/* ── 3D Hero Icon (Brilliant-inspired) ──────────────────────────── */
+/* 3D Hero Icon (Brilliant-inspired) */
 .hero-3d-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .hero-3d-icon {
@@ -3603,7 +3278,7 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Journey Path (Brilliant-inspired) ──────────────────────────── */
+/* Journey Path (Brilliant-inspired) */
 .journey-path {
   display: flex;
   align-items: center;
@@ -3622,7 +3297,7 @@ body.lesson-focus-mode::before {
   font-size: 10px;
   font-weight: 700;
   color: var(--primary);
-  background: var(--ide-bg);
+  background: var(--surface-0);
   padding: 0 8px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -3664,7 +3339,7 @@ body.lesson-focus-mode::before {
   margin: 0 4px;
 }
 
-/* ── Difficulty Pill (LeetCode-inspired) ─────────────────────────── */
+/* Difficulty Pill (LeetCode-inspired) */
 .difficulty-pill {
   display: inline-flex;
   align-items: center;
@@ -3693,17 +3368,11 @@ body.lesson-focus-mode::before {
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
 }
 
-.difficulty-hard {
-  background: rgba(239, 68, 68, 0.15);
-  color: #F87171;
-  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
-}
-
-/* ── Inline Hint (Codecademy-inspired) ───────────────────────────── */
+/* Inline Hint (Codecademy-inspired) */
 .inline-hint {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px 16px;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(6, 182, 212, 0.06));
   border-left: 3px solid var(--warning);
@@ -3724,18 +3393,18 @@ body.lesson-focus-mode::before {
 
 .inline-hint strong {
   color: var(--warning);
-  margin-right: 4px;
+  margin-right: var(--space-1);
 }
 
 .inline-hint.hidden {
   display: none;
 }
 
-/* ── Terminal Aesthetic (Codedex pixel-style) ───────────────────── */
+/* Terminal Aesthetic (Codedex pixel-style) */
 .terminal-aesthetic .terminal-chrome {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .chrome-dots {
@@ -3782,14 +3451,14 @@ body.lesson-focus-mode::before {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 
-/* ── LeetCode-style layout ──────────────────────────────────────── */
+/* LeetCode-style layout */
 .leetcode-layout {
   grid-template-columns: minmax(360px, 1fr) 1.2fr;
 }
 
 .lc-tabs {
   display: flex;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 0 16px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   background: rgba(11, 17, 33, 0.4);
@@ -3838,7 +3507,7 @@ body.lesson-focus-mode::before {
   display: none;
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .lc-tab-content.active {
@@ -3858,19 +3527,19 @@ body.lesson-focus-mode::before {
 }
 
 .lc-example {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .example-label {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-200);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   font-family: 'JetBrains Mono', monospace;
 }
 
 .example-code {
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   padding: 14px 16px;
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
@@ -3893,12 +3562,12 @@ body.lesson-focus-mode::before {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .constraints-list li {
   position: relative;
-  padding-left: 24px;
+  padding-left: var(--space-6);
   font-size: 13.5px;
   color: var(--text-200);
   line-height: 1.6;
@@ -3923,12 +3592,12 @@ body.lesson-focus-mode::before {
   border-radius: 4px;
 }
 
-/* ── LeetCode bottom toolbar ────────────────────────────────────── */
+/* LeetCode bottom toolbar */
 .lc-bottom-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid rgba(148, 163, 184, 0.08);
   background: rgba(11, 17, 33, 0.4);
   flex-shrink: 0;
@@ -3964,7 +3633,7 @@ body.lesson-focus-mode::before {
 .lc-stat {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   font-size: 11px;
   font-weight: 600;
   color: var(--text-500);
@@ -3983,10 +3652,10 @@ body.lesson-focus-mode::before {
   color: var(--warning);
 }
 
-/* ── LeetCode Run/Submit buttons ────────────────────────────────── */
+/* LeetCode Run/Submit buttons */
 .run-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .run-btn.secondary {
@@ -4002,7 +3671,7 @@ body.lesson-focus-mode::before {
 
 .run-btn.primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-deep));
-  color: var(--ide-bg);
+  color: var(--surface-0);
 }
 
 .run-btn.primary:hover {
@@ -4011,7 +3680,7 @@ body.lesson-focus-mode::before {
 
 .lang-selector {
   padding: 5px 10px;
-  background: var(--ide-bg);
+  background: var(--surface-0);
   color: var(--text-200);
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 6px;
@@ -4042,12 +3711,12 @@ body.lesson-focus-mode::before {
 
 .next-btn.ghost.small {
   width: auto;
-  margin-top: 8px;
+  margin-top: var(--space-2);
   padding: 8px 14px;
   font-size: 12px;
 }
 
-/* ── Step Check (in progress track) ─────────────────────────────── */
+/* Step Check (in progress track) */
 .step-check {
   position: absolute;
   top: 50%;
@@ -4069,7 +3738,7 @@ body.lesson-focus-mode::before {
   transform: translateY(-50%) scale(1);
 }
 
-/* ── Achievement Unlock (Codedex-inspired, in success modal) ────── */
+/* Achievement Unlock (Codedex-inspired, in success modal) */
 .achievement-unlock {
   display: flex;
   align-items: center;
@@ -4077,7 +3746,7 @@ body.lesson-focus-mode::before {
   padding: 14px 16px;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(6, 182, 212, 0.08));
   border-radius: 12px;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
   border-left: 3px solid var(--warning);
 }
 
@@ -4150,6 +3819,157 @@ body.lesson-focus-mode::before {
 /* Responsive overrides */
 
 /* ════════════════════════════════════════════════════════════════════
+ * C3 — Celebration Variety (Brilliant-style)
+ * - sparkle-fall (Step 4 submit correct)
+ * - trophy-bounce (module complete — B6/B13)
+ * - graduation-bounce (course complete — B18)
+ * ════════════════════════════════════════════════════════════════════ */
+
+/* Sparkle rain (golden particles falling from top) */
+@keyframes sparkle-fall {
+  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+.sparkle-particle {
+  position: fixed;
+  width: 6px; height: 6px;
+  background: #F59E0B;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10003;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+  animation: sparkle-fall 1.5s ease-in forwards;
+}
+
+/* Trophy bounce (module complete — B6, B13) */
+@keyframes trophy-bounce {
+  0%   { transform: scale(0)    rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.2)  rotate(5deg);   opacity: 1; }
+  100% { transform: scale(1)    rotate(0deg);   opacity: 1; }
+}
+
+.trophy-celebration {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 64px;
+  z-index: 10004;
+  pointer-events: none;
+  filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8));
+  animation: trophy-bounce 0.8s var(--ease-out-quart) forwards;
+}
+
+.trophy-celebration::after {
+  content: 'Hoàn thành module!';
+  position: absolute;
+  top: 100%; left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #F59E0B;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  margin-top: 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Graduation bounce (course complete — B18 only) */
+@keyframes graduation-bounce {
+  0%   { transform: scale(0)    rotate(-180deg); opacity: 0; }
+  50%  { transform: scale(1.3)  rotate(10deg);   opacity: 1; }
+  100% { transform: scale(1)    rotate(0deg);    opacity: 1; }
+}
+
+.graduation-celebration {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 80px;
+  z-index: 10004;
+  pointer-events: none;
+  filter: drop-shadow(0 0 24px rgba(139, 92, 246, 0.9));
+  animation: graduation-bounce 1s var(--ease-out-quart) forwards;
+}
+
+.graduation-celebration::after {
+  content: 'Chúc mừng hoàn thành khóa học! 🎉';
+  position: absolute;
+  top: 100%; left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #06B6D4, #8B5CF6, #EC4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin-top: 16px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Reduced motion override — consolidated at end of file (search: "═══ Reduced motion") */
+
+/* ════════════════════════════════════════════════════════════════════
+ * C4 — MCQ Variants (Code + Diagram)
+ * - .mcq-code-option: syntax-highlighted SQL in <pre>
+ * - .mcq-diagram-option: ASCII art or HTML table
+ * ════════════════════════════════════════════════════════════════════ */
+
+.mcq-option .mcq-code-option,
+.mcq-option .mcq-diagram-option {
+  background: rgba(11, 17, 33, 0.6);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-xs, 12px);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #CBD5E1;
+  display: block;
+  margin-top: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.10);
+}
+
+.mcq-option .mcq-diagram-option {
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.mcq-option .mcq-diagram-table {
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-xs, 12px);
+}
+.mcq-option .mcq-diagram-table th,
+.mcq-option .mcq-diagram-table td {
+  border: 1px solid rgba(148, 163, 184, 0.30);
+  padding: 4px 10px;
+  text-align: left;
+  color: #CBD5E1;
+}
+.mcq-option .mcq-diagram-table th {
+  background: rgba(6, 182, 212, 0.15);
+  color: #06B6D4;
+  font-weight: 700;
+}
+
+/* Reuse .t-* syntax highlight classes outside .ide-content for MCQ code options */
+.mcq-option .t-keyword { color: #C084FC; font-weight: 600; }
+.mcq-option .t-string  { color: #86EFAC; }
+.mcq-option .t-number  { color: #FCD34D; }
+.mcq-option .t-operator{ color: #94A3B8; }
+.mcq-option .t-comment { color: #64748B; font-style: italic; }
+
+body.light .mcq-option .mcq-code-option,
+body.light .mcq-option .mcq-diagram-option { background: #F8FAFC; border-color: #E2E8F0; color: #0F172A; }
+body.light .mcq-option .t-keyword { color: #7C3AED; }
+body.light .mcq-option .t-string  { color: #15803D; }
+body.light .mcq-option .t-number  { color: #B45309; }
+
+/* ════════════════════════════════════════════════════════════════════
  * REALIGN v3 — Foundation for 10-lesson re-design
  * - Mini-game (Step 2 bonus)
  * - Reset/Undo toolbar (Step 3)
@@ -4157,7 +3977,7 @@ body.lesson-focus-mode::before {
  * - Layer 0 primer compact 5-line format
  * ════════════════════════════════════════════════════════════════════ */
 
-/* ── Step 2: Mini-game (drag chip → correct/wrong bin) ─────────── */
+/* Step 2: Mini-game (drag chip → correct/wrong bin) */
 .mini-game-head {
   margin-bottom: 14px;
 }
@@ -4174,7 +3994,7 @@ body.lesson-focus-mode::before {
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .mini-game-instruction {
@@ -4232,8 +4052,8 @@ body.lesson-focus-mode::before {
 }
 
 .mini-game-feedback {
-  margin-top: 12px;
-  padding: 12px 16px;
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: 10px;
   font-size: 13.5px;
   font-weight: 600;
@@ -4259,7 +4079,7 @@ body.lesson-focus-mode::before {
   font-size: 16px;
 }
 
-/* ── Step 3: Reset / Undo buttons ──────────────────────────────── */
+/* Step 3: Reset / Undo buttons */
 .icon-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
@@ -4270,7 +4090,7 @@ body.lesson-focus-mode::before {
   color: var(--text-400);
 }
 
-/* ── Step 4: Multi-mode challenge dispatcher ───────────────────── */
+/* Step 4: Multi-mode challenge dispatcher */
 .challenge-host {
   flex: 1;
   display: flex;
@@ -4288,15 +4108,15 @@ body.lesson-focus-mode::before {
 }
 
 .challenge-pane[hidden] {
-  display: none !important;
+  display: none;
 }
 
 /* MCQ code: choose correct query from 4 options */
 .mcq-code-host {
-  padding: 20px;
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   overflow-y: auto;
 }
 
@@ -4304,7 +4124,7 @@ body.lesson-focus-mode::before {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-100);
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .mcq-code-option {
@@ -4334,7 +4154,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ide-surface-2);
+  background: var(--surface-3);
   color: var(--text-400);
   border-radius: 50%;
   font-size: 12px;
@@ -4375,10 +4195,10 @@ body.lesson-focus-mode::before {
 
 /* Fill blank: complete partial SQL */
 .fill-blank-host {
-  padding: 20px;
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   overflow-y: auto;
 }
 
@@ -4389,7 +4209,7 @@ body.lesson-focus-mode::before {
 }
 
 .fill-blank-code {
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   border: 1px solid rgba(6, 182, 212, 0.2);
   border-radius: 12px;
   padding: 18px 20px;
@@ -4404,7 +4224,7 @@ body.lesson-focus-mode::before {
   min-width: 90px;
   padding: 3px 10px;
   margin: 0 2px;
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border: 1.5px solid var(--warning);
   border-radius: 6px;
   color: var(--text-100);
@@ -4442,7 +4262,7 @@ body.lesson-focus-mode::before {
 
 /* Bug fix: highlight lines in the buggy code */
 .bug-fix-host {
-  padding: 20px;
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -4453,7 +4273,7 @@ body.lesson-focus-mode::before {
   font-size: 14px;
   color: var(--text-200);
   line-height: 1.6;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   background: rgba(239, 68, 68, 0.08);
   border-left: 3px solid var(--danger);
   border-radius: 0 8px 8px 0;
@@ -4464,7 +4284,7 @@ body.lesson-focus-mode::before {
 }
 
 .bug-fix-editor {
-  background: var(--ide-bg-2);
+  background: var(--surface-1);
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 10px;
   padding: 14px 18px;
@@ -4494,19 +4314,12 @@ body.lesson-focus-mode::before {
   transition: background var(--anim-fast);
 }
 
-.bug-fix-line.buggy {
-  background: rgba(239, 68, 68, 0.10);
-  border-left: 2px solid var(--danger);
-  padding-left: 8px;
-  margin-left: -10px;
-}
-
 .bug-fix-line.fixed {
   background: rgba(16, 185, 129, 0.10);
   border-left: 2px solid var(--success);
 }
 
-/* ── Layer 0 primer compact (5-line) ───────────────────────────── */
+/* Layer 0 primer compact (5-line) */
 .primer-card.compact {
   padding: 14px 18px;
 }
@@ -4521,23 +4334,14 @@ body.lesson-focus-mode::before {
   line-height: 1.45;
 }
 
-/* ── Step 1: Layered mission hint (link to layer 2) ────────────── */
-.mission-card .mission-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--primary);
-  font-weight: 600;
-}
+/* Step 1: Layered mission hint (link to layer 2) *
 
-/* ── Step 3: Mission banner (top of left pane, compact for new 2-pane layout) ── */
+/* Step 3: Mission banner (top of left pane, compact for new 2-pane layout) */
 .mission-sticky {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08));
   border: 1px solid rgba(16, 185, 129, 0.28);
   border-left: 3px solid var(--success);
@@ -4589,40 +4393,7 @@ body.lesson-focus-mode::before {
   flex-shrink: 0;
 }
 
-.zone-legend {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding-left: 14px;
-  margin-left: 14px;
-  border-left: 1px solid rgba(148, 163, 184, 0.15);
-}
-
-.zl {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-.zl-select {
-  background: #06B6D4;
-  box-shadow: 0 0 6px #06B6D4;
-}
-
-.zl-from {
-  background: #F59E0B;
-  box-shadow: 0 0 6px #F59E0B;
-}
-
-.zl-where {
-  background: #10B981;
-  box-shadow: 0 0 6px #10B981;
-}
-
-/* ── Step 3: Data preview (compact schema in top of left pane) ── */
+/* Step 3: Data preview (compact schema in top of left pane) */
 .data-preview {
   flex: 1 1 auto;
   min-height: 0;
@@ -4666,7 +4437,7 @@ body.lesson-focus-mode::before {
 }
 
 .data-preview-content .dp-table {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .data-preview-content .dp-table-name {
@@ -4676,7 +4447,7 @@ body.lesson-focus-mode::before {
   margin-bottom: 2px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .data-preview-content .dp-col {
@@ -4746,8 +4517,8 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 20px;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
   background: rgba(11, 17, 33, 0.78);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
@@ -4771,7 +4542,7 @@ body.lesson-focus-mode::before {
 .nav-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 10px 18px;
   min-width: 120px;
   background: rgba(148, 163, 184, 0.08);
@@ -4782,7 +4553,7 @@ body.lesson-focus-mode::before {
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all var(--dur-snappy) ease;
   position: relative;
   overflow: hidden;
 }
@@ -4799,7 +4570,7 @@ body.lesson-focus-mode::before {
   mask-composite: exclude;
   pointer-events: none;
   opacity: 0.6;
-  transition: opacity 0.18s;
+  transition: opacity var(--dur-snappy);
 }
 
 .nav-btn:hover:not(:disabled) {
@@ -4903,7 +4674,7 @@ body.lesson-focus-mode::before {
   align-items: center;
   gap: 3px;
   margin-left: 10px;
-  padding-left: 12px;
+  padding-left: var(--space-3);
   border-left: 1px solid rgba(148, 163, 184, 0.10);
 }
 
@@ -4935,6 +4706,73 @@ body.lesson-focus-mode::before {
   }
 }
 
+/* B7 — Mobile Step 3 drag-drop fallback notice (Option A) */
+.mobile-step3-notice {
+  display: none;
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 10001;
+  background: var(--surface-2);
+  border-bottom: 2px solid var(--warning);
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+  padding: var(--space-4);
+  gap: var(--space-3);
+  align-items: flex-start;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.mobile-step3-notice.is-visible {
+  display: flex;
+  animation: mobile-step3-slide-down var(--dur-base) var(--ease-out-quart);
+}
+
+.mobile-step3-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+  border-radius: var(--radius);
+  font-size: 20px;
+}
+
+.mobile-step3-content { flex: 1; min-width: 0; }
+
+.mobile-step3-title {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--text-100);
+  margin: 0 0 var(--space-2) 0;
+  line-height: 1.3;
+}
+
+.mobile-step3-text {
+  font-size: var(--text-sm);
+  color: var(--text-300);
+  line-height: 1.5;
+  margin: 0 0 var(--space-3) 0;
+}
+
+.mobile-step3-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mobile-step3-actions .btn { width: 100%; min-width: 0; }
+
+@keyframes mobile-step3-slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Reduced motion override — see consolidated block at end of file */
+
 /* ════════════════════════════════════════════════════════════════════
  * Step 3 Right Pane — Truck Grid drag-query visualization (Brilliant-style)
  * ════════════════════════════════════════════════════════════════════ */
@@ -4943,37 +4781,16 @@ body.lesson-focus-mode::before {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 18px 20px;
   background:
     radial-gradient(circle at 30% 20%, rgba(6, 182, 212, 0.05), transparent 60%),
     radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.04), transparent 60%),
-    var(--ide-bg);
+    var(--surface-0);
   overflow: hidden;
 }
 
-/* ── Status bar ───────────────────────────────────────────────── */
-.drag-status-bar {
-  background: var(--ide-surface);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.drag-status-bar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.20), transparent 60%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
+/* Status bar *
 
 .status-row {
   display: flex;
@@ -4988,41 +4805,6 @@ body.lesson-focus-mode::before {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-}
-
-.status-label {
-  font-size: 9px;
-  font-weight: 800;
-  color: var(--text-500);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.status-val {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-600);
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: rgba(148, 163, 184, 0.06);
-  transition: all var(--anim-normal);
-  white-space: nowrap;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.status-val.active {
-  color: var(--primary);
-  background: var(--primary-soft);
-  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.25);
-}
-
-.status-val.success {
-  color: var(--success);
-  background: var(--success-soft);
-  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35);
-  animation: status-success-pulse 0.6s ease;
 }
 
 @keyframes status-success-pulse {
@@ -5051,143 +4833,29 @@ body.lesson-focus-mode::before {
   align-items: flex-end;
 }
 
-.status-goal .status-label {
-  color: var(--primary);
-}
-
-/* ── Map ──────────────────────────────────────────────────────── */
-.drag-map-wrap {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 280px;
-}
-
-.drag-map {
-  --cols: 8;
-  --rows: 6;
-  display: grid;
-  grid-template-columns: repeat(var(--cols), 1fr);
-  grid-template-rows: repeat(var(--rows), 1fr);
-  gap: 4px;
-  width: min(520px, 100%);
-  aspect-ratio: 8 / 6;
-  padding: 8px;
-  background:
-    linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px) 0 0 / 100% 14.28%,
-    linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px) 0 0 / 12.5% 100%,
-    rgba(11, 17, 33, 0.5);
-  border-radius: var(--radius);
-  position: relative;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06);
-}
+/* Map *
 
 /* Truck is appended INSIDE .drag-map so its translate() coords
    align with the grid-template cell positions. Needs positioning
    context + overflow:visible so the truck can extend slightly
-   past the cell edge during bounce. */
-.drag-map>.drag-truck {
-  position: absolute;
-}
-
-.drag-cell {
-  position: relative;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-600);
-  transition: all var(--anim-fast) ease;
-  overflow: hidden;
-  background: rgba(148, 163, 184, 0.025);
-}
+   past the cell edge during bounce. *
 
 .cell-label {
   font-size: 10px;
   line-height: 1;
 }
 
-.cell-sub {
-  font-size: 8px;
-  color: var(--text-600);
-  margin-top: 2px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
+/* Warehouse cell *
 
-/* Warehouse cell */
-.cell-warehouse {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.18), rgba(6, 182, 212, 0.06));
-  box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.35);
-  color: var(--primary);
-  font-size: 16px;
-}
+/* Output cell *
 
-/* Output cell */
-.cell-output {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.06));
-  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.35);
-  color: var(--success);
-  font-size: 14px;
-}
+/* Table-building cells (bottom row, 4 cells of the schema) *
 
-/* Table-building cells (bottom row, 4 cells of the schema) */
-.cell-table-cell {
-  background: linear-gradient(180deg, rgba(97, 175, 239, 0.18), rgba(97, 175, 239, 0.06));
-  box-shadow: inset 0 0 0 1px rgba(97, 175, 239, 0.30);
-  color: var(--t-function);
-  font-size: 10px;
-}
+/* Data row cell (one cell per row, leftmost column above the table) *
 
-/* Data row cell (one cell per row, leftmost column above the table) */
-.cell-row {
-  background: rgba(245, 158, 11, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
-  color: var(--warning);
-  font-size: 10px;
-  padding: 0 4px;
-}
+/* Plain road cells *
 
-.cell-row .cell-label {
-  font-weight: 800;
-  color: var(--warning);
-}
-
-.cell-row .cell-sub {
-  color: var(--text-500);
-  text-transform: none;
-  font-size: 8px;
-  letter-spacing: 0;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Plain road cells */
-.cell-road {
-  background: rgba(148, 163, 184, 0.025);
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.05);
-}
-
-/* ── Truck character ─────────────────────────────────────────── */
-.drag-truck {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 38px;
-  height: 38px;
-  pointer-events: none;
-  transition: transform 0.55s var(--anim-spring);
-  z-index: 5;
-}
+/* Truck character *
 
 .truck-body {
   position: relative;
@@ -5205,22 +4873,6 @@ body.lesson-focus-mode::before {
   font-size: 18px;
 }
 
-.truck-shadow {
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 6px;
-  background: radial-gradient(ellipse, rgba(6, 182, 212, 0.45), transparent 70%);
-  filter: blur(2px);
-  z-index: -1;
-}
-
-.drag-truck.bounce .truck-body {
-  animation: truck-bounce var(--anim-slow) ease;
-}
-
 @keyframes truck-bounce {
 
   0%,
@@ -5233,33 +4885,10 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Highlights ──────────────────────────────────────────────── */
-.drag-cell.hl-active {
-  background: linear-gradient(180deg, rgba(6, 182, 212, 0.20), rgba(6, 182, 212, 0.08));
-  box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.5),
-    0 0 12px rgba(6, 182, 212, 0.25);
-}
-
-.drag-cell.hl-selected {
-  background: linear-gradient(180deg, rgba(198, 120, 221, 0.28), rgba(198, 120, 221, 0.10));
-  box-shadow: inset 0 0 0 1px rgba(198, 120, 221, 0.6),
-    0 0 14px rgba(198, 120, 221, 0.45);
-  color: var(--t-keyword);
-}
+/* Highlights *
 
 /* WHERE-row highlight: distinct magenta-violet so it doesn't clash
-   with the purple SELECT-column highlight. Adds a subtle ring + glow. */
-.drag-cell.hl-where {
-  background: linear-gradient(180deg, rgba(236, 72, 153, 0.30), rgba(236, 72, 153, 0.10));
-  box-shadow: inset 0 0 0 1px rgba(236, 72, 153, 0.65),
-    0 0 16px rgba(236, 72, 153, 0.50);
-  color: #F472B6;
-  animation: cell-pickup 0.7s ease;
-}
-
-.drag-cell.hl-pickup {
-  animation: cell-pickup 0.7s ease;
-}
+   with the purple SELECT-column highlight. Adds a subtle ring + glow. *
 
 @keyframes cell-pickup {
   0% {
@@ -5276,19 +4905,7 @@ body.lesson-focus-mode::before {
   }
 }
 
-/* ── Legend ──────────────────────────────────────────────────── */
-.drag-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  padding: 10px 12px;
-  background: rgba(11, 17, 33, 0.4);
-  border-radius: var(--radius-sm);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  color: var(--text-400);
-  flex-shrink: 0;
-}
+/* Legend *
 
 .legend-item {
   display: inline-flex;
@@ -5296,83 +4913,7 @@ body.lesson-focus-mode::before {
   gap: 6px;
 }
 
-.lg-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.lg-swatch.sw-warehouse {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(6, 182, 212, 0.15));
-  box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.5);
-}
-
-.lg-swatch.sw-table {
-  background: linear-gradient(180deg, rgba(97, 175, 239, 0.4), rgba(97, 175, 239, 0.15));
-  box-shadow: inset 0 0 0 1px rgba(97, 175, 239, 0.5);
-}
-
-.lg-swatch.sw-col {
-  background: linear-gradient(180deg, rgba(198, 120, 221, 0.4), rgba(198, 120, 221, 0.15));
-  box-shadow: inset 0 0 0 1px rgba(198, 120, 221, 0.5);
-}
-
-.lg-swatch.sw-row {
-  background: rgba(245, 158, 11, 0.25);
-  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.5);
-}
-
-.lg-swatch.sw-output {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(16, 185, 129, 0.15));
-  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.5);
-}
-
-/* ── Win overlay ─────────────────────────────────────────────── */
-.drag-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.18), transparent 70%);
-  z-index: 10;
-  border-radius: var(--radius-lg);
-  animation: overlay-fade-in var(--anim-medium) ease;
-  pointer-events: none;
-}
-
-.drag-overlay.hidden {
-  display: none;
-}
-
-.overlay-card {
-  background: rgba(21, 30, 50, 0.92);
-  border-radius: var(--radius-lg);
-  padding: 24px 28px;
-  text-align: center;
-  box-shadow: 0 0 0 1px var(--primary), 0 0 40px var(--primary-glow);
-  animation: success-pop var(--anim-slow) var(--anim-spring);
-  max-width: 280px;
-}
-
-.overlay-icon {
-  font-size: 42px;
-  margin-bottom: 8px;
-}
-
-.overlay-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-100);
-  margin-bottom: 4px;
-}
-
-.overlay-sub {
-  font-size: 12px;
-  color: var(--text-400);
-  line-height: 1.5;
-}
+/* Win overlay *
 
 @keyframes overlay-fade-in {
   from {
@@ -5386,14 +4927,6 @@ body.lesson-focus-mode::before {
 
 /* Responsive — let the map shrink on narrow viewports */
 @media (max-width: 1100px) {
-  .drag-map {
-    width: min(420px, 100%);
-  }
-
-  .drag-truck {
-    width: 32px;
-    height: 32px;
-  }
 
   .truck-body {
     font-size: 15px;
@@ -5417,15 +4950,15 @@ body.lesson-focus-mode::before {
 .te-grid {
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
-  gap: 16px;
+  gap: var(--space-4);
   align-items: start;
   min-width: 0;
 }
 
 .te-pane {
-  background: var(--ide-surface);
+  background: var(--surface-2);
   border-radius: var(--radius-lg);
-  padding: 16px;
+  padding: var(--space-4);
   position: relative;
   min-width: 0;
 }
@@ -5447,14 +4980,14 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   background: rgba(11, 17, 33, 0.5);
 }
 
 .te-panel-title {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 11px;
   font-weight: 700;
   color: var(--text-100);
@@ -5473,7 +5006,7 @@ body.lesson-focus-mode::before {
   letter-spacing: 0.02em;
 }
 
-/* ── 3D Schema Card ─────────────────────────────────────────────── */
+/* 3D Schema Card */
 .te-schema-3d {
   padding: 14px 14px 16px;
   transform-style: preserve-3d;
@@ -5489,7 +5022,7 @@ body.lesson-focus-mode::before {
 .te-table-name {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 700;
@@ -5512,7 +5045,7 @@ body.lesson-focus-mode::before {
 .te-cols {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   transform-style: preserve-3d;
 }
 
@@ -5637,12 +5170,12 @@ body.lesson-focus-mode::before {
 .te-pk-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   font-size: 9.5px;
   font-weight: 800;
   padding: 3px 8px;
   background: linear-gradient(135deg, var(--primary), var(--primary-deep));
-  color: var(--ide-bg);
+  color: var(--surface-0);
   border-radius: 100px;
   letter-spacing: 0.05em;
   flex-shrink: 0;
@@ -5658,9 +5191,9 @@ body.lesson-focus-mode::before {
   font-size: 9px;
 }
 
-/* ── Expand Panel ───────────────────────────────────────────────── */
+/* Expand Panel */
 .te-expand-panel {
-  margin-top: 12px;
+  margin-top: var(--space-3);
   background: linear-gradient(135deg, rgba(11, 17, 33, 0.7), rgba(6, 182, 212, 0.06));
   border-radius: var(--radius);
   border: 1px solid rgba(6, 182, 212, 0.20);
@@ -5689,7 +5222,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px;
+  padding: var(--space-4);
   font-size: 12.5px;
   color: var(--text-500);
   font-style: italic;
@@ -5707,7 +5240,7 @@ body.lesson-focus-mode::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   gap: 10px;
 }
 
@@ -5758,7 +5291,7 @@ body.lesson-focus-mode::before {
 .te-detail-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: 14px;
 }
 
@@ -5776,7 +5309,7 @@ body.lesson-focus-mode::before {
   color: var(--text-500);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .te-stat-value {
@@ -5811,7 +5344,7 @@ body.lesson-focus-mode::before {
 }
 
 .te-distribution {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .te-dist-empty {
@@ -5830,7 +5363,7 @@ body.lesson-focus-mode::before {
   color: var(--text-400);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .te-dist-label i {
@@ -5847,7 +5380,7 @@ body.lesson-focus-mode::before {
   display: grid;
   grid-template-columns: 90px 1fr 42px;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
   animation: te-bar-in var(--anim-slow) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
@@ -5870,7 +5403,7 @@ body.lesson-focus-mode::before {
 }
 
 .te-bar-row:nth-child(5) {
-  animation-delay: 0.18s;
+  animation-delay: var(--dur-snappy);
 }
 
 .te-bar-row:nth-child(6) {
@@ -5928,7 +5461,7 @@ body.lesson-focus-mode::before {
 .te-detail-note {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 10px 12px;
   background: rgba(6, 182, 212, 0.06);
   border-left: 2px solid var(--primary);
@@ -5967,7 +5500,7 @@ body.lesson-focus-mode::before {
   color: var(--success);
 }
 
-/* ── Sample Data Table ──────────────────────────────────────────── */
+/* Sample Data Table */
 .te-data {
   padding: 14px;
   overflow-x: auto;
@@ -6017,7 +5550,7 @@ body.lesson-focus-mode::before {
   padding: 8px 10px;
   color: var(--text-200);
   border-bottom: 1px solid rgba(148, 163, 184, 0.05);
-  transition: background 0.18s, color 0.18s, transform 0.18s;
+  transition: background var(--dur-snappy), color var(--dur-snappy), transform var(--dur-snappy);
 }
 
 .te-data-table tr:last-child td {
@@ -6049,14 +5582,14 @@ body.lesson-focus-mode::before {
   margin: 24px 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .decomp-rule {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 16px 20px;
+  padding: var(--space-4) var(--space-5);
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(239, 68, 68, 0.06));
   border: 1px solid rgba(245, 158, 11, 0.28);
@@ -6071,7 +5604,7 @@ body.lesson-focus-mode::before {
 .decomp-rule-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   color: var(--text-100);
   font-size: 14px;
 }
@@ -6112,14 +5645,14 @@ body.lesson-focus-mode::before {
 
 .decomp-stage-dot.active {
   background: var(--primary);
-  color: #0F172A;
+  color: var(--surface-1);
   border-color: var(--primary);
   box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.18);
 }
 
 .decomp-stage-dot.done {
   background: #10B981;
-  color: #0F172A;
+  color: var(--surface-1);
   border-color: #10B981;
 }
 
@@ -6147,7 +5680,7 @@ body.lesson-focus-mode::before {
 .decomp-mission {
   font-size: 14px;
   color: var(--text-200);
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   background: rgba(6, 182, 212, 0.05);
   border-left: 3px solid var(--primary);
   border-radius: 8px;
@@ -6160,7 +5693,7 @@ body.lesson-focus-mode::before {
 .decomp-workspace {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 /* Source table (top) */
@@ -6174,7 +5707,7 @@ body.lesson-focus-mode::before {
 .decomp-source-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -6192,7 +5725,7 @@ body.lesson-focus-mode::before {
   font-weight: 700;
   color: #FCA5A5;
   font-size: 15px;
-  margin-left: 4px;
+  margin-left: var(--space-1);
   padding: 2px 8px;
   background: rgba(239, 68, 68, 0.12);
   border-radius: 6px;
@@ -6201,13 +5734,13 @@ body.lesson-focus-mode::before {
 .decomp-source-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 44px;
   padding: 10px 8px;
   background: rgba(15, 23, 42, 0.45);
   border: 2px dashed rgba(239, 68, 68, 0.18);
   border-radius: 10px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   transition: border-color var(--anim-fast), background var(--anim-fast);
 }
 
@@ -6247,7 +5780,7 @@ body.lesson-focus-mode::before {
 .decomp-targets {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .decomp-target {
@@ -6257,7 +5790,7 @@ body.lesson-focus-mode::before {
   padding: 12px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   transition: border-color var(--anim-fast), transform var(--anim-fast);
 }
 
@@ -6298,7 +5831,7 @@ body.lesson-focus-mode::before {
   flex-direction: column;
   gap: 6px;
   min-height: 50px;
-  padding: 8px;
+  padding: var(--space-2);
   background: rgba(15, 23, 42, 0.45);
   border: 2px dashed rgba(16, 185, 129, 0.18);
   border-radius: 10px;
@@ -6349,7 +5882,7 @@ body.lesson-focus-mode::before {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: linear-gradient(135deg, #1E293B, #0F172A);
+  background: linear-gradient(135deg, #1E293B, var(--surface-1));
   border: 1px solid rgba(6, 182, 212, 0.35);
   border-radius: 8px;
   font-size: 12px;
@@ -6391,7 +5924,7 @@ body.lesson-focus-mode::before {
 /* Actions */
 .decomp-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
   padding: 4px 4px 0;
 }
@@ -6418,7 +5951,7 @@ body.lesson-focus-mode::before {
 
 .decomp-btn-primary {
   background: linear-gradient(135deg, var(--primary), #0891B2);
-  color: #0F172A;
+  color: var(--surface-1);
   border-color: var(--primary);
 }
 
@@ -6440,7 +5973,7 @@ body.lesson-focus-mode::before {
   border-radius: 8px;
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .decomp-hint-box i {
@@ -6525,7 +6058,7 @@ body.lesson-focus-mode::before {
  *   D. Concept cards (shadcn Card pattern) + badges
  * ============================================================================ */
 
-/* ── A.1 SVG Primer wrapper ─────────────────────────────────────── */
+/* A.1 SVG Primer wrapper */
 .primer-svg::before {
   content: 'HÌNH MINH HỌA';
   position: absolute;
@@ -6538,11 +6071,7 @@ body.lesson-focus-mode::before {
   opacity: 0.7;
 }
 
-/* ── A.2 ER Diagram SVG elements ───────────────────────────────── */
-.er-entity-rect.weak {
-  stroke-dasharray: 4 3;
-  stroke: var(--warning);
-}
+/* A.2 ER Diagram SVG elements *
 
 .er-entity-title {
   fill: var(--text-100);
@@ -6582,7 +6111,7 @@ body.lesson-focus-mode::before {
   text-anchor: middle;
 }
 
-/* ── A.3 Normalization before/after ────────────────────────────── */
+/* A.3 Normalization before/after */
 .nf-pair {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -6662,11 +6191,11 @@ body.lesson-focus-mode::before {
   font-weight: 600;
 }
 
-/* ── A.4 Query Flow (Module 3) ─────────────────────────────────── */
+/* A.4 Query Flow (Module 3) */
 .qf-flow {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .qf-step-icon {
@@ -6725,12 +6254,12 @@ body.lesson-focus-mode::before {
   color: var(--primary);
 }
 
-/* ── B.1 Concept Card (shadcn-inspired) ─────────────────────────── */
+/* B.1 Concept Card (shadcn-inspired) */
 .concept-card-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .concept-card-icon-svg {
@@ -6754,7 +6283,7 @@ body.lesson-focus-mode::before {
   line-height: 1.6;
 }
 
-/* ── Success modal — lesson tag ─────────────────────────────────── */
+/* Success modal — lesson tag */
 .success-lesson-tag {
   display: flex;
   align-items: center;
@@ -6782,11 +6311,11 @@ body.lesson-focus-mode::before {
   color: var(--text-100);
 }
 
-/* ── B.2 Badge (shadcn Badge) ──────────────────────────────────── */
+/* B.2 Badge (shadcn Badge) */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 10px;
@@ -6820,19 +6349,19 @@ body.lesson-focus-mode::before {
   color: var(--text-400);
 }
 
-/* ── C.1 Step 4 schema panel (mở rộng) ─────────────────────────── */
+/* C.1 Step 4 schema panel (mở rộng) */
 .step4-schema-card {
   background: linear-gradient(180deg, rgba(21, 30, 50, 0.7), rgba(15, 23, 42, 0.5));
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 12px;
   padding: 14px 16px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .step4-schema-card .schema-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -6853,13 +6382,13 @@ body.lesson-focus-mode::before {
 .step4-schema-card .schema-rows {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .step4-schema-card .schema-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 6px 8px;
   background: rgba(15, 23, 42, 0.5);
   border-radius: 6px;
@@ -6916,7 +6445,7 @@ body.lesson-focus-mode::before {
   color: var(--primary);
 }
 
-/* ── C.2 Hint panel (4 levels, progressive reveal) ─────────────── */
+/* C.2 Hint panel (4 levels, progressive reveal) */
 .hint-panel {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(245, 158, 11, 0.25);
@@ -6928,7 +6457,7 @@ body.lesson-focus-mode::before {
 .hint-panel-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 11px;
   font-weight: 700;
   color: var(--warning);
@@ -6945,7 +6474,7 @@ body.lesson-focus-mode::before {
 
 .hint-level-tabs {
   display: flex;
-  gap: 4px;
+  gap: var(--space-1);
   margin-bottom: 6px;
 }
 
@@ -6970,11 +6499,11 @@ body.lesson-focus-mode::before {
   background: rgba(148, 163, 184, 0.2);
 }
 
-/* ── D.1 Mini-game Match (nối cặp) ─────────────────────────────── */
+/* D.1 Mini-game Match (nối cặp) */
 .mg-match-board {
   display: grid;
   grid-template-columns: 1fr 80px 1fr;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
   position: relative;
 }
@@ -6982,11 +6511,11 @@ body.lesson-focus-mode::before {
 .mg-match-col {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .mg-match-item {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.2);
@@ -7034,12 +6563,6 @@ body.lesson-focus-mode::before {
   filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.5));
 }
 
-.mg-match-svg line.pending {
-  stroke: var(--primary);
-  stroke-dasharray: 5 3;
-  animation: dashMove 0.5s linear infinite;
-}
-
 @keyframes matchGlow {
   0% {
     transform: scale(1);
@@ -7062,14 +6585,14 @@ body.lesson-focus-mode::before {
 
 .mg-match-feedback {
   margin-top: 10px;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   background: var(--success-soft);
   color: var(--success);
   border-radius: 8px;
   font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .mg-match-feedback.wrong {
@@ -7077,7 +6600,7 @@ body.lesson-focus-mode::before {
   color: var(--danger);
 }
 
-/* ── D.2 Mini-game Order (kéo thả sắp xếp) ────────────────────── */
+/* D.2 Mini-game Order (kéo thả sắp xếp) */
 .mg-order-list {
   display: flex;
   flex-direction: column;
@@ -7156,9 +6679,9 @@ body.lesson-focus-mode::before {
 
 .mg-order-btn {
   margin-top: 10px;
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   background: var(--primary);
-  color: #0B1121;
+  color: var(--surface-0);
   border: none;
   border-radius: 8px;
   font-weight: 700;
@@ -7175,11 +6698,11 @@ body.lesson-focus-mode::before {
   cursor: not-allowed;
 }
 
-/* ── D.3 Mini-game Bug Spot (tìm lỗi trong code) ───────────────── */
+/* D.3 Mini-game Bug Spot (tìm lỗi trong code) */
 .mg-bugspot {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .mg-bugspot-code {
@@ -7196,7 +6719,7 @@ body.lesson-focus-mode::before {
 
 .mg-bugspot-line {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   cursor: pointer;
   padding: 1px 6px;
   border-radius: 4px;
@@ -7232,7 +6755,7 @@ body.lesson-focus-mode::before {
 .mg-bugspot-instr {
   font-size: 12px;
   color: var(--text-300);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   background: rgba(245, 158, 11, 0.08);
   border-left: 3px solid var(--warning);
   border-radius: 0 6px 6px 0;
@@ -7240,14 +6763,14 @@ body.lesson-focus-mode::before {
 
 .mg-bugspot-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 
 .mg-bugspot-btn {
   padding: 6px 14px;
   background: var(--primary);
-  color: #0B1121;
+  color: var(--surface-0);
   border: none;
   border-radius: 6px;
   font-weight: 700;
@@ -7265,7 +6788,7 @@ body.lesson-focus-mode::before {
   color: var(--text-200);
 }
 
-/* ── D.4 Mini-game Classify (cải tiến) ─────────────────────────── */
+/* D.4 Mini-game Classify (cải tiến) */
 .mini-game {
   background: linear-gradient(180deg, rgba(21, 30, 50, 0.5), rgba(15, 23, 42, 0.3));
   border: 1px solid rgba(148, 163, 184, 0.12);
@@ -7277,7 +6800,7 @@ body.lesson-focus-mode::before {
 .mini-game-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   color: var(--text-100);
   font-weight: 700;
   font-size: 14px;
@@ -7294,9 +6817,9 @@ body.lesson-focus-mode::before {
 .mini-game-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 44px;
-  padding: 8px 4px;
+  padding: var(--space-2) var(--space-1);
 }
 
 .mini-chip {
@@ -7337,8 +6860,8 @@ body.lesson-focus-mode::before {
 .mini-game-bins {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 
 .mini-bin {
@@ -7375,24 +6898,11 @@ body.lesson-focus-mode::before {
 .mini-bin-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--space-1);
   min-height: 24px;
 }
 
-/* ── E. Animation: pulse cho concept card khi vừa mount ────────── */
-@keyframes concept-pop {
-  0% {
-    transform: translateY(6px);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* ── E.1 Phần 8: Animation cho SVG primer + concept cards ──────── */
+/* E.1 Phần 8: Animation cho SVG primer + concept cards */
 @keyframes svg-fade-in {
   0% {
     opacity: 0;
@@ -7463,18 +6973,6 @@ body.lesson-focus-mode::before {
   animation: connector-draw 0.8s ease-out var(--anim-normal) backwards;
 }
 
-@keyframes flow-step-up {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .qf-step:nth-child(1) {
   animation-delay: 0.1s;
 }
@@ -7527,7 +7025,7 @@ body.lesson-focus-mode::before {
   animation: glow-pulse-primary 2s ease-in-out infinite;
 }
 
-/* ── E.2 Hover effect cho các elements ─────────────────────── */
+/* E.2 Hover effect cho các elements */
 .concept-card {
   transition: transform var(--anim-fast) ease, box-shadow var(--anim-fast) ease;
 }
@@ -7536,6 +7034,132 @@ body.lesson-focus-mode::before {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+ * C6 — Card Variants (shadcn-inspired)
+ * - .card-quote: border-left accent + italic body + source attribution
+ * - .card-interactive: dashed border + expand/collapse on click
+ * ════════════════════════════════════════════════════════════════════ */
+
+/* Quote card — trích dẫn từ textbook */
+.concept-card.card-quote {
+  border-left: 3px solid var(--module-color, #06B6D4);
+  padding-left: var(--space-5);
+  font-style: italic;
+  background: rgba(6, 182, 212, 0.04);
+}
+
+.concept-card.card-quote .concept-card-title {
+  font-style: italic;
+}
+
+.concept-card.card-quote .concept-card-body {
+  font-style: italic;
+  color: var(--text-300);
+}
+
+.card-source {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-500);
+  font-style: normal;
+  font-weight: 500;
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px dashed rgba(148, 163, 184, 0.15);
+}
+
+.card-source::before {
+  content: '— ';
+  opacity: 0.6;
+}
+
+/* Interactive card — click để expand */
+.concept-card.card-interactive {
+  border: 1px dashed var(--module-color, #06B6D4);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1));
+}
+
+.concept-card.card-interactive:hover {
+  border-style: solid;
+  border-color: var(--module-color, #06B6D4);
+  box-shadow: 0 8px 28px rgba(6, 182, 212, 0.25);
+  transform: translateY(-2px);
+}
+
+.concept-card.card-interactive.expanded {
+  border-style: solid;
+}
+
+.card-expand-hint {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--primary, #06B6D4);
+  font-weight: 600;
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px dashed rgba(148, 163, 184, 0.15);
+}
+
+.card-expand-hint::before {
+  content: '👆 ';
+  margin-right: 4px;
+}
+
+.card-body-extra {
+  display: none;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  font-size: var(--text-sm, 13px);
+  color: var(--text-400);
+}
+
+.concept-card.card-interactive.expanded .card-body-extra {
+  display: block;
+  animation: card-expand-reveal 280ms var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)) both;
+}
+
+.concept-card.card-interactive.expanded .card-expand-hint {
+  display: none;
+}
+
+@keyframes card-expand-reveal {
+  0%   { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Light mode overrides */
+body.light .concept-card.card-quote { background: #F0F9FF; border-left-color: #0E7490; }
+body.light .concept-card.card-interactive:hover { box-shadow: 0 8px 28px rgba(14, 116, 144, 0.20); }
+body.light .card-source { color: #64748B; border-top-color: #E2E8F0; }
+
+/* ════════════════════════════════════════════════════════════════════
+ * C7 — Progressive Disclosure (ContentCore-inspired)
+ * - .step1-reveal: hidden until scroll-triggered, fade-in via IntersectionObserver
+ * - 3 sections wrap: concept cards, diagram (primer-svg-mount), visual-db-panel
+ * ════════════════════════════════════════════════════════════════════ */
+
+.step1-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity var(--dur-base, 200ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)),
+    transform var(--dur-base, 200ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1));
+}
+
+.step1-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger via --i CSS variable (set via JS) */
+.step1-reveal[data-stagger]:not(.is-visible) {
+  transition-delay: calc(var(--i, 0) * 150ms);
+}
+
+/* Reduced motion override — see consolidated block at end of file */
 
 .er-entity-rect {
   transition: filter var(--anim-fast) ease;
@@ -7556,7 +7180,7 @@ body.lesson-focus-mode::before {
 
 @media (min-width: 1024px) {
   .lesson-header.is-scrolled .progress-track {
-    padding: 4px 12px;
+    padding: var(--space-1) var(--space-3);
     background: rgba(11, 17, 33, 0.85);
     backdrop-filter: blur(12px);
     border-radius: 100px;
@@ -7598,12 +7222,8 @@ body.lesson-focus-mode::before {
     font-size: 20px;
   }
 
-  .player-card {
-    display: none;
-  }
-
   .hearts {
-    padding: 4px 8px;
+    padding: var(--space-1) var(--space-2);
   }
 
   .leetcode-layout {
@@ -7611,13 +7231,9 @@ body.lesson-focus-mode::before {
     grid-template-rows: auto 1fr;
   }
 
-  .player-card {
-    display: none;
-  }
-
   .lesson-nav-footer {
     padding: 10px 14px;
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .nav-indicator .nav-step-name {
@@ -7628,15 +7244,6 @@ body.lesson-focus-mode::before {
     display: none;
   }
 
-  .drag-map {
-    width: min(360px, 100%);
-  }
-
-  .drag-truck {
-    width: 28px;
-    height: 28px;
-  }
-
   .truck-body {
     font-size: 13px;
   }
@@ -7645,32 +7252,14 @@ body.lesson-focus-mode::before {
     gap: 6px;
   }
 
-  .status-val {
-    font-size: 11px;
-    max-width: 120px;
-  }
-
   .te-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Reduce motion preference */
-@media (prefers-reduced-motion: reduce) {
+/* Reduce motion preference — see consolidated block at end of file */
 
-  .primer-svg,
-  .primer-svg svg,
-  .er-entity-rect,
-  .nf-side,
-  .er-connector,
-  .qf-step,
-  .concept-card-icon,
-  .nf-arrow i {
-    animation: none !important;
-  }
-}
-
-/* ── H. Step transition fade ────────────────────────────────────── */
+/* H. Step transition fade */
 .step-pane.step-fade-out {
   opacity: 0;
   transition: opacity var(--anim-fast) ease;
@@ -7691,6 +7280,44 @@ body.lesson-focus-mode::before {
     transform: translateY(0);
   }
 }
+
+/* ============================================================================
+ * C5 — Step-specific entry animations (Brilliant-style variety)
+ * Each step has its own personality:
+ *   Step 1 (Theory): Slide from LEFT — entry into journey
+ *   Step 2 (MCQ):    Scale POP — challenge appears
+ *   Step 3 (Drag):   Expand from CENTER — workspace opens
+ *   Step 4 (Code):   Slide from RIGHT — arrival at destination
+ * Overrides base .step-fade-in via higher specificity (data-step attribute).
+ * ========================================================================== */
+
+@keyframes step1-enter {
+  0%   { opacity: 0; transform: translateX(-50px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes step2-enter {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes step3-enter {
+  0%   { opacity: 0; transform: scale(0.9) translateY(24px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes step4-enter {
+  0%   { opacity: 0; transform: translateX(50px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.step-pane[data-step="1"].step-fade-in { animation: step1-enter var(--anim-normal) var(--ease-out-quart); }
+.step-pane[data-step="2"].step-fade-in { animation: step2-enter var(--anim-normal) var(--ease-out-quart); }
+.step-pane[data-step="3"].step-fade-in { animation: step3-enter var(--anim-normal) var(--ease-out-quart); }
+.step-pane[data-step="4"].step-fade-in { animation: step4-enter var(--anim-normal) var(--ease-out-quart); }
+
+/* Reduced motion override — see consolidated block at end of file */
 
 @keyframes pe-toast-in {
   0% {
@@ -7752,7 +7379,7 @@ body.lesson-focus-mode::before {
   animation: pe-toast-out var(--anim-normal) var(--anim-ease) forwards;
 }
 
-/* ── G. Accessibility — :focus-visible rings ─────────────────────── */
+/* G. Accessibility — :focus-visible rings */
 /* Chỉ hiện outline khi dùng bàn phím (Tab), không hiện khi click chuột */
 button:focus-visible,
 a:focus-visible,
@@ -7774,5 +7401,116 @@ a:focus:not(:focus-visible) {
   outline: none;
 }
 
+/* PHASE 4 — Micro-interactions */
+.mcq-option:hover{background:var(--surface-3);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.mcq-option:active{transform:scale(.99)}
+@keyframes mcq-correct-pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 8px rgba(16,185,129,.2)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.mcq-wrong-tip{margin-top:var(--space-2);padding:var(--space-2) var(--space-3);background:rgba(239,68,68,.08);border-left:2px solid var(--danger);border-radius:var(--radius-sm);font-size:var(--text-xs);color:var(--text-300);animation:mcq-fade-in var(--dur-base) var(--ease-out-quart)}
+.mcq-wrong-why{color:var(--danger);font-weight:600;line-height:1.4}
+.mcq-correct-hint{color:var(--success);font-size:var(--text-xs);line-height:1.4;margin-top:var(--space-1);padding-top:var(--space-1);border-top:1px solid rgba(148,163,184,.12)}
+@keyframes mcq-fade-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.logic-pill.dragging{transform:scale(1.05);box-shadow:var(--shadow-md);z-index:100;opacity:.9}
+.drop-line.zone-accepted{animation:zone-accept-flash var(--dur-base) var(--ease-out-quart)}
+@keyframes zone-accept-flash{0%{background:rgba(16,185,129,.2)}100%{background:transparent}}
+.xp-pulse{transform:scale(1.15)}
+.xp-sparkle.ring{animation:xp-sparkle-ring .6s var(--ease-out-quart)}
+@keyframes xp-sparkle-ring{0%{box-shadow:0 0 0 0 rgba(245,158,11,.6)}100%{box-shadow:0 0 0 12px rgba(245,158,11,0)}}
+.progress-step::after{content:"";position:absolute;left:50%;bottom:-3px;width:0;height:2px;background:var(--module-accent);transition:width var(--dur-base) var(--ease-out-quart)}
+.progress-step.active::after{width:100%;left:0}
+.scroll-progress{position:fixed;top:0;left:0;height:3px;width:var(--scroll-pct,0);z-index:10002;background:var(--module-accent);transition:width var(--dur-instant) linear}
+
+/* PHASE 5 — Success screen upgrade */
+.success-xp-breakdown{background:var(--surface-2);border-radius:var(--radius);padding:var(--space-3) var(--space-4);margin:0 auto var(--space-3);font-size:var(--text-sm);max-width:300px}
+.success-xp-row,.success-xp-total{display:flex;justify-content:space-between}
+.success-xp-row{padding:3px 0;color:var(--text-400)}.success-xp-row span:last-child{color:var(--success);font-weight:600}
+.success-xp-total{margin-top:var(--space-2);padding-top:var(--space-2);border-top:1px solid rgba(255,255,255,.08);font-weight:700}.success-xp-num{color:#F59E0B}
+.success-next-preview{display:flex;flex-direction:column;gap:3px;padding:var(--space-2) var(--space-3);margin-bottom:var(--space-3);background:var(--surface-2);border:1px solid var(--module-accent-soft,var(--primary-soft));border-radius:var(--radius);cursor:pointer}
+.success-next-title{font-size:var(--text-sm);color:var(--text-100);font-weight:600}
+.success-next-label{font-size:11px;color:var(--text-500);text-transform:uppercase;letter-spacing:1px}
+@keyframes firework-burst{0%{transform:scale(0);opacity:1}50%{transform:scale(1);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+.firework{position:fixed;width:8px;height:8px;border-radius:50%;z-index:10003;animation:firework-burst .8s var(--ease-out-quart) forwards}
+
 /* Removed .toast-premium rule + @keyframes toast-slide (không có JS nào tạo element này;
    showToast dùng .pe-toast class thay thế — xem CSS class ở đầu file) */
+
+/* B2 — Flagship mini-game state classes (used via classList.add/remove) */
+.flagship-match-card{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;padding:10px var(--space-3);border-radius:6px;cursor:grab;font-size:12px;line-height:1.4;user-select:none}
+.flagship-split-chip{background:#1f2937;border:1px solid #22c55e;border-radius:5px;padding:5px var(--space-2);font-size:12px;cursor:pointer}
+.flagship-flash-tip{position:absolute;bottom:var(--space-3);right:var(--space-3);background:var(--warning);color:#1A1A1A;padding:6px var(--space-3);border-radius:6px;font-size:12px;font-weight:600;z-index:10}
+.flagship-panel-hidden{display:none}
+.flagship-zone-correct{background:rgba(34,197,94,0.15);border:1px solid #22c55e}
+.flagship-zone-wrong{background:rgba(239,68,68,0.15);border:1px solid #ef4444}
+.flagship-hover-purple{background:rgba(168,85,247,0.15)}
+.flagship-hover-green{background:rgba(34,197,94,0.15)}
+.flagship-hover-dark{background:#0e1424}
+.flagship-placed-correct{background:rgba(34,197,94,0.2);border:1px solid #22c55e}
+.flagship-placed-wrong{background:rgba(239,68,68,0.2);border:1px solid #ef4444}
+.flagship-result-success{color:var(--success)}
+.flagship-result-danger{color:var(--danger)}
+.flagship-feedback-flex{display:flex}
+.flagship-data-wrap{margin-top:var(--space-3)}
+.flagship-container-rel{position:relative}
+.flagship-cursor-pointer{cursor:pointer}
+.flagship-cursor-default{cursor:default}
+.flagship-card-full{width:100%}
+.flagship-card-auto{width:auto}
+/* ════════════════════════════════════════════════════════════════════
+ * CONSOLIDATED Reduced Motion Override
+ * Merged from 5 separate @media (prefers-reduced-motion: reduce) blocks
+ * (previously at lines ~3913, ~4786, ~7176, ~7284, ~7366 — see markers above)
+ *
+ * Strategy: combine selectors that share the same properties to reduce
+ *           total !important count (was 13, now 10).
+ * ════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  /* 1. Disable animations entirely (combined selector — was 3 separate rules) */
+  .sparkle-particle,
+  .trophy-celebration,
+  .graduation-celebration,
+  .primer-svg,
+  .primer-svg svg,
+  .er-entity-rect,
+  .nf-side,
+  .er-connector,
+  .qf-step,
+  .concept-card-icon,
+  .nf-arrow i,
+  .step-pane[data-step].step-fade-in,
+  .concept-card.card-interactive.expanded .card-body-extra {
+    animation: none !important;
+  }
+
+  /* 2. Speed up MCQ/btn transitions + progress animation (combined selector) */
+  .mcq-option,
+  .logic-pill,
+  .btn,
+  .drop-line,
+  .progress-step::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+
+  /* 3. Force final state for celebration elements (trophy + graduation) */
+  .trophy-celebration,
+  .graduation-celebration {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
+  }
+
+  /* 4. Force final state for progressive disclosure sections (C7) */
+  .step1-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* 5. Force final state for step fade-in (C5) */
+  .step-pane[data-step].step-fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* 6. Other utility overrides (no !important needed) */
+  .mobile-step3-notice.is-visible { animation-duration: 0.01ms; }
+  .scroll-progress { display: none; }
+}
