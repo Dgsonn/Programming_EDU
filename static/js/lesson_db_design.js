@@ -3840,12 +3840,26 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
     if (!mountEl || !diagram || !diagram.type) return;
     let html = '';
     if (diagram.type === 'er') {
+      // FIX 2f-B2: ẩn ER-diagram bài 1-entity (≤1 entity) để tránh trùng TableExplorer bên dưới.
+      // Probe xác nhận #primer-svg-mount VÀ #visual-db-panel là 2 SIBLINGS (cha chung = article.step-1-content),
+      // mỗi cái độc lập nhận class .step1-reveal (stagger reveal i=1 vs i=2). Ẩn hẹp chỉ mountEl,
+      // KHÔNG đụng #visual-db-panel. Điều kiện CHỈ áp dụng cho type='er' (NF/Flow vẫn render bình thường).
+      const entities = diagram.entities || [];
+      if (entities.length <= 1) {
+        mountEl.style.display = 'none';
+        mountEl.innerHTML = '';
+        return;
+      }
+      mountEl.style.display = '';
       html = buildERDiagramHTML(diagram);
     } else if (diagram.type === 'nf') {
+      mountEl.style.display = '';
       html = buildNormalizePairHTML(diagram);
     } else if (diagram.type === 'flow') {
+      mountEl.style.display = '';
       html = buildQueryFlowHTML(diagram);
     } else {
+      mountEl.style.display = 'none';
       mountEl.innerHTML = '';
       return;
     }
@@ -3893,7 +3907,7 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
       svg += `<text class="er-cardinality" x="${x2 - 10}" y="${y2 - 6}">${c.toCard || 'N'}</text>`;
       // Label in middle
       if (c.label) {
-        svg += `<text class="er-connector-label" x="${midX}" y="${(y1 + y2) / 2 - 6}">${escapeXml(c.label)}</text>`;
+        svg += `<text class="er-connector-label" x="${midX}" y="${(y1 + y2) / 2 - 6}" text-anchor="middle" font-size="11" font-style="italic" fill="var(--text-400)">${escapeXml(c.label)}</text>`;
       }
     });
 
@@ -3923,7 +3937,7 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
 
     // Notes
     if (d.note) {
-      svg += `<text class="er-connector-label" x="${width / 2}" y="${height - 8}">${escapeXml(d.note)}</text>`;
+      svg += `<text class="er-connector-label" x="${width / 2}" y="${height - 8}" text-anchor="middle" font-size="11" font-style="italic" fill="var(--text-400)">${escapeXml(d.note)}</text>`;
     }
 
     svg += `</svg>`;

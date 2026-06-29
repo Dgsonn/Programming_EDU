@@ -5984,8 +5984,8 @@ body.light .mcq-option .t-number  { color: #B45309; }
 
 .er-connector-label {
   fill: var(--text-400);
-  font: italic 10px 'Inter', system-ui, sans-serif;
-  text-anchor: middle;
+  font: italic 11px 'Inter', system-ui, sans-serif;
+  text-anchor: middle !important;   /* FIX 2f-B2: ensure middle-anchor applied (Chrome SVG default=start) */
 }
 
 .er-cardinality {
@@ -7497,9 +7497,13 @@ a:focus:not(:focus-visible) {
   0%, 100% { opacity: 1; }
   40%, 80% { opacity: 0.18; }
 }
+/* FIX 2f-B1: CSS animation `transform: scale(...)` đã wipe SVG attribute `transform="translate(250,305)"`,
+   làm group render tại SVG (0,0) với scale ~1.087 → bbox tràn 12px TRÊN hero (probe: groupScreenTop=270 < heroTop=282).
+   Fix: include translate(250,305) trong keyframes (CSS transform replaces SVG attribute) +
+   transform-origin: 250px 305px neo quanh anchor (không drift). */
 @keyframes pk-where-pulse {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  40%, 80% { opacity: 1; transform: scale(1.04); }
+  0%, 100% { opacity: 0.7; transform: translate(250px, 305px) scale(1); }
+  40%, 80% { opacity: 1;   transform: translate(250px, 305px) scale(1.04); }
 }
 
 /* CHANGE 2: Concept-card-hero — 3-up what/how/try grid (Brilliant-style) */
@@ -8539,10 +8543,13 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
  * ═════════════════════════════════════════════════════════════════════════════ */
 
 /* ── §A.3 Run Query button ─────────────────────────────────────────────── */
+/* FIX 2f-A2: chống bẹp nút Chạy — nút phải có min-height 38px + flex-shrink 0, riêng hàng */
 .run-query-btn {
   display: block;
   margin: 12px auto 0;
   padding: 10px 28px;
+  min-height: 38px;
+  min-width: 220px;
   background: var(--module-accent);
   color: var(--surface-0);
   border: none;
@@ -8553,14 +8560,18 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   position: relative;
   overflow: hidden;
+  flex: 0 0 auto;        /* FIX 2f-A2: không bị flex shrink → KHÔNG bẹp h=20 */
+  align-self: center;
 }
 .run-query-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--module-accent) 40%, transparent);
 }
 .run-query-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;                       /* FIX 2f-A2: bump 0.5→0.55 để nhìn rõ nút hơn */
   cursor: not-allowed;
+  filter: saturate(0.55);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);   /* viền trắng mờ = nhìn rõ là nút dù disabled */
 }
 /* Shimmer hover (§A1 pattern adapted) */
 .run-query-btn::after {
@@ -8776,7 +8787,19 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 /* FIX 2e-A2: drag-game-mount grow để map fill, data-preview compact dưới map. */
 .step3-pipeline-map > #drag-game-mount {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 360px;   /* FIX 2f-A2: SÀN chống tái-bẹp (đổi từ min-height:0 — đã bẹp map 221px) */
+}
+/* FIX 2f-A2: pipeline-root floor + town-map-track floor chống bẹp nút Chạy */
+.pipeline-root {
+  min-height: 360px;   /* override L1276 min-height:0 */
+}
+.pipeline-root > .town-map-track {
+  flex: 1 1 auto;
+  min-height: 360px;   /* SÀN map-track */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
 }
 /* FIX 2e-A2: data-preview trong cột trái — compact, KHÔNG phải bảng to */
 .step3-pipeline-map > .data-preview {
@@ -9254,12 +9277,12 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
  * Truck top-down bám SVG path, xoay theo heading. Manifest clipboard cố định.
  * ════════════════════════════════════════════════════════════════════════════ */
 
-/* Town map root — A3 dusk: linear-gradient tím→hồng→cam hoàng hôn */
+/* Town map root — FIX 2f-A1: navy dark-native substrate (không còn tím-cam "trẻ con") */
 .town-map { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden;
   background:
-    linear-gradient(160deg, rgba(59,47,99,.65) 0%, rgba(124,74,107,.55) 50%, rgba(194,104,63,.6) 100%),
-    #1a1230;
-  border: 1px solid rgba(148,163,184,.22); box-shadow: 0 30px 70px rgba(0,0,0,.65);
+    linear-gradient(160deg,#0f1626 0%,#0b1120 60%,#0d1730 100%),
+    #0a0f1c;
+  border: 1px solid rgba(148,163,184,.18); box-shadow: 0 30px 70px rgba(0,0,0,.55);
   max-width: 600px; margin: 0 auto; }
 .town-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .town-stations { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
@@ -9289,21 +9312,19 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 /* ══════ Town decor — blocks (mái dốc + body + cửa sổ sáng) ══════ */
 .bldg-roof { filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
 .bldg-body { filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
-.bldg-window { filter: drop-shadow(0 0 4px rgba(252,211,77,.4)); }
-/* A3. Cửa sổ twinkle — ngẫu nhiên theo animation-delay inline */
-.bldg-window.twinkle { animation: twinkle 2.4s ease-in-out infinite; }
-@keyframes twinkle { 0%, 100% { opacity: 0.85; } 50% { opacity: 0.35; } }
-/* A3. Pond ripple — scale nhẹ + fade */
-.town-pond-ripple { animation: pond-ripple 4s ease-in-out infinite; transform-origin: 120px 120px; }
-@keyframes pond-ripple { 0%, 100% { opacity: 0.35; transform: scale(1); }
-  50% { opacity: 0.1; transform: scale(1.18); } }
-/* A3. Park trees sway — gió nhẹ (transform-origin đã set inline) */
-.tree-sway { animation: tree-sway 4s ease-in-out infinite; }
-@keyframes tree-sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
-/* A3. Street lamp pulse */
-.street-lamp { animation: lamp-pulse 2.2s ease-in-out infinite; transform-origin: center; }
-.street-lamp-glow { animation: lamp-glow-pulse 2.2s ease-in-out infinite; }
-@keyframes lamp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+.bldg-window { filter: none; }   /* FIX 2f-A1: bỏ glow vàng rực — dark-native */
+.bldg-chimney { fill: #0f172a; } /* FIX 2f-A1: slate-900 mái tối hơn */
+
+/* FIX 2f-A1: override inline fill window/lamps/trees sang slate muted (dark-native) */
+.town-map .bldg-window { fill: rgba(148,163,184,.32) !important; opacity: 1; }
+.town-map .bldg-window:not(.lit) { fill: rgba(15,23,42,.7) !important; }
+.town-map .street-lamp { fill: rgba(148,163,184,.45); }
+.town-map .street-lamp-glow { fill: rgba(148,163,184,.18); opacity: .55; }
+.town-map .tree-sway { fill: #14253a; }
+
+/* FIX 2f-A1: BỎ các animation "trẻ con" (twinkle, lamp-pulse, tree-sway, pond-ripple).
+   GIỮ DUY NHẤT .town-route-flow (dash "flow" = dữ liệu chảy, có mục đích dạy học).
+   Lý do: Brilliant-style "mỗi pixel có MỤC ĐÍCH" — nhấp nháy/đung đưa là trang trí thừa. */
 @keyframes lamp-glow-pulse { 0%, 100% { opacity: 0.35; transform: scale(1); }
   50% { opacity: 0.6; transform: scale(1.4); } }
 /* A3. LANDMARK "PE" tower glow */
