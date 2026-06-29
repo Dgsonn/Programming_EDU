@@ -333,3 +333,46 @@ Phân tích chi tiết (từ Claude council review):
 
 **Report:** D:\PE_test\docs\B_FIX_2E_2026-06-30.md (full 11.1KB)
 **Screenshots:** screenshots/probe_2e_pre_*.png + postA/postC/postD (12 files, mỗi file ~250KB)
+
+
+### 2026-06-30: PHASE 2f — STEP 3 ART DARK-NATIVE + STEP 1 HERO CLIP + ER-DIAGRAM HIDE
+
+**Source:** `docs/SYSTEM_INSTRUCTIONS_FINAL.md` v48 (Claude Code council) + `docs/STEP3_MAP_DESIGN_2026-06-30.md` (vision dương "Query Line" — phase sau)
+
+**4 fixes ship CHUNG trong 1 commit + 1 report:**
+
+| Part | Issue | Fix | File |
+|---|---|---|---|
+| **A1** | Step 3 art tím-cam "trẻ con/màu mè chọi nền dark" | navy `#0f1626/#0b1120/#0d1730` + slate buildings + bỏ twinkle/lamp/tree/pond, giữ cyan route+PE | `lesson_db_design.css` |
+| **A2** | nút "▶ Chạy Query" bị bóp h=20/opacity .5 → user không bấm được | `min-height:38px; flex:0 0 auto` + sàn `min-height:360px` (đổi từ `min-height:0`) cho map cả 3 tầng | `lesson_db_design.css` |
+| **B1** | step1 hero clip: WHERE label lòi **12px TRÊN** hero card | **CSS animation wipe SVG transform attribute** — `pk-where-pulse` keyframe `transform: scale(1.04)` REPLACED inline `transform="translate(250,305)"` → group render at SVG (0,0) scale 1.087. Fix: include translate(250,305) trong keyframes + `transform-origin: 250px 305px` (neo quanh anchor) | `lesson_db_design.css` |
+| **B2** | ER-diagram bài 1 (1 entity) trùng TableExplorer bên dưới | Hide HẸP `#primer-svg-mount` trong `renderDiagramFromData` khi `type==='er' && entities.length<=1`. Probe xác nhận `#primer-svg-mount` VÀ `#visual-db-panel` là 2 SIBLINGS (cha chung = `article.step-1-content`), mỗi cái nhận `.step1-reveal` (i=1 vs i=2). Không đụng TableExplorer. Plus inline `text-anchor="middle"` (Chrome SVG không nhận text-anchor từ CSS class — probe computed style vẫn "start" dù `!important`) | `lesson_db_design.js` |
+
+**Commit (LOCAL only, no push):**
+- `a4f4a98` — 2f-PartA+B: Step 3 dark-native + Chạy Query btn + Step 1 hero clip + ER-diagram hide ≤1 entity
+- `462b2a4` — 2f-Report: B_FIX_2F_2026-06-30.md (4 fixes ship CHUNG + probe verify + screenshots)
+
+**Acceptance @1600px & @960px:**
+- Bài 1 hero `groupScreenTop=588` (trong hero 282-682), `heroOverflow: false` — clip FIXED ✓
+- Bài 1 `#primer-svg-mount` `display:none`, children=0 — ER-diagram HIDDEN ✓
+- Bài 1 town-map bg `linear-gradient(160deg, rgb(15,22,38) 0%, rgb(11,17,32) 60%, rgb(13,23,48) 100%)` — navy confirmed ✓
+- Bài 1 run-btn `h=39, min-height:38px, flex:0 0 auto, opacity:0.55` — NOT squashed, visible ✓
+- Bài 4 M:N `#primer-svg-mount` `display:block` — KEEP ✓, note label CENTERED (screenLeft=659, right=940 — symmetric quanh center 800) — no overflow ✓
+- Animations: `twinkle/lamp/tree/pond` → `animationName: "none"` → ALL STOPPED. `route-flow` → STILL RUNNING ✓
+- 18/18 bài console sweep: **0 pageerror** ✓
+- CSS 246,126B / 275,000B ✓ (still headroom 28,874B)
+- !important 23 / 24 ✓ (bumped từ 22 do A1 fill override)
+- backdrop-filter 6 / 6 ✓ (không đụng)
+
+**Limitations (ngoài scope 2f):**
+- Town map còn cartoon orange truck (spec B `KEEP xe` — không đụng). Vision dương "Query Line" phase sau sẽ re-skin metro/PCB cyan packet.
+- 14 bài context còn fallback (chưa roll-out — chờ user duyệt template).
+- Step 4 GIỮ NGUYÊN (2e đã duyệt user, không đụng).
+
+**Pattern learned (RULE 7 — probe-then-fix lives):**
+- **SVG + CSS transform interaction pitfall:** Chrome `transform` CSS property REPLACES (not composes) SVG attribute `transform`. Any CSS animation using `transform: scale(...)` on an SVG element with inline `transform="translate(...)"` wipes the translate → element renders at SVG (0,0) with scale → bbox leaks outside intended bounds. Fix: always include base translate in keyframes (`transform: translate(...) scale(...)`) + set `transform-origin` to the translate origin point. Diagnostic: SVGElement.getCTM() to compare expected vs actual transform.
+- **SVG text-anchor CSS class pitfall:** Chrome ignores `text-anchor: middle` from CSS class on SVG `<text>` elements — must use inline `text-anchor` attribute. `getMatchedCSSRules` workaround doesn't help because Chrome drops CSS text-anchor on SVG text from class selectors.
+- **Q4 scope creep avoided:** cho smoke = 3 bài VISUAL (Bài 1/4/18) @960 + @1600 + console sweep 18 bài bắt pageerror (rẻ, không screenshot). Rẻ hơn full loop ~5x mà vẫn đủ cover "18 không vỡ".
+
+**Report:** D:\PE_test\docs\B_FIX_2F_2026-06-30.md (full 5.4KB, 8 sections)
+**Screenshots:** D:\PE_test\screenshots\2f\ (12 PNG, ~3MB total: step1/step3 × 3 bài × 2 viewports)
