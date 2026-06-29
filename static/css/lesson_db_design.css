@@ -8708,30 +8708,17 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
  * (no DOM elements use these classes anymore — init() now renders v6.1 classes).
  * ═════════════════════════════════════════════════════════════════════════════ */
 
-/* === LAYOUT 2 CỘT (v6.1) === */
-.step3-two-col {
-  display: flex;
-  gap: 0;
-  min-height: 420px;
-}
-.step3-pipeline-map {
-  flex: 0 0 40%;
-  max-width: 40%;
-  padding: 12px;
-  border-right: 1px solid var(--border-default);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.step3-editor {
-  flex: 0 0 60%;
-  max-width: 60%;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* === LAYOUT 2 CỘT (v6.1) — REMOVED 2e-A1 ===
+   Đã xóa rule flex trùng để chỉ còn .split-pane.step3-two-col (grid 45fr 55fr ở dưới) thắng.
+   Nguyên nhân gốc: rule này + L8615 grid cùng tồn tại → specificity trùng → parser đoán nhầm,
+   dẫn đến 2d step3 bị fallback về display:flex (bóp map 221px).
+   DORMANT/CHÍNH THỨC REMOVED: 2026-06-30
+   (legacy CSS giữ dưới comment nếu cần rollback; backup ở __backup/v6_1_2026-06-29/)
+
+.step3-two-col { display: flex; gap: 0; min-height: 420px; }
+.step3-pipeline-map { flex: 0 0 40%; max-width: 40%; padding: 12px; ... }
+.step3-editor { flex: 0 0 60%; max-width: 60%; ... }
+*/
 
 /* FIX 4 v6.2 — BRILLIANT-STYLE PIPELINE-AS-FEATURE (2026-06-29)
  * Source: docs/STEP3_BRILLIANT_PROPOSAL.md §6.5 (council merged, user chốt)

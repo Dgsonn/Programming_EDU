@@ -1125,6 +1125,9 @@ function renderCourses() {
 /* ── My Courses rendering ── */
 function renderMyCourses() {
   var container = document.getElementById("enrolled-list");
+  // FIX 2e-D1: guard null — khi user mở lesson page, #enrolled-list không tồn tại → container null
+  // Trước fix: null.innerHTML = ... → pageerror mỗi lần vào bài
+  if (!container) return;
   if (!enrolledCourses.length) {
     container.innerHTML =
       '<p style="color:#9CA3AF;font-size:14px;padding:24px 0">Bạn chưa đăng ký khóa học nào. <a href="#" onclick="navigate(\'courses\')" style="color:#4A9EE0">Khám phá khóa học →</a></p>';
