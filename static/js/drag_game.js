@@ -256,6 +256,37 @@
 
     root.appendChild(trackEl);
 
+    /* FIX 2g-B1: ResizeObserver — ép map VUÔNG theo min(parent_w, parent_h, 600).
+       Lý do: CSS aspect-ratio:1/1 + max-height:100% KHÔNG ép width khi max-height cap (browser chỉ cap height).
+       → dùng JS set pixel size = min(600, parent_w, parent_h) để map vuông + fit container @ mọi viewport. */
+    var mapEl = trackEl.querySelector('.town-map');
+    var sizeMapToParent = function() {
+      if (!mapEl) return;
+      var r = mountEl.getBoundingClientRect();
+      var w = r.width, h = r.height;
+      /* Trừ phần data-preview + btn đã có sẵn nếu có siblings trong mountEl — trackEl chỉ là 1 child. */
+      var siblings = Array.from(mountEl.children).filter(function(c){ return c !== root; });
+      var siblingH = 0;
+      siblings.forEach(function(s){ siblingH += s.getBoundingClientRect().height; });
+      var trackRect = trackEl.getBoundingClientRect();
+      var availableW = Math.max(0, w - 40);   /* 40 = padding tối đa của mount (~18+20) */
+      var availableH = Math.max(0, trackRect.height || (h - siblingH - 40));
+      var size = Math.min(600, availableW, availableH);
+      if (size > 0) {
+        mapEl.style.width = size + 'px';
+        mapEl.style.height = size + 'px';
+      }
+    };
+    sizeMapToParent();
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(sizeMapToParent);
+      ro.observe(mountEl);
+      ro.observe(trackEl);
+    } else {
+      window.addEventListener('resize', sizeMapToParent);
+    }
+    window.__peMapSizer = sizeMapToParent;  /* expose for probe/reset */
+
     /* Position stations ON the path (must happen AFTER innerHTML insert + path in DOM) */
     placeStationsOnPath();
 

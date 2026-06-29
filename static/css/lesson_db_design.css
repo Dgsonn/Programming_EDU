@@ -8552,8 +8552,8 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   padding: 10px 28px;
   min-height: 38px;
   min-width: 220px;
-  background: var(--module-accent);
-  color: var(--surface-0);
+  background: #22D3EE;                       /* FIX 2g-B2: cyan (#22D3EE) thay amber, hợp theme Query Line */
+  color: #04222a;                            /* FIX 2g-B2: text đậm tương phản trên cyan */
   border: none;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -8564,10 +8564,11 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   overflow: hidden;
   flex: 0 0 auto;        /* FIX 2f-A2: không bị flex shrink → KHÔNG bẹp h=20 */
   align-self: center;
+  box-shadow: 0 0 18px rgba(34, 211, 238, .4);   /* FIX 2g-B2: cyan glow ambient */
 }
 .run-query-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--module-accent) 40%, transparent);
+  box-shadow: 0 4px 18px rgba(34, 211, 238, .55);   /* FIX 2g-B2: cyan glow intensified on hover */
 }
 .run-query-btn:disabled {
   opacity: 0.55;                       /* FIX 2f-A2: bump 0.5→0.55 để nhìn rõ nút hơn */
@@ -8789,15 +8790,15 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 /* FIX 2e-A2: drag-game-mount grow để map fill, data-preview compact dưới map. */
 .step3-pipeline-map > #drag-game-mount {
   flex: 1 1 auto;
-  min-height: 360px;   /* FIX 2f-A2: SÀN chống tái-bẹp (đổi từ min-height:0 — đã bẹp map 221px) */
+  min-height: 0;       /* FIX 2g-B1: chain height — để map có thể fit container (was 360 floor) */
 }
-/* FIX 2f-A2: pipeline-root floor + town-map-track floor chống bẹp nút Chạy */
+/* FIX 2g-B1: pipeline-root + town-map-track = min-height:0 (chain height flow lên từ .step3-pipeline-map) */
 .pipeline-root {
-  min-height: 360px;   /* override L1276 min-height:0 */
+  min-height: 0;       /* override L1276 + L8796 floor — cho phép co */
 }
 .pipeline-root > .town-map-track {
   flex: 1 1 auto;
-  min-height: 360px;   /* SÀN map-track */
+  min-height: 0;       /* FIX 2g-B1: cho phép co để map fit-height (was 360 floor) */
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -9280,12 +9281,13 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
  * ════════════════════════════════════════════════════════════════════════════ */
 
 /* Town map root — FIX 2f-A1: navy dark-native substrate (không còn tím-cam "trẻ con") */
-.town-map { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden;
+/* FIX 2g-B1: chain fit-height — width/height min(600,parent) + aspect-ratio để map VUÔNG + FIT container (không tràn @1600, không méo aspect) */
+.town-map { position: relative; width: min(600px, 100%); height: min(600px, 100%); aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden;
   background:
     linear-gradient(160deg,#0f1626 0%,#0b1120 60%,#0d1730 100%),
     #0a0f1c;
   border: 1px solid rgba(148,163,184,.18); box-shadow: 0 30px 70px rgba(0,0,0,.55);
-  max-width: 600px; margin: 0 auto; }
+  margin: 0 auto; }
 .town-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .town-stations { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 
@@ -9303,9 +9305,13 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   pointer-events: none; }
 .town-compass b { color: #22D3EE; font-size: 11px; }
 
-/* Route path — shadow + base + flow */
+/* Route path — 3 lớp (mockup v2): shadow (đen rộng) + glow cyan TĨNH (đổi từ .town-route cũ) + flow (dashes gated) */
 .town-route-shadow { fill: none; stroke: #101a2e; stroke-width: 30; stroke-linecap: round; stroke-linejoin: round; }
-.town-route { fill: none; stroke: #26405e; stroke-width: 24; stroke-linecap: round; stroke-linejoin: round; }
+/* FIX 2g-B3: .town-route → CYAN STATIC GLOW (đổi từ #26405e w24 → #22D3EE w2.4 + drop-shadow).
+   Lý do: A1 đã pause flow-dashes khi idle → track đọc ra xám.
+   → Thêm 1 lớp glow cyan TĨNH luôn hiện, không animate, không gate. */
+.town-route { fill: none; stroke: #22D3EE; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+  opacity: 0.85; filter: drop-shadow(0 0 5px #22D3EE); }
 .town-route-flow { fill: none; stroke: #22D3EE; stroke-width: 2.5;
   stroke-dasharray: 1 13; stroke-linecap: round; opacity: 0.7;
   animation: route-flow 1.4s linear infinite;
