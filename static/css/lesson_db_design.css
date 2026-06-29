@@ -723,6 +723,18 @@ body.lesson-focus-mode::before {
 
 .schema-table {
   padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 0;  /* FIX 2e-B2: cho phép children thấp thoát container */
+  /* KHÔNG overflow:hidden cứng — note text cần đủ chỗ */
+}
+
+/* FIX 2e-B2: header #schema-table-name phải là 1 hàng riêng trên cùng (KHÔNG absolute, KHÔNG đè rows) */
+#schema-table-name {
+  display: inline-block;  /* thay span inline → inline-block để có margin */
+  margin-bottom: 0;
+  position: static;
 }
 
 .schema-row {
@@ -730,11 +742,12 @@ body.lesson-focus-mode::before {
   align-items: center;
   gap: 10px;
   padding: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-1);
+  margin-bottom: 0;  /* FIX 2e-B2: gap của parent đã xử lý spacing */
   background: rgba(11, 17, 33, 0.4);
   border-radius: var(--radius-sm);
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
+  position: static;
 }
 
 .schema-row .col-icon {
@@ -7308,8 +7321,9 @@ a:focus:not(:focus-visible) {
 .lesson-hero svg {
   width: 100%;
   height: 100%;
-  max-height: 320px;
+  max-height: 100%;  /* FIX 2e-B1: đổi 320→100% để SVG fill mount thay vì ép max height 320 (làm content thấp bị cắt đáy) */
   display: block;
+  preserveAspectRatio: xMidYMid meet;  /* FIX 2e-B1: explicit (default) để KHÔNG rely on user-agent default */
 }
 
 .lesson-hero::before {
