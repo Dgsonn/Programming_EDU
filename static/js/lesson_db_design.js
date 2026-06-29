@@ -2509,13 +2509,15 @@
     });
 
     // Check completion: full SQL matches expected_sql
-    const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ').toUpperCase();
-    const builtSQL = buildSQLString().replace(/\s+/g, ' ').toUpperCase();
+    const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ');
+    const builtSQL = buildSQLString().replace(/\s+/g, ' ');
     const isComplete = builtSQL === expected;
 
     window.DragGame.update({
       zoneFills: zoneFills,
-      isComplete: isComplete
+      isComplete: isComplete,
+      expected: expected,    // FIX 2g-A4: pass for diagnostic on incorrect feedback
+      userBuilt: builtSQL,   // FIX 2g-A4: pass for diagnostic on incorrect feedback
     });
   }
 
@@ -3397,6 +3399,18 @@
     document.getElementById('success-message').textContent =
       s4.success_message || 'Bạn đã hoàn thành bài học!';
     document.getElementById('reward-xp').textContent = `+${s4.xp_reward || 50}`;
+    // FIX 2g-A2: achievement data-driven — chỉ hiện khi bài CÓ `l.achievement`,
+    // KHÔNG fallback "Khóa chính — Khởi đầu" (đúng > sai; bài 2-18 thiếu data → ẩn hẳn).
+    const achBlock = document.getElementById('achievement-unlock-block');
+    if (achBlock) {
+      if (l.achievement && l.achievement.name) {
+        document.getElementById('achievement-name').textContent = l.achievement.name;
+        document.getElementById('achievement-desc').textContent = l.achievement.desc || '';
+        achBlock.hidden = false;
+      } else {
+        achBlock.hidden = true;
+      }
+    }
     document.getElementById('success-modal').classList.remove('hidden');
 
     // 5.1 XP breakdown — show code XP + countup total

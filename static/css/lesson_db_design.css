@@ -3626,6 +3626,8 @@ body.lesson-focus-mode::before {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(6, 182, 212, 0.08));
   border-radius: 12px;
   margin-bottom: var(--space-5);
+}
+.achievement-unlock[hidden] { display: none; }   /* FIX 2g-A2: hide khi thiếu data — specificity (0,2,0) > (0,1,0) */
   border-left: 3px solid var(--warning);
 }
 
@@ -9306,7 +9308,11 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .town-route { fill: none; stroke: #26405e; stroke-width: 24; stroke-linecap: round; stroke-linejoin: round; }
 .town-route-flow { fill: none; stroke: #22D3EE; stroke-width: 2.5;
   stroke-dasharray: 1 13; stroke-linecap: round; opacity: 0.7;
-  animation: route-flow 1.4s linear infinite; }
+  animation: route-flow 1.4s linear infinite;
+  animation-play-state: paused;       /* FIX 2g-A1: gate — idle tắt (user: "xe đứng thì đường chạy như rắn") */ }
+.town-map.is-running .town-route-flow {
+  animation-play-state: running;      /* chỉ chạy khi xe đi */
+}
 @keyframes route-flow { to { stroke-dashoffset: -14; } }
 
 /* ══════ Town decor — blocks (mái dốc + body + cửa sổ sáng) ══════ */
@@ -9476,22 +9482,128 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 
 /* ══════ Manifest clipboard panel (280×300, fixed bottom-right of map) ══════ */
 .town-manifest { position: absolute; right: 12px; bottom: 12px; z-index: 6;
-  width: 280px; max-width: 47%; background: rgba(13,18,32,.96);
-  border: 1.5px solid rgba(148,163,184,.28); border-radius: 14px;
-  padding: 12px 14px; box-shadow: 0 16px 40px rgba(0,0,0,.6);
+  width: 212px; max-width: 47%; background: rgba(9,14,26,.92);   /* FIX 2g-B: darkglass per mockup v2 (was 280px + no blur để fit backdrop-filter ≤6) */
+  border: 1px solid rgba(148,163,184,.18); border-radius: 12px;
+  padding: 11px 13px; box-shadow: 0 16px 40px rgba(0,0,0,.6);
   opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s;
   pointer-events: none; }
 .town-manifest.show { opacity: 1; transform: translateY(0); }
-.town-manifest-ttl { font-size: 12.5px; font-weight: 800; letter-spacing: .4px;
-  margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: center; gap: 6px; }
+.town-manifest-ttl { font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  margin-bottom: 7px; color: #22D3EE; display: flex; align-items: center; gap: 6px; }   /* FIX 2g-B: cyan title per mockup */
 .town-manifest-body { font-size: 12.5px; }
-.town-manifest-body .station-mini-table { font-size: 12px; }
-.town-manifest-body .station-mini-table th { font-size: 10px; padding: 3px 6px; }
+.town-manifest-body .station-mini-table { font-size: 11px; }   /* FIX 2g-B: smaller table for compact panel */
+.town-manifest-body .station-mini-table th { font-size: 9.5px; padding: 3px 6px; }
 .town-manifest-body .station-mini-table td { padding: 3px 6px; }
 .town-manifest-body .station-mini-table tbody tr { animation: row-fade-in-v43 .3s ease-out backwards;
   animation-delay: calc(var(--i, 0) * 60ms); }
-.town-manifest-sub { margin-top: 8px; font-size: 11px; color: #8aa0bd; }
+.town-manifest-sub { margin-top: 8px; font-size: 11px; color: #5f718c; }   /* FIX 2g-B: muted per mockup */
 .manifest-error { color: #EF4444; font-size: 13px; padding: 8px 0; }
+
+/* ══════ FIX 2g-B: Query Line v2 — node/packet/origin (re-skin toàn bộ map art) ══════ */
+
+/* Background data-nodes (chiều sâu thay buildings/park/trees/lamps) */
+.bgnode { fill: #1b2740; opacity: 0.5; }
+.map-grid { pointer-events: none; }
+
+/* Origin hub PE (thay PE tower) — 2 vòng cyan nhịp nhẹ */
+.pe-hub { animation: pe-hub-pulse 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(34,211,238,.55)); }
+.pe-hub-inner { animation: pe-hub-pulse 2.6s ease-in-out infinite reverse;
+  filter: drop-shadow(0 0 8px rgba(34,211,238,.55)); }
+@keyframes pe-hub-pulse {
+  0%,100% { opacity: 0.6; }
+  50%     { opacity: 1; }
+}
+
+/* Station qnode (replaces silhouette) — 60x60 hex, centered */
+.town-station-bldg { width: 60px; height: 60px; }
+.qnode-svg { display: block; width: 100%; height: 100%; }
+.qnode-hex { transition: filter .3s, opacity .3s; }
+.town-station.active .qnode-hex {
+  filter: drop-shadow(0 0 10px currentColor);
+}
+.town-station[data-zone="from-line"].active .qnode-hex   { color: #FBBF24; }
+.town-station[data-zone="where-line"].active .qnode-hex  { color: #34D399; }
+.town-station[data-zone="select-line"].active .qnode-hex { color: #22D3EE; }
+.town-station[data-zone="group-line"].active .qnode-hex  { color: #A78BFA; }
+.town-station[data-zone="order-line"].active .qnode-hex   { color: #F472B6; }
+.town-station[data-zone="having-line"].active .qnode-hex { color: #FB923C; }
+.town-station.active .town-station-bldg { transform: scale(1.15); }
+.town-station.done .town-station-bldg { opacity: 0.85; }
+.town-station.error .qnode-hex { filter: drop-shadow(0 0 14px #EF4444); }
+
+/* Re-style station label (sub bg) để phù hợp Query Line */
+.town-station-tag { background: rgba(10,15,28,.85); border: 1px solid rgba(148,163,184,.18);
+  border-radius: 6px; padding: 4px 9px; }
+.town-station-label { display: block; font-weight: 800; letter-spacing: .5px; font-size: 11px; }
+.town-station-check { display: none; }   /* không cần check icon cho hex node */
+
+/* Data-packet (replaces truck SVG) — capsule cyan + đuôi glow + badge "N dòng" */
+.town-truck.packet {
+  width: 56px; height: 56px; pointer-events: none;
+  position: absolute; left: 0; top: 0; z-index: 8;
+  will-change: transform;
+}
+.town-truck.packet .pk-rot {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px; height: 16px; transition: transform .08s linear;
+}
+.town-truck.packet .pk-body {
+  position: absolute; left: 50%; top: 50%;
+  width: 28px; height: 16px; border-radius: 8px;
+  background: linear-gradient(180deg, #d4fbff, #22D3EE);
+  box-shadow: 0 0 12px #22D3EE, 0 0 30px rgba(34,211,238,.45);
+  transform: translate(-50%, -50%);
+}
+.town-truck.packet .pk-trail {
+  position: absolute; right: 100%; top: 50%; width: 22px; height: 8px;
+  margin-right: 4px; transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,.5));
+  border-radius: 6px; filter: blur(2px);
+  pointer-events: none;
+}
+.town-truck.packet .pk-badge {
+  position: absolute; left: 0; top: -21px;
+  transform: translateX(-50%);
+  font: 700 11px 'JetBrains Mono', monospace;
+  color: #d4fbff; background: rgba(10,15,28,.88);
+  border: 1px solid rgba(34,211,238,.5); border-radius: 6px;
+  padding: 1px 7px; white-space: nowrap;
+}
+.town-truck.celebrate .pk-body {
+  animation: packet-celebrate 1.5s ease-in-out;
+  box-shadow: 0 0 24px #22D3EE, 0 0 50px rgba(34,211,238,.7);
+}
+@keyframes packet-celebrate {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  40%      { transform: translate(-50%, -80%) scale(1.3); }
+  70%      { transform: translate(-50%, -120%) scale(1.1); }
+}
+.town-truck.shake .pk-body { animation: packet-shake 0.7s ease-in-out; }
+@keyframes packet-shake {
+  0%, 100% { transform: translate(-50%, -50%); }
+  20%      { transform: translate(-50%, -50%) translateX(-3px); }
+  40%      { transform: translate(-50%, -50%) translateX(3px); }
+  60%      { transform: translate(-50%, -50%) translateX(-2px); }
+  80%      { transform: translate(-50%, -50%) translateX(2px); }
+}
+
+/* BỎ old truck-SVG children styles (không có SVG con nữa) */
+.town-truck-svg, .truck-wheel, .truck-cargo, .truck-cabin, .truck-windshield,
+.truck-headlight, .truck-headlight-glow, .truck-headlight-cone, .truck-exhaust,
+.truck-shadow, .silhouette, .bldg-roof, .bldg-body, .bldg-chimney, .bldg-window,
+.tree-sway, .street-lamp, .town-park, .town-pond, .town-trees, .street-lamps,
+.town-blocks { display: none; }   /* FIX 2g-B: hide old building/vehicle DOM */
+
+/* Re-position compass to top-right per mockup v2 */
+.town-compass { top: 14px; right: 18px; bottom: auto; left: auto;
+  width: 34px; height: 34px; border: 1px solid rgba(148,163,184,.22);
+  background: rgba(13,18,32,.7); }
+
+/* Brand text — mockup v2 tone */
+.town-brand { font-size: 12px; letter-spacing: 1.5px; color: #93a4bd; }
+.town-brand b { color: #22D3EE; font-weight: 700; }
 
 /* ══════ Town map reduced motion ══════ */
 @media (prefers-reduced-motion: reduce) {
