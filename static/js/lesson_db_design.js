@@ -13,6 +13,412 @@
 (function () {
   'use strict';
 
+  /* ─── CHANGE 1: Hero SVG per lesson (lookup table) ──────────────────────────── */
+  // Each SVG: 400x300 viewBox, var(--module-accent) colors, simple geometric.
+  // B13/B17/B18 thêm animated details (hero-pulse class + staggered delay).
+  const HERO_SVGS = {
+    /* B1: Hero PK demo (Bài 1) — animation loop 3s: dòng id=101 sáng cyan + viền glow,
+     * 3 dòng còn lại mờ opacity 0.2, nhãn "WHERE id = 101" pulse đồng pha.
+     * Thông điệp: "PK = chốt đúng 1 dòng". */
+    db_01: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bảng game_catalog với Primary Key — dòng id 101 được chốt">' +
+      /* Title */
+      '<text x="250" y="30" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">game_catalog</text>' +
+      /* Column headers */
+      '<g class="hero-pk-cols" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="var(--text-300)">' +
+        '<text x="80" y="68">id</text>' +
+        '<text x="220" y="68">name</text>' +
+        '<line x1="50" y1="78" x2="450" y2="78" stroke="var(--text-300)" stroke-width="1" opacity="0.4"/>' +
+      '</g>' +
+      /* 4 rows (chỉ dòng id=101 có class pkrow-key, 3 dòng còn lại có pkrow-dim) */
+      '<g class="hero-pk-rows" font-family="JetBrains Mono, monospace" font-size="15" font-weight="500">' +
+        /* Row 1: id=101 Elden Ring — KEY row */
+        '<g class="pkrow pkrow-key">' +
+          '<rect x="50" y="92" width="400" height="36" rx="6" fill="rgba(34,211,238,0.15)" stroke="#22D3EE" stroke-width="1.5"/>' +
+          '<text x="80" y="115" fill="var(--text-100)">101</text>' +
+          '<text x="220" y="115" fill="var(--text-100)">Elden Ring</text>' +
+          '<text x="425" y="115" text-anchor="end" fill="#FCD34D" font-size="12">🔑 PK</text>' +
+        '</g>' +
+        /* Row 2: dimmed */
+        '<g class="pkrow pkrow-dim">' +
+          '<rect x="50" y="138" width="400" height="36" rx="6" fill="rgba(255,255,255,0.02)"/>' +
+          '<text x="80" y="161" fill="var(--text-300)">102</text>' +
+          '<text x="220" y="161" fill="var(--text-300)">God of War</text>' +
+        '</g>' +
+        /* Row 3: dimmed */
+        '<g class="pkrow pkrow-dim">' +
+          '<rect x="50" y="184" width="400" height="36" rx="6" fill="rgba(255,255,255,0.02)"/>' +
+          '<text x="80" y="207" fill="var(--text-300)">103</text>' +
+          '<text x="220" y="207" fill="var(--text-300)">Hades</text>' +
+        '</g>' +
+        /* Row 4: dimmed */
+        '<g class="pkrow pkrow-dim">' +
+          '<rect x="50" y="230" width="400" height="36" rx="6" fill="rgba(255,255,255,0.02)"/>' +
+          '<text x="80" y="253" fill="var(--text-300)">104</text>' +
+          '<text x="220" y="253" fill="var(--text-300)">Elden Ring</text>' +
+        '</g>' +
+      '</g>' +
+      /* WHERE id = 101 label — pulse đồng pha với key row */
+      '<g class="hero-pk-where" transform="translate(250, 305)">' +
+        '<rect x="-110" y="-15" width="220" height="30" rx="15" fill="rgba(34,211,238,0.1)" stroke="#22D3EE" stroke-width="1"/>' +
+        '<text x="0" y="5" text-anchor="middle" fill="#22D3EE" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">WHERE id = 101</text>' +
+      '</g></svg>',
+
+    db_02: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Composite name chia thành first_name và last_name. Derived age tính từ birth_date">' +
+      '<text x="250" y="29" text-anchor="middle" fill="var(--text-400)" font-size="14">Composite (split into parts)</text>' +
+      '<ellipse cx="100" cy="94" rx="69" ry="28" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="100" y="101" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="600">name</text>' +
+      '<line x1="169" y1="94" x2="238" y2="47" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<line x1="169" y1="94" x2="238" y2="140" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<ellipse cx="300" cy="47" rx="81" ry="25" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="54" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">first_name</text>' +
+      '<ellipse cx="300" cy="140" rx="81" ry="25" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="147" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">last_name</text>' +
+      '<text x="250" y="211" text-anchor="middle" fill="var(--text-400)" font-size="14">Derived (computed from)</text>' +
+      '<ellipse cx="100" cy="257" rx="62" ry="28" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="5,3"/>' +
+      '<text x="100" y="264" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="600">age</text>' +
+      '<line x1="169" y1="257" x2="231" y2="257" stroke="var(--module-accent)" stroke-width="2" marker-end="url(#arrow)"/>' +
+      '<ellipse cx="300" cy="257" rx="81" ry="25" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="264" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">birth_date</text>' +
+      '<text x="250" y="328" text-anchor="middle" fill="var(--text-400)" font-size="14">2 kiểu attribute phức tạp</text></svg>',
+
+    db_03: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3 kiểu cardinality: 1:1, 1:N, M:N">' +
+      '<text x="300" y="33" text-anchor="middle" fill="var(--text-400)" font-size="17">3 loại Cardinalities</text>' +
+      '<rect x="30" y="66" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="98" y="94" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Dept</text>' +
+      '<rect x="435" y="66" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="502" y="94" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Building</text>' +
+      '<line x1="165" y1="88" x2="435" y2="88" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="80" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">1 : 1</text>' +
+      '<rect x="30" y="186" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="98" y="214" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Author</text>' +
+      '<rect x="435" y="186" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="502" y="214" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Book</text>' +
+      '<line x1="165" y1="207" x2="435" y2="207" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="200" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">1 : N</text>' +
+      '<rect x="30" y="306" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="98" y="334" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Student</text>' +
+      '<rect x="435" y="306" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="502" y="334" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Course</text>' +
+      '<line x1="165" y1="327" x2="435" y2="327" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="319" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">M : N</text></svg>',
+
+    db_04: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M:N giữa Student và Course qua bảng trung gian Enrollment">' +
+      '<rect x="30" y="93" width="165" height="105" rx="9" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="112" y="130" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="21" font-weight="700">Student</text>' +
+      '<text x="112" y="157" text-anchor="middle" fill="var(--module-accent)" font-size="28" font-weight="700">M</text>' +
+      '<rect x="405" y="93" width="165" height="105" rx="9" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="488" y="130" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="21" font-weight="700">Course</text>' +
+      '<text x="488" y="157" text-anchor="middle" fill="var(--module-accent)" font-size="28" font-weight="700">N</text>' +
+      '<rect x="218" y="133" width="165" height="150" rx="9" fill="rgba(245,158,11,0.18)" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="300" y="180" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="700">Enrollment</text>' +
+      '<text x="300" y="213" text-anchor="middle" fill="var(--text-400)" font-size="14">(junction)</text>' +
+      '<text x="300" y="239" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14">s_id + c_id</text>' +
+      '<line x1="195" y1="140" x2="218" y2="180" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<line x1="382" y1="180" x2="405" y2="140" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="17">Junction table giải quyết M:N</text></svg>',
+
+    db_05: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Weak entity Loan_Payment phụ thuộc parent Loan">' +
+      '<rect x="50" y="94" width="150" height="88" rx="8" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="50" y="94" width="150" height="28" rx="8" fill="var(--module-accent)"/>' +
+      '<text x="125" y="112" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">Loan (parent)</text>' +
+      '<text x="125" y="146" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">loan_id (PK)</text>' +
+      '<line x1="200" y1="135" x2="262" y2="135" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="4,2"/>' +
+      '<text x="231" y="126" text-anchor="middle" fill="var(--module-accent)" font-size="14">identifies</text>' +
+      '<rect x="262" y="94" width="175" height="138" rx="8" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="4" stroke-dasharray="6,3"/>' +
+      '<rect x="262" y="94" width="175" height="28" rx="8" fill="rgba(245,158,11,0.25)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="350" y="112" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">Loan_Payment</text>' +
+      '<text x="350" y="150" text-anchor="middle" fill="var(--text-400)" font-size="12">payment_no</text>' +
+      '<text x="350" y="173" text-anchor="middle" fill="var(--module-accent)" font-size="12">(partial key)</text>' +
+      '<text x="350" y="205" text-anchor="middle" fill="var(--text-400)" font-size="12">amount, date</text>' +
+      '<text x="250" y="269" text-anchor="middle" fill="var(--text-400)" font-size="14">Double border = weak entity</text></svg>',
+
+    db_06: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Specialization: Vehicle thành Car và Truck qua ISA">' +
+      '<rect x="162" y="35" width="175" height="75" rx="8" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="162" y="35" width="175" height="28" rx="8" fill="var(--module-accent)"/>' +
+      '<text x="250" y="54" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">Vehicle (parent)</text>' +
+      '<text x="250" y="91" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">vin, model</text>' +
+      '<path d="M 170,90 A 35 35 0 0 0 230,90" fill="none" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="250" y="123" text-anchor="middle" fill="var(--module-accent)" font-size="14" font-weight="700">ISA</text>' +
+      '<line x1="250" y1="146" x2="150" y2="211" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<line x1="250" y1="146" x2="350" y2="211" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="62" y="211" width="175" height="100" rx="8" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="150" y="246" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="19" font-weight="700">Car</text>' +
+      '<text x="150" y="271" text-anchor="middle" fill="var(--text-400)" font-size="14">num_doors</text>' +
+      '<text x="150" y="290" text-anchor="middle" fill="var(--text-400)" font-size="14">fuel_type</text>' +
+      '<rect x="262" y="211" width="175" height="100" rx="8" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="350" y="246" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="19" font-weight="700">Truck</text>' +
+      '<text x="350" y="271" text-anchor="middle" fill="var(--text-400)" font-size="14">max_load</text>' +
+      '<text x="350" y="290" text-anchor="middle" fill="var(--text-400)" font-size="14">num_axles</text></svg>',
+
+    db_07: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapping ER diagram thành 3 tables riêng">' +
+      '<text x="120" y="33" text-anchor="middle" fill="var(--text-400)" font-size="15">ER diagram</text>' +
+      '<rect x="45" y="53" width="150" height="75" rx="6" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="120" y="82" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700">Student</text>' +
+      '<text x="120" y="104" text-anchor="middle" fill="var(--text-400)" font-size="13">+ Course</text>' +
+      '<line x1="195" y1="86" x2="300" y2="86" stroke="var(--module-accent)" stroke-width="3" marker-end="url(#arrow-m2)"/>' +
+      '<text x="248" y="77" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">map</text>' +
+      '<text x="458" y="33" text-anchor="middle" fill="var(--text-400)" font-size="15">3 tables</text>' +
+      '<rect x="300" y="53" width="270" height="48" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="300" y="53" width="270" height="18" rx="6" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="435" y="66" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">students</text>' +
+      '<rect x="300" y="112" width="270" height="48" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="300" y="112" width="270" height="18" rx="6" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="435" y="125" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">courses</text>' +
+      '<rect x="300" y="170" width="270" height="48" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="300" y="170" width="270" height="18" rx="6" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="435" y="184" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">enrollments</text>' +
+      '<text x="300" y="279" text-anchor="middle" fill="var(--text-400)" font-size="15">Mỗi entity set + relationship → 1 table riêng</text></svg>',
+
+    db_08: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="1NF: composite value slice thanh atomic rows">' +
+      '<text x="160" y="80" text-anchor="middle" fill="var(--text-400)" font-size="28" font-weight="600">Trước 1NF (vi phạm)</text>' +
+      '<rect x="60" y="120" width="200" height="200" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<rect x="60" y="120" width="200" height="120" rx="6" fill="rgba(139,92,246,0.25)"/>' +
+      '<text x="160" y="200" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="56" font-weight="700">[...]</text>' +
+      '<text x="160" y="260" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="22">{Java, Py, SQL}</text>' +
+      '<text x="160" y="295" text-anchor="middle" fill="var(--text-400)" font-size="18">1 cell = 3 giá trị</text>' +
+      '<line x1="270" y1="220" x2="510" y2="220" stroke="var(--module-accent)" stroke-width="4" marker-end="url(#arrow-m2)"/>' +
+      '<text x="390" y="195" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="40" font-weight="700">1NF</text>' +
+      '<text x="390" y="260" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="18">atomic</text>' +
+      '<text x="640" y="80" text-anchor="middle" fill="var(--text-400)" font-size="28" font-weight="600">Sau 1NF (chuẩn)</text>' +
+      '<rect x="540" y="120" width="200" height="55" rx="4" fill="rgba(139,92,246,0.08)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="540" y="185" width="200" height="55" rx="4" fill="rgba(139,92,246,0.08)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="540" y="250" width="200" height="55" rx="4" fill="rgba(139,92,246,0.08)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="640" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="24">Java</text>' +
+      '<text x="640" y="220" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="24">Py</text>' +
+      '<text x="640" y="285" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="24">SQL</text>' +
+      '<text x="400" y="395" text-anchor="middle" fill="var(--text-400)" font-size="22">Mỗi cell = 1 atomic value</text>' +
+      '<text x="400" y="430" text-anchor="middle" fill="var(--text-400)" font-size="20">Không list, set, hay composite</text>' +
+      '</svg>',
+
+    db_09: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="2NF: partial dependency bị cắt, tách thành 2 bảng">' +
+      '<rect x="30" y="53" width="540" height="66" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="53" width="540" height="21" rx="0" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="300" y="69" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">enrollments (PK: s_id + c_id)</text>' +
+      '<text x="45" y="100" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">s_id | c_id | grade | student_name</text>' +
+      '<line x1="90" y1="133" x2="255" y2="133" stroke="var(--danger)" stroke-width="3" stroke-dasharray="5,3"/>' +
+      '<text x="172" y="153" text-anchor="middle" fill="var(--danger)" font-size="15">partial dep (X)</text>' +
+      '<line x1="405" y1="133" x2="405" y2="160" stroke="var(--danger)" stroke-width="3" stroke-dasharray="3,2"/>' +
+      '<text x="442" y="153" text-anchor="middle" fill="var(--danger)" font-size="15">full dep (X)</text>' +
+      '<rect x="30" y="200" width="270" height="75" rx="0" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="200" width="270" height="21" rx="0" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="165" y="215" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">enrollments_clean</text>' +
+      '<text x="45" y="246" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">s_id | c_id | grade</text>' +
+      '<rect x="315" y="200" width="255" height="75" rx="0" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="315" y="200" width="255" height="21" rx="0" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="442" y="215" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">students</text>' +
+      '<text x="330" y="246" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">s_id | student_name</text>' +
+      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="15">Tách → mỗi bảng phụ thuộc full key</text></svg>',
+
+    db_10: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BCNF: FD graph A→B→C, arrow A→C bị redirect">' +
+      '<text x="90" y="80" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="50" font-weight="700">A</text>' +
+      '<text x="300" y="80" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="50" font-weight="700">B</text>' +
+      '<text x="510" y="80" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="50" font-weight="700">C</text>' +
+      '<line x1="135" y1="106" x2="255" y2="106" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="195" y="96" text-anchor="middle" fill="var(--module-accent)" font-size="17">A→B</text>' +
+      '<line x1="345" y1="106" x2="465" y2="106" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="405" y="96" text-anchor="middle" fill="var(--module-accent)" font-size="17">B→C</text>' +
+      '<line x1="135" y1="226" x2="255" y2="226" stroke="var(--danger)" stroke-width="3" stroke-dasharray="4,2"/>' +
+      '<line x1="345" y1="226" x2="465" y2="226" stroke="var(--success)" stroke-width="4"/>' +
+      '<line x1="255" y1="86" x2="345" y2="200" stroke="var(--danger)" stroke-width="2" stroke-dasharray="3,3"/>' +
+      '<text x="135" y="253" text-anchor="middle" fill="var(--danger)" font-size="15">A→C vi phạm BCNF</text>' +
+      '<text x="405" y="253" text-anchor="middle" fill="var(--success)" font-size="15">B→C vẫn OK</text>' +
+      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="15">BCNF: mọi FD phải có superkey ở vế trái</text></svg>',
+
+    db_11: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3NF: transitive dependency A→B→C, B→C bị cắt vì B không phải key">' +
+      '<text x="90" y="106" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="53" font-weight="700">A</text>' +
+      '<text x="300" y="106" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="53" font-weight="700">B</text>' +
+      '<text x="510" y="106" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="53" font-weight="700">C</text>' +
+      '<line x1="142" y1="106" x2="255" y2="106" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="195" y="96" text-anchor="middle" fill="var(--module-accent)" font-size="17">A→B</text>' +
+      '<line class="hero-pulse" x1="352" y1="106" x2="465" y2="106" stroke="var(--danger)" stroke-width="4" stroke-dasharray="6,3"/>' +
+      '<line x1="442" y1="106" x2="562" y2="80" stroke="var(--danger)" stroke-width="3" stroke-dasharray="2,2"/>' +
+      '<line x1="442" y1="106" x2="562" y2="133" stroke="var(--danger)" stroke-width="3" stroke-dasharray="2,2"/>' +
+      '<text x="412" y="153" text-anchor="middle" fill="var(--danger)" font-size="15">B→C transitive (X)</text>' +
+      '<text x="300" y="266" text-anchor="middle" fill="var(--text-400)" font-size="15">Tách: (A,B) + (B,C) → C phụ thuộc trực tiếp key</text>' +
+      '<text x="300" y="293" text-anchor="middle" fill="var(--text-400)" font-size="14">3NF cho phép nếu B là key của (B,C)</text></svg>',
+
+    db_12: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="4NF: multi-valued dependency tách thành nhiều bảng độc lập">' +
+      '<rect x="30" y="53" width="540" height="75" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="53" width="540" height="21" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="300" y="69" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">person (PK + 2 multi-values)</text>' +
+      '<text x="45" y="104" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">id | skills | hobbies</text>' +
+      '<line x1="300" y1="126" x2="120" y2="206" stroke="var(--danger)" stroke-width="2" stroke-dasharray="3,3"/>' +
+      '<line x1="300" y1="126" x2="300" y2="206" stroke="var(--danger)" stroke-width="2" stroke-dasharray="3,3"/>' +
+      '<line x1="300" y1="126" x2="480" y2="206" stroke="var(--danger)" stroke-width="2" stroke-dasharray="3,3"/>' +
+      '<rect x="30" y="206" width="180" height="60" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="120" y="233" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">person_skill</text>' +
+      '<text x="120" y="253" text-anchor="middle" fill="var(--text-400)" font-size="14">id | skill</text>' +
+      '<rect x="225" y="206" width="150" height="60" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="233" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">person_hobby</text>' +
+      '<text x="300" y="253" text-anchor="middle" fill="var(--text-400)" font-size="14">id | hobby</text>' +
+      '<rect x="390" y="206" width="180" height="60" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="480" y="233" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">exploded</text>' +
+      '<text x="480" y="253" text-anchor="middle" fill="var(--text-400)" font-size="14">2NF-style</text>' +
+      '<text x="300" y="306" text-anchor="middle" fill="var(--text-400)" font-size="15">4NF: tách MVD độc lập thành bảng riêng</text></svg>',
+
+    db_13: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boss Battle Grand integrated schema 12 bài">' +
+      '<rect x="60" y="80" width="180" height="110" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse"/>' +
+      '<rect x="60" y="80" width="180" height="32" rx="8" fill="var(--module-accent)"/>' +
+      '<text x="150" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700">Student</text>' +
+      '<text x="150" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">id, name</text>' +
+      '<text x="150" y="178" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="16">(6 attrs)</text>' +
+      '<rect x="310" y="80" width="180" height="110" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.3s"/>' +
+      '<rect x="310" y="80" width="180" height="32" rx="8" fill="var(--module-accent)"/>' +
+      '<text x="400" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700">Course</text>' +
+      '<text x="400" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">id, title</text>' +
+      '<text x="400" y="178" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="16">(5 attrs)</text>' +
+      '<rect x="560" y="80" width="180" height="110" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.6s"/>' +
+      '<rect x="560" y="80" width="180" height="32" rx="8" fill="var(--module-accent)"/>' +
+      '<text x="650" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700">Grade</text>' +
+      '<text x="650" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">letter</text>' +
+      '<text x="650" y="178" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="16">(A, B, C)</text>' +
+      '<line x1="150" y1="190" x2="320" y2="295" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,6"/>' +
+      '<line x1="400" y1="190" x2="400" y2="295" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,6"/>' +
+      '<line x1="650" y1="190" x2="480" y2="295" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,6"/>' +
+      '<rect x="240" y="295" width="320" height="100" rx="8" fill="rgba(139,92,246,0.2)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.9s"/>' +
+      '<rect x="240" y="295" width="320" height="36" rx="8" fill="var(--module-accent)"/>' +
+      '<text x="400" y="320" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="26" font-weight="700">ENROLLMENT</text>' +
+      '<text x="400" y="370" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">student_id + course_id</text>' +
+      '<text x="400" y="425" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="32" font-weight="700">★ BOSS BATTLE ★</text>' +
+      '<text x="400" y="455" text-anchor="middle" fill="var(--text-400)" font-size="20">Tích hợp 12 bài (B1-B12)</text>' +
+      '</svg>',
+
+    db_14: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JSON path: $.settings.theme navigate nested object">' +
+      '<text x="300" y="33" text-anchor="middle" fill="var(--success)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">$.settings.theme</text>' +
+      '<rect x="30" y="53" width="255" height="60" rx="6" fill="rgba(16,185,129,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="53" width="255" height="21" rx="6" fill="rgba(16,185,129,0.2)"/>' +
+      '<text x="158" y="69" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">$ (root)</text>' +
+      '<text x="45" y="96" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">{ ... }</text>' +
+      '<line x1="158" y1="106" x2="158" y2="146" stroke="var(--success)" stroke-width="4"/>' +
+      '<rect x="30" y="146" width="255" height="60" rx="6" fill="rgba(16,185,129,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="146" width="255" height="21" rx="6" fill="rgba(16,185,129,0.2)"/>' +
+      '<text x="158" y="162" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">.settings</text>' +
+      '<text x="45" y="189" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">{ "theme": "dark" }</text>' +
+      '<line class="hero-pulse" x1="285" y1="173" x2="330" y2="239" stroke="var(--success)" stroke-width="4"/>' +
+      '<rect x="330" y="226" width="240" height="60" rx="6" fill="rgba(16,185,129,0.2)" stroke="var(--success)" stroke-width="4"/>' +
+      '<rect x="330" y="226" width="240" height="21" rx="6" fill="var(--success)"/>' +
+      '<text x="450" y="242" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">.theme (target)</text>' +
+      '<text x="345" y="269" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">→ "dark"</text>' +
+      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="15">JSON path traverse nested structure</text>' +
+      '<text x="300" y="343" text-anchor="middle" fill="var(--text-400)" font-size="14">SELECT settings->>\'theme\' FROM app_users</text></svg>',
+
+    db_15: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spatial query: 2 điểm trên map + distance">' +
+      '<rect x="30" y="40" width="540" height="330" fill="rgba(16,185,129,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="60" y="73" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">SF</text>' +
+      '<line x1="60" y1="80" x2="90" y2="64" stroke="var(--text-600)" stroke-width="1"/>' +
+      '<line x1="90" y1="80" x2="120" y2="61" stroke="var(--text-600)" stroke-width="1"/>' +
+      '<text x="60" y="319" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">LA</text>' +
+      '<line x1="60" y1="293" x2="120" y2="259" stroke="var(--text-600)" stroke-width="1"/>' +
+      '<line x1="120" y1="293" x2="90" y2="273" stroke="var(--text-600)" stroke-width="1"/>' +
+      '<circle cx="150" cy="133" r="15" fill="var(--success)" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="177" y="140" fill="var(--text-100)" font-size="15" font-weight="700">store_1</text>' +
+      '<text x="177" y="160" fill="var(--text-400)" font-size="13">(37.7, -122.4)</text>' +
+      '<circle cx="450" cy="266" r="15" fill="var(--success)" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="368" y="266" fill="var(--text-100)" font-size="15" font-weight="700">store_2</text>' +
+      '<text x="368" y="286" fill="var(--text-400)" font-size="13">(34.0, -118.2)</text>' +
+      '<line class="hero-pulse" x1="162" y1="133" x2="440" y2="266" stroke="var(--module-accent)" stroke-width="3" stroke-dasharray="4,4"/>' +
+      '<text x="300" y="193" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">559 km</text>' +
+      '<text x="300" y="370" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="15">ST_Distance(POINT, POINT)</text></svg>',
+
+    db_16: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ORM: Python class ↔ SQL table mirror">' +
+      '<rect x="30" y="40" width="255" height="240" rx="6" fill="rgba(16,185,129,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<rect x="30" y="40" width="255" height="33" rx="6" fill="var(--module-accent)"/>' +
+      '<text x="158" y="61" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">class User</text>' +
+      '<text x="45" y="98" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">id: int</text>' +
+      '<text x="45" y="126" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">name: str</text>' +
+      '<text x="45" y="154" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">email: str</text>' +
+      '<text x="45" y="193" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">def save()</text>' +
+      '<text x="45" y="215" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">@classmethod all()</text>' +
+      '<text x="45" y="239" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">objects.filter(...)</text>' +
+      '<line x1="285" y1="146" x2="315" y2="146" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<line x1="315" y1="146" x2="285" y2="146" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="300" y="133" text-anchor="middle" fill="var(--module-accent)" font-size="18" font-weight="700">ORM</text>' +
+      '<rect x="315" y="40" width="255" height="240" rx="6" fill="rgba(16,185,129,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<rect x="315" y="40" width="255" height="33" rx="6" fill="var(--module-accent)"/>' +
+      '<text x="442" y="61" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">TABLE users</text>' +
+      '<text x="330" y="98" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">id INT PK</text>' +
+      '<text x="330" y="126" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">name VARCHAR</text>' +
+      '<text x="330" y="154" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">email VARCHAR</text>' +
+      '<text x="330" y="193" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">INSERT INTO</text>' +
+      '<text x="330" y="215" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">SELECT WHERE</text>' +
+      '<text x="330" y="239" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">UPDATE SET</text>' +
+      '<text x="300" y="306" text-anchor="middle" fill="var(--text-400)" font-size="15">Object ↔ Row mapping tự động (Django ORM)</text></svg>',
+
+    db_17: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SQL Injection bypass auth, fix bằng prepared statement">' +
+      '<rect x="20" y="80" width="240" height="180" rx="8" fill="rgba(239,68,68,0.05)" stroke="var(--danger)" stroke-width="3"/>' +
+      '<rect x="20" y="80" width="240" height="36" rx="8" fill="var(--danger)"/>' +
+      '<text x="140" y="106" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">USER INPUT</text>' +
+      '<text x="140" y="160" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="32" font-weight="700">"admin\'--"</text>' +
+      '<text x="140" y="200" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="22">or "1"="1"</text>' +
+      '<text x="140" y="235" text-anchor="middle" fill="var(--text-400)" font-size="18">(hacker payload)</text>' +
+      '<line class="hero-pulse" x1="270" y1="170" x2="310" y2="170" stroke="var(--danger)" stroke-width="4" marker-end="url(#arrow-danger)"/>' +
+      '<text x="290" y="155" text-anchor="middle" fill="var(--danger)" font-size="20" font-weight="700">⚠</text>' +
+      '<rect x="320" y="80" width="240" height="180" rx="8" fill="rgba(239,68,68,0.08)" stroke="var(--danger)" stroke-width="3"/>' +
+      '<rect x="320" y="80" width="240" height="36" rx="8" fill="var(--danger)"/>' +
+      '<text x="440" y="106" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">VULNERABLE SQL</text>' +
+      '<text x="440" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">SELECT * FROM users</text>' +
+      '<text x="440" y="183" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18">WHERE name=\'...\' + input</text>' +
+      '<text x="440" y="211" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="18">-- bypass auth</text>' +
+      '<text x="440" y="240" text-anchor="middle" fill="var(--text-400)" font-size="18">(string concat)</text>' +
+      '<line class="hero-pulse" x1="570" y1="170" x2="610" y2="170" stroke="var(--danger)" stroke-width="4" marker-end="url(#arrow-danger)"/>' +
+      '<rect x="620" y="80" width="160" height="180" rx="8" fill="rgba(239,68,68,0.15)" stroke="var(--danger)" stroke-width="3"/>' +
+      '<rect x="620" y="80" width="160" height="36" rx="8" fill="var(--danger)"/>' +
+      '<text x="700" y="106" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">⚠ BREACH</text>' +
+      '<text x="700" y="170" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="28" font-weight="700">all users</text>' +
+      '<text x="700" y="200" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="24">exposed</text>' +
+      '<rect x="20" y="310" width="760" height="120" rx="8" fill="rgba(16,185,129,0.1)" stroke="var(--success)" stroke-width="3"/>' +
+      '<rect x="20" y="310" width="760" height="36" rx="8" fill="var(--success)"/>' +
+      '<text x="400" y="336" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">✓ FIX: Prepared Statement (param binding)</text>' +
+      '<text x="400" y="380" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="22">SELECT * FROM users WHERE name=? AND pass=?</text>' +
+      '<text x="400" y="415" text-anchor="middle" fill="var(--text-400)" font-size="20">Input KHÔNG BAO GIỜ được thành SQL code</text>' +
+      '</svg>',
+
+    db_18: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Password Hashing: password + salt → bcrypt iterations → hash">' +
+      '<rect x="30" y="66" width="120" height="66" rx="6" fill="rgba(16,185,129,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="90" y="93" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">password</text>' +
+      '<text x="90" y="114" text-anchor="middle" fill="var(--text-400)" font-size="13">"secret123"</text>' +
+      '<line x1="150" y1="96" x2="202" y2="96" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="176" y="89" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">+</text>' +
+      '<rect x="202" y="66" width="98" height="66" rx="6" fill="rgba(245,158,11,0.1)" stroke="#F59E0B" stroke-width="2"/>' +
+      '<text x="250" y="93" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">salt</text>' +
+      '<text x="250" y="114" text-anchor="middle" fill="var(--text-400)" font-size="13">"x7Qp2"</text>' +
+      '<line x1="300" y1="96" x2="352" y2="96" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<rect x="352" y="47" width="120" height="111" rx="9" fill="rgba(16,185,129,0.15)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse"/>' +
+      '<text x="412" y="77" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700">bcrypt</text>' +
+      '<text x="412" y="101" text-anchor="middle" fill="var(--text-400)" font-size="14">12 rounds</text>' +
+      '<text x="412" y="122" text-anchor="middle" fill="var(--text-400)" font-size="13">cost=2^12</text>' +
+      '<text x="412" y="140" text-anchor="middle" fill="var(--text-400)" font-size="13">slow by design</text>' +
+      '<line x1="472" y1="96" x2="518" y2="96" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<rect x="518" y="66" width="60" height="66" rx="6" fill="rgba(16,185,129,0.25)" stroke="var(--success)" stroke-width="4"/>' +
+      '<text x="548" y="93" text-anchor="middle" fill="var(--success)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">$2b</text>' +
+      '<text x="548" y="114" text-anchor="middle" fill="var(--text-400)" font-size="13">hash</text>' +
+      '<text x="300" y="197" text-anchor="middle" fill="var(--text-400)" font-size="15">Plain password KHÔNG lưu → chỉ lưu hash</text>' +
+      '<line x1="90" y1="133" x2="90" y2="246" stroke="var(--text-600)" stroke-width="2" stroke-dasharray="2,2"/>' +
+      '<text x="90" y="273" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="15">× NO STORE</text>' +
+      '<line x1="548" y1="133" x2="548" y2="246" stroke="var(--text-600)" stroke-width="2" stroke-dasharray="2,2"/>' +
+      '<text x="548" y="273" text-anchor="middle" fill="var(--success)" font-family="JetBrains Mono, monospace" font-size="15">✓ STORE</text>' +
+      '<text x="300" y="326" text-anchor="middle" fill="var(--text-400)" font-size="15">Salt chống rainbow table. Cost chống brute-force.</text></svg>'
+  };
+
+  function renderLessonHero(lessonId) {
+    const mount = document.getElementById('lesson-hero');
+    if (!mount) return;
+    if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
+    // Normalize: accept 'db_NN', 'BN', 'bNN', 'B0X' formats
+    const m = String(lessonId).match(/\d+/);
+    const key = m ? 'db_' + String(m[0]).padStart(2, '0') : lessonId;
+    const svg = HERO_SVGS[key];
+    if (svg) {
+      mount.innerHTML = svg;
+      // Extract aria-label from SVG root for screen readers
+      const ariaMatch = svg.match(/aria-label="([^"]+)"/);
+      mount.setAttribute('aria-label', ariaMatch ? ariaMatch[1] : '');
+    } else {
+      mount.innerHTML = '';
+      mount.removeAttribute('aria-label');
+    }
+  }
+
   /* ─── State ───────────────────────────────────────────────────── */
   const state = {
     currentStep: 1,
@@ -45,31 +451,11 @@
   /* ─── Init ────────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', init);
 
-  /* ── LeetCode-style tabs (Step 4) ─────────────────────────────── */
+  /* ── LeetCode-style tabs (Step 4) — REMOVED in Part C of STAGE 2d ── */
   function bindLeetCodeTabs() {
-    // All .lc-tabs groups in Step 4 left pane
-    document.querySelectorAll('.lc-tabs').forEach(tabsContainer => {
-      const tabs = tabsContainer.querySelectorAll('.lc-tab');
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const target = tab.dataset.tab;
-          // Active state for tabs
-          tabs.forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          // Find sibling content within the same parent .pane
-          const pane = tabsContainer.closest('.pane');
-          if (!pane) return;
-          // If we have data-tab, show matching content
-          pane.querySelectorAll('.lc-tab-content').forEach(content => {
-            if (content.dataset.tab === target) {
-              content.classList.add('active');
-            } else {
-              content.classList.remove('active');
-            }
-          });
-        });
-      });
-    });
+    // No-op: Cột 1 step 4 giờ là 1 panel cuộn liên tục (đề + hướng dẫn + gợi ý collapsible),
+    // không còn tabs LeetCode. Function này giữ lại trống để không vỡ nếu code khác gọi.
+    return;
   }
 
   /* ── Duolingo-style celebration (confetti) ────────────────────── */
@@ -140,6 +526,24 @@
     setTimeout(function () {
       if (el && el.parentNode) el.parentNode.removeChild(el);
     }, lifetime);
+    // CHANGE 3: Module-specific element animations
+    // B6 (M1 end) → ER diagram pulse on .visual-db-panel nodes
+    // B13 (M2 end) → decomposition unfold on .schema-row
+    // B18 (M3 end) → stack components highlight on .ide-display
+    var mod = state.currentLesson && state.currentLesson.module;
+    var completionCls = 'module' + mod + '-completion';
+    var targetEls = [];
+    if (mod === 1) {
+      targetEls = document.querySelectorAll('.visual-db-panel .entity, .visual-db-panel .connector');
+    } else if (mod === 2) {
+      targetEls = document.querySelectorAll('.visual-db-panel .schema-row');
+    } else if (mod === 3) {
+      targetEls = document.querySelectorAll('.ide-display');
+    }
+    targetEls.forEach(function (node) { node.classList.add(completionCls); });
+    setTimeout(function () {
+      targetEls.forEach(function (node) { node.classList.remove(completionCls); });
+    }, 2400);
     // B18 graduation also triggers rainbow confetti explicitly (in case hearts < 3)
     if (isGraduation) celebrate();
   }
@@ -194,6 +598,9 @@
     const themeSlug = THEME_SLUG[mod] || '';
     document.body.classList.remove('theme-amber', 'theme-indigo', 'theme-emerald');
     if (themeSlug) document.body.classList.add('theme-' + themeSlug);
+    // REDESIGN 2026-06-28 — A4: also tag body with .module-N for layout variations
+    document.body.classList.remove('module-1', 'module-2', 'module-3');
+    if (mod >= 1 && mod <= 3) document.body.classList.add('module-' + mod);
 
     // 4.8 Scroll progress bar — thin colored bar at top tracks scroll within active step
     const scrollBar = document.getElementById('scroll-progress');
@@ -274,14 +681,16 @@
       return;
     }
 
-    // Primer goals
+    // Primer goals (legacy — primer-card removed, concept-cards-hero handles overview now)
     const goalList = document.getElementById('goal-list');
-    goalList.innerHTML = '';
-    (s1.primer.goal || []).forEach(g => {
-      const li = document.createElement('li');
-      li.innerHTML = g;
-      goalList.appendChild(li);
-    });
+    if (goalList) {
+      goalList.innerHTML = '';
+      (s1.primer.goal || []).forEach(g => {
+        const li = document.createElement('li');
+        li.innerHTML = g;
+        goalList.appendChild(li);
+      });
+    }
 
     // Intro & example
     document.getElementById('lesson-intro').innerHTML = s1.primer.intro || '';
@@ -407,26 +816,25 @@
       'fa-circle-check': 'i-shield'
     };
 
-    // Premium concept cards (shadcn Card-inspired) — opt-in
-    const conceptMount = document.getElementById('concept-cards-mount');
-    if (conceptMount) {
-      if (s1.concept_cards && s1.concept_cards.length) {
-        conceptMount.innerHTML = s1.concept_cards.map((c, idx) => {
-          // Resolve icon: data-icon field (SVG id) > icon field (fa-*) > fallback
+    // Concept cards HERO (CHANGE 2 — what/how/try 3-up grid)
+    renderLessonHero(state.currentLesson && state.currentLesson.id);
+    const heroMount = document.getElementById('concept-cards-hero');
+    if (heroMount) {
+      const allCards = s1.concept_cards || [];
+      const heroCards = allCards.slice(0, 3); // CHANGE 2: 3-up grid (what/how/try)
+      if (heroCards.length) {
+        heroMount.innerHTML = heroCards.map((c, idx) => {
           const iconName = c.data_icon || ICON_MAP[c.icon || ''] || 'i-zap';
-          // C6: variant takes precedence over idx-based default (highlight/default)
           const variant = c.variant || (idx === 0 ? 'highlight' : 'default');
           const variantCls = 'card-' + variant;
-          // Quote variant: extra .card-source element
           const sourceHTML = (variant === 'quote' && c.source)
             ? `<span class="card-source">${escapeHtml(c.source)}</span>`
             : '';
-          // Interactive variant: extra body + expand hint
           const extraHTML = (variant === 'interactive' && c.extra)
             ? `<div class="card-body-extra">${c.extra}</div><span class="card-expand-hint">Click để xem thêm</span>`
             : '';
           return `
-          <div class="concept-card ${variantCls}" data-variant="${variant}">
+          <div class="concept-card concept-card-hero ${variantCls}" data-variant="${variant}">
             <div class="concept-card-head">
               <div class="concept-card-icon">
                 <svg class="concept-card-icon-svg" aria-hidden="true"><use href="#${iconName}"/></svg>
@@ -438,18 +846,43 @@
           </div>
         `;
         }).join('');
-        // C6: attach click handler for interactive cards (toggle expanded)
-        const interactiveCards = conceptMount.querySelectorAll('.concept-card.card-interactive');
+        // Click handler for interactive cards
+        const interactiveCards = heroMount.querySelectorAll('.concept-card.card-interactive');
         interactiveCards.forEach(function (card) {
           card.addEventListener('click', function () {
             card.classList.toggle('expanded');
-            const hint = card.querySelector('.card-expand-hint');
-            // CSS rule: .concept-card.card-interactive.expanded .card-expand-hint { display: none; }
-            // The classList toggle on card already controls hint visibility via CSS.
           });
         });
       } else {
-        conceptMount.innerHTML = '';
+        heroMount.innerHTML = '';
+      }
+    }
+
+    // CHANGE 2: Situation → Problem → Solution flow
+    const flowMount = document.getElementById('primer-flow-mount');
+    if (flowMount) {
+      const flow = s1.flow;
+      if (flow && flow.situation && flow.problem && flow.solution) {
+        flowMount.innerHTML = `
+          <div class="primer-flow" role="group" aria-label="Situation Problem Solution">
+            <div class="flow-step" data-flow="situation">
+              <span class="flow-label">Situation</span>
+              <span class="flow-text">${flow.situation}</span>
+            </div>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <div class="flow-step" data-flow="problem">
+              <span class="flow-label">Problem</span>
+              <span class="flow-text">${flow.problem}</span>
+            </div>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <div class="flow-step" data-flow="solution">
+              <span class="flow-label">Solution</span>
+              <span class="flow-text">${flow.solution}</span>
+            </div>
+          </div>
+        `;
+      } else {
+        flowMount.innerHTML = '';
       }
     }
 
@@ -461,7 +894,7 @@
   /* ── C7: Progressive Disclosure — scroll-triggered fade-in ────── */
   function wrapStep1RevealSections() {
     var sections = [
-      { el: document.getElementById('concept-cards-mount'),  i: 0 },
+      { el: document.getElementById('concept-cards-hero'),   i: 0 },
       { el: document.getElementById('primer-svg-mount'),     i: 1 },
       { el: document.getElementById('visual-db-panel'),      i: 2 }
     ];
@@ -1033,6 +1466,7 @@
 
     // Compact data preview (schema) in top of left pane
     renderStep3DataPreview(l.step_1);
+    renderStep3SampleOutput(l.step_1);
 
     renderDropZones(s3);
     renderBlockBank(s3);
@@ -1041,6 +1475,53 @@
     state.step3History = [];
     state.step3XPAwarded = false;  // A4: reset XP guard cho Step 3 completion mới
     updateUndoButton();
+
+    // A4: wire #ide-code (contenteditable) — paste = plain text, blur/click Run = hydrate
+    var ideCodeEl = document.getElementById('ide-code');
+    if (ideCodeEl && !ideCodeEl.dataset.peWired) {
+      ideCodeEl.dataset.peWired = '1';
+      ideCodeEl.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      });
+      ideCodeEl.addEventListener('keydown', function(e) {
+        /* Tab → insert 2 spaces (giữ user quen thuộc) */
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          document.execCommand('insertText', false, '  ');
+        }
+      });
+      /* A4: hydrate khi user click Run (hoặc blur) */
+      ideCodeEl.addEventListener('blur', function() {
+        var hasAny = Object.keys(state.step3Blocks || {}).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
+        if (!hasAny) hydrateZonesFromTypedSQL();
+        updateTruckGrid();
+      });
+    }
+    /* A4: capture-phase click delegation on document — hydrate trước khi drag_game xử lý.
+     * Dùng delegation vì .run-query-btn tạo SAU (DragGame.init chạy sau renderDropZones). */
+    if (!document.body.dataset.peRunDelegation) {
+      document.body.dataset.peRunDelegation = '1';
+      document.body.addEventListener('click', function(e) {
+        var btn = e.target.closest && e.target.closest('.run-query-btn');
+        if (!btn) return;
+        if (btn.disabled) {
+          /* Force-enable nếu có SQL trong #ide-code (parser thành công → có blocks → state đầy đủ) */
+          var ide = document.getElementById('ide-code');
+          if (ide && ide.textContent.trim()) {
+            btn.disabled = false;
+          } else {
+            return;
+          }
+        }
+        var hasAny = Object.keys(state.step3Blocks || {}).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
+        if (!hasAny) {
+          var ok = hydrateZonesFromTypedSQL();
+          if (ok) updateTruckGrid();
+        }
+      }, true);
+    }
 
     // Build Truck Grid map (big, in bottom of left pane, always visible)
     if (window.DragGame) {
@@ -1207,17 +1688,61 @@
     `;
   }
 
+  // Per-zone inline hints — short text under each drop zone telling user what to drag
+  // Zone IDs are like 'select-line', 'from-line', 'where-line' (strip -line to match)
+  const ZONE_HINTS = {
+    select:   { arrow: '←', pre: 'chọn cột ',  keys: ['name', 'price'], sep: ', ' },
+    from:     { arrow: '←', pre: 'từ bảng ',   table: 'game_catalog' },
+    where:    { arrow: '←', pre: 'lọc theo ',  col: 'id', op: '=', val: '101' },
+    group_by: { arrow: '←', pre: 'gom nhóm ',  keys: ['genre'], sep: '' },
+    having:   { arrow: '←', pre: 'lọc nhóm ',  col: 'COUNT(*)', op: '>', val: '1' },
+    order_by: { arrow: '←', pre: 'sắp xếp ',   keys: ['price'], sep: '' },
+    limit:    { arrow: '←', pre: 'giới hạn ',  val: '5' },
+    insert_into: { arrow: '←', pre: 'chèn vào ', table: 'game_catalog' },
+    values:   { arrow: '←', pre: 'dữ liệu: ', val: '(...)' },
+    set:      { arrow: '←', pre: 'cập nhật: ', col: 'price', op: '=', val: '70' },
+    delete_from: { arrow: '←', pre: 'xóa từ ', table: 'game_catalog' },
+    update:   { arrow: '←', pre: 'cập nhật ',  table: 'game_catalog' },
+  };
+
+  function getZoneHintHtml(zoneId, zone) {
+    // Strip -line suffix to match hint keys
+    const key = zoneId.replace(/-line$/, '');
+    const hint = ZONE_HINTS[key];
+    if (!hint) return '';
+    let html = `<span class="hint-arrow">${hint.arrow}</span> ${hint.pre}`;
+    if (hint.keys) {
+      const parts = hint.keys.map(k => `<span class="hint-key">${k}</span>`).join(hint.sep || '');
+      html += parts;
+    } else if (hint.table) {
+      html += `<span class="hint-table">${hint.table}</span>`;
+    } else if (hint.col && hint.val) {
+      html += `<span class="hint-col">${hint.col}</span> <span class="hint-key">${hint.op}</span> <span class="hint-key">${hint.val}</span>`;
+    } else if (hint.val) {
+      html += `<span class="hint-key">${hint.val}</span>`;
+    }
+    return `<div class="zone-sample-hint" data-zone-hint="${zoneId}">${html}</div>`;
+  }
+
   function renderDropZones(s3) {
     const stack = document.getElementById('drop-zones');
     stack.innerHTML = '';
 
-    s3.drop_zones.forEach(zone => {
+    s3.drop_zones.forEach((zone, idx) => {
+      const pos = idx + 1;  /* 1-based numbering — NUMBERED LINES per v6.2 §4C */
       const line = document.createElement('div');
       line.className = 'drop-line';
       line.dataset.zone = zone.id;
+      line.dataset.zonePosition = pos;  /* Q3=C — visually chỉ số, JS sees attribute too */
+      /* v6.2 numbered lines:
+       * - Always show number prefix (Q2=A).
+       * - Generic prompt "Kéo mệnh đề vào đây" — KHÔNG SELECT/FROM/WHERE (no spoiler).
+       * - Slot starts empty; pills append on drag.
+       * - KEEP data-slot="<id>" — JS uses querySelector('[data-slot="<id>"]') at line 1926, 2127. */
       line.innerHTML = `
-        <span class="drop-line-prompt">${zone.placeholder.split(' ')[0]}</span>
-        <span class="drop-line-slot" data-slot="${zone.id}">${zone.placeholder.split(' ').slice(1).join(' ') || '...'}</span>
+        <span class="drop-line-num">${pos}.</span>
+        <span class="drop-line-prompt">Kéo mệnh đề vào đây…</span>
+        <span class="drop-line-slot" data-slot="${zone.id}"></span>
         <span class="broken-tooltip" data-broken-tooltip="${zone.id}">⚠️ Thứ tự chưa đúng — thử kéo swap trong slot</span>
       `;
 
@@ -1237,6 +1762,10 @@
       });
 
       stack.appendChild(line);
+      /* v6.2 STEP 2a FIX-1: REMOVED inline zone hints (CRITICAL anti-spoiler).
+       * "chọn cột", "từ bảng game_catalog", "lọc theo id = 101" → VẪN SPOILER.
+       * Brilliant pattern: hint chỉ qua nút "Xem gợi ý" (progressive, user chủ động).
+       * getZoneHintHtml() vẫn còn để fallback / debug; chỉ drop call site. */
     });
   }
 
@@ -1345,6 +1874,28 @@
     el.innerHTML = (s3 && s3.mission) || s1.mission || 'Kéo thả các khối lệnh vào drop-zone để xây dựng câu SQL.';
   }
 
+  // Sample output panel — show 2-3 rows from data_preview so user knows what the SQL should produce
+  function renderStep3SampleOutput(s1) {
+    const wrap = document.getElementById('step3-sample-rows');
+    if (!wrap) return;
+    const schema = s1 && s1.visual && s1.visual.schema;
+    const rows = s1 && s1.visual && Array.isArray(s1.visual.data_preview) ? s1.visual.data_preview : [];
+    if (!schema || !schema.columns || schema.columns.length === 0 || rows.length === 0) {
+      wrap.innerHTML = '<div class="sample-empty">Chưa có dữ liệu mẫu.</div>';
+      return;
+    }
+    const cols = schema.columns;
+    const header = '<div class="sample-row header">' +
+      cols.map(c => `<span class="sample-cell${c.key === 'PK' ? ' pk' : ''}">${c.name}</span>`).join('') +
+      '</div>';
+    const body = rows.slice(0, 3).map(r =>
+      '<div class="sample-row">' +
+      r.map((cell, i) => `<span class="sample-cell${cols[i] && cols[i].key === 'PK' ? ' pk' : ''}">${cell}</span>`).join('') +
+      '</div>'
+    ).join('');
+    wrap.innerHTML = header + body;
+  }
+
   // Populate compact schema preview in top of left pane (Step 3)
   // Reads step_1.visual.schema (already used by Step 1's visual-db).
   function renderStep3DataPreview(s1) {
@@ -1359,14 +1910,14 @@
     const cols = schema.columns.map(c => {
       const pk = c.key === 'PK' ? 'pk' : '';
       return `<div class="dp-col ${pk}">
-        <span>${pk ? '🔑 ' : ''}${c.name}</span>
+        <span class="dp-col-name">${pk ? '🔑 ' : ''}${c.name}</span>
         <span class="dp-col-type">${c.type || ''}</span>
       </div>`;
     }).join('');
     el.innerHTML = `
       <div class="dp-table">
         <div class="dp-table-name"><i class="fa-solid fa-table"></i> ${name}</div>
-        ${cols}
+        <div class="dp-cols">${cols}</div>
       </div>
     `;
   }
@@ -1446,9 +1997,11 @@
       const zDef = state.currentLesson.step_3.drop_zones.find(z => z.id === zoneId);
       slotEl.innerHTML = zDef ? (zDef.placeholder.split(' ').slice(1).join(' ') || '...') : '...';
       slotEl.classList.remove('filled');
+      slotEl.classList.remove('has-content');  /* v6.2 STAGE 2a-2 FIX-9: JS toggle bulletproof */
       return;
     }
     slotEl.classList.add('filled');
+    slotEl.classList.add('has-content');  /* v6.2 STAGE 2a-2 FIX-9 */
     arr.forEach((b, i) => {
       if (i > 0) slotEl.appendChild(document.createTextNode(' '));
       const np = document.createElement('span');
@@ -1585,32 +2138,14 @@
       .find(p => p.dataset.token === token);
     if (!pill) return;
 
-    /* Validate block type + keyword trước khi cho vào zone
-       - zone.accepts (cũ): nhóm lớn ('kw', 'col', 'tbl', ...)
-       - zone.acceptedKeywords (mới): keyword CỤ THỂ được chấp nhận, vd select-line chỉ nhận 'SELECT'
-       → pill không match → bounce back với message rõ ràng */
+    /* v6.1 PHASE A — FREE DRAG: REMOVE all block-type / keyword validation.
+       Mọi block được kéo vào mọi zone. Validation chỉ xảy ra khi bấm ▶ Chạy Query
+       (trong executeStation()). User tự do thử sai → truck chạy → user THẤY tại sao sai.
+       Đây là fix cho v5 lỗi "drag bị chặn đỏ". */
     const s3 = state.currentLesson.step_3;
     const blockDef = s3.blocks.find(b => b.token === token);
     const zone = s3.drop_zones.find(z => z.id === zoneId);
     if (!blockDef || !zone) return;
-    // Check 1: type-level (nhóm lớn)
-    if (!zone.accepts.includes(blockDef.type)) {
-      pill.classList.add('error');
-      setTimeout(() => pill.classList.remove('error'), 500);
-      flashZoneHint(zoneId, `❌ Block "${blockDef.token}" không phù hợp zone này.`);
-      return;
-    }
-    // Check 2: keyword-level (nếu zone khai báo acceptedKeywords)
-    if (zone.acceptedKeywords && zone.acceptedKeywords.length > 0 && blockDef.type === 'kw') {
-      if (!zone.acceptedKeywords.includes(blockDef.token)) {
-        pill.classList.add('error');
-        setTimeout(() => pill.classList.remove('error'), 500);
-        if (window.showToast) {
-          window.showToast('warning', `⚠️ Zone này chỉ nhận: ${zone.acceptedKeywords.join(', ')}`, 2500);
-        }
-        return;
-      }
-    }
 
     pill.classList.add('locked');
 
@@ -1634,6 +2169,14 @@
       zoneEl.classList.add('zone-accepted');
       setTimeout(() => zoneEl.classList.remove('zone-accepted'), 240);
     }
+    // CHANGE 3: SQL block-snap satisfying animation on the placed pill
+    if (zoneEl) {
+      const lastPill = zoneEl.querySelector('.placed-pill:last-child');
+      if (lastPill) {
+        lastPill.classList.add('block-just-snapped');
+        setTimeout(() => lastPill.classList.remove('block-just-snapped'), 400);
+      }
+    }
   }
 
   // (Undo removed — use drag-back to bank to remove individual blocks,
@@ -1655,6 +2198,10 @@
         slotEl.classList.remove('filled');
       }
     });
+    // FIX 4 v3 (2026-06-29): reset state border + pill on drag reset (Brilliant pattern)
+    const wrapper = document.querySelector('[data-step3-wrapper]');
+    if (wrapper) wrapper.classList.remove('step3-state-correct', 'step3-state-wrong');
+    hidePillBadge();
     updateIDEFromBlocks();
     if (window.DragGame) window.DragGame.reset();
   };
@@ -1704,6 +2251,83 @@
     applyBrokenState(sql, s3);
 
     updateRevealHint();
+
+    // FIX 4 v3 (2026-06-29): Toggle whole-exercise state border + pill badge.
+    // Brilliant-inspired: user nhìn 1 giây biết đúng/sai qua border color.
+    updateStep3ExerciseState();
+  }
+
+  /* FIX 4 v3 — Toggle .step3-state-correct / .step3-state-wrong trên wrapper
+     + show/hide pill badge (Brilliant-inspired whole-exercise feedback).
+     Called from updateIDEFromBlocks() mỗi lần block thay đổi.
+     CSS: .step3-exercise.step3-state-{correct,wrong} → 2px border + box-shadow glow.
+     CSS: .step3-pill-badge.is-{correct,wrong} → success/warning pill. */
+  function updateStep3ExerciseState() {
+    const wrapper = document.querySelector('[data-step3-wrapper]');
+    if (!wrapper) return;
+
+    const s3 = state.currentLesson && state.currentLesson.step_3;
+    if (!s3 || !s3.expected_sql) {
+      hidePillBadge();
+      wrapper.classList.remove('step3-state-correct', 'step3-state-wrong');
+      return;
+    }
+
+    const totalBlocks = Object.values(state.step3Blocks).reduce((s, a) => s + a.length, 0);
+    const totalAvailable = (s3.blocks || []).length;
+    const allPlaced = totalBlocks === totalAvailable && totalBlocks > 0;
+
+    // Build current SQL from placed blocks (canonical zone order, with comma between value types)
+    const parts = [];
+    s3.drop_zones.forEach(zone => {
+      const blocks = state.step3Blocks[zone.id];
+      if (!blocks || !blocks.length) return;
+      blocks.forEach((b, idx) => {
+        parts.push(b.token);
+        if (idx < blocks.length - 1) {
+          const next = blocks[idx + 1];
+          const isValueType = t => t === 'col' || t === 'fn' || t === 'val';
+          if (isValueType(b.type) && isValueType(next.type)) parts.push(',');
+        }
+      });
+    });
+    const builtSQL = parts.join(' ').trim().replace(/\s+,/g, ',');
+    const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ');
+    const isMatch = builtSQL.toUpperCase() === expected.toUpperCase();
+
+    // Reset state classes every call (Brilliant pattern: chỉ 1 state tại 1 thời điểm)
+    wrapper.classList.remove('step3-state-correct', 'step3-state-wrong');
+
+    if (allPlaced && isMatch) {
+      wrapper.classList.add('step3-state-correct');
+      showPillBadge('correct', '✓ Hoàn hảo!');
+    } else if (allPlaced) {
+      wrapper.classList.add('step3-state-wrong');
+      showPillBadge('wrong', '⚠ Thử lại nhé');
+    } else {
+      hidePillBadge();
+    }
+  }
+
+  /* FIX 4 v3 — Show success/warning pill badge trong .step3-exercise wrapper */
+  function showPillBadge(kind, text) {
+    let badge = document.getElementById('step3-pill-badge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'step3-pill-badge';
+      const wrapper = document.querySelector('[data-step3-wrapper]');
+      if (!wrapper) return;
+      wrapper.appendChild(badge);
+    }
+    badge.className = 'step3-pill-badge is-visible is-' + kind;
+    const icon = kind === 'correct' ? 'fa-circle-check' : 'fa-circle-exclamation';
+    badge.innerHTML = '<i class="fa-solid ' + icon + '"></i><span>' + text + '</span>';
+  }
+
+  /* FIX 4 v3 — Hide pill badge */
+  function hidePillBadge() {
+    const badge = document.getElementById('step3-pill-badge');
+    if (badge) badge.classList.remove('is-visible');
   }
 
   /* v3 redesign: Subtle "broken" feedback when user has placed all blocks
@@ -1737,11 +2361,133 @@
     });
   }
 
+  /* A4: PE_parseSQLToBlocks — parse SQL text → blocks per zone.
+   * Used khi user gõ tay SQL trong #ide-code mà chưa kéo block nào.
+   * Returns {zoneFills: {zoneId: [{token, type}, ...]}} hoặc {error: '...'}. */
+  window.PE_parseSQLToBlocks = function(sqlText, s3) {
+    if (!s3 || !s3.drop_zones) return { error: 'No drop zones' };
+    /* Strip SQL comments -- ... */
+    var clean = String(sqlText || '').replace(/--.*$/gm, '').trim();
+    if (!clean) return { error: 'Chưa nhập query' };
+    /* Match SELECT ... FROM ... [WHERE ...] */
+    var m = /^\s*select\s+(.+?)\s+from\s+(\w+)(?:\s+where\s+(.+?))?\s*;?\s*$/i.exec(clean);
+    if (!m) return { error: 'Cú pháp: SELECT … FROM … [WHERE …]' };
+    var colsStr = m[1].trim();
+    var table = m[2].trim();
+    var whereStr = m[3] ? m[3].trim() : null;
+    /* Build blocks per zone */
+    var cols = colsStr.split(',').map(function(c){ return c.trim(); }).filter(Boolean);
+    var selectBlocks = cols.map(function(c){ return { token: c, type: c === '*' ? 'fn' : 'col' }; });
+    var fromBlocks = [{ token: table, type: 'tbl' }];
+    var whereBlocks = [];
+    if (whereStr) {
+      var wm = /(\w+)\s*(=)\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(\w+))/i.exec(whereStr);
+      if (wm) {
+        whereBlocks = [
+          { token: wm[1], type: 'col' },
+          { token: wm[2], type: 'op' },
+          { token: wm[3] !== undefined ? "'" + wm[3] + "'" : (wm[4] !== undefined ? wm[4] : (wm[5] !== undefined ? wm[5] : wm[6])), type: 'val' }
+        ];
+      }
+    }
+    /* Add SELECT keyword at start of select-line (matches drag flow convention) */
+    var result = { selectBlocks: [{ token: 'SELECT', type: 'kw' }].concat(selectBlocks),
+                   fromBlocks: [{ token: 'FROM', type: 'kw' }].concat(fromBlocks),
+                   whereBlocks: whereStr ? [{ token: 'WHERE', type: 'kw' }].concat(whereBlocks) : [] };
+    /* Find canonical zone ids */
+    var selectZoneId = (s3.drop_zones.find(function(z){ return z.id === 'select-line'; }) || {}).id;
+    var fromZoneId = (s3.drop_zones.find(function(z){ return z.id === 'from-line'; }) || {}).id;
+    var whereZoneId = (s3.drop_zones.find(function(z){ return z.id === 'where-line'; }) || {}).id;
+    return {
+      zoneFills: {
+        'select-line': result.selectBlocks,
+        'from-line': result.fromBlocks,
+        'where-line': result.whereBlocks
+      }
+    };
+  };
+
+  /* A4+C4: PE_runSQL — shared SQL executor cho step 3 (gõ tay) + step 4 (GÕ THẬT).
+   * sqlText = raw SQL, schema = {columns, dataRows} (s3/s4.schema hoặc DEFAULT_TABLE).
+   * Returns {cols, rows} on success, {error: 'msg'} on failure.
+   * C4 fix: accept BOTH {columns: ['id',...]} (legacy string array) AND {columns: [{name,type,key,icon},...]} (s4 schema objects).
+   *         Also handles schema.schema.* nesting. */
+  window.PE_runSQL = function(sqlText, schema, data) {
+    var s3Pseudo = { drop_zones: [{id:'select-line'},{id:'from-line'},{id:'where-line'}] };
+    var parsed = window.PE_parseSQLToBlocks(sqlText, s3Pseudo);
+    if (parsed.error) return { error: parsed.error };
+    var fills = parsed.zoneFills;
+    /* Detect correct columns/data source: ưu tiên schema.schema.* (s4 shape), fallback schema.* */
+    var rawCols = (schema && schema.schema && schema.schema.columns)
+      || (schema && schema.columns)
+      || [];
+    var rows = (data && data.length)
+      || (schema && schema.data)
+      || (schema && schema.schema && schema.schema.data)
+      || [];
+    rows = rows.slice();
+    /* Normalize columns: accept string[] OR {name,type,...}[] → string[] of names */
+    var columns = rawCols.map(function(c){ return typeof c === 'string' ? c : (c.name || ''); });
+    /* WHERE filter via shared parseWhereRows từ drag_game */
+    if (fills['where-line'] && fills['where-line'].length) {
+      var whereInput = fills['where-line'].filter(function(b){ return b.type !== 'kw'; }).map(function(b){ return b.token; }).join(' ');
+      var tableForParse = { columns: columns, dataRows: rows };
+      var matched = window.PE_parseWhereRows ? window.PE_parseWhereRows(whereInput, tableForParse) : null;
+      if (matched === null) return { error: 'WHERE không hợp lệ: ' + whereInput };
+      if (matched.length === 0) return { error: 'WHERE không khớp dòng nào' };
+      rows = rows.filter(function(_, i){ return matched.indexOf(i) >= 0; });
+    }
+    /* SELECT projection */
+    var outCols = columns;
+    if (fills['select-line'] && fills['select-line'].length) {
+      var selTokens = fills['select-line'].filter(function(b){ return b.type === 'col' || b.type === 'fn'; }).map(function(b){ return b.token; });
+      if (selTokens.length && selTokens.indexOf('*') < 0) {
+        outCols = selTokens;
+        /* Project rows: keep only selected column values in order */
+        rows = rows.map(function(r){
+          var obj = {};
+          columns.forEach(function(c, ci){ obj[c] = r[ci]; });
+          return selTokens.map(function(t){ return obj[t] !== undefined ? obj[t] : ''; });
+        });
+      } else {
+        rows = rows.map(function(r){ return r.slice(); });
+      }
+    }
+    return { cols: outCols, rows: rows };
+  };
+
+  /* A4: hydrateZonesFromTypedSQL — khi user gõ tay SQL mà blocks trống, fill state.step3Blocks */
+  function hydrateZonesFromTypedSQL() {
+    var s3 = state.currentLesson && state.currentLesson.step_3;
+    if (!s3) return false;
+    var ideCode = document.getElementById('ide-code');
+    if (!ideCode) return false;
+    var sqlText = (ideCode.textContent || '').trim();
+    if (!sqlText) return false;
+    var hasAnyBlock = Object.keys(state.step3Blocks).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
+    if (hasAnyBlock) return false;
+    var parsed = window.PE_parseSQLToBlocks(sqlText, s3);
+    if (parsed.error) return false;
+    /* Apply to state.step3Blocks */
+    Object.keys(parsed.zoneFills).forEach(function(zid){
+      state.step3Blocks[zid] = parsed.zoneFills[zid];
+    });
+    /* Re-render zones visually (function name is renderZone, not renderDropZone) */
+    if (typeof renderZone === 'function') {
+      Object.keys(parsed.zoneFills).forEach(function(zid){
+        renderZone(zid);
+      });
+    }
+    return true;
+  }
+
   /* Extract zone fill status for all drop_zones → feed DragGame.update(). */
   function updateTruckGrid() {
     if (!window.DragGame) return;
     const s3 = state.currentLesson.step_3;
     if (!s3) return;
+    /* A4: nếu user gõ tay mà chưa kéo block → hydrate từ #ide-code */
+    hydrateZonesFromTypedSQL();
 
     // Build zoneFills: for each zone, extract a summary string if it has blocks
     const zoneFills = {};
@@ -1924,14 +2670,10 @@
     document.getElementById('step4-title').textContent = l.title;
     document.getElementById('step4-prompt').innerHTML = s4.prompt || '';
 
-    // Schema (left side) — common across all types
-    renderStep4Schema(s4);
-
-    // Premium enhanced: nếu có s4.schema thì render với CSS mới (ghi đè fallback)
-    const schemaMount = document.getElementById('step4-schema');
-    if (schemaMount && s4.schema && s4.schema.table_name) {
-      enhanceStep4Schema(schemaMount, s4);
-    }
+    // SCHEMA PANEL ĐÃ BỎ (PHASE 2e-C1). User tự gõ `SELECT * FROM …` rồi Run để khám phá
+    // schema trong Results panel (cột 3 full). Hàm renderStep4Schema + enhanceStep4Schema
+    // vẫn còn (DORMANT) — s4.schema.data VẪN cần cho PE_runSQL engine.
+    // KHÔNG gọi enhanceStep4Schema render panel nữa; PE_runSQL đọc s4.schema.data trực tiếp.
 
     // Premium: hint panel với 4 levels (progressive)
     const hintMount = document.getElementById('step4-hint-mount');
@@ -1957,11 +2699,71 @@
     // Reset terminal
     const term = document.getElementById('terminal-output');
     term.innerHTML = '<span class="prompt-arrow">$</span> Đang chờ bạn hoàn thành thử thách...';
+    // C4 (STAGE 2d): reset results panel (cột 3) — clean slate cho mỗi bài
+    renderStep4Idle();
+
+    // FIX 2e-C2: data-driven context giàu. Render s4.context vào #step4-instructions.
+    // Bài nào có context → render đầy đủ (scenario+steps+example+expected).
+    // Bài nào KHÔNG có → fallback về instructions-block trống, không crash.
+    renderStep4Context(s4);
   }
 
+  /**
+   * FIX 2e-C2: render s4.context (giàu) vào pane cột 1 — bài nào có thì hiện,
+   * bài nào fallback về rỗng. KHÔNG đụng #step4-prompt (vẫn giữ prompt cũ).
+   * Schema cho context:
+   *   s4.context = {
+   *     scenario:    'string' — bối cảnh ngắn (1-2 câu),
+   *     steps:       ['string', ...] — các bước gợi ý (3-5 bước),
+   *     hint_explore:'string' — "chưa biết bảng? gõ SELECT * FROM ... Run để xem", CHỈ hiện cho full_ide,
+   *     example:     { question, sql, sample_output } — worked example KHÁC đáp án,
+   *     expected:    'string' — kết quả mong đợi (prose),
+   *   }
+   */
+  function renderStep4Context(s4) {
+    const mount = document.getElementById('step4-instructions');
+    if (!mount) return;
+    const ctx = s4 && s4.context;
+    if (!ctx) {
+      mount.innerHTML = '';
+      mount.classList.remove('has-context');
+      return;
+    }
+    mount.classList.add('has-context');
+    const challengeType = s4.challenge_type || 'full_ide';
+    const parts = [];
+    if (ctx.scenario) {
+      parts.push(`<div class="context-scenario"><span class="ctx-tag ctx-tag-scenario">📖 Bối cảnh</span><div class="ctx-body">${ctx.scenario}</div></div>`);
+    }
+    if (Array.isArray(ctx.steps) && ctx.steps.length) {
+      const lis = ctx.steps.map((s) => `<li>${s}</li>`).join('');
+      parts.push(`<div class="context-steps"><span class="ctx-tag ctx-tag-steps">🪜 Các bước</span><ol class="ctx-body">${lis}</ol></div>`);
+    }
+    if (ctx.hint_explore && challengeType === 'full_ide') {
+      parts.push(`<div class="context-hint-explore"><i class="fa-solid fa-lightbulb"></i> ${ctx.hint_explore}</div>`);
+    }
+    if (ctx.example && typeof ctx.example === 'object') {
+      const ex = ctx.example;
+      let exInner = '';
+      if (ex.question) exInner += `<div class="ctx-example-q"><span class="ctx-tag ctx-tag-example">📚 Ví dụ tương tự</span>${ex.question}</div>`;
+      if (ex.sql) exInner += `<pre class="ctx-example-sql"><code>${escapeHtmlForContext(ex.sql)}</code></pre>`;
+      if (ex.sample_output) exInner += `<div class="ctx-example-output"><span class="ctx-tag ctx-tag-output">→ Output</span>${ex.sample_output}</div>`;
+      if (exInner) parts.push(`<div class="context-example">${exInner}</div>`);
+    }
+    if (ctx.expected) {
+      parts.push(`<div class="context-expected"><span class="ctx-tag ctx-tag-expected">🎯 Kết quả mong đợi</span><div class="ctx-body">${ctx.expected}</div></div>`);
+    }
+    mount.innerHTML = parts.join('\n');
+  }
+
+  function escapeHtmlForContext(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // DORMANT 2e-C1: schema panel removed (user: tự SELECT * khám phá); s4.schema.data vẫn dùng cho PE_runSQL
   function renderStep4Schema(s4) {
     const schemaEl = document.getElementById('step4-schema');
-    if (!schemaEl) return;
+    if (!schemaEl) return;  // guard: schemaEl không tồn tại → no-op
     // Guard: data có thể thiếu schema (vd: bài mcq_code không cần schema panel)
     if (!s4 || !s4.schema || !s4.schema.table_name) {
       schemaEl.innerHTML = '<div style="font-size:12px;color:var(--text-400);font-style:italic;padding:12px;">Không có schema cho bài này.</div>';
@@ -2000,12 +2802,15 @@
   /* ── Challenge type: full_ide (CodeMirror) ─────────────────────── */
   function initChallengeFullIDE(s4, pane) {
     pane.innerHTML = '<div id="code-editor" style="flex:1;display:flex;flex-direction:column;min-height:0;"></div>';
-    // Auto-save draft vào localStorage (load + save)
+    // C2 (STAGE 2d): full_ide → editor TRỐNG, không load draft cũ, không seed starter.
+    // Ghost placeholder hiển thị hint thay vì starter SQL (tránh user copy-paste starter mà không hiểu).
     const lessonId = state.currentLesson && state.currentLesson.id;
     const draftKey = `pe_draft_${lessonId}`;
-    const savedDraft = lessonId ? localStorage.getItem(draftKey) : null;
-    const initialValue = savedDraft || (s4.starter || '-- Viết query của bạn ở đây\n');
-    let saveTimer = null;
+    if (lessonId) {
+      try { localStorage.removeItem(draftKey); } catch (_) { /* defensive */ }
+    }
+    const initialValue = '';
+    const ghostHint = s4.starter_hint || '💡 Gõ câu SQL của bạn vào đây. Bắt đầu bằng SELECT ...';
     if (window.CodeMirror) {
       state.cmEditor = CodeMirror(pane.querySelector('#code-editor'), {
         value: initialValue,
@@ -2015,30 +2820,17 @@
         indentUnit: 2,
         tabSize: 2,
         autofocus: false,
-        matchBrackets: true
+        matchBrackets: true,
+        placeholder: ghostHint
       });
       state.cmEditor.on('change', () => {
-        if (state.hintLevel > 0) {
-          state.hintLevel = 0;
-          document.getElementById('step4-hint-card').classList.add('hidden');
-        }
-        // Debounced auto-save (1s sau khi ngừng gõ)
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => {
-          if (lessonId) localStorage.setItem(draftKey, state.cmEditor.getValue());
-        }, 1000);
+        // Đóng gợi ý khi user bắt đầu gõ lại (tránh spoiler)
+        const hintDetails = document.getElementById('step4-hint-details');
+        if (hintDetails && hintDetails.open) hintDetails.open = false;
       });
-      // Toast notification khi khôi phục draft
-      if (savedDraft && savedDraft !== (s4.starter || '')) {
-        setTimeout(() => {
-          if (window.showToast) {
-            window.showToast('info', '🔄 Đã khôi phục bản nháp từ lần trước');
-          }
-        }, 500);
-      }
     } else {
       pane.querySelector('#code-editor').innerHTML =
-        `<textarea id="cm-fallback" style="flex:1;width:100%;background:#0F172A;color:#F1F5F9;font-family:'JetBrains Mono',monospace;font-size:14px;padding:16px;border:none;outline:none;resize:none;line-height:1.7;">${initialValue}</textarea>`;
+        `<textarea id="cm-fallback" style="flex:1;width:100%;background:#0F172A;color:#F1F5F9;font-family:'JetBrains Mono',monospace;font-size:14px;padding:16px;border:none;outline:none;resize:none;line-height:1.7;" placeholder="${escapeHtml(ghostHint)}"></textarea>`;
     }
   }
 
@@ -2164,9 +2956,32 @@
 
     if (!userCode) {
       flashTerminal('error', '[!] Bạn chưa nhập query nào. Hãy thử gõ SELECT ... và nhấn Run.');
+      renderStep4Error('Chưa có query nào để chạy.');
       return;
     }
     flashTerminal('info', `$ ${isSubmit ? 'Đang submit...' : 'Đang chạy thử...'}`);
+
+    // C4 (STAGE 2d): chạy query thật với PE_runSQL (helper từ drag_game.js A4)
+    // → render bảng kết quả vào cột 3 (Codecademy-style "Results" panel)
+    let liveResult = null;
+    try {
+      if (typeof window.PE_runSQL === 'function') {
+        liveResult = window.PE_runSQL(userCode, s4);
+      }
+    } catch (e) {
+      console.warn('[runCodeIDE] PE_runSQL error:', e);
+    }
+
+    if (liveResult && liveResult.error) {
+      // Query có lỗi parse/exec → render error panel + skip validation
+      renderStep4Error(liveResult.error);
+    } else if (liveResult && Array.isArray(liveResult.cols) && Array.isArray(liveResult.rows)) {
+      // Query chạy được → render bảng kết quả thật
+      renderStep4Results(liveResult.cols, liveResult.rows);
+    } else {
+      // Fallback nếu PE_runSQL không có / không trả về
+      renderStep4Idle();
+    }
 
     setTimeout(() => {
       const result = validateSQL(userCode, s4.expected_sql);
@@ -2204,6 +3019,19 @@
       }
     });
 
+    // C4 (STAGE 2d): ghép SQL hoàn chỉnh từ template + inputs, chạy PE_runSQL → render cột 3
+    if (s4.template) {
+      const parts = s4.template.split('____');
+      const assembled = parts.map((p, i) => i < parts.length - 1 ? p + (inputs[i]?.value || '') : p).join('');
+      try {
+        if (typeof window.PE_runSQL === 'function') {
+          const live = window.PE_runSQL(assembled, s4);
+          if (live && live.error) renderStep4Error(live.error);
+          else if (live && live.cols) renderStep4Results(live.cols, live.rows);
+        }
+      } catch (e) { /* defensive */ }
+    }
+
     if (correct === inputs.length) {
       flashTerminal('success', `✓ Tuyệt vời! Bạn đã điền đúng ${correct}/${inputs.length} ô.\n\n→ ${s4.xp_reward || 50} XP!`);
       addXP(s4.xp_reward || 50);
@@ -2220,6 +3048,15 @@
     if (!editor) return;
     const userSQL = editor.innerText.trim();
     const result = validateSQL(userSQL, s4.expected_sql);
+
+    // C4 (STAGE 2d): chạy PE_runSQL trên user SQL sau sửa → render cột 3
+    try {
+      if (typeof window.PE_runSQL === 'function') {
+        const live = window.PE_runSQL(userSQL, s4);
+        if (live && live.error) renderStep4Error(live.error);
+        else if (live && live.cols) renderStep4Results(live.cols, live.rows);
+      }
+    } catch (e) { /* defensive */ }
 
     if (result.correct) {
       flashTerminal('success', `✓ Đã sửa xong! Query giờ trả về kết quả đúng.\n\n→ ${s4.xp_reward || 50} XP!`);
@@ -2448,12 +3285,24 @@
     const currentActive = document.querySelector('.step-pane.active');
     const nextPane = document.querySelector(`.step-pane[data-step="${step}"]`);
     if (currentActive && currentActive !== nextPane) {
-      currentActive.classList.add('step-fade-out');
-      setTimeout(() => {
-        currentActive.classList.remove('active', 'step-fade-out');
-        nextPane.classList.add('active', 'step-fade-in');
-        setTimeout(() => nextPane.classList.remove('step-fade-in'), 350);
-      }, 150);
+      // CHANGE 3: directional transitions for 1→2 (theory rises, quiz drops)
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var fromStep = currentActive.getAttribute('data-step');
+      if (!reduced && fromStep === '1' && step === '2') {
+        currentActive.classList.add('entering-step1-out');
+        setTimeout(function () {
+          currentActive.classList.remove('active', 'entering-step1-out');
+          nextPane.classList.add('active', 'entering-step2-in');
+          setTimeout(function () { nextPane.classList.remove('entering-step2-in'); }, 500);
+        }, 350);
+      } else {
+        currentActive.classList.add('step-fade-out');
+        setTimeout(() => {
+          currentActive.classList.remove('active', 'step-fade-out');
+          nextPane.classList.add('active', 'step-fade-in');
+          setTimeout(() => nextPane.classList.remove('step-fade-in'), 350);
+        }, 150);
+      }
     } else if (!currentActive) {
       nextPane.classList.add('active', 'step-fade-in');
       setTimeout(() => nextPane.classList.remove('step-fade-in'), 350);
@@ -3410,22 +4259,23 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
     if (typeof window.addXP === 'function') window.addXP(n);
   }
 
-  /* ── E. Step 4 enhanced schema (dùng CSS mới) ───────────── */
+  /* ── E. Step 4 enhanced schema (dùng CSS mới) — DORMANT 2e-C1 ─────────────
+   * Schema panel bị bỏ (user: tự SELECT * khám phá); hàm giữ dormant để rollback dễ.
+   * s4.schema.data VẪN cần cho PE_runSQL engine; gọi nhầm cũng không crash (guard null). */
   function enhanceStep4Schema(container, s4) {
     if (!container || !s4 || !s4.schema) return;
     const schema = s4.schema;
-    const data = s4.schema.data || s4.data || [];
-    // Render schema chính + related_schemas (nếu có) — user cần thấy tất cả bảng để JOIN
+    // C3 (STAGE 2d): simplify — chỉ head + rows (tên cột + type + key). Bỏ data-preview + row-count
+    // để schema panel vừa khít cột 3 (Codecademy), không bị tràn sample data.
     const renderOneTable = (tbl) => {
-      const tblData = tbl.data || [];
+      const cols = tbl.columns || [];
       return `<div class="step4-schema-card">
         <div class="schema-head">
           <i class="fa-solid fa-table"></i>
           <span class="table-name">${escapeHtml(tbl.table_name)}</span>
-          <span class="row-count">${tblData.length} rows</span>
         </div>
         <div class="schema-rows">
-          ${(tbl.columns || []).map(col => `
+          ${cols.map(col => `
             <div class="schema-row">
               <span class="col-name">${col.icon ? col.icon + ' ' : ''}${escapeHtml(col.name)}</span>
               <span class="col-type">${escapeHtml(col.type || '')}</span>
@@ -3433,26 +4283,46 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
             </div>
           `).join('')}
         </div>
-        ${tblData.length > 0 ? `
-          <div class="data-preview">
-            <table class="data-table">
-              <thead><tr>${(tbl.columns || []).map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}</tr></thead>
-              <tbody>${tblData.map(row => `<tr>${row.map((cell, i) =>
-        `<td class="${tbl.columns[i]?.key === 'PK' ? 'pk-cell' : ''}">${escapeHtml(String(cell))}</td>`
-      ).join('')}</tr>`).join('')}</tbody>
-            </table>
-          </div>
-        ` : ''}
       </div>`;
     };
     let html = renderOneTable(schema);
-    // Nếu có related_schemas (vd: JOIN nhiều bảng), render thêm
     if (s4.related_schemas && Array.isArray(s4.related_schemas)) {
       s4.related_schemas.forEach(relSchema => {
         html += renderOneTable(relSchema);
       });
     }
     container.innerHTML = html;
+  }
+
+  /* ── C4 (STAGE 2d): render kết quả truy vấn vào cột 3 ─────────────── */
+  function renderStep4Results(cols, rows) {
+    const el = document.getElementById('step4-results');
+    if (!el) return;
+    if (!cols || cols.length === 0) {
+      el.innerHTML = '<div class="results-empty">Query chạy không trả về cột nào.</div>';
+      return;
+    }
+    const rowCountHtml = `<div class="results-row-count">→ ${rows.length} dòng × ${cols.length} cột</div>`;
+    const tableHtml = `<table>
+      <thead><tr>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r => `<tr>${r.map(cell => `<td>${escapeHtml(String(cell ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+    el.innerHTML = rowCountHtml + tableHtml;
+  }
+
+  function renderStep4Error(msg) {
+    const el = document.getElementById('step4-results');
+    if (!el) return;
+    el.innerHTML = `<div class="results-error">
+      <strong><i class="fa-solid fa-triangle-exclamation"></i> Lỗi truy vấn</strong>
+      ${escapeHtml(msg || 'Có lỗi xảy ra khi chạy query.')}
+    </div>`;
+  }
+
+  function renderStep4Idle() {
+    const el = document.getElementById('step4-results');
+    if (!el) return;
+    el.innerHTML = '<div class="results-empty">Bấm <strong>Run</strong> để xem kết quả.</div>';
   }
 
   /* ── F. Hint panel 4 levels (progressive reveal) ──────────── */

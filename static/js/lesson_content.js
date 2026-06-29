@@ -68,7 +68,13 @@ window.LESSON_CONTENT['db_design'] = {
               "title": "Primary Key (Khóa chính)",
               "body": "Hai game đều tên \"Elden Ring\" — làm sao DB biết bạn muốn game nào? <strong>Primary Key</strong> giải quyết: mỗi dòng có 1 số ID riêng, không ai giống ai. <code>WHERE id = 101</code> → chính xác 1 dòng, không bao giờ nhầm."
             }
-        ],
+        ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Bảng game_catalog dưới đây có cột id làm PK."
+            }
+          ],
         visual: {
           diagram: {
             type: 'er',
@@ -177,7 +183,24 @@ window.LESSON_CONTENT['db_design'] = {
 
       /* ----- STEP 4: Pure code (Premium v4 — schema + starter đầy đủ) ----- */
       step_4: {
-        prompt: 'Khách muốn biết <strong>name</strong> và <strong>price</strong> của game có <code>id = 101</code>. Viết query SQL trong editor bên phải.',
+        prompt: 'Khách muốn biết <strong>name</strong> và <strong>price</strong> của game có <code>id = 101</code>. Viết query SQL trong editor ở cột giữa.',
+        // FIX 2e-C2: context giàu (kịch bản + bước + gợi ý SELECT * + example khác đáp án + expected) — Bài 1 = template chuẩn vàng
+        context: {
+          scenario: 'Bạn là nhân viên cửa hàng game cần tra cứu nhanh thông tin một sản phẩm khi khách hỏi. Cửa hàng lưu tất cả game trong bảng <code>game_catalog</code> với mỗi game có một <code>id</code> duy nhất (Primary Key).',
+          steps: [
+            'Liệt kê các cột cần lấy trong <code>SELECT</code> — ở đây là <code>name</code> và <code>price</code>.',
+            'Chỉ định bảng nguồn sau <code>FROM</code> — <code>game_catalog</code>.',
+            'Lọc đúng 1 dòng bằng <code>WHERE</code> với khóa chính: <code>id = 101</code>.',
+            'Run để xem kết quả ở cột phải — phải đúng 1 dòng với 2 cột <code>name</code> và <code>price</code>.'
+          ],
+          hint_explore: 'Chưa biết bảng có cột gì? Gõ <code>SELECT * FROM game_catalog</code> rồi <strong>Run</strong> để xem toàn bộ 4 cột + 4 dòng mẫu.',
+          example: {
+            question: 'Ví dụ tương tự — tra <code>name</code> + <code>price</code> của <strong>Hades</strong> (id = 103):',
+            sql: 'SELECT name, price FROM game_catalog WHERE id = 103;',
+            sample_output: '→ 1 dòng × 2 cột: <code>(Hades, 25)</code>'
+          },
+          expected: 'Bảng kết quả 1 dòng × 2 cột: <code>(Elden Ring, 60)</code> — chính xác 1 dòng vì <code>id</code> là PK không trùng.'
+        },
         schema: {
           table_name: 'game_catalog',
           columns: [
@@ -254,7 +277,13 @@ concept_cards: [
                   "title": "Derived Attribute",
                   "body": "Như <strong>tuổi của bạn</strong> — không ai hỏi mẹ sinh năm nào rồi ghi vào sổ; chỉ cần biết năm sinh, ai cũng tự tính. <code>age = 2026 - birth_year</code>. DB <em>không lưu</em>, chỉ tính khi SELECT với <code>AS</code>."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Bảng player_profile dưới đây đã tách address thành address_city + address_dist."
+            }
+          ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 240, 'entities': [{'name': 'player_profile', 'columns': [{'name': 'p_id', 'type': 'INT', 'key': 'PK'}, {'name': 'username', 'type': 'VARCHAR'}, {'name': 'address_city', 'type': 'VARCHAR'}, {'name': 'address_dist', 'type': 'VARCHAR'}, {'name': 'birth_year', 'type': 'INT', 'derived': true, 'note': 'age'}]}], 'note': 'address = composite (city + dist) · age = derived (KHÔNG lưu)'},
@@ -456,7 +485,13 @@ concept_cards: [
                   "title": "JOIN — Nối bảng qua FK",
                   "body": "1 game có 1 publisher. <strong>Không lưu</strong> tên publisher trong bảng game — chỉ lưu <code>pub_id</code>. Khi cần tên → <code>JOIN</code> qua FK. Đây là lý do database thiết kế chuẩn 3NF tiết kiệm hàng GB storage ở quy mô triệu record."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Bảng game có cột pub_id (FK) trỏ sang publisher."
+            }
+          ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'game', 'columns': [{'name': 'game_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}, {'name': 'pub_id', 'type': 'INT', 'key': 'FK'}]}, {'name': 'publisher', 'columns': [{'name': 'pub_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}, {'name': 'country', 'type': 'VARCHAR'}]}], 'connectors': [{'from': 'game', 'to': 'publisher', 'label': 'published_by', 'fromCard': 'N', 'toCard': '1'}], 'note': 'N game thuộc về 1 publisher. Mũi tên từ game.pub_id → publisher.pub_id'},
@@ -654,7 +689,13 @@ concept_cards: [
                   "title": "Junction Table — Cầu nối M:N",
                   "body": "Bảng <code>enrollment(student_id, course_id)</code> chỉ chứa 2 FK. PK là cặp (student_id, course_id) ghép lại. Đôi khi có thêm cột riêng như <code>enrolled_at</code> hay <code>grade</code>. Đây là <strong>1 bảng trung gian</strong> cho mọi quan hệ M:N."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Bảng player_game_library ở giữa chỉ chứa ref_p_id + ref_game_id."
+            }
+          ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 620, 'height': 280, 'entities': [{'name': 'student', 'columns': [{'name': 'student_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}]}, {'name': 'course', 'columns': [{'name': 'course_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}]}, {'name': 'enrollment', 'columns': [{'name': 'student_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'course_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'enrolled_at', 'type': 'DATE'}]}], 'connectors': [{'from': 'student', 'to': 'enrollment', 'fromCard': '1', 'toCard': 'N', 'label': 'enrolls'}, {'from': 'course', 'to': 'enrollment', 'fromCard': '1', 'toCard': 'N', 'label': 'has'}], 'note': 'M:N qua bảng trung gian. 2 FK + PK ghép.'},
@@ -790,7 +831,24 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Từ 3 bảng <code>player</code>, <code>player_game_library</code>, <code>game</code>: tìm <code>title</code> của các game mà player tên <em>DragonLord</em> đang sở hữu. Viết query SQL trong editor bên phải.',
+        prompt: 'Từ 3 bảng <code>player</code>, <code>player_game_library</code>, <code>game</code>: tìm <code>title</code> của các game mà player tên <em>DragonLord</em> đang sở hữu. Viết query SQL trong editor ở cột giữa.',
+        // FIX 2e-C2: context giàu — Bài 3 mid concept (JOIN qua 3 bảng)
+        context: {
+          scenario: 'Bạn đang xây tính năng "Thư viện game" cho hệ thống gaming. Mỗi player có thể sở hữu nhiều game; mối quan hệ N-N giữa <code>player</code> và <code>game</code> được lưu qua bảng trung gian <code>player_game_library</code>. Cần truy vấn game của riêng <em>DragonLord</em>.',
+          steps: [
+            'Xác định bảng nguồn: bắt đầu từ <code>player</code> (lọc theo <code>username</code>).',
+            'JOIN sang <code>player_game_library</code> qua FK <code>player.p_id = library.ref_p_id</code> để biết player sở hữu game nào.',
+            'JOIN tiếp sang <code>game</code> qua FK <code>library.ref_game_id = game.game_id</code> để lấy <code>title</code>.',
+            'SELECT <code>game.title</code>, kết thúc bằng <code>WHERE player.username = "DragonLord"</code>.'
+          ],
+          hint_explore: 'Bài này có 3 bảng liên kết. Để xem cấu trúc từng bảng: <code>SELECT * FROM player</code>, <code>SELECT * FROM player_game_library</code>, <code>SELECT * FROM game</code> (gõ từng cái, Run, xem kết quả).',
+          example: {
+            question: 'Ví dụ tương tự — lấy <code>title</code> game của player <em>NoobMaster</em>:',
+            sql: 'SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = "NoobMaster";',
+            sample_output: '→ 1 dòng: <code>Elden Ring</code> (NoobMaster chỉ sở hữu 1 game trong data mẫu)'
+          },
+          expected: 'Bảng kết quả 2 dòng × 1 cột <code>title</code>: <code>Elden Ring</code> và <code>Hades</code> (DragonLord sở hữu 2 game).'
+        },
         starter: "-- Tìm title game của player 'DragonLord'\n-- JOIN 3 bảng: player ↔ player_game_library ↔ game\nSELECT game.\n  FROM player\n  JOIN player_game_library ON player. = player_game_library.\n  JOIN game ON player_game_library. = game.\n WHERE player. = ;\n",
         schema: {
           table_name: 'player',
@@ -886,7 +944,13 @@ concept_cards: [
                   "title": "Partial Key + Identifying Relationship",
                   "body": "<strong>Partial key</strong> = khóa phân biệt TRONG phạm vi owner (vd: <code>room_number</code>). <strong>Identifying relationship</strong> (đường nét đôi) nối weak với owner, FK gồm CẢ PK owner + partial key = composite PK. Thử vẽ ER với Room(building_id, room_number) xem."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Trong bảng dlc_content, không có cột dlc_id riêng."
+            }
+          ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'building', 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'PK'}, {'name': 'address', 'type': 'VARCHAR'}]}, {'name': 'room', 'weak': true, 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'room_number', 'type': 'INT', 'key': 'PK(partial)'}, {'name': 'capacity', 'type': 'INT'}]}], 'connectors': [{'from': 'building', 'to': 'room', 'label': 'contains', 'fromCard': '1', 'toCard': 'N'}], 'note': 'room là WEAK entity (viền đứt nét). PK ghép: (bld_id, room_number)'},
@@ -974,7 +1038,24 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Lấy <code>dlc_name</code> của gói DLC số <strong>2</strong> thuộc game id <strong>300</strong>. Viết query SQL trong editor bên phải.',
+        prompt: 'Lấy <code>dlc_name</code> của gói DLC số <strong>2</strong> thuộc game id <strong>300</strong>. Viết query SQL trong editor ở cột giữa.',
+        // FIX 2e-C2: context giàu — Bài 4 M:N (bảng trung gian có composite key)
+        context: {
+          scenario: 'Trong hệ thống DLC store, mỗi game có nhiều gói DLC, và mỗi DLC được đánh số theo <code>dlc_no</code> trong từng game. Bảng <code>dlc_content</code> dùng khóa tổng hợp (<code>ref_game_id</code> + <code>dlc_no</code>) để xác định duy nhất 1 DLC. Cần lấy tên DLC #2 của game id = 300.',
+          steps: [
+            'SELECT cột <code>dlc_name</code> từ bảng <code>dlc_content</code>.',
+            'WHERE dùng 2 điều kiện AND: <code>ref_game_id = 300</code> (lọc theo game) VÀ <code>dlc_no = 2</code> (lọc theo số DLC).',
+            'Nếu thiếu AND → trả về nhầm DLC của game khác (vd DLC #2 của game 400 = "Hades - DLC 1").',
+            'Run để verify kết quả chỉ 1 dòng, đúng DLC cần tìm.'
+          ],
+          hint_explore: 'Khám phá: gõ <code>SELECT * FROM dlc_content</code> rồi Run để thấy 3 dòng mẫu (game 300 có DLC 1+2, game 400 chỉ có DLC 1).',
+          example: {
+            question: 'Ví dụ tương tự — lấy <code>dlc_name</code> của <strong>DLC #1 thuộc game 400</strong>:',
+            sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;',
+            sample_output: '→ 1 dòng: <code>Hades - DLC 1</code>'
+          },
+          expected: 'Bảng kết quả 1 dòng × 1 cột: <code>Elden Ring - DLC 2</code>. Phải đúng 1 dòng — nếu trả về nhiều dòng, kiểm tra WHERE có đủ 2 điều kiện AND chưa.'
+        },
         starter: "-- Lấy dlc_name của DLC #2 thuộc game id 300\n-- Filter: dlc_no = 2 AND ref_game_id = 300\nSELECT \n  FROM \n WHERE  = \n   AND  = ;\n",
         schema: {
           table_name: 'dlc_content',
@@ -1047,7 +1128,13 @@ concept_cards: [
                   "variant": "quote",
                   "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 6.7 — Mapping E-R to Relational"
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "ER có Game (entity mạnh) + Publisher (entity mạnh) + quan hệ publishes (1:N — 1 publisher xuất bản nhiều game)."
+            }
+          ],
                 visual: {
           
           diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'employee', 'columns': [{'name': 'emp_id', 'type': 'INT', 'key': 'PK'}, {'name': 'name', 'type': 'VARCHAR'}, {'name': 'dept_id', 'type': 'INT', 'key': 'FK'}]}, {'name': 'department', 'columns': [{'name': 'dept_id', 'type': 'INT', 'key': 'PK'}, {'name': 'dept_name', 'type': 'VARCHAR'}]}, {'name': 'project', 'columns': [{'name': 'proj_id', 'type': 'INT', 'key': 'PK'}, {'name': 'proj_name', 'type': 'VARCHAR'}]}, {'name': 'works_on', 'columns': [{'name': 'emp_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'proj_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'hours', 'type': 'INT'}]}], 'connectors': [{'from': 'employee', 'to': 'department', 'label': 'belongs_to', 'fromCard': 'N', 'toCard': '1'}, {'from': 'employee', 'to': 'works_on', 'label': 'works', 'fromCard': '1', 'toCard': 'N'}, {'from': 'project', 'to': 'works_on', 'label': 'has', 'fromCard': '1', 'toCard': 'N'}], 'note': '3 entity + 1 junction. Bài 6: áp dụng 7 bước mapping để tạo table vật lý.'},
@@ -1189,7 +1276,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Lấy <code>title</code> và <code>genre</code> của mọi game do <code>Supergiant</code> xuất bản. Viết query SQL trong editor bên phải.',
+        prompt: 'Lấy <code>title</code> và <code>genre</code> của mọi game do <code>Supergiant</code> xuất bản. Viết query SQL trong editor ở cột giữa.',
         starter: "-- Lấy title + genre của game do Supergiant xuất bản\n-- JOIN game ↔ publisher ON game.pub_id = publisher.id\nSELECT g., g.\n  FROM  g\n  JOIN  p ON g. = p.\n WHERE p. = ;\n",
         schema: {
           table_name: 'game',
@@ -1267,7 +1354,13 @@ concept_cards: [
                   "title": "Functional Dependency (FD)",
                   "body": "Quy tắc <code>X → Y</code>: biết X thì xác định Y duy nhất. <code>game_id → title, genre, price</code> (mọi FD đều từ PK). Nhưng <code>studio_name → studio_country</code> cũng là FD — đây là manh mối để tách bảng. Cứ tìm FD mà PK không liên quan → tách ra."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Bạn phát hiện FD: studio_name → st_country."
+            }
+          ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — chưa tách", "columns": ["game_id", "title", "studio", "studio_country"], "rows": [["1", "Mario", "Nintendo", "Japan"], ["2", "Zelda", "Nintendo", "Japan"], ["3", "Hades", "Supergiant", "USA"]], "violations": {"1-3": true, "2-3": true}}, "after": {"title": "SAU — tách studio", "columns": ["game_id", "title", "studio"], "rows": [["1", "Mario", "Nintendo"], ["2", "Zelda", "Nintendo"], ["3", "Hades", "Supergiant"]]}, "note": "Tách thành 2 bảng: game + studio. studio_country lưu 1 lần duy nhất."},
@@ -1387,7 +1480,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> (USA). Viết query SQL trong editor bên phải.',
+        prompt: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> (USA). Viết query SQL trong editor ở cột giữa.',
 
         starter: "-- Lấy tên các game do Valve phát triển\n-- Filter theo studio_name = 'Valve'\nSELECT \n  FROM game_studio_combined\n WHERE ;\n",
         schema: {
@@ -1458,7 +1551,13 @@ concept_cards: [
                   "title": "Multivalued vs Composite — 2 cái bẫy 1NF",
                   "body": "<strong>Multivalued</strong>: 1 cell chứa N giá trị cùng loại (vd: <code>phones = \"0901,0902\"</code>) → tách thành nhiều dòng. <strong>Composite</strong>: 1 cell chứa nhiều mảnh khác loại (vd: <code>address = \"Q1, HCM\"</code>) → tách thành nhiều cột. Cùng vi phạm 1NF nhưng fix khác nhau."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Nếu muốn tìm TẤT CẢ sinh viên có số \"0901-xxx\" — bạn không thể WHERE phones = \\'0901-xxx\\' (vì ô chứa \"0901-xxx, 0902-yyy\" không bằng)."
+            }
+          ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 1NF", "columns": ["member_id", "name", "phones"], "rows": [["1", "Alice", "0901,0902"], ["2", "Bob", "0903"]], "violations": {"0-2": true, "1-2": true}}, "after": {"title": "SAU — đã 1NF (tách dòng)", "columns": ["member_id", "name", "phone"], "rows": [["1", "Alice", "0901"], ["1", "Alice", "0902"], ["2", "Bob", "0903"]], "fixes": {"0-2": true, "1-2": true, "2-2": true}}, "note": "1NF yêu cầu atomic: tách \"0901,0902\" thành 2 dòng riêng."},
@@ -1668,7 +1767,13 @@ concept_cards: [
                   "title": "Cách fix 2NF",
                   "body": "Tách phần PK gây phụ thuộc ra bảng riêng. <code>loans(book_id, copy_no, member_id, member_name)</code> có <code>member_id → member_name</code> → tách thành bảng <code>member(member_id, member_name)</code>. Bảng loans chỉ giữ FK <code>member_id</code>. 1 dòng UPDATE, 1 dòng sửa — xong."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Nếu đổi tên người mượn từ \"Minh\" → \"Minh Nguyễn"
+            }
+          ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 2NF", "columns": ["book_id", "copy_no", "member_id", "member_name", "loan_date"], "rows": [["B1", "1", "M01", "Alice", "2026-01-01"], ["B1", "2", "M01", "Alice", "2026-01-05"], ["B2", "1", "M02", "Bob", "2026-01-03"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 2NF (tách member)", "columns": ["book_id", "copy_no", "member_id", "loan_date"], "rows": [["B1", "1", "M01", "2026-01-01"], ["B1", "2", "M01", "2026-01-05"], ["B2", "1", "M02", "2026-01-03"]]}, "note": "PK (book_id, copy_no) nhưng member_name chỉ phụ thuộc member_id → tách member riêng."},
@@ -1868,7 +1973,13 @@ concept_cards: [
                   "variant": "quote",
                   "source": "BCNF Theorem — Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 7.5"
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Cập nhật chuyên khoa bác sĩ D01 từ \"Tim mạch\" → \"Nội tiết\" → phải sửa nhiều dòng."
+            }
+          ],
                 visual: {
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm BCNF", "columns": ["patient_id", "doctor_id", "treatment", "doctor_specialty"], "rows": [["P01", "D01", "Khám tổng quát", "Tim mạch"], ["P01", "D01", "Tái khám", "Tim mạch"], ["P02", "D02", "Phẫu thuật", "Ngoại khoa"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã BCNF (tách doctors)", "columns": ["patient_id", "doctor_id", "treatment"], "rows": [["P01", "D01", "Khám tổng quát"], ["P01", "D01", "Tái khám"], ["P02", "D02", "Phẫu thuật"]]}, "note": "Tách doctors(doctor_id, specialty) riêng. doctor_specialty lưu 1 lần."},
           schema: {
@@ -2039,6 +2150,23 @@ concept_cards: [
 
       step_4: {
         prompt: 'Sau BCNF, tách thành 3 bảng <code>doctors</code>, <code>patients</code>, <code>treatments</code>. Tìm <strong>top 3 chuyên khoa có nhiều ca điều trị nhất</strong>. Hiển thị chuyên khoa + số ca, sắp xếp giảm dần.',
+        // FIX 2e-C2: context giàu — Bài 10 late BCNF (aggregation qua 3 bảng)
+        context: {
+          scenario: 'Bệnh viện X sau khi áp dụng BCNF đã tách bảng <code>treatments</code> cũ thành 3 bảng chuẩn hóa: <code>doctors</code> (chuyên khoa), <code>patients</code>, <code>treatments</code> (ghi nhận ca điều trị). Ban giám đốc muốn biết <strong>top 3 chuyên khoa</strong> đang "hot" nhất để điều phối nhân lực.',
+          steps: [
+            'Xác định cột cần thống kê: <code>doctor_specialty</code> + <code>COUNT(*)</code> đặt alias là <code>treatment_count</code>.',
+            'Từ bảng <code>treatments</code>, JOIN sang <code>doctors</code> qua FK <code>treatments.doctor_id = doctors.doctor_id</code>.',
+            '<code>GROUP BY doctor_specialty</code> để gom nhóm theo chuyên khoa.',
+            '<code>ORDER BY treatment_count DESC</code> + <code>LIMIT 3</code> để lấy top 3.'
+          ],
+          hint_explore: 'Cần biết schema 3 bảng: gõ <code>SELECT * FROM treatments</code> trước để thấy cột <code>doctor_id</code> (FK), rồi <code>SELECT * FROM doctors</code> để thấy cột <code>doctor_specialty</code>.',
+          example: {
+            question: 'Ví dụ tương tự — lấy <strong>top 2 bác sĩ có nhiều ca nhất</strong> (thay vì chuyên khoa):',
+            sql: 'SELECT d.doctor_name, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name ORDER BY treatment_count DESC LIMIT 2;',
+            sample_output: '→ 2 dòng × 2 cột: vd <code>(BS. Hà, 3)</code>, <code>(BS. Linh, 2)</code>'
+          },
+          expected: 'Bảng kết quả 3 dòng × 2 cột <code>doctor_specialty</code> + <code>treatment_count</code>, sắp xếp giảm dần theo số ca. (Số liệu thực tế phụ thuộc data mẫu — bài 10 dùng hospital domain.)'
+        },
         starter: "-- Top 3 chuyên khoa có nhiều ca điều trị nhất\n-- JOIN treatments ↔ doctors + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT d., COUNT(*) AS \n  FROM treatments t\n  JOIN doctors d ON t. = d.\n GROUP BY d.\n ORDER BY  DESC\n LIMIT 3;\n",
         schema: {
           table_name: 'doctors',
@@ -2141,7 +2269,13 @@ concept_cards: [
                   "title": "BCNF vs 3NF — Sự thỏa hiệp",
                   "body": "<strong>BCNF</strong> nghiêm hơn 3NF: nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd: 2+ candidate key overlap, vd ở B10). Thực tế: BCNF thường tốt hơn, nhưng đôi khi 3NF + giữ redundancy chấp nhận được. Bạn chọn cái nào?"
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là khóa của bảng khác."
+            }
+          ],
                 visual: {
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 3NF", "columns": ["order_id", "product_id", "category", "category_manager"], "rows": [["1001", "P01", "Game", "An"], ["1002", "P02", "Game", "An"], ["1003", "P03", "Gear", "Bình"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 3NF (tách categories)", "columns": ["order_id", "product_id", "category"], "rows": [["1001", "P01", "Game"], ["1002", "P02", "Game"], ["1003", "P03", "Gear"]]}, "note": "Tách categories(category, manager) riêng. category_manager lưu 1 lần / category."},
           schema: {
@@ -2379,7 +2513,13 @@ concept_cards: [
                   "title": "Multivalued Dependency (MVD)",
                   "body": "Khi 1 khóa X quyết định NHIỀU giá trị Y <em>độc lập</em> với cột khác → <code>X →→ Y</code>. <strong>Quy tắc</strong>: nếu có 2+ MVD cùng vế trái, tách thành 2 bảng. MVD khác FD ở chỗ Y là <em>tập giá trị</em> chứ không phải 1 giá trị. Bài này dạy cách phát hiện."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Bảng course_offering_raw có MVD: course_id →→ textbook và course_id →→ instructor."
+            }
+          ],
                 visual: {
           
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 4NF", "columns": ["prof", "course", "hobby"], "rows": [["Dr. Lee", "DB", "Chess"], ["Dr. Lee", "DB", "Music"], ["Dr. Lee", "AI", "Chess"], ["Dr. Lee", "AI", "Music"]], "violations": {"0-2": true, "0-1": true}}, "after": {"title": "SAU — đã 4NF (tách 2 bảng)", "columns": ["prof", "course"], "rows": [["Dr. Lee", "DB"], ["Dr. Lee", "AI"]]}, "note": "Tách thành 2 bảng: prof_course + prof_hobby. Mỗi MVD 1 bảng riêng."},
@@ -2563,7 +2703,13 @@ concept_cards: [
                   "title": "Đáp án mẫu — 7 bảng cốt lõi chuẩn BCNF",
                   "body": "5 bảng chính: <code>users, posts, games, genres, platforms</code>. 2 junction cốt lõi: <code>post_games</code> (post ↔ game) và <code>game_genres</code> (game ↔ genre, tránh MVD). <strong>Đã 4NF</strong> vì mỗi MVD được tách riêng. <em>(Mở rộng tùy use-case: thêm <code>user_friends</code> cho follow, <code>post_likes</code> cho like — không bắt buộc cho schema cốt lõi.)</em> Tổng 7 bảng cốt lõi, query nhanh, không dư thừa."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Sau 4 vòng, bạn sẽ có một schema sạch cho Mạng Xã Hội Gamers: users, posts, games, genres, platforms, và các bảng junction."
+            }
+          ],
                 visual: {
           diagram: {"type": "nf", "before": {"title": "TRƯỚC — bảng tổng (siêu vi phạm)", "columns": ["user_id", "username", "country", "is_premium", "post_id", "post_text", "game_name"], "rows": [["U01", "minh_gamer", "VN", "true", "P01", "Clear Elden Ring!", "Elden Ring"], ["U02", "yuki_99", "JP", "false", "P02", "Hades quá hay", "Hades"]], "violations": {"0-5": true, "0-6": true}}, "after": {"title": "SAU — schema sạch (sau 4 vòng)", "columns": ["user_id", "post_id", "game_id", "post_date"], "rows": [["U01", "P01", "G01", "2024-05-01"], ["U02", "P02", "G02", "2024-05-02"]]}, "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."},
           schema: {
@@ -2862,7 +3008,13 @@ concept_cards: [
                   "title": "JSON Path Operators",
                   "body": "<code>-&gt;</code> lấy element (trả JSON), <code>-&gt;&gt;</code> lấy element (trả TEXT), <code>#&gt;</code> lấy nested path, <code>@&gt;</code> kiểm tra contains. <strong>Index GIN</strong> trên JSONB column → query <code>WHERE settings @&gt; '{...}'</code> chạy nhanh như index B-tree trên cột thường."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "Query settings->>\\'theme\\' trả về text thuần (dark, light…)."
+            }
+          ],
                 visual: {
           // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
           // from earlier lessons. The render loop reads only `diagram:` (last one wins).
@@ -3062,7 +3214,13 @@ concept_cards: [
                   "title": "POINT(lon, lat) — Sai thứ tự = lỗi im lặng",
                   "body": "<code>ST_MakePoint(lon, lat)</code> — <strong>longitude TRƯỚC</strong> (X), latitude SAU (Y). Sai thứ tự → tọa độ rác nhưng DB không báo lỗi. VN: lon ≈ 102-110, lat ≈ 8-23. <code>ST_DWithin(geo, center, 5000)</code> = trong bán kính 5km, có index = nhanh."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "ST_Distance(geo_location, ST_MakePoint(106."
+            }
+          ],
                 visual: {
           // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
           // from earlier lessons. The render loop reads only `diagram:` (last one wins).
@@ -3254,7 +3412,13 @@ concept_cards: [
                   "title": "N+1 Query — Cạm bẫy ORM",
                   "body": "1000 users, mỗi user có 5 posts. Code <code>for user in users: print(user.posts.all())</code> → <strong>1 + 1000 = 1001 queries</strong>! Fix: <code>users = User.objects.prefetch_related(\"posts\")</code> → chỉ 2 queries. <strong>Ưu</strong> ORM: ít SQL, type-safe. <strong>Nhược</strong>: dễ N+1, raw SQL phức tạp vẫn cần."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "LogEvent."
+            }
+          ],
                 visual: {
           // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
           // from earlier lessons. The render loop reads only `diagram:` (last one wins).
@@ -3404,7 +3568,13 @@ concept_cards: [
                   "title": "Prepared Statement — Khiên chắn",
                   "body": "Phòng chống: <code>SELECT * FROM users WHERE username = %s AND password = %s</code> với params gửi <strong>riêng</strong>. DB engine biết đó là literal, escape tự động, attacker chèn thêm dấu nháy cũng vô dụng. <strong>NGUYÊN TẮC</strong>: input KHÔNG BAO GIỜ ghép chuỗi thành SQL."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "' OR '1'='1' -- đóng chuỗi ('), thêm điều kiện luôn đúng ('1'='1'), comment out phần còn lại (--)."
+            }
+          ],
                 visual: {
           // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
           // from earlier lessons. The render loop reads only `diagram:` (last one wins).
@@ -3554,7 +3724,13 @@ concept_cards: [
                   "title": "bcrypt + Salt — Công thức chuẩn",
                   "body": "<strong>bcrypt</strong>: hash 1 chiều, có cost factor (mỗi +1 = gấp đôi thời gian). <strong>Salt</strong>: chuỗi ngẫu nhiên gắn vào password trước khi hash. Cùng password \"123456\" → hash khác nhau (do salt khác) → rainbow table vô dụng. <strong>md5/sha1</strong> quá yếu, không có salt → crack trong vài giây. Dùng bcrypt hoặc argon2."
             }
-      ],
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "md5 hash bắt đầu bằng chuỗi hex 32 ký tự (5f4dcc3b5aa."
+            }
+          ],
                 visual: {
           // NOTE: legacy `diagram_legacy_N:` keys below are deprecated copy-paste
           // from earlier lessons. The render loop reads only `diagram:` (last one wins).

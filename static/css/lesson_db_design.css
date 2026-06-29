@@ -3046,6 +3046,8 @@ body.lesson-focus-mode::before {
 }
 .codecademy-layout .results-pane { flex: 1 1 60%; }
 .codecademy-layout .schema-pane { flex: 1 1 40%; }
+/* FIX 2e-C1: khi schema-pane bị bỏ, results-pane giãn full 100% chiều cao cột 3 */
+.codecademy-layout .results-pane.results-pane--full { flex: 1 1 100%; }
 .codecademy-layout .results-head,
 .codecademy-layout .schema-head {
   font-family: 'JetBrains Mono', monospace;
@@ -3188,6 +3190,130 @@ body.lesson-focus-mode::before {
   top: 0;
   color: var(--primary);
   font-weight: 800;
+}
+
+/* FIX 2e-C2: CONTEXT GIÀU — data-driven, fallback về rỗng khi bài không có s4.context.
+   Sử dụng .has-context modifier để override default khi có context. */
+.codecademy-layout .instructions-block.has-context {
+  background: transparent;
+  border-left: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* FIX 2e-C2: các context blocks (scenario/steps/example/expected) */
+.codecademy-layout .instructions-block .context-scenario,
+.codecademy-layout .instructions-block .context-steps,
+.codecademy-layout .instructions-block .context-example,
+.codecademy-layout .instructions-block .context-expected {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(34, 211, 238, 0.04);
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  color: var(--text-200);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.codecademy-layout .instructions-block .context-steps {
+  border-left-color: #8B5CF6;  /* indigo để phân biệt */
+  background: rgba(139, 92, 246, 0.05);
+}
+.codecademy-layout .instructions-block .context-example {
+  border-left-color: #F59E0B;  /* amber */
+  background: rgba(245, 158, 11, 0.04);
+}
+.codecademy-layout .instructions-block .context-expected {
+  border-left-color: #10B981;  /* emerald */
+  background: rgba(16, 185, 129, 0.05);
+}
+.codecademy-layout .instructions-block .context-hint-explore {
+  padding: 9px 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  color: #FCD34D;
+  font-size: 12.5px;
+  font-style: italic;
+}
+.codecademy-layout .instructions-block .context-hint-explore i {
+  margin-right: 6px;
+  color: #FCD34D;
+}
+/* FIX 2e-C2: tag nhỏ cho mỗi section */
+.codecademy-layout .instructions-block .ctx-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 5px;
+  margin-bottom: 6px;
+}
+.codecademy-layout .instructions-block .ctx-tag-scenario {
+  background: rgba(34, 211, 238, 0.18);
+  color: var(--primary);
+}
+.codecademy-layout .instructions-block .ctx-tag-steps {
+  background: rgba(139, 92, 246, 0.18);
+  color: #C4B5FD;
+}
+.codecademy-layout .instructions-block .ctx-tag-example {
+  background: rgba(245, 158, 11, 0.18);
+  color: #FCD34D;
+}
+.codecademy-layout .instructions-block .ctx-tag-output {
+  background: rgba(148, 163, 184, 0.18);
+  color: var(--text-300);
+}
+.codecademy-layout .instructions-block .ctx-tag-expected {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6EE7B7;
+}
+.codecademy-layout .instructions-block .ctx-body {
+  color: var(--text-200);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.codecademy-layout .instructions-block .context-steps ol.ctx-body {
+  padding-left: 18px;
+  margin: 4px 0 0 0;
+  display: block;
+  gap: 0;
+}
+.codecademy-layout .instructions-block .context-steps ol.ctx-body li {
+  padding-left: 0;
+  margin: 3px 0;
+}
+.codecademy-layout .instructions-block .context-steps ol.ctx-body li::before {
+  content: '';  /* override the bullet from .instructions-block li::before */
+  display: none;
+}
+.codecademy-layout .instructions-block .ctx-example-q {
+  margin-bottom: 6px;
+}
+.codecademy-layout .instructions-block .ctx-example-sql {
+  margin: 6px 0;
+  padding: 10px 14px;
+  background: rgba(13, 18, 32, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: #E2E8F0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.codecademy-layout .instructions-block .ctx-example-output {
+  margin-top: 4px;
+  padding: 6px 10px;
+  background: rgba(13, 18, 32, 0.65);
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text-300);
+  font-family: 'JetBrains Mono', monospace;
 }
 .codecademy-layout .hint-collapsible {
   margin-top: var(--space-4);
