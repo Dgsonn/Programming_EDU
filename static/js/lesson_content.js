@@ -1533,14 +1533,14 @@ concept_cards: [
           steps: [
             'SELECT cột <code>dlc_name</code> từ bảng <code>dlc_content</code>.',
             'WHERE dùng 2 điều kiện AND: <code>ref_game_id = 300</code> (lọc theo game) VÀ <code>dlc_no = 2</code> (lọc theo số DLC).',
-            'Nếu thiếu AND → trả về nhầm DLC của game khác (vd DLC #2 của game 400 = "Hades - DLC 1").',
+            'Nếu thiếu AND → trả về nhầm DLC của game khác (vd DLC #2 của game 400 = "Corpo Gear Pack").',
             'Run để verify kết quả chỉ 1 dòng, đúng DLC cần tìm.'
           ],
           hint_explore: 'Khám phá: gõ <code>SELECT * FROM dlc_content</code> rồi Run để thấy 3 dòng mẫu (game 300 có DLC 1+2, game 400 chỉ có DLC 1).',
           example: {
             question: 'Ví dụ tương tự — lấy <code>dlc_name</code> của <strong>DLC #1 thuộc game 400</strong>:',
             sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;',
-            sample_output: '→ 1 dòng: <code>Hades - DLC 1</code>'
+            sample_output: '→ 1 dòng: <code>Phantom Liberty</code>'
           },
           expected: 'Bảng kết quả 1 dòng × 1 cột: <code>Blood and Wine</code> — DLC #2 của game 300. Phải đúng 1 dòng — nếu trả về nhiều dòng, kiểm tra WHERE có đủ 2 điều kiện AND chưa.'
         },

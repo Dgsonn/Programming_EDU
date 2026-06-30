@@ -189,6 +189,9 @@
 
   function renderDataTable(schema, data) {
     const cols = schema.columns || [];
+    // PHASE 3.5a-fix-A5: step-1 preview ngắn 5 dòng (chỉ cắt RENDER, KHÔNG đụng buildDistribution — line 59-72)
+    // Badge "N rows" ở mount() vẫn truthful: ${(data || []).length} rows
+    const preview = (data || []).slice(0, 5);
     return `
       <div class="te-data">
         <table class="te-data-table" id="te-data-table">
@@ -202,7 +205,7 @@
             </tr>
           </thead>
           <tbody>
-            ${data.map((row, ri) => `
+            ${preview.map((row, ri) => `
               <tr>
                 ${row.map((cell, ci) => `
                   <td class="${cols[ci] && cols[ci].key === 'PK' ? 'te-td-pk' : ''}"

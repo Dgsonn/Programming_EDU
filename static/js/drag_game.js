@@ -1020,17 +1020,25 @@
 
   function parseWhereRows(filter, table) {
     if (!filter) return null;
-    const m = /(\w+)\s*=\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(true|false))/i.exec(filter);
-    if (!m) return null;
-    const colName = m[1];
-    const val = m[2] !== undefined ? m[2] :
-                m[3] !== undefined ? m[3] :
-                m[4] !== undefined ? m[4] : m[5];
-    const colIdx = table.columns.indexOf(colName);
-    if (colIdx < 0) return null;
+    // PHASE 3.5a-fix-A7: split WHERE theo AND, mỗi điều kiện match TẤT CẢ (giao/intersection).
+    // Backward-safe: 1 điều kiện = y như cũ. Test bắt buộc: Bài 6 `dlc_no=2 AND ref_game_id=300` → đúng 1 dòng (Blood and Wine).
+    // Chưa hỗ trợ OR / `>` / `<` / LIKE — nếu gặp, regex không match → return null (parse fail, an toàn).
+    const conds = filter.split(/\s+AND\s+/i).map(s => s.trim()).filter(Boolean);
+    const parsed = conds.map(cond => {
+      const m = /(\w+)\s*=\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(true|false))/i.exec(cond);
+      if (!m) return null;
+      const colName = m[1];
+      const val = m[2] !== undefined ? m[2] :
+                  m[3] !== undefined ? m[3] :
+                  m[4] !== undefined ? m[4] : m[5];
+      const colIdx = table.columns.indexOf(colName);
+      if (colIdx < 0) return null;
+      return { colIdx, val };
+    });
+    if (parsed.some(p => p === null)) return null;
     const matches = [];
     table.dataRows.forEach((row, i) => {
-      if (String(row[colIdx]) === val) matches.push(i);
+      if (parsed.every(p => String(row[p.colIdx]) === p.val)) matches.push(i);
     });
     return matches;
   }

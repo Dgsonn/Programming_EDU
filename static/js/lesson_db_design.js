@@ -2434,14 +2434,23 @@
     var fromBlocks = [{ token: table, type: 'tbl' }];
     var whereBlocks = [];
     if (whereStr) {
-      var wm = /(\w+)\s*(=)\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(\w+))/i.exec(whereStr);
-      if (wm) {
-        whereBlocks = [
-          { token: wm[1], type: 'col' },
-          { token: wm[2], type: 'op' },
-          { token: wm[3] !== undefined ? "'" + wm[3] + "'" : (wm[4] !== undefined ? wm[4] : (wm[5] !== undefined ? wm[5] : wm[6])), type: 'val' }
-        ];
-      }
+      // PHASE 3.5a-fix-A7b: split WHERE theo AND, parse TỪNG condition thành col/op/val blocks.
+      // Trước đây regex /(\w+)\s*(=)\s*(?:...)/i chỉ match 1 condition đầu → AND clause bị drop
+      // trước khi tới PE_parseWhereRows → step-4 Bài 6 `dlc_no=2 AND ref_game_id=300` trả 7 rows thay vì 1.
+      // Đồng bộ với A7a (drag_game.js parseWhereRows split AND). Backward-safe: 1 condition = y như cũ.
+      // CHỈ AND (chưa hỗ trợ OR/>=/<=/LIKE) — nếu gặp keyword lạ, regex không match → skip condition đó.
+      var conds = whereStr.split(/\s+AND\s+/i).map(function(s){ return s.trim(); }).filter(Boolean);
+      var parsedConds = [];
+      conds.forEach(function(cond) {
+        var wm = /(\w+)\s*(=)\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(\w+))/i.exec(cond);
+        if (wm) parsedConds.push(wm);
+      });
+      parsedConds.forEach(function(wm, ci) {
+        if (ci > 0) whereBlocks.push({ token: 'AND', type: 'kw' });
+        whereBlocks.push({ token: wm[1], type: 'col' });
+        whereBlocks.push({ token: wm[2], type: 'op' });
+        whereBlocks.push({ token: wm[3] !== undefined ? "'" + wm[3] + "'" : (wm[4] !== undefined ? wm[4] : (wm[5] !== undefined ? wm[5] : wm[6])), type: 'val' });
+      });
     }
     /* Add SELECT keyword at start of select-line (matches drag flow convention) */
     var result = { selectBlocks: [{ token: 'SELECT', type: 'kw' }].concat(selectBlocks),
@@ -2483,7 +2492,10 @@
     var columns = rawCols.map(function(c){ return typeof c === 'string' ? c : (c.name || ''); });
     /* WHERE filter via shared parseWhereRows từ drag_game */
     if (fills['where-line'] && fills['where-line'].length) {
-      var whereInput = fills['where-line'].filter(function(b){ return b.type !== 'kw'; }).map(function(b){ return b.token; }).join(' ');
+      // PHASE 3.5a-fix-A7c: GIỮ kw 'AND' trong join để PE_parseWhereRows split được nhiều condition.
+      // Trước đây filter `b.type !== 'kw'` strip luôn AND → whereInput thành 'col op val col op val' (1 condition rỗng).
+      // Bây giờ chỉ strip WHERE keyword (token='WHERE') — AND được giữ để split đúng.
+      var whereInput = fills['where-line'].filter(function(b){ return b.token !== 'WHERE'; }).map(function(b){ return b.token; }).join(' ');
       var tableForParse = { columns: columns, dataRows: rows };
       var matched = window.PE_parseWhereRows ? window.PE_parseWhereRows(whereInput, tableForParse) : null;
       if (matched === null) return { error: 'WHERE không hợp lệ: ' + whereInput };

@@ -3064,11 +3064,13 @@ body.lesson-focus-mode::before {
 .codecademy-layout .schema-head i { color: var(--primary); margin-right: 6px; }
 .codecademy-layout .results-table {
   flex: 1;
-  overflow: auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: 10px 12px;
   scrollbar-width: thin;
-  /* PHASE 3.5-A4: cap chiều cao bảng kết quả — 20-30 dòng vẫn scroll trong panel, không đẩy layout/đè footer */
-  max-height: 360px;
+  /* PHASE 3.5a-fix-A6: fill cột — flex:1 + min-height:0 ép panel fill phần còn lại, scroll nội bộ khi vượt.
+     Bỏ max-height:360px (A4 cũ cap quá thấp, hiện ~10/24 dòng). Parent chain .split-pane→.codecademy-layout→.pane-right→.results-pane
+     đều có height bounded (height:100% / flex:1 1 100%), nên flex:1 hoạt động đúng — không đè footer. */
 }
 .codecademy-layout .results-empty {
   padding: 24px 16px;
