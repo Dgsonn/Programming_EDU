@@ -2797,14 +2797,15 @@
     if (ctx.hint_explore && challengeType === 'full_ide') {
       parts.push(`<div class="context-hint-explore"><i class="fa-solid fa-lightbulb"></i> ${ctx.hint_explore}</div>`);
     }
-    if (ctx.example && typeof ctx.example === 'object') {
-      const ex = ctx.example;
-      let exInner = '';
-      if (ex.question) exInner += `<div class="ctx-example-q"><span class="ctx-tag ctx-tag-example">📚 Ví dụ tương tự</span>${ex.question}</div>`;
-      if (ex.sql) exInner += `<pre class="ctx-example-sql"><code>${escapeHtmlForContext(ex.sql)}</code></pre>`;
-      if (ex.sample_output) exInner += `<div class="ctx-example-output"><span class="ctx-tag ctx-tag-output">→ Output</span>${ex.sample_output}</div>`;
-      if (exInner) parts.push(`<div class="context-example">${exInner}</div>`);
-    }
+    // PHASE 3.5-A1: bỏ render "Ví dụ tương tự" (block ctx.example) — GIỮ data s4.context.example backward-safe
+    // if (ctx.example && typeof ctx.example === 'object') {
+    //   const ex = ctx.example;
+    //   let exInner = '';
+    //   if (ex.question) exInner += `<div class="ctx-example-q"><span class="ctx-tag ctx-tag-example">📚 Ví dụ tương tự</span>${ex.question}</div>`;
+    //   if (ex.sql) exInner += `<pre class="ctx-example-sql"><code>${escapeHtmlForContext(ex.sql)}</code></pre>`;
+    //   if (ex.sample_output) exInner += `<div class="ctx-example-output"><span class="ctx-tag ctx-tag-output">→ Output</span>${ex.sample_output}</div>`;
+    //   if (exInner) parts.push(`<div class="context-example">${exInner}</div>`);
+    // }
     if (ctx.expected) {
       parts.push(`<div class="context-expected"><span class="ctx-tag ctx-tag-expected">🎯 Kết quả mong đợi</span><div class="ctx-body">${ctx.expected}</div></div>`);
     }

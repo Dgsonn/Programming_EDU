@@ -97,10 +97,30 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           },
           data_preview: [
-            ['101', 'Elden Ring',  'Action RPG',  '60'],
-            ['102', 'God of War',  'Action',      '50'],
-            ['103', 'Hades',       'Rogue-like',  '25'],
-            ['104', 'Elden Ring',  'Card Game',   '15']
+            ['101', 'Elden Ring',         'Action RPG',    '60'],
+            ['102', 'God of War',         'Action',        '50'],
+            ['103', 'Hades',              'Roguelike',     '25'],
+            ['104', 'Elden Ring',         'Card Game',     '15'],
+            ['105', 'Stardew Valley',     'Simulation',    '18'],
+            ['106', 'Hollow Knight',      'Metroidvania',  '15'],
+            ['107', 'The Witcher 3',      'Action RPG',    '40'],
+            ['108', 'Celeste',            'Platformer',    '20'],
+            ['109', 'Cyberpunk 2077',     'Action RPG',    '45'],
+            ['110', 'Disco Elysium',      'RPG',           '35'],
+            ['111', 'Slay the Spire',     'Card Game',     '23'],
+            ['112', 'Dark Souls III',     'Action RPG',    '40'],
+            ['113', "Baldur's Gate 3",    'RPG',           '60'],
+            ['114', 'Hollow Knight',      'Card Game',     '12'],
+            ['115', 'Cuphead',            'Run & Gun',     '20'],
+            ['116', 'Sekiro',             'Action RPG',    '50'],
+            ['117', 'Doom Eternal',       'Shooter',       '40'],
+            ['118', 'Portal 2',           'Puzzle',        '10'],
+            ['119', 'Red Dead 2',         'Action',        '60'],
+            ['120', 'Terraria',           'Sandbox',       '10'],
+            ['121', 'Cult of the Lamb',   'Roguelike',     '25'],
+            ['122', 'Outer Wilds',        'Adventure',     '25'],
+            ['123', 'Vampire Survivors',  'Roguelite',      '5'],
+            ['124', 'Hollow Knight: Silksong', 'Metroidvania', '30']
           ]
         },
         mission: 'Tìm <code class="code">name</code> và <code class="code">price</code> của game Elden Ring có <code class="code">id = 101</code> — kéo thả khối lệnh xuống dưới ↓'
@@ -207,8 +227,28 @@ window.LESSON_CONTENT['db_design'] = {
           data: [
             ['101','Elden Ring','Action RPG','60'],
             ['102','God of War','Action','50'],
-            ['103','Hades','Rogue-like','25'],
-            ['104','Elden Ring','Card Game','15']
+            ['103','Hades','Roguelike','25'],
+            ['104','Elden Ring','Card Game','15'],
+            ['105','Stardew Valley','Simulation','18'],
+            ['106','Hollow Knight','Metroidvania','15'],
+            ['107','The Witcher 3','Action RPG','40'],
+            ['108','Celeste','Platformer','20'],
+            ['109','Cyberpunk 2077','Action RPG','45'],
+            ['110','Disco Elysium','RPG','35'],
+            ['111','Slay the Spire','Card Game','23'],
+            ['112','Dark Souls III','Action RPG','40'],
+            ['113',"Baldur's Gate 3",'RPG','60'],
+            ['114','Hollow Knight','Card Game','12'],
+            ['115','Cuphead','Run & Gun','20'],
+            ['116','Sekiro','Action RPG','50'],
+            ['117','Doom Eternal','Shooter','40'],
+            ['118','Portal 2','Puzzle','10'],
+            ['119','Red Dead 2','Action','60'],
+            ['120','Terraria','Sandbox','10'],
+            ['121','Cult of the Lamb','Roguelike','25'],
+            ['122','Outer Wilds','Adventure','25'],
+            ['123','Vampire Survivors','Roguelite','5'],
+            ['124','Hollow Knight: Silksong','Metroidvania','30']
           ]
         },
         starter: '-- Tìm name + price của game có id = 101\n-- Gợi ý: SELECT <cột> FROM <bảng> WHERE <điều kiện>;\n',
@@ -240,7 +280,26 @@ window.LESSON_CONTENT['db_design'] = {
           dataRows: [
             ['7',  'DragonLord',    'Tokyo',   'Akihabara', '2005'],
             ['8',  'NoobMaster',    'Seattle', 'Bellevue',  '2010'],
-            ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999']
+            ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999'],
+            ['10', 'ShadowBlade',   'Seoul',   'Gangnam',   '2003'],
+            ['11', 'PixelQueen',    'Osaka',   'Namba',     '2008'],
+            ['12', 'CriticalHit',   'Hanoi',   'Dong Da',   '2001'],
+            ['13', 'SpeedRunner',   'Busan',   'Haeundae',  '2006'],
+            ['14', 'MageLord',      'Tokyo',   'Shibuya',   '2000'],
+            ['15', 'LootGoblin',    'Saigon',  'Quan 1',    '2004'],
+            ['16', 'FrostByte',     'Seoul',   'Hongdae',   '2007'],
+            ['17', 'IronWolf',      'Hanoi',   'Tay Ho',    '1998'],
+            ['18', 'NightOwl',      'Kyoto',   'Gion',      '2002'],
+            ['19', 'BladeDancer',   'Busan',   'Seomyeon',  '2009'],
+            ['20', 'ArcaneFox',     'Saigon',  'Quan 3',    '2005'],
+            ['21', 'ThunderGod',    'Tokyo',   'Ikebukuro', '2003'],
+            ['22', 'SilentArrow',   'Hanoi',   'Cau Giay',  '2011'],
+            ['23', 'RuneMaster',    'Osaka',   'Umeda',     '1997'],
+            ['24', 'VortexGamer',   'Seoul',   'Itaewon',   '2006'],
+            ['25', 'EmberKnight',   'Saigon',  'Thu Duc',   '2008'],
+            ['26', 'ZenMonk',       'Kyoto',   'Arashiyama','2001'],
+            ['27', 'CyberNinja',    'Tokyo',   'Akihabara', '2010'],
+            ['28', 'GhostReaper',   'Busan',   'Gwangalli', '2004']
           ]
         }
       },
@@ -295,9 +354,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['7',  'DragonLord',  'Tokyo',     'Akihabara', '2005'],
-            ['8',  'NoobMaster',  'Seattle',   'Bellevue',  '2010'],
-            ['9',  'GG_WellPlayed','Hanoi',   'Cau Giay',  '1999']
+            ['7',  'DragonLord',    'Tokyo',   'Akihabara', '2005'],
+            ['8',  'NoobMaster',    'Seattle', 'Bellevue',  '2010'],
+            ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999'],
+            ['10', 'ShadowBlade',   'Seoul',   'Gangnam',   '2003'],
+            ['11', 'PixelQueen',    'Osaka',   'Namba',     '2008'],
+            ['12', 'CriticalHit',   'Hanoi',   'Dong Da',   '2001'],
+            ['13', 'SpeedRunner',   'Busan',   'Haeundae',  '2006'],
+            ['14', 'MageLord',      'Tokyo',   'Shibuya',   '2000'],
+            ['15', 'LootGoblin',    'Saigon',  'Quan 1',    '2004'],
+            ['16', 'FrostByte',     'Seoul',   'Hongdae',   '2007'],
+            ['17', 'IronWolf',      'Hanoi',   'Tay Ho',    '1998'],
+            ['18', 'NightOwl',      'Kyoto',   'Gion',      '2002'],
+            ['19', 'BladeDancer',   'Busan',   'Seomyeon',  '2009'],
+            ['20', 'ArcaneFox',     'Saigon',  'Quan 3',    '2005'],
+            ['21', 'ThunderGod',    'Tokyo',   'Ikebukuro', '2003'],
+            ['22', 'SilentArrow',   'Hanoi',   'Cau Giay',  '2011'],
+            ['23', 'RuneMaster',    'Osaka',   'Umeda',     '1997'],
+            ['24', 'VortexGamer',   'Seoul',   'Itaewon',   '2006'],
+            ['25', 'EmberKnight',   'Saigon',  'Thu Duc',   '2008'],
+            ['26', 'ZenMonk',       'Kyoto',   'Arashiyama','2001'],
+            ['27', 'CyberNinja',    'Tokyo',   'Akihabara', '2010'],
+            ['28', 'GhostReaper',   'Busan',   'Gwangalli', '2004']
           ]
         },
         mission: 'Lấy <code>username</code>, 2 mảnh địa chỉ (city + dist) và cột ảo <code>age</code> của người chơi <code>p_id = 7</code> — kéo thả khối lệnh (bao gồm cả cụm tính toán) xuống dưới ↓'
@@ -427,7 +505,26 @@ concept_cards: [
           data: [
             ['7',  'DragonLord',    'Tokyo',   'Akihabara', '2005'],
             ['8',  'NoobMaster',    'Seattle', 'Bellevue',  '2010'],
-            ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999']
+            ['9',  'GG_WellPlayed', 'Hanoi',   'Cau Giay',  '1999'],
+            ['10', 'ShadowBlade',   'Seoul',   'Gangnam',   '2003'],
+            ['11', 'PixelQueen',    'Osaka',   'Namba',     '2008'],
+            ['12', 'CriticalHit',   'Hanoi',   'Dong Da',   '2001'],
+            ['13', 'SpeedRunner',   'Busan',   'Haeundae',  '2006'],
+            ['14', 'MageLord',      'Tokyo',   'Shibuya',   '2000'],
+            ['15', 'LootGoblin',    'Saigon',  'Quan 1',    '2004'],
+            ['16', 'FrostByte',     'Seoul',   'Hongdae',   '2007'],
+            ['17', 'IronWolf',      'Hanoi',   'Tay Ho',    '1998'],
+            ['18', 'NightOwl',      'Kyoto',   'Gion',      '2002'],
+            ['19', 'BladeDancer',   'Busan',   'Seomyeon',  '2009'],
+            ['20', 'ArcaneFox',     'Saigon',  'Quan 3',    '2005'],
+            ['21', 'ThunderGod',    'Tokyo',   'Ikebukuro', '2003'],
+            ['22', 'SilentArrow',   'Hanoi',   'Cau Giay',  '2011'],
+            ['23', 'RuneMaster',    'Osaka',   'Umeda',     '1997'],
+            ['24', 'VortexGamer',   'Seoul',   'Itaewon',   '2006'],
+            ['25', 'EmberKnight',   'Saigon',  'Thu Duc',   '2008'],
+            ['26', 'ZenMonk',       'Kyoto',   'Arashiyama','2001'],
+            ['27', 'CyberNinja',    'Tokyo',   'Akihabara', '2010'],
+            ['28', 'GhostReaper',   'Busan',   'Gwangalli', '2004']
           ]
         },
         hints: [
@@ -456,10 +553,28 @@ concept_cards: [
           name: 'game',
           columns: ['game_id', 'title', 'pub_id'],
           dataRows: [
-            ['501', 'Super Mario Odyssey',  '10'],
-            ['502', 'The Legend of Zelda', '10'],
-            ['503', 'GTA V',               '20'],
-            ['504', 'Red Dead Redemption', '20']
+            ['501', 'Super Mario Odyssey',   '10'],
+            ['502', 'The Legend of Zelda',  '10'],
+            ['503', 'GTA V',                '20'],
+            ['504', 'Red Dead Redemption 2','20'],
+            ['505', 'Mario Kart 8',         '10'],
+            ['506', 'GTA IV',               '20'],
+            ['507', 'Bully',                '20'],
+            ['508', "Assassin's Creed",     '30'],
+            ['509', 'Far Cry 6',            '30'],
+            ['510', 'FIFA 23',              '40'],
+            ['511', 'The Sims 4',           '40'],
+            ['512', 'Final Fantasy XVI',    '50'],
+            ['513', 'Cyberpunk 2077',       '60'],
+            ['514', 'The Witcher 3',        '60'],
+            ['515', 'Max Payne 3',          '20'],
+            ['516', 'LA Noire',             '20'],
+            ['517', 'Splatoon 3',           '10'],
+            ['518', 'Watch Dogs',           '30'],
+            ['519', 'Battlefield 2042',     '40'],
+            ['520', 'Dragon Quest XI',      '50'],
+            ['521', 'Animal Crossing',      '10'],
+            ['522', 'Red Dead Redemption',  '20']
           ]
         }
       },
@@ -506,9 +621,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['501', 'Super Mario Odyssey',  '10'],
-            ['502', 'The Legend of Zelda', '10'],
-            ['503', 'GTA V',               '20']
+            ['501', 'Super Mario Odyssey',   '10'],
+            ['502', 'The Legend of Zelda',  '10'],
+            ['503', 'GTA V',                '20'],
+            ['504', 'Red Dead Redemption 2','20'],
+            ['505', 'Mario Kart 8',         '10'],
+            ['506', 'GTA IV',               '20'],
+            ['507', 'Bully',                '20'],
+            ['508', "Assassin's Creed",     '30'],
+            ['509', 'Far Cry 6',            '30'],
+            ['510', 'FIFA 23',              '40'],
+            ['511', 'The Sims 4',           '40'],
+            ['512', 'Final Fantasy XVI',    '50'],
+            ['513', 'Cyberpunk 2077',       '60'],
+            ['514', 'The Witcher 3',        '60'],
+            ['515', 'Max Payne 3',          '20'],
+            ['516', 'LA Noire',             '20'],
+            ['517', 'Splatoon 3',           '10'],
+            ['518', 'Watch Dogs',           '30'],
+            ['519', 'Battlefield 2042',     '40'],
+            ['520', 'Dragon Quest XI',      '50'],
+            ['521', 'Animal Crossing',      '10'],
+            ['522', 'Red Dead Redemption',  '20']
           ],
           related_tables: [
             {
@@ -519,7 +653,11 @@ concept_cards: [
               ],
               data: [
                 ['10', 'Nintendo'],
-                ['20', 'Rockstar']
+                ['20', 'Rockstar'],
+                ['30', 'Ubisoft'],
+                ['40', 'EA'],
+                ['50', 'Square Enix'],
+                ['60', 'CD Projekt']
               ]
             }
           ]
@@ -612,10 +750,28 @@ concept_cards: [
             { name: 'pub_id',  type: 'INT',     key: 'FK' }
           ],
           data: [
-            ['501', 'Super Mario Odyssey',  '10'],
-            ['502', 'The Legend of Zelda', '10'],
-            ['503', 'GTA V',               '20'],
-            ['504', 'Red Dead Redemption', '20']
+            ['501', 'Super Mario Odyssey',   '10'],
+            ['502', 'The Legend of Zelda',  '10'],
+            ['503', 'GTA V',                '20'],
+            ['504', 'Red Dead Redemption 2','20'],
+            ['505', 'Mario Kart 8',         '10'],
+            ['506', 'GTA IV',               '20'],
+            ['507', 'Bully',                '20'],
+            ['508', "Assassin's Creed",     '30'],
+            ['509', 'Far Cry 6',            '30'],
+            ['510', 'FIFA 23',              '40'],
+            ['511', 'The Sims 4',           '40'],
+            ['512', 'Final Fantasy XVI',    '50'],
+            ['513', 'Cyberpunk 2077',       '60'],
+            ['514', 'The Witcher 3',        '60'],
+            ['515', 'Max Payne 3',          '20'],
+            ['516', 'LA Noire',             '20'],
+            ['517', 'Splatoon 3',           '10'],
+            ['518', 'Watch Dogs',           '30'],
+            ['519', 'Battlefield 2042',     '40'],
+            ['520', 'Dragon Quest XI',      '50'],
+            ['521', 'Animal Crossing',      '10'],
+            ['522', 'Red Dead Redemption',  '20']
           ]
         },
         related_schemas: [
@@ -627,7 +783,11 @@ concept_cards: [
             ],
             data: [
               ['10', 'Nintendo'],
-              ['20', 'Rockstar']
+              ['20', 'Rockstar'],
+              ['30', 'Ubisoft'],
+              ['40', 'EA'],
+              ['50', 'Square Enix'],
+              ['60', 'CD Projekt']
             ]
           }
         ],
@@ -657,9 +817,20 @@ concept_cards: [
           name: 'player',
           columns: ['p_id', 'username'],
           dataRows: [
-            ['7', 'DragonLord'],
-            ['8', 'NoobMaster'],
-            ['9', 'GG_WellPlayed']
+            ['7',  'DragonLord'],
+            ['8',  'NoobMaster'],
+            ['9',  'GG_WellPlayed'],
+            ['10', 'ShadowBlade'],
+            ['11', 'PixelQueen'],
+            ['12', 'CriticalHit'],
+            ['13', 'SpeedRunner'],
+            ['14', 'MageLord'],
+            ['15', 'LootGoblin'],
+            ['16', 'FrostByte'],
+            ['17', 'IronWolf'],
+            ['18', 'NightOwl'],
+            ['19', 'BladeDancer'],
+            ['20', 'ArcaneFox']
           ]
         }
       },
@@ -705,8 +876,20 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['7', 'DragonLord'],
-            ['8', 'NoobMaster']
+            ['7',  'DragonLord'],
+            ['8',  'NoobMaster'],
+            ['9',  'GG_WellPlayed'],
+            ['10', 'ShadowBlade'],
+            ['11', 'PixelQueen'],
+            ['12', 'CriticalHit'],
+            ['13', 'SpeedRunner'],
+            ['14', 'MageLord'],
+            ['15', 'LootGoblin'],
+            ['16', 'FrostByte'],
+            ['17', 'IronWolf'],
+            ['18', 'NightOwl'],
+            ['19', 'BladeDancer'],
+            ['20', 'ArcaneFox']
           ],
           related_tables: [
             {
@@ -716,9 +899,18 @@ concept_cards: [
                 { name: 'ref_game_id', type: 'INT', key: 'FK', icon: '🔗' }
               ],
               data: [
-                ['7', '101'],
-                ['7', '103'],
-                ['8', '101']
+                ['7', '101'], ['7', '103'],
+                ['8', '101'], ['8', '105'],
+                ['9', '102'], ['9', '107'],
+                ['10','101'], ['10','109'],
+                ['11','104'], ['11','111'],
+                ['12','103'], ['12','108'],
+                ['13','110'], ['13','102'],
+                ['14','106'], ['14','112'],
+                ['15','101'], ['15','105'],
+                ['16','107'], ['17','103'],
+                ['18','109'], ['19','102'],
+                ['20','108'], ['16','110']
               ]
             },
             {
@@ -728,9 +920,18 @@ concept_cards: [
                 { name: 'title',   type: 'VARCHAR', key: '',   icon: '🎮' }
               ],
               data: [
-                ['101', 'Elden Ring'],
-                ['102', 'God of War'],
-                ['103', 'Hades']
+                ['101','Elden Ring'],
+                ['102','God of War'],
+                ['103','Hades'],
+                ['104','Celeste'],
+                ['105','Hollow Knight'],
+                ['106','Stardew Valley'],
+                ['107','The Witcher 3'],
+                ['108','Cyberpunk 2077'],
+                ['109','Dark Souls III'],
+                ['110','Sekiro'],
+                ['111','Disco Elysium'],
+                ['112',"Baldur's Gate 3"]
               ]
             }
           ]
@@ -843,7 +1044,7 @@ concept_cards: [
           example: {
             question: 'Ví dụ tương tự — lấy <code>title</code> game của player <em>NoobMaster</em>:',
             sql: 'SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = "NoobMaster";',
-            sample_output: '→ 1 dòng: <code>Elden Ring</code> (NoobMaster chỉ sở hữu 1 game trong data mẫu)'
+            sample_output: '→ 2 dòng: <code>Elden Ring</code> + <code>Hollow Knight</code> (NoobMaster sở hữu 2 game trong data mẫu)'
           },
           expected: 'Bảng kết quả 2 dòng × 1 cột <code>title</code>: <code>Elden Ring</code> và <code>Hades</code> (DragonLord sở hữu 2 game).'
         },
@@ -855,8 +1056,20 @@ concept_cards: [
             { name: 'username', type: 'VARCHAR', key: '' }
           ],
           data: [
-            ['7', 'DragonLord'],
-            ['8', 'NoobMaster']
+            ['7',  'DragonLord'],
+            ['8',  'NoobMaster'],
+            ['9',  'GG_WellPlayed'],
+            ['10', 'ShadowBlade'],
+            ['11', 'PixelQueen'],
+            ['12', 'CriticalHit'],
+            ['13', 'SpeedRunner'],
+            ['14', 'MageLord'],
+            ['15', 'LootGoblin'],
+            ['16', 'FrostByte'],
+            ['17', 'IronWolf'],
+            ['18', 'NightOwl'],
+            ['19', 'BladeDancer'],
+            ['20', 'ArcaneFox']
           ]
         },
         related_schemas: [
@@ -867,7 +1080,18 @@ concept_cards: [
               { name: 'ref_game_id', type: 'INT', key: 'FK' }
             ],
             data: [
-              ['7', '101'], ['7', '103'], ['8', '101']
+              ['7', '101'], ['7', '103'],
+              ['8', '101'], ['8', '105'],
+              ['9', '102'], ['9', '107'],
+              ['10','101'], ['10','109'],
+              ['11','104'], ['11','111'],
+              ['12','103'], ['12','108'],
+              ['13','110'], ['13','102'],
+              ['14','106'], ['14','112'],
+              ['15','101'], ['15','105'],
+              ['16','107'], ['17','103'],
+              ['18','109'], ['19','102'],
+              ['20','108'], ['16','110']
             ]
           },
           {
@@ -877,7 +1101,18 @@ concept_cards: [
               { name: 'title',   type: 'VARCHAR', key: '' }
             ],
             data: [
-              ['101', 'Elden Ring'], ['102', 'God of War'], ['103', 'Hades']
+              ['101','Elden Ring'],
+              ['102','God of War'],
+              ['103','Hades'],
+              ['104','Celeste'],
+              ['105','Hollow Knight'],
+              ['106','Stardew Valley'],
+              ['107','The Witcher 3'],
+              ['108','Cyberpunk 2077'],
+              ['109','Dark Souls III'],
+              ['110','Sekiro'],
+              ['111','Disco Elysium'],
+              ['112',"Baldur's Gate 3"]
             ]
           }
         ],
@@ -910,7 +1145,27 @@ concept_cards: [
             ['7','101','2025-01-10'],
             ['7','103','2025-02-02'],
             ['9','101','2025-01-15'],
-            ['9','105','2025-03-01']
+            ['9','105','2025-03-01'],
+            ['8','102','2024-11-20'],
+            ['8','107','2024-12-05'],
+            ['10','101','2025-01-22'],
+            ['10','109','2025-02-14'],
+            ['11','104','2024-10-30'],
+            ['11','111','2025-03-18'],
+            ['12','103','2025-01-05'],
+            ['12','108','2024-12-25'],
+            ['13','110','2025-02-09'],
+            ['13','102','2025-03-22'],
+            ['14','106','2024-11-11'],
+            ['14','112','2025-01-30'],
+            ['15','102','2025-02-28'],
+            ['15','105','2024-12-12'],
+            ['9','107','2025-03-10'],
+            ['10','103','2025-02-20'],
+            ['11','102','2025-01-08'],
+            ['12','109','2025-03-05'],
+            ['8','110','2024-10-15'],
+            ['13','108','2025-04-01']
           ]
         }
       },
@@ -956,7 +1211,27 @@ concept_cards: [
             ['7','101','2025-01-10'],
             ['7','103','2025-02-02'],
             ['9','101','2025-01-15'],
-            ['9','105','2025-03-01']
+            ['9','105','2025-03-01'],
+            ['8','102','2024-11-20'],
+            ['8','107','2024-12-05'],
+            ['10','101','2025-01-22'],
+            ['10','109','2025-02-14'],
+            ['11','104','2024-10-30'],
+            ['11','111','2025-03-18'],
+            ['12','103','2025-01-05'],
+            ['12','108','2024-12-25'],
+            ['13','110','2025-02-09'],
+            ['13','102','2025-03-22'],
+            ['14','106','2024-11-11'],
+            ['14','112','2025-01-30'],
+            ['15','102','2025-02-28'],
+            ['15','105','2024-12-12'],
+            ['9','107','2025-03-10'],
+            ['10','103','2025-02-20'],
+            ['11','102','2025-01-08'],
+            ['12','109','2025-03-05'],
+            ['8','110','2024-10-15'],
+            ['13','108','2025-04-01']
           ],
           diagram: {
             type: 'er', width: 600, height: 280,
@@ -1046,7 +1321,27 @@ concept_cards: [
             ['7','101','2025-01-10'],
             ['7','103','2025-02-02'],
             ['9','101','2025-01-15'],
-            ['9','105','2025-03-01']
+            ['9','105','2025-03-01'],
+            ['8','102','2024-11-20'],
+            ['8','107','2024-12-05'],
+            ['10','101','2025-01-22'],
+            ['10','109','2025-02-14'],
+            ['11','104','2024-10-30'],
+            ['11','111','2025-03-18'],
+            ['12','103','2025-01-05'],
+            ['12','108','2024-12-25'],
+            ['13','110','2025-02-09'],
+            ['13','102','2025-03-22'],
+            ['14','106','2024-11-11'],
+            ['14','112','2025-01-30'],
+            ['15','102','2025-02-28'],
+            ['15','105','2024-12-12'],
+            ['9','107','2025-03-10'],
+            ['10','103','2025-02-20'],
+            ['11','102','2025-01-08'],
+            ['12','109','2025-03-05'],
+            ['8','110','2024-10-15'],
+            ['13','108','2025-04-01']
           ]
         },
         hints: [
@@ -1078,7 +1373,23 @@ concept_cards: [
             ['300', '1', 'Hearts of Stone'],
             ['300', '2', 'Blood and Wine'],
             ['400', '1', 'Phantom Liberty'],
-            ['400', '2', 'Corpo Gear Pack']
+            ['400', '2', 'Corpo Gear Pack'],
+            ['500', '1', 'Shadow of the Erdtree'],
+            ['500', '2', 'Colosseum Update'],
+            ['500', '3', "Ranni's Quest Pack"],
+            ['600', '1', 'Hell Mode'],
+            ['600', '2', 'Olympus Pack'],
+            ['600', '3', 'Underworld Map'],
+            ['300', '3', 'Witcher School Gear'],
+            ['400', '3', 'Night City Expansion'],
+            ['700', '1', 'Survivor Pass S1'],
+            ['700', '2', 'Survivor Pass S2'],
+            ['700', '3', 'Survivor Pass S3'],
+            ['800', '1', 'Ranked Mode DLC'],
+            ['800', '2', 'Cosmetic Bundle'],
+            ['800', '3', 'Winter Event Pack'],
+            ['900', '1', 'Story Expansion I'],
+            ['900', '2', 'Story Expansion II']
           ]
         }
       },
@@ -1127,7 +1438,23 @@ concept_cards: [
             ['300', '1', 'Hearts of Stone'],
             ['300', '2', 'Blood and Wine'],
             ['400', '1', 'Phantom Liberty'],
-            ['400', '2', 'Corpo Gear Pack']
+            ['400', '2', 'Corpo Gear Pack'],
+            ['500', '1', 'Shadow of the Erdtree'],
+            ['500', '2', 'Colosseum Update'],
+            ['500', '3', "Ranni's Quest Pack"],
+            ['600', '1', 'Hell Mode'],
+            ['600', '2', 'Olympus Pack'],
+            ['600', '3', 'Underworld Map'],
+            ['300', '3', 'Witcher School Gear'],
+            ['400', '3', 'Night City Expansion'],
+            ['700', '1', 'Survivor Pass S1'],
+            ['700', '2', 'Survivor Pass S2'],
+            ['700', '3', 'Survivor Pass S3'],
+            ['800', '1', 'Ranked Mode DLC'],
+            ['800', '2', 'Cosmetic Bundle'],
+            ['800', '3', 'Winter Event Pack'],
+            ['900', '1', 'Story Expansion I'],
+            ['900', '2', 'Story Expansion II']
           ]
         },
         mission: 'Lấy <code>dlc_name</code> của gói DLC số 1 thuộc game id 400 — kéo thả SQL với khóa chính tổng hợp.'
@@ -1215,22 +1542,37 @@ concept_cards: [
             sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;',
             sample_output: '→ 1 dòng: <code>Hades - DLC 1</code>'
           },
-          expected: 'Bảng kết quả 1 dòng × 1 cột: <code>Elden Ring - DLC 2</code>. Phải đúng 1 dòng — nếu trả về nhiều dòng, kiểm tra WHERE có đủ 2 điều kiện AND chưa.'
+          expected: 'Bảng kết quả 1 dòng × 1 cột: <code>Blood and Wine</code> — DLC #2 của game 300. Phải đúng 1 dòng — nếu trả về nhiều dòng, kiểm tra WHERE có đủ 2 điều kiện AND chưa.'
         },
         starter: "-- Lấy dlc_name của DLC #2 thuộc game id 300\n-- Filter: dlc_no = 2 AND ref_game_id = 300\nSELECT \n  FROM \n WHERE  = \n   AND  = ;\n",
         schema: {
           table_name: 'dlc_content',
           columns: [
-            { name: 'dlc_id',       type: 'INT',     key: 'PK' },
-            { name: 'ref_game_id',  type: 'INT',     key: 'FK' },
-            { name: 'dlc_no',       type: 'INT',     key: '' },
-            { name: 'dlc_name',     type: 'VARCHAR', key: '' }
+            { name: 'ref_game_id',  type: 'INT',     key: 'PK+FK', icon: '🔗' },
+            { name: 'dlc_no',       type: 'INT',     key: 'PK',    icon: '🔑' },
+            { name: 'dlc_name',     type: 'VARCHAR', key: '',      icon: '🎁' }
           ],
           data: [
-            ['1', '300', '1', 'Elden Ring - DLC 1'],
-            ['2', '300', '2', 'Elden Ring - DLC 2'],
-            ['3', '400', '1', 'Hades - DLC 1'],
-            ['4', '400', '2', 'Hades - DLC 2']
+            ['300', '1', 'Hearts of Stone'],
+            ['300', '2', 'Blood and Wine'],
+            ['400', '1', 'Phantom Liberty'],
+            ['400', '2', 'Corpo Gear Pack'],
+            ['500', '1', 'Shadow of the Erdtree'],
+            ['500', '2', 'Colosseum Update'],
+            ['500', '3', "Ranni's Quest Pack"],
+            ['600', '1', 'Hell Mode'],
+            ['600', '2', 'Olympus Pack'],
+            ['600', '3', 'Underworld Map'],
+            ['300', '3', 'Witcher School Gear'],
+            ['400', '3', 'Night City Expansion'],
+            ['700', '1', 'Survivor Pass S1'],
+            ['700', '2', 'Survivor Pass S2'],
+            ['700', '3', 'Survivor Pass S3'],
+            ['800', '1', 'Ranked Mode DLC'],
+            ['800', '2', 'Cosmetic Bundle'],
+            ['800', '3', 'Winter Event Pack'],
+            ['900', '1', 'Story Expansion I'],
+            ['900', '2', 'Story Expansion II']
           ]
         },
         expected_sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;',
@@ -1254,9 +1596,28 @@ concept_cards: [
           name: 'game_mapping_demo',
           columns: ['game_id', 'title', 'pub_id', 'genre'],
           dataRows: [
-            ['101', 'Elden Ring',     '10', 'Soulslike'],
-            ['102', 'God of War',     '20', 'Action'],
-            ['103', 'Hades',          '30', 'Roguelike']
+            ['101','Elden Ring',         '10','Soulslike'],
+            ['102','God of War',         '20','Action'],
+            ['103','Hades',              '30','Roguelike'],
+            ['104','Stardew Valley',     '40','Cozy'],
+            ['105','Bastion',            '30','Action-RPG'],
+            ['106','Transistor',         '30','Action-RPG'],
+            ['107','Pyre',               '30','RPG'],
+            ['108','Hades II',           '30','Roguelike'],
+            ['109','Dark Souls III',     '10','Soulslike'],
+            ['110','Sekiro',             '10','Action'],
+            ['111','Bloodborne',         '10','Soulslike'],
+            ['112','God of War Ragnarok','20','Action'],
+            ['113','The Last of Us',     '20','Action'],
+            ['114','The Witcher 3',      '60','RPG'],
+            ['115','Cyberpunk 2077',     '60','RPG'],
+            ['116','Animal Crossing',    '50','Cozy'],
+            ['117','Splatoon 3',         '50','Shooter'],
+            ['118','Zelda: TOTK',        '50','Adventure'],
+            ['119','Stardew Multiplayer','40','Cozy'],
+            ['120','Mario Odyssey',      '50','Platformer'],
+            ['121','Demon Souls',        '10','Soulslike'],
+            ['122','Returnal',           '20','Roguelike']
           ]
         }
       },
@@ -1306,10 +1667,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['101', 'Elden Ring',  '10', 'Soulslike'],
-            ['102', 'God of War',  '20', 'Action'],
-            ['103', 'Hades',       '30', 'Roguelike'],
-            ['104', 'Stardew',     '40', 'Cozy']
+            ['101','Elden Ring',         '10','Soulslike'],
+            ['102','God of War',         '20','Action'],
+            ['103','Hades',              '30','Roguelike'],
+            ['104','Stardew Valley',     '40','Cozy'],
+            ['105','Bastion',            '30','Action-RPG'],
+            ['106','Transistor',         '30','Action-RPG'],
+            ['107','Pyre',               '30','RPG'],
+            ['108','Hades II',           '30','Roguelike'],
+            ['109','Dark Souls III',     '10','Soulslike'],
+            ['110','Sekiro',             '10','Action'],
+            ['111','Bloodborne',         '10','Soulslike'],
+            ['112','God of War Ragnarok','20','Action'],
+            ['113','The Last of Us',     '20','Action'],
+            ['114','The Witcher 3',      '60','RPG'],
+            ['115','Cyberpunk 2077',     '60','RPG'],
+            ['116','Animal Crossing',    '50','Cozy'],
+            ['117','Splatoon 3',         '50','Shooter'],
+            ['118','Zelda: TOTK',        '50','Adventure'],
+            ['119','Stardew Multiplayer','40','Cozy'],
+            ['120','Mario Odyssey',      '50','Platformer'],
+            ['121','Demon Souls',        '10','Soulslike'],
+            ['122','Returnal',           '20','Roguelike']
           ],
           related_tables: [
             {
@@ -1322,7 +1701,9 @@ concept_cards: [
                 ['10', 'FromSoftware'],
                 ['20', 'Sony Santa Monica'],
                 ['30', 'Supergiant'],
-                ['40', 'ConcernedApe']
+                ['40', 'ConcernedApe'],
+                ['50', 'Nintendo'],
+                ['60', 'CD Projekt']
               ]
             }
           ]
@@ -1445,10 +1826,28 @@ concept_cards: [
             { name: 'pub_id', type: 'INT',     key: 'FK' }
           ],
           data: [
-            ['1', 'Hades',    'Roguelike', '101'],
-            ['2', 'Bastion',  'Action',    '101'],
-            ['3', 'GTA V',    'Open World','102'],
-            ['4', 'Red Dead', 'Open World','102']
+            ['101','Elden Ring',         'Soulslike', '10'],
+            ['102','God of War',         'Action',    '20'],
+            ['103','Hades',              'Roguelike', '30'],
+            ['104','Stardew Valley',     'Cozy',      '40'],
+            ['105','Bastion',            'Action-RPG','30'],
+            ['106','Transistor',         'Action-RPG','30'],
+            ['107','Pyre',               'RPG',       '30'],
+            ['108','Hades II',           'Roguelike', '30'],
+            ['109','Dark Souls III',     'Soulslike', '10'],
+            ['110','Sekiro',             'Action',    '10'],
+            ['111','Bloodborne',         'Soulslike', '10'],
+            ['112','God of War Ragnarok','Action',    '20'],
+            ['113','The Last of Us',     'Action',    '20'],
+            ['114','The Witcher 3',      'RPG',       '60'],
+            ['115','Cyberpunk 2077',     'RPG',       '60'],
+            ['116','Animal Crossing',    'Cozy',      '50'],
+            ['117','Splatoon 3',         'Shooter',   '50'],
+            ['118','Zelda: TOTK',        'Adventure', '50'],
+            ['119','Stardew Multiplayer','Cozy',      '40'],
+            ['120','Mario Odyssey',      'Platformer','50'],
+            ['121','Demon Souls',        'Soulslike', '10'],
+            ['122','Returnal',           'Roguelike', '20']
           ]
         },
         expected_sql: "SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';",
@@ -1477,10 +1876,28 @@ concept_cards: [
           name: 'game_studio_combined',
           columns: ['game_id', 'game_name', 'studio_name', 'st_country'],
           dataRows: [
-            ['55', 'Elden Ring',  'FromSoftware', 'Japan'],
-            ['56', 'Bloodborne',  'FromSoftware', 'Japan'],
-            ['57', 'Sekiro',      'FromSoftware', 'Japan'],
-            ['88', 'Portal 2',    'Valve',        'USA']
+            ['55', 'Elden Ring',     'FromSoftware', 'Japan'],
+            ['56', 'Bloodborne',     'FromSoftware', 'Japan'],
+            ['57', 'Sekiro',         'FromSoftware', 'Japan'],
+            ['58', 'Dark Souls III', 'FromSoftware', 'Japan'],
+            ['88', 'Portal 2',       'Valve',        'USA'],
+            ['89', 'Half-Life 2',    'Valve',        'USA'],
+            ['90', 'Dota 2',         'Valve',        'USA'],
+            ['91', 'Counter-Strike 2','Valve',       'USA'],
+            ['92', 'Left 4 Dead 2',  'Valve',        'USA'],
+            ['60', 'Mario Odyssey',  'Nintendo',     'Japan'],
+            ['61', 'Zelda BOTW',     'Nintendo',     'Japan'],
+            ['62', 'Splatoon 3',     'Nintendo',     'Japan'],
+            ['70', 'The Witcher 3',  'CD Projekt',   'Poland'],
+            ['71', 'Cyberpunk 2077', 'CD Projekt',   'Poland'],
+            ['80', 'Hades',          'Supergiant',   'USA'],
+            ['81', 'Bastion',        'Supergiant',   'USA'],
+            ['82', 'Transistor',     'Supergiant',   'USA'],
+            ['95', 'God of War',     'Sony',         'USA'],
+            ['96', 'The Last of Us', 'Sony',         'USA'],
+            ['97', 'Spider-Man',     'Sony',         'USA'],
+            ['72', 'Gwent',          'CD Projekt',   'Poland'],
+            ['63', 'Mario Kart 8',   'Nintendo',     'Japan']
           ]
         }
       },
@@ -1528,10 +1945,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['55', 'Elden Ring',  'FromSoftware', 'Japan'],
-            ['56', 'Bloodborne',  'FromSoftware', 'Japan'],
-            ['57', 'Sekiro',      'FromSoftware', 'Japan'],
-            ['88', 'Portal 2',    'Valve',        'USA']
+            ['55', 'Elden Ring',     'FromSoftware', 'Japan'],
+            ['56', 'Bloodborne',     'FromSoftware', 'Japan'],
+            ['57', 'Sekiro',         'FromSoftware', 'Japan'],
+            ['58', 'Dark Souls III', 'FromSoftware', 'Japan'],
+            ['88', 'Portal 2',       'Valve',        'USA'],
+            ['89', 'Half-Life 2',    'Valve',        'USA'],
+            ['90', 'Dota 2',         'Valve',        'USA'],
+            ['91', 'Counter-Strike 2','Valve',       'USA'],
+            ['92', 'Left 4 Dead 2',  'Valve',        'USA'],
+            ['60', 'Mario Odyssey',  'Nintendo',     'Japan'],
+            ['61', 'Zelda BOTW',     'Nintendo',     'Japan'],
+            ['62', 'Splatoon 3',     'Nintendo',     'Japan'],
+            ['70', 'The Witcher 3',  'CD Projekt',   'Poland'],
+            ['71', 'Cyberpunk 2077', 'CD Projekt',   'Poland'],
+            ['80', 'Hades',          'Supergiant',   'USA'],
+            ['81', 'Bastion',        'Supergiant',   'USA'],
+            ['82', 'Transistor',     'Supergiant',   'USA'],
+            ['95', 'God of War',     'Sony',         'USA'],
+            ['96', 'The Last of Us', 'Sony',         'USA'],
+            ['97', 'Spider-Man',     'Sony',         'USA'],
+            ['72', 'Gwent',          'CD Projekt',   'Poland'],
+            ['63', 'Mario Kart 8',   'Nintendo',     'Japan']
           ]
         },
         mission: 'Lấy <code>studio_name</code> và <code>st_country</code> của các game thuộc studio <em>FromSoftware</em> — quan sát: nếu sửa "Japan" → "Đài Loan" ở 1 dòng, 2 dòng kia vẫn "Japan" → mâu thuẫn.'
@@ -1646,14 +2081,32 @@ concept_cards: [
             { name: 'st_country',  type: 'VARCHAR', key: '',   icon: '🌏' }
           ],
           data: [
-            ['55', 'Elden Ring',  'FromSoftware', 'Japan'],
-            ['56', 'Bloodborne',  'FromSoftware', 'Japan'],
-            ['57', 'Sekiro',      'FromSoftware', 'Japan'],
-            ['88', 'Portal 2',    'Valve',        'USA']
+            ['55', 'Elden Ring',     'FromSoftware', 'Japan'],
+            ['56', 'Bloodborne',     'FromSoftware', 'Japan'],
+            ['57', 'Sekiro',         'FromSoftware', 'Japan'],
+            ['58', 'Dark Souls III', 'FromSoftware', 'Japan'],
+            ['88', 'Portal 2',       'Valve',        'USA'],
+            ['89', 'Half-Life 2',    'Valve',        'USA'],
+            ['90', 'Dota 2',         'Valve',        'USA'],
+            ['91', 'Counter-Strike 2','Valve',       'USA'],
+            ['92', 'Left 4 Dead 2',  'Valve',        'USA'],
+            ['60', 'Mario Odyssey',  'Nintendo',     'Japan'],
+            ['61', 'Zelda BOTW',     'Nintendo',     'Japan'],
+            ['62', 'Splatoon 3',     'Nintendo',     'Japan'],
+            ['70', 'The Witcher 3',  'CD Projekt',   'Poland'],
+            ['71', 'Cyberpunk 2077', 'CD Projekt',   'Poland'],
+            ['80', 'Hades',          'Supergiant',   'USA'],
+            ['81', 'Bastion',        'Supergiant',   'USA'],
+            ['82', 'Transistor',     'Supergiant',   'USA'],
+            ['95', 'God of War',     'Sony',         'USA'],
+            ['96', 'The Last of Us', 'Sony',         'USA'],
+            ['97', 'Spider-Man',     'Sony',         'USA'],
+            ['72', 'Gwent',          'CD Projekt',   'Poland'],
+            ['63', 'Mario Kart 8',   'Nintendo',     'Japan']
           ]
         },
         expected_sql: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
-        hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 4 dòng của 2 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT game_name FROM game_studio_combined WHERE studio_name = \'Valve\';</code>'}],
+        hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 22 dòng của 6 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT game_name FROM game_studio_combined WHERE studio_name = \'Valve\';</code>'}],
         success_message: 'Bạn đã hiểu Redundancy + FD. Bài 9 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
         xp_reward: 30
       }
@@ -1675,7 +2128,24 @@ concept_cards: [
           dataRows: [
             ['S01', 'Minh', '0901-111-111, 0902-222-222'],
             ['S02', 'Yuki', '0903-333-333'],
-            ['S03', 'Sara', '0904-444-444, 0905-555-555, 0906-666-666']
+            ['S03', 'Sara', '0904-444-444, 0905-555-555, 0906-666-666'],
+            ['S04', 'Nam',  '0907-777-777'],
+            ['S05', 'Lan',  '0908-888-888, 0909-999-999'],
+            ['S06', 'Hùng', '0910-101-010'],
+            ['S07', 'Mai',  '0911-111-222, 0912-222-333'],
+            ['S08', 'Tú',   '0913-333-444'],
+            ['S09', 'Linh', '0914-444-555, 0915-555-666, 0916-666-777'],
+            ['S10', 'Phúc', '0917-777-888'],
+            ['S11', 'Quân', '0918-888-999, 0919-999-000'],
+            ['S12', 'Hà',   '0920-202-020'],
+            ['S13', 'Đạt',  '0921-121-212'],
+            ['S14', 'Vy',   '0922-232-323, 0923-343-434'],
+            ['S15', 'Khoa', '0924-454-545'],
+            ['S16', 'Trang','0925-565-656'],
+            ['S17', 'Bảo',  '0926-676-767, 0927-787-878'],
+            ['S18', 'Ngọc', '0928-898-989'],
+            ['S19', 'Sơn',  '0929-909-090'],
+            ['S20', 'Thảo', '0930-010-101, 0931-121-212']
           ]
         }
       },
@@ -1724,7 +2194,24 @@ concept_cards: [
           data_preview: [
             ['S01', 'Minh', '0901-111-111, 0902-222-222'],
             ['S02', 'Yuki', '0903-333-333'],
-            ['S03', 'Sara', '0904-444-444, 0905-555-555, 0906-666-666']
+            ['S03', 'Sara', '0904-444-444, 0905-555-555, 0906-666-666'],
+            ['S04', 'Nam',  '0907-777-777'],
+            ['S05', 'Lan',  '0908-888-888, 0909-999-999'],
+            ['S06', 'Hùng', '0910-101-010'],
+            ['S07', 'Mai',  '0911-111-222, 0912-222-333'],
+            ['S08', 'Tú',   '0913-333-444'],
+            ['S09', 'Linh', '0914-444-555, 0915-555-666, 0916-666-777'],
+            ['S10', 'Phúc', '0917-777-888'],
+            ['S11', 'Quân', '0918-888-999, 0919-999-000'],
+            ['S12', 'Hà',   '0920-202-020'],
+            ['S13', 'Đạt',  '0921-121-212'],
+            ['S14', 'Vy',   '0922-232-323, 0923-343-434'],
+            ['S15', 'Khoa', '0924-454-545'],
+            ['S16', 'Trang','0925-565-656'],
+            ['S17', 'Bảo',  '0926-676-767, 0927-787-878'],
+            ['S18', 'Ngọc', '0928-898-989'],
+            ['S19', 'Sơn',  '0929-909-090'],
+            ['S20', 'Thảo', '0930-010-101, 0931-121-212']
           ]
         },
         mission: 'Tách cột <code>phones</code> (multivalued) thành bảng riêng <code>student_phone(student_id, phone)</code> để đạt 1NF — mỗi ô chỉ chứa 1 giá trị.'
@@ -1887,9 +2374,17 @@ concept_cards: [
           name: 'book_loan_raw',
           columns: ['book_id', 'copy_no', 'loan_date', 'member_name'],
           dataRows: [
-            ['B01', '1', '2024-06-01', 'Minh'],
-            ['B01', '2', '2024-06-03', 'Minh'],
-            ['B02', '1', '2024-06-05', 'Yuki']
+            ['B01','1','2024-06-01','Minh'], ['B01','2','2024-06-03','Minh'],
+            ['B02','1','2024-06-05','Yuki'], ['B02','2','2024-06-06','Sara'],
+            ['B03','1','2024-06-08','Nam'],  ['B03','2','2024-06-09','Minh'],
+            ['B04','1','2024-06-10','Lan'],  ['B04','2','2024-06-12','Yuki'],
+            ['B05','1','2024-06-14','Hùng'], ['B05','2','2024-06-15','Sara'],
+            ['B06','1','2024-06-17','Minh'], ['B06','2','2024-06-18','Nam'],
+            ['B07','1','2024-06-20','Mai'],  ['B07','2','2024-06-21','Lan'],
+            ['B08','1','2024-06-23','Yuki'], ['B08','2','2024-06-24','Minh'],
+            ['B09','1','2024-06-26','Hùng'], ['B09','2','2024-06-27','Sara'],
+            ['B10','1','2024-06-29','Nam'],  ['B10','2','2024-06-30','Mai'],
+            ['B11','1','2024-07-01','Minh'], ['B11','2','2024-07-02','Lan']
           ]
         }
       },
@@ -1938,10 +2433,17 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['B01', '1', 'M01', 'Minh', '2024-06-01'],
-            ['B01', '2', 'M01', 'Minh', '2024-06-03'],
-            ['B02', '1', 'M02', 'Yuki', '2024-06-05'],
-            ['B03', '1', 'M01', 'Minh', '2024-06-07']
+            ['B01','1','M01','Minh','2024-06-01'], ['B01','2','M01','Minh','2024-06-03'],
+            ['B02','1','M02','Yuki','2024-06-05'], ['B02','2','M03','Sara','2024-06-06'],
+            ['B03','1','M04','Nam', '2024-06-08'], ['B03','2','M01','Minh','2024-06-09'],
+            ['B04','1','M05','Lan', '2024-06-10'], ['B04','2','M02','Yuki','2024-06-12'],
+            ['B05','1','M06','Hùng','2024-06-14'], ['B05','2','M03','Sara','2024-06-15'],
+            ['B06','1','M01','Minh','2024-06-17'], ['B06','2','M04','Nam', '2024-06-18'],
+            ['B07','1','M07','Mai', '2024-06-20'], ['B07','2','M05','Lan', '2024-06-21'],
+            ['B08','1','M02','Yuki','2024-06-23'], ['B08','2','M01','Minh','2024-06-24'],
+            ['B09','1','M06','Hùng','2024-06-26'], ['B09','2','M03','Sara','2024-06-27'],
+            ['B10','1','M04','Nam', '2024-06-29'], ['B10','2','M07','Mai', '2024-06-30'],
+            ['B11','1','M01','Minh','2024-07-01'], ['B11','2','M05','Lan', '2024-07-02']
           ]
         },
         mission: 'Quan sát bảng: <code>member_name</code> chỉ phụ thuộc <code>member_id</code> — không phụ thuộc <code>copy_no</code>. Đây là phụ thuộc bộ phận → vi phạm 2NF.'
@@ -2088,10 +2590,10 @@ concept_cards: [
           name: 'orders', col: 0, row: 5, width: 4, height: 1,
           columns: ['order_id', 'product_id', 'qty', 'total'],
           dataRows: [
-            ['1001', 'P01', '2', '60.00'],
-            ['1002', 'P02', '1', '45.00'],
-            ['1003', 'P03', '3', '90.00'],
-            ['1004', 'P01', '1', '30.00']
+            ['1001','P01','2','60.00'],
+            ['1002','P02','1','45.00'],
+            ['1003','P03','3','90.00'],
+            ['1004','P01','1','60.00']
           ]
         }
       },
@@ -2134,14 +2636,22 @@ concept_cards: [
               { name: 'order_id',   type: 'INT',     key: 'PK', icon: '🔑' },
               { name: 'product_id', type: 'INT',     key: 'FK', icon: '🔗' },
               { name: 'qty',        type: 'INT',     key: '',   icon: '#️⃣' },
+              { name: 'price',      type: 'DECIMAL', key: '',   icon: '💰' },
               { name: 'order_date', type: 'DATE',    key: '',   icon: '📅' }
             ]
           },
           data_preview: [
-            ['1001', 'P01', '2', '2024-04-01'],
-            ['1002', 'P02', '1', '2024-04-03'],
-            ['1003', 'P03', '3', '2024-04-05'],
-            ['1004', 'P01', '1', '2024-04-08']
+            ['1001','P01','2','60.00','2024-04-01'], ['1002','P02','1','45.00','2024-04-03'],
+            ['1003','P03','3','90.00','2024-04-05'], ['1004','P01','1','60.00','2024-04-06'],
+            ['1005','P04','2','30.00','2024-04-07'], ['1006','P02','4','45.00','2024-04-08'],
+            ['1007','P05','1','120.00','2024-04-10'], ['1008','P03','2','90.00','2024-04-11'],
+            ['1009','P01','5','60.00','2024-04-12'], ['1010','P06','1','25.00','2024-04-13'],
+            ['1011','P04','3','30.00','2024-04-14'], ['1012','P05','2','120.00','2024-04-15'],
+            ['1013','P02','1','45.00','2024-04-16'], ['1014','P07','2','80.00','2024-04-17'],
+            ['1015','P03','1','90.00','2024-04-18'], ['1016','P01','2','60.00','2024-04-19'],
+            ['1017','P06','4','25.00','2024-04-20'], ['1018','P08','1','55.00','2024-04-21'],
+            ['1019','P04','2','30.00','2024-04-22'], ['1020','P07','1','80.00','2024-04-23'],
+            ['1021','P05','1','120.00','2024-04-24'], ['1022','P02','3','45.00','2024-04-25']
           ]
         },
                 mission: 'Hoàn thành game kéo-thả để tách <code class="code">orders</code> thành <code class="code">categories</code>, <code class="code">products</code>, và <code class="code">orders</code>.'
@@ -2267,11 +2777,14 @@ concept_cards: [
             { name: 'price',     type: 'DECIMAL', key: '',   icon: '💰' }
           ],
           data: [
-            ['P01', 'Elden Ring',  'Game', '60.00'],
-            ['P02', 'Hades',       'Game', '25.00'],
-            ['P03', 'Bàn phím cơ', 'Gear', '40.00'],
-            ['P04', 'Chuột gaming','Gear', '50.00'],
-            ['P05', 'Màn hình 27"','Gear', '450.00']
+            ['P01', 'Elden Ring',   'Game', '60.00'],
+            ['P02', 'Hades',        'Game', '45.00'],
+            ['P03', 'Bàn phím cơ',  'Gear', '90.00'],
+            ['P04', 'Chuột gaming', 'Gear', '30.00'],
+            ['P05', 'Màn hình 27"', 'Gear', '120.00'],
+            ['P06', 'Tai nghe',     'Game', '25.00'],
+            ['P07', 'Bàn phím TKL', 'Gear', '80.00'],
+            ['P08', 'Webcam',       'Game', '55.00']
           ]
         },
         related_schemas: [
@@ -2281,14 +2794,21 @@ concept_cards: [
               { name: 'order_id',   type: 'INT',  key: 'PK' },
               { name: 'product_id', type: 'INT',  key: 'FK' },
               { name: 'qty',        type: 'INT',  key: '' },
+              { name: 'price',      type: 'DECIMAL', key: '' },
               { name: 'order_date', type: 'DATE', key: '' }
             ],
             data: [
-              ['1001', 'P01', '2', '2024-04-01'],
-              ['1002', 'P02', '1', '2024-04-03'],
-              ['1003', 'P03', '3', '2024-04-05'],
-              ['1004', 'P01', '1', '2024-04-08'],
-              ['1005', 'P04', '2', '2024-04-10']
+              ['1001','P01','2','60.00','2024-04-01'], ['1002','P02','1','45.00','2024-04-03'],
+              ['1003','P03','3','90.00','2024-04-05'], ['1004','P01','1','60.00','2024-04-06'],
+              ['1005','P04','2','30.00','2024-04-07'], ['1006','P02','4','45.00','2024-04-08'],
+              ['1007','P05','1','120.00','2024-04-10'], ['1008','P03','2','90.00','2024-04-11'],
+              ['1009','P01','5','60.00','2024-04-12'], ['1010','P06','1','25.00','2024-04-13'],
+              ['1011','P04','3','30.00','2024-04-14'], ['1012','P05','2','120.00','2024-04-15'],
+              ['1013','P02','1','45.00','2024-04-16'], ['1014','P07','2','80.00','2024-04-17'],
+              ['1015','P03','1','90.00','2024-04-18'], ['1016','P01','2','60.00','2024-04-19'],
+              ['1017','P06','4','25.00','2024-04-20'], ['1018','P08','1','55.00','2024-04-21'],
+              ['1019','P04','2','30.00','2024-04-22'], ['1020','P07','1','80.00','2024-04-23'],
+              ['1021','P05','1','120.00','2024-04-24'], ['1022','P02','3','45.00','2024-04-25']
             ]
           },
           {
@@ -2329,10 +2849,28 @@ concept_cards: [
           name: 'treatments', col: 0, row: 5, width: 4, height: 1,
           columns: ['patient_id', 'doctor_id', 'treatment', 'treatment_date'],
           dataRows: [
-            ['P01', 'D01', 'Khám tổng quát', '2024-03-01'],
-            ['P02', 'D02', 'Phẫu thuật ruột thừa', '2024-03-05'],
-            ['P01', 'D03', 'Xét nghiệm máu', '2024-03-10'],
-            ['P03', 'D01', 'Khám tim mạch', '2024-03-12']
+            ['P01','D01','Khám tổng quát',     '2024-03-01'],
+            ['P02','D02','Phẫu thuật ruột thừa','2024-03-05'],
+            ['P01','D03','Xét nghiệm máu',      '2024-03-10'],
+            ['P03','D01','Khám tim mạch',       '2024-03-12'],
+            ['P04','D01','Khám tổng quát',      '2024-03-13'],
+            ['P05','D03','Điện tim',            '2024-03-14'],
+            ['P06','D02','Nội soi',             '2024-03-15'],
+            ['P07','D04','Khám nhi',            '2024-03-16'],
+            ['P08','D01','Tư vấn dinh dưỡng',   '2024-03-17'],
+            ['P09','D05','Khám da',             '2024-03-18'],
+            ['P10','D03','Siêu âm tim',         '2024-03-19'],
+            ['P11','D01','Khám tổng quát',      '2024-03-20'],
+            ['P12','D06','Khám thần kinh',      '2024-03-21'],
+            ['P13','D02','Phẫu thuật',          '2024-03-22'],
+            ['P14','D03','Khám tim',            '2024-03-23'],
+            ['P15','D01','Xét nghiệm',          '2024-03-24'],
+            ['P16','D04','Tiêm chủng',          '2024-03-25'],
+            ['P17','D03','Holter',               '2024-03-26'],
+            ['P18','D05','Sinh thiết',          '2024-03-27'],
+            ['P19','D01','Tái khám',            '2024-03-28'],
+            ['P20','D02','Nội soi',             '2024-03-29'],
+            ['P21','D03','Khám tim',            '2024-03-30']
           ]
         }
       },
@@ -2381,10 +2919,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['P01', 'D01', 'Khám tổng quát',     '2024-03-01'],
-            ['P02', 'D02', 'Phẫu thuật ruột thừa','2024-03-05'],
-            ['P01', 'D03', 'Xét nghiệm máu',      '2024-03-10'],
-            ['P03', 'D01', 'Khám tim mạch',       '2024-03-12']
+            ['P01','D01','Khám tổng quát',     '2024-03-01'],
+            ['P02','D02','Phẫu thuật ruột thừa','2024-03-05'],
+            ['P01','D03','Xét nghiệm máu',      '2024-03-10'],
+            ['P03','D01','Khám tim mạch',       '2024-03-12'],
+            ['P04','D01','Khám tổng quát',      '2024-03-13'],
+            ['P05','D03','Điện tim',            '2024-03-14'],
+            ['P06','D02','Nội soi',             '2024-03-15'],
+            ['P07','D04','Khám nhi',            '2024-03-16'],
+            ['P08','D01','Tư vấn dinh dưỡng',   '2024-03-17'],
+            ['P09','D05','Khám da',             '2024-03-18'],
+            ['P10','D03','Siêu âm tim',         '2024-03-19'],
+            ['P11','D01','Khám tổng quát',      '2024-03-20'],
+            ['P12','D06','Khám thần kinh',      '2024-03-21'],
+            ['P13','D02','Phẫu thuật',          '2024-03-22'],
+            ['P14','D03','Khám tim',            '2024-03-23'],
+            ['P15','D01','Xét nghiệm',          '2024-03-24'],
+            ['P16','D04','Tiêm chủng',          '2024-03-25'],
+            ['P17','D03','Holter',               '2024-03-26'],
+            ['P18','D05','Sinh thiết',          '2024-03-27'],
+            ['P19','D01','Tái khám',            '2024-03-28'],
+            ['P20','D02','Nội soi',             '2024-03-29'],
+            ['P21','D03','Khám tim',            '2024-03-30']
           ]
         },
                 mission: 'Hoàn thành game kéo-thả để tách <code class="code">treatments</code> thành <code class="code">doctors</code>, <code class="code">patients</code>, và <code class="code">treatments</code>.'
@@ -2565,9 +3121,12 @@ concept_cards: [
             { name: 'doctor_specialty', type: 'VARCHAR', key: '',   icon: '⚕️' }
           ],
           data: [
-            ['D01', 'BS. Hà',   'Tim mạch'],
-            ['D02', 'BS. Linh', 'Ngoại khoa'],
-            ['D03', 'BS. Khải', 'Huyết học']
+            ['D01', 'BS. Hà',   'Nội tổng quát'],
+            ['D02', 'BS. Linh', 'Ngoại tiêu hóa'],
+            ['D03', 'BS. Khải', 'Tim mạch'],
+            ['D04', 'BS. Mai',  'Nhi'],
+            ['D05', 'BS. Nam',  'Da liễu'],
+            ['D06', 'BS. Lan',  'Thần kinh']
           ]
         },
         related_schemas: [
@@ -2592,10 +3151,28 @@ concept_cards: [
               { name: 'treatment_date', type: 'DATE',    key: '' }
             ],
             data: [
-              ['P01', 'D01', 'Khám tổng quát',     '2024-03-01'],
-              ['P02', 'D02', 'Phẫu thuật ruột thừa','2024-03-05'],
-              ['P01', 'D03', 'Xét nghiệm máu',      '2024-03-10'],
-              ['P03', 'D01', 'Khám tim mạch',       '2024-03-12']
+              ['P01','D01','Khám tổng quát',     '2024-03-01'],
+              ['P02','D02','Phẫu thuật ruột thừa','2024-03-05'],
+              ['P01','D03','Xét nghiệm máu',      '2024-03-10'],
+              ['P03','D01','Khám tim mạch',       '2024-03-12'],
+              ['P04','D01','Khám tổng quát',      '2024-03-13'],
+              ['P05','D03','Điện tim',            '2024-03-14'],
+              ['P06','D02','Nội soi',             '2024-03-15'],
+              ['P07','D04','Khám nhi',            '2024-03-16'],
+              ['P08','D01','Tư vấn dinh dưỡng',   '2024-03-17'],
+              ['P09','D05','Khám da',             '2024-03-18'],
+              ['P10','D03','Siêu âm tim',         '2024-03-19'],
+              ['P11','D01','Khám tổng quát',      '2024-03-20'],
+              ['P12','D06','Khám thần kinh',      '2024-03-21'],
+              ['P13','D02','Phẫu thuật',          '2024-03-22'],
+              ['P14','D03','Khám tim',            '2024-03-23'],
+              ['P15','D01','Xét nghiệm',          '2024-03-24'],
+              ['P16','D04','Tiêm chủng',          '2024-03-25'],
+              ['P17','D03','Holter',               '2024-03-26'],
+              ['P18','D05','Sinh thiết',          '2024-03-27'],
+              ['P19','D01','Tái khám',            '2024-03-28'],
+              ['P20','D02','Nội soi',             '2024-03-29'],
+              ['P21','D03','Khám tim',            '2024-03-30']
             ]
           }
         ],
@@ -2625,10 +3202,18 @@ concept_cards: [
           name: 'course_offering_raw',
           columns: ['course_id', 'textbook', 'instructor'],
           dataRows: [
-            ['CS101', 'Database Concepts', 'Dr. Trần'],
-            ['CS101', 'SQL Performance',   'Dr. Trần'],
-            ['CS101', 'Database Concepts', 'Dr. Lê'],
-            ['CS101', 'SQL Performance',   'Dr. Lê']
+            ['CS101','Database Concepts','Dr. Trần'], ['CS101','SQL Performance','Dr. Trần'],
+            ['CS101','Database Concepts','Dr. Lê'],    ['CS101','SQL Performance','Dr. Lê'],
+            ['CS102','Clean Code',        'Dr. Phạm'], ['CS102','Design Patterns', 'Dr. Phạm'],
+            ['CS102','Clean Code',        'Dr. Hoàng'], ['CS102','Design Patterns', 'Dr. Hoàng'],
+            ['CS103','Algorithms',        'Dr. Vũ'],    ['CS103','Data Structures', 'Dr. Vũ'],
+            ['CS103','Discrete Math',     'Dr. Vũ'],    ['CS103','Algorithms',      'Dr. Đặng'],
+            ['CS103','Data Structures',   'Dr. Đặng'],  ['CS103','Discrete Math',   'Dr. Đặng'],
+            ['CS104','Networks',          'Dr. Bùi'],   ['CS104','Security',        'Dr. Bùi'],
+            ['CS104','Networks',          'Dr. Ngô'],   ['CS104','Security',        'Dr. Ngô'],
+            ['CS104','Networks',          'Dr. Dương'], ['CS104','Security',        'Dr. Dương'],
+            ['CS105','OS Internals',      'Dr. Lý'],    ['CS105','Compilers',       'Dr. Lý'],
+            ['CS105','OS Internals',      'Dr. Mai'],   ['CS105','Compilers',       'Dr. Mai']
           ]
         }
       },
@@ -2675,12 +3260,18 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['CS101', 'Database Concepts', 'Dr. Trần'],
-            ['CS101', 'SQL Performance',   'Dr. Trần'],
-            ['CS101', 'Database Concepts', 'Dr. Lê'],
-            ['CS101', 'SQL Performance',   'Dr. Lê'],
-            ['CS202', 'Clean Code',        'Dr. Phạm'],
-            ['CS202', 'Refactoring',       'Dr. Phạm']
+            ['CS101','Database Concepts','Dr. Trần'], ['CS101','SQL Performance','Dr. Trần'],
+            ['CS101','Database Concepts','Dr. Lê'],    ['CS101','SQL Performance','Dr. Lê'],
+            ['CS102','Clean Code',        'Dr. Phạm'], ['CS102','Design Patterns', 'Dr. Phạm'],
+            ['CS102','Clean Code',        'Dr. Hoàng'], ['CS102','Design Patterns', 'Dr. Hoàng'],
+            ['CS103','Algorithms',        'Dr. Vũ'],    ['CS103','Data Structures', 'Dr. Vũ'],
+            ['CS103','Discrete Math',     'Dr. Vũ'],    ['CS103','Algorithms',      'Dr. Đặng'],
+            ['CS103','Data Structures',   'Dr. Đặng'],  ['CS103','Discrete Math',   'Dr. Đặng'],
+            ['CS104','Networks',          'Dr. Bùi'],   ['CS104','Security',        'Dr. Bùi'],
+            ['CS104','Networks',          'Dr. Ngô'],   ['CS104','Security',        'Dr. Ngô'],
+            ['CS104','Networks',          'Dr. Dương'], ['CS104','Security',        'Dr. Dương'],
+            ['CS105','OS Internals',      'Dr. Lý'],    ['CS105','Compilers',       'Dr. Lý'],
+            ['CS105','OS Internals',      'Dr. Mai'],   ['CS105','Compilers',       'Dr. Mai']
           ]
         },
         mission: 'Quan sát: CS101 có 2 textbook × 2 instructor = 4 dòng lặp tổ hợp. Nếu thêm 1 instructor nữa → thêm 2 dòng mới (mỗi textbook). Đó là dấu hiệu vi phạm 4NF.'
@@ -2764,11 +3355,17 @@ concept_cards: [
             { name: 'textbook',  type: 'VARCHAR', key: '',   icon: '📚' }
           ],
           data: [
-            ['CS101', 'Database Concepts'],
-            ['CS101', 'SQL Performance'],
-            ['CS202', 'Clean Code'],
-            ['CS202', 'Refactoring'],
-            ['CS303', 'Design Patterns']
+            ['CS101','Database Concepts'],
+            ['CS101','SQL Performance'],
+            ['CS102','Clean Code'],
+            ['CS102','Design Patterns'],
+            ['CS103','Algorithms'],
+            ['CS103','Data Structures'],
+            ['CS103','Discrete Math'],
+            ['CS104','Networks'],
+            ['CS104','Security'],
+            ['CS105','OS Internals'],
+            ['CS105','Compilers']
           ]
         },
         related_schemas: [
@@ -2779,9 +3376,17 @@ concept_cards: [
               { name: 'instructor', type: 'VARCHAR', key: '' }
             ],
             data: [
-              ['CS101', 'Dr. Trần'],
-              ['CS101', 'Dr. Lê'],
-              ['CS202', 'Dr. Phạm']
+              ['CS101','Dr. Trần'],
+              ['CS101','Dr. Lê'],
+              ['CS102','Dr. Phạm'],
+              ['CS102','Dr. Hoàng'],
+              ['CS103','Dr. Vũ'],
+              ['CS103','Dr. Đặng'],
+              ['CS104','Dr. Bùi'],
+              ['CS104','Dr. Ngô'],
+              ['CS104','Dr. Dương'],
+              ['CS105','Dr. Lý'],
+              ['CS105','Dr. Mai']
             ]
           }
         ],
@@ -2811,10 +3416,17 @@ concept_cards: [
           name: 'users', col: 0, row: 5, width: 4, height: 1,
           columns: ['user_id', 'username', 'country', 'is_premium'],
           dataRows: [
-            ['U01', 'minh_gamer',   'VN', 'true'],
-            ['U02', 'yuki_99',      'JP', 'false'],
-            ['U03', 'sara_plays',   'VN', 'true'],
-            ['U04', 'alex_pro',     'US', 'true']
+            ['U01','minh_gamer','VN','true'],  ['U02','yuki_99','JP','false'],
+            ['U03','sara_plays','VN','true'],  ['U04','alex_pro','US','true'],
+            ['U05','dragon_vn','VN','true'],   ['U06','ninja_jp','JP','true'],
+            ['U07','noob_us','US','false'],    ['U08','pixel_vn','VN','true'],
+            ['U09','frost_kr','KR','false'],   ['U10','blade_vn','VN','true'],
+            ['U11','mage_jp','JP','true'],     ['U12','loot_us','US','false'],
+            ['U13','iron_vn','VN','true'],     ['U14','owl_kr','KR','true'],
+            ['U15','arcane_us','US','false'],  ['U16','thunder_vn','VN','true'],
+            ['U17','silent_jp','JP','false'],  ['U18','rune_vn','VN','true'],
+            ['U19','vortex_kr','KR','true'],   ['U20','ember_us','US','false'],
+            ['U21','zen_jp','JP','true'],      ['U22','ghost_vn','VN','true']
           ]
         }
       },
@@ -2864,10 +3476,17 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['U01', 'minh_gamer', 'minh@x.com', 'VN', 'true'],
-            ['U02', 'yuki_99',    'yuki@x.com', 'JP', 'false'],
-            ['U03', 'sara_plays', 'sara@x.com', 'VN', 'true'],
-            ['U04', 'alex_pro',   'alex@x.com', 'US', 'true']
+            ['U01','minh_gamer',  'minh@x.com','VN','true'],  ['U02','yuki_99',    'yuki@x.com','JP','false'],
+            ['U03','sara_plays',  'sara@x.com','VN','true'],  ['U04','alex_pro',   'alex@x.com','US','true'],
+            ['U05','dragon_vn',   'dragon@x.com','VN','true'], ['U06','ninja_jp', 'ninja@x.com','JP','true'],
+            ['U07','noob_us',     'noob@x.com','US','false'],  ['U08','pixel_vn',  'pixel@x.com','VN','true'],
+            ['U09','frost_kr',    'frost@x.com','KR','false'], ['U10','blade_vn',  'blade@x.com','VN','true'],
+            ['U11','mage_jp',     'mage@x.com','JP','true'],   ['U12','loot_us',   'loot@x.com','US','false'],
+            ['U13','iron_vn',     'iron@x.com','VN','true'],   ['U14','owl_kr',    'owl@x.com','KR','true'],
+            ['U15','arcane_us',   'arcane@x.com','US','false'],['U16','thunder_vn','thunder@x.com','VN','true'],
+            ['U17','silent_jp',   'silent@x.com','JP','false'],['U18','rune_vn',   'rune@x.com','VN','true'],
+            ['U19','vortex_kr',   'vortex@x.com','KR','true'], ['U20','ember_us',  'ember@x.com','US','false'],
+            ['U21','zen_jp',      'zen@x.com','JP','true'],    ['U22','ghost_vn',  'ghost@x.com','VN','true']
           ]
         },
                 mission: 'Hoàn thành 4 vòng chiến bằng cách tách dần bảng <code class="code">gamers_social</code> khổng lồ thành schema sạch: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction.'
@@ -3099,10 +3718,17 @@ concept_cards: [
             { name: 'is_premium', type: 'BOOLEAN', key: '' }
           ],
           data: [
-            ['U01', 'minh_gamer', 'minh@x.com', 'VN', 'true'],
-            ['U02', 'yuki_99',    'yuki@x.com', 'JP', 'false'],
-            ['U03', 'sara_plays', 'sara@x.com', 'VN', 'true'],
-            ['U04', 'alex_pro',   'alex@x.com', 'US', 'true']
+            ['U01','minh_gamer',  'minh@x.com','VN','true'],  ['U02','yuki_99',    'yuki@x.com','JP','false'],
+            ['U03','sara_plays',  'sara@x.com','VN','true'],  ['U04','alex_pro',   'alex@x.com','US','true'],
+            ['U05','dragon_vn',   'dragon@x.com','VN','true'], ['U06','ninja_jp', 'ninja@x.com','JP','true'],
+            ['U07','noob_us',     'noob@x.com','US','false'],  ['U08','pixel_vn',  'pixel@x.com','VN','true'],
+            ['U09','frost_kr',    'frost@x.com','KR','false'], ['U10','blade_vn',  'blade@x.com','VN','true'],
+            ['U11','mage_jp',     'mage@x.com','JP','true'],   ['U12','loot_us',   'loot@x.com','US','false'],
+            ['U13','iron_vn',     'iron@x.com','VN','true'],   ['U14','owl_kr',    'owl@x.com','KR','true'],
+            ['U15','arcane_us',   'arcane@x.com','US','false'],['U16','thunder_vn','thunder@x.com','VN','true'],
+            ['U17','silent_jp',   'silent@x.com','JP','false'],['U18','rune_vn',   'rune@x.com','VN','true'],
+            ['U19','vortex_kr',   'vortex@x.com','KR','true'], ['U20','ember_us',  'ember@x.com','US','false'],
+            ['U21','zen_jp',      'zen@x.com','JP','true'],    ['U22','ghost_vn',  'ghost@x.com','VN','true']
           ]
         },
         expected_sql: "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
@@ -3180,7 +3806,25 @@ concept_cards: [
             ['U01','minh_dev','{"theme":"dark","notifications":true,"lang":"vi"}','2026-01-10'],
             ['U02','yuki_dev','{"theme":"light","notifications":false,"lang":"en"}','2026-01-11'],
             ['U03','sara_dev','{"theme":"dark","notifications":true,"lang":"en"}','2026-01-12'],
-            ['U04','alex_dev','{"theme":"auto","notifications":true,"lang":"vi"}','2026-01-13']
+            ['U04','alex_dev','{"theme":"auto","notifications":true,"lang":"vi"}','2026-01-13'],
+            ['U05','nam_dev','{"theme":"dark","notifications":false,"lang":"vi"}','2026-01-14'],
+            ['U06','lan_dev','{"theme":"light","notifications":true,"lang":"en"}','2026-01-15'],
+            ['U07','hung_dev','{"theme":"dark","notifications":true,"lang":"vi"}','2026-01-16'],
+            ['U08','mai_dev','{"theme":"auto","notifications":false,"lang":"en"}','2026-01-17'],
+            ['U09','tu_dev','{"theme":"dark","notifications":true,"lang":"vi"}','2026-01-18'],
+            ['U10','linh_dev','{"theme":"light","notifications":true,"lang":"vi"}','2026-01-19'],
+            ['U11','phuc_dev','{"theme":"dark","notifications":false,"lang":"en"}','2026-01-20'],
+            ['U12','quan_dev','{"theme":"auto","notifications":true,"lang":"vi"}','2026-01-21'],
+            ['U13','ha_dev','{"theme":"dark","notifications":true,"lang":"en"}','2026-01-22'],
+            ['U14','dat_dev','{"theme":"light","notifications":false,"lang":"vi"}','2026-01-23'],
+            ['U15','vy_dev','{"theme":"dark","notifications":true,"lang":"vi"}','2026-01-24'],
+            ['U16','khoa_dev','{"theme":"auto","notifications":true,"lang":"en"}','2026-01-25'],
+            ['U17','trang_dev','{"theme":"dark","notifications":false,"lang":"vi"}','2026-01-26'],
+            ['U18','bao_dev','{"theme":"light","notifications":true,"lang":"en"}','2026-01-27'],
+            ['U19','ngoc_dev','{"theme":"dark","notifications":true,"lang":"vi"}','2026-01-28'],
+            ['U20','son_dev','{"theme":"auto","notifications":false,"lang":"vi"}','2026-01-29'],
+            ['U21','thao_dev','{"theme":"dark","notifications":true,"lang":"en"}','2026-01-30'],
+            ['U22','duc_dev','{"theme":"light","notifications":true,"lang":"vi"}','2026-01-31']
           ]
         },
         mission: 'Lấy <code class="code">username</code> và giá trị <code class="code">theme</code> từ JSON. Kéo thả khối lệnh ↓'
@@ -3308,8 +3952,24 @@ concept_cards: [
             ['U02','yuki_dev','{"theme":"light","notifications":false,"lang":"en"}'],
             ['U03','sara_dev','{"theme":"dark","notifications":true,"lang":"en"}'],
             ['U04','alex_dev','{"theme":"auto","notifications":true,"lang":"vi"}'],
-            ['U05','lisa_dev','{"theme":"light","notifications":true,"lang":"vi"}'],
-            ['U06','ken_dev', '{"theme":"dark","notifications":false,"lang":"en"}']
+            ['U05','nam_dev','{"theme":"dark","notifications":false,"lang":"vi"}'],
+            ['U06','lan_dev','{"theme":"light","notifications":true,"lang":"en"}'],
+            ['U07','hung_dev','{"theme":"dark","notifications":true,"lang":"vi"}'],
+            ['U08','mai_dev','{"theme":"auto","notifications":false,"lang":"en"}'],
+            ['U09','tu_dev','{"theme":"dark","notifications":true,"lang":"vi"}'],
+            ['U10','linh_dev','{"theme":"light","notifications":true,"lang":"vi"}'],
+            ['U11','phuc_dev','{"theme":"dark","notifications":false,"lang":"en"}'],
+            ['U12','quan_dev','{"theme":"auto","notifications":true,"lang":"vi"}'],
+            ['U13','ha_dev','{"theme":"dark","notifications":true,"lang":"en"}'],
+            ['U14','dat_dev','{"theme":"light","notifications":false,"lang":"vi"}'],
+            ['U15','vy_dev','{"theme":"dark","notifications":true,"lang":"vi"}'],
+            ['U16','khoa_dev','{"theme":"auto","notifications":true,"lang":"en"}'],
+            ['U17','trang_dev','{"theme":"dark","notifications":false,"lang":"vi"}'],
+            ['U18','bao_dev','{"theme":"light","notifications":true,"lang":"en"}'],
+            ['U19','ngoc_dev','{"theme":"dark","notifications":true,"lang":"vi"}'],
+            ['U20','son_dev','{"theme":"auto","notifications":false,"lang":"vi"}'],
+            ['U21','thao_dev','{"theme":"dark","notifications":true,"lang":"en"}'],
+            ['U22','duc_dev','{"theme":"light","notifications":true,"lang":"vi"}']
           ]
         },
         expected_sql: "SELECT settings->>'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'theme' ORDER BY user_count DESC;",
@@ -3386,10 +4046,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['B01','Quận 1 Center',    '(106.7009, 10.7769)','TP.HCM'],
-            ['B02','District 7 Hub',   '(106.7369, 10.7288)','TP.HCM'],
-            ['B03','Hanoi Old Quarter','(105.8542, 21.0285)','Hà Nội'],
-            ['B04','District 3 Store', '(106.6872, 10.7822)','TP.HCM']
+            ['B01','Quận 1 Center',     '(106.7009, 10.7769)','TP.HCM'],
+            ['B02','District 7 Hub',    '(106.7369, 10.7288)','TP.HCM'],
+            ['B03','Hanoi Old Quarter', '(105.8542, 21.0285)','Hà Nội'],
+            ['B04','District 3 Store',  '(106.6872, 10.7822)','TP.HCM'],
+            ['B05','Bình Thạnh Mall',  '(106.7038, 10.8106)','TP.HCM'],
+            ['B06','Thủ Đức Tech',     '(106.7710, 10.8494)','TP.HCM'],
+            ['B07','Tân Bình Point',   '(106.6526, 10.8014)','TP.HCM'],
+            ['B08','Hai Bà Trưng HN',   '(105.8480, 21.0080)','Hà Nội'],
+            ['B09','Cầu Giấy HN',      '(105.7964, 21.0313)','Hà Nội'],
+            ['B10','Đà Nẵng Center',   '(108.2022, 16.0544)','Đà Nẵng'],
+            ['B11','Hải Châu DN',      '(108.2208, 16.0678)','Đà Nẵng'],
+            ['B12','Phú Nhuận Store',  '(106.6800, 10.7990)','TP.HCM'],
+            ['B13','Gò Vấp Hub',       '(106.6657, 10.8386)','TP.HCM'],
+            ['B14','Quận 10 Plaza',    '(106.6670, 10.7730)','TP.HCM'],
+            ['B15','Quận 4 Point',     '(106.7050, 10.7590)','TP.HCM'],
+            ['B16','Cần Thơ Center',   '(105.7469, 10.0452)','Cần Thơ'],
+            ['B17','Huế Store',        '(107.5847, 16.4637)','Huế'],
+            ['B18','Nha Trang Bay',    '(109.1967, 12.2388)','Nha Trang'],
+            ['B19','Quận 2 Hub',       '(106.7500, 10.7870)','TP.HCM'],
+            ['B20','Bình Tân Mall',    '(106.6020, 10.7650)','TP.HCM'],
+            ['B21','Long Biên HN',     '(105.8800, 21.0450)','Hà Nội'],
+            ['B22','Quận 5 Plaza',     '(106.6634, 10.7540)','TP.HCM']
           ]
         },
         mission: 'Tính <code class="code">khoảng cách</code> từ mỗi cửa hàng đến trung tâm TP.HCM. Kéo thả khối lệnh ↓'
@@ -3501,14 +4179,28 @@ concept_cards: [
             { name: 'zone',         type: 'VARCHAR', key: '',  icon: '' }
           ],
           data: [
-            ['B01','Quận 1 Center',    '(106.7009, 10.7769)','TP.HCM','Downtown'],
-            ['B02','District 7 Hub',   '(106.7369, 10.7288)','TP.HCM','South'],
-            ['B03','Hanoi Old Quarter','(105.8542, 21.0285)','Hà Nội','Old City'],
-            ['B04','District 3 Store', '(106.6872, 10.7822)','TP.HCM','Downtown'],
-            ['B05','Bình Thạnh Store', '(106.7200, 10.8034)','TP.HCM','North'],
-            ['B06','Thủ Đức Hub',      '(106.7800, 10.8782)','TP.HCM','East'],
-            ['B07','District 10 Store', '(106.6780, 10.7792)','TP.HCM','Downtown'],
-            ['B08','District 5 Store',  '(106.6500, 10.7500)','TP.HCM','West']
+            ['B01','Quận 1 Center',     '(106.7009, 10.7769)','TP.HCM','Downtown'],
+            ['B02','District 7 Hub',    '(106.7369, 10.7288)','TP.HCM','South'],
+            ['B03','Hanoi Old Quarter', '(105.8542, 21.0285)','Hà Nội','Old City'],
+            ['B04','District 3 Store',  '(106.6872, 10.7822)','TP.HCM','Downtown'],
+            ['B05','Bình Thạnh Mall',  '(106.7038, 10.8106)','TP.HCM','North'],
+            ['B06','Thủ Đức Tech',     '(106.7710, 10.8494)','TP.HCM','East'],
+            ['B07','Tân Bình Point',   '(106.6526, 10.8014)','TP.HCM','South'],
+            ['B08','Hai Bà Trưng HN',  '(105.8480, 21.0080)','Hà Nội','Old City'],
+            ['B09','Cầu Giấy HN',      '(105.7964, 21.0313)','Hà Nội','North'],
+            ['B10','Đà Nẵng Center',   '(108.2022, 16.0544)','Đà Nẵng','Downtown'],
+            ['B11','Hải Châu DN',      '(108.2208, 16.0678)','Đà Nẵng','South'],
+            ['B12','Phú Nhuận Store',  '(106.6800, 10.7990)','TP.HCM','Downtown'],
+            ['B13','Gò Vấp Hub',       '(106.6657, 10.8386)','TP.HCM','North'],
+            ['B14','Quận 10 Plaza',    '(106.6670, 10.7730)','TP.HCM','Downtown'],
+            ['B15','Quận 4 Point',     '(106.7050, 10.7590)','TP.HCM','South'],
+            ['B16','Cần Thơ Center',   '(105.7469, 10.0452)','Cần Thơ','Downtown'],
+            ['B17','Huế Store',        '(107.5847, 16.4637)','Huế','Old City'],
+            ['B18','Nha Trang Bay',    '(109.1967, 12.2388)','Nha Trang','Downtown'],
+            ['B19','Quận 2 Hub',       '(106.7500, 10.7870)','TP.HCM','East'],
+            ['B20','Bình Tân Mall',    '(106.6020, 10.7650)','TP.HCM','West'],
+            ['B21','Long Biên HN',     '(105.8800, 21.0450)','Hà Nội','North'],
+            ['B22','Quận 5 Plaza',     '(106.6634, 10.7540)','TP.HCM','West']
           ]
         },
         expected_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;",
@@ -3588,10 +4280,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['E01','U01','login',   '{"ip":"1.1.1.1"}',   '2026-01-10 08:00:00'],
-            ['E02','U02','logout',  '{"session":"sess_abc"}','2026-01-10 09:30:00'],
-            ['E03','U01','purchase','{"amount":500000}',  '2026-01-10 10:00:00'],
-            ['E04','U01','login',   '{"ip":"1.1.1.2"}',   '2026-01-11 08:05:00']
+            ['E01','U01','login',   '{"ip":"1.1.1.1"}',        '2026-01-10 08:00:00'],
+            ['E02','U02','logout',  '{"session":"sess_abc"}',  '2026-01-10 09:30:00'],
+            ['E03','U01','purchase','{"amount":500000}',      '2026-01-10 10:00:00'],
+            ['E04','U01','login',   '{"ip":"1.1.1.2"}',        '2026-01-11 08:05:00'],
+            ['E05','U03','login',   '{"ip":"2.2.2.1"}',        '2026-01-11 09:00:00'],
+            ['E06','U01','logout',  '{"session":"sess_def"}',  '2026-01-11 18:00:00'],
+            ['E07','U02','purchase','{"amount":120000}',      '2026-01-12 11:00:00'],
+            ['E08','U04','login',   '{"ip":"3.3.3.1"}',        '2026-01-12 08:30:00'],
+            ['E09','U01','login',   '{"ip":"1.1.1.3"}',        '2026-01-13 08:10:00'],
+            ['E10','U03','purchase','{"amount":250000}',      '2026-01-13 14:00:00'],
+            ['E11','U05','login',   '{"ip":"4.4.4.1"}',        '2026-01-13 09:15:00'],
+            ['E12','U01','purchase','{"amount":75000}',       '2026-01-14 12:00:00'],
+            ['E13','U02','login',   '{"ip":"2.2.2.5"}',        '2026-01-14 08:00:00'],
+            ['E14','U04','logout',  '{"session":"sess_ghi"}',  '2026-01-14 17:30:00'],
+            ['E15','U01','login',   '{"ip":"1.1.1.4"}',        '2026-01-15 08:00:00'],
+            ['E16','U06','login',   '{"ip":"5.5.5.1"}',        '2026-01-15 09:00:00'],
+            ['E17','U03','login',   '{"ip":"2.2.2.7"}',        '2026-01-15 10:00:00'],
+            ['E18','U01','logout',  '{"session":"sess_jkl"}',  '2026-01-15 18:30:00'],
+            ['E19','U05','purchase','{"amount":340000}',      '2026-01-16 13:00:00'],
+            ['E20','U02','login',   '{"ip":"2.2.2.9"}',        '2026-01-16 08:00:00'],
+            ['E21','U01','login',   '{"ip":"1.1.1.5"}',        '2026-01-17 08:00:00'],
+            ['E22','U04','login',   '{"ip":"3.3.3.4"}',        '2026-01-17 09:00:00']
           ]
         },
         mission: 'Viết Django ORM query tương đương SQL. Kéo thả khối lệnh ↓'
@@ -3658,12 +4368,28 @@ concept_cards: [
             { name: 'timestamp',   type: 'TIMESTAMP', key: '',   icon: '' }
           ],
           data: [
-            ['E01','U01','login',   '2026-01-10'],
-            ['E02','U01','purchase','2026-01-10'],
-            ['E03','U01','login',   '2026-01-11'],
-            ['E04','U01','login',   '2026-01-12'],
-            ['E05','U01','logout',  '2026-01-12'],
-            ['E06','U02','login',   '2026-01-10']
+            ['E01','U01','login',   '2026-01-10 08:00:00'],
+            ['E02','U02','logout',  '2026-01-10 09:30:00'],
+            ['E03','U01','purchase','2026-01-10 10:00:00'],
+            ['E04','U01','login',   '2026-01-11 08:05:00'],
+            ['E05','U03','login',   '2026-01-11 09:00:00'],
+            ['E06','U01','logout',  '2026-01-11 18:00:00'],
+            ['E07','U02','purchase','2026-01-12 11:00:00'],
+            ['E08','U04','login',   '2026-01-12 08:30:00'],
+            ['E09','U01','login',   '2026-01-13 08:10:00'],
+            ['E10','U03','purchase','2026-01-13 14:00:00'],
+            ['E11','U05','login',   '2026-01-13 09:15:00'],
+            ['E12','U01','purchase','2026-01-14 12:00:00'],
+            ['E13','U02','login',   '2026-01-14 08:00:00'],
+            ['E14','U04','logout',  '2026-01-14 17:30:00'],
+            ['E15','U01','login',   '2026-01-15 08:00:00'],
+            ['E16','U06','login',   '2026-01-15 09:00:00'],
+            ['E17','U03','login',   '2026-01-15 10:00:00'],
+            ['E18','U01','logout',  '2026-01-15 18:30:00'],
+            ['E19','U05','purchase','2026-01-16 13:00:00'],
+            ['E20','U02','login',   '2026-01-16 08:00:00'],
+            ['E21','U01','login',   '2026-01-17 08:00:00'],
+            ['E22','U04','login',   '2026-01-17 09:00:00']
           ]
         },
         expected_sql: "LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')",
@@ -3695,7 +4421,27 @@ concept_cards: [
             ['101','Elden Ring','RPG','60'],
             ['102','God of War','Action','50'],
             ['103','Hades','RPG','25'],
-            ['104','Celeste','Platformer','20']
+            ['104','Celeste','Platformer','20'],
+            ['105',"Baldur's Gate 3",'RPG','60'],
+            ['106','Cyberpunk 2077','RPG','45'],
+            ['107','The Witcher 3','RPG','40'],
+            ['108','Disco Elysium','RPG','35'],
+            ['109','God of War Ragnarok','Action','60'],
+            ['110','Hollow Knight','Metroidvania','15'],
+            ['111','Stardew Valley','Simulation','18'],
+            ['112','Doom Eternal','Shooter','40'],
+            ['113','Sekiro','Action','50'],
+            ['114','Slay the Spire','Card Game','23'],
+            ['115','Persona 5','RPG','55'],
+            ['116','Final Fantasy XVI','RPG','50'],
+            ['117','Portal 2','Puzzle','10'],
+            ['118','Cuphead','Run & Gun','20'],
+            ['119','Terraria','Sandbox','10'],
+            ['120','Red Dead 2','Action','60'],
+            ['121','Dark Souls III','RPG','40'],
+            ['122','Outer Wilds','Adventure','25'],
+            ['123','Vampire Survivors','Roguelite','5'],
+            ['124','Cult of the Lamb','Roguelike','25']
           ]
         }
       },
@@ -3742,7 +4488,27 @@ concept_cards: [
             ['101','Elden Ring','RPG','60'],
             ['102','God of War','Action','50'],
             ['103','Hades','RPG','25'],
-            ['104','Celeste','Platformer','20']
+            ['104','Celeste','Platformer','20'],
+            ['105',"Baldur's Gate 3",'RPG','60'],
+            ['106','Cyberpunk 2077','RPG','45'],
+            ['107','The Witcher 3','RPG','40'],
+            ['108','Disco Elysium','RPG','35'],
+            ['109','God of War Ragnarok','Action','60'],
+            ['110','Hollow Knight','Metroidvania','15'],
+            ['111','Stardew Valley','Simulation','18'],
+            ['112','Doom Eternal','Shooter','40'],
+            ['113','Sekiro','Action','50'],
+            ['114','Slay the Spire','Card Game','23'],
+            ['115','Persona 5','RPG','55'],
+            ['116','Final Fantasy XVI','RPG','50'],
+            ['117','Portal 2','Puzzle','10'],
+            ['118','Cuphead','Run & Gun','20'],
+            ['119','Terraria','Sandbox','10'],
+            ['120','Red Dead 2','Action','60'],
+            ['121','Dark Souls III','RPG','40'],
+            ['122','Outer Wilds','Adventure','25'],
+            ['123','Vampire Survivors','Roguelite','5'],
+            ['124','Cult of the Lamb','Roguelike','25']
           ]
         },
         mission: 'Server nhận request lọc game RPG — kéo thả câu SQL mà API sẽ chạy để trả kết quả.'
@@ -3811,12 +4577,32 @@ concept_cards: [
             ['101','Elden Ring','RPG','60'],
             ['102','God of War','Action','50'],
             ['103','Hades','RPG','25'],
-            ['104','Celeste','Platformer','20']
+            ['104','Celeste','Platformer','20'],
+            ['105',"Baldur's Gate 3",'RPG','60'],
+            ['106','Cyberpunk 2077','RPG','45'],
+            ['107','The Witcher 3','RPG','40'],
+            ['108','Disco Elysium','RPG','35'],
+            ['109','God of War Ragnarok','Action','60'],
+            ['110','Hollow Knight','Metroidvania','15'],
+            ['111','Stardew Valley','Simulation','18'],
+            ['112','Doom Eternal','Shooter','40'],
+            ['113','Sekiro','Action','50'],
+            ['114','Slay the Spire','Card Game','23'],
+            ['115','Persona 5','RPG','55'],
+            ['116','Final Fantasy XVI','RPG','50'],
+            ['117','Portal 2','Puzzle','10'],
+            ['118','Cuphead','Run & Gun','20'],
+            ['119','Terraria','Sandbox','10'],
+            ['120','Red Dead 2','Action','60'],
+            ['121','Dark Souls III','RPG','40'],
+            ['122','Outer Wilds','Adventure','25'],
+            ['123','Vampire Survivors','Roguelite','5'],
+            ['124','Cult of the Lamb','Roguelike','25']
           ]
         },
         hints: [
           { level: 1, text: "Bạn cần <em>2 cột</em> (name, price) từ bảng <code>game_catalog</code>, lọc theo genre = 'Action'." },
-          { level: 2, text: "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 1 dòng (God of War, 50)." },
+          { level: 2, text: "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 4 dòng (God of War 50, Ragnarok 60, Sekiro 50, Red Dead 2 60)." },
           { level: 3, text: "Giá trị chuỗi trong SQL đặt trong dấu nháy đơn: <code>'Action'</code>." },
           { level: 4, text: "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action';</code>" }
         ],
@@ -3895,10 +4681,28 @@ concept_cards: [
             ]
           },
           data_preview: [
-            ['U01','minh_admin', 'hashed_abc', 'minh@x.com','admin'],
-            ['U02','yuki_user',  'hashed_xyz', 'yuki@x.com','user'],
-            ['U03','sara_mod',   'hashed_123', 'sara@x.com','moderator'],
-            ['U04','alex_guest', 'hashed_456', 'alex@x.com','guest']
+            ['U01','minh_admin',  'hashed_abc','minh@x.com','admin'],
+            ['U02','yuki_user',   'hashed_xyz','yuki@x.com','user'],
+            ['U03','sara_mod',    'hashed_123','sara@x.com','moderator'],
+            ['U04','alex_guest',  'hashed_456','alex@x.com','guest'],
+            ['U05','nam_user',    'hashed_789','nam@x.com','user'],
+            ['U06','lan_user',    'hashed_aaa','lan@x.com','user'],
+            ['U07','hung_mod',    'hashed_bbb','hung@x.com','moderator'],
+            ['U08','mai_user',    'hashed_ccc','mai@x.com','user'],
+            ['U09','tu_admin',    'hashed_ddd','tu@x.com','admin'],
+            ['U10','linh_user',   'hashed_eee','linh@x.com','user'],
+            ['U11','phuc_guest',  'hashed_fff','phuc@x.com','guest'],
+            ['U12','quan_user',   'hashed_ggg','quan@x.com','user'],
+            ['U13','ha_mod',      'hashed_hhh','ha@x.com','moderator'],
+            ['U14','dat_user',    'hashed_iii','dat@x.com','user'],
+            ['U15','vy_user',     'hashed_jjj','vy@x.com','user'],
+            ['U16','khoa_guest',  'hashed_kkk','khoa@x.com','guest'],
+            ['U17','trang_user',  'hashed_lll','trang@x.com','user'],
+            ['U18','bao_admin',   'hashed_mmm','bao@x.com','admin'],
+            ['U19','ngoc_user',   'hashed_nnn','ngoc@x.com','user'],
+            ['U20','son_user',    'hashed_ooo','son@x.com','user'],
+            ['U21','thao_mod',    'hashed_ppp','thao@x.com','moderator'],
+            ['U22','duc_user',    'hashed_qqq','duc@x.com','user']
           ]
         },
         mission: 'Phân rã <strong>query bị SQL Injection</strong>. Kéo thả khối để xem query thực sự chạy gì ↓'
@@ -3963,14 +4767,28 @@ concept_cards: [
             { name: 'role',     type: 'VARCHAR', key: '',  icon: '' }
           ],
           data: [
-            ['U01','minh_admin','minh@x.com','admin'],
-            ['U02','yuki_user', 'yuki@x.com','user'],
-            ['U03','sara_mod',  'sara@x.com','moderator'],
-            ['U04','alex_guest','alex@x.com','guest'],
-            ['U05','lisa_user', 'lisa@x.com','user'],
-            ['U06','ken_mod',   'ken@x.com', 'moderator'],
-            ['U07','jen_guest', 'jen@x.com', 'guest'],
-            ['U08','bob_user',  'bob@x.com', 'user']
+            ['U01','minh_admin', 'minh@x.com','admin'],
+            ['U02','yuki_user',  'yuki@x.com','user'],
+            ['U03','sara_mod',   'sara@x.com','moderator'],
+            ['U04','alex_guest', 'alex@x.com','guest'],
+            ['U05','nam_user',   'nam@x.com','user'],
+            ['U06','lan_user',   'lan@x.com','user'],
+            ['U07','hung_mod',   'hung@x.com','moderator'],
+            ['U08','mai_user',   'mai@x.com','user'],
+            ['U09','tu_admin',   'tu@x.com','admin'],
+            ['U10','linh_user',  'linh@x.com','user'],
+            ['U11','phuc_guest', 'phuc@x.com','guest'],
+            ['U12','quan_user',  'quan@x.com','user'],
+            ['U13','ha_mod',     'ha@x.com','moderator'],
+            ['U14','dat_user',   'dat@x.com','user'],
+            ['U15','vy_user',    'vy@x.com','user'],
+            ['U16','khoa_guest', 'khoa@x.com','guest'],
+            ['U17','trang_user', 'trang@x.com','user'],
+            ['U18','bao_admin',  'bao@x.com','admin'],
+            ['U19','ngoc_user',  'ngoc@x.com','user'],
+            ['U20','son_user',   'son@x.com','user'],
+            ['U21','thao_mod',   'thao@x.com','moderator'],
+            ['U22','duc_user',   'duc@x.com','user']
           ]
         },
         expected_sql: "SELECT * FROM user_accounts WHERE username = %s AND password_hash = %s; SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
@@ -4056,8 +4874,28 @@ concept_cards: [
           data_preview: [
             ['U01','minh_dev', '5f4dcc3b5aa765d61d8327deb882cf99','rand_abc','md5'],
             ['U02','yuki_dev', 'e10adc3949ba59abbe56e057f20f883e','rand_xyz','md5'],
-            ['U03','sara_dev', '$2a$12$KIX...Y8Y8Y8Y8Y8Y8Y8Y8Y8','rand_123','bcrypt'],
-            ['U04','alex_dev', '$2b$12$vPZ...XzZxKIX...','rand_456','bcrypt']
+            ['U03','sara_dev', '356a192b7913b04c54574d18c28d46e6395428ab','rand_123','sha1'],
+            ['U04','alex_dev', '$2b$12$vPZ...XzZxKIX...','rand_456','argon2'],
+            ['U05','lisa_dev', '5994471abb01112afcc18159f6cc74b4f511b99806dcaf8c1c2c0d8c6c9e0d8c','rand_lisa','sha256'],
+            ['U06','nam_dev',  '$2b$12$9N8...3aBcDeFgH','rand_nam','bcrypt'],
+            ['U07','lan_dev',  'd41d8cd98f00b204e9800998ecf8427e','rand_lan','md5'],
+            ['U08','hung_dev', '$2b$12$Lp9...q1w2e3r4t','rand_hung','scrypt'],
+            ['U09','mai_dev',  'a59b7d5cdd1e6a4b1c8e3f5d7a9b1c3e5f7d9a1b3c5e7f9d1a3b5c7e9f1d3a5b','rand_mai','sha256'],
+            ['U10','tu_dev',   '$2b$12$Xy7...8z9A0B1C2','rand_tu','bcrypt'],
+            ['U11','linh_dev', 'da39a3ee5e6b4b0d3255bfef95601890afd80709','rand_linh','sha1'],
+            ['U12','phuc_dev', '$2b$12$Qq4...rR5sS6tT','rand_phuc','argon2'],
+            ['U13','quan_dev', '098f6bcd4621d373cade4e832627b4f6','rand_quan','md5'],
+            ['U14','ha_dev',   '$2b$12$Mk6...pP7qQ8rR','rand_ha','bcrypt'],
+            ['U15','dat_dev',  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855','rand_dat','sha256'],
+            ['U16','vy_dev',   '$2b$12$Jd2...sS3tT4uU','rand_vy','scrypt'],
+            ['U17','khoa_dev', '5d41402abc4b2a76b9719d911017c592','rand_khoa','md5'],
+            ['U18','trang_dev','$2b$12$Wq8...yY9zZ0A1','rand_trang','bcrypt'],
+            ['U19','bao_dev',  'a9993e364706816aba3e25717850c26c9cd0d89d','rand_bao','sha1'],
+            ['U20','ngoc_dev', '$2b$12$Bn5...fF6gG7hH','rand_ngoc','argon2'],
+            ['U21','son_dev',  '2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3','rand_son','sha256'],
+            ['U22','thao_dev', '$2b$12$Ct3...eE4fF5gG','rand_thao','bcrypt'],
+            ['U23','duc_dev',  '8277e0910d750195b448797616e091ad','rand_duc','md5'],
+            ['U24','an_dev',   '$2b$12$Vm1...dD2eE3fF','rand_an','scrypt']
           ]
         },
         mission: 'Viết query phân loại <strong>mức độ bảo mật</strong> theo thuật toán. Kéo thả khối lệnh ↓'

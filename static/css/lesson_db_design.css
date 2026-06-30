@@ -3067,6 +3067,8 @@ body.lesson-focus-mode::before {
   overflow: auto;
   padding: 10px 12px;
   scrollbar-width: thin;
+  /* PHASE 3.5-A4: cap chiều cao bảng kết quả — 20-30 dòng vẫn scroll trong panel, không đẩy layout/đè footer */
+  max-height: 360px;
 }
 .codecademy-layout .results-empty {
   padding: 24px 16px;
