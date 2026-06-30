@@ -25,8 +25,10 @@
   <div class="particles" id="particles"></div>
 
   <div class="page">
-    <div class="auth-wrapper">
-      <div class="card">
+    <div class="auth-split">
+      <!-- LEFT 50%: Form -->
+      <div class="auth-form-side">
+        <div class="card">
 
         <!-- Logo -->
         <div class="logo">
@@ -166,9 +168,55 @@
           <span id="errorMsg">Có lỗi xảy ra.</span>
         </div>
 
+        </div>
+        </div>
+
+        <!-- RIGHT 50%: Brand canvas (re-use login.css brand classes) -->
+        <aside class="auth-brand-side">
+          <div class="brand-canvas">
+            <div class="brand-glow brand-glow--amber"></div>
+            <div class="brand-glow brand-glow--indigo"></div>
+            <div class="brand-glow brand-glow--emerald"></div>
+            <div class="brand-canvas-content">
+              <div class="brand-canvas-eyebrow">
+                <span class="brand-canvas-dot"></span>
+                PE_test · Database Design
+              </div>
+              <h1 class="brand-canvas-title">
+                Bắt đầu<br/>
+                <span class="brand-canvas-grad">hành trình SQL</span>
+              </h1>
+              <p class="brand-canvas-sub">
+                Tham gia cộng đồng lập trình viên, học qua dự án thực tế với
+                schema trực quan, mini-game, và bài tập code chạy thật trên database.
+              </p>
+
+              <div class="brand-canvas-stats">
+                <div class="brand-stat">
+                  <div class="brand-stat-num">Miễn phí</div>
+                  <div class="brand-stat-lbl">100% không thu phí</div>
+                </div>
+                <div class="brand-stat">
+                  <div class="brand-stat-num">20</div>
+                  <div class="brand-stat-lbl">bài học tương tác</div>
+                </div>
+                <div class="brand-stat">
+                  <div class="brand-stat-num">XP</div>
+                  <div class="brand-stat-lbl">streak + gems</div>
+                </div>
+              </div>
+
+              <div class="brand-canvas-foot">
+                <span class="brand-pill">⚡ Nhận XP mỗi bài</span>
+                <span class="brand-pill">🔥 Streak hàng ngày</span>
+                <span class="brand-pill">🏆 Bảng xếp hạng</span>
+                <span class="brand-pill">💎 Gems thưởng</span>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
-  </div>
 
   <script>
     /* ── PARTICLES ── */

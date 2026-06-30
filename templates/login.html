@@ -34,8 +34,10 @@
     <div class="particles" id="particles"></div>
 
     <div class="page">
-      <div class="auth-wrapper">
-        <div class="card">
+      <div class="auth-split">
+        <!-- LEFT 50%: Form (clean, focused) -->
+        <div class="auth-form-side">
+          <div class="card">
           <!-- Logo -->
           <div class="logo">
             <div class="logo-icon">
@@ -225,6 +227,53 @@
             <span id="errorMsg">Có lỗi xảy ra.</span>
           </div>
         </div>
+        </div>
+
+        <!-- RIGHT 50%: Brand canvas (ambient glow + module gradient) -->
+        <aside class="auth-brand-side">
+          <div class="brand-canvas">
+            <div class="brand-glow brand-glow--amber"></div>
+            <div class="brand-glow brand-glow--indigo"></div>
+            <div class="brand-glow brand-glow--emerald"></div>
+            <div class="brand-canvas-content">
+              <div class="brand-canvas-eyebrow">
+                <span class="brand-canvas-dot"></span>
+                PE_test · Database Design
+              </div>
+              <h1 class="brand-canvas-title">
+                Học SQL qua<br/>
+                <span class="brand-canvas-grad">dự án thực tế</span>
+              </h1>
+              <p class="brand-canvas-sub">
+                20 bài học tương tác từ ER Model đến Web Services &amp; Password Security.
+                Mỗi bài có schema trực quan, mini-game, và bài tập code thực chiến.
+              </p>
+
+              <div class="brand-canvas-stats">
+                <div class="brand-stat">
+                  <div class="brand-stat-num">20</div>
+                  <div class="brand-stat-lbl">bài học tương tác</div>
+                </div>
+                <div class="brand-stat">
+                  <div class="brand-stat-num">3</div>
+                  <div class="brand-stat-lbl">module ER/NF/App</div>
+                </div>
+                <div class="brand-stat">
+                  <div class="brand-stat-num">Brilliant</div>
+                  <div class="brand-stat-lbl">/Duolingo level</div>
+                </div>
+              </div>
+
+              <div class="brand-canvas-foot">
+                <span class="brand-pill">🔑 Primary Key</span>
+                <span class="brand-pill">🔗 Foreign Key</span>
+                <span class="brand-pill">⚡ B-Tree</span>
+                <span class="brand-pill">🛡 BCNF</span>
+                <span class="brand-pill">💉 SQL Injection</span>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
 

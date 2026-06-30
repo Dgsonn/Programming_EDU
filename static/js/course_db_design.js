@@ -48,27 +48,29 @@ function toggleModule(hd) {
 
 /** Course lesson data (shared with C2 roadmap + C8 hero time) */
 var COURSE_LESSONS = [
-  // Module 1 — ER Mapping (B1-B6)
-  { n: 1,  m: 1, t: 'Entity Set & PK',                  min: 15 },
-  { n: 2,  m: 1, t: 'Composite & Derived',              min: 12 },
-  { n: 3,  m: 1, t: 'Foreign Key & JOIN',               min: 15 },
-  { n: 4,  m: 1, t: 'M:N & Junction Table',             min: 15 },
-  { n: 5,  m: 1, t: 'Weak Entity',                      min: 12 },
-  { n: 6,  m: 1, t: 'Mapping ER → Tables',              min: 18 },
-  // Module 2 — Normalization (B7-B13)
-  { n: 7,  m: 2, t: 'Redundancy & FD',                  min: 18 },
-  { n: 8,  m: 2, t: '1NF — Atomic',                     min: 15 },
-  { n: 9,  m: 2, t: '2NF — Full Dep',                   min: 15 },
-  { n: 10, m: 2, t: 'BCNF — Decomposition',             min: 20 },
-  { n: 11, m: 2, t: '3NF — Transitive',                 min: 15 },
-  { n: 12, m: 2, t: '4NF — Multi-valued',               min: 15 },
-  { n: 13, m: 2, t: 'Boss Battle', boss: true,          min: 30 },
-  // Module 3 — App Design (B14-B18)
-  { n: 14, m: 3, t: 'JSON in DB',                       min: 18 },
-  { n: 15, m: 3, t: 'Spatial Data',                     min: 18 },
-  { n: 16, m: 3, t: 'Django ORM',                       min: 18 },
-  { n: 17, m: 3, t: 'SQL Injection',                    min: 18 },
-  { n: 18, m: 3, t: 'Password Hashing',                 min: 20 }
+  // Module 1 — ER Mapping (B1-B7) — 7 bài (was 6; thêm M:N junction)
+  { n: 1,  m: 1, t: 'Entity & Primary Key',                       min: 15 },
+  { n: 2,  m: 1, t: 'Composite + Multivalued + Derived',         min: 12 },
+  { n: 3,  m: 1, t: 'Foreign Key & JOIN',                        min: 15 },
+  { n: 4,  m: 1, t: 'Foreign Key & 1:N',                         min: 15 },
+  { n: 5,  m: 1, t: 'M:N & Bảng trung gian',                     min: 18 },
+  { n: 6,  m: 1, t: 'Weak Entity & Khóa chính tổng hợp',         min: 14 },
+  { n: 7,  m: 1, t: 'Mapping ER → Bảng',                         min: 18 },
+  // Module 2 — Normalization (B8-B14) — 7 bài (BCNF↔3NF swap; Boss still cuối)
+  { n: 8,  m: 2, t: 'Redundancy & Phụ thuộc hàm (FD)',           min: 18 },
+  { n: 9,  m: 2, t: '1NF — Nguyên tử hóa',                       min: 15 },
+  { n: 10, m: 2, t: '2NF — Phụ thuộc đầy đủ',                    min: 15 },
+  { n: 11, m: 2, t: '3NF — Phụ thuộc bắc cầu',                   min: 15 },
+  { n: 12, m: 2, t: 'BCNF — Phân rã phi tổn thất',               min: 20 },
+  { n: 13, m: 2, t: '4NF — Phụ thuộc đa trị',                    min: 15 },
+  { n: 14, m: 2, t: 'Boss Battle — Mạng Xã Hội Gamers', boss: true, min: 30 },
+  // Module 3 — App Design (B15-B20) — 6 bài (was 5; thêm Web Services)
+  { n: 15, m: 3, t: 'JSON trong Relational DB',                  min: 18 },
+  { n: 16, m: 3, t: 'Spatial Data & Truy vấn tọa độ',           min: 18 },
+  { n: 17, m: 3, t: 'ORM (Django)',                              min: 18 },
+  { n: 18, m: 3, t: 'Web Services — REST/AJAX',                  min: 18 },
+  { n: 19, m: 3, t: 'SQL Injection',                             min: 18 },
+  { n: 20, m: 3, t: 'Password Security',                         min: 20 }
 ];
 
 /** Format minutes → Vietnamese-friendly time string */
@@ -88,12 +90,13 @@ function formatCourseTime(totalMin) {
   if (el) el.textContent = formatCourseTime(totalMin);
 })();
 
-/** Determine which modules are completed given a set of completed lesson numbers */
+/** Determine which modules are completed given a set of completed lesson numbers
+ *  (M1: 1-7, M2: 8-14, M3: 15-20 — per curriculum 18→20 renumber) */
 function computeModuleCompletion(completedSet) {
   return {
-    m1: [1,2,3,4,5,6].every(function (n) { return completedSet.has(n); }),
-    m2: [7,8,9,10,11,12,13].every(function (n) { return completedSet.has(n); }),
-    m3: [14,15,16,17,18].every(function (n) { return completedSet.has(n); })
+    m1: [1,2,3,4,5,6,7].every(function (n) { return completedSet.has(n); }),
+    m2: [8,9,10,11,12,13,14].every(function (n) { return completedSet.has(n); }),
+    m3: [15,16,17,18,19,20].every(function (n) { return completedSet.has(n); })
   };
 }
 
@@ -198,7 +201,7 @@ function resolveUserProgress() {
 
 /* ============================================================================
  * C2 — Course Roadmap Visual (Brilliant-style node path)
- * Renders 18 nodes in snake layout, 3 module zones, B13 = boss hexagon.
+ * Renders 20 nodes in snake layout, 3 module zones, B14 = boss hexagon.
  * State: backend API (/api/courses-enrolled) → localStorage → CURRENT_LESSON_IDX
  * ========================================================================== */
 (function renderRoadmap() {

@@ -567,8 +567,8 @@
   /* ── C3: Module / Course completion celebration ─────────────── */
   function triggerModuleCelebration() {
     var lessonNum = (state.currentLessonIdx || 0) + 1;
-    var isGraduation = (lessonNum === 18);  // B18 = course complete
-    var isTrophy    = (lessonNum === 6 || lessonNum === 13);
+    var isGraduation = (lessonNum === 20);  // B20 = course complete (was 18, renumber to 20)
+    var isTrophy    = (lessonNum === 7 || lessonNum === 14);  // B7 = M1 end, B14 = M2 end (Boss)
     if (!isGraduation && !isTrophy) return;
     var el = document.createElement('div');
     el.className = isGraduation ? 'graduation-celebration' : 'trophy-celebration';
@@ -635,7 +635,7 @@
     // Set module accent color (Amber/Indigo/Emerald) dựa trên module number
     // Module 1 (B1-B6)  ER Mapping     → Amber  #F59E0B
     // Module 2 (B7-B13) Normalization → Indigo #8B5CF6
-    // Module 3 (B14-18) App Design    → Emerald #10B981
+    // Module 3 (B15-20) App Design    → Emerald #10B981
     const MODULE_COLORS = {
       1: { accent: '#F59E0B', softAlpha: '1a', glowAlpha: '59' },  // Amber
       2: { accent: '#8B5CF6', softAlpha: '1a', glowAlpha: '59' },  // Indigo
@@ -1682,7 +1682,7 @@
     `;
   }
 
-  /* ── Bug Spot (Bài 17, 18 — SQLi, Password) ────────────────────────── */
+  /* ── Bug Spot (Bài 19, 20 — SQLi, Password) ────────────────────────── */
   function renderFlagshipBugSpot(f) {
     return `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px;">
@@ -3447,13 +3447,13 @@
     const l = state.currentLesson;
     const s4 = l.step_4;
     const lessonNum = state.currentLessonIdx + 1;
-    document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/18`;
+    document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/20`;
     document.getElementById('success-lesson-title').textContent = l.title;
     document.getElementById('success-message').textContent =
       s4.success_message || 'Bạn đã hoàn thành bài học!';
     document.getElementById('reward-xp').textContent = `+${s4.xp_reward || 50}`;
     // FIX 2g-A2: achievement data-driven — chỉ hiện khi bài CÓ `l.achievement`,
-    // KHÔNG fallback "Khóa chính — Khởi đầu" (đúng > sai; bài 2-18 thiếu data → ẩn hẳn).
+    // KHÔNG fallback "Khóa chính — Khởi đầu" (đúng > sai; bài 2-20 thiếu data → ẩn hẳn).
     const achBlock = document.getElementById('achievement-unlock-block');
     if (achBlock) {
       if (l.achievement && l.achievement.name) {
@@ -3755,7 +3755,7 @@
     alert('💡 Gợi ý: ' + (f.hint || 'Xem lại lý thuyết trong Step 1.'));
   };
 
-  /* ── Bug Spot (Bài 17, 18 — SQLi, Password) ────────────────────────── */
+  /* ── Bug Spot (Bài 19, 20 — SQLi, Password) ────────────────────────── */
   function initFlagshipBugSpotDnD() {
     document.querySelectorAll('.bug-chip').forEach(chip => {
       chip.addEventListener('dragstart', e => {

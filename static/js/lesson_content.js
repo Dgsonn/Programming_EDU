@@ -3,10 +3,10 @@
  * 4-step pipeline data: Step 1 (Theory+Visual) → Step 2 (MCQ) →
  *                       Step 3 (Hybrid Drag-Query + Reveal) → Step 4 (Pure Code)
  *
- * 18 bài (db_01..db_18) đều có content đầy đủ — curriculum chia 3 module:
- *   - Module 1 (db_01..db_06): ER Model & Mapping — Silberschatz Ch 6
- *   - Module 2 (db_07..db_13): Normalization (FD, 1NF→BCNF, Boss Battle) — Ch 7
- *   - Module 3 (db_14..db_18): Application Design (JSON, Spatial, ORM, SQLi, Password) — Ch 8-9
+ * 20 bài (db_01..db_20) đều có content đầy đủ — curriculum chia 3 module:
+*   - Module 1 (db_01..db_07): ER Model & Mapping — Silberschatz Ch 6
+*   - Module 2 (db_08..db_14): Normalization (FD, 1NF→3NF→BCNF→4NF, Boss Battle) — Ch 7
+*   - Module 3 (db_15..db_20): Application Design (JSON, Spatial, ORM, Web Services, SQLi, Password) — Ch 8-9
  *
  * Schema cho mỗi step:
  *   step_1: { primer: {goal, intro, example}, visual: {schema, data_preview}, mission }
@@ -24,14 +24,8 @@ window.LESSON_CONTENT['db_design'] = {
   course_title: 'Database Design',
   accent_color: '#06B6D4',
   module_color: '#06B6D4',
-  total_lessons: 18,
+  total_lessons: 20,
   lessons: [
-    /* ========================================================================
-     * BÀI 1 — Entity Set & Primary Key [REALIGN v3]
-     * Concept: PDF Bài 1 — data vẫn Game Shop
-     * drag_type: chip | challenge_type: mcq_code
-     * Layer 0 compact 5-line primer, 2 MCQ + mini-game bonus
-     * ======================================================================== */
     {
       id: 'db_01',
       index: 1,
@@ -46,6 +40,7 @@ window.LESSON_CONTENT['db_design'] = {
       challenge_type: 'full_ide',
 
       /* ----- STEP 1: Theory (Layer 0 + Layer 1) — Premium v4 ----- */
+      achievement: { name: 'Khóa chính — Khởi đầu', desc: 'bài đầu về Primary Key' },
       step_1: {
         primer: {
           goal: [
@@ -229,11 +224,6 @@ window.LESSON_CONTENT['db_design'] = {
       }
     },
 
-    /* ========================================================================
-     * BÀI 2 — Composite & Derived Attributes [REALIGN v3]
-     * Concept: PDF Bài 2 — data vẫn Game Shop (player_profile)
-     * drag_type: box | challenge_type: fill_blank
-     * ======================================================================== */
     {
       id: 'db_02', index: 2,
       title: 'Composite, Multivalued & Derived Attributes',
@@ -255,6 +245,7 @@ window.LESSON_CONTENT['db_design'] = {
         }
       },
 
+      achievement: { name: 'Thợ tách thuộc tính', desc: 'composite · multivalued · derived' },
       step_1: {
         primer: {
           goal: [
@@ -451,11 +442,6 @@ concept_cards: [
       }
     },
 
-    /* ========================================================================
-     * BÀI 3 — Foreign Key & JOIN [REALIGN v3]
-     * Concept: PDF Bài 3 — data: game + publisher (Game Shop)
-     * drag_type: connector | challenge_type: full_ide
-     * ======================================================================== */
     {
       id: 'db_03', index: 3,
       title: 'Foreign Key & JOIN',
@@ -478,6 +464,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Người nối bảng', desc: 'JOIN qua Khóa ngoại' },
       step_1: {
         primer: {
           goal: [
@@ -651,16 +638,11 @@ concept_cards: [
           { level: 3, text: "WHERE <code>publisher.name = 'Rockstar'</code>" },
           { level: 4, text: "<code>SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Rockstar';</code>" }
         ],
-        success_message: 'Xuất sắc! Bạn đã nối 2 bảng qua Foreign Key bằng JOIN ON. Bài 4 sẽ học M:N — quan hệ phức tạp hơn với 3 bảng (junction table).',
+        success_message: 'Xuất sắc! Bạn đã nối 2 bảng qua Foreign Key bằng JOIN ON. Bài 4 sẽ học FK & 1:N — quan hệ một-nhiều qua khóa ngoại.',
         xp_reward: 60
       }
     },
 
-    /* ========================================================================
-     * BÀI 4 — M:N & Junction Table [REALIGN v3]
-     * Concept: PDF Bài 4 — data: player + library + game
-     * drag_type: connector | challenge_type: bug_fix
-     * ======================================================================== */
     {
       id: 'db_04', index: 4,
       title: 'Foreign Key & Mối quan hệ 1:N',
@@ -682,6 +664,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Kiến trúc 1:N', desc: 'quan hệ một-nhiều bằng FK' },
       step_1: {
         primer: {
           goal: [
@@ -905,18 +888,181 @@ concept_cards: [
           { level: 4, text: '<code class="code">SELECT g.title FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE p.username = \'DragonLord\';</code>' }
         ],
         expected_sql: "SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = 'DragonLord';",
-        success_message: 'Đỉnh! Bạn đã JOIN 3 bảng thành thạo qua FK chain. Bài 5 sẽ học về Thực thể yếu (Weak Entity) — loại thực thể cần cha để tồn tại.',
+        success_message: 'Đỉnh! Bạn đã JOIN 3 bảng thành thạo qua FK chain. Bài 5 sẽ học M:N — quan hệ nhiều-nhiều qua bảng trung gian.',
         xp_reward: 70
       }
     },
 
-    /* ========================================================================
-     * BÀI 5 — Weak Entity Set [REALIGN v3]
-     * Concept: PDF Bài 5 — data: dlc_content (ref_game_id + dlc_no composite key)
-     * drag_type: chip | challenge_type: mcq_code
-     * ======================================================================== */
     {
-      id: 'db_05', index: 5,
+      id: 'db_19', index: 5,
+      title: 'Mối quan hệ M:N & Bảng trung gian',
+      subtitle: 'Nhiều-nhiều — tách bảng trung gian (junction) nối 2 thực thể',
+      module: 1, module_title: 'Giới thiệu & Nền tảng Database',
+      estimated_minutes: 22, xp_reward: 60,
+      project_piece: '🧩 Xây "Thư viện game" của người chơi',
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'library',
+          columns: ['player_id', 'game_id', 'acquired_date'],
+          dataRows: [
+            ['7','101','2025-01-10'],
+            ['7','103','2025-02-02'],
+            ['9','101','2025-01-15'],
+            ['9','105','2025-03-01']
+          ]
+        }
+      },
+
+      achievement: { name: 'Bậc thầy M:N', desc: 'nối nhiều-nhiều qua bảng trung gian' },
+      step_1: {
+        primer: {
+          goal: [
+            'M:N = 1 người chơi sở hữu NHIỀU game, 1 game thuộc NHIỀU người chơi',
+            'DB quan hệ KHÔNG nối M:N trực tiếp 2 bảng → tách BẢNG TRUNG GIAN chứa 2 FK',
+            'Khóa chính bảng trung gian = (player_id, game_id) ghép lại'
+          ],
+          intro: '1 người chơi sở hữu nhiều game; 1 game được nhiều người chơi sở hữu — quan hệ <strong>nhiều-nhiều (M:N)</strong>. DB quan hệ không biểu diễn M:N trực tiếp. Giải pháp: bảng <strong>trung gian</strong> <code>library</code> gồm 2 khóa ngoại <code>player_id</code> + <code>game_id</code>; mỗi dòng = 1 cặp "ai sở hữu game nào".',
+          example: 'Bảng <code>library(player_id, game_id, acquired_date)</code>: khóa chính là CẶP <code>(player_id, game_id)</code>. Tìm game của người chơi 7: <code>SELECT game_id FROM library WHERE player_id = 7</code>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-arrows-left-right',
+            title: 'M:N — vì sao cần bảng thứ 3',
+            body: 'Không thể nhét "danh sách game" vào 1 ô của bảng player (vi phạm 1NF). Cũng không nhét list player vào bảng game. Giải: 1 bảng RIÊNG <code>library</code>, mỗi dòng 1 cặp (player, game).'
+          },
+          {
+            icon: 'fa-code-branch',
+            title: 'Junction = 2× (1:N)',
+            body: 'Bảng trung gian biến 1 quan hệ M:N thành HAI quan hệ 1:N: player 1:N library, game 1:N library. Mỗi FK trỏ về 1 phía.'
+          },
+          {
+            icon: 'fa-hand-pointer',
+            title: 'Thử ngay',
+            body: 'Trong <code>library</code>, người chơi 7 có 2 dòng → sở hữu 2 game (101, 103).'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'library',
+            columns: [
+              { name: 'player_id', type: 'INT', key: 'PK+FK', icon: '🔗' },
+              { name: 'game_id', type: 'INT', key: 'PK+FK', icon: '🔗' },
+              { name: 'acquired_date', type: 'DATE', key: '', icon: '📅' }
+            ]
+          },
+          data_preview: [
+            ['7','101','2025-01-10'],
+            ['7','103','2025-02-02'],
+            ['9','101','2025-01-15'],
+            ['9','105','2025-03-01']
+          ],
+          diagram: {
+            type: 'er', width: 600, height: 280,
+            entities: [
+              { name: 'player', columns: [{name:'p_id',type:'INT',key:'PK'},{name:'username',type:'VARCHAR'}] },
+              { name: 'library', columns: [{name:'player_id',type:'INT',key:'FK,PK'},{name:'game_id',type:'INT',key:'FK,PK'}] },
+              { name: 'game', columns: [{name:'game_id',type:'INT',key:'PK'},{name:'title',type:'VARCHAR'}] }
+            ],
+            connectors: [
+              { from: 'player', to: 'library', label: 'sở hữu', fromCard: '1', toCard: 'N' },
+              { from: 'game', to: 'library', label: 'được sở hữu', fromCard: '1', toCard: 'N' }
+            ],
+            note: 'M:N giải bằng bảng trung gian library — PK ghép (player_id, game_id)'
+          }
+        },
+        mission: 'Tìm các <code>game_id</code> mà người chơi id 7 sở hữu — kéo thả truy vấn bảng trung gian.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao quan hệ M:N (nhiều-nhiều) cần BẢNG TRUNG GIAN?',
+            options: [
+              { id: 'a', text: 'Vì 2 bảng gốc quá lớn', correct: false, explanation: 'Sai — không liên quan kích thước. Vấn đề là KHÔNG thể nhét nhiều giá trị vào 1 ô.' },
+              { id: 'b', text: 'Vì không thể nhét nhiều giá trị vào 1 ô; cần 1 bảng riêng chứa từng cặp (player, game)', correct: true, explanation: 'Đúng — M:N → bảng trung gian, mỗi dòng 1 cặp khóa ngoại.' },
+              { id: 'c', text: 'Vì SQL không hỗ trợ JOIN', correct: false, explanation: 'Sai — SQL hỗ trợ JOIN; bảng trung gian là về MÔ HÌNH dữ liệu, không phải giới hạn SQL.' },
+              { id: 'd', text: 'Để tăng tốc truy vấn', correct: false, explanation: 'Sai — mục đích là biểu diễn đúng M:N, không phải tối ưu tốc độ.' }
+            ]
+          },
+          {
+            question: 'Khóa chính của bảng <code>library(player_id, game_id, acquired_date)</code> là gì?',
+            options: [
+              { id: 'a', text: 'Chỉ player_id', correct: false, explanation: 'Sai — 1 player có nhiều dòng (nhiều game). Không unique.' },
+              { id: 'b', text: 'Chỉ game_id', correct: false, explanation: 'Sai — 1 game thuộc nhiều player. Không unique.' },
+              { id: 'c', text: '(player_id, game_id) — cặp khóa ghép', correct: true, explanation: 'Đúng — mỗi cặp (player, game) là duy nhất: 1 người chỉ sở hữu 1 game 1 lần.' },
+              { id: 'd', text: 'acquired_date', correct: false, explanation: 'Sai — ngày mua có thể trùng giữa nhiều cặp; không định danh.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'bug_spot',
+          title: 'Tìm lỗi bảng trung gian',
+          xp: 25,
+          code: 'CREATE TABLE library (\n  lib_id INT PRIMARY KEY,\n  player_id INT,\n  game_id INT\n);',
+          bugType: 'logic',
+          bugs: [
+            { line: 2, description: 'Bảng trung gian M:N KHÔNG cần khóa nhân tạo lib_id. PK đúng = composite (player_id, game_id) + 2 FOREIGN KEY trỏ player(p_id) và game(game_id).' }
+          ]
+        }
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw', token: 'SELECT', slot: 'kw-select' },
+          { type: 'col', token: 'game_id', slot: 'col-1' },
+          { type: 'kw', token: 'FROM', slot: 'kw-from' },
+          { type: 'tbl', token: 'library', slot: 'tbl' },
+          { type: 'kw', token: 'WHERE', slot: 'kw-where' },
+          { type: 'col', token: 'player_id', slot: 'wcol-1' },
+          { type: 'op', token: '=', slot: 'op-1' },
+          { type: 'val', token: '7', slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line', placeholder: 'FROM ____', accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line', placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
+        ],
+        expected_sql: 'SELECT game_id FROM library WHERE player_id = 7;',
+        reveal_hints: {
+          'select-line': 'SELECT 1 cột: <strong>game_id</strong>.',
+          'from-line': 'FROM <strong>library</strong> (bảng trung gian).',
+          'where-line': 'WHERE lọc theo người chơi: <strong>player_id = 7</strong>.'
+        }
+      },
+
+      step_4: {
+        prompt: 'Endpoint thư viện cần liệt kê game của người chơi 9. Viết query lấy mọi <code>game_id</code> mà player 9 sở hữu.',
+        starter: "-- Lấy game_id mà player 9 sở hữu\n-- Filter: player_id = 9\nSELECT ____\n  FROM ____\n WHERE ____ = ____;",
+        schema: {
+          table_name: 'library',
+          columns: [
+            { name: 'player_id', type: 'INT', key: 'PK+FK' },
+            { name: 'game_id', type: 'INT', key: 'PK+FK' },
+            { name: 'acquired_date', type: 'DATE', key: '' }
+          ],
+          data: [
+            ['7','101','2025-01-10'],
+            ['7','103','2025-02-02'],
+            ['9','101','2025-01-15'],
+            ['9','105','2025-03-01']
+          ]
+        },
+        hints: [
+          { level: 1, text: 'Bạn cần <em>1 cột</em> (game_id) từ bảng <code>library</code>, lọc theo player_id = 9.' },
+          { level: 2, text: '<code>SELECT game_id FROM library WHERE player_id = 9;</code> — kết quả 2 dòng (101, 105).' },
+          { level: 3, text: 'Đừng gộp <code>GROUP BY</code> hay <code>DISTINCT</code> — 1 player có thể sở hữu 1 game nhiều lần (giả định đơn giản).' },
+          { level: 4, text: "<code class=\"code\">SELECT game_id FROM library WHERE player_id = 9;</code>" }
+        ],
+        expected_sql: 'SELECT game_id FROM library WHERE player_id = 9;',
+        success_message: 'Hoàn thành M:N & bảng trung gian! Bài 6 (Weak Entity) tiếp theo — thực thể yếu cũng dùng khóa ghép nhưng theo cách khác.',
+        xp_reward: 50
+      }
+    },
+
+    {
+      id: 'db_05', index: 6,
       title: 'Weak Entity & Khóa chính tổng hợp',
       subtitle: 'Thực thể yếu — không có khóa riêng, phải ghép FK (cha) + discriminator',
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
@@ -937,6 +1083,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Kiến trúc thực thể yếu', desc: 'định danh weak entity bằng khóa ghép' },
       step_1: {
         primer: {
           goal: [
@@ -1088,17 +1235,13 @@ concept_cards: [
         },
         expected_sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;',
         hints: [{'level': 1, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_no = 2;</code> — Sai: thiếu ref_game_id nên trả về cả 2 dòng DLC #2 (của game 300 + 400).'}, {'level': 2, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE ref_game_id = 300;</code> — Sai: ref_game_id chỉ đủ để biết là DLC của game 300, nhưng không định danh được DLC #1 hay #2 → trả về cả 2 dòng.'}, {'level': 3, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_name = </code> — Sai logic: lọc theo name (không phải PK) sẽ đúng trong data này nhưng phá vỡ tính định danh — không dùng tên làm định danh được.'}, {'level': 4, 'text': '<code class="code">SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;</code>'}],
-        success_message: 'Bài 6 sẽ bắt đầu Module 2 — phát hiện dư thừa (Redundancy) & Phụ thuộc hàm (Functional Dependency) — nền tảng của chuẩn hóa dữ liệu.',
+        success_message: 'Bài 7 tiếp theo — chuyển ER Diagram → bảng quan hệ vật lý (7 quy tắc mapping chuẩn).',
         xp_reward: 30
       }
     },
 
-    /* ========================================================================
-     * BÀI 6 — Mapping ER → Relational Tables
-     * Concept: Quy tắc ánh xạ từ ER Diagram sang bảng vật lý
-     * ======================================================================== */
     {
-      id: 'db_06', index: 6,
+      id: 'db_06', index: 7,
       title: 'Mapping ER → Bảng quan hệ',
       subtitle: 'Quy tắc ánh xạ Entity Set, Relationship, Multi-valued sang bảng vật lý',
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
@@ -1118,6 +1261,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Dịch giả ER', desc: 'ánh xạ ER sang bảng' },
       step_1: {
         primer: {
           goal: [
@@ -1314,18 +1458,13 @@ concept_cards: [
           { level: 3, text: "WHERE <code>publisher.name = 'Supergiant'</code>." },
           { level: 4, text: "<code class=\"code\">SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';</code>" }
         ],
-        success_message: 'Xuất sắc! Bạn đã nắm vững quy tắc mapping ER → Bảng quan hệ. Bài 7 sẽ dùng FD để phát hiện dư thừa trong bảng đã mapping xong.',
+        success_message: 'Xuất sắc! Bạn đã nắm vững quy tắc mapping ER → Bảng quan hệ. Bài 8 sẽ dùng FD để phát hiện dư thừa trong bảng đã mapping xong.',
         xp_reward: 35
       }
     },
 
-    /* ========================================================================
-     * BÀI 7 — Redundancy & Functional Dependency [REALIGN v3]
-     * Concept: PDF Bài 7 — data: game_studio_combined
-     * drag_type: box | challenge_type: mcq_code
-     * ======================================================================== */
     {
-      id: 'db_07', index: 7,
+      id: 'db_07', index: 8,
       title: 'Redundancy & Phụ thuộc hàm (FD)',
       subtitle: 'Phát hiện dữ liệu lặp và quy tắc X → Y ẩn trong bảng',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
@@ -1346,6 +1485,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Thợ săn phụ thuộc', desc: 'phát hiện FD X→Y' },
       step_1: {
         primer: {
           goal: [
@@ -1514,16 +1654,13 @@ concept_cards: [
         },
         expected_sql: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
         hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 4 dòng của 2 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT game_name FROM game_studio_combined WHERE studio_name = \'Valve\';</code>'}],
-        success_message: 'Bạn đã hiểu Redundancy + FD. Bài 8 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
+        success_message: 'Bạn đã hiểu Redundancy + FD. Bài 9 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
         xp_reward: 30
       }
     },
 
-    /* ========================================================================
-     * BÀI 8 — 1NF: Nguyên tử hóa dữ liệu (Atomic Domains)
-     * ======================================================================== */
     {
-      id: 'db_08', index: 8,
+      id: 'db_08', index: 9,
       title: 'Dạng chuẩn 1 (1NF) — Atomic Domains',
       subtitle: 'Mỗi ô chỉ chứa 1 giá trị nguyên tử (không multivalued, không composite)',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
@@ -1543,6 +1680,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Nguyên tử hóa', desc: '1NF — mỗi ô một giá trị' },
       step_1: {
         primer: {
           goal: [
@@ -1735,11 +1873,8 @@ concept_cards: [
       }
     },
 
-    /* ========================================================================
-     * BÀI 9 — 2NF: Phụ thuộc hàm đầy đủ (Full FD) — Library domain
-     * ======================================================================== */
     {
-      id: 'db_09', index: 9,
+      id: 'db_09', index: 10,
       title: 'Dạng chuẩn 2 (2NF) — Phụ thuộc hàm đầy đủ',
       subtitle: 'Loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
@@ -1759,6 +1894,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Phá phụ thuộc bộ phận', desc: '2NF' },
       step_1: {
         primer: {
           goal: [
@@ -1933,16 +2069,254 @@ concept_cards: [
           { level: 3, text: 'GROUP BY theo cả 2 cột: <code>m.member_id, m.member_name</code>. COUNT(*) đếm số dòng loans.' },
           { level: 4, text: "<code class=\"code\">SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;</code>" }
         ],
-        success_message: 'Hoàn thành 2NF nâng cao! Phụ thuộc bộ phận đã được loại bỏ, và bạn đã JOIN + GROUP BY qua 2 bảng. Tiếp theo Bài 10 sẽ xét BCNF, phiên bản "nghiêm ngặt" hơn.',
+        success_message: 'Hoàn thành 2NF nâng cao! Phụ thuộc bộ phận đã được loại bỏ, và bạn đã JOIN + GROUP BY qua 2 bảng. Tiếp theo Bài 11 sẽ xét 3NF — loại bỏ phụ thuộc bắc cầu.',
         xp_reward: 70
       }
     },
 
-    /* ========================================================================
-     * BÀI 10 — BCNF: Phân rã phi tổn thất (Lossless Decomposition) — Hospital domain
-     * ======================================================================== */
     {
-      id: 'db_10', index: 10,
+      id: 'db_11', index: 11,
+      title: 'Dạng chuẩn 3 (3NF) & Sự thỏa hiệp',
+      subtitle: 'Khi nào chấp nhận dư thừa nhỏ để tăng tốc độ truy vấn',
+      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
+      estimated_minutes: 25, xp_reward: 80,
+      project_piece: '🛡️ Phân hệ "Đặc vụ Guild tối ưu hệ thống"',
+      drag_type: 'box',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'orders', col: 0, row: 5, width: 4, height: 1,
+          columns: ['order_id', 'product_id', 'qty', 'total'],
+          dataRows: [
+            ['1001', 'P01', '2', '60.00'],
+            ['1002', 'P02', '1', '45.00'],
+            ['1003', 'P03', '3', '90.00'],
+            ['1004', 'P01', '1', '30.00']
+          ]
+        }
+      },
+
+      achievement: { name: 'Cân bằng 3NF', desc: '3NF' },
+      step_1: {
+        primer: {
+          goal: [
+            '3NF cấm phụ thuộc bắc cầu (transitive dependency): A → B → C',
+            'Cột non-key không được quyết định cột non-key khác',
+            '3NF linh hoạt hơn BCNF — cho phép một số dư thừa nếu phụ thuộc bảo toàn'
+          ],
+          intro: 'Bạn quản lý <strong>cửa hàng trực tuyến</strong>. Bảng <code class="code">orders</code> ghi: ai mua, mua gì, số lượng, giá, tổng. Bạn cũng muốn biết <em>quản lý</em> của <em>danh mục</em> sản phẩm. Vấn đề: <code class="code">order_id</code> → <code class="code">product_id</code> → <code class="code">category</code> → <code class="code">category_manager</code>. Cột <code class="code">category_manager</code> phụ thuộc BẮC CẦU vào <code class="code">order_id</code> qua trung gian <code class="code">category</code> → <strong>vi phạm 3NF</strong>.',
+          example: '3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là <em>khóa của bảng khác</em>. Ví dụ: trong bảng orders, cột <code class="code">product_name</code> phụ thuộc <code class="code">product_id</code> (khóa của bảng products) — vẫn OK theo 3NF, dù không lý tưởng. Đó là sự "thỏa hiệp" giữa tính chuẩn và tốc độ truy vấn.'
+        },
+                intro: 'Thử tưởng tượng bạn là data engineer cho 1 ngân hàng. Schema có 200 bảng. Sếp bảo: <em>"Review lại toàn bộ, đảm bảo 3NF"</em>. Bạn check từng bảng... 2 tuần vẫn chưa xong. Trong khi bạn có thể check trong 2 ngày nếu biết <strong>3NF = transitive dependency check</strong>. Bài này tiết kiệm cho bạn 12 ngày.',
+concept_cards: [
+            {
+                  "icon": "fa-link",
+                  "title": "3NF — Cho phép vi phạm BCNF (đôi khi)",
+                  "body": "Thử thách: bạn có FD <code>course → dept</code> và <code>dept → head</code>. <code>course</code> là PK. <code>head</code> chỉ phụ thuộc <code>dept</code> (transitive). 3NF bắt buộc: hoặc <code>dept</code> là superkey, hoặc <code>head</code> là prime attribute. 3NF <strong>cho phép</strong> FD non-superkey nếu vế phải là key — khác BCNF!"
+            },
+            {
+                  "icon": "fa-scale-balanced",
+                  "title": "BCNF vs 3NF — Sự thỏa hiệp",
+                  "body": "<strong>BCNF</strong> nghiêm hơn 3NF: nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd: 2+ candidate key overlap, vd ở B10). Thực tế: BCNF thường tốt hơn, nhưng đôi khi 3NF + giữ redundancy chấp nhận được. Bạn chọn cái nào?"
+            }
+      ,
+            {
+              "icon": "fa-hand-pointer",
+              "title": "Thử ngay (Apply)",
+              "body": "3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là khóa của bảng khác."
+            }
+          ],
+                visual: {
+          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 3NF", "columns": ["order_id", "product_id", "category", "category_manager"], "rows": [["1001", "P01", "Game", "An"], ["1002", "P02", "Game", "An"], ["1003", "P03", "Gear", "Bình"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 3NF (tách categories)", "columns": ["order_id", "product_id", "category"], "rows": [["1001", "P01", "Game"], ["1002", "P02", "Game"], ["1003", "P03", "Gear"]]}, "note": "Tách categories(category, manager) riêng. category_manager lưu 1 lần / category."},
+          schema: {
+            table_name: 'orders',
+            columns: [
+              { name: 'order_id',   type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'product_id', type: 'INT',     key: 'FK', icon: '🔗' },
+              { name: 'qty',        type: 'INT',     key: '',   icon: '#️⃣' },
+              { name: 'order_date', type: 'DATE',    key: '',   icon: '📅' }
+            ]
+          },
+          data_preview: [
+            ['1001', 'P01', '2', '2024-04-01'],
+            ['1002', 'P02', '1', '2024-04-03'],
+            ['1003', 'P03', '3', '2024-04-05'],
+            ['1004', 'P01', '1', '2024-04-08']
+          ]
+        },
+                mission: 'Hoàn thành game kéo-thả để tách <code class="code">orders</code> thành <code class="code">categories</code>, <code class="code">products</code>, và <code class="code">orders</code>.'
+      },
+
+        step_2: {
+        mcq: [
+          {
+            question: "3NF phân biệt với BCNF ở điểm nào?",
+            options: [
+              { id: "a", text: "3NF cho phép FD non-superkey, BCNF không", correct: true, explanation: "Đúng — 3NF cho phép FD X → Y trong 1 trường hợp: Y là prime attribute (thuộc candidate key). BCNF cấm MỌI FD có X không phải superkey, không có ngoại lệ." },
+              { id: "b", text: "BCNF chỉ áp dụng cho bảng > 5 cột", correct: false, explanation: "Sai — BCNF áp dụng cho mọi bảng, không phụ thuộc số cột. Bảng 3 cột vẫn phải check BCNF." },
+              { id: "c", text: "3NF nghiêm hơn BCNF", correct: false, explanation: "Sai — BCNF nghiêm hơn 3NF. Mọi bảng BCNF đều đạt 3NF, nhưng ngược lại thì không. BCNF là tier cao hơn trong normalization hierarchy." },
+              { id: "d", text: "BCNF là tên khác của 3NF", correct: false, explanation: "Sai — BCNF (Boyce-Codd Normal Form) là chuẩn RIÊNG, do Boyce & Codd đề xuất sau 3NF để fix các edge cases mà 3NF chưa xử lý." }
+            ]
+          },
+          {
+            question: "Transitive dependency là gì?",
+            options: [
+              { id: "a", text: "FD X → Y → Z (Y quyết định Z, X quyết định Y)", correct: true, explanation: "Đúng — transitive: A → B và B → C thì A → C (transitively). VD: order_id → product_id → category → category_manager. category_manager bị phụ thuộc BẮC CẦU qua product_id → vi phạm 3NF." },
+              { id: "b", text: "FD ngược Y → X", correct: false, explanation: "Sai — đó là reverse FD (Y → X), không phải transitive. Reverse là đảo chiều, transitive là nối tiếp qua trung gian." },
+              { id: "c", text: "Mọi cột đều phụ thuộc PK", correct: false, explanation: "Sai — đó là full functional dependency (FF) hoặc 2NF. Mọi cột phụ thuộc TOÀN BỘ PK là điều kiện của 2NF, không phải transitive." },
+              { id: "d", text: "Có 2 khóa chính", correct: false, explanation: "Sai — 1 bảng chỉ có 1 PRIMARY KEY (có thể composite nhiều cột). Bảng có thể có nhiều candidate keys nhưng chỉ chọn 1 làm PK." }
+            ]
+          }
+        ],
+        decomp_game: {
+          rule_label: '3NF — Không phụ thuộc bắc cầu',
+          rule: 'Trong bảng orders, order_id → product_id → category → category_manager. Cột category_manager bị phụ thuộc BẮC CẦU. Tách categories ra bảng riêng.',
+          mission: 'Kéo các cột từ bảng <code>orders</code> vào 3 bảng mục tiêu. Cột <em>category_manager</em> bị phụ thuộc bắc cầu → phải đi về categories.',
+          source_table: {
+            name: 'orders',
+            columns: [
+              { name: 'order_id',         type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'product_id',       type: 'INT',     key: 'PK', icon: '🔑' },
+              { name: 'product_name',     type: 'VARCHAR', key: '',   icon: '📦' },
+              { name: 'category',         type: 'VARCHAR', key: 'PK', icon: '🔑' },
+              { name: 'category_manager', type: 'VARCHAR', key: '',   icon: '⚠️' },
+              { name: 'qty',              type: 'INT',     key: '',   icon: '#️⃣' },
+              { name: 'price',            type: 'DECIMAL', key: '',   icon: '💰' },
+              { name: 'order_date',       type: 'DATE',    key: '',   icon: '📅' },
+              { name: 'product_id',       type: 'INT',     key: '',   icon: '🔗' },
+              { name: 'category',         type: 'VARCHAR', key: '',   icon: '🔗' }
+            ],
+            data: [
+              ['1001', 'P01', 'Elden Ring',  'Game',  'An',  '2', '30.00', '2024-04-01'],
+              ['1002', 'P02', 'Hades',       'Game',  'An',  '1', '25.00', '2024-04-03'],
+              ['1003', 'P03', 'Bàn phím cơ', 'Gear',  'Bình','3', '120.00','2024-04-05'],
+              ['1004', 'P01', 'Elden Ring',  'Game',  'An',  '1', '30.00', '2024-04-08'],
+              ['1005', 'P04', 'Chuột gaming','Gear',  'Bình','2', '50.00', '2024-04-10'],
+              ['1006', 'P05', 'Màn hình 27"', 'Gear',  'Bình','1', '450.00','2024-04-12']
+            ]
+          },
+          target_tables: [
+            { name: 'categories', icon: '🗂️', description: 'Bảng danh mục (mỗi danh mục có 1 quản lý)' },
+            { name: 'products',   icon: '📦', description: 'Bảng sản phẩm (FK category + name + price)' },
+            { name: 'orders',     icon: '🛒', description: 'Bảng đơn hàng (FK product + qty + ngày)' }
+          ],
+          solution: {
+            'categories': ['category', 'category_manager'],
+            'products':   ['product_id', 'product_name', 'category', 'price'],
+            'orders':     ['order_id', 'product_id', 'qty', 'order_date']
+          },
+          hint: 'Phụ thuộc bắc cầu: order_id → product_id → category → category_manager. category_manager chỉ cần category để xác định → tách ra. products giữ category vì nó là "khóa ngoại" tự nhiên.'
+        },
+        mini_game: {"type": "order", "title": "Sắp xếp thứ tự NF", "instruction": "Kéo thả để xếp theo thứ tự từ <strong>lỏng nhất → nghiêm nhất</strong>.", "items": [{"id": "1nf", "label": "1NF — atomic domains"}, {"id": "2nf", "label": "2NF — no partial dep"}, {"id": "3nf", "label": "3NF — no transitive dep"}, {"id": "bcnf", "label": "BCNF — every FD has superkey on LHS"}], "solution": {"1nf": 1, "2nf": 2, "3nf": 3, "bcnf": 4}}
+      },
+
+      step_3: {
+        mission: 'Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code> — JOIN 3 bảng <code>orders</code> ↔ <code>products</code> ↔ <code>categories</code>.',
+        blocks: [
+          { type: 'kw',  token: 'SELECT',           slot: 'kw-select' },
+          { type: 'col', token: 'c.category',       slot: 'col-1' },
+          { type: 'fn',  token: 'SUM(o.qty * p.price)', slot: 'fn-sum' },
+          { type: 'kw',  token: 'AS',               slot: 'kw-as' },
+          { type: 'col', token: 'total_revenue',     slot: 'col-alias' },
+          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
+          { type: 'tbl', token: 'orders o',          slot: 'tbl' },
+          { type: 'kw',  token: 'JOIN',             slot: 'kw-join1' },
+          { type: 'tbl', token: 'products p',        slot: 'tbl2' },
+          { type: 'kw',  token: 'ON',               slot: 'kw-on1' },
+          { type: 'col', token: 'o.product_id = p.product_id', slot: 'col-on1' },
+          { type: 'kw',  token: 'JOIN',             slot: 'kw-join2' },
+          { type: 'tbl', token: 'categories c',      slot: 'tbl3' },
+          { type: 'kw',  token: 'ON',               slot: 'kw-on2' },
+          { type: 'col', token: 'p.category = c.category', slot: 'col-on2' },
+          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
+          { type: 'col', token: 'o.order_date',      slot: 'wcol-1' },
+          { type: 'op',  token: '>=',               slot: 'op-1' },
+          { type: 'val', token: "'2024-04-05'",      slot: 'val-1' },
+          { type: 'kw',  token: 'GROUP BY',         slot: 'kw-group' },
+          { type: 'col', token: 'c.category',       slot: 'col-group' },
+          { type: 'kw',  token: 'ORDER BY',         slot: 'kw-order' },
+          { type: 'col', token: 'total_revenue',     slot: 'col-order' },
+          { type: 'kw',  token: 'DESC',             slot: 'kw-desc' }
+        ],
+        drop_zones: [
+          { id: 'select-line',  placeholder: 'SELECT ____ , SUM(...) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
+          { id: 'from-line',    placeholder: 'FROM ____ JOIN ... ON ... JOIN ... ON ...', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
+          { id: 'where-line',   placeholder: 'WHERE ____ >= ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true },
+          { id: 'group-line',   placeholder: 'GROUP BY ____',                     accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC',                accepts: ['kw', 'col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
+        ],
+        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
+        reveal_hints: {
+          'select-line':  'SELECT <strong>c.category</strong> + <strong>SUM(o.qty * p.price) AS total_revenue</strong> — tính tổng doanh thu.',
+          'from-line':    'FROM <strong>orders o</strong> + 2 khối JOIN...ON — chain 3 bảng qua FK.',
+          'where-line':   "WHERE <strong>o.order_date >= '2024-04-05'</strong> — lọc theo ngày.",
+          'group-line':   'GROUP BY <strong>c.category</strong> — gom theo danh mục.',
+          'order-line':   'ORDER BY <strong>total_revenue DESC</strong> — doanh thu cao nhất lên đầu.'
+        }
+      },
+
+      step_4: {
+        prompt: 'Sau 3NF, tách thành 3 bảng <code>orders</code>, <code>products</code>, <code>categories</code>. Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code>. Hiển thị category + tổng tiền, sắp xếp giảm dần.',
+        starter: "-- Tổng doanh thu theo category từ 2024-04-05\n-- JOIN orders ↔ products ↔ categories + GROUP BY + SUM + ORDER BY\nSELECT c., SUM(o.qty * p.) AS \n  FROM orders o\n  JOIN products p ON o. = p.\n  JOIN categories c ON p. = c.\n WHERE o. >= '2024-04-05'\n GROUP BY c.\n ORDER BY  DESC;\n",
+        schema: {
+          table_name: 'products',
+          columns: [
+            { name: 'product_id', type: 'INT',     key: 'PK', icon: '🔑' },
+            { name: 'product_name', type: 'VARCHAR', key: '',   icon: '📦' },
+            { name: 'category', type: 'VARCHAR', key: 'FK', icon: '🏷️' },
+            { name: 'price',     type: 'DECIMAL', key: '',   icon: '💰' }
+          ],
+          data: [
+            ['P01', 'Elden Ring',  'Game', '60.00'],
+            ['P02', 'Hades',       'Game', '25.00'],
+            ['P03', 'Bàn phím cơ', 'Gear', '40.00'],
+            ['P04', 'Chuột gaming','Gear', '50.00'],
+            ['P05', 'Màn hình 27"','Gear', '450.00']
+          ]
+        },
+        related_schemas: [
+          {
+            table_name: 'orders',
+            columns: [
+              { name: 'order_id',   type: 'INT',  key: 'PK' },
+              { name: 'product_id', type: 'INT',  key: 'FK' },
+              { name: 'qty',        type: 'INT',  key: '' },
+              { name: 'order_date', type: 'DATE', key: '' }
+            ],
+            data: [
+              ['1001', 'P01', '2', '2024-04-01'],
+              ['1002', 'P02', '1', '2024-04-03'],
+              ['1003', 'P03', '3', '2024-04-05'],
+              ['1004', 'P01', '1', '2024-04-08'],
+              ['1005', 'P04', '2', '2024-04-10']
+            ]
+          },
+          {
+            table_name: 'categories',
+            columns: [
+              { name: 'category',        type: 'VARCHAR', key: 'PK' },
+              { name: 'category_manager', type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['Game', 'An'],
+              ['Gear', 'Bình']
+            ]
+          }
+        ],
+        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
+        hints: [
+          { level: 1, text: 'Bạn cần <em>JOIN 3 bảng</em> (orders ↔ products ↔ categories), tính <code>SUM(qty * price)</code> cho mỗi category, lọc theo ngày, GROUP BY + ORDER BY DESC.' },
+          { level: 2, text: 'JOIN chain: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category</code>.' },
+          { level: 3, text: '<code>SUM(o.qty * p.price) AS total_revenue</code> — nhân số lượng với giá. WHERE <code>order_date >= \'2024-04-05\'</code>.' },
+          { level: 4, text: "<code class=\"code\">SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;</code>" }
+        ],
+        success_message: 'Hoàn thành 3NF nâng cao! Phụ thuộc bắc cầu đã được loại bỏ. Bạn đã tính tổng doanh thu qua 3 bảng — đây là pattern quan trọng trong business intelligence.',
+        xp_reward: 90
+      }
+    },
+
+    {
+      id: 'db_10', index: 12,
       title: 'Dạng chuẩn BCNF & Phân rã Phi tổn thất',
       subtitle: 'Chia bảng không mất dữ liệu nhờ khóa ngoại đúng vị trí',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
@@ -1963,6 +2337,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Phân rã phi tổn thất', desc: 'BCNF không mất dữ liệu' },
       step_1: {
         primer: {
           goal: [
@@ -2236,255 +2611,8 @@ concept_cards: [
       }
     },
 
-    /* ========================================================================
-     * BÀI 11 — 3NF & Sự thỏa hiệp (Compromise) — Store domain
-     * ======================================================================== */
     {
-      id: 'db_11', index: 11,
-      title: 'Dạng chuẩn 3 (3NF) & Sự thỏa hiệp',
-      subtitle: 'Khi nào chấp nhận dư thừa nhỏ để tăng tốc độ truy vấn',
-      module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
-      estimated_minutes: 25, xp_reward: 80,
-      project_piece: '🛡️ Phân hệ "Đặc vụ Guild tối ưu hệ thống"',
-      drag_type: 'box',
-      challenge_type: 'full_ide',
-      drag_map: {
-        table: {
-          name: 'orders', col: 0, row: 5, width: 4, height: 1,
-          columns: ['order_id', 'product_id', 'qty', 'total'],
-          dataRows: [
-            ['1001', 'P01', '2', '60.00'],
-            ['1002', 'P02', '1', '45.00'],
-            ['1003', 'P03', '3', '90.00'],
-            ['1004', 'P01', '1', '30.00']
-          ]
-        }
-      },
-
-      step_1: {
-        primer: {
-          goal: [
-            '3NF cấm phụ thuộc bắc cầu (transitive dependency): A → B → C',
-            'Cột non-key không được quyết định cột non-key khác',
-            '3NF linh hoạt hơn BCNF — cho phép một số dư thừa nếu phụ thuộc bảo toàn'
-          ],
-          intro: 'Bạn quản lý <strong>cửa hàng trực tuyến</strong>. Bảng <code class="code">orders</code> ghi: ai mua, mua gì, số lượng, giá, tổng. Bạn cũng muốn biết <em>quản lý</em> của <em>danh mục</em> sản phẩm. Vấn đề: <code class="code">order_id</code> → <code class="code">product_id</code> → <code class="code">category</code> → <code class="code">category_manager</code>. Cột <code class="code">category_manager</code> phụ thuộc BẮC CẦU vào <code class="code">order_id</code> qua trung gian <code class="code">category</code> → <strong>vi phạm 3NF</strong>.',
-          example: '3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là <em>khóa của bảng khác</em>. Ví dụ: trong bảng orders, cột <code class="code">product_name</code> phụ thuộc <code class="code">product_id</code> (khóa của bảng products) — vẫn OK theo 3NF, dù không lý tưởng. Đó là sự "thỏa hiệp" giữa tính chuẩn và tốc độ truy vấn.'
-        },
-                intro: 'Thử tưởng tượng bạn là data engineer cho 1 ngân hàng. Schema có 200 bảng. Sếp bảo: <em>"Review lại toàn bộ, đảm bảo 3NF"</em>. Bạn check từng bảng... 2 tuần vẫn chưa xong. Trong khi bạn có thể check trong 2 ngày nếu biết <strong>3NF = transitive dependency check</strong>. Bài này tiết kiệm cho bạn 12 ngày.',
-concept_cards: [
-            {
-                  "icon": "fa-link",
-                  "title": "3NF — Cho phép vi phạm BCNF (đôi khi)",
-                  "body": "Thử thách: bạn có FD <code>course → dept</code> và <code>dept → head</code>. <code>course</code> là PK. <code>head</code> chỉ phụ thuộc <code>dept</code> (transitive). 3NF bắt buộc: hoặc <code>dept</code> là superkey, hoặc <code>head</code> là prime attribute. 3NF <strong>cho phép</strong> FD non-superkey nếu vế phải là key — khác BCNF!"
-            },
-            {
-                  "icon": "fa-scale-balanced",
-                  "title": "BCNF vs 3NF — Sự thỏa hiệp",
-                  "body": "<strong>BCNF</strong> nghiêm hơn 3NF: nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd: 2+ candidate key overlap, vd ở B10). Thực tế: BCNF thường tốt hơn, nhưng đôi khi 3NF + giữ redundancy chấp nhận được. Bạn chọn cái nào?"
-            }
-      ,
-            {
-              "icon": "fa-hand-pointer",
-              "title": "Thử ngay (Apply)",
-              "body": "3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là khóa của bảng khác."
-            }
-          ],
-                visual: {
-          diagram: {"type": "nf", "before": {"title": "TRƯỚC — vi phạm 3NF", "columns": ["order_id", "product_id", "category", "category_manager"], "rows": [["1001", "P01", "Game", "An"], ["1002", "P02", "Game", "An"], ["1003", "P03", "Gear", "Bình"]], "violations": {"0-3": true, "1-3": true}}, "after": {"title": "SAU — đã 3NF (tách categories)", "columns": ["order_id", "product_id", "category"], "rows": [["1001", "P01", "Game"], ["1002", "P02", "Game"], ["1003", "P03", "Gear"]]}, "note": "Tách categories(category, manager) riêng. category_manager lưu 1 lần / category."},
-          schema: {
-            table_name: 'orders',
-            columns: [
-              { name: 'order_id',   type: 'INT',     key: 'PK', icon: '🔑' },
-              { name: 'product_id', type: 'INT',     key: 'FK', icon: '🔗' },
-              { name: 'qty',        type: 'INT',     key: '',   icon: '#️⃣' },
-              { name: 'order_date', type: 'DATE',    key: '',   icon: '📅' }
-            ]
-          },
-          data_preview: [
-            ['1001', 'P01', '2', '2024-04-01'],
-            ['1002', 'P02', '1', '2024-04-03'],
-            ['1003', 'P03', '3', '2024-04-05'],
-            ['1004', 'P01', '1', '2024-04-08']
-          ]
-        },
-                mission: 'Hoàn thành game kéo-thả để tách <code class="code">orders</code> thành <code class="code">categories</code>, <code class="code">products</code>, và <code class="code">orders</code>.'
-      },
-
-        step_2: {
-        mcq: [
-          {
-            question: "3NF phân biệt với BCNF ở điểm nào?",
-            options: [
-              { id: "a", text: "3NF cho phép FD non-superkey, BCNF không", correct: true, explanation: "Đúng — 3NF cho phép FD X → Y trong 1 trường hợp: Y là prime attribute (thuộc candidate key). BCNF cấm MỌI FD có X không phải superkey, không có ngoại lệ." },
-              { id: "b", text: "BCNF chỉ áp dụng cho bảng > 5 cột", correct: false, explanation: "Sai — BCNF áp dụng cho mọi bảng, không phụ thuộc số cột. Bảng 3 cột vẫn phải check BCNF." },
-              { id: "c", text: "3NF nghiêm hơn BCNF", correct: false, explanation: "Sai — BCNF nghiêm hơn 3NF. Mọi bảng BCNF đều đạt 3NF, nhưng ngược lại thì không. BCNF là tier cao hơn trong normalization hierarchy." },
-              { id: "d", text: "BCNF là tên khác của 3NF", correct: false, explanation: "Sai — BCNF (Boyce-Codd Normal Form) là chuẩn RIÊNG, do Boyce & Codd đề xuất sau 3NF để fix các edge cases mà 3NF chưa xử lý." }
-            ]
-          },
-          {
-            question: "Transitive dependency là gì?",
-            options: [
-              { id: "a", text: "FD X → Y → Z (Y quyết định Z, X quyết định Y)", correct: true, explanation: "Đúng — transitive: A → B và B → C thì A → C (transitively). VD: order_id → product_id → category → category_manager. category_manager bị phụ thuộc BẮC CẦU qua product_id → vi phạm 3NF." },
-              { id: "b", text: "FD ngược Y → X", correct: false, explanation: "Sai — đó là reverse FD (Y → X), không phải transitive. Reverse là đảo chiều, transitive là nối tiếp qua trung gian." },
-              { id: "c", text: "Mọi cột đều phụ thuộc PK", correct: false, explanation: "Sai — đó là full functional dependency (FF) hoặc 2NF. Mọi cột phụ thuộc TOÀN BỘ PK là điều kiện của 2NF, không phải transitive." },
-              { id: "d", text: "Có 2 khóa chính", correct: false, explanation: "Sai — 1 bảng chỉ có 1 PRIMARY KEY (có thể composite nhiều cột). Bảng có thể có nhiều candidate keys nhưng chỉ chọn 1 làm PK." }
-            ]
-          }
-        ],
-        decomp_game: {
-          rule_label: '3NF — Không phụ thuộc bắc cầu',
-          rule: 'Trong bảng orders, order_id → product_id → category → category_manager. Cột category_manager bị phụ thuộc BẮC CẦU. Tách categories ra bảng riêng.',
-          mission: 'Kéo các cột từ bảng <code>orders</code> vào 3 bảng mục tiêu. Cột <em>category_manager</em> bị phụ thuộc bắc cầu → phải đi về categories.',
-          source_table: {
-            name: 'orders',
-            columns: [
-              { name: 'order_id',         type: 'INT',     key: 'PK', icon: '🔑' },
-              { name: 'product_id',       type: 'INT',     key: 'PK', icon: '🔑' },
-              { name: 'product_name',     type: 'VARCHAR', key: '',   icon: '📦' },
-              { name: 'category',         type: 'VARCHAR', key: 'PK', icon: '🔑' },
-              { name: 'category_manager', type: 'VARCHAR', key: '',   icon: '⚠️' },
-              { name: 'qty',              type: 'INT',     key: '',   icon: '#️⃣' },
-              { name: 'price',            type: 'DECIMAL', key: '',   icon: '💰' },
-              { name: 'order_date',       type: 'DATE',    key: '',   icon: '📅' },
-              { name: 'product_id',       type: 'INT',     key: '',   icon: '🔗' },
-              { name: 'category',         type: 'VARCHAR', key: '',   icon: '🔗' }
-            ],
-            data: [
-              ['1001', 'P01', 'Elden Ring',  'Game',  'An',  '2', '30.00', '2024-04-01'],
-              ['1002', 'P02', 'Hades',       'Game',  'An',  '1', '25.00', '2024-04-03'],
-              ['1003', 'P03', 'Bàn phím cơ', 'Gear',  'Bình','3', '120.00','2024-04-05'],
-              ['1004', 'P01', 'Elden Ring',  'Game',  'An',  '1', '30.00', '2024-04-08'],
-              ['1005', 'P04', 'Chuột gaming','Gear',  'Bình','2', '50.00', '2024-04-10'],
-              ['1006', 'P05', 'Màn hình 27"', 'Gear',  'Bình','1', '450.00','2024-04-12']
-            ]
-          },
-          target_tables: [
-            { name: 'categories', icon: '🗂️', description: 'Bảng danh mục (mỗi danh mục có 1 quản lý)' },
-            { name: 'products',   icon: '📦', description: 'Bảng sản phẩm (FK category + name + price)' },
-            { name: 'orders',     icon: '🛒', description: 'Bảng đơn hàng (FK product + qty + ngày)' }
-          ],
-          solution: {
-            'categories': ['category', 'category_manager'],
-            'products':   ['product_id', 'product_name', 'category', 'price'],
-            'orders':     ['order_id', 'product_id', 'qty', 'order_date']
-          },
-          hint: 'Phụ thuộc bắc cầu: order_id → product_id → category → category_manager. category_manager chỉ cần category để xác định → tách ra. products giữ category vì nó là "khóa ngoại" tự nhiên.'
-        },
-        mini_game: {"type": "order", "title": "Sắp xếp thứ tự NF", "instruction": "Kéo thả để xếp theo thứ tự từ <strong>lỏng nhất → nghiêm nhất</strong>.", "items": [{"id": "1nf", "label": "1NF — atomic domains"}, {"id": "2nf", "label": "2NF — no partial dep"}, {"id": "3nf", "label": "3NF — no transitive dep"}, {"id": "bcnf", "label": "BCNF — every FD has superkey on LHS"}], "solution": {"1nf": 1, "2nf": 2, "3nf": 3, "bcnf": 4}}
-      },
-
-      step_3: {
-        mission: 'Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code> — JOIN 3 bảng <code>orders</code> ↔ <code>products</code> ↔ <code>categories</code>.',
-        blocks: [
-          { type: 'kw',  token: 'SELECT',           slot: 'kw-select' },
-          { type: 'col', token: 'c.category',       slot: 'col-1' },
-          { type: 'fn',  token: 'SUM(o.qty * p.price)', slot: 'fn-sum' },
-          { type: 'kw',  token: 'AS',               slot: 'kw-as' },
-          { type: 'col', token: 'total_revenue',     slot: 'col-alias' },
-          { type: 'kw',  token: 'FROM',             slot: 'kw-from' },
-          { type: 'tbl', token: 'orders o',          slot: 'tbl' },
-          { type: 'kw',  token: 'JOIN',             slot: 'kw-join1' },
-          { type: 'tbl', token: 'products p',        slot: 'tbl2' },
-          { type: 'kw',  token: 'ON',               slot: 'kw-on1' },
-          { type: 'col', token: 'o.product_id = p.product_id', slot: 'col-on1' },
-          { type: 'kw',  token: 'JOIN',             slot: 'kw-join2' },
-          { type: 'tbl', token: 'categories c',      slot: 'tbl3' },
-          { type: 'kw',  token: 'ON',               slot: 'kw-on2' },
-          { type: 'col', token: 'p.category = c.category', slot: 'col-on2' },
-          { type: 'kw',  token: 'WHERE',            slot: 'kw-where' },
-          { type: 'col', token: 'o.order_date',      slot: 'wcol-1' },
-          { type: 'op',  token: '>=',               slot: 'op-1' },
-          { type: 'val', token: "'2024-04-05'",      slot: 'val-1' },
-          { type: 'kw',  token: 'GROUP BY',         slot: 'kw-group' },
-          { type: 'col', token: 'c.category',       slot: 'col-group' },
-          { type: 'kw',  token: 'ORDER BY',         slot: 'kw-order' },
-          { type: 'col', token: 'total_revenue',     slot: 'col-order' },
-          { type: 'kw',  token: 'DESC',             slot: 'kw-desc' }
-        ],
-        drop_zones: [
-          { id: 'select-line',  placeholder: 'SELECT ____ , SUM(...) AS ____',   accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT', 'AS'], multi: true },
-          { id: 'from-line',    placeholder: 'FROM ____ JOIN ... ON ... JOIN ... ON ...', accepts: ['kw', 'tbl', 'col'], acceptedKeywords: ['FROM', 'JOIN', 'ON'], multi: true },
-          { id: 'where-line',   placeholder: 'WHERE ____ >= ____',               accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true },
-          { id: 'group-line',   placeholder: 'GROUP BY ____',                     accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
-          { id: 'order-line',   placeholder: 'ORDER BY ____ DESC',                accepts: ['kw', 'col'], acceptedKeywords: ['ORDER BY', 'DESC'], multi: true }
-        ],
-        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
-        reveal_hints: {
-          'select-line':  'SELECT <strong>c.category</strong> + <strong>SUM(o.qty * p.price) AS total_revenue</strong> — tính tổng doanh thu.',
-          'from-line':    'FROM <strong>orders o</strong> + 2 khối JOIN...ON — chain 3 bảng qua FK.',
-          'where-line':   "WHERE <strong>o.order_date >= '2024-04-05'</strong> — lọc theo ngày.",
-          'group-line':   'GROUP BY <strong>c.category</strong> — gom theo danh mục.',
-          'order-line':   'ORDER BY <strong>total_revenue DESC</strong> — doanh thu cao nhất lên đầu.'
-        }
-      },
-
-      step_4: {
-        prompt: 'Sau 3NF, tách thành 3 bảng <code>orders</code>, <code>products</code>, <code>categories</code>. Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code>. Hiển thị category + tổng tiền, sắp xếp giảm dần.',
-        starter: "-- Tổng doanh thu theo category từ 2024-04-05\n-- JOIN orders ↔ products ↔ categories + GROUP BY + SUM + ORDER BY\nSELECT c., SUM(o.qty * p.) AS \n  FROM orders o\n  JOIN products p ON o. = p.\n  JOIN categories c ON p. = c.\n WHERE o. >= '2024-04-05'\n GROUP BY c.\n ORDER BY  DESC;\n",
-        schema: {
-          table_name: 'products',
-          columns: [
-            { name: 'product_id', type: 'INT',     key: 'PK', icon: '🔑' },
-            { name: 'product_name', type: 'VARCHAR', key: '',   icon: '📦' },
-            { name: 'category', type: 'VARCHAR', key: 'FK', icon: '🏷️' },
-            { name: 'price',     type: 'DECIMAL', key: '',   icon: '💰' }
-          ],
-          data: [
-            ['P01', 'Elden Ring',  'Game', '60.00'],
-            ['P02', 'Hades',       'Game', '25.00'],
-            ['P03', 'Bàn phím cơ', 'Gear', '40.00'],
-            ['P04', 'Chuột gaming','Gear', '50.00'],
-            ['P05', 'Màn hình 27"','Gear', '450.00']
-          ]
-        },
-        related_schemas: [
-          {
-            table_name: 'orders',
-            columns: [
-              { name: 'order_id',   type: 'INT',  key: 'PK' },
-              { name: 'product_id', type: 'INT',  key: 'FK' },
-              { name: 'qty',        type: 'INT',  key: '' },
-              { name: 'order_date', type: 'DATE', key: '' }
-            ],
-            data: [
-              ['1001', 'P01', '2', '2024-04-01'],
-              ['1002', 'P02', '1', '2024-04-03'],
-              ['1003', 'P03', '3', '2024-04-05'],
-              ['1004', 'P01', '1', '2024-04-08'],
-              ['1005', 'P04', '2', '2024-04-10']
-            ]
-          },
-          {
-            table_name: 'categories',
-            columns: [
-              { name: 'category',        type: 'VARCHAR', key: 'PK' },
-              { name: 'category_manager', type: 'VARCHAR', key: '' }
-            ],
-            data: [
-              ['Game', 'An'],
-              ['Gear', 'Bình']
-            ]
-          }
-        ],
-        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
-        hints: [
-          { level: 1, text: 'Bạn cần <em>JOIN 3 bảng</em> (orders ↔ products ↔ categories), tính <code>SUM(qty * price)</code> cho mỗi category, lọc theo ngày, GROUP BY + ORDER BY DESC.' },
-          { level: 2, text: 'JOIN chain: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category</code>.' },
-          { level: 3, text: '<code>SUM(o.qty * p.price) AS total_revenue</code> — nhân số lượng với giá. WHERE <code>order_date >= \'2024-04-05\'</code>.' },
-          { level: 4, text: "<code class=\"code\">SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;</code>" }
-        ],
-        success_message: 'Hoàn thành 3NF nâng cao! Phụ thuộc bắc cầu đã được loại bỏ. Bạn đã tính tổng doanh thu qua 3 bảng — đây là pattern quan trọng trong business intelligence.',
-        xp_reward: 90
-      }
-    },
-
-    /* ========================================================================
-     * BÀI 12 — 4NF: Phụ thuộc đa trị (Multivalued Dependency)
-     * Concept: 1 khóa quyết định NHIỀU giá trị độc lập của nhiều cột
-     * ======================================================================== */
-    {
-      id: 'db_12', index: 12,
+      id: 'db_12', index: 13,
       title: 'Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị',
       subtitle: 'Loại bỏ phụ thuộc đa trị độc lập — tránh lặp tổ hợp Cartesian',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
@@ -2505,6 +2633,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Diệt đa trị', desc: '4NF' },
       step_1: {
         primer: {
           goal: [
@@ -2663,16 +2792,13 @@ concept_cards: [
           { level: 3, text: 'GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook. ORDER BY DESC sắp xếp giảm dần. LIMIT 5 lấy top 5.' },
           { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC LIMIT 5;</code>" }
         ],
-        success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 13 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
+        success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 14 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
         xp_reward: 75
       }
     },
 
-    /* ========================================================================
-     * BÀI 13 — BOSS BATTLE: 4 stages trên Mạng Xã Hội Gamers
-     * ======================================================================== */
     {
-      id: 'db_13', index: 13,
+      id: 'db_13', index: 14,
       title: 'Trận chiến cuối — Siêu hệ thống chuẩn hóa',
       subtitle: 'Tổng hợp mọi quy tắc — Boss battle Mạng Xã Hội Gamers',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
@@ -2693,6 +2819,7 @@ concept_cards: [
         }
       },
 
+      achievement: { name: 'Nhà vô địch chuẩn hóa', desc: 'hạ Boss chuẩn hóa' },
       step_1: {
         primer: {
           goal: [
@@ -2985,13 +3112,13 @@ concept_cards: [
           { level: 3, text: '<code>WHERE is_premium = true</code> + <code>GROUP BY u.user_id, u.username, u.country</code>' },
           { level: 4, text: "<code class=\"code\">SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;</code>" }
         ],
-        success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 13 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Mạng Xã Hội Gamers phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Bảo mật).',
+        success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 14 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Mạng Xã Hội Gamers phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Web Services, Bảo mật).',
         xp_reward: 100
       }
     },
 
     {
-      id: 'db_14', index: 14,
+      id: 'db_14', index: 15,
       title: 'JSON trong Database — Path Expressions',
       subtitle: 'Lưu và truy vấn JSON bên trong cột quan hệ',
       module: 3, module_title: 'Application Design',
@@ -3000,6 +3127,7 @@ concept_cards: [
       drag_type: 'chip',
       challenge_type: 'full_ide',
 
+      achievement: { name: 'Thợ lặn JSON', desc: 'truy vấn JSON path' },
       step_1: {
         primer: {
           goal: [
@@ -3197,7 +3325,7 @@ concept_cards: [
     },
 
     {
-      id: 'db_15', index: 15,
+      id: 'db_15', index: 16,
       title: 'Spatial Data — Dữ liệu Không gian',
       subtitle: 'Truy vấn tọa độ GPS, tìm điểm gần nhất',
       module: 3, module_title: 'Application Design',
@@ -3206,6 +3334,7 @@ concept_cards: [
       drag_type: 'chip',
       challenge_type: 'full_ide',
 
+      achievement: { name: 'Nhà bản đồ', desc: 'dữ liệu không gian' },
       step_1: {
         primer: {
           goal: [
@@ -3395,7 +3524,7 @@ concept_cards: [
     },
 
     {
-      id: 'db_16', index: 16,
+      id: 'db_16', index: 17,
       title: 'ORM với Django — Ánh xạ Class ↔ Table',
       subtitle: 'Từ Python class đến SQL query tự động',
       module: 3, module_title: 'Application Design',
@@ -3404,6 +3533,7 @@ concept_cards: [
       drag_type: 'order',
       challenge_type: 'full_ide',
 
+      achievement: { name: 'Pháp sư ORM', desc: 'class Python ↔ bảng' },
       step_1: {
         primer: {
           goal: [
@@ -3549,7 +3679,155 @@ concept_cards: [
     },
 
     {
-      id: 'db_17', index: 17,
+      id: 'db_20', index: 18,
+      title: 'Web Services — REST/AJAX nối App với Database',
+      subtitle: 'App gọi API qua HTTP → server chạy SQL → trả JSON',
+      module: 3, module_title: 'Application Design',
+      estimated_minutes: 22, xp_reward: 70,
+      project_piece: '🌐 Dựng API cho web shop game',
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'game_catalog',
+          columns: ['id', 'name', 'genre', 'price'],
+          dataRows: [
+            ['101','Elden Ring','RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','RPG','25'],
+            ['104','Celeste','Platformer','20']
+          ]
+        }
+      },
+
+      achievement: { name: 'Kết nối Web', desc: 'nối App với DB qua REST API' },
+      step_1: {
+        primer: {
+          goal: [
+            'Web Service = cầu nối App ↔ DB qua HTTP (REST). App KHÔNG nối thẳng DB',
+            'Client gửi request (vd GET /api/games?genre=RPG) → server chạy SQL → trả JSON',
+            'Giao thức stateless: mỗi request độc lập; tham số truyền AN TOÀN (parameterized ?)'
+          ],
+          intro: 'App web/mobile không nối thẳng vào DB — nó gọi <strong>API</strong> qua HTTP (REST/AJAX). Người dùng lọc game RPG → trình duyệt gửi <code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT … WHERE genre = ?</code> → trả về <strong>JSON</strong> cho app hiển thị. <strong>Stateless</strong>: mỗi request độc lập, server không nhớ phiên trước.',
+          example: '<code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT name, price FROM game_catalog WHERE genre = \'RPG\'</code> → trả <code>[{"name":"Elden Ring","price":60},{"name":"Hades","price":25}]</code>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-server',
+            title: 'REST/HTTP — stateless',
+            body: 'Mỗi request là 1 lệnh độc lập (GET/POST). Server nhận → truy DB → trả JSON. Không giữ trạng thái giữa các request.'
+          },
+          {
+            icon: 'fa-shield-halved',
+            title: 'Tham số AN TOÀN (parameterized)',
+            body: 'Param từ request (genre, id…) phải truyền qua placeholder <code>?</code>, KHÔNG ghép chuỗi trực tiếp — nếu ghép, hacker chèn SQL độc (xem bài SQL Injection).'
+          },
+          {
+            icon: 'fa-hand-pointer',
+            title: 'Thử ngay',
+            body: 'Server nhận /api/games?genre=RPG → bạn dựng câu SQL nó chạy.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'game_catalog',
+            columns: [
+              { name: 'id', type: 'INT', key: 'PK', icon: '🔑' },
+              { name: 'name', type: 'VARCHAR', key: '', icon: '🎮' },
+              { name: 'genre', type: 'VARCHAR', key: '', icon: '🏷️' },
+              { name: 'price', type: 'INT', key: '', icon: '💰' }
+            ]
+          },
+          data_preview: [
+            ['101','Elden Ring','RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','RPG','25'],
+            ['104','Celeste','Platformer','20']
+          ]
+        },
+        mission: 'Server nhận request lọc game RPG — kéo thả câu SQL mà API sẽ chạy để trả kết quả.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: '"Stateless" trong REST nghĩa là gì?',
+            options: [
+              { id: 'a', text: 'Server lưu toàn bộ lịch sử người dùng', correct: false, explanation: 'Sai — ngược lại, stateless là KHÔNG lưu trạng thái giữa request.' },
+              { id: 'b', text: 'Mỗi request độc lập, server không nhớ request trước', correct: true, explanation: 'Đúng — mỗi HTTP request tự chứa đủ thông tin; server xử lý độc lập.' },
+              { id: 'c', text: 'Không dùng được database', correct: false, explanation: 'Sai — vẫn truy DB bình thường mỗi request.' },
+              { id: 'd', text: 'Chỉ chạy được GET', correct: false, explanation: 'Sai — REST có GET/POST/PUT/DELETE.' }
+            ]
+          },
+          {
+            question: 'Vì sao tham số request nên dùng placeholder <code>?</code> (parameterized) thay vì ghép chuỗi?',
+            options: [
+              { id: 'a', text: 'Chạy nhanh hơn', correct: false, explanation: 'Phụ — lý do CHÍNH là an toàn.' },
+              { id: 'b', text: 'Tránh SQL Injection — input độc không thành câu lệnh', correct: true, explanation: 'Đúng — parameterized tách dữ liệu khỏi lệnh, hacker không chèn được SQL.' },
+              { id: 'c', text: 'Để code ngắn hơn', correct: false, explanation: 'Sai — không phải mục đích.' },
+              { id: 'd', text: 'Bắt buộc của HTTP', correct: false, explanation: 'Sai — HTTP không ép; đây là best practice bảo mật.' }
+            ]
+          }
+        ]
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw', token: 'SELECT', slot: 'kw-select' },
+          { type: 'col', token: 'name', slot: 'col-1' },
+          { type: 'col', token: 'price', slot: 'col-2' },
+          { type: 'kw', token: 'FROM', slot: 'kw-from' },
+          { type: 'tbl', token: 'game_catalog', slot: 'tbl' },
+          { type: 'kw', token: 'WHERE', slot: 'kw-where' },
+          { type: 'col', token: 'genre', slot: 'wcol-1' },
+          { type: 'op', token: '=', slot: 'op-1' },
+          { type: 'val', token: "'RPG'", slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____ , ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line', placeholder: 'FROM ____', accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line', placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
+        ],
+        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'RPG';",
+        reveal_hints: {
+          'select-line': 'SELECT 2 cột: <strong>name</strong>, <strong>price</strong>.',
+          'from-line': 'FROM <strong>game_catalog</strong>.',
+          'where-line': "WHERE lọc theo genre: <strong>genre = 'RPG'</strong> (lưu ý dấu nháy đơn quanh giá trị chuỗi)."
+        }
+      },
+
+      step_4: {
+        prompt: "Endpoint /api/games?genre=Action — viết câu SQL server chạy để trả tên + giá các game Action (dạng JSON).",
+        starter: "-- Lấy name + price các game Action\n-- Filter: genre = 'Action'\nSELECT ____, ____\n  FROM ____\n WHERE ____ = ____;",
+        schema: {
+          table_name: 'game_catalog',
+          columns: [
+            { name: 'id', type: 'INT', key: 'PK' },
+            { name: 'name', type: 'VARCHAR', key: '' },
+            { name: 'genre', type: 'VARCHAR', key: '' },
+            { name: 'price', type: 'INT', key: '' }
+          ],
+          data: [
+            ['101','Elden Ring','RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','RPG','25'],
+            ['104','Celeste','Platformer','20']
+          ]
+        },
+        hints: [
+          { level: 1, text: "Bạn cần <em>2 cột</em> (name, price) từ bảng <code>game_catalog</code>, lọc theo genre = 'Action'." },
+          { level: 2, text: "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 1 dòng (God of War, 50)." },
+          { level: 3, text: "Giá trị chuỗi trong SQL đặt trong dấu nháy đơn: <code>'Action'</code>." },
+          { level: 4, text: "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action';</code>" }
+        ],
+        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'Action';",
+        success_message: 'Hoàn thành Web Services (REST/AJAX)! Bài 19 (SQL Injection) tiếp theo — cũng chính là lý do phải dùng parameterized ?.',
+        xp_reward: 60
+      }
+    },
+
+    {
+      id: 'db_17', index: 19,
       title: 'SQL Injection — Lỗ hổng chết người',
       subtitle: 'Tấn công bằng input độc hại và phòng chống',
       module: 3, module_title: 'Application Design',
@@ -3558,6 +3836,7 @@ concept_cards: [
       drag_type: 'bug_spot',
       challenge_type: 'full_ide',
 
+      achievement: { name: 'Lá chắn Injection', desc: 'chống SQL Injection' },
       step_1: {
         primer: {
           goal: [
@@ -3701,13 +3980,13 @@ concept_cards: [
           { level: 3, text: "<code>SELECT role, COUNT(user_id) AS user_count</code> — đếm theo role." },
           { level: 4, text: "<code class=\"code\">SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;</code>" }
         ],
-        success_message: 'Prepared Statement là lá chắn! Input luôn là literal, không bao giờ chạy như SQL. Bài 18 sẽ học cách lưu password đúng cách.',
+        success_message: 'Prepared Statement là lá chắn! Input luôn là literal, không bao giờ chạy như SQL. Bài 20 sẽ học cách lưu password đúng cách.',
         xp_reward: 60
       }
     },
 
     {
-      id: 'db_18', index: 18,
+      id: 'db_18', index: 20,
       title: 'Password Security — Salt & Hashing',
       subtitle: 'Từ plain text đến bcrypt — chọn thuật toán nào?',
       module: 3, module_title: 'Application Design',
@@ -3716,6 +3995,7 @@ concept_cards: [
       drag_type: 'classify',
       challenge_type: 'full_ide',
 
+      achievement: { name: 'Vệ binh mật khẩu', desc: 'Salt & Hashing' },
       step_1: {
         primer: {
           goal: [
@@ -3893,337 +4173,10 @@ concept_cards: [
           { level: 3, text: "<code>WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code>." },
           { level: 4, text: "<code class=\"code\">SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;</code>" }
         ],
-        success_message: 'CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 18 bài Database Design Cơ bản!',
+        success_message: 'CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 20 bài Database Design Cơ bản!',
         xp_reward: 70
       }
-    },
-
-    /* ========================================================================
-     * BÀI 5 MỚI — M:N & Bảng trung gian (junction) [C2b]
-     * Source: Silberschatz §6.4 (Many-to-many) + §6.7.4 (Mapping).
-     * Theme: Thư viện game của người chơi — player ↔ library ↔ game.
-     * id ổn định: 'db_19'. index = 5 (vị trí cuối sau reorder Commit 2).
-     * ======================================================================== */
-    {
-      id: 'db_19', index: 5,
-      title: 'Mối quan hệ M:N & Bảng trung gian',
-      subtitle: 'Nhiều-nhiều — tách bảng trung gian (junction) nối 2 thực thể',
-      module: 1, module_title: 'Giới thiệu & Nền tảng Database',
-      estimated_minutes: 22, xp_reward: 60,
-      project_piece: '🧩 Xây "Thư viện game" của người chơi',
-      drag_type: 'chip',
-      challenge_type: 'full_ide',
-      drag_map: {
-        table: {
-          name: 'library',
-          columns: ['player_id', 'game_id', 'acquired_date'],
-          dataRows: [
-            ['7','101','2025-01-10'],
-            ['7','103','2025-02-02'],
-            ['9','101','2025-01-15'],
-            ['9','105','2025-03-01']
-          ]
-        }
-      },
-
-      step_1: {
-        primer: {
-          goal: [
-            'M:N = 1 người chơi sở hữu NHIỀU game, 1 game thuộc NHIỀU người chơi',
-            'DB quan hệ KHÔNG nối M:N trực tiếp 2 bảng → tách BẢNG TRUNG GIAN chứa 2 FK',
-            'Khóa chính bảng trung gian = (player_id, game_id) ghép lại'
-          ],
-          intro: '1 người chơi sở hữu nhiều game; 1 game được nhiều người chơi sở hữu — quan hệ <strong>nhiều-nhiều (M:N)</strong>. DB quan hệ không biểu diễn M:N trực tiếp. Giải pháp: bảng <strong>trung gian</strong> <code>library</code> gồm 2 khóa ngoại <code>player_id</code> + <code>game_id</code>; mỗi dòng = 1 cặp "ai sở hữu game nào".',
-          example: 'Bảng <code>library(player_id, game_id, acquired_date)</code>: khóa chính là CẶP <code>(player_id, game_id)</code>. Tìm game của người chơi 7: <code>SELECT game_id FROM library WHERE player_id = 7</code>.'
-        },
-        concept_cards: [
-          {
-            icon: 'fa-arrows-left-right',
-            title: 'M:N — vì sao cần bảng thứ 3',
-            body: 'Không thể nhét "danh sách game" vào 1 ô của bảng player (vi phạm 1NF). Cũng không nhét list player vào bảng game. Giải: 1 bảng RIÊNG <code>library</code>, mỗi dòng 1 cặp (player, game).'
-          },
-          {
-            icon: 'fa-code-branch',
-            title: 'Junction = 2× (1:N)',
-            body: 'Bảng trung gian biến 1 quan hệ M:N thành HAI quan hệ 1:N: player 1:N library, game 1:N library. Mỗi FK trỏ về 1 phía.'
-          },
-          {
-            icon: 'fa-hand-pointer',
-            title: 'Thử ngay',
-            body: 'Trong <code>library</code>, người chơi 7 có 2 dòng → sở hữu 2 game (101, 103).'
-          }
-        ],
-        visual: {
-          schema: {
-            table_name: 'library',
-            columns: [
-              { name: 'player_id', type: 'INT', key: 'PK+FK', icon: '🔗' },
-              { name: 'game_id', type: 'INT', key: 'PK+FK', icon: '🔗' },
-              { name: 'acquired_date', type: 'DATE', key: '', icon: '📅' }
-            ]
-          },
-          data_preview: [
-            ['7','101','2025-01-10'],
-            ['7','103','2025-02-02'],
-            ['9','101','2025-01-15'],
-            ['9','105','2025-03-01']
-          ],
-          diagram: {
-            type: 'er', width: 600, height: 280,
-            entities: [
-              { name: 'player', columns: [{name:'p_id',type:'INT',key:'PK'},{name:'username',type:'VARCHAR'}] },
-              { name: 'library', columns: [{name:'player_id',type:'INT',key:'FK,PK'},{name:'game_id',type:'INT',key:'FK,PK'}] },
-              { name: 'game', columns: [{name:'game_id',type:'INT',key:'PK'},{name:'title',type:'VARCHAR'}] }
-            ],
-            connectors: [
-              { from: 'player', to: 'library', label: 'sở hữu', fromCard: '1', toCard: 'N' },
-              { from: 'game', to: 'library', label: 'được sở hữu', fromCard: '1', toCard: 'N' }
-            ],
-            note: 'M:N giải bằng bảng trung gian library — PK ghép (player_id, game_id)'
-          }
-        },
-        mission: 'Tìm các <code>game_id</code> mà người chơi id 7 sở hữu — kéo thả truy vấn bảng trung gian.'
-      },
-
-      step_2: {
-        mcq: [
-          {
-            question: 'Vì sao quan hệ M:N (nhiều-nhiều) cần BẢNG TRUNG GIAN?',
-            options: [
-              { id: 'a', text: 'Vì 2 bảng gốc quá lớn', correct: false, explanation: 'Sai — không liên quan kích thước. Vấn đề là KHÔNG thể nhét nhiều giá trị vào 1 ô.' },
-              { id: 'b', text: 'Vì không thể nhét nhiều giá trị vào 1 ô; cần 1 bảng riêng chứa từng cặp (player, game)', correct: true, explanation: 'Đúng — M:N → bảng trung gian, mỗi dòng 1 cặp khóa ngoại.' },
-              { id: 'c', text: 'Vì SQL không hỗ trợ JOIN', correct: false, explanation: 'Sai — SQL hỗ trợ JOIN; bảng trung gian là về MÔ HÌNH dữ liệu, không phải giới hạn SQL.' },
-              { id: 'd', text: 'Để tăng tốc truy vấn', correct: false, explanation: 'Sai — mục đích là biểu diễn đúng M:N, không phải tối ưu tốc độ.' }
-            ]
-          },
-          {
-            question: 'Khóa chính của bảng <code>library(player_id, game_id, acquired_date)</code> là gì?',
-            options: [
-              { id: 'a', text: 'Chỉ player_id', correct: false, explanation: 'Sai — 1 player có nhiều dòng (nhiều game). Không unique.' },
-              { id: 'b', text: 'Chỉ game_id', correct: false, explanation: 'Sai — 1 game thuộc nhiều player. Không unique.' },
-              { id: 'c', text: '(player_id, game_id) — cặp khóa ghép', correct: true, explanation: 'Đúng — mỗi cặp (player, game) là duy nhất: 1 người chỉ sở hữu 1 game 1 lần.' },
-              { id: 'd', text: 'acquired_date', correct: false, explanation: 'Sai — ngày mua có thể trùng giữa nhiều cặp; không định danh.' }
-            ]
-          }
-        ],
-        mini_game: {
-          type: 'bug_spot',
-          title: 'Tìm lỗi bảng trung gian',
-          xp: 25,
-          code: 'CREATE TABLE library (\n  lib_id INT PRIMARY KEY,\n  player_id INT,\n  game_id INT\n);',
-          bugType: 'logic',
-          bugs: [
-            { line: 2, description: 'Bảng trung gian M:N KHÔNG cần khóa nhân tạo lib_id. PK đúng = composite (player_id, game_id) + 2 FOREIGN KEY trỏ player(p_id) và game(game_id).' }
-          ]
-        }
-      },
-
-      step_3: {
-        blocks: [
-          { type: 'kw', token: 'SELECT', slot: 'kw-select' },
-          { type: 'col', token: 'game_id', slot: 'col-1' },
-          { type: 'kw', token: 'FROM', slot: 'kw-from' },
-          { type: 'tbl', token: 'library', slot: 'tbl' },
-          { type: 'kw', token: 'WHERE', slot: 'kw-where' },
-          { type: 'col', token: 'player_id', slot: 'wcol-1' },
-          { type: 'op', token: '=', slot: 'op-1' },
-          { type: 'val', token: '7', slot: 'val-1' }
-        ],
-        drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line', placeholder: 'FROM ____', accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line', placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
-        ],
-        expected_sql: 'SELECT game_id FROM library WHERE player_id = 7;',
-        reveal_hints: {
-          'select-line': 'SELECT 1 cột: <strong>game_id</strong>.',
-          'from-line': 'FROM <strong>library</strong> (bảng trung gian).',
-          'where-line': 'WHERE lọc theo người chơi: <strong>player_id = 7</strong>.'
-        }
-      },
-
-      step_4: {
-        prompt: 'Endpoint thư viện cần liệt kê game của người chơi 9. Viết query lấy mọi <code>game_id</code> mà player 9 sở hữu.',
-        starter: "-- Lấy game_id mà player 9 sở hữu\n-- Filter: player_id = 9\nSELECT ____\n  FROM ____\n WHERE ____ = ____;",
-        schema: {
-          table_name: 'library',
-          columns: [
-            { name: 'player_id', type: 'INT', key: 'PK+FK' },
-            { name: 'game_id', type: 'INT', key: 'PK+FK' },
-            { name: 'acquired_date', type: 'DATE', key: '' }
-          ],
-          data: [
-            ['7','101','2025-01-10'],
-            ['7','103','2025-02-02'],
-            ['9','101','2025-01-15'],
-            ['9','105','2025-03-01']
-          ]
-        },
-        hints: [
-          { level: 1, text: 'Bạn cần <em>1 cột</em> (game_id) từ bảng <code>library</code>, lọc theo player_id = 9.' },
-          { level: 2, text: '<code>SELECT game_id FROM library WHERE player_id = 9;</code> — kết quả 2 dòng (101, 105).' },
-          { level: 3, text: 'Đừng gộp <code>GROUP BY</code> hay <code>DISTINCT</code> — 1 player có thể sở hữu 1 game nhiều lần (giả định đơn giản).' },
-          { level: 4, text: "<code class=\"code\">SELECT game_id FROM library WHERE player_id = 9;</code>" }
-        ],
-        expected_sql: 'SELECT game_id FROM library WHERE player_id = 9;',
-        success_message: 'Hoàn thành M:N & bảng trung gian! Bài 6 (Weak Entity) tiếp theo — thực thể yếu cũng dùng khóa ghép nhưng theo cách khác.',
-        xp_reward: 50
-      }
-    },
-
-    /* ========================================================================
-     * BÀI 18 MỚI — Web Services (REST/AJAX) [C3]
-     * Source: Silberschatz §9.5 (Web Services) + PART 3 concept-4.
-     * Theme: Game shop — Client (Browser) → API Server → game_catalog.
-     * id ổn định: 'db_20'. index = 18 (vị trí cuối sau reorder Commit 2).
-     * HERO: flow 4-node cyan (HERO_DESIGN_SYSTEM §11).
-     * ======================================================================== */
-    {
-      id: 'db_20', index: 18,
-      title: 'Web Services — REST/AJAX nối App với Database',
-      subtitle: 'App gọi API qua HTTP → server chạy SQL → trả JSON',
-      module: 3, module_title: 'Application Design',
-      estimated_minutes: 22, xp_reward: 70,
-      project_piece: '🌐 Dựng API cho web shop game',
-      drag_type: 'chip',
-      challenge_type: 'full_ide',
-      drag_map: {
-        table: {
-          name: 'game_catalog',
-          columns: ['id', 'name', 'genre', 'price'],
-          dataRows: [
-            ['101','Elden Ring','RPG','60'],
-            ['102','God of War','Action','50'],
-            ['103','Hades','RPG','25'],
-            ['104','Celeste','Platformer','20']
-          ]
-        }
-      },
-
-      step_1: {
-        primer: {
-          goal: [
-            'Web Service = cầu nối App ↔ DB qua HTTP (REST). App KHÔNG nối thẳng DB',
-            'Client gửi request (vd GET /api/games?genre=RPG) → server chạy SQL → trả JSON',
-            'Giao thức stateless: mỗi request độc lập; tham số truyền AN TOÀN (parameterized ?)'
-          ],
-          intro: 'App web/mobile không nối thẳng vào DB — nó gọi <strong>API</strong> qua HTTP (REST/AJAX). Người dùng lọc game RPG → trình duyệt gửi <code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT … WHERE genre = ?</code> → trả về <strong>JSON</strong> cho app hiển thị. <strong>Stateless</strong>: mỗi request độc lập, server không nhớ phiên trước.',
-          example: '<code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT name, price FROM game_catalog WHERE genre = \'RPG\'</code> → trả <code>[{"name":"Elden Ring","price":60},{"name":"Hades","price":25}]</code>.'
-        },
-        concept_cards: [
-          {
-            icon: 'fa-server',
-            title: 'REST/HTTP — stateless',
-            body: 'Mỗi request là 1 lệnh độc lập (GET/POST). Server nhận → truy DB → trả JSON. Không giữ trạng thái giữa các request.'
-          },
-          {
-            icon: 'fa-shield-halved',
-            title: 'Tham số AN TOÀN (parameterized)',
-            body: 'Param từ request (genre, id…) phải truyền qua placeholder <code>?</code>, KHÔNG ghép chuỗi trực tiếp — nếu ghép, hacker chèn SQL độc (xem bài SQL Injection).'
-          },
-          {
-            icon: 'fa-hand-pointer',
-            title: 'Thử ngay',
-            body: 'Server nhận /api/games?genre=RPG → bạn dựng câu SQL nó chạy.'
-          }
-        ],
-        visual: {
-          schema: {
-            table_name: 'game_catalog',
-            columns: [
-              { name: 'id', type: 'INT', key: 'PK', icon: '🔑' },
-              { name: 'name', type: 'VARCHAR', key: '', icon: '🎮' },
-              { name: 'genre', type: 'VARCHAR', key: '', icon: '🏷️' },
-              { name: 'price', type: 'INT', key: '', icon: '💰' }
-            ]
-          },
-          data_preview: [
-            ['101','Elden Ring','RPG','60'],
-            ['102','God of War','Action','50'],
-            ['103','Hades','RPG','25'],
-            ['104','Celeste','Platformer','20']
-          ]
-        },
-        mission: 'Server nhận request lọc game RPG — kéo thả câu SQL mà API sẽ chạy để trả kết quả.'
-      },
-
-      step_2: {
-        mcq: [
-          {
-            question: '"Stateless" trong REST nghĩa là gì?',
-            options: [
-              { id: 'a', text: 'Server lưu toàn bộ lịch sử người dùng', correct: false, explanation: 'Sai — ngược lại, stateless là KHÔNG lưu trạng thái giữa request.' },
-              { id: 'b', text: 'Mỗi request độc lập, server không nhớ request trước', correct: true, explanation: 'Đúng — mỗi HTTP request tự chứa đủ thông tin; server xử lý độc lập.' },
-              { id: 'c', text: 'Không dùng được database', correct: false, explanation: 'Sai — vẫn truy DB bình thường mỗi request.' },
-              { id: 'd', text: 'Chỉ chạy được GET', correct: false, explanation: 'Sai — REST có GET/POST/PUT/DELETE.' }
-            ]
-          },
-          {
-            question: 'Vì sao tham số request nên dùng placeholder <code>?</code> (parameterized) thay vì ghép chuỗi?',
-            options: [
-              { id: 'a', text: 'Chạy nhanh hơn', correct: false, explanation: 'Phụ — lý do CHÍNH là an toàn.' },
-              { id: 'b', text: 'Tránh SQL Injection — input độc không thành câu lệnh', correct: true, explanation: 'Đúng — parameterized tách dữ liệu khỏi lệnh, hacker không chèn được SQL.' },
-              { id: 'c', text: 'Để code ngắn hơn', correct: false, explanation: 'Sai — không phải mục đích.' },
-              { id: 'd', text: 'Bắt buộc của HTTP', correct: false, explanation: 'Sai — HTTP không ép; đây là best practice bảo mật.' }
-            ]
-          }
-        ]
-      },
-
-      step_3: {
-        blocks: [
-          { type: 'kw', token: 'SELECT', slot: 'kw-select' },
-          { type: 'col', token: 'name', slot: 'col-1' },
-          { type: 'col', token: 'price', slot: 'col-2' },
-          { type: 'kw', token: 'FROM', slot: 'kw-from' },
-          { type: 'tbl', token: 'game_catalog', slot: 'tbl' },
-          { type: 'kw', token: 'WHERE', slot: 'kw-where' },
-          { type: 'col', token: 'genre', slot: 'wcol-1' },
-          { type: 'op', token: '=', slot: 'op-1' },
-          { type: 'val', token: "'RPG'", slot: 'val-1' }
-        ],
-        drop_zones: [
-          { id: 'select-line', placeholder: 'SELECT ____ , ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
-          { id: 'from-line', placeholder: 'FROM ____', accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line', placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
-        ],
-        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'RPG';",
-        reveal_hints: {
-          'select-line': 'SELECT 2 cột: <strong>name</strong>, <strong>price</strong>.',
-          'from-line': 'FROM <strong>game_catalog</strong>.',
-          'where-line': "WHERE lọc theo genre: <strong>genre = 'RPG'</strong> (lưu ý dấu nháy đơn quanh giá trị chuỗi)."
-        }
-      },
-
-      step_4: {
-        prompt: "Endpoint /api/games?genre=Action — viết câu SQL server chạy để trả tên + giá các game Action (dạng JSON).",
-        starter: "-- Lấy name + price các game Action\n-- Filter: genre = 'Action'\nSELECT ____, ____\n  FROM ____\n WHERE ____ = ____;",
-        schema: {
-          table_name: 'game_catalog',
-          columns: [
-            { name: 'id', type: 'INT', key: 'PK' },
-            { name: 'name', type: 'VARCHAR', key: '' },
-            { name: 'genre', type: 'VARCHAR', key: '' },
-            { name: 'price', type: 'INT', key: '' }
-          ],
-          data: [
-            ['101','Elden Ring','RPG','60'],
-            ['102','God of War','Action','50'],
-            ['103','Hades','RPG','25'],
-            ['104','Celeste','Platformer','20']
-          ]
-        },
-        hints: [
-          { level: 1, text: "Bạn cần <em>2 cột</em> (name, price) từ bảng <code>game_catalog</code>, lọc theo genre = 'Action'." },
-          { level: 2, text: "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 1 dòng (God of War, 50)." },
-          { level: 3, text: "Giá trị chuỗi trong SQL đặt trong dấu nháy đơn: <code>'Action'</code>." },
-          { level: 4, text: "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action';</code>" }
-        ],
-        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'Action';",
-        success_message: 'Hoàn thành Web Services (REST/AJAX)! Bài 19 (SQL Injection) tiếp theo — cũng chính là lý do phải dùng parameterized ?.',
-        xp_reward: 60
-      }
     }
-
+  
   ]
 };
