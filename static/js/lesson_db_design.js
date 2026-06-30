@@ -117,19 +117,19 @@
       '<line x1="382" y1="180" x2="405" y2="140" stroke="var(--module-accent)" stroke-width="3"/>' +
       '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="17">Junction table giải quyết M:N</text></svg>',
 
-    db_05: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Weak entity Loan_Payment phụ thuộc parent Loan">' +
+    db_05: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Weak entity dlc_content phụ thuộc parent game">' +
       '<rect x="50" y="94" width="150" height="88" rx="8" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
       '<rect x="50" y="94" width="150" height="28" rx="8" fill="var(--module-accent)"/>' +
-      '<text x="125" y="112" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">Loan (parent)</text>' +
-      '<text x="125" y="146" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">loan_id (PK)</text>' +
+      '<text x="125" y="112" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">game (parent)</text>' +
+      '<text x="125" y="146" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">game_id (PK)</text>' +
       '<line x1="200" y1="135" x2="262" y2="135" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="4,2"/>' +
       '<text x="231" y="126" text-anchor="middle" fill="var(--module-accent)" font-size="14">identifies</text>' +
       '<rect x="262" y="94" width="175" height="138" rx="8" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="4" stroke-dasharray="6,3"/>' +
       '<rect x="262" y="94" width="175" height="28" rx="8" fill="rgba(245,158,11,0.25)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="350" y="112" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">Loan_Payment</text>' +
-      '<text x="350" y="150" text-anchor="middle" fill="var(--text-400)" font-size="12">payment_no</text>' +
+      '<text x="350" y="112" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">dlc_content</text>' +
+      '<text x="350" y="150" text-anchor="middle" fill="var(--text-400)" font-size="12">dlc_no</text>' +
       '<text x="350" y="173" text-anchor="middle" fill="var(--module-accent)" font-size="12">(partial key)</text>' +
-      '<text x="350" y="205" text-anchor="middle" fill="var(--text-400)" font-size="12">amount, date</text>' +
+      '<text x="350" y="205" text-anchor="middle" fill="var(--text-400)" font-size="12">dlc_name</text>' +
       '<text x="250" y="269" text-anchor="middle" fill="var(--text-400)" font-size="14">Double border = weak entity</text></svg>',
 
     db_06: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Specialization: Vehicle thành Car và Truck qua ISA">' +
@@ -397,7 +397,60 @@
       '<text x="90" y="273" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="15">× NO STORE</text>' +
       '<line x1="548" y1="133" x2="548" y2="246" stroke="var(--text-600)" stroke-width="2" stroke-dasharray="2,2"/>' +
       '<text x="548" y="273" text-anchor="middle" fill="var(--success)" font-family="JetBrains Mono, monospace" font-size="15">✓ STORE</text>' +
-      '<text x="300" y="326" text-anchor="middle" fill="var(--text-400)" font-size="15">Salt chống rainbow table. Cost chống brute-force.</text></svg>'
+      '<text x="300" y="326" text-anchor="middle" fill="var(--text-400)" font-size="15">Salt chống rainbow table. Cost chống brute-force.</text></svg>',
+
+    /* db_19 — Bài 5 MỚI: M:N qua bảng trung gian (library = player↔game).
+     * Copy từ db_04 (M:N junction) + relabel Student→player, Course→game, Enrollment→library.
+     * Giữ nguyên craft: amber, JetBrains Mono, viewBox 600x400. */
+    db_19: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M:N giữa player và game qua bảng trung gian library">' +
+      '<rect x="30" y="93" width="165" height="105" rx="9" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="112" y="130" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="21" font-weight="700">player</text>' +
+      '<text x="112" y="157" text-anchor="middle" fill="var(--module-accent)" font-size="28" font-weight="700">M</text>' +
+      '<rect x="405" y="93" width="165" height="105" rx="9" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="488" y="130" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="21" font-weight="700">game</text>' +
+      '<text x="488" y="157" text-anchor="middle" fill="var(--module-accent)" font-size="28" font-weight="700">N</text>' +
+      '<rect x="218" y="133" width="165" height="150" rx="9" fill="rgba(245,158,11,0.18)" stroke="var(--module-accent)" stroke-width="4"/>' +
+      '<text x="300" y="180" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="700">library</text>' +
+      '<text x="300" y="213" text-anchor="middle" fill="var(--text-400)" font-size="14">(junction)</text>' +
+      '<text x="300" y="239" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14">player_id + game_id</text>' +
+      '<line x1="195" y1="140" x2="218" y2="180" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<line x1="382" y1="180" x2="405" y2="140" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="17">Junction table giải quyết M:N</text></svg>',
+
+    /* db_20 — Bài 18 MỚI: Web Services REST/AJAX.
+     * Flow 4-node per HERO_DESIGN_SYSTEM §11: Client → API Server → DB → JSON response.
+     * Palette CYAN #22D3EE (nhóm Application, khác amber ER). */
+    db_20: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Web Services flow: Client gửi HTTP request → API Server chạy SQL → Database trả JSON → Client hiển thị">' +
+      '<text x="360" y="32" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">REST API Flow — App ↔ DB qua HTTP</text>' +
+      '<g transform="translate(30, 100)">' +
+        '<rect width="130" height="60" rx="10" fill="#0e1726" stroke="rgba(34,211,238,.55)" stroke-width="1.6"/>' +
+        '<text x="65" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="#e8edf5">Client</text>' +
+        '<text x="65" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">Browser / App</text>' +
+      '</g>' +
+      '<line x1="160" y1="118" x2="218" y2="118" stroke="rgba(34,211,238,.7)" stroke-width="1.6"/>' +
+      '<polygon points="218,118 210,114 210,122" fill="rgba(34,211,238,.9)"/>' +
+      '<text x="190" y="111" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">HTTP GET</text>' +
+      '<g transform="translate(220, 100)">' +
+        '<rect width="150" height="60" rx="10" fill="#0e1726" stroke="rgba(34,211,238,.55)" stroke-width="1.6"/>' +
+        '<text x="75" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="#e8edf5">API Server</text>' +
+        '<text x="75" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">REST endpoint</text>' +
+      '</g>' +
+      '<line x1="370" y1="118" x2="428" y2="118" stroke="rgba(34,211,238,.7)" stroke-width="1.6"/>' +
+      '<polygon points="428,118 420,114 420,122" fill="rgba(34,211,238,.9)"/>' +
+      '<text x="400" y="111" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">SQL ?</text>' +
+      '<g transform="translate(430, 100)">' +
+        '<rect width="130" height="60" rx="10" fill="#0e1726" stroke="rgba(34,211,238,.55)" stroke-width="1.6"/>' +
+        '<text x="65" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="#e8edf5">Database</text>' +
+        '<text x="65" y="46" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">game_catalog</text>' +
+      '</g>' +
+      '<line x1="428" y1="148" x2="370" y2="148" stroke="rgba(34,211,238,.7)" stroke-width="1.6" stroke-dasharray="4,2"/>' +
+      '<polygon points="370,148 378,144 378,152" fill="rgba(34,211,238,.9)"/>' +
+      '<text x="400" y="167" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">JSON rows</text>' +
+      '<line x1="218" y1="148" x2="160" y2="148" stroke="rgba(34,211,238,.7)" stroke-width="1.6" stroke-dasharray="4,2"/>' +
+      '<polygon points="160,148 168,144 168,152" fill="rgba(34,211,238,.9)"/>' +
+      '<text x="190" y="167" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">JSON</text>' +
+      '<text x="360" y="210" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Stateless: mỗi request độc lập — param truyền qua ? (parameterized)</text>' +
+      '</svg>'
   };
 
   function renderLessonHero(lessonId) {

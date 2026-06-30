@@ -236,8 +236,8 @@ window.LESSON_CONTENT['db_design'] = {
      * ======================================================================== */
     {
       id: 'db_02', index: 2,
-      title: 'Composite & Derived Attributes',
-      subtitle: 'Tách cột phức hợp (địa chỉ) và tính cột dẫn xuất (tuổi)',
+      title: 'Composite, Multivalued & Derived Attributes',
+      subtitle: 'Cột phức hợp · thuộc tính nhiều giá trị · cột dẫn xuất',
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 22, xp_reward: 50,
       project_piece: '🧬 Mở khóa "Hệ thống Hồ sơ Người chơi"',
@@ -259,11 +259,12 @@ window.LESSON_CONTENT['db_design'] = {
         primer: {
           goal: [
             'Composite Attribute = cột ghép từ nhiều cột nhỏ (vd: address = city + district)',
+            'Multivalued = 1 thuộc tính có NHIỀU giá trị (vd 1 người chơi nhiều platform PS5/Xbox/PC) → KHÔNG nhét 1 ô, phải TÁCH BẢNG riêng',
             'Derived Attribute = cột KHÔNG lưu, hệ thống tự tính khi truy vấn (vd: age = currentYear - birthYear)',
             'Dùng AS để đặt tên cột ảo cho giá trị dẫn xuất'
           ],
-          intro: 'Trong ER diagram, một thuộc tính có thể là <strong>Composite</strong> (gồm nhiều mảnh: address = city + district + street) hoặc <strong>Derived</strong> (tính toán từ thuộc tính khác: age = currentYear - birthYear). Khi chuyển sang bảng vật lý, ta <em>tách</em> composite thành nhiều cột độc lập, và <em>không lưu</em> derived — chỉ tính khi SELECT.',
-          example: 'Bảng <code class="code">player_profile</code> dưới đây đã tách address thành <code>address_city</code> + <code>address_dist</code>. Cột <code>age</code> KHÔNG tồn tại vật lý — sẽ được tính bằng <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code>.'
+          intro: 'Trong ER diagram, một thuộc tính có thể là <strong>Composite</strong> (gồm nhiều mảnh: address = city + district + street), <strong>Multivalued</strong> (nhiều giá trị: 1 người chơi chơi PS5 + Xbox + PC) hoặc <strong>Derived</strong> (tính toán từ thuộc tính khác: age = currentYear - birthYear). Khi chuyển sang bảng vật lý, ta <em>tách</em> composite thành nhiều cột độc lập, <em>không lưu</em> derived — chỉ tính khi SELECT. Loại thứ ba: <strong>Multivalued</strong> — 1 người chơi có thể chơi trên NHIỀU platform. Không thể nhét "PS5, Xbox, PC" vào 1 ô (vi phạm tính nguyên tử). Trong ER vẽ <strong>ellipse đôi</strong>; map sang bảng quan hệ → TÁCH thành bảng riêng <code>player_platform(p_id, platform)</code>.',
+          example: 'Bảng <code class="code">player_profile</code> dưới đây đã tách address thành <code>address_city</code> + <code>address_dist</code>. Cột <code>age</code> KHÔNG tồn tại vật lý — sẽ được tính bằng <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code>. Multivalued platforms → tách bảng <code>player_platform(p_id, platform)</code>, mỗi platform 1 dòng.'
         },
                 intro: 'Điều gì xảy ra khi 1 khách hàng đăng ký tài khoản và bạn cần lưu <strong>địa chỉ</strong>? Ghi thành 1 cột dài "<code>Q1, Nguyễn Huệ, HCM</code>"? Hay tách thành <code>city</code>, <code>district</code>, <code>street</code>? Câu trả lời quyết định tốc độ query 100 lần. Bài này dạy <strong>Composite</strong> + <strong>Derived</strong> attribute.',
 concept_cards: [
@@ -271,6 +272,11 @@ concept_cards: [
                   "icon": "fa-puzzle-piece",
                   "title": "Composite Attribute",
                   "body": "Giống <strong>địa chỉ nhà</strong> bạn điền form: số nhà, đường, quận, thành phố. Mỗi mảnh là 1 thông tin riêng. Database ghép lại thành cột <code>address</code> nhưng <em>nên tách thành 4 cột</em> để query \"tìm theo quận\" cực nhanh."
+            },
+            {
+                  "icon": "fa-layer-group",
+                  "title": "Multivalued — nhiều giá trị",
+                  "body": "1 người chơi nhiều platform (PS5, Xbox, PC). KHÔNG nhét list vào 1 ô (vi phạm 1NF). ER: <strong>ellipse đôi</strong>. Map sang bảng → tách bảng riêng <code>player_platform(p_id, platform)</code>, mỗi platform 1 dòng. (Cầu nối tới bài 1NF + bảng trung gian.)"
             },
             {
                   "icon": "fa-calculator",
@@ -315,6 +321,15 @@ concept_cards: [
               { id: 'b', text: 'Thuộc tính có thể tách thành nhiều thuộc tính nhỏ hơn (vd: address → city + district)', correct: true, explanation: 'Đúng — composite có thể phân rã thành nhiều thuộc tính nhỏ hơn có ý nghĩa độc lập. address = street + city + district + zip_code, mỗi phần dùng query riêng được.' },
               { id: 'c', text: 'Cột được mã hóa để bảo mật', correct: false, explanation: 'Sai — composite không liên quan đến bảo mật. Mã hóa là encryption, là attribute khác (encrypted vs plain).' },
               { id: 'd', text: 'Cột có giá trị NULL mặc định', correct: false, explanation: 'Sai — composite có thể có giá trị hoặc NULL. NULL mặc định không phải đặc trưng — composite nói về CẤU TRÚC phân rã được, không nói về giá trị.' }
+            ]
+          },
+          {
+            question: 'Thuộc tính <strong>multivalued</strong> (1 người chơi nhiều platform) khi map sang bảng quan hệ thì làm sao?',
+            options: [
+              { id: 'a', text: 'Nhét tất cả vào 1 ô, cách nhau dấu phẩy', correct: false, explanation: 'Sai — vi phạm tính nguyên tử (1NF). 1 ô = 1 giá trị.' },
+              { id: 'b', text: 'Tách thành bảng riêng, mỗi giá trị 1 dòng (vd player_platform)', correct: true, explanation: 'Đúng — multivalued → bảng riêng (p_id, platform).' },
+              { id: 'c', text: 'Thêm cột platform1, platform2, platform3...', correct: false, explanation: 'Sai — số platform không cố định; thêm cột cứng nhắc, lãng phí, vẫn sai chuẩn.' },
+              { id: 'd', text: 'Không lưu được', correct: false, explanation: 'Sai — lưu được, chỉ cần tách bảng đúng cách.' }
             ]
           },
           {
@@ -902,8 +917,8 @@ concept_cards: [
      * ======================================================================== */
     {
       id: 'db_05', index: 5,
-      title: 'Mối quan hệ M:N & Bảng trung gian',
-      subtitle: 'Nhiều-nhiều — chia trung gian để về 1:N',
+      title: 'Weak Entity & Khóa chính tổng hợp',
+      subtitle: 'Thực thể yếu — không có khóa riêng, phải ghép FK (cha) + discriminator',
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 24, xp_reward: 60,
       project_piece: '🧩 Khởi động "Máy Chia Trung Gian"',
@@ -932,28 +947,27 @@ concept_cards: [
           intro: 'Có những thực thể không thể tự tồn tại nếu thiếu "cha". Ví dụ: bản mở rộng (DLC) <em>"Gói số 1"</em> — chưa biết của game nào. Nó cần kết hợp với <code>ref_game_id</code> mới định danh được. <strong>Thực thể yếu</strong> dùng Khóa chính tổng hợp: FK (trỏ về cha) + Discriminator (cột phân biệt trong phạm vi cha).',
           example: 'Trong bảng <code>dlc_content</code>, không có cột <code>dlc_id</code> riêng. Khóa chính là 2 cột cộng lại: <code>ref_game_id</code> (FK) + <code>dlc_no</code> (Discriminator). Truy vấn cần dùng <code>AND</code>: <code>WHERE dlc_no = 1 AND ref_game_id = 400</code>.'
         },
-                intro: 'Thử tưởng tượng bạn có database cho 1 chuỗi khách sạn 50 chi nhánh. Mỗi chi nhánh có 200 phòng. Tổng = 10.000 phòng. Phòng 101 ở Hà Nội và phòng 101 ở Sài Gòn — cùng số nhưng KHÁC phòng. Bạn định danh phòng thế nào? Đây chính là <strong>Weak Entity</strong> + composite PK.',
-concept_cards: [
+                concept_cards: [
             {
                   "icon": "fa-link-slash",
-                  "title": "Weak Entity — Không có khóa riêng",
-                  "body": "Thử thách: phòng 101 trong tòa nhà A — có phải duy nhất? Không! Building A cũng có phòng 101. Phòng là <strong>weak entity</strong>, phải dựa vào building để định danh. Nếu xóa building → tất cả phòng biến mất (cascading). Bạn có thấy quen không? (Order/OrderItem chính là cặp này)."
+                  "title": "Weak Entity — không có khóa riêng",
+                  "body": "Bản mở rộng (DLC) \"Gói số 1\" — chưa biết của game nào! DLC là <strong>thực thể yếu</strong>: không tự định danh, phải dựa vào game gốc. Xóa game gốc → các DLC của nó cũng mất (cascading)."
             },
             {
                   "icon": "fa-key",
-                  "title": "Partial Key + Identifying Relationship",
-                  "body": "<strong>Partial key</strong> = khóa phân biệt TRONG phạm vi owner (vd: <code>room_number</code>). <strong>Identifying relationship</strong> (đường nét đôi) nối weak với owner, FK gồm CẢ PK owner + partial key = composite PK. Thử vẽ ER với Room(building_id, room_number) xem."
+                  "title": "Partial key + FK = Composite PK",
+                  "body": "<strong>Discriminator</strong> <code>dlc_no</code> chỉ phân biệt TRONG 1 game (như \"nhà số 1\" trong 1 khu phố). <strong>FK</strong> <code>ref_game_id</code> trỏ game cha. Khóa chính = GHÉP <code>(ref_game_id, dlc_no)</code>."
             }
       ,
             {
               "icon": "fa-hand-pointer",
-              "title": "Thử ngay (Apply)",
-              "body": "Trong bảng dlc_content, không có cột dlc_id riêng."
+              "title": "Thử ngay",
+              "body": "Bảng <code>dlc_content</code> KHÔNG có cột <code>dlc_id</code> riêng. Định danh duy nhất cần CẢ 2: <code>ref_game_id</code> + <code>dlc_no</code>."
             }
           ],
                 visual: {
           
-          diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'building', 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'PK'}, {'name': 'address', 'type': 'VARCHAR'}]}, {'name': 'room', 'weak': true, 'columns': [{'name': 'bld_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'room_number', 'type': 'INT', 'key': 'PK(partial)'}, {'name': 'capacity', 'type': 'INT'}]}], 'connectors': [{'from': 'building', 'to': 'room', 'label': 'contains', 'fromCard': '1', 'toCard': 'N'}], 'note': 'room là WEAK entity (viền đứt nét). PK ghép: (bld_id, room_number)'},
+          diagram: {'type': 'er', 'width': 600, 'height': 280, 'entities': [{'name': 'game', 'columns': [{'name': 'game_id', 'type': 'INT', 'key': 'PK'}, {'name': 'title', 'type': 'VARCHAR'}]}, {'name': 'dlc_content', 'weak': true, 'columns': [{'name': 'ref_game_id', 'type': 'INT', 'key': 'FK,PK'}, {'name': 'dlc_no', 'type': 'INT', 'key': 'PK partial'}, {'name': 'dlc_name', 'type': 'VARCHAR'}]}], 'connectors': [{'from': 'game', 'to': 'dlc_content', 'label': 'có DLC', 'fromCard': '1', 'toCard': 'N'}], 'note': 'dlc_content = WEAK entity (viền đứt) · identifying relationship · PK ghép (ref_game_id, dlc_no)'},
           schema: {
             table_name: 'dlc_content',
             columns: [
@@ -3881,6 +3895,333 @@ concept_cards: [
         ],
         success_message: 'CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 18 bài Database Design Cơ bản!',
         xp_reward: 70
+      }
+    },
+
+    /* ========================================================================
+     * BÀI 5 MỚI — M:N & Bảng trung gian (junction) [C2b]
+     * Source: Silberschatz §6.4 (Many-to-many) + §6.7.4 (Mapping).
+     * Theme: Thư viện game của người chơi — player ↔ library ↔ game.
+     * id ổn định: 'db_19'. index = 5 (vị trí cuối sau reorder Commit 2).
+     * ======================================================================== */
+    {
+      id: 'db_19', index: 5,
+      title: 'Mối quan hệ M:N & Bảng trung gian',
+      subtitle: 'Nhiều-nhiều — tách bảng trung gian (junction) nối 2 thực thể',
+      module: 1, module_title: 'Giới thiệu & Nền tảng Database',
+      estimated_minutes: 22, xp_reward: 60,
+      project_piece: '🧩 Xây "Thư viện game" của người chơi',
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'library',
+          columns: ['player_id', 'game_id', 'acquired_date'],
+          dataRows: [
+            ['7','101','2025-01-10'],
+            ['7','103','2025-02-02'],
+            ['9','101','2025-01-15'],
+            ['9','105','2025-03-01']
+          ]
+        }
+      },
+
+      step_1: {
+        primer: {
+          goal: [
+            'M:N = 1 người chơi sở hữu NHIỀU game, 1 game thuộc NHIỀU người chơi',
+            'DB quan hệ KHÔNG nối M:N trực tiếp 2 bảng → tách BẢNG TRUNG GIAN chứa 2 FK',
+            'Khóa chính bảng trung gian = (player_id, game_id) ghép lại'
+          ],
+          intro: '1 người chơi sở hữu nhiều game; 1 game được nhiều người chơi sở hữu — quan hệ <strong>nhiều-nhiều (M:N)</strong>. DB quan hệ không biểu diễn M:N trực tiếp. Giải pháp: bảng <strong>trung gian</strong> <code>library</code> gồm 2 khóa ngoại <code>player_id</code> + <code>game_id</code>; mỗi dòng = 1 cặp "ai sở hữu game nào".',
+          example: 'Bảng <code>library(player_id, game_id, acquired_date)</code>: khóa chính là CẶP <code>(player_id, game_id)</code>. Tìm game của người chơi 7: <code>SELECT game_id FROM library WHERE player_id = 7</code>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-arrows-left-right',
+            title: 'M:N — vì sao cần bảng thứ 3',
+            body: 'Không thể nhét "danh sách game" vào 1 ô của bảng player (vi phạm 1NF). Cũng không nhét list player vào bảng game. Giải: 1 bảng RIÊNG <code>library</code>, mỗi dòng 1 cặp (player, game).'
+          },
+          {
+            icon: 'fa-code-branch',
+            title: 'Junction = 2× (1:N)',
+            body: 'Bảng trung gian biến 1 quan hệ M:N thành HAI quan hệ 1:N: player 1:N library, game 1:N library. Mỗi FK trỏ về 1 phía.'
+          },
+          {
+            icon: 'fa-hand-pointer',
+            title: 'Thử ngay',
+            body: 'Trong <code>library</code>, người chơi 7 có 2 dòng → sở hữu 2 game (101, 103).'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'library',
+            columns: [
+              { name: 'player_id', type: 'INT', key: 'PK+FK', icon: '🔗' },
+              { name: 'game_id', type: 'INT', key: 'PK+FK', icon: '🔗' },
+              { name: 'acquired_date', type: 'DATE', key: '', icon: '📅' }
+            ]
+          },
+          data_preview: [
+            ['7','101','2025-01-10'],
+            ['7','103','2025-02-02'],
+            ['9','101','2025-01-15'],
+            ['9','105','2025-03-01']
+          ],
+          diagram: {
+            type: 'er', width: 600, height: 280,
+            entities: [
+              { name: 'player', columns: [{name:'p_id',type:'INT',key:'PK'},{name:'username',type:'VARCHAR'}] },
+              { name: 'library', columns: [{name:'player_id',type:'INT',key:'FK,PK'},{name:'game_id',type:'INT',key:'FK,PK'}] },
+              { name: 'game', columns: [{name:'game_id',type:'INT',key:'PK'},{name:'title',type:'VARCHAR'}] }
+            ],
+            connectors: [
+              { from: 'player', to: 'library', label: 'sở hữu', fromCard: '1', toCard: 'N' },
+              { from: 'game', to: 'library', label: 'được sở hữu', fromCard: '1', toCard: 'N' }
+            ],
+            note: 'M:N giải bằng bảng trung gian library — PK ghép (player_id, game_id)'
+          }
+        },
+        mission: 'Tìm các <code>game_id</code> mà người chơi id 7 sở hữu — kéo thả truy vấn bảng trung gian.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao quan hệ M:N (nhiều-nhiều) cần BẢNG TRUNG GIAN?',
+            options: [
+              { id: 'a', text: 'Vì 2 bảng gốc quá lớn', correct: false, explanation: 'Sai — không liên quan kích thước. Vấn đề là KHÔNG thể nhét nhiều giá trị vào 1 ô.' },
+              { id: 'b', text: 'Vì không thể nhét nhiều giá trị vào 1 ô; cần 1 bảng riêng chứa từng cặp (player, game)', correct: true, explanation: 'Đúng — M:N → bảng trung gian, mỗi dòng 1 cặp khóa ngoại.' },
+              { id: 'c', text: 'Vì SQL không hỗ trợ JOIN', correct: false, explanation: 'Sai — SQL hỗ trợ JOIN; bảng trung gian là về MÔ HÌNH dữ liệu, không phải giới hạn SQL.' },
+              { id: 'd', text: 'Để tăng tốc truy vấn', correct: false, explanation: 'Sai — mục đích là biểu diễn đúng M:N, không phải tối ưu tốc độ.' }
+            ]
+          },
+          {
+            question: 'Khóa chính của bảng <code>library(player_id, game_id, acquired_date)</code> là gì?',
+            options: [
+              { id: 'a', text: 'Chỉ player_id', correct: false, explanation: 'Sai — 1 player có nhiều dòng (nhiều game). Không unique.' },
+              { id: 'b', text: 'Chỉ game_id', correct: false, explanation: 'Sai — 1 game thuộc nhiều player. Không unique.' },
+              { id: 'c', text: '(player_id, game_id) — cặp khóa ghép', correct: true, explanation: 'Đúng — mỗi cặp (player, game) là duy nhất: 1 người chỉ sở hữu 1 game 1 lần.' },
+              { id: 'd', text: 'acquired_date', correct: false, explanation: 'Sai — ngày mua có thể trùng giữa nhiều cặp; không định danh.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'bug_spot',
+          title: 'Tìm lỗi bảng trung gian',
+          xp: 25,
+          code: 'CREATE TABLE library (\n  lib_id INT PRIMARY KEY,\n  player_id INT,\n  game_id INT\n);',
+          bugType: 'logic',
+          bugs: [
+            { line: 2, description: 'Bảng trung gian M:N KHÔNG cần khóa nhân tạo lib_id. PK đúng = composite (player_id, game_id) + 2 FOREIGN KEY trỏ player(p_id) và game(game_id).' }
+          ]
+        }
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw', token: 'SELECT', slot: 'kw-select' },
+          { type: 'col', token: 'game_id', slot: 'col-1' },
+          { type: 'kw', token: 'FROM', slot: 'kw-from' },
+          { type: 'tbl', token: 'library', slot: 'tbl' },
+          { type: 'kw', token: 'WHERE', slot: 'kw-where' },
+          { type: 'col', token: 'player_id', slot: 'wcol-1' },
+          { type: 'op', token: '=', slot: 'op-1' },
+          { type: 'val', token: '7', slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line', placeholder: 'FROM ____', accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line', placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
+        ],
+        expected_sql: 'SELECT game_id FROM library WHERE player_id = 7;',
+        reveal_hints: {
+          'select-line': 'SELECT 1 cột: <strong>game_id</strong>.',
+          'from-line': 'FROM <strong>library</strong> (bảng trung gian).',
+          'where-line': 'WHERE lọc theo người chơi: <strong>player_id = 7</strong>.'
+        }
+      },
+
+      step_4: {
+        prompt: 'Endpoint thư viện cần liệt kê game của người chơi 9. Viết query lấy mọi <code>game_id</code> mà player 9 sở hữu.',
+        starter: "-- Lấy game_id mà player 9 sở hữu\n-- Filter: player_id = 9\nSELECT ____\n  FROM ____\n WHERE ____ = ____;",
+        schema: {
+          table_name: 'library',
+          columns: [
+            { name: 'player_id', type: 'INT', key: 'PK+FK' },
+            { name: 'game_id', type: 'INT', key: 'PK+FK' },
+            { name: 'acquired_date', type: 'DATE', key: '' }
+          ],
+          data: [
+            ['7','101','2025-01-10'],
+            ['7','103','2025-02-02'],
+            ['9','101','2025-01-15'],
+            ['9','105','2025-03-01']
+          ]
+        },
+        hints: [
+          { level: 1, text: 'Bạn cần <em>1 cột</em> (game_id) từ bảng <code>library</code>, lọc theo player_id = 9.' },
+          { level: 2, text: '<code>SELECT game_id FROM library WHERE player_id = 9;</code> — kết quả 2 dòng (101, 105).' },
+          { level: 3, text: 'Đừng gộp <code>GROUP BY</code> hay <code>DISTINCT</code> — 1 player có thể sở hữu 1 game nhiều lần (giả định đơn giản).' },
+          { level: 4, text: "<code class=\"code\">SELECT game_id FROM library WHERE player_id = 9;</code>" }
+        ],
+        expected_sql: 'SELECT game_id FROM library WHERE player_id = 9;',
+        success_message: 'Hoàn thành M:N & bảng trung gian! Bài 6 (Weak Entity) tiếp theo — thực thể yếu cũng dùng khóa ghép nhưng theo cách khác.',
+        xp_reward: 50
+      }
+    },
+
+    /* ========================================================================
+     * BÀI 18 MỚI — Web Services (REST/AJAX) [C3]
+     * Source: Silberschatz §9.5 (Web Services) + PART 3 concept-4.
+     * Theme: Game shop — Client (Browser) → API Server → game_catalog.
+     * id ổn định: 'db_20'. index = 18 (vị trí cuối sau reorder Commit 2).
+     * HERO: flow 4-node cyan (HERO_DESIGN_SYSTEM §11).
+     * ======================================================================== */
+    {
+      id: 'db_20', index: 18,
+      title: 'Web Services — REST/AJAX nối App với Database',
+      subtitle: 'App gọi API qua HTTP → server chạy SQL → trả JSON',
+      module: 3, module_title: 'Application Design',
+      estimated_minutes: 22, xp_reward: 70,
+      project_piece: '🌐 Dựng API cho web shop game',
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'game_catalog',
+          columns: ['id', 'name', 'genre', 'price'],
+          dataRows: [
+            ['101','Elden Ring','RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','RPG','25'],
+            ['104','Celeste','Platformer','20']
+          ]
+        }
+      },
+
+      step_1: {
+        primer: {
+          goal: [
+            'Web Service = cầu nối App ↔ DB qua HTTP (REST). App KHÔNG nối thẳng DB',
+            'Client gửi request (vd GET /api/games?genre=RPG) → server chạy SQL → trả JSON',
+            'Giao thức stateless: mỗi request độc lập; tham số truyền AN TOÀN (parameterized ?)'
+          ],
+          intro: 'App web/mobile không nối thẳng vào DB — nó gọi <strong>API</strong> qua HTTP (REST/AJAX). Người dùng lọc game RPG → trình duyệt gửi <code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT … WHERE genre = ?</code> → trả về <strong>JSON</strong> cho app hiển thị. <strong>Stateless</strong>: mỗi request độc lập, server không nhớ phiên trước.',
+          example: '<code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT name, price FROM game_catalog WHERE genre = \'RPG\'</code> → trả <code>[{"name":"Elden Ring","price":60},{"name":"Hades","price":25}]</code>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-server',
+            title: 'REST/HTTP — stateless',
+            body: 'Mỗi request là 1 lệnh độc lập (GET/POST). Server nhận → truy DB → trả JSON. Không giữ trạng thái giữa các request.'
+          },
+          {
+            icon: 'fa-shield-halved',
+            title: 'Tham số AN TOÀN (parameterized)',
+            body: 'Param từ request (genre, id…) phải truyền qua placeholder <code>?</code>, KHÔNG ghép chuỗi trực tiếp — nếu ghép, hacker chèn SQL độc (xem bài SQL Injection).'
+          },
+          {
+            icon: 'fa-hand-pointer',
+            title: 'Thử ngay',
+            body: 'Server nhận /api/games?genre=RPG → bạn dựng câu SQL nó chạy.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'game_catalog',
+            columns: [
+              { name: 'id', type: 'INT', key: 'PK', icon: '🔑' },
+              { name: 'name', type: 'VARCHAR', key: '', icon: '🎮' },
+              { name: 'genre', type: 'VARCHAR', key: '', icon: '🏷️' },
+              { name: 'price', type: 'INT', key: '', icon: '💰' }
+            ]
+          },
+          data_preview: [
+            ['101','Elden Ring','RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','RPG','25'],
+            ['104','Celeste','Platformer','20']
+          ]
+        },
+        mission: 'Server nhận request lọc game RPG — kéo thả câu SQL mà API sẽ chạy để trả kết quả.'
+      },
+
+      step_2: {
+        mcq: [
+          {
+            question: '"Stateless" trong REST nghĩa là gì?',
+            options: [
+              { id: 'a', text: 'Server lưu toàn bộ lịch sử người dùng', correct: false, explanation: 'Sai — ngược lại, stateless là KHÔNG lưu trạng thái giữa request.' },
+              { id: 'b', text: 'Mỗi request độc lập, server không nhớ request trước', correct: true, explanation: 'Đúng — mỗi HTTP request tự chứa đủ thông tin; server xử lý độc lập.' },
+              { id: 'c', text: 'Không dùng được database', correct: false, explanation: 'Sai — vẫn truy DB bình thường mỗi request.' },
+              { id: 'd', text: 'Chỉ chạy được GET', correct: false, explanation: 'Sai — REST có GET/POST/PUT/DELETE.' }
+            ]
+          },
+          {
+            question: 'Vì sao tham số request nên dùng placeholder <code>?</code> (parameterized) thay vì ghép chuỗi?',
+            options: [
+              { id: 'a', text: 'Chạy nhanh hơn', correct: false, explanation: 'Phụ — lý do CHÍNH là an toàn.' },
+              { id: 'b', text: 'Tránh SQL Injection — input độc không thành câu lệnh', correct: true, explanation: 'Đúng — parameterized tách dữ liệu khỏi lệnh, hacker không chèn được SQL.' },
+              { id: 'c', text: 'Để code ngắn hơn', correct: false, explanation: 'Sai — không phải mục đích.' },
+              { id: 'd', text: 'Bắt buộc của HTTP', correct: false, explanation: 'Sai — HTTP không ép; đây là best practice bảo mật.' }
+            ]
+          }
+        ]
+      },
+
+      step_3: {
+        blocks: [
+          { type: 'kw', token: 'SELECT', slot: 'kw-select' },
+          { type: 'col', token: 'name', slot: 'col-1' },
+          { type: 'col', token: 'price', slot: 'col-2' },
+          { type: 'kw', token: 'FROM', slot: 'kw-from' },
+          { type: 'tbl', token: 'game_catalog', slot: 'tbl' },
+          { type: 'kw', token: 'WHERE', slot: 'kw-where' },
+          { type: 'col', token: 'genre', slot: 'wcol-1' },
+          { type: 'op', token: '=', slot: 'op-1' },
+          { type: 'val', token: "'RPG'", slot: 'val-1' }
+        ],
+        drop_zones: [
+          { id: 'select-line', placeholder: 'SELECT ____ , ____', accepts: ['kw', 'col'], acceptedKeywords: ['SELECT'], multi: true },
+          { id: 'from-line', placeholder: 'FROM ____', accepts: ['kw', 'tbl'], acceptedKeywords: ['FROM'], multi: true },
+          { id: 'where-line', placeholder: 'WHERE ____ ____ ____', accepts: ['kw', 'col', 'op', 'val'], acceptedKeywords: ['WHERE', 'AND', 'OR', 'IN'], multi: true }
+        ],
+        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'RPG';",
+        reveal_hints: {
+          'select-line': 'SELECT 2 cột: <strong>name</strong>, <strong>price</strong>.',
+          'from-line': 'FROM <strong>game_catalog</strong>.',
+          'where-line': "WHERE lọc theo genre: <strong>genre = 'RPG'</strong> (lưu ý dấu nháy đơn quanh giá trị chuỗi)."
+        }
+      },
+
+      step_4: {
+        prompt: "Endpoint /api/games?genre=Action — viết câu SQL server chạy để trả tên + giá các game Action (dạng JSON).",
+        starter: "-- Lấy name + price các game Action\n-- Filter: genre = 'Action'\nSELECT ____, ____\n  FROM ____\n WHERE ____ = ____;",
+        schema: {
+          table_name: 'game_catalog',
+          columns: [
+            { name: 'id', type: 'INT', key: 'PK' },
+            { name: 'name', type: 'VARCHAR', key: '' },
+            { name: 'genre', type: 'VARCHAR', key: '' },
+            { name: 'price', type: 'INT', key: '' }
+          ],
+          data: [
+            ['101','Elden Ring','RPG','60'],
+            ['102','God of War','Action','50'],
+            ['103','Hades','RPG','25'],
+            ['104','Celeste','Platformer','20']
+          ]
+        },
+        hints: [
+          { level: 1, text: "Bạn cần <em>2 cột</em> (name, price) từ bảng <code>game_catalog</code>, lọc theo genre = 'Action'." },
+          { level: 2, text: "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 1 dòng (God of War, 50)." },
+          { level: 3, text: "Giá trị chuỗi trong SQL đặt trong dấu nháy đơn: <code>'Action'</code>." },
+          { level: 4, text: "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action';</code>" }
+        ],
+        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'Action';",
+        success_message: 'Hoàn thành Web Services (REST/AJAX)! Bài 19 (SQL Injection) tiếp theo — cũng chính là lý do phải dùng parameterized ?.',
+        xp_reward: 60
       }
     }
 
