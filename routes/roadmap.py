@@ -2,31 +2,58 @@ import json
 from flask import Blueprint, jsonify, request
 from db import get_db
 from utils import api_login_required, current_user_id
+from routes.user import _pick_roadmap_template
 
 roadmap_bp = Blueprint('roadmap', __name__)
+
+_TEMPLATE_ORDER = """
+    ORDER BY CASE id
+        WHEN 'frontend' THEN 0
+        WHEN 'backend'  THEN 1
+        WHEN 'python'   THEN 2
+        WHEN 'cpp'      THEN 3
+        ELSE 4
+    END"""
 
 
 @roadmap_bp.route('/api/roadmaps', methods=['GET'])
 @api_login_required
 def get_roadmaps():
+    """Trả về lộ trình THỰC TẾ cho user dựa trên phiếu khảo sát gần nhất.
+    Nếu chưa làm khảo sát -> trả tất cả template để user tự chọn."""
+    uid  = current_user_id()
     conn = get_db()
-    rows = conn.execute(
-        """SELECT id, title, icon, color, mermaid_def,
-                  COALESCE(nodes_json, '{}') AS nodes_json
-           FROM roadmaps
-           ORDER BY CASE id
-               WHEN 'frontend' THEN 0
-               WHEN 'backend'  THEN 1
-               WHEN 'python'   THEN 2
-               WHEN 'cpp'      THEN 3
-               ELSE 4
-           END"""
-    ).fetchall()
+
+    survey = conn.execute(
+        'SELECT data_json FROM surveys WHERE user_id=%s ORDER BY id DESC LIMIT 1',
+        (uid,)
+    ).fetchone()
+
+    matched_id = None
+    if survey and survey['data_json']:
+        data = survey['data_json']
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except (ValueError, TypeError):
+                data = {}
+        if isinstance(data, dict):
+            matched_id = _pick_roadmap_template(data)
+
+    base = ("SELECT id, title, icon, color, mermaid_def, "
+            "COALESCE(nodes_json, '{}'::jsonb) AS nodes_json "
+            "FROM roadmaps WHERE user_id IS NULL")
+    if matched_id:
+        rows = conn.execute(base + " AND id=%s", (matched_id,)).fetchall()
+    else:
+        rows = conn.execute(base + _TEMPLATE_ORDER).fetchall()
     conn.close()
+
     result = []
     for r in rows:
         item = dict(r)
-        item['nodes'] = json.loads(item.pop('nodes_json') or '{}')
+        # JSONB -> psycopg trả dict sẵn, không cần json.loads
+        item['nodes'] = item.pop('nodes_json') or {}
         result.append(item)
     return jsonify(result)
 
@@ -34,11 +61,19 @@ def get_roadmaps():
 @roadmap_bp.route('/api/roadmap', methods=['GET'])
 @api_login_required
 def get_roadmap():
-    uid  = current_user_id()
+    uid        = current_user_id()
+    roadmap_id = request.args.get('roadmap_id')
     conn = get_db()
-    rows = conn.execute(
-        'SELECT item_id FROM roadmap_progress WHERE user_id=%s AND done=1', (uid,)
-    ).fetchall()
+    if roadmap_id:
+        rows = conn.execute(
+            'SELECT item_id FROM roadmap_progress '
+            'WHERE user_id=%s AND roadmap_id=%s AND done=TRUE',
+            (uid, roadmap_id)
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            'SELECT item_id FROM roadmap_progress WHERE user_id=%s AND done=TRUE', (uid,)
+        ).fetchall()
     conn.close()
     return jsonify({'doneItems': [r['item_id'] for r in rows]})
 
@@ -49,7 +84,10 @@ def get_my_roadmap():
     uid  = current_user_id()
     conn = get_db()
     row  = conn.execute(
-        'SELECT mermaid_def FROM user_roadmaps WHERE user_id=%s', (uid,)
+        "SELECT mermaid_def FROM roadmaps "
+        "WHERE user_id=%s AND source IN ('generated','custom') "
+        "ORDER BY updated_at DESC LIMIT 1",
+        (uid,)
     ).fetchone()
     conn.close()
     return jsonify({'mermaid_def': row['mermaid_def'] if row else ''})
@@ -61,11 +99,14 @@ def save_my_roadmap():
     uid  = current_user_id()
     body = request.get_json(silent=True) or {}
     mdef = body.get('mermaid_def', '')
+    rid  = f'u{uid}_custom'
     conn = get_db()
     conn.execute(
-        '''INSERT INTO user_roadmaps (user_id, mermaid_def) VALUES (%s, %s)
-           ON CONFLICT (user_id) DO UPDATE SET mermaid_def = EXCLUDED.mermaid_def''',
-        (uid, mdef)
+        '''INSERT INTO roadmaps (id, user_id, source, mermaid_def, updated_at)
+           VALUES (%s, %s, 'custom', %s, now())
+           ON CONFLICT (id) DO UPDATE
+               SET mermaid_def = EXCLUDED.mermaid_def, updated_at = now()''',
+        (rid, uid, mdef)
     )
     conn.commit()
     conn.close()
@@ -82,12 +123,18 @@ def ai_generate_roadmap():
 @api_login_required
 def update_roadmap(item_id):
     uid  = current_user_id()
-    done = int(request.get_json().get('done', False))
+    body = request.get_json(silent=True) or {}
+    done = bool(body.get('done', False))
+    roadmap_id = body.get('roadmap_id')
+    if not roadmap_id:
+        return jsonify({'error': 'roadmap_id là bắt buộc'}), 400
     conn = get_db()
     conn.execute(
-        '''INSERT INTO roadmap_progress VALUES (%s,%s,%s)
-           ON CONFLICT(user_id, item_id) DO UPDATE SET done=excluded.done''',
-        (uid, item_id, done)
+        '''INSERT INTO roadmap_progress (user_id, roadmap_id, item_id, done, completed_at)
+           VALUES (%s,%s,%s,%s, CASE WHEN %s THEN now() END)
+           ON CONFLICT (user_id, roadmap_id, item_id) DO UPDATE
+               SET done=EXCLUDED.done, completed_at=EXCLUDED.completed_at''',
+        (uid, roadmap_id, item_id, done, done)
     )
     conn.commit()
     conn.close()

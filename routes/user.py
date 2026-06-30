@@ -2,11 +2,79 @@ import json
 from datetime import datetime
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
+from psycopg2.extras import Json
 from db import get_db
 from utils import api_login_required, current_user_id
 from validators import validate_name_field, validate_email_field, validate_phone_field, validate_password_field
 
 user_bp = Blueprint('user', __name__)
+
+
+def _pick_roadmap_template(data):
+    """Chọn template lộ trình phù hợp nhất từ câu trả lời khảo sát."""
+    career = (data.get('career_target') or '').lower()
+    langs  = (data.get('language') or '').lower()
+    domain = (data.get('domain') or '').lower()
+
+    if 'frontend' in career:
+        return 'frontend'
+    if 'backend' in career or 'devops' in career or 'sre' in career:
+        return 'backend'
+    if 'ai' in career or 'ml' in career or 'data' in career:
+        return 'python'
+    if 'fullstack' in career:
+        return 'frontend'
+
+    # fallback theo ngôn ngữ ưa thích
+    if 'c/c++' in langs or 'c++' in langs:
+        return 'cpp'
+    if 'python' in langs:
+        return 'python'
+    if 'javascript' in langs:
+        return 'frontend'
+    if 'java' in langs:
+        return 'backend'
+
+    # fallback theo lĩnh vực quan tâm
+    if 'ai' in domain or 'machine learning' in domain or 'data' in domain:
+        return 'python'
+    if 'embedded' in domain or 'iot' in domain:
+        return 'cpp'
+    if 'web' in domain:
+        return 'frontend'
+
+    return 'frontend'
+
+
+def _generate_user_roadmap(conn, uid, survey_id, data):
+    """Tạo lộ trình cá nhân (source='generated') cho user bằng cách sao chép template
+    khớp với khảo sát. Idempotent theo id 'u<uid>_generated'."""
+    tmpl_id = _pick_roadmap_template(data)
+    tmpl = conn.execute(
+        'SELECT title, icon, color, nodes_json, edges_json, mermaid_def '
+        'FROM roadmaps WHERE id=%s AND user_id IS NULL',
+        (tmpl_id,)
+    ).fetchone()
+    if not tmpl:
+        return
+    rid = f'u{uid}_generated'
+    conn.execute(
+        '''INSERT INTO roadmaps
+               (id, user_id, source, generated_from_survey_id,
+                title, icon, color, nodes_json, edges_json, mermaid_def, updated_at)
+           VALUES (%s, %s, 'generated', %s, %s, %s, %s, %s, %s, %s, now())
+           ON CONFLICT (id) DO UPDATE SET
+               generated_from_survey_id = EXCLUDED.generated_from_survey_id,
+               title       = EXCLUDED.title,
+               icon        = EXCLUDED.icon,
+               color       = EXCLUDED.color,
+               nodes_json  = EXCLUDED.nodes_json,
+               edges_json  = EXCLUDED.edges_json,
+               mermaid_def = EXCLUDED.mermaid_def,
+               updated_at  = now()''',
+        (rid, uid, survey_id, tmpl['title'], tmpl['icon'], tmpl['color'],
+         Json(tmpl['nodes_json']), Json(tmpl['edges_json']), tmpl['mermaid_def'])
+    )
 
 
 @user_bp.route('/api/user', methods=['GET'])
@@ -86,15 +154,18 @@ def save_survey():
     data = request.get_json()
     if not isinstance(data, dict):
         return jsonify({'error': 'Dữ liệu khảo sát không hợp lệ'}), 400
+    uid  = current_user_id()
     conn = get_db()
-    conn.execute(
-        'INSERT INTO surveys (user_id, data_json, created_at) VALUES (%s,%s,%s)',
-        (current_user_id(), json.dumps(data, ensure_ascii=False), datetime.utcnow().isoformat())
-    )
+    survey = conn.execute(
+        'INSERT INTO surveys (user_id, data_json, created_at) VALUES (%s,%s,%s) RETURNING id',
+        (uid, json.dumps(data, ensure_ascii=False), datetime.utcnow().isoformat())
+    ).fetchone()
     conn.execute(
         'UPDATE users SET questionnaire_completed=1 WHERE id=%s',
-        (current_user_id(),)
+        (uid,)
     )
+    # Tự sinh lộ trình cá nhân cho user mới dựa trên khảo sát
+    _generate_user_roadmap(conn, uid, survey['id'], data)
     conn.commit()
     conn.close()
     return jsonify({'ok': True})

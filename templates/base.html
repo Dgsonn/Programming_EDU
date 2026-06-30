@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Programming EDU{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=3" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="{{ url_for('static', filename='js/icons.js') }}?v=2"></script>
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -22,22 +24,22 @@
   <div class="topbar">
     <div class="topbar-left">
       <div class="brand brand-always" onclick="navigate('dashboard');window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer" title="Về trang chủ">
-        <div class="brand-title brand-full">Programming EDU</div>
-        <div class="brand-title brand-short">PE</div>
+        <span class="brand-title brand-full"><span class="brand-c1">Programming</span> <span class="brand-c2">EDU</span></span>
+        <span class="brand-title brand-short">PE</span>
       </div>
     </div>
 
-    <nav class="topbar-nav" role="navigation" aria-label="Main navigation">
+    <nav class="topbar-nav" role="navigation" aria-label="Main navigation" id="topbar-nav">
       <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')" aria-label="Dashboard">
         <span class="nav-icon">🏠</span><span>Dashboard</span>
       </button>
       <button class="nav-btn" data-page="courses" onclick="navigate('courses')" aria-label="Khóa học">
-        <span class="nav-icon">📖</span><span>Khóa học</span>
+        <span class="nav-icon">📚</span><span>Khóa học</span>
       </button>
       <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')" aria-label="Lộ trình">
         <span class="nav-icon">🗺️</span><span>Lộ trình</span>
       </button>
-      
+
       <button class="nav-btn" data-page="forum" onclick="navigate('forum')" aria-label="Diễn đàn">
         <span class="nav-icon">💬</span><span>Diễn đàn</span>
       </button>
@@ -45,12 +47,13 @@
       <button class="nav-btn" id="nav-admin" style="display:none" onclick="window.location='/admin'" aria-label="Quản trị">
         <span class="nav-icon">🛠️</span><span>Quản trị</span>
       </button>
+      <span class="nav-underline" id="nav-underline"></span>
     </nav>
 
     <div class="topbar-right">
       <div class="search-wrap" id="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" placeholder="Tìm kiếm khóa học..." oninput="filterCourses(); showSearchSuggestions()" onfocus="showSearchSuggestions()" onclick="showSearchSuggestions()" onblur="closeSearchSuggestions()" autocomplete="off" />
+        <span class="search-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+        <input type="text" id="search-input" placeholder="Tìm kiếm..." oninput="filterCourses(); showSearchSuggestions()" onfocus="showSearchSuggestions()" onclick="showSearchSuggestions()" onblur="closeSearchSuggestions()" autocomplete="off" />
         <div class="search-suggestions hidden" id="search-suggestions">
           <div class="suggestions-header">Gợi ý tìm kiếm</div>
           <div class="suggestions-row" id="suggestions-row"></div>
@@ -58,10 +61,13 @@
           <div class="suggestion-levels" id="suggestion-levels"></div>
         </div>
       </div>
-      <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện" aria-label="Đổi giao diện">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
       <div class="bell-wrap" id="bell-wrap">
         <button class="bell-btn" id="bell-btn" onclick="toggleBellPanel()" aria-haspopup="true" aria-expanded="false" aria-label="Thông báo">
-          🔔<span class="bell-dot" id="bell-dot"></span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="bell-dot" id="bell-dot"></span>
         </button>
         <div class="bell-panel" id="bell-panel" role="dialog" aria-label="Thông báo">
           <div class="bell-panel-header">
@@ -73,13 +79,13 @@
       </div>
       <div class="user-chip-wrap" id="user-chip-wrap">
         <div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
-          <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+          <span class="chip-avatar" id="chip-avatar">?</span>
           <span class="chip-name" id="chip-name">—</span>
-          <span class="dropdown-icon" id="chip-arrow">▾</span>
+          <span class="dropdown-icon" id="chip-arrow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
         </div>
         <div class="user-dropdown" id="user-dropdown" role="menu">
           <div class="user-dropdown-header">
-            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" class="udh-avatar" />
+            <span class="chip-avatar udh-avatar" id="udh-avatar">?</span>
             <div>
               <div class="udh-name" id="udh-name">—</div>
               <div class="udh-role">Học viên</div>
@@ -87,14 +93,14 @@
           </div>
           <div class="user-dropdown-divider"></div>
           <button class="user-dropdown-item" onclick="navigate('profile'); closeUserMenu()" role="menuitem">
-            <span class="udi-icon">🙋</span> Trang của tôi
+            <span class="udi-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Trang của tôi
           </button>
           <button class="user-dropdown-item" onclick="navigate('settings'); closeUserMenu()" role="menuitem">
-            <span class="udi-icon">⚙️</span> Cài đặt
+            <span class="udi-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Cài đặt
           </button>
           <div class="user-dropdown-divider"></div>
           <button class="user-dropdown-item danger" onclick="window.location='/auth/logout'" role="menuitem">
-            <span class="udi-icon">🚪</span> Đăng xuất
+            <span class="udi-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></span> Đăng xuất
           </button>
         </div>
       </div>

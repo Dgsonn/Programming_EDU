@@ -1,5 +1,7 @@
 import json
 
+from psycopg2.extras import Json
+
 from db.connection import _get_pool
 
 
@@ -131,13 +133,6 @@ def init_db():
             content_update INTEGER DEFAULT 0
         )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS roadmap_progress (
-            user_id INTEGER,
-            item_id TEXT,
-            done    INTEGER DEFAULT 0,
-            PRIMARY KEY (user_id, item_id)
-        )''')
-
         c.execute('''CREATE TABLE IF NOT EXISTS surveys (
             id         SERIAL PRIMARY KEY,
             user_id    INTEGER,
@@ -145,19 +140,38 @@ def init_db():
             created_at TEXT
         )''')
 
+        # ── Roadmap (ERD v2.1): bảng roadmaps hợp nhất template + cá nhân ──
+        # DB test rỗng nên DROP các bảng roadmap cũ rồi tạo schema mới sạch.
+        c.execute('DROP TABLE IF EXISTS user_roadmaps')
+        c.execute('DROP TABLE IF EXISTS roadmap_progress')
+        c.execute('DROP TABLE IF EXISTS roadmaps')
+
         c.execute('''CREATE TABLE IF NOT EXISTS roadmaps (
-            id          TEXT PRIMARY KEY,
+            id                       TEXT PRIMARY KEY,
+            user_id                  INTEGER     REFERENCES users(id) ON DELETE CASCADE,
+            source                   TEXT        DEFAULT 'template',
+            generated_from_survey_id INTEGER     REFERENCES surveys(id) ON DELETE SET NULL,
             title       TEXT,
             icon        TEXT,
             color       TEXT,
+            nodes_json  JSONB       DEFAULT '[]'::jsonb,
+            edges_json  JSONB       DEFAULT '[]'::jsonb,
             mermaid_def TEXT,
-            nodes_json  TEXT DEFAULT '{}'
+            created_at  TIMESTAMPTZ DEFAULT now(),
+            updated_at  TIMESTAMPTZ DEFAULT now()
         )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_roadmaps_user   ON roadmaps(user_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_roadmaps_source ON roadmaps(source)')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS user_roadmaps (
-            user_id     INTEGER PRIMARY KEY,
-            mermaid_def TEXT DEFAULT ''
+        c.execute('''CREATE TABLE IF NOT EXISTS roadmap_progress (
+            user_id      INTEGER     NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+            roadmap_id   TEXT        NOT NULL REFERENCES roadmaps(id) ON DELETE CASCADE,
+            item_id      TEXT        NOT NULL,
+            done         BOOLEAN     DEFAULT FALSE,
+            completed_at TIMESTAMPTZ,
+            PRIMARY KEY (user_id, roadmap_id, item_id)
         )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_roadmap_progress_user ON roadmap_progress(user_id)')
 
         # ── Diễn đàn: bài viết + bình luận ──
         c.execute('''CREATE TABLE IF NOT EXISTS posts (
@@ -184,11 +198,6 @@ def init_db():
         )''')
         c.execute('CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)')
-
-        try:
-            c.execute("ALTER TABLE roadmaps ADD COLUMN IF NOT EXISTS nodes_json TEXT DEFAULT '{}'")
-        except Exception:
-            conn.rollback()
 
         c.execute('SELECT 1 FROM roadmaps LIMIT 1')
         if not c.fetchone():
@@ -294,7 +303,8 @@ def init_db():
                 ),
             ]
             c.executemany(
-                'INSERT INTO roadmaps (id, title, icon, color, mermaid_def) VALUES (%s,%s,%s,%s,%s)',
+                "INSERT INTO roadmaps (id, title, icon, color, mermaid_def, user_id, source) "
+                "VALUES (%s,%s,%s,%s,%s, NULL, 'template')",
                 roadmaps_seed
             )
 
@@ -351,7 +361,7 @@ def init_db():
         for _rid, _nodes in _nodes_data.items():
             c.execute(
                 'UPDATE roadmaps SET nodes_json=%s WHERE id=%s',
-                (json.dumps(_nodes, ensure_ascii=False), _rid)
+                (Json(_nodes), _rid)
             )
 
         # Luôn cập nhật mermaid_def để đảm bảo label tiếng Việt đầy đủ dấu

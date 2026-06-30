@@ -1,0 +1,68 @@
+/* ══════════════════════════════════════════════════
+   THEME TOKENS — Programming EDU (dark mode mặc định)
+   Nguồn màu: thiết kế Figma export (src.zip)
+   ══════════════════════════════════════════════════ */
+:root {
+  --bg: #07090F;
+  --card: #0C1220;
+  --lift: #101928;
+  --card-border: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.07);
+
+  --t1: #E2E8F0;
+  --t2: #94A3B8;
+  --t3: #64748B;
+  /* alias tương thích ngược với các đợt sửa trước */
+  --text-1: var(--t1);
+  --text-2: var(--t2);
+  --text-3: var(--t3);
+
+  --blue: #3B82F6;
+  --blue-light: #60A5FA;
+  --purple: #8B5CF6;
+  --accent: var(--blue);
+  --accent-light: var(--blue-light);
+  --accent-soft: rgba(59, 130, 246, 0.15);
+
+  --success: #34D399;
+  --warning: #FCD34D;
+  --danger: #F87171;
+
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font-size-base: 16px;
+  --glass-blur: 20px;
+}
+
+body.dark {
+  background: var(--bg);
+  color: var(--t1);
+}
+
+body.dark .topbar {
+  background: rgba(7, 9, 15, 0.96);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* ── Animation patterns dùng chung (thay Framer Motion) ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeScale {
+  from { opacity: 0; transform: translateY(-5px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pulseDot {
+  0%, 16% { transform: scale(1); }
+  8%      { transform: scale(1.35); }
+  100%    { transform: scale(1); }
+}
+
+.fx-fade-up {
+  animation: fadeUp 0.22s ease both;
+}
+.fx-fade-scale {
+  animation: fadeScale 0.13s ease both;
+}

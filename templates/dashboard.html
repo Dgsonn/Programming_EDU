@@ -3,12 +3,13 @@
 {% block title %}Programming EDU{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=30" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=13" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=12" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=38" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=17" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ChangePassword.css') }}?v=9" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.css') }}?v=1" />
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=12" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/roadmap.css') }}?v=10" />
 {% endblock %}
 
 {% block content %}
@@ -17,92 +18,102 @@
     <!-- ── Dashboard ── -->
     <div class="page active" id="page-dashboard">
 
-      <div class="dash-grid">
+      <!-- Hero banner -->
+      <div class="dash-hero fx-fade-up">
+        <div class="dash-hero-overlay"></div>
+        <div class="dash-hero-text">
+          <span class="dash-hero-greeting" id="banner-greeting">Chào mừng trở lại 👋</span>
+          <h2 id="banner-name">—</h2>
+          <p>Hôm nay bạn sẽ học gì? Tiếp tục hành trình chinh phục kỹ năng lập trình của bạn.</p>
+        </div>
+        <button class="dash-hero-btn" onclick="navigate('courses')">
+          Khám phá khóa học <span data-icon="arrow-right" data-size="13"></span>
+        </button>
+      </div>
 
-        <!-- ── Welcome banner — span cả hai cột ── -->
-        <div class="welcome-banner welcome-banner--slim dash-banner">
-          <div class="banner-dots"></div>
-          <div class="banner-inner">
-            <div class="banner-text">
-              <span class="greeting" id="banner-greeting">Chào mừng trở lại! 👋</span>
-              <h2 id="banner-name">—</h2>
+      <!-- Row 1: Calendar + Mini-roadmap -->
+      <div class="dash-row dash-row--cal">
+        <div class="section-card study-cal-card fx-fade-up" style="animation-delay:.05s">
+          <div class="study-cal-header">
+            <div class="section-title" style="margin-bottom:0"><span class="title-icon-blue">📅</span><span>Lịch học tuần này</span></div>
+            <div class="study-cal-streak" id="cal-streak-badge">
+              <span class="cal-fire">🔥</span>
+              <span class="cal-streak-num" id="cal-streak-num">0</span>
+              <span class="cal-streak-lbl">ngày streak</span>
             </div>
-            <div class="banner-code">&lt;/&gt;</div>
+          </div>
+          <div class="study-cal-grid" id="study-cal-grid">
+            <div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div>
+          </div>
+          <div class="study-cal-legend">
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-done">✓</span> Đã học</span>
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-todo">○</span> Chưa học</span>
+            <span class="cal-legend-item"><span class="cal-legend-dot cal-today-dot"></span> Hôm nay</span>
           </div>
         </div>
+        <div class="cal-tooltip" id="cal-tooltip"></div>
 
-        <!-- ── TRÁI: calendar + BXH ── -->
-        <div class="dash-col-left">
-
-          <!-- Calendar -->
-          <div class="section-card study-cal-card">
-            <div class="study-cal-header">
-              <div class="section-title" style="margin-bottom:0"><span class="title-icon-blue">📅</span><span>Lịch học tuần này</span></div>
-              <div class="study-cal-streak" id="cal-streak-badge">
-                <span class="cal-fire">🔥</span>
-                <span class="cal-streak-num" id="cal-streak-num">0</span>
-                <span class="cal-streak-lbl">ngày streak</span>
-              </div>
+        <div class="section-card mini-rm-card mini-rm-card--full fx-fade-up" style="animation-delay:.09s">
+          <div class="mini-rm-header">
+            <div class="section-title" style="margin-bottom:0">
+              <span class="title-icon-blue">🗺</span><span>Lộ trình của bạn</span>
             </div>
-            <div class="study-cal-grid" id="study-cal-grid">
-              <div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div><div class="skel-cal-day skel"></div>
-            </div>
-            <div class="study-cal-legend">
-              <span class="cal-legend-item"><span class="cal-legend-dot cal-done">✓</span> Đã học</span>
-              <span class="cal-legend-item"><span class="cal-legend-dot cal-todo">○</span> Chưa học</span>
-              <span class="cal-legend-item"><span class="cal-legend-dot cal-today-dot"></span> Hôm nay</span>
-            </div>
+            <a class="mini-rm-more" href="#" onclick="navigate('roadmap');return false;">Xem tất cả ›</a>
           </div>
-          <div class="cal-tooltip" id="cal-tooltip"></div>
-
-          <!-- BXH -->
-          <div class="section-card lb-card">
-            <div class="lb-header">
-              <div class="section-title" style="margin-bottom:0">
-                <span class="title-icon-blue">🏆</span><span>Bảng xếp hạng</span>
-              </div>
-              <div class="lb-tabs" role="tablist" aria-label="Bảng xếp hạng">
-                <button type="button" class="lb-tab active" data-type="weekly"  role="tab" aria-selected="true">⏱ Tuần</button>
-                <button type="button" class="lb-tab"        data-type="streak"  role="tab" aria-selected="false">🔥 Streak</button>
-                <button type="button" class="lb-tab"        data-type="friends" role="tab" aria-selected="false">👥 Bạn bè</button>
-              </div>
-            </div>
-            <div class="lb-meta" id="lb-meta">Đang tải…</div>
-            <ol class="lb-list" id="lb-list" aria-live="polite">
-              <li class="lb-skel">Đang tải bảng xếp hạng…</li>
-            </ol>
-            <div class="lb-me" id="lb-me" hidden></div>
+          <div class="mini-rm-canvas" id="mini-rm-canvas" tabindex="0">
+            <div class="mini-rm-loading">Đang tải lộ trình…</div>
+          </div>
+          <div class="mini-rm-legend">
+            <span class="lb-legend-item"><span class="lb-legend-dot lb-done">✓</span> Hoàn thành</span>
+            <span class="lb-legend-item"><span class="lb-legend-dot lb-progress">◐</span> Đang học</span>
+            <span class="lb-legend-item"><span class="lb-legend-dot lb-locked">○</span> Mở khoá</span>
           </div>
         </div>
+      </div>
 
-        <!-- ── PHẢI 1/2: roadmap ── -->
-        <div class="dash-col-right">
-          <div class="section-card mini-rm-card mini-rm-card--full">
-            <div class="mini-rm-header">
-              <div class="section-title" style="margin-bottom:0">
-                <span class="title-icon-blue">🗺</span><span>Lộ trình của bạn</span>
-              </div>
-              <a class="mini-rm-more" href="#" onclick="navigate('roadmap');return false;">Xem tất cả →</a>
+      <!-- Row 2: Leaderboard + Learning progress -->
+      <div class="dash-row dash-row--lb">
+        <div class="section-card lb-card fx-fade-up" style="animation-delay:.12s">
+          <div class="lb-header">
+            <div class="section-title" style="margin-bottom:0">
+              <span class="title-icon-blue">🏆</span><span>Bảng xếp hạng</span>
             </div>
-            <div class="mini-rm-canvas" id="mini-rm-canvas" tabindex="0">
-              <div class="mini-rm-loading">Đang tải lộ trình…</div>
+            <div class="lb-tabs" role="tablist" aria-label="Bảng xếp hạng">
+              <button type="button" class="lb-tab active" data-type="weekly"  role="tab" aria-selected="true">⏱ Tuần</button>
+              <button type="button" class="lb-tab"        data-type="streak"  role="tab" aria-selected="false">🔥 Streak</button>
+              <button type="button" class="lb-tab"        data-type="friends" role="tab" aria-selected="false">👥 Bạn bè</button>
             </div>
-            <div class="mini-rm-legend">
-              <span class="lb-legend-item"><span class="lb-legend-dot lb-done">✓</span> Hoàn thành</span>
-              <span class="lb-legend-item"><span class="lb-legend-dot lb-progress">◐</span> Đang học</span>
-              <span class="lb-legend-item"><span class="lb-legend-dot lb-locked">○</span> Mở khoá</span>
-            </div>
+          </div>
+          <div class="lb-meta" id="lb-meta">Đang tải…</div>
+          <ol class="lb-list" id="lb-list" aria-live="polite">
+            <li class="lb-skel">Đang tải bảng xếp hạng…</li>
+          </ol>
+          <div class="lb-me" id="lb-me" hidden></div>
+        </div>
+
+        <div class="section-card dash-progress-card fx-fade-up" style="animation-delay:.15s">
+          <div class="section-title" style="margin-bottom:0">
+            <span class="title-icon-blue">📋</span><span>Tiến độ học tập</span>
+          </div>
+          <div class="dash-progress-empty" id="dash-progress-empty">
+            <span class="dash-progress-icon" data-icon="book-open" data-size="20" data-color="#60A5FA"></span>
+            <p>Chưa đăng ký khóa học nào</p>
+            <span class="dash-progress-sub">Bắt đầu học ngay hôm nay!</span>
+            <button class="dash-progress-btn" onclick="navigate('courses')">Xem khóa học →</button>
           </div>
         </div>
       </div>
     </div>    <!-- ── Courses ── -->
     <div class="page" id="page-courses">
-      <div class="courses-header">
-        <h2>Tất cả khóa học</h2>
+      <div class="courses-header fx-fade-up">
+        <div>
+          <h2>📚 Khóa học</h2>
+          <p class="courses-subtitle" id="courses-count-sub">Đang tải…</p>
+        </div>
         <div class="courses-controls">
           <div class="filter-group" role="group" aria-label="Enrollment filter">
             <button class="filter-btn active" onclick="setEnrollmentFilter(this,'all')" role="radio" aria-checked="true">Tất cả</button>
-            <button class="filter-btn" onclick="setEnrollmentFilter(this,'enrolled')" role="radio" aria-checked="false">Đã đăng ký</button>
+            <button class="filter-btn" onclick="setEnrollmentFilter(this,'enrolled')" role="radio" aria-checked="false">Đang học</button>
             <button class="filter-btn" onclick="setEnrollmentFilter(this,'not-enrolled')" role="radio" aria-checked="false">Chưa đăng ký</button>
           </div>
           <div class="sort-dropdown-wrap">
@@ -116,51 +127,53 @@
         </div>
       </div>
 
-      <!-- Search bar + dropdown overlay -->
-      <div class="courses-search-bar-wrap" id="courses-search-bar-wrap">
-        <span class="csb-icon">🔍</span>
-        <input type="text" id="course-search-input" class="courses-search-bar-input"
-          placeholder="Tìm kiếm khóa học, ngôn ngữ, chủ đề..."
-          autocomplete="off"
-          onclick="cshOpen()"
-          oninput="cshInput(this.value)" />
-        <button class="csb-clear" id="course-search-clear" type="button"
-          style="display:none" onclick="cshClear()">✕</button>
-        <div class="course-search-hints" id="course-search-hints" style="display:none">
-          <div id="csh-static">
-            <div class="csh-label">Gợi ý tìm kiếm</div>
-            <div class="csh-pills">
-              <button type="button" class="csh-pill" onclick="cshPick('Phù hợp người mới')">✨ Phù hợp người mới</button>
-              <button type="button" class="csh-pill" onclick="cshPick('Cơ bản')">📘 Cơ bản</button>
-              <button type="button" class="csh-pill" onclick="cshPick('Trung cấp')">🧠 Trung cấp</button>
-              <button type="button" class="csh-pill" onclick="cshPick('Cao cấp')">🚀 Cao cấp</button>
+      <!-- Search bar + tag filter row -->
+      <div class="courses-filter-row fx-fade-up" style="animation-delay:.07s">
+        <div class="courses-search-bar-wrap" id="courses-search-bar-wrap">
+          <span class="csb-icon" data-icon="search" data-size="14"></span>
+          <input type="text" id="course-search-input" class="courses-search-bar-input"
+            placeholder="Tìm kiếm khóa học, ngôn ngữ, chủ đề..."
+            autocomplete="off"
+            onclick="cshOpen()"
+            oninput="cshInput(this.value)" />
+          <button class="csb-clear" id="course-search-clear" type="button"
+            style="display:none" onclick="cshClear()">✕</button>
+          <div class="course-search-hints" id="course-search-hints" style="display:none">
+            <div id="csh-static">
+              <div class="csh-label">Gợi ý tìm kiếm</div>
+              <div class="csh-pills">
+                <button type="button" class="csh-pill" onclick="cshPick('Phù hợp người mới')">✨ Phù hợp người mới</button>
+                <button type="button" class="csh-pill" onclick="cshPick('Cơ bản')">📘 Cơ bản</button>
+                <button type="button" class="csh-pill" onclick="cshPick('Trung cấp')">🧠 Trung cấp</button>
+                <button type="button" class="csh-pill" onclick="cshPick('Cao cấp')">🚀 Cao cấp</button>
 
-              <button type="button" class="csh-pill" onclick="cshPick('Python')">🐍 Python</button>
-              <button type="button" class="csh-pill" onclick="cshPick('C++')">⚙️ C / C++</button>
-              <button type="button" class="csh-pill" onclick="cshPick('Java')">☕ Java</button>
-              <button type="button" class="csh-pill" onclick="cshPick('HTML CSS')">🌐 HTML/CSS</button>
+                <button type="button" class="csh-pill" onclick="cshPick('Python')">🐍 Python</button>
+                <button type="button" class="csh-pill" onclick="cshPick('C++')">⚙️ C / C++</button>
+                <button type="button" class="csh-pill" onclick="cshPick('Java')">☕ Java</button>
+                <button type="button" class="csh-pill" onclick="cshPick('HTML CSS')">🌐 HTML/CSS</button>
+              </div>
             </div>
+            <ul id="csh-dynamic" style="display:none;list-style:none;padding:0;margin:8px 0 0"></ul>
           </div>
-          <ul id="csh-dynamic" style="display:none;list-style:none;padding:0;margin:8px 0 0"></ul>
         </div>
-      </div>
 
-      <!-- Bộ lọc cấp độ + ngôn ngữ -->
-      <div class="course-filter-panel">
-        <div class="filter-pill-row" id="level-filter-row">
-          <span class="pill-label">Cấp độ</span>
-          <button class="pill-btn" onclick="setLevelFilter(this,'Cơ bản')">Cơ bản</button>
-          <button class="pill-btn" onclick="setLevelFilter(this,'Trung cấp')">Trung cấp</button>
-          <button class="pill-btn" onclick="setLevelFilter(this,'Nâng cao')">Nâng cao</button>
+        <!-- Bộ lọc cấp độ + ngôn ngữ (dạng tag pill giống Figma) -->
+        <div class="course-filter-panel">
+          <div class="filter-pill-row" id="level-filter-row">
+            <span class="pill-label">Cấp độ</span>
+            <button class="pill-btn" onclick="setLevelFilter(this,'Cơ bản')">Cơ bản</button>
+            <button class="pill-btn" onclick="setLevelFilter(this,'Trung cấp')">Trung cấp</button>
+            <button class="pill-btn" onclick="setLevelFilter(this,'Nâng cao')">Nâng cao</button>
+          </div>
+          <div class="filter-pill-row" id="language-filter-row">
+            <span class="pill-label">Ngôn ngữ</span>
+            <button class="pill-btn" onclick="toggleLanguageFilter(this,'Python')">Python</button>
+            <button class="pill-btn" onclick="toggleLanguageFilter(this,'JS')">JS</button>
+            <button class="pill-btn" onclick="toggleLanguageFilter(this,'Java')">Java</button>
+            <button class="pill-btn" onclick="toggleLanguageFilter(this,'SQL')">SQL</button>
+          </div>
+          <div class="active-filters hidden" id="active-filters"></div>
         </div>
-        <div class="filter-pill-row" id="language-filter-row">
-          <span class="pill-label">Ngôn ngữ</span>
-          <button class="pill-btn" onclick="toggleLanguageFilter(this,'Python')">Python</button>
-          <button class="pill-btn" onclick="toggleLanguageFilter(this,'JS')">JS</button>
-          <button class="pill-btn" onclick="toggleLanguageFilter(this,'Java')">Java</button>
-          <button class="pill-btn" onclick="toggleLanguageFilter(this,'SQL')">SQL</button>
-        </div>
-        <div class="active-filters hidden" id="active-filters"></div>
       </div>
 
       <div class="courses-grid" id="courses-grid">
@@ -171,115 +184,22 @@
         <div class="skel-course-card"><div class="skel-card-img skel"></div><div class="skel-card-body"><div class="skel-card-tag skel"></div><div class="skel-card-title skel"></div><div class="skel-card-desc skel"></div><div class="skel-card-footer"><div class="skel-card-meta skel"></div><div class="skel-card-btn skel"></div></div></div></div>
       </div>
       <div class="empty hidden" id="empty-state">
-        <div class="empty-icon">📖</div>
-        <p>Không tìm thấy khóa học nào</p>
+        <div class="empty-icon">🔍</div>
+        <p>Không tìm thấy khóa học phù hợp.</p>
       </div>
     </div>
 
-    <!-- ── Roadmap ── -->
-    <div class="page" id="page-roadmap">
-
-      <!-- Toolbar: tabs + search -->
-      <div class="rm-toolbar">
-        <div class="rm-tabs-wrap filter-group" id="roadmap-tabs"></div>
-        <div class="rm-search-box" id="roadmap-search-wrap">
-          <span class="rm-search-icon">🔍</span>
-          <input type="text" id="roadmap-search-input" class="rm-search-input"
-            placeholder="Tìm lộ trình..."
-            autocomplete="off" oninput="roadmapSearch(this.value)" />
-          <button class="rm-search-clear" id="roadmap-search-clear" type="button"
-            style="display:none" onclick="roadmapClearSearch()">✕</button>
-        </div>
-      </div>
-
-      <!-- Diagram container -->
-      <div id="roadmap-container-wrapper">
-        <div id="roadmap-mermaid-wrap">
-          <div class="rm-loading">
-            <div class="rm-loading-spinner"></div>
-            <div class="rm-loading-text">Đang tải sơ đồ lộ trình...</div>
-          </div>
-        </div>
-
-        <!-- Cá nhân — hiện khi chọn tab "Cá nhân" -->
-        <div id="roadmap-personal-view">
-          <div class="rm-personal-hd">
-            <div class="rm-personal-hd-left">
-              <div class="rm-personal-icon">✏️</div>
-              <div>
-                <div class="rm-personal-label">Lộ trình cá nhân của tôi</div>
-                <div class="rm-personal-sub">Kéo thả · Nhấn đúp để đổi tên · Click mũi tên để xóa</div>
-              </div>
-            </div>
-            <div class="rm-personal-hd-right">
-              <button class="rm-ai-btn" onclick="handlePersonalRoadmapAI()" title="Chỉ dành cho tài khoản Premium">
-                🤖 Tạo bằng AI <span class="rm-premium-badge">Premium</span>
-              </button>
-              <button class="rm-save-btn" onclick="savePersonalRoadmap()">💾 Lưu lộ trình</button>
-            </div>
-          </div>
-
-          <!-- Visual toolbar -->
-          <div class="rmv-toolbar">
-            <button class="rmv-btn rmv-btn-add" onclick="rmVAddNode()">
-              <span>➕</span> Thêm node
-            </button>
-            <button class="rmv-btn rmv-btn-connect" id="rm-vbtn-connect" onclick="rmVToggleConnect()">
-              <span>🔗</span> Nối node
-            </button>
-            <button class="rmv-btn rmv-btn-clear" onclick="rmVClearAll()">
-              <span>🗑️</span> Xóa hết
-            </button>
-            <div class="rmv-hint" id="rm-vhint">Click "Thêm node" để bắt đầu</div>
-            <div class="rmv-zoom-wrap">
-              <button class="rmv-zoom-btn" onclick="rmVZoomOut()" title="Thu nhỏ (Ctrl+Scroll)">−</button>
-              <span class="rmv-zoom-label" id="rm-vzoom-label">100%</span>
-              <button class="rmv-zoom-btn" onclick="rmVZoomIn()" title="Phóng to (Ctrl+Scroll)">+</button>
-              <button class="rmv-zoom-btn rmv-zoom-reset" onclick="rmVZoomReset()" title="Reset zoom">↺</button>
-            </div>
-          </div>
-
-          <!-- Canvas -->
-          <div id="rm-visual-canvas" tabindex="0">
-            <div id="rm-vcontent">
-              <svg id="rm-arrows-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hint bar -->
-      <div class="rm-hint-bar">
-        <span class="rm-hint-item">💡 Ấn vào node để xem chi tiết kỹ năng</span>
-        <span class="rm-hint-sep">·</span>
-        <span class="rm-hint-item">🖱️ Scroll để zoom · Kéo để di chuyển bản đồ</span>
-        <span class="rm-hint-sep">·</span>
-        <span class="rm-hint-item">⌨️ Ctrl+Scroll để zoom nhanh</span>
-      </div>
-
-      <!-- Backdrop cho sidebar chi tiết (click để đóng) -->
-      <div id="sidebar-backdrop" onclick="closeSidebar()" aria-hidden="true"></div>
-
-      <!-- Sidebar chi tiết node -->
-      <div id="sidebar-detail" role="dialog" aria-modal="true" aria-labelledby="sidebar-title">
-        <div class="rm-sidebar-header">
-          <h2 id="sidebar-title">Tiêu đề</h2>
-          <button class="rm-sidebar-close" id="rm-sidebar-close" onclick="closeSidebar()" aria-label="Đóng" type="button" title="Đóng (Esc)">✕</button>
-        </div>
-        <div class="rm-sidebar-divider"></div>
-        <div id="sidebar-content">Nội dung chi tiết sẽ hiển thị ở đây...</div>
-      </div>
-
-    </div>
+    <!-- ── Roadmap (tách riêng file để dễ chỉnh sửa) ── -->
+    {% include 'roadmap.html' %}
 
     <!-- ── Skills ── -->
     <div class="page" id="page-skills">
 
-      <div class="courses-header">
-        <h2>🏅 Kỹ năng</h2>
+      <div class="courses-header fx-fade-up">
+        <h2>🐙 Kỹ năng</h2>
       </div>
-      <div class="courses-search-bar-wrap" id="skills-search-wrap">
-        <span class="csb-icon">🔍</span>
+      <div class="courses-search-bar-wrap fx-fade-up" id="skills-search-wrap" style="animation-delay:.07s">
+        <span class="csb-icon" data-icon="search" data-size="14"></span>
         <input type="text" id="skills-search-input" class="courses-search-bar-input"
           placeholder="Tìm kỹ năng (ví dụ: Python, HTML, Git...)"
           autocomplete="off" oninput="skillsSearch(this.value)" />
@@ -287,8 +207,8 @@
           style="display:none" onclick="skillsClearSearch()">✕</button>
       </div>
 
-      <div id="skills-search-empty" style="display:none;text-align:center;padding:32px 0;color:#9CA3AF;font-size:14px;">Không tìm thấy kỹ năng nào khớp với từ khoá.</div>
-      <div class="sk-summary" id="sk-summary"></div>
+      <div id="skills-search-empty" style="display:none;text-align:center;padding:32px 0;color:var(--t3);font-size:14px;">🔍 Không tìm thấy kỹ năng phù hợp.</div>
+      <div class="sk-summary fx-fade-up" id="sk-summary" style="animation-delay:.12s"></div>
       <div class="sk-grid" id="sk-grid">
         <div style="color:#9CA3AF;font-size:14px;padding:24px;">Đang tải...</div>
       </div>
@@ -297,15 +217,15 @@
     <!-- ── Forum ── -->
     <div class="page" id="page-forum">
 
-      <div class="courses-header">
+      <div class="courses-header fx-fade-up">
         <div>
           <h2>💬 Diễn đàn</h2>
           <p class="page-subtitle">Chia sẻ kiến thức, đặt câu hỏi và thảo luận cùng mọi người</p>
         </div>
       </div>
 
-      <div class="courses-search-bar-wrap" id="forum-search-wrap">
-        <span class="csb-icon">🔍</span>
+      <div class="courses-search-bar-wrap fx-fade-up" id="forum-search-wrap" style="animation-delay:.07s">
+        <span class="csb-icon" data-icon="search" data-size="14"></span>
         <input type="text" id="forum-search-input" class="courses-search-bar-input"
           placeholder="Tìm bài viết..."
           autocomplete="off" oninput="forumSearch(this.value)" />
@@ -313,12 +233,12 @@
           style="display:none" onclick="forumClearSearch()">✕</button>
       </div>
 
-      <div class="courses-header" style="margin-bottom:16px">
+      <div class="courses-header fx-fade-up" style="margin-bottom:16px;animation-delay:.11s">
         <div class="filter-group" id="forum-tabs">
-          <button class="filter-btn active" data-cat="all"      onclick="forumSetCat(this,'all')">🌐 Tất cả</button>
+          <button class="filter-btn active" data-cat="all"      onclick="forumSetCat(this,'all')">🗂️ Tất cả</button>
           <button class="filter-btn"        data-cat="question"  onclick="forumSetCat(this,'question')">❓ Câu hỏi</button>
           <button class="filter-btn"        data-cat="share"     onclick="forumSetCat(this,'share')">💡 Chia sẻ</button>
-          <button class="filter-btn"        data-cat="discuss"   onclick="forumSetCat(this,'discuss')">🗣️ Thảo luận</button>
+          <button class="filter-btn"        data-cat="discuss"   onclick="forumSetCat(this,'discuss')">💬 Thảo luận</button>
         </div>
         <div class="sort-dropdown-wrap">
           <label class="sort-label">Sắp xếp:</label>
@@ -330,28 +250,21 @@
         </div>
       </div>
 
-      <!-- FB-style Create Box -->
-      <div class="forum-create-box">
+      <!-- Create box (textarea inline — giống Forum.tsx) -->
+      <div class="forum-create-box fx-fade-up" style="animation-delay:.15s">
         <div class="forum-create-row">
-          <div class="fcb-avatar">
-            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" id="fcb-user-avatar" />
-          </div>
-          <div class="fcb-input-fake" onclick="forumOpenCreate()">Bạn đang nghĩ gì? Chia sẻ với mọi người...</div>
+          <div class="fcb-avatar" id="fcb-avatar">?</div>
+          <textarea id="forum-inline-body" class="fcb-textarea" maxlength="2000"
+            placeholder="Bạn đang nghĩ gì? Chia sẻ với mọi người..."
+            oninput="forumInlineInput(this.value)"></textarea>
         </div>
-        <div class="fcb-divider"></div>
-        <div class="fcb-actions">
-          <button class="fcb-action-btn" onclick="forumOpenCreateWithMedia()">
-            <span>🖼️</span> Ảnh/Video
-          </button>
-          <button class="fcb-action-btn" onclick="forumOpenCreateCat('question')">
-            <span>❓</span> Câu hỏi
-          </button>
-          <button class="fcb-action-btn" onclick="forumOpenCreateCat('share')">
-            <span>💡</span> Chia sẻ
-          </button>
-          <button class="fcb-action-btn" onclick="forumOpenCreateCat('discuss')">
-            <span>🗣️</span> Thảo luận
-          </button>
+        <div class="fcb-bottom-row">
+          <div class="fcb-type-picker" id="fcb-type-picker">
+            <button type="button" class="fcb-type-btn active" data-val="question" onclick="forumInlinePickType(this)">❓ Câu hỏi</button>
+            <button type="button" class="fcb-type-btn" data-val="share" onclick="forumInlinePickType(this)">💡 Chia sẻ</button>
+            <button type="button" class="fcb-type-btn" data-val="discuss" onclick="forumInlinePickType(this)">💬 Thảo luận</button>
+          </div>
+          <button class="fcb-submit-btn" id="fcb-submit-btn" disabled onclick="forumSubmitInline()">Đăng</button>
         </div>
       </div>
 
@@ -445,46 +358,48 @@
       <div class="prof-wrap">
 
         <!-- ── Hero card ── -->
-        <div class="prof-hero">
+        <div class="prof-hero fx-fade-up">
           <div class="prof-hero-bg"></div>
           <div class="prof-hero-body">
             <div class="prof-avatar-wrap">
-              <img class="prof-avatar" src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+              <div class="prof-avatar" id="prof-avatar-letter">?</div>
               <span class="prof-avatar-badge">🎓</span>
             </div>
             <div class="prof-hero-info">
               <div class="prof-name" id="prof-name">—</div>
               <div class="prof-email" id="prof-email">—</div>
-              <div class="prof-role-tag">Học viên</div>
+              <div class="prof-role-tag">🎓 Học viên</div>
             </div>
-            <button class="prof-edit-btn" onclick="navigate('settings')">✏️ Chỉnh sửa hồ sơ</button>
+            <button class="prof-edit-btn" onclick="navigate('settings')">
+              <span data-icon="pencil" data-size="13"></span> Chỉnh sửa hồ sơ
+            </button>
           </div>
         </div>
 
         <!-- ── Stats row (5 cards) ── -->
         <div class="prof-stats-row">
-          <div class="prof-stat-card">
-            <div class="prof-stat-icon">🔥</div>
+          <div class="prof-stat-card fx-fade-up" style="animation-delay:.05s">
+            <div class="prof-stat-icon" data-icon="flame" data-size="22" data-color="#F97316"></div>
             <div class="prof-stat-val" id="prof-streak">—</div>
             <div class="prof-stat-lbl">Chuỗi ngày học</div>
           </div>
-          <div class="prof-stat-card">
-            <div class="prof-stat-icon">📖</div>
+          <div class="prof-stat-card fx-fade-up" style="animation-delay:.1s">
+            <div class="prof-stat-icon" data-icon="book-open" data-size="22" data-color="#3B82F6"></div>
             <div class="prof-stat-val" id="prof-enrolled">—</div>
             <div class="prof-stat-lbl">Khóa học đang học</div>
           </div>
-          <div class="prof-stat-card">
-            <div class="prof-stat-icon">✅</div>
+          <div class="prof-stat-card fx-fade-up" style="animation-delay:.15s">
+            <div class="prof-stat-icon" data-icon="check-circle-2" data-size="22" data-color="#10B981"></div>
             <div class="prof-stat-val" id="prof-done">—</div>
             <div class="prof-stat-lbl">Bài học hoàn thành</div>
           </div>
-          <div class="prof-stat-card">
-            <div class="prof-stat-icon">🏅</div>
+          <div class="prof-stat-card fx-fade-up" style="animation-delay:.2s">
+            <div class="prof-stat-icon" data-icon="medal" data-size="22" data-color="#F59E0B"></div>
             <div class="prof-stat-val" id="prof-badges">—</div>
             <div class="prof-stat-lbl">Huy hiệu đạt được</div>
           </div>
-          <div class="prof-stat-card prof-stat-card--link" onclick="navigateToSkills()" title="Xem kỹ năng">
-            <div class="prof-stat-icon">💡</div>
+          <div class="prof-stat-card prof-stat-card--link fx-fade-up" style="animation-delay:.25s" onclick="navigateToSkills()" title="Xem kỹ năng">
+            <div class="prof-stat-icon" data-icon="sparkles" data-size="22" data-color="#A78BFA"></div>
             <div class="prof-stat-val" id="prof-skills">—</div>
             <div class="prof-stat-lbl">Kỹ năng</div>
           </div>
@@ -497,7 +412,7 @@
           <div class="prof-col-left">
 
             <!-- Khóa học đang học -->
-            <div class="prof-section">
+            <div class="prof-section fx-fade-up" style="animation-delay:.25s">
               <div class="prof-section-hd">
                 <span class="prof-section-icon">📚</span>
                 <span class="prof-section-title">Khóa học đang học</span>
@@ -508,7 +423,7 @@
             </div>
 
             <!-- Kinh nghiệm bài học -->
-            <div class="prof-xp-card">
+            <div class="prof-xp-card fx-fade-up" style="animation-delay:.3s">
               <div class="prof-xp-label">kinh nghiệm bài học</div>
               <div class="prof-xp-inner">
                 <div class="prof-xp-top">
@@ -529,7 +444,7 @@
           </div><!-- /prof-col-left -->
 
           <!-- Bài đăng -->
-          <div class="prof-section prof-section--posts">
+          <div class="prof-section prof-section--posts fx-fade-up" style="animation-delay:.25s">
             <h3 class="prof-posts-heading">bài đăng</h3>
             <div class="prof-post-list" id="prof-post-list">
               <div class="prof-empty">Chưa có bài đăng nào.</div>
@@ -670,57 +585,6 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════════════════
-     ★ MODAL TẠO BÀI ĐĂNG DIỄN ĐÀN
-     ════════════════════════════════════════════════════════════ -->
-  <div class="forum-modal-overlay" id="forumCreateModal" onclick="forumOverlayClick(event)">
-    <div class="forum-modal-card">
-      <div class="forum-modal-hd">
-        <span class="forum-modal-title">✏️ Đăng bài mới</span>
-        <button class="forum-modal-close" onclick="forumCloseCreate()">✕</button>
-      </div>
-      <div class="forum-modal-body">
-        <div class="forum-field">
-          <label class="forum-field-label">Danh mục</label>
-          <div class="forum-cat-picker" id="forum-cat-picker">
-            <button type="button" class="forum-cat-pick active" data-val="question" onclick="forumPickCat(this)">❓ Câu hỏi</button>
-            <button type="button" class="forum-cat-pick" data-val="share"    onclick="forumPickCat(this)">💡 Chia sẻ</button>
-            <button type="button" class="forum-cat-pick" data-val="discuss"  onclick="forumPickCat(this)">🗣️ Thảo luận</button>
-          </div>
-        </div>
-        <div class="forum-field">
-          <label class="forum-field-label" for="forum-input-title">Tiêu đề bài viết</label>
-          <input id="forum-input-title" class="forum-input" type="text" maxlength="120"
-            placeholder="Nhập tiêu đề ngắn gọn, rõ ràng..." />
-          <div class="forum-char-count" id="forum-title-count">0 / 120</div>
-        </div>
-        <div class="forum-field">
-          <label class="forum-field-label" for="forum-input-body">Nội dung</label>
-          <textarea id="forum-input-body" class="forum-textarea"
-            placeholder="Mô tả chi tiết vấn đề hoặc nội dung bạn muốn chia sẻ..." maxlength="2000"></textarea>
-          <div class="forum-char-count" id="forum-body-count">0 / 2000</div>
-        </div>
-        <div class="forum-field">
-          <label class="forum-field-label">Thêm ảnh / video</label>
-          <div class="forum-media-toolbar">
-            <button type="button" class="forum-media-btn" onclick="document.getElementById('forum-img-input').click()">
-              📷 Ảnh
-            </button>
-            <button type="button" class="forum-media-btn" onclick="document.getElementById('forum-vid-input').click()">
-              🎬 Video
-            </button>
-          </div>
-          <input type="file" id="forum-img-input" accept="image/*" multiple style="display:none" onchange="forumHandleMedia(event,'image')">
-          <input type="file" id="forum-vid-input" accept="video/*" multiple style="display:none" onchange="forumHandleMedia(event,'video')">
-          <div class="forum-media-preview" id="forum-media-preview"></div>
-        </div>
-      </div>
-      <div class="forum-modal-ft">
-        <button class="forum-modal-cancel" onclick="forumCloseCreate()">Hủy</button>
-        <button class="forum-modal-submit" onclick="forumSubmitPost()">🚀 Đăng bài</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ════════════════════════════════════════════════════════════
      ★ POPUP NHẮC GIỮ CHUỖI HỌC
@@ -741,9 +605,11 @@
   <!-- External libraries -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}?v=10"></script>
+  <script src="{{ url_for('static', filename='js/roadmapData.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='js/roadmap.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=15"></script>
 
   {% include 'chatbot.html' %}
   <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}?v=10"></script>
 {% endblock %}

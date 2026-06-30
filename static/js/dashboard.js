@@ -2,6 +2,21 @@
    dashboard.js — tất cả JS riêng cho dashboard.html
    ═══════════════════════════════════════════════════════ */
 
+/* Lớp bảo vệ độc lập: đảm bảo trang Roadmap/Skills luôn được khởi tạo
+   khi điều hướng tới, kể cả khi 1 đoạn code khác phía dưới trong file
+   này lỗi (1 lỗi JS ở top-level sẽ chặn các IIFE phía sau không chạy). */
+(function () {
+  var _orig = window.navigate;
+  window.navigate = function (page) {
+    _orig(page);
+    try {
+      if (page === 'roadmap' && typeof window.initRoadmapPage === 'function') {
+        window.initRoadmapPage();
+      }
+    } catch (e) { console.error('[roadmap] init error:', e); }
+  };
+})();
+
 /* ── User avatar dropdown ── */
 function toggleUserMenu() {
   var wrap = document.getElementById('user-chip-wrap');
@@ -153,15 +168,22 @@ function resetCpUI() {
   document.getElementById('cpConfirmMsg').textContent = '';
 }
 
-document.getElementById('changePasswordModal').addEventListener('click', (e) => {
-  if (e.target.id === 'changePasswordModal') closeChangePasswordModal();
-});
+(function () {
+  var cpModal = document.getElementById('changePasswordModal');
+  if (cpModal) {
+    cpModal.addEventListener('click', (e) => {
+      if (e.target.id === 'changePasswordModal') closeChangePasswordModal();
+    });
+  }
+})();
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (document.getElementById('changePasswordModal').classList.contains('active'))
+    var cpModal = document.getElementById('changePasswordModal');
+    var unModal = document.getElementById('unenrollModal');
+    if (cpModal && cpModal.classList.contains('active'))
       closeChangePasswordModal();
-    if (document.getElementById('unenrollModal').classList.contains('active'))
+    if (unModal && unModal.classList.contains('active'))
       closeUnenrollModal();
   }
 });
@@ -227,18 +249,26 @@ function checkMatch() {
   }
 }
 
-document.getElementById('cpSubmitBtn').addEventListener('click', function (e) {
-  const rect = this.getBoundingClientRect();
-  const ripple = document.createElement('span');
-  ripple.className = 'cp-ripple';
-  ripple.style.width = ripple.style.height = '20px';
-  ripple.style.left = (e.clientX - rect.left - 10) + 'px';
-  ripple.style.top = (e.clientY - rect.top - 10) + 'px';
-  this.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-});
+(function () {
+  var cpSubmitBtn = document.getElementById('cpSubmitBtn');
+  if (cpSubmitBtn) {
+    cpSubmitBtn.addEventListener('click', function (e) {
+      const rect = this.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'cp-ripple';
+      ripple.style.width = ripple.style.height = '20px';
+      ripple.style.left = (e.clientX - rect.left - 10) + 'px';
+      ripple.style.top = (e.clientY - rect.top - 10) + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  }
+})();
 
-document.getElementById('cpForm').addEventListener('submit', async (e) => {
+(function () {
+  var cpForm = document.getElementById('cpForm');
+  if (!cpForm) return;
+  cpForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const currentPwd = document.getElementById('cpCurrent').value;
@@ -291,7 +321,8 @@ document.getElementById('cpForm').addEventListener('submit', async (e) => {
     submitBtn.classList.remove('loading');
     submitBtn.disabled = false;
   }
-});
+  });
+})();
 
 /* ═══════════════════════════════════════════════════════
    Kỹ năng — toggle helpers
@@ -347,16 +378,26 @@ function skSkillToggle(row) {
     });
 
     var sum = document.getElementById('sk-summary');
+    var filt = window._skFilter || 'all';
+    function tab(key, val, label, color) {
+      var active = filt === key;
+      return '<button type="button" class="sk-tab' + (active ? ' active' : '') + '" data-filter="' + key + '" onclick="skSetFilter(\'' + key + '\')" style="' + (active && color ? 'border-color:' + color + '33;color:' + color : '') + '">' +
+        '<div class="v"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div><div class="l">' + label + '</div></button>';
+    }
     sum.innerHTML =
-      '<div class="sk-stat"><div class="v">' + total + '</div><div class="l">Tổng kỹ năng</div></div>' +
-      '<div class="sk-stat" style="border-color:#D1FAE5"><div class="v" style="color:#10B981">' + achieved + '</div><div class="l">Đã đạt ✓</div></div>' +
-      '<div class="sk-stat" style="border-color:#FDE68A"><div class="v" style="color:#F59E0B">' + review + '</div><div class="l">Cần ôn</div></div>' +
-      '<div class="sk-stat"><div class="v" style="color:#9CA3AF">' + unstarted + '</div><div class="l">Chưa bắt đầu</div></div>';
+      tab('all', total, 'Tổng', null) +
+      tab('achieved', achieved, 'Đã đạt ✓', '#10B981') +
+      tab('review', review, 'Cần ôn', '#F59E0B') +
+      tab('none', unstarted, 'Chưa bắt đầu', '#64748B');
 
     var grid = document.getElementById('sk-grid');
     if (!sets.length) { grid.innerHTML = '<div style="color:#9CA3AF;font-size:14px;padding:24px;">Chưa có dữ liệu kỹ năng.</div>'; return; }
 
+    var defaultOpen = document.getElementById('page-skills').classList.contains('active');
+
     grid.innerHTML = sets.map(function (bs) {
+      var setStatus = bs.progress >= 70 ? 'achieved' : (bs.progress > 0 ? 'review' : 'none');
+      if (filt !== 'all' && filt !== setStatus) return '';
       var skillRows = bs.skills.map(function (sk) {
         var subItems = sk.sub_skills.map(function (sub) {
           var cls = sub.done ? 'done' : 'todo';
@@ -391,39 +432,36 @@ function skSkillToggle(row) {
         '</div>' +
         badge(bs.progress) +
         donutChart(bs.progress) +
-        '<span class="sk-arrow">▶</span>' +
+        '<span class="sk-arrow"' + (defaultOpen ? ' style="transform:rotate(90deg)"' : '') + '>▶</span>' +
         '</div>' +
-        '<div class="sk-body" style="display:none">' + skillRows + '</div>' +
+        '<div class="sk-body" style="display:' + (defaultOpen ? 'block' : 'none') + '">' + skillRows + '</div>' +
         '</div>';
     }).join('');
   }
 
+  var _skillsData = null;
   function loadSkills() {
     if (_skillsLoaded) return;
     _skillsLoaded = true;
     fetch('/api/skills')
       .then(function (r) { return r.json(); })
-      .then(renderSkills)
+      .then(function (data) { _skillsData = data; renderSkills(data); })
       .catch(function () {
         document.getElementById('sk-grid').innerHTML =
           '<div style="color:#EF4444;font-size:14px;padding:24px;">Không tải được dữ liệu kỹ năng.</div>';
       });
   }
+  window.skSetFilter = function (key) {
+    window._skFilter = key;
+    if (_skillsData) renderSkills(_skillsData);
+  };
 
   var _origNavigate = window.navigate;
   window.navigate = function (page) {
     _origNavigate(page);
     if (page === 'skills') loadSkills();
-    if (page === 'roadmap') {
-      if (typeof _eduRoadmaps !== 'undefined' && _eduRoadmaps.length) {
-        renderEduRoadmapTabs();
-        if (window.currentEduRoadmap !== 'personal') {
-          _roadmapRenderedId = null;
-          renderEduInteractiveRoadmap();
-        }
-      } else if (typeof loadEduRoadmaps === 'function') {
-        loadEduRoadmaps().then(function () { renderEduInteractiveRoadmap(); });
-      }
+    if (page === 'roadmap' && typeof window.initRoadmapPage === 'function') {
+      window.initRoadmapPage();
     }
   };
   window._loadSkillsGlobal = loadSkills;
@@ -496,9 +534,9 @@ function skSkillToggle(row) {
     }
   };
 
-  var CAT_LABELS = { question: '❓ Câu hỏi', share: '💡 Chia sẻ', discuss: '🗣️ Thảo luận' };
-  var CAT_COLORS = { question: '#3B82F6', share: '#10B981', discuss: '#8B5CF6' };
-  var CAT_BG = { question: '#EFF6FF', share: '#ECFDF5', discuss: '#F5F3FF' };
+  var CAT_LABELS = { question: '❓ Câu hỏi', share: '💡 Chia sẻ', discuss: '💬 Thảo luận' };
+  var CAT_COLORS = { question: '#F87171', share: '#FCD34D', discuss: '#A78BFA' };
+  var CAT_BG = { question: 'rgba(248,113,113,0.1)', share: 'rgba(252,211,77,0.1)', discuss: 'rgba(167,139,250,0.1)' };
 
   var REACT_EMOJIS = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
   var REACT_LABELS = { like: 'Thích', love: 'Yêu thích', haha: 'Haha', wow: 'Wow', sad: 'Buồn', angry: 'Phẫn nộ' };
@@ -662,7 +700,7 @@ function skSkillToggle(row) {
     }
     empty && empty.classList.add('hidden');
 
-    list.innerHTML = posts.map(function (p) {
+    list.innerHTML = posts.map(function (p, idx) {
       var catColor = CAT_COLORS[p.cat] || '#6B7280';
       var catBg = CAT_BG[p.cat] || '#F3F4F6';
       var catLabel = CAT_LABELS[p.cat] || p.cat;
@@ -671,16 +709,8 @@ function skSkillToggle(row) {
       var reactions = p.reactions || { like: p.likes || 0 };
       var myReaction = p.myReaction || null;
       var totalR = Object.values(reactions).reduce(function (a, b) { return a + b; }, 0);
-      var reactEmoji = myReaction ? REACT_EMOJIS[myReaction] : '👍';
-      var reactLabel = myReaction ? REACT_LABELS[myReaction] : 'Thích';
+      var liked = !!myReaction;
       var reactClass = myReaction ? ('reacted-' + myReaction) : '';
-
-      var reactSummary = Object.keys(reactions)
-        .filter(function (k) { return reactions[k] > 0; })
-        .sort(function (a, b) { return reactions[b] - reactions[a]; })
-        .slice(0, 3)
-        .map(function (k) { return REACT_EMOJIS[k]; })
-        .join('');
 
       var pickerItems = Object.keys(REACT_EMOJIS).map(function (k) {
         return '<span class="reaction-item" onclick="forumSetReaction(\'' + p.id + '\',\'' + k + '\')" title="' + REACT_LABELS[k] + '">' + REACT_EMOJIS[k] + '</span>';
@@ -697,9 +727,9 @@ function skSkillToggle(row) {
       }
 
       return (
-        '<div class="forum-post-card" id="fpc-' + p.id + '">' +
+        '<div class="forum-post-card fx-fade-up" id="fpc-' + p.id + '" style="animation-delay:' + Math.min(idx * 0.04, 0.3) + 's">' +
         '<div class="fpc-top">' +
-        '<div class="fpc-avatar">' + (p.avatar || '🧑') + '</div>' +
+        '<div class="fpc-avatar" style="background:' + avatarColor(p.author) + '">' + (p.author || '?').charAt(0).toUpperCase() + '</div>' +
         '<div class="fpc-meta">' +
         '<span class="fpc-author">' + p.author + '</span>' +
         '<span class="fpc-time">' + timeAgo(p.time) + '</span>' +
@@ -711,16 +741,16 @@ function skSkillToggle(row) {
         mediaPart +
         '<div class="fpc-actions">' +
         '<div class="fpc-react-wrap">' +
-        '<button class="fpc-react-btn ' + reactClass + '" onclick="forumSetReaction(\'' + p.id + '\',\'' + (myReaction || 'like') + '\')">' +
-        reactEmoji + ' <span>' + reactLabel + '</span>' +
-        (totalR > 0 ? ' <span style="opacity:.55;font-weight:400">· ' + totalR + '</span>' : '') +
+        '<button class="fpc-react-btn' + (liked ? ' liked' : '') + ' ' + reactClass + '" onclick="forumSetReaction(\'' + p.id + '\',\'' + (myReaction || 'like') + '\')">' +
+        '<span data-icon="thumbs-up" data-size="13"' + (liked ? ' data-color="#60A5FA"' : '') + '></span> Thích' +
+        (totalR > 0 ? ' <span class="fpc-react-count">' + totalR + '</span>' : '') +
         '</button>' +
         '<div class="reaction-picker">' + pickerItems + '</div>' +
         '</div>' +
-        (reactSummary && totalR > 0 ? '<span class="fpc-react-summary">' + reactSummary + ' ' + totalR + '</span>' : '') +
         '<button class="fpc-comment-btn" id="fpc-cmtbtn-' + p.id + '" onclick="forumToggleComments(\'' + p.id + '\')">' +
-        '💬 ' + p.comments + ' bình luận' +
+        '<span data-icon="message-circle" data-size="13"></span> ' + p.comments + ' bình luận' +
         '</button>' +
+        '<button class="fpc-share-btn" onclick="event.stopPropagation()"><span data-icon="share2" data-size="13"></span> Chia sẻ</button>' +
         '</div>' +
         '<div class="fpc-comments" id="fpc-cmt-' + p.id + '">' +
         '<div class="fpc-cmt-sort-bar">' +
@@ -745,10 +775,19 @@ function skSkillToggle(row) {
         '</div>'
       );
     }).join('');
+    if (window.mountIcons) mountIcons(list);
   }
 
   function escHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  var _AVATAR_COLORS = ['#3B82F6', '#8B5CF6', '#F97316', '#10B981', '#EC4899', '#06B6D4', '#F59E0B', '#EF4444'];
+  function avatarColor(name) {
+    var s = String(name || '?');
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return _AVATAR_COLORS[h % _AVATAR_COLORS.length];
   }
 
   window.forumSetCat = function (btn, cat) {
@@ -801,89 +840,24 @@ function skSkillToggle(row) {
     }
   };
 
-  window.forumOpenCreate = function () {
-    document.getElementById('forumCreateModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  };
-
-  window.forumOpenCreateWithMedia = function () {
-    forumOpenCreate();
-    setTimeout(function () {
-      document.getElementById('forum-img-input').click();
-    }, 300);
-  };
-
-  window.forumOpenCreateCat = function (cat) {
-    forumOpenCreate();
-    setTimeout(function () {
-      document.querySelectorAll('.forum-cat-pick').forEach(function (b) {
-        b.classList.toggle('active', b.dataset.val === cat);
-      });
-      _selectedCat = cat;
-    }, 50);
-  };
-
-  window.forumHandleMedia = function (e, type) {
-    var files = Array.from(e.target.files);
-    files.forEach(function (file) {
-      var url = URL.createObjectURL(file);
-      _forumMediaFiles.push({ type: type, url: url, name: file.name });
-    });
-    renderMediaPreview();
-    e.target.value = '';
-  };
-
-  function renderMediaPreview() {
-    var container = document.getElementById('forum-media-preview');
-    if (!container) return;
-    container.innerHTML = _forumMediaFiles.map(function (m, i) {
-      var thumb = m.type === 'video'
-        ? '<video src="' + m.url + '" muted></video>'
-        : '<img src="' + m.url + '" alt="' + m.name + '" />';
-      return '<div class="forum-media-thumb">' +
-        thumb +
-        '<button class="forum-thumb-remove" onclick="forumRemoveMedia(' + i + ')" title="Xóa">✕</button>' +
-        '</div>';
-    }).join('');
-  }
-
-  window.forumRemoveMedia = function (idx) {
-    URL.revokeObjectURL(_forumMediaFiles[idx].url);
-    _forumMediaFiles.splice(idx, 1);
-    renderMediaPreview();
-  };
-
-  window.forumCloseCreate = function () {
-    document.getElementById('forumCreateModal').classList.remove('active');
-    document.body.style.overflow = '';
-    document.getElementById('forum-input-title').value = '';
-    document.getElementById('forum-input-body').value = '';
-    document.getElementById('forum-title-count').textContent = '0 / 120';
-    document.getElementById('forum-body-count').textContent = '0 / 2000';
-    _selectedCat = 'question';
-    document.querySelectorAll('.forum-cat-pick').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.val === 'question');
-    });
-    _forumMediaFiles.forEach(function (m) { URL.revokeObjectURL(m.url); });
-    _forumMediaFiles = [];
-    renderMediaPreview();
-  };
-
-  window.forumOverlayClick = function (e) {
-    if (e.target.id === 'forumCreateModal') forumCloseCreate();
-  };
-
-  window.forumPickCat = function (btn) {
-    document.querySelectorAll('.forum-cat-pick').forEach(function (b) { b.classList.remove('active'); });
+  /* ── Create box inline (giống Forum.tsx: 1 textarea, không modal) ── */
+  window.forumInlinePickType = function (btn) {
+    document.querySelectorAll('.fcb-type-btn').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
     _selectedCat = btn.dataset.val;
   };
 
-  window.forumSubmitPost = function () {
-    var title = document.getElementById('forum-input-title').value.trim();
-    var body = document.getElementById('forum-input-body').value.trim();
-    if (!title) { alert('Vui lòng nhập tiêu đề bài viết.'); return; }
-    if (!body) { alert('Vui lòng nhập nội dung bài viết.'); return; }
+  window.forumInlineInput = function (val) {
+    var btn = document.getElementById('fcb-submit-btn');
+    if (btn) btn.disabled = !val.trim();
+  };
+
+  window.forumSubmitInline = function () {
+    var ta = document.getElementById('forum-inline-body');
+    var body = (ta.value || '').trim();
+    if (!body) return;
+    var firstLine = body.split('\n')[0];
+    var title = firstLine.length > 80 ? firstLine.slice(0, 77) + '…' : firstLine;
 
     var userName = document.getElementById('sidebar-name').textContent || 'Bạn';
     var newPost = {
@@ -897,28 +871,24 @@ function skSkillToggle(row) {
       reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
       myReaction: null,
       comments: 0,
-      media: _forumMediaFiles.slice(),
+      media: [],
     };
 
-    // Call API to create post, then reload all posts
     forumApi.createPost(newPost).then(function () {
-      forumCloseCreate();
+      ta.value = '';
+      document.getElementById('fcb-submit-btn').disabled = true;
+      _selectedCat = 'question';
+      document.querySelectorAll('.fcb-type-btn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.val === 'question');
+      });
       _currentCat = 'all';
       _currentSort = 'newest';
       document.querySelectorAll('#forum-tabs .filter-btn').forEach(function (b) {
         b.classList.toggle('active', b.dataset.cat === 'all');
       });
-      // Reload posts from API
       reloadPosts();
     });
   };
-
-  document.getElementById('forum-input-title').addEventListener('input', function () {
-    document.getElementById('forum-title-count').textContent = this.value.length + ' / 120';
-  });
-  document.getElementById('forum-input-body').addEventListener('input', function () {
-    document.getElementById('forum-body-count').textContent = this.value.length + ' / 2000';
-  });
 
   window.forumToggleComments = function (postId) {
     var section = document.getElementById('fpc-cmt-' + postId);
@@ -1225,11 +1195,6 @@ function skSkillToggle(row) {
     }, 50);
   };
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && document.getElementById('forumCreateModal').classList.contains('active'))
-      forumCloseCreate();
-  });
-
   var _origNavigateForum = window.navigate;
   window.navigate = function (page) {
     _origNavigateForum(page);
@@ -1311,9 +1276,9 @@ function skSkillToggle(row) {
     var doneEl = document.querySelector('.stat-val[data-stat="done"], #stat-done-lessons');
     _set('prof-done', doneEl ? doneEl.textContent : '—');
 
-    // Kỹ năng: đếm sk-grid cards nếu đã load
-    var skillCards = document.querySelectorAll('#sk-grid .sk-card');
-    _set('prof-skills', skillCards.length > 0 ? skillCards.length : '—');
+    // Kỹ năng: đếm tổng số skill (sk-skill) nếu sk-grid đã load
+    var skillRows = document.querySelectorAll('#sk-grid .sk-skill');
+    _set('prof-skills', skillRows.length > 0 ? skillRows.length : '—');
 
     // Khóa học đang học: render từ enrolledCourses
     _renderProfCourses();

@@ -42,308 +42,6 @@ var pageLabels = {
   forum: "Diễn đàn",
 };
 
-/* ════════════════════════════════════════════════════════════
-   ★ TRANG LỘ TRÌNH — Mermaid flowchart TD từ DB
-   ════════════════════════════════════════════════════════════ */
-
-var _eduRoadmaps = [];          // dữ liệu tải từ API
-var _mermaidRenderCount = 0;
-var _roadmapRenderedId = null;
-window.currentEduRoadmap = 'frontend';
-
-function renderEduRoadmapTabs() {
-    var tabsContainer = document.getElementById('roadmap-tabs');
-    if (!tabsContainer) return;
-    var tabs = _eduRoadmaps.map(function(r) {
-        var isActive = r.id === window.currentEduRoadmap ? 'active' : '';
-        return '<button class="filter-btn ' + isActive + '" onclick="window.switchEduRoadmap(\'' + r.id + '\')">' + r.icon + ' ' + r.title + '</button>';
-    });
-    var personalActive = window.currentEduRoadmap === 'personal' ? 'active' : '';
-    tabs.push('<button class="filter-btn rm-tab-personal ' + personalActive + '" onclick="window.switchEduRoadmap(\'personal\')">✏️ Cá nhân</button>');
-    tabsContainer.innerHTML = tabs.join('');
-}
-
-window.switchEduRoadmap = function(roadmapId) {
-    window.currentEduRoadmap = roadmapId;
-    renderEduRoadmapTabs();
-    var mermaidWrap   = document.getElementById('roadmap-mermaid-wrap');
-    var personalView  = document.getElementById('roadmap-personal-view');
-    if (roadmapId === 'personal') {
-        if (mermaidWrap)  mermaidWrap.style.display  = 'none';
-        if (personalView) personalView.style.display = 'flex';
-        if (_rmPersonalLoaded) {
-            _rmVInitCanvas();
-            _rmVRender();
-        } else {
-            loadPersonalRoadmap();
-        }
-    } else {
-        if (mermaidWrap)  mermaidWrap.style.display  = '';
-        if (personalView) personalView.style.display = 'none';
-        _roadmapRenderedId = null;
-        renderEduInteractiveRoadmap();
-    }
-};
-
-function renderEduInteractiveRoadmap() {
-    var roadmap = _eduRoadmaps.find(function(r) { return r.id === window.currentEduRoadmap; });
-    if (!roadmap) return;
-    if (_roadmapRenderedId === roadmap.id) return;
-    var wrap = document.getElementById('roadmap-mermaid-wrap');
-    if (!wrap) return;
-    _roadmapRenderedId = roadmap.id;
-
-    wrap.innerHTML = '<div class="rm-loading"><div class="rm-loading-spinner"></div><div class="rm-loading-text">Đang tải sơ đồ...</div></div>';
-
-    if (typeof mermaid === 'undefined') {
-        setTimeout(renderEduInteractiveRoadmap, 300);
-        return;
-    }
-
-    var svgId = 'rm-svg-' + (++_mermaidRenderCount);
-
-    /* Bỏ %%{init}%% dark theme nếu backend có nhúng — JS palette sẽ kiểm soát hoàn toàn.
-       Đồng thời tiêm init light-theme base để Mermaid không fallback default (trắng). */
-    var _cleanDef = String(roadmap.mermaid_def || '').replace(/%%\{init:[\s\S]*?\}%%/g, '').trim();
-    var _initDirective = '%%{init:{"theme":"base","themeVariables":{"primaryColor":"#ffffff","primaryTextColor":"#1F2937","primaryBorderColor":"#94A3B8","lineColor":"#94A3B8","edgeLabelBackground":"#ffffff","tertiaryColor":"#ffffff","classText":"#1F2937"},"flowchart":{"curve":"basis","useMaxWidth":false,"nodeSpacing":55,"rankSpacing":75,"padding":20,"htmlLabels":true}}}%%';
-    var _defForRender = _initDirective + '\n' + _cleanDef;
-
-    /* Defer sang idle tick để tránh block UI khi navigate */
-    setTimeout(function() {
-        mermaid.render(svgId, _defForRender).then(function(result) {
-            wrap.innerHTML = result.svg;
-            console.log('[roadmap] mermaid rendered, node count =', wrap.querySelectorAll('g.node, g[class*="node"]').length);
-            var svgEl = wrap.querySelector('svg');
-            if (svgEl) {
-                svgEl.removeAttribute('width');
-                svgEl.removeAttribute('height');
-                svgEl.style.width = '100%';
-                svgEl.style.height = '100%';
-
-                var _isDark = document.body.classList.contains('dark');
-                /* Palette đồng bộ với .rm-vnode[data-color] trong dashboard.css (roadmap cá nhân) */
-                var _PASTEL_LIGHT = [
-                    { bg:'#FFFBEB', border:'#F59E0B', text:'#92400E' },
-                    { bg:'#EFF6FF', border:'#60A5FA', text:'#1D4ED8' },
-                    { bg:'#F0FDF4', border:'#34D399', text:'#065F46' },
-                    { bg:'#F5F3FF', border:'#A78BFA', text:'#5B21B6' },
-                    { bg:'#FDF2F8', border:'#F472B6', text:'#9D174D' },
-                    { bg:'#FFF7ED', border:'#FB923C', text:'#9A3412' },
-                ];
-                var _PASTEL_DARK = [
-                    { bg:'#1C1500', border:'#FBBF24', text:'#FEF08A' },
-                    { bg:'#050E1F', border:'#38BDF8', text:'#BAE6FD' },
-                    { bg:'#011C0E', border:'#4ADE80', text:'#BBF7D0' },
-                    { bg:'#0F0520', border:'#A78BFA', text:'#DDD6FE' },
-                    { bg:'#1A0520', border:'#F472B6', text:'#FBCFE8' },
-                    { bg:'#1A0A00', border:'#FB923C', text:'#FED7AA' },
-                ];
-                var _palette = _isDark ? _PASTEL_DARK : _PASTEL_LIGHT;
-
-                var _nodeIdx = 0;
-                svgEl.querySelectorAll('g.node, g[class*="node"]').forEach(function(gEl) {
-                    gEl.style.cursor = 'pointer';
-                    gEl.style.transition = 'filter 0.2s ease';
-
-                    /* áp màu pastel lên mọi shape bên trong g.node */
-                    var c = _palette[_nodeIdx % _palette.length];
-                    _nodeIdx++;
-
-                    gEl.querySelectorAll('rect, circle, polygon, ellipse, path').forEach(function(shape) {
-                        /* bỏ qua path là edge (nằm trong .edgePath) */
-                        if (shape.closest('.edgePath')) return;
-                        /* Xóa inline style cũ + set trực tiếp fill/stroke để thắng
-                           mọi CSS rule của Mermaid (kể cả !important) */
-                        shape.removeAttribute('style');
-                        shape.setAttribute('fill', c.bg);
-                        shape.setAttribute('stroke', c.border);
-                        shape.setAttribute('stroke-width', '2');
-                        if (shape.tagName.toLowerCase() === 'rect') {
-                            shape.setAttribute('rx', '10');
-                            shape.setAttribute('ry', '10');
-                        }
-                    });
-                    /* SVG text elements */
-                    gEl.querySelectorAll('text, tspan').forEach(function(t) {
-                        t.removeAttribute('style');
-                        t.setAttribute('fill', c.text);
-                        t.setAttribute('font-weight', '600');
-                        t.setAttribute('font-size', '13');
-                        t.setAttribute('font-family', '"Fira Code", "Consolas", monospace');
-                    });
-                    /* HTML-based foreignObject labels */
-                    gEl.querySelectorAll('.nodeLabel, .nodeLabel span, .nodeLabel p, foreignObject div, foreignObject span, foreignObject p').forEach(function(el) {
-                        el.removeAttribute('style');
-                        el.style.color = c.text;
-                        el.style.fontWeight = '600';
-                        el.style.fontSize = '13px';
-                        el.style.fontFamily = "'Fira Code', 'Consolas', monospace";
-                    });
-                    /* Set CSS variable trên g.node để bất kỳ CSS rule nào cũng
-                       có thể dùng — fallback cho trường hợp Mermaid render element lạ */
-                    gEl.style.setProperty('--rm-node-bg', c.bg);
-                    gEl.style.setProperty('--rm-node-border', c.border);
-                    gEl.style.setProperty('--rm-node-text', c.text);
-
-                    var glowOn  = 'drop-shadow(0 0 6px ' + c.border + ') drop-shadow(0 0 14px ' + c.border + '80)';
-                    var glowOff = 'none';
-                    gEl.addEventListener('mouseenter', function() { gEl.style.filter = glowOn; });
-                    gEl.addEventListener('mouseleave', function() { gEl.style.filter = glowOff; });
-
-                    gEl.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        var m = gEl.id.match(/rm_[bpc]?\d+/);
-                        if (!m) return;
-                        var nodeId = m[0];
-                        var node = roadmap.nodes && roadmap.nodes[nodeId];
-                        if (!node) return;
-                        var sidebarTitle   = document.getElementById('sidebar-title');
-                        var sidebarContent = document.getElementById('sidebar-content');
-                        var sidebarDetail  = document.getElementById('sidebar-detail');
-                        var sidebarBackdrop = document.getElementById('sidebar-backdrop');
-                        if (!sidebarDetail) return;
-                        if (sidebarTitle)   sidebarTitle.textContent = node.title;
-                        if (sidebarContent) sidebarContent.innerHTML  = node.desc;
-                        /* Reset scroll về đầu để user thấy title ngay */
-                        sidebarDetail.scrollTop = 0;
-                        sidebarDetail.classList.add('open');
-                        if (sidebarBackdrop) sidebarBackdrop.classList.add('open');
-                        document.body.classList.add('rm-sidebar-open');
-                    });
-
-                    /* Fix click ở giữa block: ép text/foreignObject capture events.
-                       KHÔNG thêm rect overlay nữa — nó hiện thành bảng trắng trên
-                       browser mobile. */
-                    gEl.querySelectorAll('text, tspan').forEach(function(t) {
-                        t.style.pointerEvents = 'all';
-                        t.style.cursor = 'pointer';
-                    });
-                    gEl.querySelectorAll('foreignObject').forEach(function(fo) {
-                        fo.style.pointerEvents = 'all';
-                        fo.style.cursor = 'pointer';
-                        try {
-                            var inner = fo.querySelectorAll('*');
-                            for (var i = 0; i < inner.length; i++) {
-                                inner[i].style.pointerEvents = 'all';
-                                inner[i].style.cursor = 'pointer';
-                            }
-                        } catch (e) {}
-                    });
-                });
-
-                /* màu đường nối */
-                svgEl.querySelectorAll('.edgePath path, .flowchart-link').forEach(function(p) {
-                    p.setAttribute('stroke', _isDark ? '#475569' : '#94A3B8');
-                    p.setAttribute('stroke-width', '2');
-                });
-                svgEl.querySelectorAll('marker path, marker polygon').forEach(function(m) {
-                    m.setAttribute('fill', _isDark ? '#475569' : '#94A3B8');
-                });
-
-                if (typeof svgPanZoom !== 'undefined') {
-                    svgPanZoom(svgEl, {
-                        zoomEnabled: true,
-                        controlIconsEnabled: true,
-                        fit: true,
-                        center: true,
-                        minZoom: 0.2,
-                        maxZoom: 4,
-                        panEnabled: true,
-                        preventMouseEventsDefault: false,
-                    });
-                }
-
-                /* Helper: tìm node group từ 1 điểm (x, y) trên viewport.
-                   1. Thử elementFromPoint + closest g.node trước (rẻ, đúng cho
-                      click trúng rect/text).
-                   2. Nếu không trúng (click vào khoảng trống trong block) →
-                      quét getBoundingClientRect() của tất cả g.node để tìm
-                      node nào chứa điểm đó. */
-                function findNodeFromPoint(x, y) {
-                    var el = document.elementFromPoint(x, y);
-                    if (el) {
-                        var g = el.closest && el.closest('g.node, g[class*="node"]');
-                        if (g) return g;
-                    }
-                    /* Fallback: quét bounding rect của từng node group */
-                    var nodes = svgEl.querySelectorAll('g.node, g[class*="node"]');
-                    for (var i = 0; i < nodes.length; i++) {
-                        var r = nodes[i].getBoundingClientRect();
-                        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-                            return nodes[i];
-                        }
-                    }
-                    return null;
-                }
-
-                /* Click handler trên SVG: xử lý click vào KHOẢNG TRỐNG trong
-                   block. Click trúng rect/text vẫn được g.node bắt trước (và
-                   stopPropagation), nên handler này chỉ chạy khi click rơi ra
-                   ngoài element con của g.node. */
-                svgEl.addEventListener('click', function(e) {
-                    var nodeG = findNodeFromPoint(e.clientX, e.clientY);
-                    if (!nodeG) return;
-                    /* Click trúng rect/text thì g.node đã xử lý rồi (stopPropagation
-                       chặn bubble). Check e.target để tránh mở lại lần 2. */
-                    if (e.target.closest && e.target.closest('g.node, g[class*="node"]') === nodeG) return;
-                    nodeG.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                });
-
-                /* Mobile: svgPanZoom nuốt touch events → node click không hoạt động.
-                   Dùng touchend ngắn (< 300ms, di < 10px) để giả lập click trên node. */
-                (function() {
-                    var _tStart = null;
-                    svgEl.addEventListener('touchstart', function(e) {
-                        if (e.touches.length === 1) {
-                            _tStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
-                        } else {
-                            _tStart = null;
-                        }
-                    }, { passive: true });
-                    svgEl.addEventListener('touchend', function(e) {
-                        if (!_tStart) return;
-                        var touch = e.changedTouches[0];
-                        var dx = Math.abs(touch.clientX - _tStart.x);
-                        var dy = Math.abs(touch.clientY - _tStart.y);
-                        var dt = Date.now() - _tStart.t;
-                        _tStart = null;
-                        if (dx > 10 || dy > 10 || dt > 300) return;
-                        /* Dùng findNodeFromPoint (có fallback getBoundingClientRect)
-                           để bắt cả touch vào khoảng trống trong block */
-                        var nodeG = findNodeFromPoint(touch.clientX, touch.clientY);
-                        if (nodeG) {
-                            e.preventDefault();
-                            nodeG.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                        }
-                    });
-                })();
-            }
-        }).catch(function(err) {
-            wrap.innerHTML = '<div class="rm-loading"><div style="font-size:32px">⚠️</div><div class="rm-loading-text" style="color:#EF4444">Không tải được sơ đồ. Vui lòng thử lại.</div></div>';
-            console.error('Mermaid render error:', err);
-        });
-    }, 0);
-}
-
-function loadEduRoadmaps() {
-    return fetch(API + '/roadmaps')
-        .then(handleFetch)
-        .then(function(data) {
-            if (!Array.isArray(data) || !data.length) {
-                console.warn('loadEduRoadmaps: empty or non-array response', data);
-                return;
-            }
-            _eduRoadmaps = data;
-            window.currentEduRoadmap = data[0].id;
-            renderEduRoadmapTabs();
-        })
-        .catch(function(err) {
-            console.error('loadEduRoadmaps:', err);
-            var wrap = document.getElementById('roadmap-mermaid-wrap');
-            if (wrap) wrap.innerHTML = '<div style="color:#EF4444;padding:40px;text-align:center;font-size:14px;">Không tải được lộ trình. Vui lòng thử lại.</div>';
-        });
-}
-
 window.closeSidebar = function() {
     var sd = document.getElementById('sidebar-detail');
     var bd = document.getElementById('sidebar-backdrop');
@@ -517,14 +215,80 @@ function _rmVToMermaid() {
 
 function _rmVFromMermaid(mdef) {
     var m = mdef && mdef.match(/%% VDATA:(.+)$/m);
-    if (!m) return false;
-    try {
-        var d = JSON.parse(m[1]);
-        _rmV.nodes  = d.nodes  || [];
-        _rmV.edges  = d.edges  || [];
-        _rmV.nextId = d.nextId || (_rmV.nodes.length + 1);
-        return true;
-    } catch(e) { return false; }
+    if (m) {
+        try {
+            var d = JSON.parse(m[1]);
+            _rmV.nodes  = d.nodes  || [];
+            _rmV.edges  = d.edges  || [];
+            _rmV.nextId = d.nextId || (_rmV.nodes.length + 1);
+            return true;
+        } catch(e) { /* rơi xuống parser mermaid thường */ }
+    }
+    // Không có VDATA (vd: lộ trình sinh từ template) -> parse mermaid flowchart thường
+    return _rmVFromPlainMermaid(mdef);
+}
+
+/* Parse mermaid flowchart cơ bản (node defs + cạnh) và tự sắp xếp toạ độ.
+   Dùng cho lộ trình 'generated' được sao chép từ template (không kèm VDATA). */
+function _rmVFromPlainMermaid(mdef) {
+    if (!mdef) return false;
+    var lines = String(mdef).split('\n');
+    var nodes = {};         // id -> { id, label }
+    var order = [];         // giữ thứ tự khai báo
+    var edges = [];
+    var nodeDefRe = /^\s*([A-Za-z0-9_]+)\s*\[\s*"?([^"\]]*)"?\s*\]\s*$/;
+    var edgeRe    = /^\s*([A-Za-z0-9_]+)\s*-->\s*([A-Za-z0-9_]+)\s*$/;
+
+    function ensure(id, label) {
+        if (!nodes[id]) { nodes[id] = { id: id, label: label || id }; order.push(id); }
+        else if (label) { nodes[id].label = label; }
+    }
+
+    lines.forEach(function(raw) {
+        var line = raw.trim();
+        if (!line || /^flowchart/i.test(line) || line.indexOf('%%') === 0) return;
+        var em = line.match(edgeRe);
+        if (em) { ensure(em[1]); ensure(em[2]); edges.push({ from: em[1], to: em[2] }); return; }
+        var nm = line.match(nodeDefRe);
+        if (nm) { ensure(nm[1], nm[2].trim()); }
+    });
+
+    if (!order.length) return false;
+
+    // Tính độ sâu (longest-path) để xếp tầng theo chiều dọc
+    var depth = {}, adj = {};
+    order.forEach(function(id){ depth[id] = 0; adj[id] = []; });
+    edges.forEach(function(e){ if (adj[e.from]) adj[e.from].push(e.to); });
+    // lặp đến hội tụ (đồ thị nhỏ, DAG)
+    for (var pass = 0; pass < order.length; pass++) {
+        var changed = false;
+        edges.forEach(function(e){
+            if (depth[e.to] < depth[e.from] + 1) { depth[e.to] = depth[e.from] + 1; changed = true; }
+        });
+        if (!changed) break;
+    }
+
+    var byDepth = {};
+    order.forEach(function(id){ (byDepth[depth[id]] = byDepth[depth[id]] || []).push(id); });
+
+    var COL_GAP = 210, ROW_GAP = 130, X0 = 240, Y0 = 80;
+    var ci = 0;
+    _rmV.nodes = [];
+    Object.keys(byDepth).map(Number).sort(function(a,b){return a-b;}).forEach(function(d){
+        var ids = byDepth[d];
+        ids.forEach(function(id, i){
+            _rmV.nodes.push({
+                id: id,
+                x: X0 + (i - (ids.length - 1) / 2) * COL_GAP,
+                y: Y0 + d * ROW_GAP,
+                label: nodes[id].label,
+                color: (ci++) % _RMV_COLORS
+            });
+        });
+    });
+    _rmV.edges  = edges;
+    _rmV.nextId = order.length + 1;
+    return true;
 }
 
 /* ── Render ── */
@@ -900,6 +664,20 @@ function handleFetch(r) {
 }
 
 /* ── Navigation ── */
+function _updateNavUnderline(activeBtn) {
+  var line = document.getElementById("nav-underline");
+  var nav = document.getElementById("topbar-nav");
+  if (!line || !nav || !activeBtn) return;
+  var navRect = nav.getBoundingClientRect();
+  var btnRect = activeBtn.getBoundingClientRect();
+  line.style.left = (btnRect.left - navRect.left) + "px";
+  line.style.width = btnRect.width + "px";
+}
+window.addEventListener("resize", function () {
+  var active = document.querySelector(".nav-btn.active");
+  if (active) _updateNavUnderline(active);
+});
+
 function navigate(page) {
   /* Đóng panel chi tiết roadmap (nếu đang mở) để tránh kẹt body scroll + UI lỗi */
   try { closeSidebar(); } catch (_) {}
@@ -928,6 +706,8 @@ function navigate(page) {
 
   var titleEl = document.getElementById("topbar-title");
   if (titleEl) titleEl.textContent = pageLabels[page] || "Dashboard";
+
+  _updateNavUnderline(active);
 
   // Hiện search bar topbar ở Dashboard và Khóa học
   var sw = document.getElementById("search-wrap");
@@ -1025,6 +805,9 @@ function renderCourses() {
 
   filtered = sortCourses(filtered);
 
+  var sub = document.getElementById("courses-count-sub");
+  if (sub) sub.textContent = courses.length + " khóa học có sẵn";
+
   if (!filtered.length) {
     grid.innerHTML = "";
     empty.classList.remove("hidden");
@@ -1033,11 +816,9 @@ function renderCourses() {
   empty.classList.add("hidden");
 
   grid.innerHTML = filtered
-    .map(function (c) {
+    .map(function (c, i) {
       return [
-        '<div class="course-card" onmouseenter="hoverCard(this,\'' +
-          c.color +
-          '\')" onmouseleave="unhoverCard(this)">',
+        '<div class="course-card fx-fade-up" style="animation-delay:' + Math.min(i * 0.05, 0.4) + 's">',
         '<div class="card-img-wrap" style="cursor:pointer" onclick="window.location=\'/courses/' + c.id + '\'">',
         '<img src="/' + c.image + '" alt="' + c.title + '" loading="lazy" />',
         '<div class="card-overlay"></div>',
@@ -1048,7 +829,7 @@ function renderCourses() {
           ')">' +
           c.level +
           "</div>",
-        c.enrolled ? '<div class="badge-enrolled">Đã đăng ký</div>' : "",
+        c.enrolled ? '<div class="badge-enrolled"><span data-icon="check" data-size="11"></span> Đã đăng ký</div>' : "",
         '<div class="card-title-overlay">',
         '<div class="card-tag">' + c.tag + "</div>",
         "<h3>" + c.title + "</h3>",
@@ -1057,62 +838,21 @@ function renderCourses() {
         '<div class="card-body">',
         '<div class="card-desc">' + c.description + "</div>",
         '<div class="card-stats">',
-        '<span class="card-stat">⏱ ' + c.duration + "</span>",
-        '<span class="card-stat">👥 ' + c.students + "</span>",
-        '<span class="card-stat"><span class="star">★</span> <span class="rating">' +
-          c.rating +
-          "</span></span>",
+        '<span class="card-stat"><span data-icon="star" data-size="11" data-color="#F59E0B" style="display:inline-flex"></span> <span class="rating">' + c.rating + "</span></span>",
+        '<span class="card-stat"><span data-icon="users" data-size="11" style="display:inline-flex"></span> ' + c.students + "</span>",
+        '<span class="card-stat"><span data-icon="clock" data-size="11" style="display:inline-flex"></span> ' + c.duration + "</span>",
+        '<span class="card-stat"><span data-icon="book-open" data-size="11" style="display:inline-flex"></span> ' + c.lessons + "</span>",
         "</div>",
         '<div class="card-footer">',
-        '<span class="card-lessons">📖 ' + c.lessons + " bài học</span>",
+        '<span class="card-level-pill">' + c.level + "</span>",
+        '<div class="card-footer-spacer"></div>',
+        '<button class="card-btn-ghost" onclick="window.location=\'/courses/' + c.id + '\'">Học thử</button>',
         (function () {
-          var detailBtn =
-            '<button onclick="window.location=\'/courses/' + c.id + '\'"' +
-            ' style="height:34px;padding:0 12px;border-radius:10px;border:1px solid #E5E7EB;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#6B7280;transition:all 0.2s;white-space:nowrap;flex-shrink:0"' +
-            " onmouseenter=\"this.style.background='#F3F4F6';this.style.color='#1F2937'\"" +
-            " onmouseleave=\"this.style.background='none';this.style.color='#6B7280'\">Chi tiết</button>";
           if (c.enrolled) {
             var goUrl = COURSE_URLS[c.id] || "#";
-            return (
-              '<div style="display:flex;align-items:center;gap:6px">' +
-              detailBtn +
-              '<button class="cta-btn"' +
-              " onclick=\"window.location='" +
-              goUrl +
-              "'\"" +
-              " onmouseenter=\"ctaHover(this,'" +
-              c.color +
-              "','" +
-              c.accentColor +
-              "')\"" +
-              ' onmouseleave="ctaLeave(this)">Tiếp tục học →</button>' +
-              '<button title="Hủy đăng ký"' +
-              " onclick=\"unenroll('" +
-              c.id +
-              "','" +
-              c.title.replace(/'/g, "\\'") +
-              "')\"" +
-              ' style="width:34px;height:34px;border-radius:10px;border:1px solid #E5E7EB;background:none;cursor:pointer;font-size:14px;color:#9CA3AF;transition:all 0.2s;flex-shrink:0"' +
-              " onmouseenter=\"this.style.background='#FEF2F2';this.style.borderColor='#FCA5A5';this.style.color='#EF4444'\"" +
-              " onmouseleave=\"this.style.background='none';this.style.borderColor='#E5E7EB';this.style.color='#9CA3AF'\">✕</button>" +
-              "</div>"
-            );
+            return '<button class="card-btn-enrolled" onclick="window.location=\'' + goUrl + '\'"><span data-icon="check" data-size="12"></span> Đã đăng ký</button>';
           }
-          return (
-            '<div style="display:flex;align-items:center;gap:6px">' +
-            detailBtn +
-            '<button class="cta-btn"' +
-            " onclick=\"toggleEnroll('" +
-            c.id +
-            "',false)\"" +
-            " onmouseenter=\"ctaHover(this,'" +
-            c.color +
-            "','" +
-            c.accentColor +
-            "')\"" +
-            ' onmouseleave="ctaLeave(this)">Đăng ký →</button>' +
-            "</div>"
-          );
+          return '<button class="card-btn-enroll" onclick="toggleEnroll(\'' + c.id + '\',false)">Đăng ký</button>';
         })(),
         "</div>",
         "</div>",
@@ -1120,6 +860,7 @@ function renderCourses() {
       ].join("");
     })
     .join("");
+  if (window.mountIcons) mountIcons(grid);
 }
 
 /* ── My Courses rendering ── */
@@ -1744,6 +1485,11 @@ function loadUser() {
       if (adminBtn) adminBtn.style.display = (u.role === "admin") ? "" : "none";
       setText("banner-name", u.name.split(" ").slice(-1)[0]);
       setText("chip-name", u.name.split(" ").slice(-1)[0]);
+      var _initial = (u.name || "?").trim().charAt(0).toUpperCase();
+      ["chip-avatar", "udh-avatar", "fcb-avatar", "prof-avatar-letter"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = _initial;
+      });
       setText("settings-profile-name", u.name);
       setText("settings-profile-email", u.email);
       setVal("field-name", u.name);
@@ -2001,7 +1747,6 @@ function loadAll() {
   loadStats();
   loadCoursesAndEnrolled();
   loadNotifications();
-  loadEduRoadmaps();
 }
 
 
@@ -2054,17 +1799,6 @@ function toggleTheme() {
   var isDark = !document.body.classList.contains("dark");
   applyTheme(isDark);
   localStorage.setItem("theme", isDark ? "dark" : "light");
-  if (typeof mermaid !== 'undefined') {
-    mermaid.initialize(Object.assign({
-      startOnLoad: false,
-      securityLevel: 'strict',
-      suppressErrors: true,
-    }, _getMermaidTheme()));
-    _roadmapRenderedId = null;
-    if (window.currentEduRoadmap && window.currentEduRoadmap !== 'personal') {
-      renderEduInteractiveRoadmap();
-    }
-  }
 }
 
 function initDragDrop() {
@@ -2139,6 +1873,9 @@ document.addEventListener("DOMContentLoaded", function () {
   var validPages = ['dashboard', 'courses', 'roadmap', 'skills', 'forum', 'settings'];
   if (hash && validPages.includes(hash)) {
     navigate(hash);
+  } else {
+    var initActive = document.querySelector(".nav-btn.active");
+    if (initActive) _updateNavUnderline(initActive);
   }
 });
 
