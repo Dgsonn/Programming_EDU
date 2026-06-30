@@ -376,3 +376,119 @@ Phân tích chi tiết (từ Claude council review):
 
 **Report:** D:\PE_test\docs\B_FIX_2F_2026-06-30.md (full 5.4KB, 8 sections)
 **Screenshots:** D:\PE_test\screenshots\2f\ (12 PNG, ~3MB total: step1/step3 × 3 bài × 2 viewports)
+
+### 2026-06-30: 2g-curr — Content 20 bài + renumber 18→20 (CURRENT)
+
+**Plan v51 (user + Claude council):** Tách App Design ra C3 riêng + chèn M:N explicit ở C2b → 18 → 20 bài.
+- M1: 6 → 7 (chèn C2b db_19 M:N junction)
+- M2: 7 → 7 (giữ)
+- M3: 5 → 6 (tách Web Services ra db_20 riêng)
+
+**2 commits atomic:**
+
+#### Commit 1 — 3a2f5e Content append
+- static/js/lesson_content.js +371: thêm db_19 (M:N theme player↔game qua library junction) + db_20 (Web Services REST/AJAX theme game_catalog API)
+- static/js/lesson_db_design.js +67: handler mới cho db_19/20 + bug_spot cho db_19
+- db_05 Weak Entity relabel: Loan → game, Loan_Payment → dlc_content, payment_no → dlc_no (đồng bộ theme "game store" xuyên M1)
+- index field: db_19=5, db_20=18 (logical — array order chưa khớp, fix Commit 2)
+- HERO_SVG: db_19 copy db_04 + relabel, db_20 NEW flow 4-node cyan
+
+#### Commit 2 — 34c494a Atomic renumber
+- Reorder CURRICULA['db_design'].lessons array per v51: M1(7) / M2(7) / M3(6)
+- Sweep '18' → '20' ở 5 templates: landing.html / login.html / register.html / dashboard.html / course_db_design.html
+- JS guards update: lessonNum === 20 (graduation thay vì 18) + === 7 || === 14 (trophy đúng bài M1/M2 cuối)
+- Achievement block data-driven auto-hide khi đạt bài 20
+
+**Verify:**
+- 
+ode -c pass: lesson_content.js, lesson_db_design.js, course_db_design.js
+- st.parse pass: outes/main.py
+- Smoke render ?lesson=5,19,20 → 0 console error (ngoài favicon 404 pre-existing)
+- Screenshot Bài 5/6/18 acceptance **DEFERRED** — Flask cooldown rate-limit (429), chạy follow-up
+
+**Known issues / follow-up:**
+1. Screenshot acceptance Bài 5/6/18 — Flask cooldown rồi chạy lại
+2. CURRICULUM_CONTENT_2026-06-30.md + HERO_DESIGN_SYSTEM_2026-06-30.md WIP, chưa commit
+3. SYSTEM_INSTRUCTIONS_FINAL.md LEAN pass (v43+) đã làm working tree, chưa commit (~ -300 dòng thừa)
+4. **Autonomous redesign CSS Phase B/C** (login/register split 50/50 + dashboard welcome-banner) — đã có từ 2026-06-28, chưa commit + chưa screenshot acceptance. HTML templates đã reference classes (auth-split, brand-canvas, welcome-banner) nhưng CSS chưa verify end-to-end — **cần smoke screenshot session dedicated trước commit**
+
+**Pattern learned (atomic renumber):**
+- Content trước → renumber sau: commit 1 có content ổn định + id (db_19, db_20) cố định, KHÔNG đụng index hiển thị. Commit 2 reorder array + sweep literals. Tách thành 2 commit tránh half-state (có content db_20 nhưng landing vẫn "18 bài").
+- JS guard sweep phải update CẢ === 20 (graduation) + === 7 || === 14 (trophy bài M1/M2 cuối). Quên cái nào → UX regression.
+- Achievement block auto-hide data-driven tốt hơn hardcode — đỡ phải nhớ guard.
+
+**Report:** D:\PE_test\docs\B_FIX_2G_CURR_2026-06-30.md (full 10.3KB, 6 sections)
+**Screenshots:** D:\PE_test\screenshots\2g\commit1_lesson{05,19,20}_*.png (commit 1 only — commit 2 acceptance deferred)
+
+
+### 2026-07-01: PHASE 3.5a — Step-4 UX polish (R1) — SHIP ✅
+
+**Source:** `docs/SYSTEM_INSTRUCTIONS_FINAL.md` v53 §A (LESSON-UX POLISH) + `docs/LESSON_TABLE_DATA_2026-06-30.md` (council đã soạn đủ 20 bài).
+
+**Quyết định trước execute (4 câu hỏi popup):**
+- Phasing = **2 reports** (R1=Step-4, R2=Step-3). User lý do: "step-3 map có lịch sử lặp rất nhiều (2c→2d→2e→2f→2g, bạn reject nhiều lần vì 'trẻ con/bó/lỗi'). Nếu gộp 1 batch, map sai = kéo kẹt cả step-4 (vốn low-risk, gần như chắc pass). Tách ra → step-4 ship sạch, map cứ iterate riêng."
+- A2 scope = **Pilot Bài 1 → duyệt → roll theo NHÓM** (LỌC / JOIN / AGG / ĐẶC BIỆT) — verify query sau mỗi nhóm. User: "Pilot 1 là đủ rồi verify-per-group — rủi ro thật ở JOIN/AGG, pilot 5 bài LỌC không chứng minh thêm gì."
+- A1 = **GIỮ data s4.context.example**, chỉ tắt render block ctx.example (backward-safe)
+- Bài 6 reconcile = **sửa expected-text khớp data** (council chốt luôn, không hỏi lại). Text mới: "Blood and Wine — DLC #2 của game 300."
+
+**Shipped (4 parts LOCAL commit only, no push):**
+
+**A1 — Bỏ "Ví dụ tương tự"** (lesson_db_design.js:2800-2807):
+- Comment out block `if (ctx.example)` rendering — chỉ tắt render, KHÔNG xóa data `s4.context.example` (giữ 20 bài backward-safe)
+- Verified visually: cột trái chỉ BỐI CẢNH + CÁC BƯỚC + KẾT QUẢ MONG ĐỢI — không còn block 📚
+
+**A2 — Data 20-30 dòng × 20 bài × 3 nơi** (lesson_content.js: +1664/-104):
+- Pilot Bài 1: 24 rows game_catalog (giữ Elden Ring 101/104 + Hollow Knight 106/114 = 2 cặp PK trùng tên để dạy PK uniqueness)
+- LỌC: Bài 2=22, Bài 5=24, Bài 18=24 (Bài 6 đã reconcile ở §5.1)
+- JOIN: Bài 3=22 game + 6 publisher, Bài 4=14 player + 24 library + 12 game, Bài 7=22 game + 6 publisher (FK integrity verified)
+- AGG: Bài 8=22 game_studio_combined, Bài 9=20 student_raw (multivalued phones, 1NF vi phạm preserved), Bài 10=22 book_loan_raw (partial-dep preserved), Bài 11=22 orders + 8 products (columns added `price`+`order_date`), Bài 12=22 treatments + 6 doctors, Bài 13=11+11 course_textbook (Cartesian ĐỦ — không thiếu cặp, 4NF vi phạm preserved), Bài 14=22 users + 28 posts
+- ĐẶC BIỆT: Bài 15=22 app_users JSONB, Bài 16=22 shop_branches geo, Bài 17=22 log_events, Bài 19=22 user_accounts, Bài 20=24 security_users_vault
+
+**A3 — PK trùng tên preserved:**
+- Bài 1: Elden Ring 101/104 (id khác, tên giống) + Hollow Knight 106/114 = 2 cặp dup
+- Không dedupe bất kỳ bài nào
+
+**A4 — Scroll cap .results-table** (lesson_db_design.css:3065):
+- `max-height: 360px` + comment. Verify: Bài 1 SELECT * → 24 dòng × 4 cột, scrollHeight 717 > 360 → scroll trong panel, .results-pane bottom 828 trong viewport 900 → không đè footer.
+
+**Verify metrics:**
+- node -c pass: lesson_content.js (363KB), lesson_db_design.js (230KB), drag_game.js (55KB unchanged)
+- CSS 253,125 B / 275,000 B (headroom 21,875 B), !important 23/24, backdrop-filter 6/6
+- 20/20 bài fetch HTTP 200
+- Bài 1 PILOT pass: `WHERE id=101` → 1 row (Elden Ring, 60) — khớp đáp án
+- Bài 5 pass: `WHERE player_id=7` → 2 rows (101, 103)
+- Bài 18 pass: `WHERE genre='Action'` → 4 rows (God of War 50, Ragnarok 60, Sekiro 50, Red Dead 2 60)
+- 8 screenshots @960+@1600 (Bài 1/5/6/18) — `screenshots/3.5a/{b1,b5,b6,b18}_{960,1600}.png`
+
+**Deviations (§2 report) — đã flag trong R1:**
+1. **Bài 6 (db_05) column drop:** xóa cột `dlc_id` stale (theme M:N cũ từ 2g-curr relabel) khỏi step_4.schema.columns. 3 cols mới khớp LESSON_TABLE_DATA §Bài 6 + step_1 visual.schema. Vi phạm §A2 rule 6 ("không đụng columns") nhưng cần để đồng bộ.
+2. **Bài 11 (db_11) columns add:** thêm `price` (DECIMAL) + `order_date` vào orders. Cần để engine WHERE/SUM đúng với 3NF demo `SUM(o.qty * p.price)`. Vi phạm rule 6 nhưng LESSON_TABLE_DATA chỉ định 5 cột.
+3. **Bài 10 (db_09) asymmetric schemas:** drag_map giữ 4 cols (BEFORE-2NF với member_name), data_preview 5 cols (AFTER-2NF với member_id FK). Cố ý để demo partial dependency. drag_map.dataRows update từ LESSON_TABLE_DATA 4-col spec.
+
+**Pre-existing engine bug (§5.1 — flag follow-up, out of scope R1):**
+- `parseWhereRows` tại `drag_game.js:1021-1036` chỉ regex match 1 condition `(\w+)\s*=\s*(...)`. KHÔNG loop qua AND/OR.
+- Test Bài 6 step_4: `WHERE dlc_no=2 AND ref_game_id=300` → trả 7 rows (tất cả dòng có `dlc_no=2`) thay vì 1 row. KHÔNG phải data issue.
+- Workaround hiện tại: dùng single-condition WHERE (Bài 6 vẫn pass didactic qua reveal_hints "thiếu AND → trả về nhầm DLC").
+- Action: council/engineer fix `parseWhereRows` regex để split AND/OR trong follow-up task.
+
+**Commit (LOCAL only, no push):**
+- `5bc2fc3` — phase3.5a: Step-4 polish — A1+A2+A3+A4 ship + Bài 6 reconcile (Blood and Wine + bỏ cột dlc_id)
+- 4 files: 1274 insertions, 202 deletions
+- docs/B_FIX_3_5A_2026-07-01.md (231 lines, 7 sections §0-§7)
+
+**Lesson learned (reusable):**
+- Pilot-first + per-group verify (user-suggested) tránh được 60 vị trí chèn cùng lúc có lỗi. Pattern này nên dùng cho mọi data roll lớn trong tương lai.
+- Pre-existing engine bug phát hiện được nhờ verify per-group (Bài 6 thuộc LỌC nhóm đầu tiên, AND bug lộ ngay).
+- Cột stale từ theme cũ (db_05 `dlc_id` từ M:N cũ) cần audit khi relabel — flag cho R2 follow-up.
+- Multi-table JOIN (Bài 3, 4, 7, 11, 12, 14) cần update CẢ drag_map.table.dataRows + step_1 visual.data_preview (cho game/publisher) + step_1 visual.related_tables[].data + step_4.schema.data + step_4.related_schemas[].data — nhiều nơi, dễ miss nếu không có checklist. Có thể viết helper script cho lần sau.
+
+**Pending (R2 — Step-3):**
+- §7.4E hint counter progressive button
+- §7.4F panel "Tại sao?" 320px
+- B1 map lấp panel (bỏ khóa vuông `drag_game.js:259-279`)
+- B2 fix node FROM đè (manifest + packet)
+- C1 screenshot Bài 5/6/18 (đã xong R1) + Bài 18 step-3 FLOW verify (C2)
+- Pre-existing engine AND bug fix (nếu council ưu tiên)
+
+**Screenshots:** D:\PE_test\screenshots\3.5a\{b1,b5,b6,b18}_{960,1600}.png (8 files)
+**Report:** D:\PE_test\docs\B_FIX_3_5A_2026-07-01.md
