@@ -1850,6 +1850,28 @@ concept_cards: [
             ['122','Returnal',           'Roguelike', '20']
           ]
         },
+        // PHASE 4A-E1: related_schemas = COPY từ step_1.related_tables (canonical, single source of truth).
+        // Lý do: Bài 7 expected_sql = JOIN publisher, mà step_4 chỉ có 1 bảng game → JOIN ra 0 rows.
+        // Single-source rule: bài nào có bảng phụ ở step_1/step_3 → copy; không bịa data mới.
+        // FK check: pub_id ∈ {10,20,30,40,50,60} = publisher.id (verified Bài 7).
+        // Count check: WHERE publisher.name='Supergiant' (=pub_id=30) → 5 rows (Hades/103, Bastion/105, Transistor/106, Pyre/107, Hades II/108).
+        related_schemas: [
+          {
+            table_name: 'publisher',
+            columns: [
+              { name: 'id',   type: 'INT',     key: 'PK' },
+              { name: 'name', type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['10', 'FromSoftware'],
+              ['20', 'Sony Santa Monica'],
+              ['30', 'Supergiant'],
+              ['40', 'ConcernedApe'],
+              ['50', 'Nintendo'],
+              ['60', 'CD Projekt']
+            ]
+          }
+        ],
         expected_sql: "SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';",
         hints: [
           { level: 1, text: 'Cần 2 cột: <code>title</code> và <code>genre</code>.' },
