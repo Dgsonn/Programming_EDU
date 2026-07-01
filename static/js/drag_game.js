@@ -190,6 +190,125 @@
     'select-line':'#22D3EE','order-line':'#F472B6',
   };
 
+  /* PHASE 3.6-R-B: sinh route SERPENTINE ĐỘNG từ container W×H + station count (thay route hardcode 600×600).
+     - KHO fixed bottom-left, padding đáy chừa chỗ cho PE hub + sublabel "nguồn dữ liệu" (110px).
+     - Stations distributed theo execution order, evenly spaced along serpentine (bottom→top).
+     - ViewBox = actual W×H 1:1, path px = station px tự align KHÔNG distort.
+     - Adapt aspect: container rộng → serpentine ngang; container cao → vẫn bottom→top nhưng compressed Y.
+     - Returns {pathD, fMap, khoPos} để regenerate trên resize. */
+  function computeSerpentineRoute(stations, W, H) {
+    var padX = 50;
+    var padTop = 50;
+    var padBottom = 110;
+    var exec = (stations || []).filter(function(s){ return s.id !== 'start' && s.zone; })
+      .sort(function(a, b){ return EXEC_ORDER.indexOf(a.zone) - EXEC_ORDER.indexOf(b.zone); });
+    var n = exec.length;
+    var khoPos = { x: padX + 40, y: H - padBottom };
+    var positions = [];
+    if (n === 1) {
+      positions.push({ x: W * 0.5, y: H - padBottom });
+    } else if (n === 2) {
+      positions.push({ x: W * 0.30, y: H - padBottom });
+      positions.push({ x: W - padX - 40, y: padTop + 40 });
+    } else if (n === 3) {
+      positions.push({ x: W * 0.30, y: H - padBottom });
+      positions.push({ x: W * 0.55, y: H * 0.50 });
+      positions.push({ x: W - padX - 40, y: padTop + 40 });
+    } else if (n === 4) {
+      positions.push({ x: W * 0.25, y: H - padBottom });
+      positions.push({ x: W * 0.50, y: H * 0.65 });
+      positions.push({ x: W * 0.70, y: H * 0.30 });
+      positions.push({ x: W - padX - 40, y: padTop + 40 });
+    } else {
+      // 5+ stations: evenly distribute bottom→top
+      var yStart = H - padBottom;
+      var yEnd = padTop + 50;
+      for (var i = 0; i < n; i++) {
+        var t = i / (n - 1);
+        positions.push({ x: W * (0.25 + t * 0.50), y: yStart + t * (yEnd - yStart) });
+      }
+    }
+    // Build path with cubic Bezier curves between points (smooth serpentine)
+    var path = ['M ' + khoPos.x + ' ' + khoPos.y];
+    positions.forEach(function(p, i) {
+      var prev = (i === 0) ? khoPos : positions[i - 1];
+      var cpX1 = prev.x + (p.x - prev.x) * 0.5;
+      var cpY1 = prev.y;
+      var cpX2 = p.x - (p.x - prev.x) * 0.5;
+      var cpY2 = p.y;
+      path.push('C ' + cpX1 + ' ' + cpY1 + ', ' + cpX2 + ' ' + cpY2 + ', ' + p.x + ' ' + p.y);
+    });
+    // fMap: KHO at f=0, exec stations evenly along [0,1]
+    var fMap = { 'start': 0 };
+    exec.forEach(function(s, i) { fMap[s.zone] = (i + 1) / n; });
+    return { pathD: path.join(' '), fMap: fMap, khoPos: khoPos, positions: positions };
+  }
+
+  /* PHASE 3.6-R-B: regenerate route + positions on container resize (and initial mount).
+     - Đo mapEl W×H
+     - Set SVG viewBox = "0 0 W H" (1:1, no stretch)
+     - Compute pathD via serpentine, update 3 path elements
+     - Update bgDots positions proportionally (decorative)
+     - Re-place stations + truck via getPointAtLength on new path (px = viewBox unit)
+     - Re-position PE hub overlay HTML at khoPos */
+  function regenerateRoute() {
+    var mapEl = trackEl && trackEl.querySelector('.town-map');
+    if (!mapEl) return;
+    var r = mapEl.getBoundingClientRect();
+    var W = r.width, H = r.height;
+    if (W < 50 || H < 50) return; // too small / not measured yet
+
+    var computed = computeSerpentineRoute(activeStations, W, H);
+
+    // 1. SVG viewBox = actual W×H (1:1, no distortion)
+    var svgEl = mapEl.querySelector('.town-svg');
+    if (svgEl) svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+    // 2. Update 3 path elements (shadow, route, flow) with new pathD
+    var paths = mapEl.querySelectorAll('.town-route-shadow, .town-route, .town-route-flow');
+    paths.forEach(function(p) { p.setAttribute('d', computed.pathD); });
+
+    // 3. Update bgDots positions proportionally (decorative, kept at 600-based ratios)
+    var bgDots = mapEl.querySelectorAll('.bgnode');
+    var dotsOrig = [[92,180],[510,150],[120,470],[500,430],[470,540],[70,330],[380,60],[220,75]];
+    bgDots.forEach(function(c, i) {
+      if (!dotsOrig[i]) return;
+      c.setAttribute('cx', dotsOrig[i][0] / 600 * W);
+      c.setAttribute('cy', dotsOrig[i][1] / 600 * H);
+    });
+
+    // 4. Update PE hub overlay position (px relative to mapEl)
+    var peHubEl = mapEl.querySelector('[data-pe-hub]');
+    if (peHubEl) {
+      peHubEl.style.left = computed.khoPos.x + 'px';
+      peHubEl.style.top = computed.khoPos.y + 'px';
+    }
+
+    // 5. Re-place stations (fMap từ computed) via getPointAtLength
+    var route = mapEl.querySelector('.town-route');
+    if (route) {
+      var total = route.getTotalLength();
+      activeStations.forEach(function(s) {
+        var el = mapEl.querySelector('[data-town-station="' + s.id + '"]');
+        if (!el) return;
+        var f = (s.id === 'start') ? 0 : computed.fMap[s.zone || s.id];
+        if (f === undefined) f = activeStations.indexOf(s) / Math.max(1, activeStations.length - 1);
+        var p = route.getPointAtLength(Math.max(0, Math.min(1, f)) * total);
+        el.style.left = p.x + 'px';
+        el.style.top = p.y + 'px';
+      });
+    }
+
+    // 6. Re-position truck at f=0 (KHO)
+    var truckElLocal = mapEl.querySelector('[data-town-truck]');
+    if (truckElLocal && route) {
+      var startP = route.getPointAtLength(0);
+      truckElLocal.style.left = startP.x + 'px';
+      truckElLocal.style.top = startP.y + 'px';
+      currentTruckF = 0;
+    }
+  }
+
   function buildTownMapHTML(activeStations, table) {
     var routeD = 'M 110 525 L 110 460 Q 110 445 125 445 L 240 445 Q 255 445 255 430 L 255 360 Q 255 345 270 345 L 395 345 Q 410 345 410 330 L 410 250 Q 410 235 425 235 L 510 235 Q 525 235 525 220 L 525 130 Q 525 115 510 115 L 305 115 Q 290 115 290 100 L 290 70';
     var bgDots = [[92,180,3],[510,150,3],[120,470,3],[500,430,3],[470,540,3],[70,330,3],[380,60,3],[220,75,3]].map(function(d){return '<circle class="bgnode" cx="'+d[0]+'" cy="'+d[1]+'" r="'+d[2]+'"/>';}).join('');
@@ -247,10 +366,10 @@
       var f = fMap[s.id === 'start' ? 'start' : (s.zone || s.id)];
       if (f === undefined) f = activeStations.indexOf(s) / Math.max(1, activeStations.length - 1);
       var p = route.getPointAtLength(Math.max(0, Math.min(1, f)) * total);
-      /* PHASE 3.5b-B1: % position thay vì px — viewBox 600×600 + preserveAspectRatio="none" stretch SVG theo container,
-         nên station cần % để bám route đã stretch. p.x/600*100 = % của container width, tương tự cho p.y. */
-      el.style.left = (p.x / 600 * 100) + '%';
-      el.style.top = (p.y / 600 * 100) + '%';
+      /* PHASE 3.6-R-B: viewBox = "0 0 W H" (dynamic, 1:1 với container px) → p.x/p.y từ getPointAtLength
+         = viewBox units = container px trực tiếp. KHÔNG cần convert % nữa. */
+      el.style.left = p.x + 'px';
+      el.style.top = p.y + 'px';
     });
   }
 
@@ -270,8 +389,9 @@
        KHÔNG set pixel size ở đây — để CSS lo (width/height:100% trên .town-map). */
     var sizeMapToParent = function() {
       if (!mapEl) return;
-      /* Re-place stations nếu route đã tính lại (defensive — trường hợp resize làm viewBox scale đổi) */
-      if (typeof placeStationsOnPath === 'function') placeStationsOnPath();
+      /* PHASE 3.6-R-B: regenerate route + positions on resize (thay vì chỉ re-place stations).
+         Đo mapEl W×H → compute serpentine pathD + fMap → set viewBox, paths, bgDots, peHub, stations, truck. */
+      if (typeof regenerateRoute === 'function') regenerateRoute();
     };
     sizeMapToParent();
     if (typeof ResizeObserver !== 'undefined') {
@@ -284,7 +404,7 @@
     window.__peMapSizer = sizeMapToParent;  /* expose for probe/reset */
 
     /* Position stations ON the path (must happen AFTER innerHTML insert + path in DOM) */
-    placeStationsOnPath();
+    regenerateRoute();
 
     /* stationEls keyed by station id */
     stationEls = {};
@@ -335,9 +455,9 @@
     if (truckEl && routeEl) {
       var total = routeEl.getTotalLength();
       var startP = routeEl.getPointAtLength(0);
-      /* PHASE 3.5b-B1: % position cho truck (cùng logic placeStationsOnPath) */
-      truckEl.style.left = (startP.x / 600 * 100) + '%';
-      truckEl.style.top = (startP.y / 600 * 100) + '%';
+      /* PHASE 3.6-R-B: viewBox = actual W×H 1:1, startP.x/.y = container px trực tiếp */
+      truckEl.style.left = startP.x + 'px';
+      truckEl.style.top = startP.y + 'px';
       truckEl.style.transform = 'translate(-50%, -50%) rotate(0deg)';
       currentTruckF = 0;
       sfxEngine();
@@ -397,8 +517,8 @@
     var p = routeEl.getPointAtLength(f * total);
     var p2 = routeEl.getPointAtLength(Math.min(total, (f + 0.004) * total));
     var angle = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
-truckEl.style.left = (p.x / 600 * 100) + '%';
-      truckEl.style.top = (p.y / 600 * 100) + '%';
+truckEl.style.left = p.x + 'px';
+      truckEl.style.top = p.y + 'px';
       truckEl.style.transform = 'translate(-50%, -50%) rotate(' + angle + 'deg)';
   }
 

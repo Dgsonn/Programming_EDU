@@ -388,7 +388,8 @@ body.lesson-focus-mode::before {
   max-width: 880px;
   width: 100%;
   margin: 0 auto;
-  padding: 48px 32px 80px;
+  /* PHASE 3.6-R-A: clamp padding fluid — min 20px (mobile/narrow), max 48px (wide), 3vw responsive */
+  padding: clamp(20px, 3vw, 48px) clamp(16px, 2vw, 32px) clamp(20px, 3vw, 80px);
 }
 
 .eyebrow-row {
@@ -937,7 +938,8 @@ body.lesson-focus-mode::before {
   max-width: 720px;
   width: 100%;
   margin: 0 auto;
-  padding: 48px 32px 80px;
+  /* PHASE 3.6-R-A: clamp padding fluid */
+  padding: clamp(20px, 3vw, 48px) clamp(16px, 2vw, 32px) clamp(20px, 3vw, 80px);
 }
 
 .mcq-question {
@@ -8055,6 +8057,8 @@ a:focus:not(:focus-visible) {
  * ══════════════════════════════════════════════════════════════════════════ */
 .step3-exercise {
   position: relative;
+  flex: 1;
+  min-height: 0;
   border: 2px solid var(--border-default, rgba(148, 163, 184, 0.18));
   border-radius: 12px;
   background: var(--surface-1);
@@ -9530,10 +9534,10 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   50%     { opacity: 1; }
 }
 
-/* PHASE 3.5b-B1c: PE hub HTML overlay (ngoài town-svg stretch) — % position 18.33% / 82% (was 87.5%, nâng lên để
-   sub text "nguồn dữ liệu" (top:100% = +60px) không clip ở map ngắn). Giữ tròn + "PE" text không méo khi town-svg
-   stretch non-square. z-index 8 (>truck 7) để PE hub luôn nằm trên truck (cùng toạ độ 110,525). */
-.pe-hub-overlay { position: absolute; left: 18.33%; top: 82%; width: 60px; height: 60px;
+/* PHASE 3.6-R-B: PE hub HTML overlay — default left/top 50%/50% (center fallback nếu regenerateRoute fail).
+   regenerateRoute() set px position theo khoPos động (thay vì % hardcode). vẫn z-index 8 (>truck 7),
+   60×60 fixed, transform translate(-50%,-50%) để center tại (khoPos.x, khoPos.y). */
+.pe-hub-overlay { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px;
   transform: translate(-50%, -50%); z-index: 8; pointer-events: none; }
 .pe-hub-outer { position: absolute; inset: 0; border: 2px solid #22D3EE; border-radius: 50%;
   animation: pe-hub-pulse 2.6s ease-in-out infinite;
