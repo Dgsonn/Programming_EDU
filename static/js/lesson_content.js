@@ -2564,9 +2564,13 @@ concept_cards: [
             { name: 'member_name', type: 'VARCHAR', key: '',   icon: '👤' },
             { name: 'join_date',   type: 'DATE',    key: '',   icon: '📅' }
           ],
+          // PHASE 4A-E2: members mở rộng 2→5 (per §DATA-E2 council cấp). Verify: M01=5 loans, M03=4, M02=3, M05=2, M04=1.
           data: [
             ['M01', 'Minh',     '2023-01-15'],
-            ['M02', 'Yuki',     '2023-05-20']
+            ['M02', 'Yuki',     '2023-05-20'],
+            ['M03', 'Sara',     '2023-03-10'],
+            ['M04', 'Alex',     '2023-07-01'],
+            ['M05', 'Nam',      '2023-09-12']
           ]
         },
         related_schemas: [
@@ -2578,11 +2582,17 @@ concept_cards: [
               { name: 'member_id', type: 'INT',  key: 'FK' },
               { name: 'loan_date', type: 'DATE', key: '' }
             ],
+            // PHASE 4A-E2: loans mở rộng 4→15 (per §DATA-E2 council cấp). Single-source: schema step_4 chỉ có ở đây (khác step_1 step_3 là bảng book_loan_raw dạy 2NF violation — KHÔNG sync).
+            // Counts: M01=5, M03=4, M02=3, M05=2, M04=1 → top-3 = Minh(5)/Sara(4)/Yuki(3).
             data: [
-              ['B01', '1', 'M01', '2024-06-01'],
-              ['B01', '2', 'M01', '2024-06-03'],
-              ['B02', '1', 'M02', '2024-06-05'],
-              ['B03', '1', 'M01', '2024-06-07']
+              ['B01', '1', 'M01', '2024-01-05'], ['B02', '1', 'M01', '2024-01-12'],
+              ['B03', '1', 'M01', '2024-02-01'], ['B04', '1', 'M01', '2024-02-15'],
+              ['B05', '1', 'M01', '2024-03-01'], ['B06', '1', 'M03', '2024-01-08'],
+              ['B07', '1', 'M03', '2024-01-20'], ['B08', '1', 'M03', '2024-02-10'],
+              ['B09', '1', 'M03', '2024-03-05'], ['B10', '1', 'M02', '2024-01-15'],
+              ['B11', '1', 'M02', '2024-02-20'], ['B12', '1', 'M02', '2024-03-10'],
+              ['B13', '1', 'M05', '2024-02-05'], ['B14', '1', 'M05', '2024-03-15'],
+              ['B15', '1', 'M04', '2024-01-25']
             ]
           }
         ],
@@ -3753,6 +3763,39 @@ concept_cards: [
             ['U21','zen_jp',      'zen@x.com','JP','true'],    ['U22','ghost_vn',  'ghost@x.com','VN','true']
           ]
         },
+        // PHASE 4A-E2: thêm related_schemas: [posts] (per §DATA-E2 council cấp). Schema step_4 trước đó CHỈ có users → JOIN posts ra 0 dòng.
+        // Counts: premium users U01=5, U05=4, U03=3, U08=2, U10=1; non-premium U02=2, U07=1 (loại bỏ bởi WHERE is_premium=true).
+        // Top 3 (premium only): U01(minh_gamer,VN)=5, U05(dragon_vn,VN)=4, U03(sara_plays,VN)=3.
+        related_schemas: [
+          {
+            table_name: 'posts',
+            columns: [
+              { name: 'post_id',  type: 'INT',  key: 'PK' },
+              { name: 'user_id',  type: 'INT',  key: 'FK' },
+              { name: 'post_text',type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['P01','U01','Clear Elden Ring!'],
+              ['P02','U01','Boss tips'],
+              ['P03','U01','Build guide'],
+              ['P04','U01','PvP montage'],
+              ['P05','U01','Lore thread'],
+              ['P06','U05','Ranked climb'],
+              ['P07','U05','Deck list'],
+              ['P08','U05','Patch notes'],
+              ['P09','U05','Tier list'],
+              ['P10','U03','Speedrun WR'],
+              ['P11','U03','Glitch found'],
+              ['P12','U03','Route guide'],
+              ['P13','U08','New skin'],
+              ['P14','U08','Event recap'],
+              ['P15','U10','First post'],
+              ['P16','U02','(non-premium)'],
+              ['P17','U02','(non-premium)'],
+              ['P18','U07','(non-premium)']
+            ]
+          }
+        ],
         expected_sql: "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
         hints: [
           { level: 1, text: 'Boss Battle! Bạn cần <em>kết hợp dữ liệu từ 2 bảng</em> (users và posts), lọc theo điều kiện, đếm, sắp xếp, lấy top. Hãy nghĩ: dùng JOIN + GROUP BY + ORDER BY + LIMIT.' },
