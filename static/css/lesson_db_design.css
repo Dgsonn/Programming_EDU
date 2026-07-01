@@ -9293,12 +9293,16 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
    routeD + bgDots trong town-svg stretch theo viewBox 600×600 + preserveAspectRatio="none" → trải rộng theo panel.
    PE hub + station + truck + manifest là HTML overlay ngoài town-svg → KHÔNG distort (giữ tròn/đúng tỉ lệ).
    Station/truck dùng % position để bám route đã stretch (1 viewBox unit = 100/600 % của container). */
-.town-map { position: relative; width: 100%; height: 100%; border-radius: 18px; overflow: hidden;
+/* PHASE 3.7 F1 — cap map ≤640 px (màn lớn @1920/@2560 KHÔNG phình trống) + center trong .town-map-track.
+   Serpentine algorithm (computeSerpentineRoute) re-tính theo W×H thật của map nên không distort.
+   @960/@1366/@1600: W <640 → map fill 100% (cap không trigger, behavior y hệt cũ).
+   @1920/@2560: W>640 → map = 640×(H container), lề 2 bên tự center qua parent's justify-content:center. */
+.town-map { position: relative; width: 100%; height: 100%; max-width: 640px; max-height: 100%;
+  margin: 0 auto; border-radius: 18px; overflow: hidden;
   background:
     linear-gradient(160deg,#0f1626 0%,#0b1120 60%,#0d1730 100%),
     #0a0f1c;
-  border: 1px solid rgba(148,163,184,.18); box-shadow: 0 30px 70px rgba(0,0,0,.55);
-  margin: 0; }
+  border: 1px solid rgba(148,163,184,.18); box-shadow: 0 30px 70px rgba(0,0,0,.55); }
 .town-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .town-stations { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 

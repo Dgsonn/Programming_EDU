@@ -206,26 +206,22 @@
     var khoPos = { x: padX + 40, y: H - padBottom };
     var positions = [];
     if (n === 1) {
-      positions.push({ x: W * 0.5, y: H - padBottom });
-    } else if (n === 2) {
-      positions.push({ x: W * 0.30, y: H - padBottom });
-      positions.push({ x: W - padX - 40, y: padTop + 40 });
-    } else if (n === 3) {
-      positions.push({ x: W * 0.30, y: H - padBottom });
-      positions.push({ x: W * 0.55, y: H * 0.50 });
-      positions.push({ x: W - padX - 40, y: padTop + 40 });
-    } else if (n === 4) {
-      positions.push({ x: W * 0.25, y: H - padBottom });
-      positions.push({ x: W * 0.50, y: H * 0.65 });
-      positions.push({ x: W * 0.70, y: H * 0.30 });
-      positions.push({ x: W - padX - 40, y: padTop + 40 });
+      /* F1 (PHASE 3.7-AUDIT-FIX): center single station giữa kho và top-edge */
+      positions.push({ x: W * 0.5, y: (khoPos.y + (padTop + 40)) / 2 });
     } else {
-      // 5+ stations: evenly distribute bottom→top
-      var yStart = H - padBottom;
-      var yEnd = padTop + 50;
+      /* F1 (PHASE 3.7-AUDIT-FIX): even-spacing zigzag.
+         - Y slot giữa khoPos.y và (padTop+40) qua n+1 slots (kho + n stations + 1 headroom).
+         - X alternating 0.75↔0.25 để đảm bảo minGap ≥120 px MỌI count × MỌI viewport.
+         - Fix AUDIT_FINDING: 87px cram @ 6-station Bài 11/14/16 + 254px sparse @ 3-station Bài 19.
+         - Worst case @960 W=361 n=6: yStep≈29.7, x diff=181 → gap ≈ √(181²+30²) ≈ 184 ✓.
+         - Backward compat: fMap giữ (i+1)/n (giống cũ) để driveTruckTo không đổi. */
+      var yStart = khoPos.y;
+      var yEnd = padTop + 40;
+      var yStep = (yStart - yEnd) / (n + 1);
       for (var i = 0; i < n; i++) {
-        var t = i / (n - 1);
-        positions.push({ x: W * (0.25 + t * 0.50), y: yStart + t * (yEnd - yStart) });
+        var y = yStart - (i + 1) * yStep;
+        var xRatio = (i % 2 === 0) ? 0.75 : 0.25;
+        positions.push({ x: W * xRatio, y: y });
       }
     }
     // Build path with cubic Bezier curves between points (smooth serpentine)
