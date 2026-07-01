@@ -190,12 +190,57 @@
     'select-line':'#22D3EE','order-line':'#F472B6',
   };
 
-  /* PHASE 3.6-R-B: sinh route SERPENTINE ĐỘNG từ container W×H + station count (thay route hardcode 600×600).
+  /* PHASE 3.8-F5: sinh route CONG hữu cơ từ container W×H + station count.
      - KHO fixed bottom-left, padding đáy chừa chỗ cho PE hub + sublabel "nguồn dữ liệu" (110px).
-     - Stations distributed theo execution order, evenly spaced along serpentine (bottom→top).
+     - Stations distributed theo execution order.
+     - X theo sine (cosine đối xứng, waves=n/2, amp start 0.30) → uốn lượn hữu cơ, KHÔNG răng cưa 2-cột.
+     - Auto-bump amp (max 0.45) + nudge Y range (nếu minGap < target) → đảm bảo spacing tối đa khả thi.
+     - Smooth spline bằng Catmull-Rom centripetal (α=0.5, tension=0.5) → path QUA TẤT CẢ điểm KHO + stations.
      - ViewBox = actual W×H 1:1, path px = station px tự align KHÔNG distort.
-     - Adapt aspect: container rộng → serpentine ngang; container cao → vẫn bottom→top nhưng compressed Y.
-     - Returns {pathD, fMap, khoPos} để regenerate trên resize. */
+     - Returns {pathD, fMap, khoPos, positions} để regenerate trên resize.
+     - Backward compat: fMap giữ (i+1)/n để driveTruckTo không đổi.
+     - Giữ cap ≤640px từ F1 (P2.3.7-AUDIT-FIX) + hybrid map↔bảng từ F7 (P2.3.8). */
+
+  /* Catmull-Rom centripetal (α=0.5) → cubic Bezier segments.
+     - points: [kho, pos[0], pos[1], ..., pos[n-1]]  (n+1 points)
+     - Phantom endpoints (duplicate first/last) → smooth tangent tại KHO + station cuối.
+     - Returns: array of {from, c1, c2, to} segments. */
+  function catmullRomToBezier(points, alpha, tension) {
+    alpha = (alpha == null) ? 0.5 : alpha;
+    tension = (tension == null) ? 0.5 : tension;
+    var np = points.length;
+    if (np < 2) return [];
+    var ext = [points[0]].concat(points).concat([points[np - 1]]);
+    // ext has np + 2 points: [phantom_start, p0, p1, ..., pn-1, phantom_end]
+    var segments = [];
+    for (var i = 1; i < ext.length - 2; i++) {
+      var p0 = ext[i - 1];
+      var p1 = ext[i];
+      var p2 = ext[i + 1];
+      var p3 = ext[i + 2];
+      var dx01 = p1.x - p0.x, dy01 = p1.y - p0.y;
+      var dx12 = p2.x - p1.x, dy12 = p2.y - p1.y;
+      var dx23 = p3.x - p2.x, dy23 = p3.y - p2.y;
+      var d01 = Math.pow(Math.sqrt(dx01*dx01 + dy01*dy01), alpha);
+      var d12 = Math.pow(Math.sqrt(dx12*dx12 + dy12*dy12), alpha);
+      var d23 = Math.pow(Math.sqrt(dx23*dx23 + dy23*dy23), alpha);
+      if (d12 < 1e-6) d12 = 1e-6;  // avoid div0
+      if (d01 + d12 < 1e-6) d01 = 1e-6;
+      if (d12 + d23 < 1e-6) d23 = 1e-6;
+      // Tangent at p1 (from p0 to p2)
+      var t1x = ((p2.x - p0.x) / (d01 + d12)) * d12 * tension;
+      var t1y = ((p2.y - p0.y) / (d01 + d12)) * d12 * tension;
+      // Tangent at p2 (from p1 to p3)
+      var t2x = ((p3.x - p1.x) / (d12 + d23)) * d12 * tension;
+      var t2y = ((p3.y - p1.y) / (d12 + d23)) * d12 * tension;
+      // Bezier control points
+      var c1 = { x: p1.x + t1x, y: p1.y + t1y };
+      var c2 = { x: p2.x - t2x, y: p2.y - t2y };
+      segments.push({ from: p1, c1: c1, c2: c2, to: p2 });
+    }
+    return segments;
+  }
+
   function computeSerpentineRoute(stations, W, H) {
     var padX = 50;
     var padTop = 50;
@@ -205,36 +250,81 @@
     var n = exec.length;
     var khoPos = { x: padX + 40, y: H - padBottom };
     var positions = [];
+    if (n === 0) {
+      return { pathD: 'M ' + khoPos.x + ' ' + khoPos.y, fMap: { 'start': 0 }, khoPos: khoPos, positions: [] };
+    }
     if (n === 1) {
-      /* F1 (PHASE 3.7-AUDIT-FIX): center single station giữa kho và top-edge */
+      /* F1 (3.7): center single station giữa kho và top-edge */
       positions.push({ x: W * 0.5, y: (khoPos.y + (padTop + 40)) / 2 });
     } else {
-      /* F1 (PHASE 3.7-AUDIT-FIX): even-spacing zigzag.
-         - Y slot giữa khoPos.y và (padTop+40) qua n+1 slots (kho + n stations + 1 headroom).
-         - X alternating 0.75↔0.25 để đảm bảo minGap ≥120 px MỌI count × MỌI viewport.
-         - Fix AUDIT_FINDING: 87px cram @ 6-station Bài 11/14/16 + 254px sparse @ 3-station Bài 19.
-         - Worst case @960 W=361 n=6: yStep≈29.7, x diff=181 → gap ≈ √(181²+30²) ≈ 184 ✓.
-         - Backward compat: fMap giữ (i+1)/n (giống cũ) để driveTruckTo không đổi. */
+      /* F5 (3.8): COSINE X distribution (đối xứng, đạo hàm max ở giữa) + auto-bump spacing.
+         - waves = max(1, round(n/2)) → uốn ~1 khúc mỗi 2 trạm.
+         - amp start 0.30, bump tới 0.45 (max) nếu minGap < target.
+         - minGap target = min(110, max(70, 0.20*min(W,H))) → adaptive theo viewport.
+           @960 target ≈ 73 · @1366 ≈ 89 · @1600+/@1920+ = 110.
+         - Y range nudge (giảm padBottom/padTop) nếu amp bump không đủ.
+         - Worst case @960 n=6: vẫn có thể < 110 do container bé (H≈408, 6 stations + 1 kho = 7 anchors trong 361px width → 51px X step, 26px Y step → 57px minGap tối đa khi align diagonal). Best-effort; ack trong report. */
+      var waves = Math.max(1, Math.round(n / 2));
+      var amp = 0.30;
+      var minGapTarget = Math.min(110, Math.max(70, 0.20 * Math.min(W, H)));
+      function genPos(amp, yStart, yEnd) {
+        var yStep = (yStart - yEnd) / (n + 1);
+        var pos = [];
+        for (var i = 0; i < n; i++) {
+          var t = (i + 1) / (n + 1);
+          var y = yStart - t * (yStart - yEnd);
+          // Cosine: xRatio = 0.5 + amp*cos(t*π*waves). Đạo hàm = -amp*π*waves*sin(t*π*waves).
+          // Max đạo hàm tại t=0.5 (midpoint) → X biến thiên mạnh nhất ở giữa.
+          var xRatio = 0.5 + amp * Math.cos(t * Math.PI * waves);
+          pos.push({ x: W * xRatio, y: y });
+        }
+        return pos;
+      }
+      function computeMinGap(pos) {
+        var mg = Infinity;
+        var prev = khoPos;
+        for (var i = 0; i < pos.length; i++) {
+          var dx = pos[i].x - prev.x;
+          var dy = pos[i].y - prev.y;
+          var d = Math.sqrt(dx*dx + dy*dy);
+          if (d < mg) mg = d;
+          prev = pos[i];
+        }
+        return mg;
+      }
       var yStart = khoPos.y;
       var yEnd = padTop + 40;
-      var yStep = (yStart - yEnd) / (n + 1);
-      for (var i = 0; i < n; i++) {
-        var y = yStart - (i + 1) * yStep;
-        var xRatio = (i % 2 === 0) ? 0.75 : 0.25;
-        positions.push({ x: W * xRatio, y: y });
+      positions = genPos(amp, yStart, yEnd);
+      var minGap = computeMinGap(positions);
+      // Bump 1: tăng amp (max 0.45)
+      var iter = 0;
+      while (minGap < minGapTarget && amp < 0.45 && iter < 10) {
+        amp += 0.03;
+        positions = genPos(amp, yStart, yEnd);
+        minGap = computeMinGap(positions);
+        iter++;
+      }
+      // Bump 2: nudge Y range (mở rộng vùng stations, ăn vào padding)
+      iter = 0;
+      while (minGap < minGapTarget && iter < 3) {
+        var padBottomNudge = Math.max(20, padBottom - 25 * (iter + 1));
+        var padTopNudge = Math.max(15, padTop - 20 * (iter + 1));
+        yStart = H - padBottomNudge;
+        yEnd = padTopNudge + 40;
+        if (yStart - yEnd < 60) break;  // safety: giữ ≥60 cho station visual
+        positions = genPos(amp, yStart, yEnd);
+        minGap = computeMinGap(positions);
+        iter++;
       }
     }
-    // Build path with cubic Bezier curves between points (smooth serpentine)
+    /* Build Catmull-Rom spline qua TẤT CẢ điểm (KHO + stations) — mượt, không gãy khúc. */
+    var allPoints = [khoPos].concat(positions);
+    var segments = catmullRomToBezier(allPoints, 0.5, 0.5);
     var path = ['M ' + khoPos.x + ' ' + khoPos.y];
-    positions.forEach(function(p, i) {
-      var prev = (i === 0) ? khoPos : positions[i - 1];
-      var cpX1 = prev.x + (p.x - prev.x) * 0.5;
-      var cpY1 = prev.y;
-      var cpX2 = p.x - (p.x - prev.x) * 0.5;
-      var cpY2 = p.y;
-      path.push('C ' + cpX1 + ' ' + cpY1 + ', ' + cpX2 + ' ' + cpY2 + ', ' + p.x + ' ' + p.y);
+    segments.forEach(function(seg) {
+      path.push('C ' + seg.c1.x + ' ' + seg.c1.y + ', ' + seg.c2.x + ' ' + seg.c2.y + ', ' + seg.to.x + ' ' + seg.to.y);
     });
-    // fMap: KHO at f=0, exec stations evenly along [0,1]
+    /* fMap: KHO at f=0, exec stations evenly along [0,1] — backward compat driveTruckTo */
     var fMap = { 'start': 0 };
     exec.forEach(function(s, i) { fMap[s.zone] = (i + 1) / n; });
     return { pathD: path.join(' '), fMap: fMap, khoPos: khoPos, positions: positions };
