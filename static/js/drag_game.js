@@ -193,7 +193,10 @@
   function buildTownMapHTML(activeStations, table) {
     var routeD = 'M 110 525 L 110 460 Q 110 445 125 445 L 240 445 Q 255 445 255 430 L 255 360 Q 255 345 270 345 L 395 345 Q 410 345 410 330 L 410 250 Q 410 235 425 235 L 510 235 Q 525 235 525 220 L 525 130 Q 525 115 510 115 L 305 115 Q 290 115 290 100 L 290 70';
     var bgDots = [[92,180,3],[510,150,3],[120,470,3],[500,430,3],[470,540,3],[70,330,3],[380,60,3],[220,75,3]].map(function(d){return '<circle class="bgnode" cx="'+d[0]+'" cy="'+d[1]+'" r="'+d[2]+'"/>';}).join('');
-    var peHub = '<g class="pe-hub-group" transform="translate(110, 525)"><circle class="pe-hub" cx="0" cy="0" r="21" fill="none" stroke="#22D3EE" stroke-width="2"/><circle class="pe-hub-inner" cx="0" cy="0" r="11" fill="none" stroke="#22D3EE" stroke-width="2"/><text class="pe-txt" x="0" y="4" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="800" fill="#22D3EE">PE</text></g><text class="pe-sub" x="110" y="572" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="500" fill="#7f93ad">nguồn dữ liệu</text>';
+    /* PHASE 3.5b-B1c: PE hub CHUYỂN sang HTML overlay (ngoài town-svg) để KHÔNG bị distort
+       khi town-svg stretch non-square. position bằng % (18.33%, 87.5%) — khớp vị trí cũ trong viewBox 600×600.
+       PE hub stays circular, "PE" text không méo. */
+    var peHub = '<div class="pe-hub-overlay" data-pe-hub><div class="pe-hub-outer"></div><div class="pe-hub-inner"></div><div class="pe-hub-text">PE</div><div class="pe-hub-sub">nguồn dữ liệu</div></div>';
     function stationNode(s, ord) {
       var z = s.zone || '', stroke = ZONE_STROKE[z] || '#94a3b8';
       var glyph;
@@ -215,7 +218,7 @@
     var manifest = '<div class="town-manifest" data-town-manifest><div class="town-manifest-ttl" data-town-manifest-ttl>DỮ LIỆU</div><div class="town-manifest-body" data-town-manifest-body></div><div class="town-manifest-sub" data-town-manifest-sub></div></div>';
     var brand = '<div class="town-brand"><span class="town-brand-dot"></span><b>PE_TEST</b> · TUYẾN TRUY VẤN</div>';
     var compass = '<div class="town-compass"><b>N</b></div>';
-    return '<div class="town-map" data-town-map>'+brand+compass+'<svg class="town-svg" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"><rect class="map-grid" width="600" height="600" fill="url(#qline-grid)" mask="url(#qline-mask)"/>'+bgDots+'<path class="town-route-shadow" d="'+routeD+'"/><path class="town-route" d="'+routeD+'"/><path class="town-route-flow" d="'+routeD+'"/>'+peHub+'</svg><div class="town-stations">'+stationsHTML+'</div>'+truck+manifest+'</div>';
+    return '<div class="town-map" data-town-map>'+brand+compass+'<svg class="town-svg" viewBox="0 0 600 600" preserveAspectRatio="none"><rect class="map-grid" width="600" height="600" fill="url(#qline-grid)" mask="url(#qline-mask)"/>'+bgDots+'<path class="town-route-shadow" d="'+routeD+'"/><path class="town-route" d="'+routeD+'"/><path class="town-route-flow" d="'+routeD+'"/></svg><div class="town-stations">'+stationsHTML+'</div>'+peHub+truck+manifest+'</div>';
   }
 
   /* FIX 2g-B: SVG defs cho blueprint grid + vignette mask (inject 1 lần) */
@@ -234,7 +237,7 @@
     var route = trackEl.querySelector('.town-route');
     if (!route) return;
     var total = route.getTotalLength();
-    var fMap = { 'start': 0, 'from-line': 0.30, 'where-line': 0.62, 'group-line': 0.45,
+    var fMap = { 'start': 0.05, 'from-line': 0.30, 'where-line': 0.62, 'group-line': 0.45,
                  'having-line': 0.75, 'select-line': 1.0, 'order-line': 0.88, 'join-line': 0.18,
                  'setup-zone': 0.10, 'chain-zone': 0.50, 'slice-zone': 0.92,
                  'select-zone': 1.0, 'inject-zone': 0.55 };
@@ -244,8 +247,10 @@
       var f = fMap[s.id === 'start' ? 'start' : (s.zone || s.id)];
       if (f === undefined) f = activeStations.indexOf(s) / Math.max(1, activeStations.length - 1);
       var p = route.getPointAtLength(Math.max(0, Math.min(1, f)) * total);
-      el.style.left = p.x + 'px';
-      el.style.top = p.y + 'px';
+      /* PHASE 3.5b-B1: % position thay vì px — viewBox 600×600 + preserveAspectRatio="none" stretch SVG theo container,
+         nên station cần % để bám route đã stretch. p.x/600*100 = % của container width, tương tự cho p.y. */
+      el.style.left = (p.x / 600 * 100) + '%';
+      el.style.top = (p.y / 600 * 100) + '%';
     });
   }
 
@@ -260,22 +265,13 @@
        Lý do: CSS aspect-ratio:1/1 + max-height:100% KHÔNG ép width khi max-height cap (browser chỉ cap height).
        → dùng JS set pixel size = min(600, parent_w, parent_h) để map vuông + fit container @ mọi viewport. */
     var mapEl = trackEl.querySelector('.town-map');
+    /* PHASE 3.5b-B1: bỏ ép VUÔNG — map fill 100% container (CSS đã width/height:100%). ResizeObserver chỉ cần
+       re-trigger placeStationsOnPath khi container resize để station % vẫn align với route đã stretch.
+       KHÔNG set pixel size ở đây — để CSS lo (width/height:100% trên .town-map). */
     var sizeMapToParent = function() {
       if (!mapEl) return;
-      var r = mountEl.getBoundingClientRect();
-      var w = r.width, h = r.height;
-      /* Trừ phần data-preview + btn đã có sẵn nếu có siblings trong mountEl — trackEl chỉ là 1 child. */
-      var siblings = Array.from(mountEl.children).filter(function(c){ return c !== root; });
-      var siblingH = 0;
-      siblings.forEach(function(s){ siblingH += s.getBoundingClientRect().height; });
-      var trackRect = trackEl.getBoundingClientRect();
-      var availableW = Math.max(0, w - 40);   /* 40 = padding tối đa của mount (~18+20) */
-      var availableH = Math.max(0, trackRect.height || (h - siblingH - 40));
-      var size = Math.min(600, availableW, availableH);
-      if (size > 0) {
-        mapEl.style.width = size + 'px';
-        mapEl.style.height = size + 'px';
-      }
+      /* Re-place stations nếu route đã tính lại (defensive — trường hợp resize làm viewBox scale đổi) */
+      if (typeof placeStationsOnPath === 'function') placeStationsOnPath();
     };
     sizeMapToParent();
     if (typeof ResizeObserver !== 'undefined') {
@@ -339,8 +335,9 @@
     if (truckEl && routeEl) {
       var total = routeEl.getTotalLength();
       var startP = routeEl.getPointAtLength(0);
-      truckEl.style.left = startP.x + 'px';
-      truckEl.style.top = startP.y + 'px';
+      /* PHASE 3.5b-B1: % position cho truck (cùng logic placeStationsOnPath) */
+      truckEl.style.left = (startP.x / 600 * 100) + '%';
+      truckEl.style.top = (startP.y / 600 * 100) + '%';
       truckEl.style.transform = 'translate(-50%, -50%) rotate(0deg)';
       currentTruckF = 0;
       sfxEngine();
@@ -400,9 +397,9 @@
     var p = routeEl.getPointAtLength(f * total);
     var p2 = routeEl.getPointAtLength(Math.min(total, (f + 0.004) * total));
     var angle = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
-    truckEl.style.left = p.x + 'px';
-    truckEl.style.top = p.y + 'px';
-    truckEl.style.transform = 'translate(-50%, -50%) rotate(' + angle + 'deg)';
+truckEl.style.left = (p.x / 600 * 100) + '%';
+      truckEl.style.top = (p.y / 600 * 100) + '%';
+      truckEl.style.transform = 'translate(-50%, -50%) rotate(' + angle + 'deg)';
   }
 
   /* ═════ UPDATE — Phase A behavior (no auto-truck-movement) ═════ */
@@ -553,7 +550,7 @@
     if (!truckEl || !routeEl) return Promise.resolve();
     var station = activeStations.find(function(s) { return s.id === stationId; });
     if (!station) return Promise.resolve();
-    var fMap = { 'start': 0, 'from-line': 0.30, 'where-line': 0.62, 'group-line': 0.45,
+    var fMap = { 'start': 0.05, 'from-line': 0.30, 'where-line': 0.62, 'group-line': 0.45,
                  'having-line': 0.75, 'select-line': 1.0, 'order-line': 0.88, 'join-line': 0.18,
                  'setup-zone': 0.10, 'chain-zone': 0.50, 'slice-zone': 0.92,
                  'select-zone': 1.0, 'inject-zone': 0.55 };

@@ -1536,7 +1536,7 @@ concept_cards: [
             'Nếu thiếu AND → trả về nhầm DLC của game khác (vd DLC #2 của game 400 = "Corpo Gear Pack").',
             'Run để verify kết quả chỉ 1 dòng, đúng DLC cần tìm.'
           ],
-          hint_explore: 'Khám phá: gõ <code>SELECT * FROM dlc_content</code> rồi Run để thấy 3 dòng mẫu (game 300 có DLC 1+2, game 400 chỉ có DLC 1).',
+          hint_explore: 'Khám phá: gõ <code>SELECT * FROM dlc_content</code> rồi Run để thấy nhiều game — mỗi game có nhiều DLC đánh số <code>dlc_no</code> riêng (game 300 có 3 DLC: 1,2,3 · game 900 có 2 DLC: 1,2). Củng cố composite PK: ref_game_id + dlc_no định danh duy nhất 1 DLC.',
           example: {
             question: 'Ví dụ tương tự — lấy <code>dlc_name</code> của <strong>DLC #1 thuộc game 400</strong>:',
             sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;',

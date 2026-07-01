@@ -9285,13 +9285,16 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
  * ════════════════════════════════════════════════════════════════════════════ */
 
 /* Town map root — FIX 2f-A1: navy dark-native substrate (không còn tím-cam "trẻ con") */
-/* FIX 2g-B1: chain fit-height — width/height min(600,parent) + aspect-ratio để map VUÔNG + FIT container (không tràn @1600, không méo aspect) */
-.town-map { position: relative; width: min(600px, 100%); height: min(600px, 100%); aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden;
+/* PHASE 3.5b-B1: bỏ ép VUÔNG — fill 100% container (kể cả non-square @960/1600).
+   routeD + bgDots trong town-svg stretch theo viewBox 600×600 + preserveAspectRatio="none" → trải rộng theo panel.
+   PE hub + station + truck + manifest là HTML overlay ngoài town-svg → KHÔNG distort (giữ tròn/đúng tỉ lệ).
+   Station/truck dùng % position để bám route đã stretch (1 viewBox unit = 100/600 % của container). */
+.town-map { position: relative; width: 100%; height: 100%; border-radius: 18px; overflow: hidden;
   background:
     linear-gradient(160deg,#0f1626 0%,#0b1120 60%,#0d1730 100%),
     #0a0f1c;
   border: 1px solid rgba(148,163,184,.18); box-shadow: 0 30px 70px rgba(0,0,0,.55);
-  margin: 0 auto; }
+  margin: 0; }
 .town-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .town-stations { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 
@@ -9301,7 +9304,7 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   display: flex; align-items: center; gap: 8px; pointer-events: none; }
 .town-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: #22D3EE;
   box-shadow: 0 0 10px #22D3EE; }
-.town-compass { position: absolute; bottom: 16px; left: 18px; z-index: 9;
+.town-compass { position: absolute; bottom: 16px; right: 18px; z-index: 9;
   width: 38px; height: 38px; border-radius: 50%;
   background: rgba(13,18,32,.7); border: 1px solid rgba(148,163,184,.2);
   display: flex; align-items: center; justify-content: center;
@@ -9490,12 +9493,14 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 @keyframes digit-in { from { transform: translate(-50%, 8px) scale(0); opacity: 0; }
   to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
 
-/* ══════ Manifest clipboard panel (280×300, fixed bottom-right of map) ══════ */
-.town-manifest { position: absolute; right: 12px; bottom: 12px; z-index: 6;
-  width: 212px; max-width: 47%; background: rgba(9,14,26,.92);   /* FIX 2g-B: darkglass per mockup v2 (was 280px + no blur để fit backdrop-filter ≤6) */
+/* ══════ Manifest clipboard panel — PHASE 3.5b-B2: top-right + shrink 170px ══════
+   Trước: bottom-right (đè node FROM khi map stretch non-square).
+   Sau: top-right (góc đối brand top-left) + width 170px cho gọn, không đè route/station. */
+.town-manifest { position: absolute; right: 12px; top: 12px; z-index: 6;
+  width: 170px; max-width: 47%; background: rgba(9,14,26,.92);   /* FIX 2g-B: darkglass per mockup v2 (was 280px + no blur để fit backdrop-filter ≤6) */
   border: 1px solid rgba(148,163,184,.18); border-radius: 12px;
-  padding: 11px 13px; box-shadow: 0 16px 40px rgba(0,0,0,.6);
-  opacity: 0; transform: translateY(8px); transition: opacity .35s, transform .35s;
+  padding: 10px 11px; box-shadow: 0 16px 40px rgba(0,0,0,.6);
+  opacity: 0; transform: translateY(-8px); transition: opacity .35s, transform .35s;
   pointer-events: none; }
 .town-manifest.show { opacity: 1; transform: translateY(0); }
 .town-manifest-ttl { font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
@@ -9524,6 +9529,23 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   0%,100% { opacity: 0.6; }
   50%     { opacity: 1; }
 }
+
+/* PHASE 3.5b-B1c: PE hub HTML overlay (ngoài town-svg stretch) — % position 18.33% / 82% (was 87.5%, nâng lên để
+   sub text "nguồn dữ liệu" (top:100% = +60px) không clip ở map ngắn). Giữ tròn + "PE" text không méo khi town-svg
+   stretch non-square. z-index 8 (>truck 7) để PE hub luôn nằm trên truck (cùng toạ độ 110,525). */
+.pe-hub-overlay { position: absolute; left: 18.33%; top: 82%; width: 60px; height: 60px;
+  transform: translate(-50%, -50%); z-index: 8; pointer-events: none; }
+.pe-hub-outer { position: absolute; inset: 0; border: 2px solid #22D3EE; border-radius: 50%;
+  animation: pe-hub-pulse 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(34,211,238,.55)); }
+.pe-hub-inner { position: absolute; inset: 16px; border: 2px solid #22D3EE; border-radius: 50%;
+  animation: pe-hub-pulse 2.6s ease-in-out infinite reverse;
+  filter: drop-shadow(0 0 8px rgba(34,211,238,.55)); }
+.pe-hub-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 13px; font-weight: 800; color: #22D3EE; }
+.pe-hub-sub { position: absolute; top: 100%; left: 50%; transform: translate(-50%, 4px);
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 500; color: #7f93ad;
+  white-space: nowrap; }
 
 /* Station qnode (replaces silhouette) — 60x60 hex, centered */
 .town-station-bldg { width: 60px; height: 60px; }
