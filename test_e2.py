@@ -93,8 +93,10 @@ async def main():
                         return {{ ok: false, error: 'EXCEPTION: ' + e.message, sql: sql }};
                     }}
                     return {{
-                        ok: !result.error,
+                        ok: !result.error && !result.pending,
                         error: result.error || null,
+                        pending: !!result.pending,
+                        pendingMsg: result.msg || null,
                         sql: sql,
                         cols: result.cols || null,
                         rowCount: result.rows ? result.rows.length : 0,
@@ -130,14 +132,17 @@ async def main():
                     detail = f"FAIL: error - {test_result.get('error', '')[:80]}"
 
             elif mode == "honest_error":
-                err = test_result.get('error', '') or ''
-                if not test_result.get('ok') and 'E3' in err and err:
+                # 4A-E2-fix: PE_runSQL trả {pending:true, msg} thay {error} cho E3-scope.
+                # Test verify "đáp án ĐÚNG, clause chưa hỗ trợ" trong msg (chứa 'E3' marker).
+                pmsg = (test_result.get('pendingMsg') or test_result.get('error') or '') or ''
+                has_pending = test_result.get('pending', False) or not test_result.get('ok', True)
+                if has_pending and 'E3' in pmsg and pmsg:
                     passed = True
-                    detail = f"honest-error: ...E3...{expected_val} ✓"
+                    detail = f"honest-pending: ...E3...{expected_val} ✓"
                 elif test_result.get('ok'):
                     detail = f"SILENT-WRONG: returned OK with {test_result['rowCount']} rows (E3-scope clause)!"
                 else:
-                    detail = f"FAIL: error doesn't have E3 marker: {err[:80]}"
+                    detail = f"FAIL: msg doesn't have E3 marker: {pmsg[:80]}"
 
             results.append((idx, mode, passed, detail, test_result))
 

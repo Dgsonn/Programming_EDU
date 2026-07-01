@@ -3137,6 +3137,28 @@ body.lesson-focus-mode::before {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+/* 4A-E2-fix: PENDING panel — neutral cyan/amber (KHÔNG đỏ, KHÔNG tam-giác).
+ * Dùng cho E3-scope clauses user gõ đúng nhưng engine tier hiện tại chưa hỗ trợ
+ * (JSON->>, CASE, ORM, %s, IN-subquery, PostGIS spatial). Text "đáp án ĐÚNG"
+ * được giữ — khung INFO nhất quán, không đổ-lỗi-user. */
+.codecademy-layout .results-pending {
+  padding: 16px;
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 8px;
+  color: #A5E8FF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.codecademy-layout .results-pending strong {
+  color: #67E8F9;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .codecademy-layout .schema-content {
   flex: 1;
   overflow: auto;

@@ -2461,19 +2461,23 @@
       }
       return undefined;
     }
-    function parseFactor(s) {
-      s = s.trim();
-      if (!s) return null;
-      if (s.charAt(0) === '(' && s.charAt(s.length - 1) === ')') {
-        return evalSqlExpr(row, s.substring(1, s.length - 1));
+      function parseFactor(s) {
+        s = s.trim();
+        if (!s) return null;
+        if (s.charAt(0) === '(' && s.charAt(s.length - 1) === ')') {
+          return evalSqlExpr(row, s.substring(1, s.length - 1));
+        }
+        if (/^-?[0-9]+(?:\.[0-9]+)?$/.test(s)) return parseFloat(s);
+        /* 4A-E2-fix Bài 2: EXTRACT(YEAR FROM CURRENT_DATE) — derived column "age"
+         * = currentYear - birth_year. Dynamic year (per user chốt), no hardcode. */
+        var extractMatch = /^\s*extract\s*\(\s*year\s+from\s+(?:current_date|current\s+timestamp)\s*\)\s*$/i.exec(s);
+        if (extractMatch) return new Date().getFullYear();
+        if (/^-?[\w.]+$/.test(s)) {
+          var v = getCell(row, s);
+          return v === undefined ? 0 : toNumber(v);
+        }
+        return null;
       }
-      if (/^-?[0-9]+(?:\.[0-9]+)?$/.test(s)) return parseFloat(s);
-      if (/^-?[\w.]+$/.test(s)) {
-        var v = getCell(row, s);
-        return v === undefined ? 0 : toNumber(v);
-      }
-      return null;
-    }
     function splitByOuterOps(s, ops) {
       var parts = ['']; var i = 0; var depth = 0;
       while (i < s.length) {
@@ -2836,12 +2840,38 @@
    * Backward-safe: 1-table queries KHÔNG có aggregate → E1 logic y nguyên.
    * Step-3 drag (`executeStation` + `PE_parseWhereRows`) KHÔNG đi qua đây.
    * `PE_parseWhereRows` (drag_game.js A7a) KHÔNG đụng. */
+  /* 4A-E2-fix: stripAliasPrefix — dùng khi output col header KHÔNG có AS, đỡ rò alias prefix
+   * (vd `m.member_name` → `member_name`, `game.title` → `title`). Có AS GIỮ nguyên. */
+  function stripAliasPrefix(col) {
+    if (!col || col.indexOf('.') < 0) return col;
+    return col.replace(/^\w+\./, '');
+  }
+
+  /* 4A-E2-fix Bài 2: projectValue — projection cell computation.
+   * - Col ref (no parens, no arithmetic at outer level) → getRowVal(row, col).
+   * - Expression (has parens/functions/arithmetic outer) → evalSqlExpr(row, col).
+   * Returns string '' when undefined. evalSqlExpr handles EXTRACT(YEAR FROM CURRENT_DATE)
+   * → current year dynamically (no hardcode 2026). */
+  function projectValue(row, col) {
+    if (col == null) return '';
+    var s = String(col);
+    if (s.indexOf('(') >= 0 || /\s[\+\-\*\/]\s/.test(s)) {
+      var v = evalSqlExpr(row, s);
+      if (v !== null && !isNaN(v)) return v;
+      if (v !== null && typeof v === 'string') return v;
+    }
+    return getRowVal(row, s);
+  }
+
   window.PE_runSQL = function(sqlText, schema, data) {
-    /* 4A-E2: chạy token whitelist scan TRƯỚC parser — parser chưa handle nested parens (IN-subquery)
-     * và ORM syntax không bắt đầu "SELECT" → fail nhầm. E3-scope → honest error không đổ-lỗi-user. */
+    /* 4A-E2 + 4A-E2-fix: chạy token whitelist scan TRƯỚC parser — parser chưa handle nested parens
+     * (IN-subquery) và ORM syntax không bắt đầu "SELECT" → fail nhầm. E3-scope → **pending neutral**
+     * (không phải error-đỏ): trả `{pending: true, msg}` để renderStep4Pending vẽ khung INFO
+     * (icon fa-gear cyan/amber), KHÔNG chữ "LỖI", KHÔNG tam-giác-đỏ. `{error}` thật (syntax sai)
+     * VẪN đỏ qua renderStep4Error. */
     var scan = scanUnsupportedTokens(sqlText);
     if (scan.unsupported) {
-      return { error: '⚙ Bảng kết quả cho truy vấn này đang được hoàn thiện (E3) — đáp án của bạn ĐÚNG. Clause chưa hỗ trợ: ' + scan.kw + '.' };
+      return { pending: true, msg: '⚙ Bảng kết quả cho truy vấn này đang được hoàn thiện (E3) — đáp án của bạn ĐÚNG. Clause chưa hỗ trợ: ' + scan.kw + '.' };
     }
     var s3Pseudo = { drop_zones: [{id:'select-line'},{id:'from-line'},{id:'where-line'}] };
     var parsed = window.PE_parseSQLToBlocks(sqlText, s3Pseudo);
@@ -3064,12 +3094,12 @@
       rowsOut = groupArr.map(function(group) {
         return projections.map(function(p) {
           if (p.kind === 'agg') return computeAggregate(group.rows, p);
-          /* kind === 'col' */
+          /* kind === 'col' — 4A-E2-fix: dùng projectValue để support expression Bài 2 + col ref */
           if (groupByCols) {
             var idx = groupByCols.indexOf(p.col);
             if (idx >= 0) return group.keyVals[idx];
           }
-          return getRowVal(group.rows[0], p.col);
+          return projectValue(group.rows[0], p.col);
         });
       });
 
@@ -3123,14 +3153,16 @@
       /* Output column names: alias || raw. */
       outCols = projections.map(function(p) {
         if (p.kind === 'agg') return p.alias || (p.fn.toUpperCase() + '(' + p.expr + ')');
-        return p.alias || p.col;
+        return p.alias || stripAliasPrefix(p.col);
       });
     } else {
-      /* E1 path (no GROUP BY, no aggregate) — project per joinedRow. */
-      outCols = projections.map(function(p){ return p.alias || p.col; });
+      /* E1 path (no GROUP BY, no aggregate) — project per joinedRow.
+       * 4A-E2-fix: projection value = col-ref thì getRowVal; expression có parens/arithmetic
+       * thì evalSqlExpr (vd Bài 2 `(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age`). */
+      outCols = projections.map(function(p){ return p.alias || stripAliasPrefix(p.col); });
       rowsOut = joinedRows.map(function(r) {
         return projections.map(function(p) {
-          return getRowVal(r, p.col);
+          return projectValue(r, p.col);
         });
       });
     }
@@ -3656,7 +3688,10 @@
       console.warn('[runCodeIDE] PE_runSQL error:', e);
     }
 
-    if (liveResult && liveResult.error) {
+    if (liveResult && liveResult.pending) {
+      /* 4A-E2-fix: pending neutral (E3-scope). KHUNG INFO cyan/amber, KHÔNG đỏ-tam-giác. */
+      renderStep4Pending(liveResult.msg);
+    } else if (liveResult && liveResult.error) {
       // Query có lỗi parse/exec → render error panel + skip validation
       renderStep4Error(liveResult.error);
     } else if (liveResult && Array.isArray(liveResult.cols) && Array.isArray(liveResult.rows)) {
@@ -3710,7 +3745,8 @@
       try {
         if (typeof window.PE_runSQL === 'function') {
           const live = window.PE_runSQL(assembled, s4);
-          if (live && live.error) renderStep4Error(live.error);
+          if (live && live.pending) renderStep4Pending(live.msg);
+          else if (live && live.error) renderStep4Error(live.error);
           else if (live && live.cols) renderStep4Results(live.cols, live.rows);
         }
       } catch (e) { /* defensive */ }
@@ -3737,7 +3773,8 @@
     try {
       if (typeof window.PE_runSQL === 'function') {
         const live = window.PE_runSQL(userSQL, s4);
-        if (live && live.error) renderStep4Error(live.error);
+        if (live && live.pending) renderStep4Pending(live.msg);
+        else if (live && live.error) renderStep4Error(live.error);
         else if (live && live.cols) renderStep4Results(live.cols, live.rows);
       }
     } catch (e) { /* defensive */ }
@@ -5026,6 +5063,19 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
     el.innerHTML = `<div class="results-error">
       <strong><i class="fa-solid fa-triangle-exclamation"></i> Lỗi truy vấn</strong>
       ${escapeHtml(msg || 'Có lỗi xảy ra khi chạy query.')}
+    </div>`;
+  }
+
+  /* 4A-E2-fix: PENDING (khung neutral) — dùng cho E3-scope clauses user gõ đúng nhưng engine
+   * tier hiện tại chưa hỗ trợ. KHUNG INFO cyan/amber icon fa-gear, KHÔNG chữ "LỖI",
+   * KHÔNG tam-giác-đỏ (mâu thuẫn với text "đáp án ĐÚNG"). {error} thật vẫn dùng
+   * renderStep4Error (đỏ, icon tam-giác). */
+  function renderStep4Pending(msg) {
+    const el = document.getElementById('step4-results');
+    if (!el) return;
+    el.innerHTML = `<div class="results-pending">
+      <strong><i class="fa-solid fa-gear"></i> Đang được hoàn thiện</strong>
+      ${escapeHtml(msg || 'Câu này tạm thời chưa có bảng kết quả — đáp án của bạn vẫn được tính đúng.')}
     </div>`;
   }
 
