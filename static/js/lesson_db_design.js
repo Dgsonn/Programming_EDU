@@ -2429,9 +2429,11 @@
     var t = String(sqlText || '').toLowerCase();
     var checks = [
       { kw: '.objects.', label: 'Django ORM' },           /* ORM không phải SQL — ngay cả khi không có aggregate, parser cũng fail vì "LogEvent.objects..." không bắt đầu SELECT */
-      { kw: ' in (',     label: 'IN-subquery' },          /* khoảng-trắng trước '(' tránh false-positive với MIN(...) */
-      { kw: 'case ',     label: 'CASE WHEN' },
-      { kw: '->>',       label: 'JSONB path operator ->>' },
+      /* 4A-E3-engine: 3 entries removed — engine-thật Bài 9/15/20 handle these:
+       *   - ' in (' (Bài 9 IN-subquery)
+       *   - 'case '  (Bài 20 CASE WHEN)
+       *   - '->>'    (Bài 15 JSON path)
+       * Phase4-E3-equiv sẽ xử ORM/%s/spatial (Bài 17/19/16). */
       { kw: '%s',        label: 'Python placeholder %s' },
       { kw: 'st_dwithin',  label: 'spatial ST_DWithin' },
       { kw: 'st_makepoint', label: 'spatial ST_MakePoint' }
@@ -2582,14 +2584,116 @@
     return 0;
   }
 
-  /* getRowVal — fallback lookup: prefixed first, then unprefixed. */
+  /* getRowVal — fallback lookup: prefixed first, then unprefixed.
+   * 4A-E3-engine: JSON-path `col->>'key'` → trích giá trị từ cell JSON string.
+   * Trả `''` nếu col rỗng / JSON parse fail / key không tồn tại. */
   function getRowVal(row, col) {
+    if (col == null) return '';
+    /* JSON path: 'col->>' or 'table.col->>key' */
+    var jsonMatch = /^([\w.]+?)->>'([^']+)'$/.exec(String(col).trim());
+    if (jsonMatch) {
+      var jsonCol = jsonMatch[1];
+      var jsonKey = jsonMatch[2];
+      var jsonVal = row[jsonCol] !== undefined ? row[jsonCol] : (jsonCol.indexOf('.') >= 0 ? row[jsonCol.substring(jsonCol.indexOf('.') + 1)] : '');
+      if (jsonVal == null || jsonVal === '') return '';
+      try {
+        var obj = typeof jsonVal === 'string' ? JSON.parse(jsonVal) : jsonVal;
+        var extracted = obj[jsonKey];
+        return extracted === undefined ? '' : extracted;
+      } catch (e) { return ''; }
+    }
     if (row[col] !== undefined) return row[col];
     var dotIdx = col.indexOf('.');
     if (dotIdx >= 0 && row[col.substring(dotIdx + 1)] !== undefined) {
       return row[col.substring(dotIdx + 1)];
     }
     return '';
+  }
+
+  /* 4A-E3-engine: detectCase — parse "CASE WHEN cond THEN val [WHEN ...] [ELSE val] END [AS alias]".
+   * cond = col op val hoặc col IN (val,val,val). Returns {kind:'case', branches:[{cond,val}], elseVal, alias}
+   * hoặc null. */
+  function detectCase(token) {
+    var trimmed = String(token || '').trim();
+    var headMatch = /^\s*case\s+(.+?)\s+end\s*(?:\s+as\s+(\w+))?\s*$/i.exec(trimmed);
+    if (!headMatch) return null;
+    var body = headMatch[1];
+    var alias = headMatch[2] || null;
+    var branches = [];
+    /* Capture WHEN cond THEN val pairs */
+    var re = /\s*when\s+([\s\S]+?)\s+then\s+(?:'(.*?)'|"([^"]*?)"|([^\s,)(]+))\s*/gi;
+    var m, cond;
+    while ((m = re.exec(body)) !== null) {
+      var condStr = m[1].trim();
+      var val = m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : m[4]);
+      branches.push({ cond: condStr, val: val });
+    }
+    if (branches.length === 0) return null;
+    /* ELSE val at end */
+    var elseMatch = /\s*else\s+(?:'(.*?)'|"([^"]*?)"|([^\s,)(]+))\s*$/i.exec(body);
+    var elseVal = null;
+    if (elseMatch) {
+      elseVal = elseMatch[1] !== undefined ? elseMatch[1] : (elseMatch[2] !== undefined ? elseMatch[2] : elseMatch[3]);
+    }
+    return { kind: 'case', branches: branches, elseVal: elseVal, alias: alias };
+  }
+
+  /* 4A-E3-engine: evalCase(row, parsedCase) — evaluate CASE expression per row.
+   * Hỗ trợ WHEN cond WHERE cond là:
+   *   - `col IN ('a', 'b', 'c')` → if row[col] ∈ list
+   *   - `col = 'val'`            → if row[col] === val
+   * Returns string value hoặc ''. */
+  function evalCase(row, parsedCase) {
+    if (!parsedCase || !parsedCase.branches) return '';
+    function stripQuotes(s) {
+      if (s == null) return '';
+      var t = String(s).trim();
+      if ((t.charAt(0) === "'" && t.charAt(t.length - 1) === "'") || (t.charAt(0) === '"' && t.charAt(t.length - 1) === '"')) {
+        return t.substring(1, t.length - 1);
+      }
+      return t;
+    }
+    function evalCond(condStr) {
+      /* col IN ('a', 'b', 'c') */
+      var inMatch = /^\s*([\w.]+)\s+in\s*\(([^)]+)\)\s*$/i.exec(condStr);
+      if (inMatch) {
+        var col = inMatch[1];
+        var rawList = inMatch[2];
+        var vals = rawList.split(',').map(function(s){ return stripQuotes(s); });
+        var rowVal = getRowVal(row, col);
+        return vals.indexOf(String(rowVal)) >= 0;
+      }
+      /* col = 'val' */
+      var eqMatch = /^\s*([\w.]+)\s*=\s*(.+)\s*$/i.exec(condStr);
+      if (eqMatch) {
+        var ec = eqMatch[1];
+        var ev = stripQuotes(eqMatch[2]);
+        return String(getRowVal(row, ec)) === ev;
+      }
+      /* <, >, <=, >= */
+      var cmpMatch = /^\s*([\w.]+)\s*(<=|>=|<>|>|<|=)\s*(.+)\s*$/i.exec(condStr);
+      if (cmpMatch) {
+        var cc = cmpMatch[1];
+        var op = cmpMatch[2];
+        var cv = stripQuotes(cmpMatch[3]);
+        var l = getRowVal(row, cc);
+        var r = cv;
+        var lc = compareSqlVals(l, r);
+        if (op === '=') return lc === 0;
+        if (op === '<>') return lc !== 0;
+        if (op === '>') return lc > 0;
+        if (op === '<') return lc < 0;
+        if (op === '>=') return lc >= 0;
+        if (op === '<=') return lc <= 0;
+      }
+      return false;
+    }
+    for (var bi = 0; bi < parsedCase.branches.length; bi++) {
+      if (evalCond(parsedCase.branches[bi].cond)) {
+        return parsedCase.branches[bi].val;
+      }
+    }
+    return parsedCase.elseVal != null ? parsedCase.elseVal : '';
   }
 
   /* computeAggregate — COUNT/SUM/AVG/MIN/MAX over rows for 1 group.
@@ -2698,11 +2802,26 @@
       var m = prefix.exec(restStr);
       if (!m) return { val: null, rest: restStr };
       var body = restStr.substring(m[0].length);
-      /* Find next clause keyword (anywhere in body, NOT ^anchored — body starts AFTER consumed kw).
-       * Prevents swallowing the next clauses (GROUP BY/HAVING/ORDER BY/LIMIT) into current clause. */
-      var nextKwRe = /(?:where|group\s+by|having|order\s+by|limit)\s+/i;
-      var nm = nextKwRe.exec(body);
-      if (nm) return { val: body.substring(0, nm.index).trim(), rest: body.substring(nm.index).trim() };
+      /* 4A-E3-engine: find next clause keyword at TOP LEVEL (paren depth=0). Tránh nuốt
+       * WHERE/GROUP/HAVING/ORDER BY/LIMIT BÊN TRONG IN-subquery (vd Bài 9:
+       * `WHERE col IN (SELECT … WHERE phone='…')` — inner `WHERE` không nên là boundary). */
+      function findTopLevelKw(b) {
+        var depth = 0;
+        for (var i = 0; i < b.length; i++) {
+          var ch = b.charAt(i);
+          if (ch === '(') depth++;
+          else if (ch === ')') depth--;
+          else if (depth === 0) {
+            var rest2 = b.substring(i);
+            if (/^(where|group\s+by|having|order\s+by|limit)\s+/i.test(rest2)) return i;
+          }
+        }
+        return -1;
+      }
+      var endIdx = findTopLevelKw(body);
+      if (endIdx >= 0) {
+        return { val: body.substring(0, endIdx).trim(), rest: body.substring(endIdx).trim() };
+      }
       return { val: body.trim(), rest: '' };
     }
 
@@ -2751,8 +2870,27 @@
       onConds.push({ leftCol: jm[3], rightCol: jm[4] });
     }
 
-    /* Build blocks per zone (E1 compat + 4A-E2 group/order populate). */
-    var cols = colsStr.split(',').map(function(c){ return c.trim(); }).filter(Boolean);
+    /* Build blocks per zone (E1 compat + 4A-E2 group/order populate).
+     * 4A-E3-engine: split SELECT projection by commas respecting paren depth + string
+     * literals — commas bên trong CASE WHEN ... IN (...) không nên là boundary. */
+    function splitCommasDepth(str) {
+      var parts = ['']; var depth = 0; var inStr = null;
+      for (var i = 0; i < str.length; i++) {
+        var ch = str.charAt(i);
+        if (inStr) {
+          if (ch === inStr && str.charAt(i - 1) !== '\\') inStr = null;
+          parts[parts.length - 1] += ch;
+        } else if (ch === "'" || ch === '"') {
+          inStr = ch;
+          parts[parts.length - 1] += ch;
+        } else if (ch === '(') { depth++; parts[parts.length - 1] += ch; }
+        else if (ch === ')') { depth--; parts[parts.length - 1] += ch; }
+        else if (ch === ',' && depth === 0) { parts.push(''); }
+        else { parts[parts.length - 1] += ch; }
+      }
+      return parts;
+    }
+    var cols = splitCommasDepth(colsStr).map(function(c){ return c.trim(); }).filter(Boolean);
     var selectBlocks = [{ token: 'SELECT', type: 'kw' }].concat(
       cols.map(function(c){ return { token: c, type: c === '*' ? 'fn' : 'col' }; })
     );
@@ -2764,13 +2902,22 @@
       fromBlocks.push({ token: onConds[oi].leftCol + ' = ' + onConds[oi].rightCol, type: 'col' });
     }
     var whereBlocks = [];
+    var inSubqueries = [];  /* 4A-E3-engine: WHERE col IN (SELECT …) — Bài 9 */
     if (whereStr) {
       /* 4A-E1 + 4A-E2: WHERE col capture [\w.]+ chấp nhận 'publisher.name'.
        * 4A-E2: hỗ trợ operators =, <>, <, >, <=, >= (cần cho Bài 11 `o.order_date >= '2024-04-05'`).
+       * 4A-E3-engine: tách `col IN (subquery)` riêng — recursion engine để tránh parseWhereRows
+       *   (single-table path) nuốt nhầm.
        * A7b AND-split backward-safe. */
       var conds = whereStr.split(/\s+AND\s+/i).map(function(s){ return s.trim(); }).filter(Boolean);
       var parsedConds = [];
       conds.forEach(function(cond) {
+        /* 4A-E3-engine: IN-subquery pattern — capture subquery raw, mark as inCond. */
+        var inMatch = /^([\w.]+)\s+in\s*\(([\s\S]+)\)\s*$/i.exec(cond);
+        if (inMatch) {
+          inSubqueries.push({ col: inMatch[1], subSql: inMatch[2].trim() });
+          return;
+        }
         var wm = /([\w.]+)\s*(<=|>=|<>|<|>|=)\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(\w+))/i.exec(cond);
         if (wm) parsedConds.push(wm);
       });
@@ -2820,6 +2967,7 @@
       _tables: parsedTables,
       _onConds: onConds,
       _aliasMap: aliasMap,
+      _inSubqueries: inSubqueries,  /* 4A-E3-engine: WHERE col IN (SELECT …) */
       _groupByStr: groupByStr,
       _havingStr: havingStr,
       _orderByStr: orderByStr,
@@ -2884,11 +3032,14 @@
      * Build tableByName map primary + related, sau đó map(parsedTables, tableName → entry).
      *
      * 4A-E2 fix: PE_runSQL accepts 2 schema shapes:
-     *   (a) top-level: schema = {table_name, columns, data, related_schemas}
-     *   (b) nested (Run button path): schema = {schema: {table_name, columns, data}, related_schemas}
-     * Resolve via normalize helper. */
-    var relatedSchemas = (schema && schema.related_schemas) || [];
+      *   (a) top-level: schema = {table_name, columns, data, related_schemas}
+     *   (b) nested (Run button path): schema = {schema: {table_name, columns, data, related_schemas}}
+     *     — lesson_content.js nests related_schemas INSIDE step_4.schema (NOT at s4 top-level).
+     * Resolve via normalize helper. 4A-E3-engine: also pull related_schemas from primarySchema
+     * (nested form) — Mode B (Run button) needs this fallback. */
     var primarySchema = (schema && schema.schema) || schema || {};
+    var relatedSchemas = (schema && schema.related_schemas)
+      || (primarySchema && primarySchema.related_schemas) || [];
     var tableByName = {};
     /* Primary schema */
     var primaryRawCols = (primarySchema && primarySchema.columns) || [];
@@ -2991,12 +3142,45 @@
         var cleanV = String(cval).replace(/^'(.*)'$/, '$1').replace(/^"(.*)"$/, '$1');
         if (/^(=|<>|<=|>=|<|>)$/.test(cop)) conds.push({ col: ccol, op: cop, val: cleanV });
       }
+      /* 4A-E3-engine Bài 9: WHERE col IN (SELECT …) — run subquery against SAME joined tables
+       * set as outer. Build schema where primary = subquery's FROM table, others = related.
+       * __forceInlineFilter = internal flag → subquery skip PE_parseWhereRows path
+       * (PE_parseWhereRows nuốt nhầm nested WHERE bên trong IN). */
+      if (parsed._inSubqueries && parsed._inSubqueries.length) {
+        var inCond = parsed._inSubqueries[0];
+        var _fromMatch = inCond.subSql.match(/from\s+(\w+)/i);
+        var subFromTable = _fromMatch ? _fromMatch[1] : tables[0].name;
+        var subPrim = tableByName[subFromTable];
+        if (subPrim) {
+          var _relTables = [];
+          for (var tbi in tableByName) {
+            if (tbi !== subFromTable) _relTables.push(tableByName[tbi]);
+          }
+          var _schemaObj = {
+            schema: { table_name: subPrim.name, columns: subPrim.columns, data: subPrim.dataRows },
+            related_schemas: _relTables.map(function(t){ return { table_name: t.name, columns: t.columns, data: t.dataRows }; }),
+            __forceInlineFilter: true
+          };
+          var _r = window.PE_runSQL(inCond.subSql, _schemaObj);
+          if (!_r.error && _r.rows) {
+            var inVals = _r.rows.map(function(row){ return String(row[0]); });
+            joinedRows = joinedRows.filter(function(row){
+              var lv = String(getRowVal(row, inCond.col));
+              return inVals.indexOf(lv) >= 0;
+            });
+          }
+        }
+      }
       if (conds.length) {
+        var hasInSub = parsed._inSubqueries && parsed._inSubqueries.length > 0;
+        var forceInline = hasInSub || !!schema.__forceInlineFilter;
         if (!isJoin) {
           /* Single-table backward-compat: PE_parseWhereRows (drag_game A7a) chỉ xử lý '=' + AND.
-           * Nếu có op khác '=', fallback sang inline filter qua compareSqlVals. */
+           * Nếu có op khác '=', fallback sang inline filter qua compareSqlVals.
+           * 4A-E3-engine: nếu outer có IN-subquery HOẶC schema.__forceInlineFilter (subquery
+           * recursion), dùng inline filter (PE_parseWhereRows nuốt nhầm nested WHERE bên trong IN). */
           var onlyEq = conds.every(function(c){ return c.op === '='; });
-          if (onlyEq) {
+          if (onlyEq && !forceInline) {
             var whereInputStr = fills['where-line'].filter(function(b){ return b.token !== 'WHERE'; }).map(function(b){ return b.token; }).join(' ');
             var t0 = tables[0];
             var tableForParse = { columns: t0.columns, dataRows: t0.dataRows };
@@ -3005,7 +3189,7 @@
             if (matched.length === 0) return { error: 'WHERE không khớp dòng nào' };
             joinedRows = matched.map(function(i){ return joinedRows[i]; });
           } else {
-            /* Inline filter cho op khác (>=, <=, >, <, <>). Single-table joinedRows = t0 rows. */
+            /* Inline filter cho op khác (>=, <=, >, <, <>) HOẶC outer IN-subquery HOẶC subquery recursion. */
             joinedRows = joinedRows.filter(function(r) {
               return conds.every(function(c) {
                 var rv = r[c.col];
@@ -3041,7 +3225,8 @@
       }
     }
 
-    /* Parse SELECT projections: alias + aggregate detect. */
+    /* Parse SELECT projections: alias + aggregate detect + CASE detect (4A-E3-engine).
+     * Pattern: detectAggregate (COUNT/SUM/...) > detectCase (CASE WHEN) > plain col. */
     var projections;
     if (fills['select-line'] && fills['select-line'].length) {
       var selTokens = fills['select-line'].filter(function(b){ return b.type === 'col' || b.type === 'fn'; }).map(function(b){ return b.token; });
@@ -3053,6 +3238,12 @@
           var alias = asMatch ? asMatch[2] : null;
           var agg = detectAggregate(src);
           if (agg) return { kind: 'agg', fn: agg.fn, expr: agg.expr, alias: alias || agg.alias };
+          var cs = detectCase(src);
+          if (cs) {
+            /* If detectCase already grabbed the alias, prefer that; otherwise use asMatch's alias. */
+            var caseAlias = cs.alias || alias;
+            return { kind: 'case', branches: cs.branches, elseVal: cs.elseVal, alias: caseAlias };
+          }
           return { kind: 'col', col: src, alias: alias };
         });
       }
@@ -3079,27 +3270,53 @@
         return allColsFlat.map(function(c){ return r[c] !== undefined ? r[c] : ''; });
       });
     } else if (isGrouped) {
-      /* GROUP BY pipeline. */
+      /* GROUP BY pipeline. 4A-E3-engine: pre-compute per-row projection values (kind=col, kind=case)
+       * for alias-based GROUP BY (vd Bài 20 'GROUP BY security_level' alias CASE WHEN).
+       * kind=agg skipped (compute at group time). */
+      var aliasIdxByName = {};
+      projections.forEach(function(p, idx) {
+        if (p.alias) aliasIdxByName[p.alias] = idx;
+      });
+      var precomputed = joinedRows.map(function(row) {
+        return projections.map(function(p) {
+          if (p.kind === 'agg') return null;
+          if (p.kind === 'case') return evalCase(row, p);
+          return projectValue(row, p.col);
+        });
+      });
+      /* Helper: GROUP BY col → value. Resolve alias via precomputed[]. Else getRowVal + alias-strip. */
+      function resolveGroupKey(row, rowIdx, gc) {
+        var aliasIdx = aliasIdxByName[gc];
+        if (aliasIdx !== undefined) return precomputed[rowIdx][aliasIdx];
+        return getRowVal(row, stripAliasPrefix(gc));
+      }
       var groups = new Map();
       for (var gi = 0; gi < joinedRows.length; gi++) {
         var grow = joinedRows[gi];
-        var keyVals = groupByCols ? groupByCols.map(function(c){ return getRowVal(grow, c); }) : ['__ALL__'];
+        var keyVals = groupByCols ? groupByCols.map(function(c){ return resolveGroupKey(grow, gi, c); }) : ['__ALL__'];
         var key = keyVals.map(function(v){ return String(v === undefined ? '' : v); }).join('||');
         if (!groups.has(key)) groups.set(key, { keyVals: keyVals, rows: [] });
         groups.get(key).rows.push(grow);
       }
       var groupArr = Array.from(groups.values());
 
-      /* Project per group: cho mỗi projection, nếu kind=agg → compute; col → từ keyVals hoặc rows[0]. */
+      /* Project per group: cho mỗi projection, nếu kind=agg → compute; col/case → keyVals hoặc rows[0]. */
       rowsOut = groupArr.map(function(group) {
         return projections.map(function(p) {
           if (p.kind === 'agg') return computeAggregate(group.rows, p);
-          /* kind === 'col' — 4A-E2-fix: dùng projectValue để support expression Bài 2 + col ref */
-          if (groupByCols) {
-            var idx = groupByCols.indexOf(p.col);
+          /* kind === 'col' or 'case' */
+          if (p.alias) {
+            /* If this projection's alias matches a group col, return that group key (first row's computed value). */
+            var aliasIdx = aliasIdxByName[p.alias];
+            if (aliasIdx !== undefined && groupByCols && groupByCols.indexOf(p.alias) >= 0) {
+              return group.keyVals[groupByCols.indexOf(p.alias)];
+            }
+          }
+          if (groupByCols && p.kind === 'col') {
+            var idx = groupByCols.indexOf(stripAliasPrefix(p.col));
             if (idx >= 0) return group.keyVals[idx];
           }
-          return projectValue(group.rows[0], p.col);
+          return projectValue(group.rows[0], p.kind === 'case' ? '' : p.col);
         });
       });
 

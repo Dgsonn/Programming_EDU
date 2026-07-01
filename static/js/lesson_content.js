@@ -2367,7 +2367,21 @@ concept_cards: [
             ['S03', '0904-444-444'],
             ['S03', '0905-555-555'],
             ['S03', '0906-666-666']
-          ]
+          ],
+          /* 4A-E3-engine Bài 9: thêm bảng `student` (data spec §DATA-E3) — IN-subquery cần table
+           * chứa name + id mới SELECT được. Alice (S01) sở hữu 0901-111-111 → match filter. */
+          related_schemas: [{
+            table_name: 'student',
+            columns: [
+              { name: 'student_id', type: 'INT',     key: 'PK' },
+              { name: 'name',       type: 'VARCHAR', key: '' }
+            ],
+            data: [
+              ['S01', 'Alice'],
+              ['S02', 'Bob'],
+              ['S03', 'Carol']
+            ]
+          }]
         },
         starter: "-- Tìm tên SV có số ĐT '0901-111-111'\n-- Gợi ý: dùng WHERE student_id IN (subquery)\nSELECT \n  FROM student\n WHERE student_id  (\n   SELECT student_id FROM student_phone WHERE \n );\n",
         expected_sql: "SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');",

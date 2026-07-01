@@ -23,21 +23,21 @@ EXPECTED = {
     6:  ("rows_eq", 1),       # WHERE dlc_no=2 AND ref_game_id=300 → 1
     7:  ("rows_eq", 5),       # WHERE publisher.name='Supergiant' → 5
     8:  ("rows_eq", 5),       # WHERE studio_name='Valve' → 5
-    # 9: E3 IN-subquery — sau E2 expect honest-error
-    16: ("honest_error", "spatial"),  # ST_DWithin/MakePoint
-    18: ("rows_eq", 4),       # WHERE genre='Action' → 4
+    # E3-engine (4A-E3) — Bài 9/15/20 engine-thật
+    9:  ("rows_eq", 1),       # IN-subquery → Alice
+    15: ("rows_eq", 3),       # JSON->> GROUP BY theme → 3 themes (dark/light/auto)
+    20: ("rows_eq", 3),       # CASE WHEN + GROUP BY alias → 3 security levels (HIGH/LOW/MEDIUM)
+    # E3-equiv (4A-E3-equiv — coming next) — để pending/equiv
+    16: ("honest_error", "spatial"),  # ST_DWithin
+    17: ("honest_error", "ORM"),  # sẽ wire equiv_sql
+    19: ("honest_error", "%s"),  # sẽ wire equiv_sql
     # E2 mới
-    10: ("rows_eq", 3),       # GROUP BY + ORDER BY DESC + LIMIT 3 → 3 rows (Minh/Sara/Yuki)
-    11: ("rows_eq_min", 2),   # GROUP BY + SUM → ≥2 categories (Game, Gear) at least
-    12: ("rows_eq", 3),       # GROUP BY + LIMIT 3 → 3 chuyên khoa top
-    13: ("rows_eq", 5),       # GROUP BY + ORDER BY DESC + LIMIT 5 → 5 (CS103 + 4 tied 2)
-    14: ("rows_eq", 3),       # JOIN + WHERE + GROUP BY + ORDER BY DESC + LIMIT 3 → U01/U05/U03
-    # E3-scope (sẽ fail với honest-error)
-    9:  ("honest_error", "IN"),
-    15: ("honest_error", "JSONB"),
-    17: ("honest_error", "ORM"),  # ORM sẽ được wire equiv_sql sau E3 — hiện tại error generic
-    19: ("honest_error", "%s"),
-    20: ("honest_error", "CASE"),
+    10: ("rows_eq", 3),       # GROUP BY + ORDER BY DESC + LIMIT 3
+    11: ("rows_eq_min", 2),   # GROUP BY + SUM
+    12: ("rows_eq", 3),       # GROUP BY + LIMIT 3
+    13: ("rows_eq", 5),       # GROUP BY + ORDER BY DESC + LIMIT 5
+    14: ("rows_eq", 3),       # JOIN + WHERE + GROUP BY
+    18: ("rows_eq", 4),       # WHERE genre='Action' → 4
 }
 
 
