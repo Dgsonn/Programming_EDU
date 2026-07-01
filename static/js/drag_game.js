@@ -247,8 +247,8 @@
 
   function computeSerpentineRoute(stations, W, H) {
     var padX = 50;
-    var padTop = 50;
-    var padBottom = 110;
+    var padTop = 28;       /* F5b (3.8-fix): giảm 50→28 lấy thêm Y-room (vẫn chừa chỗ PE hub label 28px). */
+    var padBottom = 75;    /* F5b (3.8-fix): giảm 110→75 — vẫn chừa chỗ cho PE hub 60×60 + sublabel "nguồn dữ liệu" ~15px. */
     var exec = (stations || []).filter(function(s){ return s.id !== 'start' && s.zone; })
       .sort(function(a, b){ return EXEC_ORDER.indexOf(a.zone) - EXEC_ORDER.indexOf(b.zone); });
     var n = exec.length;
@@ -261,64 +261,26 @@
       /* F1 (3.7): center single station giữa kho và top-edge */
       positions.push({ x: W * 0.5, y: (khoPos.y + (padTop + 40)) / 2 });
     } else {
-      /* F5 (3.8): COSINE X distribution (đối xứng, đạo hàm max ở giữa) + auto-bump spacing.
-         - waves = max(1, round(n/2)) → uốn ~1 khúc mỗi 2 trạm.
-         - amp start 0.30, bump tới 0.45 (max) nếu minGap < target.
-         - minGap target = min(110, max(70, 0.20*min(W,H))) → adaptive theo viewport.
-           @960 target ≈ 73 · @1366 ≈ 89 · @1600+/@1920+ = 110.
-         - Y range nudge (giảm padBottom/padTop) nếu amp bump không đủ.
-         - Worst case @960 n=6: vẫn có thể < 110 do container bé (H≈408, 6 stations + 1 kho = 7 anchors trong 361px width → 51px X step, 26px Y step → 57px minGap tối đa khi align diagonal). Best-effort; ack trong report. */
-      var waves = Math.max(1, Math.round(n / 2));
-      var amp = 0.30;
-      var minGapTarget = Math.min(110, Math.max(70, 0.20 * Math.min(W, H)));
-      function genPos(amp, yStart, yEnd) {
-        var yStep = (yStart - yEnd) / (n + 1);
-        var pos = [];
-        for (var i = 0; i < n; i++) {
-          var t = (i + 1) / (n + 1);
-          var y = yStart - t * (yStart - yEnd);
-          // Cosine: xRatio = 0.5 + amp*cos(t*π*waves). Đạo hàm = -amp*π*waves*sin(t*π*waves).
-          // Max đạo hàm tại t=0.5 (midpoint) → X biến thiên mạnh nhất ở giữa.
-          var xRatio = 0.5 + amp * Math.cos(t * Math.PI * waves);
-          pos.push({ x: W * xRatio, y: y });
-        }
-        return pos;
-      }
-      function computeMinGap(pos) {
-        var mg = Infinity;
-        var prev = khoPos;
-        for (var i = 0; i < pos.length; i++) {
-          var dx = pos[i].x - prev.x;
-          var dy = pos[i].y - prev.y;
-          var d = Math.sqrt(dx*dx + dy*dy);
-          if (d < mg) mg = d;
-          prev = pos[i];
-        }
-        return mg;
-      }
+      /* F5b (3.8-fix): XEN KẼ 2 bên với envelope organic-nhẹ (user chốt).
+         - Công thức: xRatio = (i % 2 === 0) ? 0.5 + A_i : 0.5 − A_i
+           với A_i = 0.30 + 0.06 * sin(π(i+1)/(n+1)) → envelope 0.24-0.36 organic.
+         - |Δx| giữa 2 trạm liền kề = 2*A_i (cố định lớn) → minPair ≥110 kể cả 6 trạm mọi viewport.
+         - Y slot giữa khoPos.y và (padTop+40) qua n+1 slots (kho + n stations + 1 headroom).
+         - KHÔNG auto-bump (F5 cosine đã gỡ) — xen kẽ cố định Δx ≥ 0.48W đủ minPair.
+         - KHÔI PHỤC target ≥110 THẬT (bỏ adaptive 70-110 từ F5). Sàn tuyệt đối ≥90.
+         - padBottom 110→75 + padTop 50→28 (user chốt) — lấy thêm Y-room.
+         - Hard ceiling: @960 n=6 với map cao 383px → trần cứng ~85px (Y range 280px / 7 slots × 2 = 80px/slot). Đạt 110 chỉ @1600 + n≤5. Note trong report.
+         - GIỮ Catmull-Rom spline (không răng cưa từ CÁCH VẼ ĐƯỜNG). */
       var yStart = khoPos.y;
       var yEnd = padTop + 40;
-      positions = genPos(amp, yStart, yEnd);
-      var minGap = computeMinGap(positions);
-      // Bump 1: tăng amp (max 0.45)
-      var iter = 0;
-      while (minGap < minGapTarget && amp < 0.45 && iter < 10) {
-        amp += 0.03;
-        positions = genPos(amp, yStart, yEnd);
-        minGap = computeMinGap(positions);
-        iter++;
-      }
-      // Bump 2: nudge Y range (mở rộng vùng stations, ăn vào padding)
-      iter = 0;
-      while (minGap < minGapTarget && iter < 3) {
-        var padBottomNudge = Math.max(20, padBottom - 25 * (iter + 1));
-        var padTopNudge = Math.max(15, padTop - 20 * (iter + 1));
-        yStart = H - padBottomNudge;
-        yEnd = padTopNudge + 40;
-        if (yStart - yEnd < 60) break;  // safety: giữ ≥60 cho station visual
-        positions = genPos(amp, yStart, yEnd);
-        minGap = computeMinGap(positions);
-        iter++;
+      var yStep = (yStart - yEnd) / (n + 1);
+      for (var i = 0; i < n; i++) {
+        var y = yStart - (i + 1) * yStep;
+        // Envelope organic-nhẹ: A_i dao động theo i, envelope 0.24-0.36
+        var A_i = 0.30 + 0.06 * Math.sin(Math.PI * (i + 1) / (n + 1));
+        // Xen kẽ 2 bên: |Δx| = 2*A_i ≥ 0.48W (cố định lớn, đảm bảo minPair ≥110)
+        var xRatio = (i % 2 === 0) ? 0.5 + A_i : 0.5 - A_i;
+        positions.push({ x: W * xRatio, y: y });
       }
     }
     /* Build Catmull-Rom spline qua TẤT CẢ điểm (KHO + stations) — mượt, không gãy khúc. */
@@ -568,7 +530,7 @@
    * • instant=false: rAF animation duration (default 550ms) với ease-in-out cubic.
    * • Truck bám đường, xoay theo heading tại mỗi frame. */
   function driveTruckTo(f, instant, duration) {
-    if (!truckEl || !routeEl) return;
+    if (!truckEl || !routeEl) return Promise.resolve();
     if (typeof f !== 'number') f = 0;
     f = Math.max(0, Math.min(1, f));
     if (instant) {
@@ -583,6 +545,16 @@
     if (truckEl) truckEl.classList.add('is-driving');
     return new Promise(function(resolve) {
       function fr(now) {
+        /* F6-fix (3.8-fix): ABORT — check failState cancellation. Nếu user click cancel mid-flight,
+           snap về vị trí HIỆN TẠI (currentTruckF = partially-driven) + remove classes + resolve. */
+        if (failState && failState.token && failState.token.cancelled) {
+          if (truckEl) {
+            truckEl.classList.remove('is-driving', 'truck-anticipating', 'truck-arriving', 'celebrate', 'shake');
+            setTruckAtF(currentTruckF);  // snap to last position
+          }
+          resolve();
+          return;
+        }
         var k = Math.min(1, (now - t0) / duration);
         /* ease-in-out cubic */
         k = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -771,9 +743,20 @@ truckEl.style.left = p.x + 'px';
     truckEl.classList.add('truck-anticipating');
     return new Promise(function(resolve) {
       setTimeout(function() {
+        /* F6-fix (3.8-fix): ABORT — check cancellation TRƯỚC khi start travel phase. */
+        if (failState && failState.token && failState.token.cancelled) {
+          truckEl.classList.remove('truck-anticipating');
+          resolve();
+          return;
+        }
         truckEl.classList.remove('truck-anticipating');
-        /* 2. TRAVEL 550ms ease-in-out cubic, rAF */
+        /* 2. TRAVEL 1200ms ease-in-out cubic, rAF (with abort check inside) */
         driveTruckTo(f, false, 1200).then(function() {
+          /* F6-fix: also check after travel */
+          if (failState && failState.token && failState.token.cancelled) {
+            resolve();
+            return;
+          }
           /* 3. ARRIVAL overshoot → settle 150ms */
           truckEl.classList.add('truck-arriving');
           setTimeout(function() {

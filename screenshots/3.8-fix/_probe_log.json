@@ -1,0 +1,92 @@
+{
+  "f5b_metrics": [],
+  "f7_balance": [],
+  "f3_icons": [],
+  "f6_frames": [],
+  "errors": [
+    {
+      "phase": "F5b",
+      "lesson": 19,
+      "vp": "960",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 19,
+      "vp": "1600",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 1,
+      "vp": "960",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 1,
+      "vp": "1600",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 14,
+      "vp": "960",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 14,
+      "vp": "1600",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 11,
+      "vp": "960",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 11,
+      "vp": "1600",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 16,
+      "vp": "960",
+      "error": "status=429"
+    },
+    {
+      "phase": "F5b",
+      "lesson": 16,
+      "vp": "1600",
+      "error": "status=429"
+    },
+    {
+      "phase": "F3",
+      "n": 15,
+      "error": "status=429"
+    },
+    {
+      "phase": "F3",
+      "n": 16,
+      "error": "status=429"
+    },
+    {
+      "phase": "F3",
+      "n": 19,
+      "error": "status=429"
+    },
+    {
+      "phase": "F3",
+      "n": 20,
+      "error": "status=429"
+    },
+    {
+      "phase": "F6",
+      "error": "lesson load status=429"
+    }
+  ]
+}

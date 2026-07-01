@@ -8823,11 +8823,13 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 }
 /* F7 (PHASE 3.8): cap data-preview cùng trục map ở màn lớn — fix §1.3 report 3.7 visual balance.
    Map (F1) đã cap 640 center @1920+ nhưng data-preview stretch full column → "lệch trục" (map 640 centered, table full-width).
-   → Cap data-preview max-width 640 + center ngay dưới map. @1366 trở xuống giữ full (không đụng).
+   → Cap data-preview max-width 640 + center ngay dưới map. @1366 trở xuống giữ full (không đổi).
    Scope: CHỈ .step3-pipeline-map > .data-preview (bảng schema nhỏ dưới map). KHÔNG đụng TableExplorer step-1
-   hay bảng KẾT QUẢ step-4 (2 cái đó GIỮ stretch — chính là bảng-nhiều-dữ-liệu A6). */
+   hay bảng KẾT QUẢ step-4 (2 cái đó GIỮ stretch — chính là bảng-nhiều-dữ-liệu A6).
+   PHASE 3.8-fix: thêm `width: 100%` để max-width 640px take effect (không bị content-size rút lại intrinsic 430px). */
 @media (min-width: 1920px) {
   .step3-pipeline-map > .data-preview {
+    width: 100%;
     max-width: 640px;
     margin-left: auto;
     margin-right: auto;
