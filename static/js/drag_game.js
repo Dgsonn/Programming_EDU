@@ -64,6 +64,10 @@
   /* FIX 2g-A4: expected + userBuilt dùng cho chẩn đoán khi feedback sai */
   let lastExpected = '';
   let lastUserBuilt = '';
+  /* F6 (PHASE 3.8): in-memory fail counter + cancellation token.
+     Reset 0 khi: celebrate (đúng) · reset (handleDragReset) · đổi bài (page reload).
+     KHÔNG localStorage (persist = trừng phạt user, vô nghĩa). */
+  var failState = window.__dragFailState = window.__dragFailState || { count: 0, token: null, cancelHandler: null };
 
   /* ═════ SOUND ═════ */
   let soundEnabled = (() => {
@@ -968,9 +972,11 @@ truckEl.style.left = p.x + 'px';
         /* 8. Mark done / error */
         stationEl.classList.remove('active');
         if (result.error) {
+          /* F6 (3.8): parse error → trigger fail animation (xe lượn về KHO).
+             Thay vì finishExecution(false) ngay (cũ — mâu thuẫn "về đích rồi báo sai"). */
           stationEl.classList.add('error');
           shakeTruck();
-          finishExecution(false);
+          runFailAnimation(entry.station, filledStations, i);
           return;
         }
         stationEl.classList.add('done');
@@ -978,12 +984,158 @@ truckEl.style.left = p.x + 'px';
         currentData = result.data;
         await wait(80);
       }
+      /* F6 (3.8): sau loop, kiểm tra currentIsComplete. Nếu sai (wrong SQL nhưng parse OK) → fail.
+         Cũ: gọi finishExecution() mặc định dùng currentIsComplete để show feedback.
+         Mới: dùng last filled station làm "wrongStation" fallback (vì đã chạy hết, không có station cụ thể sai). */
+      if (!currentIsComplete && filledStations.length > 0) {
+        var lastEntry = filledStations[filledStations.length - 1];
+        runFailAnimation(lastEntry.station, filledStations, filledStations.length - 1);
+        return;
+      }
       finishExecution();
     })();
   }
 
   /* wait — Promise-based delay */
   function wait(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+  /* ═════ F6 (PHASE 3.8): Fail animation — xe lượn về KHO (Brilliant-style) ═════
+     - Lần 1: 1500ms full (drive → veer → return).
+     - Lần 2: 800ms rút gọn (drive shorter → veer short → return fast).
+     - Lần 3+: 400ms snap (rung + flash + snap KHO, không animate lùi).
+     - Pill + diagnoseDiff + "Thử lại" LUÔN đầy đủ mọi lần (chỉ rút gọn xe).
+     - Cancellation: click bất kỳ (ngoài .query-feedback) → cancel + snap KHO + reset.
+     - Reset failCount: celebrate (đúng) · reset() (handleDragReset) · đổi bài (page reload). */
+
+  /* F6: snap truck về KHO instant (f=0) — dùng cho cancel + lần 3+ snap. */
+  function snapToKho() {
+    if (!truckEl || !routeEl) return;
+    var p = routeEl.getPointAtLength(0);
+    truckEl.style.left = p.x + 'px';
+    truckEl.style.top = p.y + 'px';
+    truckEl.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+    currentTruckF = 0;
+    if (truckEl) {
+      truckEl.classList.remove('is-driving', 'truck-anticipating', 'truck-arriving', 'celebrate', 'shake');
+    }
+  }
+
+  /* F6: truck "lượn" off-path small loop quanh vị trí hiện tại.
+     Offset tròn (sin/cos) quanh path, radius thu nhỏ dần về 0. */
+  function veerOffPath(durationMs) {
+    if (!truckEl || !routeEl) return Promise.resolve();
+    var t0 = performance.now();
+    return new Promise(function(resolve) {
+      function fr(now) {
+        if (failState.token && failState.token.cancelled) { resolve(); return; }
+        var k = Math.min(1, (now - t0) / durationMs);
+        var total = routeEl.getTotalLength();
+        var curF = currentTruckF;
+        var offsetR = 30 * (1 - k);  // shrink về 0 cuối loop
+        var phase = k * Math.PI * 2;
+        var p = routeEl.getPointAtLength(curF * total);
+        var offsetX = Math.sin(phase) * offsetR;
+        var offsetY = -Math.abs(Math.cos(phase)) * offsetR * 0.6;
+        truckEl.style.left = (p.x + offsetX) + 'px';
+        truckEl.style.top = (p.y + offsetY) + 'px';
+        truckEl.style.transform = 'translate(-50%, -50%) rotate(' + (k * 90) + 'deg)';
+        if (k < 1) requestAnimationFrame(fr);
+        else resolve();
+      }
+      requestAnimationFrame(fr);
+    });
+  }
+
+  /* F6: cancel fail animation (bấm bất kỳ lúc xe đang lượn). */
+  function cancelFailAnimation() {
+    if (failState.token) {
+      failState.token.cancelled = true;
+      failState.token = null;
+    }
+    if (failState.cancelHandler) {
+      document.removeEventListener('click', failState.cancelHandler, true);
+      failState.cancelHandler = null;
+    }
+    snapToKho();
+    // Clear station error/active/done states
+    activeStations.forEach(function(s) {
+      var el = stationEls[s.id];
+      if (el) el.classList.remove('error', 'active', 'done', 'arriving');
+    });
+    // Restore run button
+    if (trackEl) {
+      var townMap = trackEl.querySelector('.town-map');
+      if (townMap) townMap.classList.remove('is-running');
+    }
+    isRunning = false;
+    if (runBtnEl) {
+      runBtnEl.disabled = false;
+      runBtnEl.innerHTML = '▶ Thử lại';
+    }
+  }
+
+  /* F6: main fail animation orchestrator.
+     wrongStation: station sai đầu tiên (hoặc last filled nếu no-error wrong data).
+     filledStations: danh sách station đã fill (cho future-station grayed).
+     wrongIndex: index của wrongStation trong filledStations. */
+  async function runFailAnimation(wrongStation, filledStations, wrongIndex) {
+    // Cancel any prior animation
+    if (failState.token) failState.token.cancelled = true;
+    var token = { cancelled: false };
+    failState.token = token;
+    // Global click handler: any click cancels (trừ .query-feedback)
+    failState.cancelHandler = function(e) {
+      if (e.target.closest && e.target.closest('.query-feedback')) return;
+      cancelFailAnimation();
+    };
+    document.addEventListener('click', failState.cancelHandler, true);
+    // Increment fail count + determine timing
+    failState.count++;
+    var totalMs;
+    if (failState.count >= 3) totalMs = 400;
+    else if (failState.count === 2) totalMs = 800;
+    else totalMs = 1500;
+    // Mark wrong station + future stations as error (visual: future path grayed)
+    if (stationEls[wrongStation.id]) stationEls[wrongStation.id].classList.add('error');
+    for (var fi = wrongIndex + 1; fi < filledStations.length; fi++) {
+      var futureEl = stationEls[filledStations[fi].station.id];
+      if (futureEl) futureEl.classList.add('error');
+    }
+    // Animation phases
+    try {
+      if (totalMs >= 1500) {
+        // Full: drive → veer → return
+        await driveTruckToStation(wrongStation.id);
+        if (token.cancelled) return;
+        await wait(80);
+        await veerOffPath(280);
+        if (token.cancelled) return;
+        await driveTruckTo(0, false, 550);
+      } else if (totalMs >= 800) {
+        // Rút gọn: drive shorter → veer ngắn → return nhanh
+        await driveTruckToStation(wrongStation.id);
+        if (token.cancelled) return;
+        await veerOffPath(150);
+        if (token.cancelled) return;
+        await driveTruckTo(0, false, 350);
+      } else {
+        // Snap: shake + flash + immediate KHO (no lùi animation)
+        shakeTruck();
+        await wait(200);
+        snapToKho();
+      }
+    } catch (e) { /* ignore */ }
+    // If cancelled mid-flight, don't show feedback (cancelFailAnimation already cleaned up)
+    if (token.cancelled) return;
+    // Cleanup cancel handler before showing feedback
+    if (failState.cancelHandler) {
+      document.removeEventListener('click', failState.cancelHandler, true);
+      failState.cancelHandler = null;
+    }
+    failState.token = null;
+    // Show feedback (pill + diagnoseDiff + retry)
+    finishExecution(false);
+  }
 
   /* updateManifest — fill manifest panel (§D: 280px, font 12.5px) */
   function updateManifest(station, result, data, table) {
@@ -1327,6 +1479,17 @@ truckEl.style.left = p.x + 'px';
   }
 
   function reset() {
+    /* F6 (3.8): cancel any running fail animation + reset fail counter on drag reset.
+       handleDragReset (lesson_db_design.js) calls DragGame.reset() khi user bấm "Reset" → quay về KHO + animation kết thúc. */
+    if (failState.token) {
+      failState.token.cancelled = true;
+      failState.token = null;
+    }
+    if (failState.cancelHandler) {
+      document.removeEventListener('click', failState.cancelHandler, true);
+      failState.cancelHandler = null;
+    }
+    failState.count = 0;
     /* STAGE 2c reset: clear town-station states + manifest + mechanism visuals + truck */
     activeStations.forEach(s => {
       if (stationEls[s.id]) {
@@ -1382,6 +1545,8 @@ truckEl.style.left = p.x + 'px';
   }
 
   function celebrate() {
+    /* F6 (3.8): reset fail counter on correct (đúng → failCount về 0, fail sau là lần 1 mới). */
+    failState.count = 0;
     if (typeof window.confetti === 'function') {
       window.confetti({
         particleCount: 90, spread: 70, origin: { y: 0.5 },
