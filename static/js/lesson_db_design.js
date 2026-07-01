@@ -3919,6 +3919,14 @@
       renderStep4Idle();
     }
 
+    /* 4A-E3-equiv: 600ms sau khi chạy userCode, validateSQL Accept → có thể chạy
+     * equiv_sql (Bài 16/17/19). Runner phải DO validateSQL LÁI panel results cuối cùng
+     * — KHÔNG dùng userCode (userCode có thể là ORM/spatial/%s parser không hiểu → pending).
+     *
+     * - Accept + s4.equiv_sql exists → run equiv_sql → renderStep4Results (OVERWRITE pending).
+     * - Accept + no equiv        → keep current render (liveResult đã đúng).
+     * - Reject                     → renderStep4Neutral (KHÔNG hiện pending/false-correct).
+     */
     setTimeout(() => {
       const result = validateSQL(userCode, s4.expected_sql);
       if (result.correct) {
@@ -3929,7 +3937,24 @@
           localStorage.removeItem(`pe_draft_${state.currentLesson.id}`);
         }
         if (isSubmit) { triggerStep4Success(); setTimeout(showSuccess, 1200); }
+        /* Equiv runner: only when bài có s4.equiv_sql (Bài 16 spatial, Bài 17 ORM, Bài 19 %s). */
+        if (s4.equiv_sql && typeof window.PE_runSQL === 'function') {
+          try {
+            const eqRes = window.PE_runSQL(s4.equiv_sql, s4);
+            if (eqRes && Array.isArray(eqRes.cols) && Array.isArray(eqRes.rows)) {
+              renderStep4Results(eqRes.cols, eqRes.rows);
+            } else if (eqRes && eqRes.error) {
+              /* Equiv SQL itself lỗi — KHÔNG replace pending (false-correct). */
+              console.warn('[E3-equiv] equiv_sql error:', eqRes.error);
+            }
+          } catch (e) {
+            console.warn('[E3-equiv] equiv_sql exception:', e);
+          }
+        }
       } else {
+        /* 4A-E3-equiv: validateSQL Reject → KHÔNG giữ pending (sẽ false-correct);
+         * KHÔNG giữ results (sẽ show bảng-phải cho SQL sai). Render NEUTRAL panel. */
+        renderStep4Neutral('Câu query chưa khớp đáp án — bạn có thể thử lại hoặc bấm "Gợi ý" bên trái.');
         flashTerminal('error', `✗ Wrong Answer\n\n${result.error || 'Query chưa đúng.'}\n\n${result.suggestion || ''}`);
         if (isSubmit) loseHeart();
         if (s4.hints && s4.hints.length > 0) showNextHint();
@@ -5293,6 +5318,18 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
     el.innerHTML = `<div class="results-pending">
       <strong><i class="fa-solid fa-gear"></i> Đang được hoàn thiện</strong>
       ${escapeHtml(msg || 'Câu này tạm thời chưa có bảng kết quả — đáp án của bạn vẫn được tính đúng.')}
+    </div>`;
+  }
+
+  /* 4A-E3-equiv: NEUTRAL (no-result-yet) — dùng khi validateSQL Reject mà panel đang là
+   * pending từ immediate render. Tránh false-correct (nói "đáp án ĐÚNG" cho bài user SAI).
+   * Khung neutral grey/cyan-nhạt icon fa-lightbulb, text "gõ đúng query để xem kết quả". */
+  function renderStep4Neutral(msg) {
+    const el = document.getElementById('step4-results');
+    if (!el) return;
+    el.innerHTML = `<div class="results-neutral">
+      <strong><i class="fa-solid fa-lightbulb"></i> Gõ đúng query để xem kết quả</strong>
+      ${escapeHtml(msg || '')}
     </div>`;
   }
 

@@ -3159,6 +3159,27 @@ body.lesson-focus-mode::before {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+/* 4A-E3-equiv: NEUTRAL (no-result-yet) — khung dùng khi validateSQL Reject mà panel
+ * đang hiện pending từ immediate render → tránh false-correct (nói "đáp án ĐÚNG" khi user sai).
+ * Style: xám nhạt + icon lightbulb, không chữ "LỖI" / "Pending" / "Done". */
+.codecademy-layout .results-neutral {
+  padding: 16px;
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  color: #CBD5E1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.codecademy-layout .results-neutral strong {
+  color: #94A3B8;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .codecademy-layout .schema-content {
   flex: 1;
   overflow: auto;

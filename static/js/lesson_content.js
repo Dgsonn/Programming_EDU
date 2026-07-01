@@ -4248,6 +4248,13 @@ concept_cards: [
       step_4: {
         prompt: 'Viết query đếm <strong>số cửa hàng theo từng zone</strong> trong TP.HCM, chỉ cửa hàng <strong>trong bán kính 10km</strong> từ trung tâm. GROUP BY zone, sắp xếp giảm dần.',
         starter: "-- Đếm cửa hàng theo zone (TP.HCM, bán kính 10km từ trung tâm)\n-- ST_DWithin + GROUP BY zone + ORDER BY count DESC\nSELECT , COUNT(*) AS \n  FROM shop_branches\n WHERE city = 'TP.HCM'\n   AND ST_DWithin(geo_location, ST_MakePoint(, ), )\n GROUP BY \n ORDER BY  DESC;\n",
+        /* 4A-E3-equiv Bài 16: equiv_sql dùng cột phẳng within_10km — engine không làm PostGIS,
+         * council tính khoảng cách 22 branch từ tâm B01 (106.7009, 10.7769), bán kính 10km:
+         *   yes (≤10km, TP.HCM): B01·B02·B04·B05·B07·B12·B13·B14·B15·B19·B22 (11)
+         *   no (TP.HCM ngoài 10km): B06 (East, ~11.1km) · B20 (West, ~10.9km)
+         *   no (khác tỉnh): B03·B08·B09·B21 (HN) · B10·B11 (ĐN) · B16 (CT) · B17 (Huế) · B18 (NT)
+         * Verify: Downtown 4 · South 3 · North 2 · East 1 · West 1 (5 zone ORDER DESC, top=4). */
+        equiv_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND within_10km = 'yes' GROUP BY zone ORDER BY branch_count DESC;",
         schema: {
           table_name: 'shop_branches',
           columns: [
@@ -4255,31 +4262,32 @@ concept_cards: [
             { name: 'name',         type: 'VARCHAR', key: '',  icon: '' },
             { name: 'geo_location', type: 'POINT',   key: '',  icon: '&#128205;' },
             { name: 'city',         type: 'VARCHAR', key: '',  icon: '' },
-            { name: 'zone',         type: 'VARCHAR', key: '',  icon: '' }
+            { name: 'zone',         type: 'VARCHAR', key: '',  icon: '' },
+            { name: 'within_10km',  type: 'VARCHAR', key: '',  icon: '&#127757;' }
           ],
           data: [
-            ['B01','Quận 1 Center',     '(106.7009, 10.7769)','TP.HCM','Downtown'],
-            ['B02','District 7 Hub',    '(106.7369, 10.7288)','TP.HCM','South'],
-            ['B03','Hanoi Old Quarter', '(105.8542, 21.0285)','Hà Nội','Old City'],
-            ['B04','District 3 Store',  '(106.6872, 10.7822)','TP.HCM','Downtown'],
-            ['B05','Bình Thạnh Mall',  '(106.7038, 10.8106)','TP.HCM','North'],
-            ['B06','Thủ Đức Tech',     '(106.7710, 10.8494)','TP.HCM','East'],
-            ['B07','Tân Bình Point',   '(106.6526, 10.8014)','TP.HCM','South'],
-            ['B08','Hai Bà Trưng HN',  '(105.8480, 21.0080)','Hà Nội','Old City'],
-            ['B09','Cầu Giấy HN',      '(105.7964, 21.0313)','Hà Nội','North'],
-            ['B10','Đà Nẵng Center',   '(108.2022, 16.0544)','Đà Nẵng','Downtown'],
-            ['B11','Hải Châu DN',      '(108.2208, 16.0678)','Đà Nẵng','South'],
-            ['B12','Phú Nhuận Store',  '(106.6800, 10.7990)','TP.HCM','Downtown'],
-            ['B13','Gò Vấp Hub',       '(106.6657, 10.8386)','TP.HCM','North'],
-            ['B14','Quận 10 Plaza',    '(106.6670, 10.7730)','TP.HCM','Downtown'],
-            ['B15','Quận 4 Point',     '(106.7050, 10.7590)','TP.HCM','South'],
-            ['B16','Cần Thơ Center',   '(105.7469, 10.0452)','Cần Thơ','Downtown'],
-            ['B17','Huế Store',        '(107.5847, 16.4637)','Huế','Old City'],
-            ['B18','Nha Trang Bay',    '(109.1967, 12.2388)','Nha Trang','Downtown'],
-            ['B19','Quận 2 Hub',       '(106.7500, 10.7870)','TP.HCM','East'],
-            ['B20','Bình Tân Mall',    '(106.6020, 10.7650)','TP.HCM','West'],
-            ['B21','Long Biên HN',     '(105.8800, 21.0450)','Hà Nội','North'],
-            ['B22','Quận 5 Plaza',     '(106.6634, 10.7540)','TP.HCM','West']
+            ['B01','Quận 1 Center',     '(106.7009, 10.7769)','TP.HCM','Downtown','yes'],
+            ['B02','District 7 Hub',    '(106.7369, 10.7288)','TP.HCM','South','yes'],
+            ['B03','Hanoi Old Quarter', '(105.8542, 21.0285)','Hà Nội','Old City','no'],
+            ['B04','District 3 Store',  '(106.6872, 10.7822)','TP.HCM','Downtown','yes'],
+            ['B05','Bình Thạnh Mall',  '(106.7038, 10.8106)','TP.HCM','North','yes'],
+            ['B06','Thủ Đức Tech',     '(106.7710, 10.8494)','TP.HCM','East','no'],
+            ['B07','Tân Bình Point',   '(106.6526, 10.8014)','TP.HCM','South','yes'],
+            ['B08','Hai Bà Trưng HN',  '(105.8480, 21.0080)','Hà Nội','Old City','no'],
+            ['B09','Cầu Giấy HN',      '(105.7964, 21.0313)','Hà Nội','North','no'],
+            ['B10','Đà Nẵng Center',   '(108.2022, 16.0544)','Đà Nẵng','Downtown','no'],
+            ['B11','Hải Châu DN',      '(108.2208, 16.0678)','Đà Nẵng','South','no'],
+            ['B12','Phú Nhuận Store',  '(106.6800, 10.7990)','TP.HCM','Downtown','yes'],
+            ['B13','Gò Vấp Hub',       '(106.6657, 10.8386)','TP.HCM','North','yes'],
+            ['B14','Quận 10 Plaza',    '(106.6670, 10.7730)','TP.HCM','Downtown','yes'],
+            ['B15','Quận 4 Point',     '(106.7050, 10.7590)','TP.HCM','South','yes'],
+            ['B16','Cần Thơ Center',   '(105.7469, 10.0452)','Cần Thơ','Downtown','no'],
+            ['B17','Huế Store',        '(107.5847, 16.4637)','Huế','Old City','no'],
+            ['B18','Nha Trang Bay',    '(109.1967, 12.2388)','Nha Trang','Downtown','no'],
+            ['B19','Quận 2 Hub',       '(106.7500, 10.7870)','TP.HCM','East','yes'],
+            ['B20','Bình Tân Mall',    '(106.6020, 10.7650)','TP.HCM','West','no'],
+            ['B21','Long Biên HN',     '(105.8800, 21.0450)','Hà Nội','North','no'],
+            ['B22','Quận 5 Plaza',     '(106.6634, 10.7540)','TP.HCM','West','yes']
           ]
         },
         expected_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;",
@@ -4471,6 +4479,9 @@ concept_cards: [
             ['E22','U04','login',   '2026-01-17 09:00:00']
           ]
         },
+        /* 4A-E3-equiv Bài 17 (Django ORM): equiv_sql render bảng-phải bằng SQL tương đương
+         * (engine không chạy ORM syntax). Verify result: login=5 · purchase=2 · logout=2 (3 rows cho user U01). */
+        equiv_sql: "SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;",
         expected_sql: "LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')",
         hints: [
           { level: 1, text: "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể. Hãy nghĩ: filter user trước, GROUP BY loại event, COUNT, ORDER BY giảm dần." },
@@ -4870,6 +4881,10 @@ concept_cards: [
             ['U22','duc_user',   'duc@x.com','user']
           ]
         },
+        /* 4A-E3-equiv Bài 19 (%s + 2 câu): câu 1 'WHERE username=%s AND password_hash=%s'
+         *   không chạy (bảng KHÔNG có password_hash) → render câu 2 aggregation qua equiv_sql.
+         * Verify result: user=12 · moderator=4 · admin=3 · guest=3 (4 rows). */
+        equiv_sql: "SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
         expected_sql: "SELECT * FROM user_accounts WHERE username = %s AND password_hash = %s; SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
         hints: [
           { level: 1, text: "Bạn cần <em>phòng chống SQL Injection</em> (Prepared Statement) + <em>đếm user theo role</em> (aggregation). Hãy nghĩ: <code>%s</code> placeholder cho input, GROUP BY role cho aggregation." },
