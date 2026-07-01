@@ -3906,8 +3906,15 @@
     }
 
     if (liveResult && liveResult.pending) {
-      /* 4A-E2-fix: pending neutral (E3-scope). KHUNG INFO cyan/amber, KHÔNG đỏ-tam-giác. */
-      renderStep4Pending(liveResult.msg);
+      /* 4A-E2-fix: pending neutral (E3-scope). KHUNG INFO cyan/amber, KHÔNG đỏ-tam-giác.
+       * 4A-E3-equiv-fix: bài có s4.equiv_sql thay vì pending "đáp án ĐÚNG" (flash 0.6s giả) hiện
+       * ngay placeholder "⏳ Đang kiểm tra…" — setTimeout 600ms sẽ OVERWRITE bằng kết quả
+       * equiv thật (Accept) hoặc neutral "gõ đúng query để xem kết quả" (Reject). */
+      if (s4.equiv_sql) {
+        renderStep4Checking();
+      } else {
+        renderStep4Pending(liveResult.msg);
+      }
     } else if (liveResult && liveResult.error) {
       // Query có lỗi parse/exec → render error panel + skip validation
       renderStep4Error(liveResult.error);
@@ -3952,9 +3959,18 @@
           }
         }
       } else {
-        /* 4A-E3-equiv: validateSQL Reject → KHÔNG giữ pending (sẽ false-correct);
-         * KHÔNG giữ results (sẽ show bảng-phải cho SQL sai). Render NEUTRAL panel. */
-        renderStep4Neutral('Câu query chưa khớp đáp án — bạn có thể thử lại hoặc bấm "Gợi ý" bên trái.');
+        /* 4A-E3-equiv-fix: gate by liveResult.pending — không gate by s4.equiv_sql.
+         *
+         * - reject + liveResult = bảng thật / lỗi cú pháp thật → GIỮ panel (đã render
+         *   ở immediate path trên). KHÔNG xóa kết quả đang hiển thị — phá IDE khám phá
+         *   (Bài 1 `WHERE id=102` reject → VẪN hiện bảng id=102).
+         *
+         * - reject + liveResult.pending (bài equiv HOẶC bài thường user lỡ gõ clause
+         *   chưa hỗ trợ như CASE/IN-subquery/JOSN->>) → neutral "gõ đúng query…".
+         *   Tránh false-correct "đáp án ĐÚNG" cho SQL sai. */
+        if (liveResult && liveResult.pending) {
+          renderStep4Neutral('Câu query chưa khớp đáp án — bạn có thể thử lại hoặc bấm "Gợi ý" bên trái.');
+        }
         flashTerminal('error', `✗ Wrong Answer\n\n${result.error || 'Query chưa đúng.'}\n\n${result.suggestion || ''}`);
         if (isSubmit) loseHeart();
         if (s4.hints && s4.hints.length > 0) showNextHint();
@@ -5330,6 +5346,18 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
     el.innerHTML = `<div class="results-neutral">
       <strong><i class="fa-solid fa-lightbulb"></i> Gõ đúng query để xem kết quả</strong>
       ${escapeHtml(msg || '')}
+    </div>`;
+  }
+
+  /* 4A-E3-equiv-fix: CHECKING (placeholder 0.6s) — bài equiv khi Run hiện ngay placeholder
+   * "Đang kiểm tra…" (icon fa-spinner) thay vì pending "đáp án ĐÚNG" (avoid false-correct flash).
+   * Sau 600ms, Accept→equiv results (OVERWRITE) / Reject→neutral (OVERWRITE). */
+  function renderStep4Checking() {
+    const el = document.getElementById('step4-results');
+    if (!el) return;
+    el.innerHTML = `<div class="results-checking">
+      <strong><i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra…</strong>
+      Chờ validate query trong giây lát.
     </div>`;
   }
 

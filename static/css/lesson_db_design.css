@@ -3180,6 +3180,26 @@ body.lesson-focus-mode::before {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+/* 4A-E3-equiv-fix: CHECKING (placeholder 0.6s) — khung tạm khi Run trên bài equiv;
+ * bị OVERWRITE bởi results (Accept) hoặc neutral (Reject) sau 600ms validateSQL. */
+.codecademy-layout .results-checking {
+  padding: 16px;
+  background: rgba(100, 116, 139, 0.05);
+  border: 1px dashed rgba(148, 163, 184, 0.32);
+  border-radius: 8px;
+  color: #94A3B8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.codecademy-layout .results-checking strong {
+  color: #CBD5E1;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .codecademy-layout .schema-content {
   flex: 1;
   overflow: auto;
