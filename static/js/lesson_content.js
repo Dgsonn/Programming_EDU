@@ -494,7 +494,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Hoàn thiện câu SQL dưới đây — điền các từ/cột còn thiếu vào ô trống:',
+        prompt: "Nâng độ khó — thay vì 1 người, liệt kê <strong>MỌI người chơi ở Tokyo</strong> kèm cột ảo <code>age</code>, sắp xếp <strong>già → trẻ</strong> (<code>ORDER BY age DESC</code>).",
         starter: '-- Tính username + 2 mảnh địa chỉ + cột ảo age\n-- AS dùng để đặt tên cột ảo\nSELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age\n  FROM player_profile\n WHERE p_id = 7;',
         schema: {
           table_name: 'player_profile',
@@ -534,9 +534,9 @@ concept_cards: [
           { level: 1, text: 'Bạn cần lấy <em>nhiều cột</em> + tính <em>cột ảo</em> từ birth_year → tuổi. Hãy nghĩ: <code>EXTRACT(YEAR FROM CURRENT_DATE) - birth_year</code> cho ra tuổi hiện tại.' },
           { level: 2, text: 'SELECT 4 cột: <code>username</code>, <code>address_city</code>, <code>address_dist</code>, và cột tính tuổi.' },
           { level: 3, text: 'Cột ảo tuổi: <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code> — dùng <code>AS</code> để đặt tên.' },
-          { level: 4, text: '<code class="code">SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;</code>' }
+          { level: 4, text: "<code class=\"code\">SELECT username, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE address_city = 'Tokyo' ORDER BY age DESC;</code>" }
         ],
-        expected_sql: 'SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;',
+        expected_sql: "SELECT username, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE address_city = 'Tokyo' ORDER BY age DESC;",
         success_message: 'Tuyệt! Bạn đã nắm Composite (tách cột) + Derived (tính cột ảo với AS). Bài 3 sẽ học cách nối 2 bảng bằng Foreign Key + JOIN.',
         xp_reward: 50
       }
@@ -743,7 +743,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Tự gõ SQL! Lấy <code>title</code> của mọi game do <code>Rockstar</code> sản xuất. <em>Gợi ý: dùng game JOIN publisher ...</em>',
+        prompt: "Nâng độ khó — <strong>đếm số game của mỗi nhà phát hành</strong> (JOIN + <code>GROUP BY</code> + <code>COUNT</code>), sắp xếp nhiều → ít. Không chỉ lọc 1 publisher nữa.",
         starter: '-- Viết query của bạn ở đây\n',
         schema: {
           table_name: 'game',
@@ -794,12 +794,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Rockstar';",
+        expected_sql: "SELECT publisher.name, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id GROUP BY publisher.name ORDER BY game_count DESC;",
         hints: [
           { level: 1, text: 'Cần 1 cột: <code>game.title</code> (dùng table.column để rõ ràng).' },
           { level: 2, text: 'Bảng <code>game</code>, JOIN với <code>publisher</code> ON <code>game.pub_id = publisher.id</code>.' },
           { level: 3, text: "WHERE <code>publisher.name = 'Rockstar'</code>" },
-          { level: 4, text: "<code>SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Rockstar';</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT publisher.name, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id GROUP BY publisher.name ORDER BY game_count DESC;</code>" }
         ],
         success_message: 'Xuất sắc! Bạn đã nối 2 bảng qua Foreign Key bằng JOIN ON. Bài 4 sẽ học FK & 1:N — quan hệ một-nhiều qua khóa ngoại.',
         xp_reward: 60
@@ -1033,7 +1033,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Từ 3 bảng <code>player</code>, <code>player_game_library</code>, <code>game</code>: tìm <code>title</code> của các game mà player tên <em>DragonLord</em> đang sở hữu. Viết query SQL trong editor ở cột giữa.',
+        prompt: "Nâng độ khó — đi <strong>ngược chiều</strong>: từ 3 bảng, tìm <strong>những người chơi ĐANG SỞ HỮU game \"Elden Ring\"</strong> (thay vì liệt kê game của 1 người).",
         // FIX 2e-C2: context giàu — Bài 3 mid concept (JOIN qua 3 bảng)
         context: {
           scenario: 'Bạn đang xây tính năng "Thư viện game" cho hệ thống gaming. Mỗi player có thể sở hữu nhiều game; mối quan hệ N-N giữa <code>player</code> và <code>game</code> được lưu qua bảng trung gian <code>player_game_library</code>. Cần truy vấn game của riêng <em>DragonLord</em>.',
@@ -1049,7 +1049,7 @@ concept_cards: [
             sql: 'SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = "NoobMaster";',
             sample_output: '→ 2 dòng: <code>Elden Ring</code> + <code>Hollow Knight</code> (NoobMaster sở hữu 2 game trong data mẫu)'
           },
-          expected: 'Bảng kết quả 2 dòng × 1 cột <code>title</code>: <code>Elden Ring</code> và <code>Hades</code> (DragonLord sở hữu 2 game).'
+          expected: "Bảng kết quả 4 dòng × 1 cột <code>username</code>: <code>DragonLord, NoobMaster, ShadowBlade, LootGoblin</code> — 4 người đang sở hữu 'Elden Ring' (id 101). Lần này đi NGƯỢC: lọc theo game → ra người chơi."
         },
         starter: "-- Tìm title game của player 'DragonLord'\n-- JOIN 3 bảng: player ↔ player_game_library ↔ game\nSELECT game.\n  FROM player\n  JOIN player_game_library ON player. = player_game_library.\n  JOIN game ON player_game_library. = game.\n WHERE player. = ;\n",
         schema: {
@@ -1123,9 +1123,9 @@ concept_cards: [
           { level: 1, text: 'Bạn cần <em>nối 3 bảng</em> qua các FK: <code>player.p_id</code> ↔ <code>player_game_library.ref_p_id</code> ↔ <code>player_game_library.ref_game_id</code> ↔ <code>game.game_id</code>.' },
           { level: 2, text: 'SELECT 1 cột: <code>game.title</code>. Filter username = \'DragonLord\'.' },
           { level: 3, text: 'JOIN thứ 1: <code>player p JOIN player_game_library l ON p.p_id = l.ref_p_id</code>. JOIN thứ 2: <code>JOIN game g ON l.ref_game_id = g.game_id</code>.' },
-          { level: 4, text: '<code class="code">SELECT g.title FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE p.username = \'DragonLord\';</code>' }
+          { level: 4, text: "<code class=\"code\">SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Elden Ring';</code>" }
         ],
-        expected_sql: "SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = 'DragonLord';",
+        expected_sql: "SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Elden Ring';",
         success_message: 'Đỉnh! Bạn đã JOIN 3 bảng thành thạo qua FK chain. Bài 5 sẽ học M:N — quan hệ nhiều-nhiều qua bảng trung gian.',
         xp_reward: 70
       }
@@ -1311,7 +1311,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Endpoint thư viện cần liệt kê game của người chơi 9. Viết query lấy mọi <code>game_id</code> mà player 9 sở hữu.',
+        prompt: "Nâng độ khó — dùng bảng trung gian để <strong>đếm mỗi người chơi sở hữu bao nhiêu game</strong> (<code>GROUP BY player_id</code> + <code>COUNT</code>), sắp xếp nhiều → ít.",
         starter: "-- Lấy game_id mà player 9 sở hữu\n-- Filter: player_id = 9\nSELECT ____\n  FROM ____\n WHERE ____ = ____;",
         schema: {
           table_name: 'library',
@@ -1351,9 +1351,9 @@ concept_cards: [
           { level: 1, text: 'Bạn cần <em>1 cột</em> (game_id) từ bảng <code>library</code>, lọc theo player_id = 9.' },
           { level: 2, text: '<code>SELECT game_id FROM library WHERE player_id = 9;</code> — kết quả 2 dòng (101, 105).' },
           { level: 3, text: 'Đừng gộp <code>GROUP BY</code> hay <code>DISTINCT</code> — 1 player có thể sở hữu 1 game nhiều lần (giả định đơn giản).' },
-          { level: 4, text: "<code class=\"code\">SELECT game_id FROM library WHERE player_id = 9;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT player_id, COUNT(*) AS game_count FROM library GROUP BY player_id ORDER BY game_count DESC;</code>" }
         ],
-        expected_sql: 'SELECT game_id FROM library WHERE player_id = 9;',
+        expected_sql: "SELECT player_id, COUNT(*) AS game_count FROM library GROUP BY player_id ORDER BY game_count DESC;",
         success_message: 'Hoàn thành M:N & bảng trung gian! Bài 6 (Weak Entity) tiếp theo — thực thể yếu cũng dùng khóa ghép nhưng theo cách khác.',
         xp_reward: 50
       }
@@ -1529,7 +1529,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Lấy <code>dlc_name</code> của gói DLC số <strong>2</strong> thuộc game id <strong>300</strong>. Viết query SQL trong editor ở cột giữa.',
+        prompt: "Nâng độ khó — liệt kê <strong>TẤT CẢ các gói DLC</strong> (số + tên) của game id <code>500</code>, sắp xếp theo <code>dlc_no</code>. Thấy rõ: 1 game yếu → nhiều DLC nên khóa phải GHÉP cả <code>ref_game_id</code> + <code>dlc_no</code>.",
         // FIX 2e-C2: context giàu — Bài 4 M:N (bảng trung gian có composite key)
         context: {
           scenario: 'Trong hệ thống DLC store, mỗi game có nhiều gói DLC, và mỗi DLC được đánh số theo <code>dlc_no</code> trong từng game. Bảng <code>dlc_content</code> dùng khóa tổng hợp (<code>ref_game_id</code> + <code>dlc_no</code>) để xác định duy nhất 1 DLC. Cần lấy tên DLC #2 của game id = 300.',
@@ -1545,7 +1545,7 @@ concept_cards: [
             sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;',
             sample_output: '→ 1 dòng: <code>Phantom Liberty</code>'
           },
-          expected: 'Bảng kết quả 1 dòng × 1 cột: <code>Blood and Wine</code> — DLC #2 của game 300. Phải đúng 1 dòng — nếu trả về nhiều dòng, kiểm tra WHERE có đủ 2 điều kiện AND chưa.'
+          expected: "Bảng kết quả 3 dòng × 2 cột (<code>dlc_no, dlc_name</code>): 3 DLC của game 500. Cùng <code>ref_game_id = 500</code> nhưng <code>dlc_no</code> khác nhau — vì thế khóa chính phải GHÉP cả hai cột."
         },
         starter: "-- Lấy dlc_name của DLC #2 thuộc game id 300\n-- Filter: dlc_no = 2 AND ref_game_id = 300\nSELECT \n  FROM \n WHERE  = \n   AND  = ;\n",
         schema: {
@@ -1578,8 +1578,8 @@ concept_cards: [
             ['900', '2', 'Story Expansion II']
           ]
         },
-        expected_sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;',
-        hints: [{'level': 1, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_no = 2;</code> — Sai: thiếu ref_game_id nên trả về cả 2 dòng DLC #2 (của game 300 + 400).'}, {'level': 2, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE ref_game_id = 300;</code> — Sai: ref_game_id chỉ đủ để biết là DLC của game 300, nhưng không định danh được DLC #1 hay #2 → trả về cả 2 dòng.'}, {'level': 3, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_name = </code> — Sai logic: lọc theo name (không phải PK) sẽ đúng trong data này nhưng phá vỡ tính định danh — không dùng tên làm định danh được.'}, {'level': 4, 'text': '<code class="code">SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;</code>'}],
+        expected_sql: "SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no;",
+        hints: [{'level': 1, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_no = 2;</code> — Sai: thiếu ref_game_id nên trả về cả 2 dòng DLC #2 (của game 300 + 400).'}, {'level': 2, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE ref_game_id = 300;</code> — Sai: ref_game_id chỉ đủ để biết là DLC của game 300, nhưng không định danh được DLC #1 hay #2 → trả về cả 2 dòng.'}, {'level': 3, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_name = </code> — Sai logic: lọc theo name (không phải PK) sẽ đúng trong data này nhưng phá vỡ tính định danh — không dùng tên làm định danh được.'}, {'level': 4, 'text': '<code class="code">SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no;</code>'}],
         success_message: 'Bài 7 tiếp theo — chuyển ER Diagram → bảng quan hệ vật lý (7 quy tắc mapping chuẩn).',
         xp_reward: 30
       }
@@ -1818,7 +1818,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Lấy <code>title</code> và <code>genre</code> của mọi game do <code>Supergiant</code> xuất bản. Viết query SQL trong editor ở cột giữa.',
+        prompt: "Nâng độ khó — <strong>đếm số game theo từng thể loại</strong> mà <code>FromSoftware</code> phát hành (JOIN + <code>GROUP BY genre</code> + <code>COUNT</code>), sắp xếp nhiều → ít.",
         starter: "-- Lấy title + genre của game do Supergiant xuất bản\n-- JOIN game ↔ publisher ON game.pub_id = publisher.id\nSELECT g., g.\n  FROM  g\n  JOIN  p ON g. = p.\n WHERE p. = ;\n",
         schema: {
           table_name: 'game',
@@ -1875,12 +1875,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';",
+        expected_sql: "SELECT game.genre, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware' GROUP BY game.genre ORDER BY game_count DESC;",
         hints: [
           { level: 1, text: 'Cần 2 cột: <code>title</code> và <code>genre</code>.' },
           { level: 2, text: 'Bảng <code>game</code> JOIN <code>publisher</code> ON <code>game.pub_id = publisher.id</code>.' },
           { level: 3, text: "WHERE <code>publisher.name = 'Supergiant'</code>." },
-          { level: 4, text: "<code class=\"code\">SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT game.genre, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware' GROUP BY game.genre ORDER BY game_count DESC;</code>" }
         ],
         success_message: 'Xuất sắc! Bạn đã nắm vững quy tắc mapping ER → Bảng quan hệ. Bài 8 sẽ dùng FD để phát hiện dư thừa trong bảng đã mapping xong.',
         xp_reward: 35
@@ -2094,7 +2094,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Tìm tất cả <code>game_name</code> của studio <em>Valve</em> (USA). Viết query SQL trong editor ở cột giữa.',
+        prompt: "Nâng độ khó — <strong>đếm số game mỗi studio</strong> kèm quốc gia (<code>GROUP BY studio_name, st_country</code>), sắp xếp nhiều → ít. Chú ý: quốc gia bị LẶP theo studio = dấu hiệu dư thừa (FD).",
 
         starter: "-- Lấy tên các game do Valve phát triển\n-- Filter theo studio_name = 'Valve'\nSELECT \n  FROM game_studio_combined\n WHERE ;\n",
         schema: {
@@ -2130,8 +2130,8 @@ concept_cards: [
             ['63', 'Mario Kart 8',   'Nintendo',     'Japan']
           ]
         },
-        expected_sql: "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
-        hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 22 dòng của 6 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT game_name FROM game_studio_combined WHERE studio_name = \'Valve\';</code>'}],
+        expected_sql: "SELECT studio_name, st_country, COUNT(*) AS game_count FROM game_studio_combined GROUP BY studio_name, st_country ORDER BY game_count DESC;",
+        hints: [{'level': 1, 'text': 'Loại trừ <code>WHERE st_country = \'USA\'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể.'}, {'level': 2, 'text': 'Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 22 dòng của 6 studio.'}, {'level': 3, 'text': 'Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve.'}, {'level': 4, 'text': '<code class="code">SELECT studio_name, st_country, COUNT(*) AS game_count FROM game_studio_combined GROUP BY studio_name, st_country ORDER BY game_count DESC;</code>'}],
         success_message: 'Bạn đã hiểu Redundancy + FD. Bài 9 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.',
         xp_reward: 30
       }
@@ -2356,7 +2356,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Sau khi tách theo 1NF: bảng <code>student(student_id, name)</code> và bảng <code>student_phone(student_id, phone)</code>. Tìm <code>name</code> của sinh viên có số điện thoại <code>\'0901-111-111\'</code>.',
+        prompt: "Nâng độ khó — <strong>đếm mỗi sinh viên có bao nhiêu số điện thoại</strong> (JOIN student ↔ student_phone + <code>GROUP BY</code> + <code>COUNT</code>), sắp xếp nhiều → ít. Nhờ 1NF mỗi số là 1 dòng nên đếm được.",
         schema: {
           table_name: 'student_phone',
           columns: [
@@ -2387,12 +2387,12 @@ concept_cards: [
           }]
         },
         starter: "-- Tìm tên SV có số ĐT '0901-111-111'\n-- Gợi ý: dùng WHERE student_id IN (subquery)\nSELECT \n  FROM student\n WHERE student_id  (\n   SELECT student_id FROM student_phone WHERE \n );\n",
-        expected_sql: "SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');",
+        expected_sql: "SELECT s.name, COUNT(*) AS phone_count FROM student s JOIN student_phone sp ON s.student_id = sp.student_id GROUP BY s.name ORDER BY phone_count DESC;",
         hints: [
           { level: 1, text: 'Cần lấy <code>name</code> từ bảng <code>student</code> — nơi có tên sinh viên.' },
           { level: 2, text: 'Dùng <code>IN (subquery)</code>: <code>WHERE student_id IN (...)</code> với subquery tìm student_id từ bảng <code>student_phone</code>.' },
           { level: 3, text: 'Subquery: <code>(SELECT student_id FROM student_phone WHERE phone = \'0901-111-111\')</code>' },
-          { level: 4, text: "<code class=\"code\">SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT s.name, COUNT(*) AS phone_count FROM student s JOIN student_phone sp ON s.student_id = sp.student_id GROUP BY s.name ORDER BY phone_count DESC;</code>" }
         ],
         success_message: 'Hoàn thành 1NF! Dữ liệu đã nguyên tử hóa — mỗi ô chỉ chứa 1 giá trị, query đơn giản không cần LIKE. Tiếp theo: 2NF loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp!',
         xp_reward: 50
@@ -2572,7 +2572,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Sau 2NF, tách thành 2 bảng <code>loans</code> và <code>members</code>. Tìm <strong>top 3 thành viên mượn nhiều sách nhất</strong>. Hiển thị <code>member_name</code> + số lượt mượn, sắp xếp giảm dần.',
+        prompt: "Nâng độ khó — chỉ tính <strong>lượt mượn TỪ 2024-02-01</strong> (thêm <code>WHERE loan_date &gt;= ...</code>), đếm theo thành viên, sắp xếp nhiều → ít (bỏ giới hạn top 3).",
         starter: "-- Top 3 thành viên mượn nhiều sách nhất\n-- JOIN loans ↔ members + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT m., COUNT(*) AS \n  FROM members m\n  JOIN loans l ON l. = m.\n GROUP BY m., m.\n ORDER BY  DESC\n LIMIT 3;\n",
         schema: {
           table_name: 'members',
@@ -2613,12 +2613,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;",
+        expected_sql: "SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id WHERE l.loan_date >= '2024-02-01' GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC;",
         hints: [
           { level: 1, text: 'Bạn cần <em>đếm sách mượn theo từng thành viên</em>. Hãy nghĩ: <strong>JOIN</strong> 2 bảng qua <code>member_id</code>, <strong>GROUP BY</strong> member, <strong>COUNT(*)</strong>, <strong>ORDER BY</strong> giảm dần, <strong>LIMIT</strong> top 3.' },
           { level: 2, text: 'JOIN: <code>members m JOIN loans l ON l.member_id = m.member_id</code>.' },
           { level: 3, text: 'GROUP BY theo cả 2 cột: <code>m.member_id, m.member_name</code>. COUNT(*) đếm số dòng loans.' },
-          { level: 4, text: "<code class=\"code\">SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id WHERE l.loan_date >= '2024-02-01' GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC;</code>" }
         ],
         success_message: 'Hoàn thành 2NF nâng cao! Phụ thuộc bộ phận đã được loại bỏ, và bạn đã JOIN + GROUP BY qua 2 bảng. Tiếp theo Bài 11 sẽ xét 3NF — loại bỏ phụ thuộc bắc cầu.',
         xp_reward: 70
@@ -2815,7 +2815,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Sau 3NF, tách thành 3 bảng <code>orders</code>, <code>products</code>, <code>categories</code>. Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code>. Hiển thị category + tổng tiền, sắp xếp giảm dần.',
+        prompt: "Nâng độ khó — tính doanh thu theo category nhưng chỉ cho đơn <strong>trong khoảng 2024-04-10 → 2024-04-20</strong> (thêm 2 điều kiện <code>AND</code> ngày), sắp xếp giảm dần.",
         starter: "-- Tổng doanh thu theo category từ 2024-04-05\n-- JOIN orders ↔ products ↔ categories + GROUP BY + SUM + ORDER BY\nSELECT c., SUM(o.qty * p.) AS \n  FROM orders o\n  JOIN products p ON o. = p.\n  JOIN categories c ON p. = c.\n WHERE o. >= '2024-04-05'\n GROUP BY c.\n ORDER BY  DESC;\n",
         schema: {
           table_name: 'products',
@@ -2872,12 +2872,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
+        expected_sql: "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-10' AND o.order_date <= '2024-04-20' GROUP BY c.category ORDER BY total_revenue DESC;",
         hints: [
           { level: 1, text: 'Bạn cần <em>JOIN 3 bảng</em> (orders ↔ products ↔ categories), tính <code>SUM(qty * price)</code> cho mỗi category, lọc theo ngày, GROUP BY + ORDER BY DESC.' },
           { level: 2, text: 'JOIN chain: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category</code>.' },
           { level: 3, text: '<code>SUM(o.qty * p.price) AS total_revenue</code> — nhân số lượng với giá. WHERE <code>order_date >= \'2024-04-05\'</code>.' },
-          { level: 4, text: "<code class=\"code\">SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-10' AND o.order_date <= '2024-04-20' GROUP BY c.category ORDER BY total_revenue DESC;</code>" }
         ],
         success_message: 'Hoàn thành 3NF nâng cao! Phụ thuộc bắc cầu đã được loại bỏ. Bạn đã tính tổng doanh thu qua 3 bảng — đây là pattern quan trọng trong business intelligence.',
         xp_reward: 90
@@ -3143,7 +3143,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Sau BCNF, tách thành 3 bảng <code>doctors</code>, <code>patients</code>, <code>treatments</code>. Tìm <strong>top 3 chuyên khoa có nhiều ca điều trị nhất</strong>. Hiển thị chuyên khoa + số ca, sắp xếp giảm dần.',
+        prompt: "Nâng độ khó — thống kê <strong>chi tiết theo từng BÁC SĨ</strong> (tên + chuyên khoa + số ca), lấy <strong>top 3 bác sĩ</strong> nhiều ca nhất — mịn hơn mức 'theo chuyên khoa'.",
         // FIX 2e-C2: context giàu — Bài 10 late BCNF (aggregation qua 3 bảng)
         context: {
           scenario: 'Bệnh viện X sau khi áp dụng BCNF đã tách bảng <code>treatments</code> cũ thành 3 bảng chuẩn hóa: <code>doctors</code> (chuyên khoa), <code>patients</code>, <code>treatments</code> (ghi nhận ca điều trị). Ban giám đốc muốn biết <strong>top 3 chuyên khoa</strong> đang "hot" nhất để điều phối nhân lực.',
@@ -3159,7 +3159,7 @@ concept_cards: [
             sql: 'SELECT d.doctor_name, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name ORDER BY treatment_count DESC LIMIT 2;',
             sample_output: '→ 2 dòng × 2 cột: vd <code>(BS. Hà, 3)</code>, <code>(BS. Linh, 2)</code>'
           },
-          expected: 'Bảng kết quả 3 dòng × 2 cột <code>doctor_specialty</code> + <code>treatment_count</code>, sắp xếp giảm dần theo số ca. (Số liệu thực tế phụ thuộc data mẫu — bài 10 dùng hospital domain.)'
+          expected: "Bảng kết quả 3 dòng × 3 cột (<code>doctor_name, doctor_specialty, treatment_count</code>): top 3 bác sĩ nhiều ca nhất — mịn hơn mức 'theo chuyên khoa' của Bước 3."
         },
         starter: "-- Top 3 chuyên khoa có nhiều ca điều trị nhất\n-- JOIN treatments ↔ doctors + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT d., COUNT(*) AS \n  FROM treatments t\n  JOIN doctors d ON t. = d.\n GROUP BY d.\n ORDER BY  DESC\n LIMIT 3;\n",
         schema: {
@@ -3225,12 +3225,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;",
+        expected_sql: "SELECT d.doctor_name, d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name, d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;",
         hints: [
           { level: 1, text: 'Bạn cần <em>JOIN 2 bảng</em> (treatments + doctors) qua <code>doctor_id</code>, <strong>GROUP BY</strong> chuyên khoa, <strong>COUNT</strong>, <strong>ORDER BY DESC</strong> + <strong>LIMIT 3</strong>.' },
           { level: 2, text: 'JOIN: <code>treatments t JOIN doctors d ON t.doctor_id = d.doctor_id</code>.' },
           { level: 3, text: 'GROUP BY <code>d.doctor_specialty</code>. COUNT(*) đếm số treatment. ORDER BY DESC + LIMIT 3 lấy top 3.' },
-          { level: 4, text: "<code class=\"code\">SELECT d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT d.doctor_name, d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name, d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;</code>" }
         ],
         success_message: 'Hoàn thành BCNF nâng cao! Bạn đã JOIN treatments + doctors + GROUP BY chuyên khoa. Bác sĩ và chuyên khoa đã được cô lập — cập nhật 1 chỗ, dữ liệu luôn nhất quán.',
         xp_reward: 80
@@ -3395,7 +3395,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Sau 4NF, tách thành 2 bảng <code>course_textbook</code> và <code>course_instructor</code>. Tìm <strong>top 5 khóa học có nhiều textbook nhất</strong>. Hiển thị course_id + số textbook, sắp xếp giảm dần, lấy 5 kết quả đầu.',
+        prompt: "Nâng độ khó — sang chiều còn lại của 4NF: <strong>đếm số GIẢNG VIÊN mỗi khóa</strong> (bảng <code>course_instructor</code>), sắp xếp nhiều → ít. (Textbook &amp; instructor là 2 chiều đa trị ĐỘC LẬP.)",
         starter: "-- Top khóa học có nhiều textbook nhất\n-- GROUP BY course_id + COUNT + ORDER BY DESC\nSELECT , COUNT(*) AS \n  FROM course_textbook\n GROUP BY \n ORDER BY  DESC;\n",
         schema: {
           table_name: 'course_textbook',
@@ -3439,12 +3439,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC LIMIT 5;",
+        expected_sql: "SELECT course_id, COUNT(*) AS instructor_count FROM course_instructor GROUP BY course_id ORDER BY instructor_count DESC;",
         hints: [
           { level: 1, text: 'Bạn cần <em>đếm số textbook theo từng course</em>, lấy <strong>top 5</strong>. Hãy nghĩ: <strong>GROUP BY course_id</strong> + <strong>COUNT(*)</strong> + <strong>ORDER BY DESC</strong> + <strong>LIMIT 5</strong>.' },
           { level: 2, text: 'SELECT 2 cột: <code>course_id</code> và <code>COUNT(*) AS textbook_count</code>.' },
           { level: 3, text: 'GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook. ORDER BY DESC sắp xếp giảm dần. LIMIT 5 lấy top 5.' },
-          { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC LIMIT 5;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS instructor_count FROM course_instructor GROUP BY course_id ORDER BY instructor_count DESC;</code>" }
         ],
         success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 14 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
         xp_reward: 75
@@ -3755,7 +3755,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'BOSS BATTLE — Từ hệ thống Mạng Xã Hội Gamers (sau 4 vòng chuẩn hóa): tìm <strong>top 3 user premium</strong> có <strong>nhiều post nhất</strong>. Hiển thị username, country, và số post. Sắp xếp giảm dần theo post_count.',
+        prompt: "BOSS+ — thu hẹp còn <strong>user premium ở Việt Nam (country = 'VN')</strong>: top 3 người đăng nhiều post nhất (thêm điều kiện <code>AND u.country = 'VN'</code>).",
         starter: "-- BOSS BATTLE: Top 3 user premium có nhiều post nhất\n-- JOIN 2 bảng (users ↔ posts) + GROUP BY + ORDER BY + LIMIT\nSELECT u., u., COUNT(p.) AS post_count\n  FROM users u\n  JOIN posts p ON p. = u.\n WHERE u. = \n GROUP BY u., u., u.\n ORDER BY post_count DESC\n LIMIT 3;\n",
         schema: {
           table_name: 'users',
@@ -3813,12 +3813,12 @@ concept_cards: [
             ]
           }
         ],
-        expected_sql: "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
+        expected_sql: "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true AND u.country = 'VN' GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
         hints: [
           { level: 1, text: 'Boss Battle! Bạn cần <em>kết hợp dữ liệu từ 2 bảng</em> (users và posts), lọc theo điều kiện, đếm, sắp xếp, lấy top. Hãy nghĩ: dùng JOIN + GROUP BY + ORDER BY + LIMIT.' },
           { level: 2, text: 'Cần <code>JOIN users ↔ posts</code> qua <code>user_id</code>.' },
           { level: 3, text: '<code>WHERE is_premium = true</code> + <code>GROUP BY u.user_id, u.username, u.country</code>' },
-          { level: 4, text: "<code class=\"code\">SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true AND u.country = 'VN' GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;</code>" }
         ],
         success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 14 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Mạng Xã Hội Gamers phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Web Services, Bảo mật).',
         xp_reward: 100
@@ -4020,7 +4020,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: "Viết query đếm <strong>số user theo từng theme</strong> từ JSONB. Dùng <code>GROUP BY settings->>'theme'</code>. Đếm user, nhóm theo theme, sắp xếp giảm dần.",
+        prompt: "Nâng độ khó — trích key JSON KHÁC: <strong>đếm user theo <code>settings-&gt;&gt;'lang'</code></strong> (ngôn ngữ), sắp xếp nhiều → ít. Cùng kỹ thuật path expression, key khác.",
         starter: "-- Đếm user theo theme (extract từ JSONB)\n-- GROUP BY settings->>'theme' + ORDER BY count DESC\nSELECT settings->>'theme' AS , COUNT(*) AS \n  FROM app_users\n GROUP BY settings->>'theme'\n ORDER BY  DESC;\n",
         schema: {
           table_name: 'app_users',
@@ -4054,12 +4054,12 @@ concept_cards: [
             ['U22','duc_dev','{"theme":"light","notifications":true,"lang":"vi"}']
           ]
         },
-        expected_sql: "SELECT settings->>'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'theme' ORDER BY user_count DESC;",
+        expected_sql: "SELECT settings->>'lang' AS lang, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'lang' ORDER BY user_count DESC;",
         hints: [
           { level: 1, text: "Bạn muốn <em>phân tích dữ liệu JSON linh hoạt</em> — trích xuất 1 key từ JSON, đếm số lượng theo từng giá trị của key đó, sắp xếp giảm dần. Hãy nghĩ: trích key = <code>-&gt;&gt;</code>, đếm = <code>COUNT</code>, nhóm = <code>GROUP BY</code>." },
           { level: 2, text: "<code>GROUP BY settings->>'theme'</code> — extract key từ JSON rồi GROUP như cột thường." },
           { level: 3, text: "<code>SELECT settings->>'theme' AS theme, COUNT(*)</code> — alias cho dễ đọc." },
-          { level: 4, text: "<code class=\"code\">SELECT settings-&gt;&gt;'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings-&gt;&gt;'theme' ORDER BY user_count DESC;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT settings-&gt;&gt;'lang' AS lang, COUNT(*) AS user_count FROM app_users GROUP BY settings-&gt;&gt;'lang' ORDER BY user_count DESC;</code>" }
         ],
         success_message: 'JSONB + GROUP BY = phân tích dữ liệu linh hoạt. Không cần ALTER TABLE để thêm cột!',
         xp_reward: 60
@@ -4249,7 +4249,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Viết query đếm <strong>số cửa hàng theo từng zone</strong> trong TP.HCM, chỉ cửa hàng <strong>trong bán kính 10km</strong> từ trung tâm. GROUP BY zone, sắp xếp giảm dần.',
+        prompt: "Nâng độ khó — dùng cột cờ <strong>đã tính sẵn <code>within_10km = 'yes'</code></strong> (thay <code>ST_DWithin</code>) để đếm cửa hàng TP.HCM trong bán kính 10km theo zone, sắp xếp giảm dần — chạy được ngay.",
         starter: "-- Đếm cửa hàng theo zone (TP.HCM, bán kính 10km từ trung tâm)\n-- ST_DWithin + GROUP BY zone + ORDER BY count DESC\nSELECT , COUNT(*) AS \n  FROM shop_branches\n WHERE city = 'TP.HCM'\n   AND ST_DWithin(geo_location, ST_MakePoint(, ), )\n GROUP BY \n ORDER BY  DESC;\n",
         /* 4A-E3-equiv Bài 16: equiv_sql dùng cột phẳng within_10km — engine không làm PostGIS,
          * council tính khoảng cách 22 branch từ tâm B01 (106.7009, 10.7769), bán kính 10km:
@@ -4293,12 +4293,12 @@ concept_cards: [
             ['B22','Quận 5 Plaza',     '(106.6634, 10.7540)','TP.HCM','West','yes']
           ]
         },
-        expected_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;",
+        expected_sql: "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND within_10km = 'yes' GROUP BY zone ORDER BY branch_count DESC;",
         hints: [
           { level: 1, text: "Bạn cần <em>kết hợp spatial filter + aggregation</em>. Lọc TP.HCM → lọc bán kính 10km quanh trung tâm → nhóm theo zone → đếm → sắp xếp. Hãy nghĩ: filter trước (WHERE), aggregate sau (GROUP BY)." },
           { level: 2, text: "<code>WHERE city = 'TP.HCM'</code> — lọc TP.HCM trước." },
           { level: 3, text: "<code>AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10)</code> — lọc bán kính 10km." },
-          { level: 4, text: "<code class=\"code\">SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND within_10km = 'yes' GROUP BY zone ORDER BY branch_count DESC;</code>" }
         ],
         success_message: 'Spatial + GROUP BY = phân tích vùng phủ cửa hàng cực kỳ hiệu quả! ST_DWithin + GiST index = O(log n).',
         xp_reward: 60
@@ -4656,7 +4656,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: "Endpoint /api/games?genre=Action — viết câu SQL server chạy để trả tên + giá các game Action (dạng JSON).",
+        prompt: "Endpoint /api/games?genre=Action&amp;minPrice=50&amp;sort=desc — nâng độ khó: lấy game <strong>Action giá ≥ 50</strong>, <strong>sắp xếp giá giảm dần</strong> (thêm <code>AND price &gt;= 50 ORDER BY price DESC</code>).",
         starter: "-- Lấy name + price các game Action\n-- Filter: genre = 'Action'\nSELECT ____, ____\n  FROM ____\n WHERE ____ = ____;",
         schema: {
           table_name: 'game_catalog',
@@ -4697,9 +4697,9 @@ concept_cards: [
           { level: 1, text: "Bạn cần <em>2 cột</em> (name, price) từ bảng <code>game_catalog</code>, lọc theo genre = 'Action'." },
           { level: 2, text: "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 4 dòng (God of War 50, Ragnarok 60, Sekiro 50, Red Dead 2 60)." },
           { level: 3, text: "Giá trị chuỗi trong SQL đặt trong dấu nháy đơn: <code>'Action'</code>." },
-          { level: 4, text: "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action';</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action' AND price >= 50 ORDER BY price DESC;</code>" }
         ],
-        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'Action';",
+        expected_sql: "SELECT name, price FROM game_catalog WHERE genre = 'Action' AND price >= 50 ORDER BY price DESC;",
         success_message: 'Hoàn thành Web Services (REST/AJAX)! Bài 19 (SQL Injection) tiếp theo — cũng chính là lý do phải dùng parameterized ?.',
         xp_reward: 60
       }
@@ -5082,7 +5082,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: "Viết query phân loại <strong>mức độ bảo mật</strong>: bcrypt/scrypt/argon2 = 'HIGH', sha256 = 'MEDIUM', md5/sha1 = 'LOW'. Dùng <code>CASE WHEN</code>. Đếm số user theo từng mức, sắp xếp giảm dần.",
+        prompt: "Nâng độ khó — thay vì đếm gộp, hãy <strong>liệt kê TỪNG user kèm mức bảo mật</strong> (dùng lại <code>CASE WHEN</code>) làm bảng audit, sắp xếp theo <code>username</code>.",
         starter: "-- CASE WHEN phân loại security level\n-- HIGH (bcrypt/argon2/scrypt), MEDIUM (sha256), LOW (md5/sha1)\nSELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN ''\n            WHEN hash_algorithm = '' THEN ''\n            ELSE '' END AS security_level,\n       COUNT() AS \n  FROM security_users_vault\n GROUP BY security_level\n ORDER BY  DESC;\n",
         schema: {
           table_name: 'security_users_vault',
@@ -5101,12 +5101,12 @@ concept_cards: [
             ['U07','jen_dev', 'scrypt']
           ]
         },
-        expected_sql: "SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;",
+        expected_sql: "SELECT username, hash_algorithm, CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level FROM security_users_vault ORDER BY username;",
         hints: [
           { level: 1, text: "Bạn cần <em>phân loại security level</em> theo thuật toán, đếm user theo từng mức, sắp xếp giảm dần. Hãy nghĩ: <code>CASE WHEN</code> để gán nhãn, <code>GROUP BY</code> theo nhãn, <code>COUNT</code> + <code>ORDER BY</code>." },
           { level: 2, text: "<code>CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH'</code> — recommended algorithms." },
           { level: 3, text: "<code>WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code>." },
-          { level: 4, text: "<code class=\"code\">SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;</code>" }
+          { level: 4, text: "<code class=\"code\">SELECT username, hash_algorithm, CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level FROM security_users_vault ORDER BY username;</code>" }
         ],
         success_message: 'CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 20 bài Database Design Cơ bản!',
         xp_reward: 70
