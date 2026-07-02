@@ -107,24 +107,9 @@
         <div class="eyebrow-row">
           <span class="step-pill">Bước 1 / 4</span>
           <span class="topic-tag">Lý thuyết bite-sized + Trực quan Database</span>
-          <span class="difficulty-pill difficulty-easy" id="diff-pill-1">
-            <i class="fa-solid fa-circle"></i> Dễ
-          </span>
         </div>
 
         <h1 class="lesson-title" id="lesson-title">Entity Set & Primary Key</h1>
-
-        <!-- Step-by-step path indicator (Brilliant-inspired) -->
-        <div class="journey-path">
-          <div class="journey-dot active"></div>
-          <div class="journey-line"></div>
-          <div class="journey-dot"></div>
-          <div class="journey-line"></div>
-          <div class="journey-dot"></div>
-          <div class="journey-line"></div>
-          <div class="journey-dot"></div>
-          <div class="journey-step-label">Lộ trình 4 bước tới Mastery</div>
-        </div>
 
         <!-- Hero visual per lesson (CHANGE 1) — populated by renderLessonHero() based on lesson.id -->
         <div id="lesson-hero" class="lesson-hero" role="img" aria-label="Hero illustration"></div>
@@ -300,9 +285,6 @@
         <div class="eyebrow-row">
           <span class="step-pill">Bước 2 / 4</span>
           <span class="topic-tag">Kiểm tra nhanh — Đừng sai nhé!</span>
-          <span class="difficulty-pill difficulty-easy">
-            <i class="fa-solid fa-circle"></i> Dễ
-          </span>
         </div>
 
         <h2 class="mcq-question" id="mcq-question"></h2>
@@ -407,6 +389,7 @@
               </div>
             </div>
             <div class="ide-tools">
+              <span class="ide-type-hint" title="Bạn có thể gõ SQL trực tiếp vào đây"><i class="fa-solid fa-pen"></i> Tự gõ được</span>
               <span class="char-count" id="ide-char-count">0 ký tự</span>
               <button class="icon-btn" id="btn-drag-reset" title="Bắt đầu lại" onclick="window.handleDragReset()">
                 <i class="fa-solid fa-rotate-left"></i>
@@ -415,7 +398,7 @@
           </header>
           <div class="ide-display pixel-terminal">
             <div class="ide-line-numbers" id="ide-line-numbers">1</div>
-            <div class="ide-content" id="ide-code" contenteditable="true" spellcheck="false" data-placeholder="-- Query của bạn sẽ hiện ở đây"><span class="ide-cursor"></span></div>
+            <div class="ide-content" id="ide-code" contenteditable="true" spellcheck="false" data-placeholder="✎ Gõ SQL trực tiếp ở đây, hoặc kéo khối lệnh phía trên…"><span class="ide-cursor"></span></div>
           </div>
         </div>
       </div>
@@ -431,9 +414,6 @@
             <div>
               <div class="eyebrow-row tight">
                 <span class="step-pill small">Bước 4 / 4</span>
-                <span class="difficulty-pill difficulty-medium" id="diff-pill-4">
-                  <i class="fa-solid fa-circle"></i> Trung bình
-                </span>
               </div>
               <h2 class="pane-title problem-title">
                 <span class="problem-number">1.</span>

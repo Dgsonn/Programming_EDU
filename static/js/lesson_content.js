@@ -48,8 +48,8 @@ window.LESSON_CONTENT['db_design'] = {
             'Primary Key (PK) = cột định danh duy nhất',
             'Dùng PK trong WHERE để lấy chính xác 1 record'
           ],
-          intro: 'Trong CSDL quan hệ, mỗi <strong>Entity Set</strong> = 1 table. Mỗi dòng = 1 thực thể (entity), mỗi cột = 1 thuộc tính (attribute). <strong>Primary Key (PK)</strong> là cột đảm bảo mỗi dòng có giá trị <em>DUY NHẤT</em> — không trùng, không NULL.',
-          example: 'Bảng <code class="code">game_catalog</code> dưới đây có cột <code class="code">id</code> làm PK. Hai game có thể trùng tên (Elden Ring xuất hiện 2 lần ở 2 thể loại), nhưng <code class="code">id</code> thì không bao giờ trùng — vì vậy dùng <code class="code">id</code> trong WHERE sẽ chốt được đúng 1 dòng.'
+          intro: '',
+          example: '🔍 <strong>Nhìn bảng SAMPLE DATA bên dưới:</strong> ngay trong vài dòng đầu, <strong>Elden Ring</strong> đã xuất hiện 2 lần — dòng <code class="code">101</code> và <code class="code">104</code>. Nếu bạn chỉ nói với DB "tôi muốn Elden Ring", nó biết lấy dòng nào? Giữ câu hỏi này khi sang Bước 2 👇'
         },
         intro: 'Bạn vừa nhận việc ở 1 shop game online. Sếp bảo: <em>"Tổ chức lại kho 5000 game cho gọn gàng"</em>. Bước đầu tiên? Tạo 1 <strong>bảng</strong> (table) — nơi mỗi game là 1 dòng, mỗi thuộc tính (tên, giá, thể loại) là 1 cột. Đây chính là <strong>Entity Set</strong> trong database design.',
         concept_cards: [
@@ -67,7 +67,7 @@ window.LESSON_CONTENT['db_design'] = {
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Bảng game_catalog dưới đây có cột id làm PK."
+              "body": "Lý thuyết là để <strong>phá</strong>. Ở Bước 3 &amp; 4 bạn sẽ tự gõ: <code>WHERE name = 'Elden Ring'</code> → ra <strong>2 dòng</strong> (sai!), còn <code>WHERE id = 101</code> → đúng <strong>1 dòng</strong>. Tự sai rồi sửa — đó là cách nhớ Primary Key lâu nhất."
             }
           ],
         visual: {
@@ -196,25 +196,28 @@ window.LESSON_CONTENT['db_design'] = {
         }
       },
 
-      /* ----- STEP 4: Pure code (Premium v4 — schema + starter đầy đủ) ----- */
+      /* ----- STEP 4: Pure code — CÂU HỎI MỚI (khác Step 3) cùng kỹ năng -----
+         Step 3 kéo thả: id=101, name+price. Step 4 tự viết: id=104, name+genre —
+         chính là bản Elden Ring TRÙNG TÊN → củng cố "PK chốt đúng 1 dòng dù tên trùng". */
       step_4: {
-        prompt: 'Khách muốn biết <strong>name</strong> và <strong>price</strong> của game có <code>id = 101</code>. Viết query SQL trong editor ở cột giữa.',
-        // FIX 2e-C2: context giàu (kịch bản + bước + gợi ý SELECT * + example khác đáp án + expected) — Bài 1 = template chuẩn vàng
+        prompt: 'Kho có <strong>hai</strong> game cùng tên "Elden Ring" (id 101 và 104). Khách vừa bấm vào <strong>bản thứ hai</strong>. Tự viết query lấy <strong>name</strong> và <strong>genre</strong> của game có <code>id = 104</code>.',
+        // Câu hỏi khác Step 3 (id=104, name+genre) — cùng kỹ năng SELECT-FROM-WHERE, chống nhàm chán
         context: {
-          scenario: 'Bạn là nhân viên cửa hàng game cần tra cứu nhanh thông tin một sản phẩm khi khách hỏi. Cửa hàng lưu tất cả game trong bảng <code>game_catalog</code> với mỗi game có một <code>id</code> duy nhất (Primary Key).',
+          scenario: 'Bảng <code>game_catalog</code> có 2 dòng cùng tên "Elden Ring" (id 101 & 104). Khách hỏi về đúng bản thứ hai. Nhờ Primary Key <code>id</code>, bạn lấy chính xác 1 dòng — dù tên bị trùng.',
+          real_world: 'Đây chính là điều xảy ra khi bạn bấm vào <strong>đúng một</strong> sản phẩm trên <strong>Steam</strong>/<strong>Shopee</strong>: link <code>/product/104</code> → hệ thống chạy <code>WHERE id = 104</code> lấy ĐÚNG mục đó trong vài mili-giây — <strong>kể cả khi có sản phẩm khác trùng tên</strong>. Không có Primary Key, app không phân biệt nổi 2 bản Elden Ring.',
           steps: [
-            'Liệt kê các cột cần lấy trong <code>SELECT</code> — ở đây là <code>name</code> và <code>price</code>.',
-            'Chỉ định bảng nguồn sau <code>FROM</code> — <code>game_catalog</code>.',
-            'Lọc đúng 1 dòng bằng <code>WHERE</code> với khóa chính: <code>id = 101</code>.',
-            'Run để xem kết quả ở cột phải — phải đúng 1 dòng với 2 cột <code>name</code> và <code>price</code>.'
+            'Chọn cột cần lấy trong <code>SELECT</code> — lần này là <code>name</code> và <code>genre</code>.',
+            'Bảng nguồn sau <code>FROM</code> — <code>game_catalog</code>.',
+            'Lọc đúng bản thứ hai bằng PK: <code>WHERE id = 104</code> — <strong>đừng</strong> lọc theo name vì tên trùng!',
+            'Run — kết quả phải đúng 1 dòng: <code>(Elden Ring, Card Game)</code>.'
           ],
-          hint_explore: 'Chưa biết bảng có cột gì? Gõ <code>SELECT * FROM game_catalog</code> rồi <strong>Run</strong> để xem toàn bộ 4 cột + 4 dòng mẫu.',
+          hint_explore: 'Chưa nhớ bảng có cột gì? Gõ <code>SELECT * FROM game_catalog</code> rồi <strong>Run</strong> để xem toàn bộ 4 cột + dữ liệu mẫu (chú ý 2 dòng "Elden Ring").',
           example: {
-            question: 'Ví dụ tương tự — tra <code>name</code> + <code>price</code> của <strong>Hades</strong> (id = 103):',
-            sql: 'SELECT name, price FROM game_catalog WHERE id = 103;',
-            sample_output: '→ 1 dòng × 2 cột: <code>(Hades, 25)</code>'
+            question: 'Ví dụ tương tự — tra <code>name</code> + <code>genre</code> của <strong>Celeste</strong> (id = 108):',
+            sql: 'SELECT name, genre FROM game_catalog WHERE id = 108;',
+            sample_output: '→ 1 dòng × 2 cột: <code>(Celeste, Platformer)</code>'
           },
-          expected: 'Bảng kết quả 1 dòng × 2 cột: <code>(Elden Ring, 60)</code> — chính xác 1 dòng vì <code>id</code> là PK không trùng.'
+          expected: 'Bảng kết quả 1 dòng × 2 cột: <code>(Elden Ring, Card Game)</code> — <strong>trùng tên</strong> với id=101 nhưng PK chốt đúng bản id=104. Đó là sức mạnh của khóa chính.'
         },
         schema: {
           table_name: 'game_catalog',
@@ -251,15 +254,15 @@ window.LESSON_CONTENT['db_design'] = {
             ['124','Hollow Knight: Silksong','Metroidvania','30']
           ]
         },
-        starter: '-- Tìm name + price của game có id = 101\n-- Gợi ý: SELECT <cột> FROM <bảng> WHERE <điều kiện>;\n',
-        expected_sql: 'SELECT name, price FROM game_catalog WHERE id = 101;',
+        starter: '-- Lấy name + genre của bản Elden Ring thứ hai (id = 104)\n-- Gợi ý: SELECT <cột>, <cột> FROM <bảng> WHERE <pk> = <giá trị>;\n',
+        expected_sql: 'SELECT name, genre FROM game_catalog WHERE id = 104;',
         hints: [
-          { level: 1, text: 'Cần lấy 2 cột: <code>name</code> và <code>price</code>.' },
-          { level: 2, text: 'Lọc đúng 1 dòng bằng PK: <code>WHERE id = 101</code>.' },
+          { level: 1, text: 'Cần lấy 2 cột: <code>name</code> và <code>genre</code>.' },
+          { level: 2, text: 'Đừng lọc theo tên (2 game trùng tên!). Dùng PK: <code>WHERE id = 104</code>.' },
           { level: 3, text: 'Cú pháp: <code>SELECT col1, col2 FROM table WHERE pk = value;</code>' },
-          { level: 4, text: '<code>SELECT name, price FROM game_catalog WHERE id = 101;</code>' }
+          { level: 4, text: '<code>SELECT name, genre FROM game_catalog WHERE id = 104;</code>' }
         ],
-        success_message: 'Xuất sắc! Bạn đã nắm vững SELECT-FROM-WHERE — bộ 3 SQL cơ bản nhất. Bài 2 sẽ học cách tách cột phức hợp (địa chỉ) và tính cột dẫn xuất (tuổi từ năm sinh).',
+        success_message: 'Xuất sắc! Bạn vừa dùng Primary Key để chốt đúng 1 trong 2 game TRÙNG TÊN — đúng bản chất của khóa chính. Bài 2 sẽ học tách cột phức hợp (địa chỉ) và tính cột dẫn xuất (tuổi từ năm sinh).',
         xp_reward: 30
       }
     },

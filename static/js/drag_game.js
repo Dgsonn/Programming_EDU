@@ -57,6 +57,8 @@
   let runBtnEl = null;
   /* STAGE 2c: current truck position as fraction (0..1) along path */
   let currentTruckF = 0;
+  /* Option A (vertical flow): fMap from the current computed route — keeps packet stops aligned to cards. */
+  let currentFMap = {};
   /* Phase A (Fix 4 v5) state */
   let isRunning = false;
   let currentZoneFills = {};
@@ -246,53 +248,38 @@
   }
 
   function computeSerpentineRoute(stations, W, H) {
-    var padX = 50;
-    var padTop = 28;       /* F5b (3.8-fix): giảm 50→28 lấy thêm Y-room (vẫn chừa chỗ PE hub label 28px). */
-    var padBottom = 75;    /* F5b (3.8-fix): giảm 110→75 — vẫn chừa chỗ cho PE hub 60×60 + sublabel "nguồn dữ liệu" ~15px. */
+    /* Option A v2 — "DÒNG CHẢY": đường CONG hữu cơ (không thẳng đơ) trong khung .qflow.
+       Nguồn ở ĐỈNH (f=0) → các mệnh đề UỐN LƯỢN xuống theo execution order → cuối ở ĐÁY (f=1).
+       Spline Catmull-Rom → getPointAtLength bám đường cong → thể hiện "logic không đi thẳng".
+       Engine packet/fail GIỮ NGUYÊN (vẫn getPointAtLength). */
+    var padTop = 46, padBottom = 30;
     var exec = (stations || []).filter(function(s){ return s.id !== 'start' && s.zone; })
       .sort(function(a, b){ return EXEC_ORDER.indexOf(a.zone) - EXEC_ORDER.indexOf(b.zone); });
     var n = exec.length;
-    var khoPos = { x: padX + 40, y: H - padBottom };
+    var cx = W / 2;
+    var yTop = padTop, yBottom = Math.max(yTop + 70, H - padBottom);
+    /* biên độ uốn — co giãn theo CẢ W và chiều cao khả dụng (tránh cong gắt khi khung thấp-rộng) */
+    var amp = Math.min(W * 0.16, (yBottom - yTop) * 0.42, 118);
+    var khoPos = { x: cx, y: yTop };
+    var fMap = { 'start': 0 };
     var positions = [];
     if (n === 0) {
-      return { pathD: 'M ' + khoPos.x + ' ' + khoPos.y, fMap: { 'start': 0 }, khoPos: khoPos, positions: [] };
+      return { pathD: 'M ' + cx + ' ' + yTop, fMap: fMap, khoPos: khoPos, positions: [] };
     }
-    if (n === 1) {
-      /* F1 (3.7): center single station giữa kho và top-edge */
-      positions.push({ x: W * 0.5, y: (khoPos.y + (padTop + 40)) / 2 });
-    } else {
-      /* F5b (3.8-fix): XEN KẼ 2 bên với envelope organic-nhẹ (user chốt).
-         - Công thức: xRatio = (i % 2 === 0) ? 0.5 + A_i : 0.5 − A_i
-           với A_i = 0.30 + 0.06 * sin(π(i+1)/(n+1)) → envelope 0.24-0.36 organic.
-         - |Δx| giữa 2 trạm liền kề = 2*A_i (cố định lớn) → minPair ≥110 kể cả 6 trạm mọi viewport.
-         - Y slot giữa khoPos.y và (padTop+40) qua n+1 slots (kho + n stations + 1 headroom).
-         - KHÔNG auto-bump (F5 cosine đã gỡ) — xen kẽ cố định Δx ≥ 0.48W đủ minPair.
-         - KHÔI PHỤC target ≥110 THẬT (bỏ adaptive 70-110 từ F5). Sàn tuyệt đối ≥90.
-         - padBottom 110→75 + padTop 50→28 (user chốt) — lấy thêm Y-room.
-         - Hard ceiling: @960 n=6 với map cao 383px → trần cứng ~85px (Y range 280px / 7 slots × 2 = 80px/slot). Đạt 110 chỉ @1600 + n≤5. Note trong report.
-         - GIỮ Catmull-Rom spline (không răng cưa từ CÁCH VẼ ĐƯỜNG). */
-      var yStart = khoPos.y;
-      var yEnd = padTop + 40;
-      var yStep = (yStart - yEnd) / (n + 1);
-      for (var i = 0; i < n; i++) {
-        var y = yStart - (i + 1) * yStep;
-        // Envelope organic-nhẹ: A_i dao động theo i, envelope 0.24-0.36
-        var A_i = 0.30 + 0.06 * Math.sin(Math.PI * (i + 1) / (n + 1));
-        // Xen kẽ 2 bên: |Δx| = 2*A_i ≥ 0.48W (cố định lớn, đảm bảo minPair ≥110)
-        var xRatio = (i % 2 === 0) ? 0.5 + A_i : 0.5 - A_i;
-        positions.push({ x: W * xRatio, y: y });
-      }
+    for (var i = 0; i < n; i++) {
+      var t = (i + 1) / n;
+      var y = yTop + t * (yBottom - yTop);
+      var side = (i % 2 === 0) ? 1 : -1;               /* xen kẽ 2 bên */
+      var env = 0.72 + 0.28 * Math.sin(Math.PI * t);   /* envelope 0.72..1.0 (đầu/cuối co lại, giữa phình) */
+      positions.push({ x: cx + side * amp * env, y: y });
+      fMap[exec[i].zone] = t;
     }
-    /* Build Catmull-Rom spline qua TẤT CẢ điểm (KHO + stations) — mượt, không gãy khúc. */
     var allPoints = [khoPos].concat(positions);
     var segments = catmullRomToBezier(allPoints, 0.5, 0.5);
     var path = ['M ' + khoPos.x + ' ' + khoPos.y];
     segments.forEach(function(seg) {
       path.push('C ' + seg.c1.x + ' ' + seg.c1.y + ', ' + seg.c2.x + ' ' + seg.c2.y + ', ' + seg.to.x + ' ' + seg.to.y);
     });
-    /* fMap: KHO at f=0, exec stations evenly along [0,1] — backward compat driveTruckTo */
-    var fMap = { 'start': 0 };
-    exec.forEach(function(s, i) { fMap[s.zone] = (i + 1) / n; });
     return { pathD: path.join(' '), fMap: fMap, khoPos: khoPos, positions: positions };
   }
 
@@ -306,11 +293,14 @@
   function regenerateRoute() {
     var mapEl = trackEl && trackEl.querySelector('.town-map');
     if (!mapEl) return;
-    var r = mapEl.getBoundingClientRect();
+    /* Option A v2: đo khung .qflow (cột trái) — route/cards nằm trong đó, panel dữ liệu ở cột phải. */
+    var flowEl = mapEl.querySelector('[data-qflow]') || mapEl;
+    var r = flowEl.getBoundingClientRect();
     var W = r.width, H = r.height;
     if (W < 50 || H < 50) return; // too small / not measured yet
 
     var computed = computeSerpentineRoute(activeStations, W, H);
+    currentFMap = computed.fMap;   /* keep packet stops aligned to cards (Option A) */
 
     // 1. SVG viewBox = actual W×H (1:1, no distortion)
     var svgEl = mapEl.querySelector('.town-svg');
@@ -362,34 +352,54 @@
   }
 
   function buildTownMapHTML(activeStations, table) {
-    var routeD = 'M 110 525 L 110 460 Q 110 445 125 445 L 240 445 Q 255 445 255 430 L 255 360 Q 255 345 270 345 L 395 345 Q 410 345 410 330 L 410 250 Q 410 235 425 235 L 510 235 Q 525 235 525 220 L 525 130 Q 525 115 510 115 L 305 115 Q 290 115 290 100 L 290 70';
-    var bgDots = [[92,180,3],[510,150,3],[120,470,3],[500,430,3],[470,540,3],[70,330,3],[380,60,3],[220,75,3]].map(function(d){return '<circle class="bgnode" cx="'+d[0]+'" cy="'+d[1]+'" r="'+d[2]+'"/>';}).join('');
-    /* PHASE 3.5b-B1c: PE hub CHUYỂN sang HTML overlay (ngoài town-svg) để KHÔNG bị distort
-       khi town-svg stretch non-square. position bằng % (18.33%, 87.5%) — khớp vị trí cũ trong viewBox 600×600.
-       PE hub stays circular, "PE" text không méo. */
-    var peHub = '<div class="pe-hub-overlay" data-pe-hub><div class="pe-hub-outer"></div><div class="pe-hub-inner"></div><div class="pe-hub-text">PE</div><div class="pe-hub-sub">nguồn dữ liệu</div></div>';
-    function stationNode(s, ord) {
-      var z = s.zone || '', stroke = ZONE_STROKE[z] || '#94a3b8';
-      var glyph;
-      if (z === 'from-line')        glyph = '<path d="M16,24 h28 M16,29 h28 M16,34 h22" fill="none" stroke="'+stroke+'" stroke-width="1.6" stroke-linecap="round"/>';
-      else if (z === 'where-line')  glyph = '<path d="M19,22 h22 l-7,9 v8 h-8 v-8 z" fill="none" stroke="'+stroke+'" stroke-width="1.6" stroke-linejoin="round"/>';
-      else if (z === 'select-line') glyph = '<path d="M19,26 h22 M19,32 h22 M19,38 h14" fill="none" stroke="'+stroke+'" stroke-width="1.6" stroke-linecap="round"/>';
-      else if (z === 'group-line')  glyph = '<circle cx="22" cy="30" r="3" fill="none" stroke="'+stroke+'" stroke-width="1.6"/><circle cx="38" cy="30" r="3" fill="none" stroke="'+stroke+'" stroke-width="1.6"/><line x1="25" y1="30" x2="35" y2="30" stroke="'+stroke+'" stroke-width="1.6"/>';
-      else                          glyph = '<path d="M16,28 h28 M30,22 v14" fill="none" stroke="'+stroke+'" stroke-width="1.6" stroke-linecap="round"/>';
-      return '<svg class="qnode-svg" viewBox="0 0 60 60"><polygon class="qnode-hex" points="30,8 52,22 52,42 30,56 8,42 8,22" fill="#0e1726" stroke="'+stroke+'" stroke-width="1.7"/>' + glyph + (ord > 0 ? '<circle class="qnode-order" cx="49" cy="14" r="9" fill="#0a0f1c" stroke="rgba(148,163,184,.4)" stroke-width="1"/><text class="qnode-order-t" x="49" y="17.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#aebfd6">'+ord+'</text>' : '') + '</svg>';
-    }
-    /* FIX 2g-B: ord số dựa trên thứ tự THỰC TẾ trong bài (contiguous) — Bài 1 (3 zones) hiện 1,2,3 chứ không 1,2,5 */
+    /* Option A — "DÒNG CHẢY TRUY VẤN": vertical high-contrast flow (thay bản đồ neon murky).
+       Route = đường thẳng đứng (regenerateRoute set lại theo W×H thật). Các ga = thẻ mệnh đề
+       xếp DỌC, tương phản cao; gói dữ liệu trượt xuống; số dòng biến đổi hiện ở manifest. */
+    var routeD = 'M 300 54 L 300 566';
+    var ZONE_GLYPH = {
+      'from-line':'▤','where-line':'▽','select-line':'☰',
+      'group-line':'⊞','having-line':'⊟','order-line':'↕'
+    };
+    var peHub = '<div class="pe-hub-overlay" data-pe-hub></div>';   /* hidden — giữ ref cho regenerateRoute */
+
+    /* FIX 2g-B: ord số dựa trên thứ tự THỰC TẾ trong bài (contiguous 1..n) */
     var presentZones = activeStations.map(function(s){return s.zone;}).filter(function(z){return z && EXEC_ORDER.indexOf(z) >= 0;}).sort(function(a,b){return EXEC_ORDER.indexOf(a) - EXEC_ORDER.indexOf(b);});
 
-    var stationsHTML = activeStations.map(function(s) {
+    function cardInner(s, ord) {
+      var z = s.zone || '', stroke = ZONE_STROKE[z] || '#94a3b8';
+      if (s.id === 'start') {
+        return '<span class="qcard-glyph src">🗄</span>'
+          + '<span class="qcard-main"><span class="qcard-label mono">' + escapeHtml(table.name) + '</span>'
+          + '<span class="qcard-sub">bảng nguồn · ' + table.dataRows.length + ' dòng</span></span>';
+      }
+      var glyph = ZONE_GLYPH[z] || '▸';
+      return (ord > 0 ? '<span class="qcard-ord">' + ord + '</span>' : '')
+        + '<span class="qcard-glyph" style="color:' + stroke + '">' + glyph + '</span>'
+        + '<span class="qcard-main"><span class="qcard-label">' + escapeHtml(s.label) + '</span>'
+        + '<span class="qcard-sub">' + escapeHtml(s.sub || '') + '</span></span>'
+        + '<span class="qcard-count" data-qcard-count></span>'
+        + '<span class="qcard-check">✓</span>';
+    }
+
+    var lastIdx = activeStations.length - 1;
+    var stationsHTML = activeStations.map(function(s, i) {
       var ord = (s.zone && presentZones.indexOf(s.zone) >= 0) ? presentZones.indexOf(s.zone) + 1 : 0;
-      return '<div class="town-station qnode" data-town-station="'+s.id+'"'+(s.zone?' data-zone="'+s.zone+'"':'')+'><div class="town-station-bldg">'+stationNode(s, ord)+'</div><div class="town-station-tag"><span class="town-station-label">'+s.label+'</span><span class="town-station-check">✓</span></div></div>';
+      var stroke = ZONE_STROKE[s.zone] || '#94a3b8';
+      return '<div class="town-station qcard' + (s.id === 'start' ? ' qcard-source' : '') + (i === lastIdx ? ' qcard-last' : '') + '"'
+        + ' data-town-station="' + s.id + '"' + (s.zone ? ' data-zone="' + s.zone + '"' : '') + ' style="--zc:' + stroke + '">'
+        + '<div class="qcard-inner">' + cardInner(s, ord) + '</div></div>';
     }).join('');
+
     var truck = '<div class="town-truck packet" data-town-truck><div class="pk-rot"><div class="pk-trail"></div><div class="pk-body"></div></div><div class="pk-badge town-truck-badge" data-town-truck-badge>'+table.dataRows.length+' dòng</div></div>';
+    /* Panel dữ liệu (phải): bảng "nhìn theo" + số liệu sống (Brilliant-style) — luôn hiện, cập nhật theo packet. */
     var manifest = '<div class="town-manifest" data-town-manifest><div class="town-manifest-ttl" data-town-manifest-ttl>DỮ LIỆU</div><div class="town-manifest-body" data-town-manifest-body></div><div class="town-manifest-sub" data-town-manifest-sub></div></div>';
-    var brand = '<div class="town-brand"><span class="town-brand-dot"></span><b>PE_TEST</b> · TUYẾN TRUY VẤN</div>';
-    var compass = '<div class="town-compass"><b>N</b></div>';
-    return '<div class="town-map" data-town-map>'+brand+compass+'<svg class="town-svg" viewBox="0 0 600 600" preserveAspectRatio="none"><rect class="map-grid" width="600" height="600" fill="url(#qline-grid)" mask="url(#qline-mask)"/>'+bgDots+'<path class="town-route-shadow" d="'+routeD+'"/><path class="town-route" d="'+routeD+'"/><path class="town-route-flow" d="'+routeD+'"/></svg><div class="town-stations">'+stationsHTML+'</div>'+peHub+truck+manifest+'</div>';
+    var brand = '<div class="town-brand"><span class="town-brand-dot"></span><b>PE_TEST</b> · DÒNG CHẢY TRUY VẤN</div>';
+    var flow = '<div class="qflow" data-qflow>'
+      + '<svg class="town-svg" viewBox="0 0 600 600" preserveAspectRatio="none"><path class="town-route-shadow" d="'+routeD+'"/><path class="town-route" d="'+routeD+'"/><path class="town-route-flow" d="'+routeD+'"/></svg>'
+      + '<div class="town-stations">'+stationsHTML+'</div>' + peHub + truck
+      + '</div>';
+    var dataCol = '<div class="qdata" data-qdata>' + manifest + '</div>';
+    return '<div class="town-map" data-town-map>' + brand + flow + dataCol + '</div>';
   }
 
   /* FIX 2g-B: SVG defs cho blueprint grid + vignette mask (inject 1 lần) */
@@ -519,6 +529,23 @@
     lastIsComplete = false;
 
     window.__pipeline = { stations: stationEls, table, activeStations, route: routeEl };
+
+    /* Option A v2: panel dữ liệu hiện NGAY từ đầu (bảng nguồn) để người học "nhìn theo". */
+    showManifestRest();
+  }
+
+  /* showManifestRest — panel dữ liệu ở trạng thái nghỉ: bảng nguồn đầy đủ + đếm dòng. */
+  function showManifestRest() {
+    if (!manifestEl) return;
+    var table = (window.__pipeline && window.__pipeline.table) || DEFAULT_TABLE;
+    if (manifestTtlEl) { manifestTtlEl.textContent = '⛁ Nguồn · ' + table.name; manifestTtlEl.style.color = ''; }
+    if (manifestBodyEl) {
+      manifestBodyEl.innerHTML = renderStationMiniTable({ rows: table.dataRows, columns: table.columns }, {}, table);
+      var rows = manifestBodyEl.querySelectorAll('.station-mini-table tbody tr');
+      rows.forEach(function(tr, idx) { tr.style.setProperty('--i', idx); });
+    }
+    if (manifestSubEl) manifestSubEl.textContent = table.dataRows.length + ' dòng · ▶ chạy để xem lọc';
+    manifestEl.classList.add('show');
   }
 
   /* renderStationDataPlaceholder + renderMiniTable — REMOVED in STAGE 2c.
@@ -577,11 +604,10 @@
     if (!truckEl || !routeEl) return;
     var total = routeEl.getTotalLength();
     var p = routeEl.getPointAtLength(f * total);
-    var p2 = routeEl.getPointAtLength(Math.min(total, (f + 0.004) * total));
-    var angle = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
-truckEl.style.left = p.x + 'px';
+    /* Option A: round data-orb → no heading rotation (keeps the "N dòng" badge upright). */
+    truckEl.style.left = p.x + 'px';
       truckEl.style.top = p.y + 'px';
-      truckEl.style.transform = 'translate(-50%, -50%) rotate(' + angle + 'deg)';
+      truckEl.style.transform = 'translate(-50%, -50%)';
   }
 
   /* ═════ UPDATE — Phase A behavior (no auto-truck-movement) ═════ */
@@ -732,11 +758,9 @@ truckEl.style.left = p.x + 'px';
     if (!truckEl || !routeEl) return Promise.resolve();
     var station = activeStations.find(function(s) { return s.id === stationId; });
     if (!station) return Promise.resolve();
-    var fMap = { 'start': 0.05, 'from-line': 0.30, 'where-line': 0.62, 'group-line': 0.45,
-                 'having-line': 0.75, 'select-line': 1.0, 'order-line': 0.88, 'join-line': 0.18,
-                 'setup-zone': 0.10, 'chain-zone': 0.50, 'slice-zone': 0.92,
-                 'select-zone': 1.0, 'inject-zone': 0.55 };
-    var f = fMap[station.id === 'start' ? 'start' : (station.zone || station.id)];
+    /* Option A: prefer the LIVE fMap from the vertical route (packet lands exactly on cards). */
+    var key = station.id === 'start' ? 'start' : (station.zone || station.id);
+    var f = (currentFMap && currentFMap[key] !== undefined) ? currentFMap[key] : undefined;
     if (f === undefined) f = activeStations.indexOf(station) / Math.max(1, activeStations.length - 1);
 
     /* 1. ANTICIPATION 120ms — scaleY 0.85 + retreat (CSS keyframe) */
@@ -871,14 +895,14 @@ truckEl.style.left = p.x + 'px';
     /* Reset town-map state: clear station classes + manifest + mechanism visuals */
     activeStations.forEach(function(s) {
       var el = stationEls[s.id];
-      if (el) el.classList.remove('active', 'done', 'error', 'executing', 'has-input');
+      if (el) {
+        el.classList.remove('active', 'done', 'error', 'executing', 'has-input');
+        var c = el.querySelector('[data-qcard-count]');
+        if (c) c.textContent = '';
+      }
     });
-    if (manifestEl) {
-      manifestEl.classList.remove('show');
-      if (manifestBodyEl) manifestBodyEl.innerHTML = '';
-      if (manifestSubEl) manifestSubEl.textContent = '';
-      if (manifestTtlEl) { manifestTtlEl.textContent = '📋 Phiếu giao hàng'; manifestTtlEl.style.color = ''; }
-    }
+    /* Option A v2: panel dữ liệu về lại BẢNG NGUỒN (không ẩn/không để trống). */
+    showManifestRest();
     if (trackEl) {
       trackEl.querySelectorAll('.sil-box').forEach(function(b) {
         b.style.opacity = '0';
@@ -1146,6 +1170,25 @@ truckEl.style.left = p.x + 'px';
       manifestSubEl.textContent = getStepLogText(station, result, data);
     }
     manifestEl.classList.add('show');
+
+    /* Option A: mirror the row-count transform INLINE on the clause card (manifest panel is hidden). */
+    var cardEl = stationEls[station.id];
+    if (cardEl) {
+      var cntEl = cardEl.querySelector('[data-qcard-count]');
+      if (cntEl) {
+        if (result.error) {
+          cntEl.textContent = '⚠ lỗi';
+        } else if (station.zone === 'where-line') {
+          var kept = result.matchedRows ? result.matchedRows.length : (result.data ? result.data.rows.length : data.rows.length);
+          cntEl.textContent = kept + '/' + data.rows.length + ' dòng';
+        } else if (station.zone === 'select-line') {
+          var nc = result.selectedCols ? result.selectedCols.length : (result.data ? result.data.columns.length : 0);
+          cntEl.textContent = nc + ' cột';
+        } else {
+          cntEl.textContent = (result.data ? result.data.rows.length : data.rows.length) + ' dòng';
+        }
+      }
+    }
   }
 
   /* runStationMechanism — per-zone visual (§B.3 CƠ CHẾ nhìn thấy) */
@@ -1490,12 +1533,8 @@ truckEl.style.left = p.x + 'px';
         w.setAttribute('fill', '#FCD34D');
       });
     }
-    if (manifestEl) {
-      manifestEl.classList.remove('show');
-      if (manifestBodyEl) manifestBodyEl.innerHTML = '';
-      if (manifestSubEl) manifestSubEl.textContent = '';
-      if (manifestTtlEl) { manifestTtlEl.textContent = '📋 Phiếu giao hàng'; manifestTtlEl.style.color = ''; }
-    }
+    /* Option A v2: panel dữ liệu về lại BẢNG NGUỒN (không ẩn/không để trống). */
+    showManifestRest();
     /* Truck instant về Kho (f=0) */
     driveTruckTo(0, true);
     /* Truck badge về initial row count */

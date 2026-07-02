@@ -20,7 +20,7 @@
     /* B1: Hero PK demo (Bài 1) — animation loop 3s: dòng id=101 sáng cyan + viền glow,
      * 3 dòng còn lại mờ opacity 0.2, nhãn "WHERE id = 101" pulse đồng pha.
      * Thông điệp: "PK = chốt đúng 1 dòng". */
-    db_01: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bảng game_catalog với Primary Key — dòng id 101 được chốt">' +
+    db_01: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="game_catalog: hai game trùng tên Elden Ring (id 101 và 104); Primary Key id chốt đúng dòng 101">' +
       /* Title */
       '<text x="250" y="30" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">game_catalog</text>' +
       /* Column headers */
@@ -29,38 +29,39 @@
         '<text x="220" y="68">name</text>' +
         '<line x1="50" y1="78" x2="450" y2="78" stroke="var(--text-300)" stroke-width="1" opacity="0.4"/>' +
       '</g>' +
-      /* 4 rows (chỉ dòng id=101 có class pkrow-key, 3 dòng còn lại có pkrow-dim) */
+      /* 4 rows: 101 = KEY (cyan, PK chốt) · 104 = COLLISION (amber, cùng tên "Elden Ring") · 102/103 dim */
       '<g class="hero-pk-rows" font-family="JetBrains Mono, monospace" font-size="15" font-weight="500">' +
-        /* Row 1: id=101 Elden Ring — KEY row */
+        /* Row 1: id=101 Elden Ring — KEY row (name amber = 1 nửa cặp trùng tên) */
         '<g class="pkrow pkrow-key">' +
           '<rect x="50" y="92" width="400" height="36" rx="6" fill="rgba(34,211,238,0.15)" stroke="#22D3EE" stroke-width="1.5"/>' +
           '<text x="80" y="115" fill="var(--text-100)">101</text>' +
-          '<text x="220" y="115" fill="var(--text-100)">Elden Ring</text>' +
-          '<text x="425" y="115" text-anchor="end" fill="#FCD34D" font-size="12">🔑 PK</text>' +
+          '<text x="220" y="115" fill="#FCD34D" font-weight="700">Elden Ring</text>' +
+          '<text x="430" y="115" text-anchor="end" fill="#22D3EE" font-size="12" font-weight="700">🔑 PK</text>' +
         '</g>' +
-        /* Row 2: dimmed */
+        /* Row 2: dimmed filler */
         '<g class="pkrow pkrow-dim">' +
           '<rect x="50" y="138" width="400" height="36" rx="6" fill="rgba(255,255,255,0.02)"/>' +
           '<text x="80" y="161" fill="var(--text-300)">102</text>' +
           '<text x="220" y="161" fill="var(--text-300)">God of War</text>' +
         '</g>' +
-        /* Row 3: dimmed */
+        /* Row 3: dimmed filler */
         '<g class="pkrow pkrow-dim">' +
           '<rect x="50" y="184" width="400" height="36" rx="6" fill="rgba(255,255,255,0.02)"/>' +
           '<text x="80" y="207" fill="var(--text-300)">103</text>' +
           '<text x="220" y="207" fill="var(--text-300)">Hades</text>' +
         '</g>' +
-        /* Row 4: dimmed */
-        '<g class="pkrow pkrow-dim">' +
-          '<rect x="50" y="230" width="400" height="36" rx="6" fill="rgba(255,255,255,0.02)"/>' +
+        /* Row 4: id=104 Elden Ring — COLLISION row (amber dashed, semi-visible: cùng tên NHƯNG id khác) */
+        '<g class="pkrow" style="opacity:0.62">' +
+          '<rect x="50" y="230" width="400" height="36" rx="6" fill="rgba(252,211,77,0.07)" stroke="rgba(252,211,77,0.45)" stroke-width="1" stroke-dasharray="4 3"/>' +
           '<text x="80" y="253" fill="var(--text-300)">104</text>' +
-          '<text x="220" y="253" fill="var(--text-300)">Elden Ring</text>' +
+          '<text x="220" y="253" fill="#FCD34D" font-weight="700">Elden Ring</text>' +
+          '<text x="430" y="253" text-anchor="end" fill="#FCD34D" font-family="Inter, sans-serif" font-size="11" font-weight="600">trùng tên · id khác</text>' +
         '</g>' +
       '</g>' +
-      /* WHERE id = 101 label — pulse đồng pha với key row */
-      '<g class="hero-pk-where" transform="translate(250, 305)">' +
-        '<rect x="-110" y="-15" width="220" height="30" rx="15" fill="rgba(34,211,238,0.1)" stroke="#22D3EE" stroke-width="1"/>' +
-        '<text x="0" y="5" text-anchor="middle" fill="#22D3EE" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">WHERE id = 101</text>' +
+      /* WHERE id = 101 label — pulse đồng pha với key row: chốt đúng 1 dòng DÙ trùng tên */
+      '<g class="hero-pk-where" transform="translate(250, 308)">' +
+        '<rect x="-140" y="-16" width="280" height="32" rx="16" fill="rgba(34,211,238,0.1)" stroke="#22D3EE" stroke-width="1"/>' +
+        '<text x="0" y="5" text-anchor="middle" fill="#22D3EE" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700">WHERE id = 101 → đúng 1 dòng</text>' +
       '</g></svg>',
 
     db_02: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Composite name chia thành first_name và last_name. Derived age tính từ birth_date">' +
@@ -745,9 +746,13 @@
       });
     }
 
-    // Intro & example
-    document.getElementById('lesson-intro').innerHTML = s1.primer.intro || '';
-    document.getElementById('lesson-example').innerHTML = s1.primer.example || '';
+    // Intro & example (hide empty ones so removed paragraphs leave no dead gap)
+    const introEl = document.getElementById('lesson-intro');
+    const exampleEl = document.getElementById('lesson-example');
+    introEl.innerHTML = s1.primer.intro || '';
+    introEl.hidden = !((s1.primer.intro || '').trim());
+    exampleEl.innerHTML = s1.primer.example || '';
+    exampleEl.hidden = !((s1.primer.example || '').trim());
 
     // Theory extended (optional field — only show when present in data)
     const theoryEl = document.getElementById('theory-extended');
@@ -3666,6 +3671,9 @@
     const parts = [];
     if (ctx.scenario) {
       parts.push(`<div class="context-scenario"><span class="ctx-tag ctx-tag-scenario">📖 Bối cảnh</span><div class="ctx-body">${ctx.scenario}</div></div>`);
+    }
+    if (ctx.real_world) {
+      parts.push(`<div class="context-realworld"><span class="ctx-tag ctx-tag-realworld">🌍 Trong thực tế</span><div class="ctx-body">${ctx.real_world}</div></div>`);
     }
     if (Array.isArray(ctx.steps) && ctx.steps.length) {
       const lis = ctx.steps.map((s) => `<li>${s}</li>`).join('');

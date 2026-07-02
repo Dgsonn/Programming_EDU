@@ -3297,6 +3297,16 @@ body.lesson-focus-mode::before {
   border-left-color: #10B981;  /* emerald */
   background: rgba(16, 185, 129, 0.05);
 }
+.codecademy-layout .instructions-block .context-realworld {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 3px solid #2DD4BF;  /* teal — ứng dụng thực tế */
+  background: rgba(45, 212, 191, 0.05);
+  border-radius: 6px;
+  color: var(--text-200);
+  font-size: 13px;
+  line-height: 1.55;
+}
 .codecademy-layout .instructions-block .context-hint-explore {
   padding: 9px 14px;
   background: rgba(245, 158, 11, 0.08);
@@ -3340,6 +3350,10 @@ body.lesson-focus-mode::before {
 .codecademy-layout .instructions-block .ctx-tag-expected {
   background: rgba(16, 185, 129, 0.18);
   color: #6EE7B7;
+}
+.codecademy-layout .instructions-block .ctx-tag-realworld {
+  background: rgba(45, 212, 191, 0.18);
+  color: #5EEAD4;
 }
 .codecademy-layout .instructions-block .ctx-body {
   color: var(--text-200);
@@ -3993,6 +4007,17 @@ body.light .mcq-option .t-number  { color: #B45309; }
 .mini-bin[data-correct="false"] .bin-icon {
   background: var(--danger-soft);
   color: var(--danger);
+}
+
+/* 10/10 polish (tiết chế): tint nhẹ mức-bin để 2 vùng thả đọc rõ là PK / không-PK.
+ * Đặt TRƯỚC .mini-bin.drag-over để drag-over (cùng specificity) ghi đè khi kéo-qua. */
+.mini-bin[data-correct="true"] {
+  border-color: rgba(16, 185, 129, 0.38);
+  background: rgba(16, 185, 129, 0.045);
+}
+.mini-bin[data-correct="false"] {
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.04);
 }
 
 .mini-game-actions {
@@ -6793,6 +6818,12 @@ body.light .mcq-option .t-number  { color: #B45309; }
 
 .mini-chip:hover {
   background: rgba(6, 182, 212, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.18);
+}
+.mini-chip:active {
+  cursor: grabbing;
+  transform: translateY(0);
 }
 
 .mini-chip.placed {
@@ -6833,6 +6864,8 @@ body.light .mcq-option .t-number  { color: #B45309; }
   border-style: solid;
   border-color: var(--primary);
   background: var(--primary-soft);
+  transform: scale(1.02);
+  box-shadow: 0 0 0 1px var(--primary), 0 6px 18px rgba(6, 182, 212, 0.15);
 }
 
 .mini-bin-label {
@@ -6854,6 +6887,17 @@ body.light .mcq-option .t-number  { color: #B45309; }
   flex-wrap: wrap;
   gap: var(--space-1);
   min-height: 24px;
+}
+.mini-bin-chips:empty {
+  align-items: center;
+  justify-content: center;
+}
+.mini-bin-chips:empty::after {
+  content: 'thả thẻ vào đây';
+  color: var(--text-600);
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.7;
 }
 
 /* E.1 Phần 8: Animation cho SVG primer + concept cards */
@@ -8112,6 +8156,29 @@ a:focus:not(:focus-visible) {
 .step3-pipeline-map { grid-area: pipeline; }
 .step3-editor       { grid-area: editor; }
 
+/* FLEX-FILL (fix dead-space cột phải): rule cũ dùng .step3-side-col (đã đổi tên → .step3-editor)
+ * nên block-bank không grow → khoảng trống giữa palette và query.sql. Cho editor = flex-col fill cell. */
+.step3-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.step3-editor .drop-zone-stack {
+  flex: 1 1 auto;                 /* grow: 3 drop-zone thoáng hơn, chia đều không gian */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-height: 0;
+}
+.step3-editor .block-bank-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;   /* bỏ cap 55% → chia đều không gian với drop-zones, hết dead-space */
+  overflow-y: auto;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
  * FIX 4 v3 — STEP 3 EXERCISE WRAPPER (Brilliant-inspired whole-exercise state border)
  * Reference: Brilliant.org feedback pattern — green/amber border bao toàn exercise,
@@ -8335,8 +8402,8 @@ a:focus:not(:focus-visible) {
    * Now IDE ở col 2 row 3 → compact 110px. Live SQL luôn hiện không collapse. */
   grid-area: ide;
   height: auto;
-  max-height: 120px;
-  min-height: 80px;
+  max-height: 230px;   /* v2: to hơn để người dùng biết gõ code được (was 120) */
+  min-height: 168px;
   overflow: hidden;
 }
 
@@ -8938,7 +9005,7 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   word-break: break-word;
 }
 .step3-ide .ide-display {
-  max-height: 110px;
+  max-height: 200px;   /* v2: to hơn (was 110) */
   overflow-x: auto;
   overflow-y: auto;
 }
@@ -8947,10 +9014,30 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   padding: 4px 12px;
 }
 .step3-ide .ide-content {
-  font-size: 13px;
-  line-height: 1.55;
-  padding: 8px 14px 12px;
+  font-size: 14px;   /* v2: to + rõ hơn (was 13) */
+  line-height: 1.6;
+  padding: 12px 16px 14px;
 }
+
+/* v2: tô màu cú pháp query.sql như Step 4 (keyword tím, số hồng, string xanh) — dễ nhìn + "trông như editor thật" */
+.step3-ide .ide-content { color: #dbe4f0; }
+.step3-ide .ide-content .t-keyword  { color: #C084FC; font-weight: 700; }
+.step3-ide .ide-content .t-string   { color: #86EFAC; }
+.step3-ide .ide-content .t-number   { color: #F9A8D4; }
+.step3-ide .ide-content .t-operator { color: #93C5FD; }
+.step3-ide .ide-content .t-comment  { color: #6b7a90; font-style: italic; }
+
+/* v2: nhãn "Tự gõ được" trong header query.sql */
+.step3-ide .ide-type-hint {
+  font-size: 11px; color: #7fd4e6; font-weight: 600; letter-spacing: .2px;
+  display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;
+  padding: 2px 9px; border-radius: 20px;
+  background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.28);
+}
+
+/* v2: ép chiều cao query.sql cao hơn — đè .ide-pane.step3-ide{min-height:0} (specificity 0,2,0, later wins) */
+.ide-pane.step3-ide { min-height: 172px; max-height: 244px; }
+.step3-ide .ide-display { min-height: 128px; }
 
 /* === STATION CARDS — ẩn tên clause default, reveal on .revealed === */
 .pipeline-station-card {
@@ -9162,11 +9249,11 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   flex: 1;
   overflow: auto;
   min-width: 0;
-  padding: 12px 14px;
+  padding: 12px 16px;
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 14px;   /* v2: khớp .ide-content 14px */
+  line-height: 1.6;
 }
 
 /* §1.② BUG FIX — pill `=` (op slate) mờ trên nền tối → bump contrast
@@ -9732,3 +9819,185 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   STEP 3 — OPTION A "DÒNG CHẢY TRUY VẤN" (vertical high-contrast flow)
+   Thay bản đồ neon murky bằng chuỗi thẻ mệnh đề xếp DỌC, tương phản cao,
+   mũi tên rõ, gói dữ liệu trượt xuống. Đè các rule .town-* cũ ở trên.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* — Declutter: ẩn chrome bản đồ cũ (GIỮ manifest = panel dữ liệu cột phải) — */
+.town-map .pe-hub-overlay,
+.town-map .town-compass,
+.town-map .bgnode,
+.town-map .map-grid { display: none !important; }
+
+/* — Substrate + LAYOUT: mặc định XẾP DỌC (flow đầy bề ngang + data phía dưới) —
+     màn RỘNG (≥2200px) → 2 CỘT cạnh nhau (tận dụng khoảng trống bên trái). — */
+.town-map {
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+  max-width: none !important;   /* dùng hết bề ngang cột trái (bỏ cap 640) */
+  padding: 10px;
+  background:
+    radial-gradient(120% 55% at 30% -8%, rgba(34,211,238,.08), transparent 62%),
+    linear-gradient(180deg, #0e1728 0%, #0a0f1c 100%) !important;
+  border: 1px solid rgba(148,163,184,.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 24px 60px rgba(0,0,0,.5) !important;
+}
+.town-map .qflow {
+  position: relative; flex: 1 1 auto; min-width: 0; min-height: 330px;
+}
+.town-map .qdata {
+  flex: none; width: 100%; max-height: 168px;
+  display: flex; flex-direction: column; min-height: 0;
+}
+@media (min-width: 2200px) {
+  .town-map { flex-direction: row; align-items: stretch; gap: 16px; }
+  .town-map .qflow { flex: 1 1 60%; min-height: 420px; }
+  .town-map .qdata { flex: 0 0 36%; width: auto; max-width: 360px; max-height: none; }
+}
+.town-map .town-brand {
+  top: 16px; left: 18px; font-size: 10.5px; letter-spacing: 1.6px;
+  color: #7f92ad; text-transform: uppercase;
+}
+.town-map .town-brand b { color: #22D3EE; }
+
+/* — Spine dọc: track mờ + line sáng + flow chạy khi is-running — */
+.town-map .town-route-shadow { stroke: #16223a !important; stroke-width: 5 !important; }
+.town-map .town-route {
+  stroke: rgba(34,211,238,.5) !important; stroke-width: 2.4 !important;
+  filter: drop-shadow(0 0 4px rgba(34,211,238,.4)) !important;
+}
+.town-map .town-route-flow {
+  stroke: #22D3EE !important; stroke-width: 2.4 !important;
+  stroke-dasharray: 3 10 !important; opacity: .85;
+}
+
+/* — Thẻ mệnh đề (clause card) — TO hơn, dễ nhìn — */
+.town-station.qcard {
+  display: block; width: min(84%, 310px);
+  flex-direction: initial; align-items: initial; gap: 0;
+}
+.town-station.qcard .qcard-inner {
+  position: relative;
+  display: flex; align-items: center; gap: 13px;
+  padding: 14px 17px;
+  background: linear-gradient(180deg, #14203450, #0f172890), #101a2c;
+  border: 1px solid rgba(148,163,184,.16);
+  border-left: 4px solid var(--zc, #94a3b8);
+  border-radius: 13px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.45);
+  transition: border-color .25s, box-shadow .25s, transform .2s, background .25s;
+}
+.town-station.qcard .qcard-glyph {
+  flex: none; width: 30px; text-align: center;
+  font-size: 21px; line-height: 1;
+}
+.town-station.qcard .qcard-glyph.src { color: #8aa0bd; font-size: 19px; }
+.town-station.qcard .qcard-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.town-station.qcard .qcard-label {
+  font-family: 'JetBrains Mono','Courier New',monospace; font-weight: 700;
+  font-size: 15.5px; color: #eaf1ff; letter-spacing: .4px; line-height: 1.15;
+}
+.town-station.qcard .qcard-label.mono { font-size: 14px; color: #cfe3ff; }
+.town-station.qcard .qcard-sub { font-size: 11px; color: #7f93ad; line-height: 1.2; }
+.town-station.qcard .qcard-count {
+  flex: none; font-family: 'JetBrains Mono',monospace; font-size: 11.5px; font-weight: 700;
+  color: #9fb2cc; opacity: 0; transition: opacity .3s;
+  padding: 3px 8px; border-radius: 20px; background: rgba(148,163,184,.1);
+}
+.town-station.qcard .qcard-check { flex: none; color: #34D399; opacity: 0; font-weight: 900; transition: opacity .3s; }
+.town-station.qcard .qcard-ord {
+  position: absolute; top: -9px; left: -9px; z-index: 2;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #0a0f1c; border: 1px solid rgba(148,163,184,.4);
+  color: #aebfd6; font-family: 'JetBrains Mono',monospace; font-size: 10.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Source card (bảng nguồn) — sắc thái database, tách biệt */
+.town-station.qcard-source .qcard-inner {
+  border-left-color: #22D3EE;
+  background: linear-gradient(180deg, #0f223060, #0c1a2690), #0d1c2a;
+}
+
+/* Mũi tên chỉ hướng giữa các thẻ (rõ ở trạng thái nghỉ) */
+.town-station.qcard:not(.qcard-last)::after {
+  content: '▼';
+  position: absolute; left: 50%; bottom: -19px; transform: translateX(-50%);
+  color: rgba(34,211,238,.55); font-size: 12px; z-index: 4; pointer-events: none;
+}
+
+/* — Trạng thái — */
+.town-station.qcard.has-input .qcard-inner { border-color: rgba(34,211,238,.3); }
+.town-station.qcard.active { z-index: 6; }
+.town-station.qcard.active .qcard-inner {
+  border-color: var(--zc);
+  box-shadow: 0 0 0 1px var(--zc), 0 8px 22px rgba(0,0,0,.5), 0 0 22px -6px var(--zc);
+  transform: scale(1.025);
+}
+.town-station.qcard.active .qcard-count,
+.town-station.qcard.done .qcard-count { opacity: 1; }
+.town-station.qcard.done .qcard-inner { border-left-color: #34D399; }
+.town-station.qcard.done .qcard-check { opacity: 1; }
+.town-station.qcard.error .qcard-inner { border-color: #EF4444; box-shadow: 0 0 0 1px #EF4444, 0 0 18px -4px #EF4444; }
+.town-station.qcard.error .qcard-count { opacity: 1; color: #fca5a5; }
+.town-station.qcard.flash .qcard-inner { animation: qcard-flash .4s ease; }
+@keyframes qcard-flash { 0%,100% { border-left-color: var(--zc); } 45% { border-left-color: #fff; } }
+
+/* — Gói dữ liệu (orb): chỉ hiện khi đang chạy (nghỉ = thẻ sạch, không lởn vởn ở nguồn) — */
+.town-map .town-truck.packet { opacity: 0; transition: opacity .3s; }
+.town-map.is-running .town-truck.packet { opacity: 1; }
+.town-map .town-truck.packet .pk-body {
+  width: 15px; height: 15px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #f0fdff, #22D3EE 58%, #0891b2) !important;
+  box-shadow: 0 0 12px 2px rgba(34,211,238,.7) !important;
+  border: none !important;
+}
+.town-map .town-truck.packet .pk-trail { display: none !important; }
+.town-map .town-truck-badge {
+  left: 14px; top: -10px;
+  font-family: 'JetBrains Mono',monospace; font-size: 10.5px; font-weight: 700;
+  color: #bfe9f2; background: rgba(9,20,30,.9); border: 1px solid rgba(34,211,238,.35);
+  padding: 1px 7px; border-radius: 20px; white-space: nowrap;
+}
+
+/* — Panel dữ liệu (bảng "nhìn theo"): LUÔN hiện, cập nhật theo packet (Brilliant-style) — */
+.town-map .qdata .town-manifest {
+  position: static !important; width: 100% !important; max-width: none !important;
+  height: 100%; opacity: 1 !important; transform: none !important; pointer-events: auto;
+  display: flex; flex-direction: column; min-height: 0;
+  background: rgba(9,14,26,.72) !important; border: 1px solid rgba(148,163,184,.14) !important;
+  border-radius: 12px !important; padding: 11px 13px !important; box-shadow: none !important;
+}
+.town-map .qdata .town-manifest-ttl {
+  font-size: 11.5px; color: #7fd4e6; margin-bottom: 8px; letter-spacing: .4px; flex: none;
+}
+.town-map .qdata .town-manifest-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.town-map .qdata .town-manifest-body .station-mini-table { width: 100%; font-size: 12px; }
+.town-map .qdata .town-manifest-body .station-mini-table th { font-size: 10px; padding: 4px 7px; }
+.town-map .qdata .town-manifest-body .station-mini-table td { padding: 4px 7px; }
+.town-map .qdata .town-manifest-sub {
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(148,163,184,.1); flex: none;
+  font-size: 11px; color: #8aa0bd; font-family: 'JetBrains Mono',monospace;
+}
+/* Panel LUÔN hiện → bỏ fade-in per-row (nếu không sẽ kẹt ở opacity:0) */
+.town-map .qdata .station-mini-table tbody tr { animation: none !important; opacity: 1; }
+/* Hàng bị lọc bỏ mờ đi, hàng giữ lại sáng — "nhìn theo" data co lại */
+.town-map .qdata .station-mini-table tr.filtered-out { opacity: .32; }
+.town-map .qdata .station-mini-table tr.filtered-in { background: rgba(34,211,238,.06); }
+.town-map .qdata .station-mini-table td.col-hidden,
+.town-map .qdata .station-mini-table th.col-hidden { opacity: .28; }
+
+/* ── Cột phải Step 3: drop-zone (.drop-line) + block (.logic-pill) TO hơn cho dễ nhìn/kéo ── */
+.step3-editor #drop-zones { gap: 16px; }
+.step3-editor #drop-zones .drop-line {
+  min-height: 62px; padding: 14px 18px; border-radius: 13px;
+}
+.step3-editor #drop-zones .drop-line-num { font-size: 15px; }
+.step3-editor #drop-zones .drop-line-prompt { font-size: 13.5px; }
+.step3-editor #block-bank { gap: 11px; }
+.step3-editor #block-bank .logic-pill {
+  font-size: 13.5px; padding: 10px 14px;
+}
+.step3-editor .bank-label { font-size: 12px; }
