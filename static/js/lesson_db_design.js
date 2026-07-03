@@ -1092,7 +1092,15 @@
     const wrap = document.getElementById('mcq-options');
     wrap.innerHTML = '';
 
-    q.options.forEach((opt, i) => {
+    // v4 FIX: xáo trộn vị trí đáp án mỗi lần render → đáp án đúng rơi ngẫu nhiên A–D
+    // (trước đây đáp án đúng luôn ở cùng 1 vị trí, thường là B — quá dễ đoán).
+    const shuffledOpts = q.options.slice();
+    for (let k = shuffledOpts.length - 1; k > 0; k--) {
+      const j = Math.floor(Math.random() * (k + 1));
+      [shuffledOpts[k], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[k]];
+    }
+
+    shuffledOpts.forEach((opt, i) => {
       const btn = document.createElement('button');
       btn.className = 'mcq-option';
       btn.dataset.correct = opt.correct;
@@ -3421,12 +3429,39 @@
     const builtSQL = buildSQLString().replace(/\s+/g, ' ');
     const isComplete = builtSQL === expected;
 
+    // v4 FIX: chấm ĐÚNG/SAI nội dung TỪNG mệnh đề (so nội dung THÔ của zone với expected clause).
+    // → pipeline chỉ ✓ 1 ga khi mệnh đề đó THỰC SỰ đúng, không phải cứ có block/đúng-loại là ✓.
+    const expZone = expectedZoneContent(s3.expected_sql || '');
+    const normClause = t => (t || '').toUpperCase().replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    const zoneCorrect = {};
+    (s3.drop_zones || []).forEach(zone => {
+      const blocks = state.step3Blocks[zone.id] || [];
+      if (!blocks.length) return;
+      const raw = blocks.map(b => b.token).join(' ');
+      const exp = expZone[zone.id];
+      zoneCorrect[zone.id] = (exp != null) && normClause(raw) === normClause(exp);
+    });
+
     window.DragGame.update({
       zoneFills: zoneFills,
+      zoneCorrect: zoneCorrect,   // v4: per-clause correctness cho pipeline
       isComplete: isComplete,
       expected: expected,    // FIX 2g-A4: pass for diagnostic on incorrect feedback
       userBuilt: builtSQL,   // FIX 2g-A4: pass for diagnostic on incorrect feedback
     });
+  }
+
+  /* v4: tách expected_sql thành nội dung MỆNH ĐỀ theo zone (để pipeline chấm từng ga). */
+  function expectedZoneContent(sql) {
+    sql = (sql || '').replace(/;$/, '').trim();
+    const m = {}; let mm;
+    if ((mm = sql.match(/\bSELECT\b\s+(.+?)\s+\bFROM\b/i))) m['select-line'] = 'SELECT ' + mm[1].trim();
+    if ((mm = sql.match(/\bFROM\b\s+(.+?)(?=\s+\bWHERE\b|\s+\bGROUP\s+BY\b|\s+\bORDER\s+BY\b|\s+\bHAVING\b|$)/i))) m['from-line'] = 'FROM ' + mm[1].trim();
+    if ((mm = sql.match(/\bWHERE\b\s+(.+?)(?=\s+\bGROUP\s+BY\b|\s+\bORDER\s+BY\b|\s+\bHAVING\b|$)/i))) m['where-line'] = 'WHERE ' + mm[1].trim();
+    if ((mm = sql.match(/\bGROUP\s+BY\b\s+(.+?)(?=\s+\bORDER\s+BY\b|\s+\bHAVING\b|$)/i))) m['group-line'] = 'GROUP BY ' + mm[1].trim();
+    if ((mm = sql.match(/\bHAVING\b\s+(.+?)(?=\s+\bORDER\s+BY\b|$)/i))) m['having-line'] = 'HAVING ' + mm[1].trim();
+    if ((mm = sql.match(/\bORDER\s+BY\b\s+(.+?)$/i))) m['order-line'] = 'ORDER BY ' + mm[1].trim();
+    return m;
   }
 
   function buildSQLString() {

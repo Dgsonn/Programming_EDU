@@ -62,6 +62,7 @@
   /* Phase A (Fix 4 v5) state */
   let isRunning = false;
   let currentZoneFills = {};
+  let currentZoneCorrect = {};  /* v4: per-clause correctness (từ lesson_db_design) */
   let currentIsComplete = false;
   /* FIX 2g-A4: expected + userBuilt dùng cho chẩn đoán khi feedback sai */
   let lastExpected = '';
@@ -656,6 +657,7 @@
 
     /* ── 4. Phase A: Store state for runQuery() ── */
     currentZoneFills = zoneFills;
+    currentZoneCorrect = state.zoneCorrect || {};
     currentIsComplete = !!state.isComplete;
     /* FIX 2g-A4: lưu expected SQL + user-built để showFeedback chẩn đoán khi sai */
     lastExpected = (state.expected || '').toUpperCase();
@@ -976,11 +978,13 @@
         /* 7. Wait for badge animation + let user READ manifest (~1.5s pause) */
         await wait(1500);
 
-        /* 8. Mark done / error */
+        /* 8. Mark done / error.
+           v4 FIX: ga chỉ ✓ khi (a) chạy được VÀ (b) nội dung mệnh đề ĐÚNG (zoneCorrect).
+           Trước đây FROM luôn ✓ vì "nạp bảng" luôn chạy được, dù zone chứa rác. */
         stationEl.classList.remove('active');
-        if (result.error) {
-          /* F6 (3.8): parse error → trigger fail animation (xe lượn về KHO).
-             Thay vì finishExecution(false) ngay (cũ — mâu thuẫn "về đích rồi báo sai"). */
+        var clauseWrong = currentZoneCorrect[entry.station.zone] === false;
+        if (result.error || clauseWrong) {
+          /* F6 (3.8): parse error / sai nội dung → fail animation (xe lượn về KHO). */
           stationEl.classList.add('error');
           shakeTruck();
           runFailAnimation(entry.station, filledStations, i);

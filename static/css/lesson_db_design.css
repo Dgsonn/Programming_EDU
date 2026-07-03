@@ -6825,12 +6825,15 @@ body.light .mcq-option .t-number  { color: #B45309; }
 .mini-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 9px 15px;   /* v4: to hơn cho dễ cầm-thả (was 6px 12px) */
+  padding: 10px 16px;   /* v4: to hơn cho dễ cầm-thả (was 6px 12px) */
+  min-width: 62px;      /* v4: chip ngắn (id, name) không còn bé tí */
   border-radius: 9px;
   background: var(--primary-soft);
   color: var(--primary);
   font-size: 13.5px;
+  font-weight: 600;
   cursor: grab;
   user-select: none;
   border: 1px solid rgba(6, 182, 212, 0.3);
