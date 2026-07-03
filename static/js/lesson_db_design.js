@@ -64,23 +64,36 @@
         '<text x="0" y="5" text-anchor="middle" fill="#22D3EE" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700">WHERE id = 101 → đúng 1 dòng</text>' +
       '</g></svg>',
 
-    db_02: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Composite name chia thành first_name và last_name. Derived age tính từ birth_date">' +
-      '<text x="250" y="29" text-anchor="middle" fill="var(--text-400)" font-size="14">Composite (split into parts)</text>' +
-      '<ellipse cx="100" cy="94" rx="69" ry="28" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="100" y="101" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="600">name</text>' +
-      '<line x1="169" y1="94" x2="238" y2="47" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<line x1="169" y1="94" x2="238" y2="140" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<ellipse cx="300" cy="47" rx="81" ry="25" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="300" y="54" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">first_name</text>' +
-      '<ellipse cx="300" cy="140" rx="81" ry="25" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="300" y="147" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">last_name</text>' +
-      '<text x="250" y="211" text-anchor="middle" fill="var(--text-400)" font-size="14">Derived (computed from)</text>' +
-      '<ellipse cx="100" cy="257" rx="62" ry="28" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="5,3"/>' +
-      '<text x="100" y="264" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="600">age</text>' +
-      '<line x1="169" y1="257" x2="231" y2="257" stroke="var(--module-accent)" stroke-width="2" marker-end="url(#arrow)"/>' +
-      '<ellipse cx="300" cy="257" rx="81" ry="25" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="300" y="264" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">birth_date</text>' +
-      '<text x="250" y="328" text-anchor="middle" fill="var(--text-400)" font-size="14">2 kiểu attribute phức tạp</text></svg>',
+    db_02: '<svg viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3 loại thuộc tính đặc biệt: Composite (name tách first_name last_name), Multivalued (player nhiều platform tách bảng riêng), Derived (age tính từ birth_year)">' +
+      '<text x="250" y="24" text-anchor="middle" fill="var(--text-400)" font-size="13">① Composite — tách 1 cột thành nhiều mảnh</text>' +
+      '<ellipse cx="92" cy="72" rx="60" ry="24" fill="rgba(245,158,11,0.12)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="92" y="78" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="17" font-weight="600">name</text>' +
+      '<line x1="152" y1="72" x2="216" y2="50" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<line x1="152" y1="72" x2="216" y2="98" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<ellipse cx="300" cy="50" rx="80" ry="21" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="56" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">first_name</text>' +
+      '<ellipse cx="300" cy="98" rx="80" ry="21" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="104" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">last_name</text>' +
+      '<text x="250" y="158" text-anchor="middle" fill="var(--text-400)" font-size="13">② Multivalued — 1 người nhiều platform → tách bảng riêng</text>' +
+      '<ellipse cx="92" cy="208" rx="62" ry="24" fill="rgba(245,158,11,0.12)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="92" y="214" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16" font-weight="600">player</text>' +
+      '<line x1="154" y1="208" x2="214" y2="186" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<line x1="154" y1="208" x2="214" y2="208" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<line x1="154" y1="208" x2="214" y2="230" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="216" y="174" width="82" height="24" rx="6" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="1.6"/>' +
+      '<text x="257" y="190" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">PS5</text>' +
+      '<rect x="216" y="196" width="82" height="24" rx="6" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="1.6"/>' +
+      '<text x="257" y="212" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">Xbox</text>' +
+      '<rect x="216" y="218" width="82" height="24" rx="6" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="1.6"/>' +
+      '<text x="257" y="234" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">PC</text>' +
+      '<text x="312" y="212" fill="var(--text-500)" font-size="11" font-style="italic">player_platform</text>' +
+      '<text x="250" y="290" text-anchor="middle" fill="var(--text-400)" font-size="13">③ Derived — tính khi cần, KHÔNG lưu</text>' +
+      '<ellipse cx="92" cy="338" rx="56" ry="24" fill="rgba(245,158,11,0.12)" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="5,3"/>' +
+      '<text x="92" y="344" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="17" font-weight="600">age</text>' +
+      '<line x1="148" y1="338" x2="214" y2="338" stroke="var(--module-accent)" stroke-width="2" marker-end="url(#arrow)"/>' +
+      '<ellipse cx="300" cy="338" rx="80" ry="21" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="300" y="344" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">birth_year</text>' +
+      '<text x="250" y="404" text-anchor="middle" fill="var(--text-400)" font-size="13">3 kiểu thuộc tính đặc biệt: Composite · Multivalued · Derived</text></svg>',
 
     db_03: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3 kiểu cardinality: 1:1, 1:N, M:N">' +
       '<text x="300" y="33" text-anchor="middle" fill="var(--text-400)" font-size="17">3 loại Cardinalities</text>' +
