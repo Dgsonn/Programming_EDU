@@ -131,20 +131,38 @@
       '<line x1="382" y1="180" x2="405" y2="140" stroke="var(--module-accent)" stroke-width="3"/>' +
       '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="17">Junction table giải quyết M:N</text></svg>',
 
-    db_05: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Weak entity dlc_content phụ thuộc parent game">' +
-      '<rect x="50" y="94" width="150" height="88" rx="8" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="50" y="94" width="150" height="28" rx="8" fill="var(--module-accent)"/>' +
-      '<text x="125" y="112" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">game (parent)</text>' +
-      '<text x="125" y="146" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">game_id (PK)</text>' +
-      '<line x1="200" y1="135" x2="262" y2="135" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="4,2"/>' +
-      '<text x="231" y="126" text-anchor="middle" fill="var(--module-accent)" font-size="14">identifies</text>' +
-      '<rect x="262" y="94" width="175" height="138" rx="8" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="4" stroke-dasharray="6,3"/>' +
-      '<rect x="262" y="94" width="175" height="28" rx="8" fill="rgba(245,158,11,0.25)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="350" y="112" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">dlc_content</text>' +
-      '<text x="350" y="150" text-anchor="middle" fill="var(--text-400)" font-size="12">dlc_no</text>' +
-      '<text x="350" y="173" text-anchor="middle" fill="var(--module-accent)" font-size="12">(partial key)</text>' +
-      '<text x="350" y="205" text-anchor="middle" fill="var(--text-400)" font-size="12">dlc_name</text>' +
-      '<text x="250" y="269" text-anchor="middle" fill="var(--text-400)" font-size="14">Double border = weak entity</text></svg>',
+    db_05: '<svg viewBox="0 0 560 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Thực thể yếu dlc_content mượn khóa của game qua quan hệ định danh">' +
+      /* parent = strong entity: game */
+      '<rect x="40" y="72" width="160" height="106" rx="10" fill="rgba(245,158,11,0.08)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="40" y="72" width="160" height="32" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="120" y="93" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700">game</text>' +
+      '<text x="120" y="120" text-anchor="middle" fill="var(--text-500)" font-size="11">thực thể mạnh</text>' +
+      '<line x1="54" y1="130" x2="186" y2="130" stroke="rgba(148,163,184,0.25)" stroke-width="1"/>' +
+      '<text x="120" y="152" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">game_id</text>' +
+      '<rect x="96" y="160" width="48" height="18" rx="9" fill="rgba(245,158,11,0.2)" stroke="var(--module-accent)" stroke-width="1"/>' +
+      '<text x="120" y="173" text-anchor="middle" fill="var(--module-accent)" font-size="11" font-weight="700">PK</text>' +
+      /* weak entity = DOUBLE border: dlc_content */
+      '<rect x="360" y="58" width="170" height="140" rx="11" fill="rgba(245,158,11,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="366" y="64" width="158" height="128" rx="8" fill="none" stroke="var(--module-accent)" stroke-width="1.4"/>' +
+      '<rect x="366" y="64" width="158" height="30" rx="8" fill="rgba(245,158,11,0.22)"/>' +
+      '<text x="445" y="85" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700">dlc_content</text>' +
+      '<text x="445" y="112" text-anchor="middle" fill="var(--text-500)" font-size="11">thực thể yếu (weak)</text>' +
+      '<text x="445" y="138" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">dlc_no</text>' +
+      '<line x1="418" y1="144" x2="472" y2="144" stroke="var(--module-accent)" stroke-width="1.4" stroke-dasharray="4,3"/>' +
+      '<text x="445" y="160" text-anchor="middle" fill="var(--module-accent)" font-size="10">khóa một phần</text>' +
+      '<text x="445" y="184" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="13">dlc_name</text>' +
+      /* identifying relationship = DOUBLE diamond, center (280,125) */
+      '<line x1="200" y1="125" x2="246" y2="125" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<line x1="314" y1="125" x2="360" y2="125" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<polygon points="280,95 314,125 280,155 246,125" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<polygon points="280,103 306,125 280,147 254,125" fill="none" stroke="var(--module-accent)" stroke-width="1"/>' +
+      '<text x="222" y="117" text-anchor="middle" fill="var(--text-400)" font-size="11" font-weight="700">1</text>' +
+      '<text x="338" y="117" text-anchor="middle" fill="var(--text-400)" font-size="11" font-weight="700">N</text>' +
+      '<text x="280" y="177" text-anchor="middle" fill="var(--module-accent)" font-size="11" font-weight="600">định danh</text>' +
+      /* composite PK pill */
+      '<rect x="110" y="236" width="340" height="40" rx="20" fill="rgba(245,158,11,0.12)" stroke="var(--module-accent)" stroke-width="1.4" stroke-dasharray="5,3"/>' +
+      '<text x="280" y="261" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--text-100)">Khóa chính = ( <tspan fill="var(--module-accent)" font-weight="700">ref_game_id</tspan> + <tspan fill="var(--module-accent)" font-weight="700">dlc_no</tspan> )</text>' +
+      '<text x="280" y="304" text-anchor="middle" fill="var(--text-500)" font-size="12">Viền đôi = thực thể yếu · gạch đứt = khóa một phần · mượn game_id của cha</text></svg>',
 
     db_06: '<svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Specialization: Vehicle thành Car và Truck qua ISA">' +
       '<rect x="162" y="35" width="175" height="75" rx="8" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
@@ -590,22 +608,11 @@
   /* ── C3: Module / Course completion celebration ─────────────── */
   function triggerModuleCelebration() {
     var lessonNum = (state.currentLessonIdx || 0) + 1;
-    var isGraduation = (lessonNum === 20);  // B20 = course complete (was 18, renumber to 20)
-    var isTrophy    = (lessonNum === 7 || lessonNum === 14);  // B7 = M1 end, B14 = M2 end (Boss)
+    var isGraduation = (lessonNum === 20);  // B20 = course complete
+    var isTrophy    = (lessonNum === 7 || lessonNum === 14);  // B7 = M1 end, B14 = M2 end
     if (!isGraduation && !isTrophy) return;
-    var el = document.createElement('div');
-    el.className = isGraduation ? 'graduation-celebration' : 'trophy-celebration';
-    el.textContent = isGraduation ? '🎓' : '🏆';
-    document.body.appendChild(el);
-    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var lifetime = reduced ? 1000 : 2200;
-    setTimeout(function () {
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-    }, lifetime);
-    // CHANGE 3: Module-specific element animations
-    // B6 (M1 end) → ER diagram pulse on .visual-db-panel nodes
-    // B13 (M2 end) → decomposition unfold on .schema-row
-    // B18 (M3 end) → stack components highlight on .ide-display
+
+    // Module-specific element pulse (ER nodes / schema rows / IDE) — subtle backdrop life.
     var mod = state.currentLesson && state.currentLesson.module;
     var completionCls = 'module' + mod + '-completion';
     var targetEls = [];
@@ -620,8 +627,81 @@
     setTimeout(function () {
       targetEls.forEach(function (node) { node.classList.remove(completionCls); });
     }, 2400);
-    // B18 graduation also triggers rainbow confetti explicitly (in case hearts < 3)
+
     if (isGraduation) celebrate();
+    // The real milestone moment: a full-screen overlay with recap + continue.
+    setTimeout(function () { showModuleCompleteOverlay(isGraduation, mod, lessonNum); }, 500);
+  }
+
+  /* Full-screen "Hoàn thành Chương" overlay — recap kỹ năng của cả chương + nút sang chương sau.
+   * Chặn 1 nhịp để người học CẢM được cột mốc (Duolingo/Brilliant style). */
+  function showModuleCompleteOverlay(isGraduation, modNum, lessonNum) {
+    if (document.querySelector('.module-complete-overlay')) return;
+    var data = window.LESSON_CONTENT && window.LESSON_CONTENT['db_design'];
+    var lessons = (data && data.lessons) || [];
+    var cur = state.currentLesson || {};
+    var modTitle = cur.module_title || ('Chương ' + (modNum || ''));
+    var modLessons = lessons.filter(function (l) { return l.module === modNum; })
+                            .sort(function (a, b) { return (a.index || 0) - (b.index || 0); });
+    var skills = modLessons.map(function (l) { return l.title; });
+    if (!skills.length) skills = [cur.title || ''];
+
+    var icon = isGraduation ? '🎓' : '🏆';
+    var eyebrow = isGraduation ? 'HOÀN THÀNH KHÓA HỌC' : ('HOÀN THÀNH CHƯƠNG ' + (modNum || ''));
+    var headline = isGraduation ? 'Bạn đã trở thành Nhà thiết kế CSDL!' : modTitle;
+    var sub = isGraduation
+      ? 'Bạn đã đi hết 20 bài — từ thực thể đầu tiên tới hệ CSDL hoàn chỉnh. Những gì bạn đã nắm ở chương cuối:'
+      : ('Bạn vừa chinh phục ' + skills.length + ' bài. Những gì bạn đã nắm:');
+
+    var skillsHTML = skills.map(function (s) {
+      return '<li><i class="fa-solid fa-circle-check"></i> ' + escapeHtml(s) + '</li>';
+    }).join('');
+
+    var nextLabel, nextAttr;
+    if (isGraduation) {
+      nextLabel = 'Hoàn tất 🎉';
+      nextAttr = 'data-mco-close="1"';
+    } else {
+      nextLabel = 'Tiếp tục Chương ' + ((modNum || 1) + 1) + ' <i class="fa-solid fa-arrow-right"></i>';
+      nextAttr = 'data-mco-next="' + (lessonNum + 1) + '"';
+    }
+
+    var ov = document.createElement('div');
+    ov.className = 'module-complete-overlay';
+    ov.innerHTML =
+      '<div class="mco-backdrop" data-mco-close="1"></div>' +
+      '<div class="mco-card" role="dialog" aria-modal="true" aria-label="' + escapeHtml(eyebrow) + '">' +
+        '<div class="mco-glow"></div>' +
+        '<div class="mco-icon">' + icon + '</div>' +
+        '<div class="mco-eyebrow">' + eyebrow + '</div>' +
+        '<h2 class="mco-title">' + escapeHtml(headline) + '</h2>' +
+        '<p class="mco-sub">' + sub + '</p>' +
+        '<ul class="mco-skills">' + skillsHTML + '</ul>' +
+        '<div class="mco-actions">' +
+          '<button class="mco-continue" ' + nextAttr + '>' + nextLabel + '</button>' +
+          (isGraduation ? '' : '<button class="mco-later" data-mco-close="1">Ở lại xem lại</button>') +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function () { ov.classList.add('show'); });
+
+    function closeOverlay() {
+      ov.classList.remove('show');
+      setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 260);
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') closeOverlay(); }
+    document.addEventListener('keydown', onKey);
+
+    ov.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-mco-next], [data-mco-close]');
+      if (!t) return;
+      if (t.hasAttribute('data-mco-next')) {
+        window.location.href = '?lesson=' + t.getAttribute('data-mco-next');
+      } else {
+        closeOverlay();
+      }
+    });
   }
 
   /* ── C3: Combined Step 4 success hook ────────────────────────── */
@@ -1238,7 +1318,7 @@
           // Mini-game still unsolved → keep button hidden but unlock "Try mini-game"
           showMCQExplain('Câu hỏi xong rồi! 🎉 Thử mini-game bên dưới để ghi điểm thêm nhé.');
         } else {
-          document.getElementById('btn-next-step3').classList.remove('hidden');
+          revealStep3Cta();
           if (mg && isMiniGameSolved()) addXP(10);
         }
       }
@@ -1278,7 +1358,7 @@
 
     document.getElementById('mini-game-title').textContent = mg.title || 'Phân loại nhanh';
     document.getElementById('mini-game-instruction').innerHTML = (mg.instruction || '') +
-      ' <span class="mini-hint-inline">💡 Kéo thả, HOẶC bấm thẻ rồi bấm ô để đặt.</span>';
+      ' <span class="mini-hint-inline">👆 <strong>Bấm 1 thẻ</strong> để chọn (viền sáng) rồi <strong>bấm ô</strong> để đặt — hoặc kéo-thả.</span>';
     document.getElementById('mini-game-feedback').classList.add('hidden');
     document.getElementById('btn-mini-reset').onclick = () => renderMiniGame(mg);
 
@@ -1329,6 +1409,7 @@
           handleMiniDrop(state.miniSelectedChip, bin.id);
           state.miniSelectedChip = null;
           document.querySelectorAll('.mini-chip.selected').forEach(c => c.classList.remove('selected'));
+          clearMiniAwaiting();
         }
       });
       binsHost.appendChild(el);
@@ -1374,6 +1455,10 @@
     newBin.appendChild(newEl);
   }
 
+  function clearMiniAwaiting() {
+    document.querySelectorAll('.mini-bin.awaiting').forEach(b => b.classList.remove('awaiting'));
+  }
+
   function attachMiniChipDrag(el, chipId) {
     el.addEventListener('dragstart', e => {
       if (state.miniGameLocked) { e.preventDefault(); return; }
@@ -1382,14 +1467,17 @@
       el.classList.add('dragging');
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
-    // v4: CLICK-để-đặt (fallback khi HTML5 drag kén) — bấm thẻ để chọn, bấm ô để đặt.
-    el.addEventListener('click', () => {
+    // v5: CLICK-để-đặt là CHÍNH (drag chỉ là phụ vì HTML5 drag kén trên nhiều máy).
+    // Bấm thẻ để chọn (viền sáng + các ô "chờ" pulse), bấm ô để đặt.
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();               // đừng để nổi bọt xuống ô đang chứa thẻ này
       if (state.miniGameLocked) return;
       const wasSel = el.classList.contains('selected');
       document.querySelectorAll('.mini-chip.selected').forEach(c => c.classList.remove('selected'));
-      if (wasSel) { state.miniSelectedChip = null; return; }
+      if (wasSel) { clearMiniAwaiting(); state.miniSelectedChip = null; return; }
       state.miniSelectedChip = chipId;
       el.classList.add('selected');
+      document.querySelectorAll('.mini-bin').forEach(b => b.classList.add('awaiting'));  // mời bấm ô
     });
   }
 
@@ -1434,9 +1522,24 @@
       fb.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Đúng ${correctCount}/${Object.keys(sol).length}. Bấm 🔄 để thử lại.`;
     }
 
-    // Enable "next step" button regardless (mini-game is bonus)
-    document.getElementById('btn-next-step3').classList.remove('hidden');
+    // Enable "next step" button regardless (mini-game is bonus) — label stays honest
+    revealStep3Cta();
   };
+
+  /* Reveal + honestly label the "next → Step 3" CTA.
+   * Only claim "Chuẩn!" when EVERY MCQ was answered correctly AND (no mini-game OR mini-game solved).
+   * Otherwise neutral "Tiếp tục" — never a false "Đúng rồi". Mini-game stays optional bonus. */
+  function revealStep3Cta() {
+    const btn = document.getElementById('btn-next-step3');
+    if (!btn) return;
+    const answers = state.mcqAnswers || [];
+    const allMcqCorrect = answers.length > 0 && answers.every(a => a && a.correct);
+    const perfect = allMcqCorrect && isMiniGameSolved();
+    const label = btn.querySelector('.cta-label');
+    const text = perfect ? 'Chuẩn! Tới Kéo Thả Logic' : 'Tiếp tục → Kéo Thả Logic';
+    if (label) label.textContent = text; else btn.textContent = text;
+    btn.classList.remove('hidden');
+  }
 
   function showMCQExplain(text) {
     const el = document.getElementById('mcq-explain');

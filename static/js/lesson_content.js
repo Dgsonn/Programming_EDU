@@ -681,12 +681,12 @@ concept_cards: [
             ]
           },
           {
-            question: 'Khi 2 bảng cùng có cột <code>id</code> và bạn SELECT cả 2, làm sao phân biệt?',
+            question: 'Muốn lấy <code>id</code> của game KÈM <code>id</code> nhà phát hành ĐÚNG của nó (tránh cả lỗi trùng tên cột lẫn ghép sai cặp), bạn viết:',
             options: [
-{ id: 'a', text: 'SELECT id FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — cột `id` xuất hiện ở cả 2 bảng mà không qualify → ambiguous column error. SQL không tự hiểu ý bạn.' },
-          { id: 'b', text: 'SELECT game.id, publisher.id FROM game JOIN publisher ON game.pub_id = publisher.id', correct: true, format: 'code', explanation: 'Đúng — qualify bằng `<table>.<column>` (game.id, publisher.id). Khi JOIN, dùng ON để chỉ định FK relationship (game.pub_id = publisher.id).' },
-          { id: 'c', text: 'SELECT * FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — `*` chọn tất cả cột của CẢ 2 bảng → 2 cột `id` đều được trả về với cùng tên → phía client không phân biệt được đâu là `game.id`, đâu là `publisher.id`.' },
-          { id: 'd', text: 'SELECT game.id AS game_id, publisher.id AS pub_id FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — alias chỉ đổi tên cột OUTPUT, không giải quyết ambiguity lúc query. Câu này KHÔNG có JOIN nên cross product — kết quả vẫn ambiguous giữa 2 cột id.' }
+{ id: 'a', text: 'SELECT id FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — cột `id` có ở cả 2 bảng mà không qualify → lỗi "ambiguous column". SQL không đoán được bạn muốn id nào.' },
+          { id: 'b', text: 'SELECT game.id, publisher.id FROM game JOIN publisher ON game.pub_id = publisher.id', correct: true, format: 'code', explanation: 'Đúng — qualify `game.id` / `publisher.id` để hết trùng tên, VÀ `JOIN ... ON game.pub_id = publisher.id` để ghép đúng cặp game ↔ publisher của nó.' },
+          { id: 'c', text: 'SELECT * FROM game, publisher', correct: false, format: 'code', explanation: 'Sai — `*` trả TẤT CẢ cột của cả 2 bảng (2 cột `id` cùng tên), lại thiếu ON → tích Descartes: mỗi game ghép với MỌI publisher.' },
+          { id: 'd', text: 'SELECT game.id AS game_id, publisher.id AS pub_id FROM game, publisher', correct: false, format: 'code', explanation: 'Bẫy hay: cột ĐÃ hết trùng tên (alias ok), NHƯNG thiếu `JOIN ... ON` → đây là cross join, mỗi game ghép với MỌI publisher → sai cặp. Phải thêm ON game.pub_id = publisher.id.' }
             ]
           }
         ],
@@ -1315,7 +1315,7 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — dùng bảng trung gian để <strong>đếm mỗi người chơi sở hữu bao nhiêu game</strong> (<code>GROUP BY player_id</code> + <code>COUNT</code>), sắp xếp nhiều → ít.",
-        starter: "-- Lấy game_id mà player 9 sở hữu\n-- Filter: player_id = 9\nSELECT ____\n  FROM ____\n WHERE ____ = ____;",
+        starter: "-- Đếm mỗi người chơi sở hữu bao nhiêu game\n-- Gợi ý: GROUP BY player_id + COUNT(*)\nSELECT ____, ____\n  FROM library\n GROUP BY ____\n ORDER BY ____ DESC;",
         schema: {
           table_name: 'library',
           columns: [
@@ -1351,11 +1351,23 @@ concept_cards: [
           ]
         },
         hints: [
-          { level: 1, text: 'Bạn cần <em>1 cột</em> (game_id) từ bảng <code>library</code>, lọc theo player_id = 9.' },
-          { level: 2, text: '<code>SELECT game_id FROM library WHERE player_id = 9;</code> — kết quả 2 dòng (101, 105).' },
-          { level: 3, text: 'Đừng gộp <code>GROUP BY</code> hay <code>DISTINCT</code> — 1 player có thể sở hữu 1 game nhiều lần (giả định đơn giản).' },
+          { level: 1, text: 'Cần <em>2 cột</em>: <code>player_id</code> và số game của họ — đếm bằng <code>COUNT(*)</code>.' },
+          { level: 2, text: 'Gộp theo người chơi: <code>GROUP BY player_id</code> (mỗi nhóm gộp mọi dòng cùng 1 player). <code>COUNT(*)</code> đếm số dòng trong nhóm = số game.' },
+          { level: 3, text: 'Đặt tên cột đếm bằng <code>AS</code>: <code>COUNT(*) AS game_count</code>, rồi sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>.' },
           { level: 4, text: "<code class=\"code\">SELECT player_id, COUNT(*) AS game_count FROM library GROUP BY player_id ORDER BY game_count DESC;</code>" }
         ],
+        context: {
+          scenario: "Bảng trung gian <code>library</code> ghi mỗi dòng = 1 cặp (player, game) — \"ai sở hữu game nào\". Sếp muốn biết <strong>mỗi người chơi đang sở hữu bao nhiêu game</strong> để trao huy hiệu 'Nhà sưu tầm'.",
+          real_world: "<strong>Steam</strong>, <strong>Epic Games</strong> đếm số game mỗi tài khoản đúng kiểu này — <strong>không</strong> lưu sẵn con số 'tổng game' (thêm/xoá 1 game là sai ngay), mà <strong>đếm động</strong> từ bảng sở hữu bằng <code>GROUP BY</code> + <code>COUNT</code>. Truy vấn tổng hợp này chạy hàng triệu lần mỗi ngày.",
+          steps: [
+            "Gộp các dòng cùng 1 người chơi: <code>GROUP BY player_id</code> — mỗi nhóm = 1 người.",
+            "Đếm số dòng trong mỗi nhóm = số game người đó sở hữu: <code>COUNT(*) AS game_count</code>.",
+            "Chọn 2 cột hiển thị: <code>player_id</code>, <code>game_count</code>.",
+            "Sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>. Run → bảng xếp hạng người chơi theo số game."
+          ],
+          hint_explore: "Chưa rõ bảng có gì? Gõ <code>SELECT * FROM library</code> rồi <strong>Run</strong> để xem toàn bộ các cặp (player, game).",
+          expected: "Bảng nhiều dòng × 2 cột (<code>player_id, game_count</code>): mỗi người chơi kèm số game đang sở hữu, xếp từ nhiều → ít. Người đầu bảng là 'nhà sưu tầm' lớn nhất."
+        },
         expected_sql: "SELECT player_id, COUNT(*) AS game_count FROM library GROUP BY player_id ORDER BY game_count DESC;",
         success_message: 'Hoàn thành M:N & bảng trung gian! Bài 6 (Weak Entity) tiếp theo — thực thể yếu cũng dùng khóa ghép nhưng theo cách khác.',
         xp_reward: 50
@@ -1492,12 +1504,12 @@ concept_cards: [
           "title": "Tìm lỗi trong Weak Entity setup",
           "instruction": "Dòng nào sai trong SQL tạo bảng weak entity DLC?",
           "xp": 25,
-          "code": "CREATE TABLE dlc_content (\n  dlc_id INT PRIMARY KEY,\n  game_id INT,\n  dlc_name VARCHAR(100),\n  price DECIMAL(10,2)\n);",
+          "code": "CREATE TABLE dlc_content (\n  dlc_no INT PRIMARY KEY,\n  ref_game_id INT,\n  dlc_name VARCHAR(100),\n  price DECIMAL(10,2)\n);",
           "bugType": "logic",
           "bugs": [
             {
               "line": 2,
-              "description": "Weak entity KHÔNG có PK riêng! PK phải là composite (game_id, dlc_id) — dlc_id chỉ là partial key. Sửa: PRIMARY KEY (game_id, dlc_id) và FOREIGN KEY (game_id) REFERENCES games(game_id)."
+              "description": "Weak entity KHÔNG có PK riêng! dlc_no chỉ là khóa MỘT PHẦN. PK đúng = composite (ref_game_id, dlc_no). Sửa: bỏ PRIMARY KEY ở dlc_no → PRIMARY KEY (ref_game_id, dlc_no) + FOREIGN KEY (ref_game_id) REFERENCES game(game_id)."
             }
           ]
         }
