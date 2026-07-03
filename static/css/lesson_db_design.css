@@ -6868,6 +6868,9 @@ body.light .mcq-option .t-number  { color: #B45309; }
   font-style: italic;
 }
 
+/* v4: bỏ khối "🎯 Nhiệm vụ" ở Step 1 (tất cả bài) — nhiệm vụ đã có ở Step 3, để Step 1 thuần lý thuyết. */
+.step-1-content .mission-card { display: none !important; }
+
 .mini-chip.correct {
   background: var(--success-soft);
   color: var(--success);

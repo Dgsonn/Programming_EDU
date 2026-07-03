@@ -808,9 +808,11 @@
         renderSVGPrimer(svgMount, s1.visual);
       }
     } else if (s1.visual && s1.visual.diagram) {
-      // Diagram-as-data: {type: 'er'|'nf'|'flow', ...}
+      // v4 FIX: BỎ render ER-diagram-as-data — bị lỗi (nhãn quan hệ đè chữ, và 1 số bài
+      // hiện SAI bảng, vd db_04 hiện student/course/enrollment thay vì player/game/library).
+      // Hero SVG (per-lesson) + Schema Explorer đã đủ trực quan. (user: "xóa luôn đi")
       const svgMount = document.getElementById('primer-svg-mount');
-      if (svgMount) renderDiagramFromData(svgMount, s1.visual.diagram);
+      if (svgMount) svgMount.innerHTML = '';
     } else {
       const svgMount = document.getElementById('primer-svg-mount');
       if (svgMount) svgMount.innerHTML = '';
