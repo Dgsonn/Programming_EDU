@@ -340,7 +340,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Bảng player_profile dưới đây đã tách address thành address_city + address_dist."
+              "body": "Thử lưu địa chỉ <code>'Q1, HCM'</code> trong 1 ô rồi tìm \"ai ở Quận 1\" — chịu! Tách <code>address_city</code> + <code>address_dist</code> mới lọc theo quận được. Còn <code>age</code>? Đừng lưu — sinh nhật tới là sai; tính <code>2026 - birth_year</code> ngay lúc SELECT."
             }
           ],
                 visual: {
@@ -609,7 +609,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Bảng game có cột pub_id (FK) trỏ sang publisher."
+              "body": "Thử tìm \"game nào của Rockstar?\" — bảng <code>game</code> chỉ có <code>pub_id = 20</code>, KHÔNG có chữ \"Rockstar\"! Phải <code>JOIN publisher</code> để nối <code>pub_id</code> ↔ tên. Đó chính là lý do Foreign Key tồn tại."
             }
           ],
                 visual: {
@@ -865,7 +865,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Bảng player_game_library ở giữa chỉ chứa ref_p_id + ref_game_id."
+              "body": "1 người chơi nhiều game, 1 game nhiều người — nhét vào đâu? Bảng trung gian <code>player_game_library</code>: mỗi dòng = 1 cặp (người, game). Muốn ra <em>tên</em> game phải JOIN qua 2 chặng FK — thử bỏ 1 chặng xem, ra ngay id vô nghĩa."
             }
           ],
                 visual: {
@@ -1198,7 +1198,7 @@ concept_cards: [
           {
             icon: 'fa-hand-pointer',
             title: 'Thử ngay',
-            body: 'Trong <code>library</code>, người chơi 7 có 2 dòng → sở hữu 2 game (101, 103).'
+            body: "Nhiều người ↔ nhiều game: đừng nhét danh sách game vào cột của player (hỏng 1NF). Bảng trung gian <code>library</code> — mỗi dòng = 1 cặp (player, game). Đếm số dòng theo player = số game người đó sở hữu."
           }
         ],
         visual: {
@@ -1654,7 +1654,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "ER có Game (entity mạnh) + Publisher (entity mạnh) + quan hệ publishes (1:N — 1 publisher xuất bản nhiều game)."
+              "body": "Quan hệ 1:N \"publishes\" map sang bảng thế nào? KHÔNG tạo bảng riêng — chỉ cắm <code>pub_id</code> (FK) vào bảng phía \"nhiều\" (game). Thử làm ngược (cắm danh sách game vào publisher) → 1 ô phải chứa nhiều game = hỏng 1NF."
             }
           ],
                 visual: {
@@ -1954,7 +1954,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Bạn phát hiện FD: studio_name → st_country."
+              "body": "Bảng gộp lặp <code>st_country</code> ở MỌI game cùng studio. Thử sửa quốc gia Valve ở 1 dòng mà quên 4 dòng kia → dữ liệu mâu thuẫn. FD <code>studio_name → st_country</code> chính là dấu hiệu phải tách bảng."
             }
           ],
                 visual: {
@@ -2674,7 +2674,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là khóa của bảng khác."
+              "body": "Trong bảng gộp, <code>category</code> kéo theo <code>category_manager</code> (phụ thuộc bắc cầu). Thử đổi manager của \"Gear\" → phải sửa MỌI dòng Gear, sót 1 dòng là sai. Tách bảng <code>categories</code> riêng → sửa đúng 1 chỗ."
             }
           ],
                 visual: {
@@ -3294,7 +3294,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Bảng course_offering_raw có MVD: course_id →→ textbook và course_id →→ instructor."
+              "body": "1 khóa có nhiều textbook VÀ nhiều instructor. Nhồi chung 1 bảng → mỗi textbook bị nhân với mỗi instructor (bùng nổ dòng thừa, vô nghĩa). Tách thành 2 bảng ĐỘC LẬP — đó là 4NF."
             }
           ],
                 visual: {
@@ -3509,7 +3509,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Sau 4 vòng, bạn sẽ có một schema sạch cho Mạng Xã Hội Gamers: users, posts, games, genres, platforms, và các bảng junction."
+              "body": "Boss battle: 1 bảng \"Mạng Xã Hội Gamers\" nhồi đủ thứ (user, post, game, platform) đang vi phạm cả 1NF→4NF. Nhiệm vụ: soi từng cột, hỏi \"nó phụ thuộc vào ai?\", rồi tách cho đúng chuẩn."
             }
           ],
                 visual: {
@@ -3862,7 +3862,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Query settings->>\\'theme\\' trả về text thuần (dark, light…)."
+              "body": "Thử thêm cột <code>lang</code> cho 1000 user bằng <code>ALTER TABLE</code> — chậm + khóa bảng. Với JSONB chỉ cần nhét vào <code>settings</code> rồi <code>settings->>'lang'</code> lôi ra. Linh hoạt, không phải đổi schema."
             }
           ],
                 visual: {
@@ -4103,7 +4103,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "ST_Distance(geo_location, ST_MakePoint(106."
+              "body": "Thử tìm \"cửa hàng trong 10km\" bằng cách so <code>lat/long</code> thủ công — công thức Haversine rối tung. <code>ST_DWithin(geo, điểm, 10)</code> làm gọn 1 dòng, lại có GiST index nên nhanh cả triệu điểm."
             }
           ],
                 visual: {
@@ -4342,7 +4342,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "LogEvent."
+              "body": "Thử ghép SQL log-analytics bằng chuỗi string tay → dễ dính SQL-injection + khó bảo trì. ORM: <code>LogEvent.objects.filter(...).annotate(Count(...))</code> — viết Python thuần, an toàn, tự sinh SQL chuẩn."
             }
           ],
                 visual: {
@@ -4564,7 +4564,7 @@ concept_cards: [
           {
             icon: 'fa-hand-pointer',
             title: 'Thử ngay',
-            body: 'Server nhận /api/games?genre=RPG → bạn dựng câu SQL nó chạy.'
+            body: "Người dùng bấm \"lọc RPG\" trên web → JS gọi <code>/api/games?genre=RPG</code> → server dịch query-param thành SQL <code>WHERE genre = 'RPG'</code> → trả JSON về. Bạn chính là người viết đúng câu SQL đó."
           }
         ],
         visual: {
@@ -4937,7 +4937,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "md5 hash bắt đầu bằng chuỗi hex 32 ký tự (5f4dcc3b5aa."
+              "body": "Thử: 2 user cùng đặt mật khẩu \"123456\" → cùng 1 chuỗi md5 (lộ ngay khi rò DB). Thêm <code>salt</code> ngẫu nhiên mỗi người → 2 hash KHÁC nhau, rainbow table vô dụng. Rồi bcrypt/argon2 đủ chậm để chặn brute-force."
             }
           ],
                 visual: {
