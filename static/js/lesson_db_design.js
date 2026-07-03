@@ -1861,17 +1861,12 @@
         showPillHint(pill, b.type, zoneName);
       });
 
-      // Drag = the ONLY way to place. While dragging, light up the matching
-      // zone with a steady glow so the user gets continuous feedback.
+      // Drag = the ONLY way to place. v4 FIX: KHÔNG sáng "zone đáp án" của block khi cầm lên
+      // (đó là spoiler lộ đáp án). Chỉ giữ visual .dragging trên chính pill.
       pill.addEventListener('dragstart', e => {
         e.dataTransfer.setData('text/plain', b.token);
         e.dataTransfer.effectAllowed = 'move';
         pill.classList.add('dragging'); // 4.4 pill drag-start visual
-        const zoneId = slotToZone(b.slot, s3);
-        if (zoneId) {
-          const zoneEl = document.querySelector(`.drop-line[data-zone="${zoneId}"]`);
-          if (zoneEl) zoneEl.classList.add('drag-target-hint');
-        }
       });
       pill.addEventListener('dragend', () => {
         pill.classList.remove('dragging'); // 4.4 pill drag-end cleanup
@@ -2353,18 +2348,11 @@
     const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ');
     const isMatch = builtSQL.toUpperCase() === expected.toUpperCase();
 
-    // Reset state classes every call (Brilliant pattern: chỉ 1 state tại 1 thời điểm)
+    // v4 FIX: KHÔNG chấm đúng/sai TRƯỚC khi Run. Người học build tự do; bấm "Chạy Query"
+    // mới phán xử (pipeline chạy → feedback pill). Bỏ auto-báo-sai + badge lởn vởn.
     wrapper.classList.remove('step3-state-correct', 'step3-state-wrong');
-
-    if (allPlaced && isMatch) {
-      wrapper.classList.add('step3-state-correct');
-      showPillBadge('correct', '✓ Hoàn hảo!');
-    } else if (allPlaced) {
-      wrapper.classList.add('step3-state-wrong');
-      showPillBadge('wrong', '⚠ Thử lại nhé');
-    } else {
-      hidePillBadge();
-    }
+    hidePillBadge();
+    void allPlaced; void isMatch; // giữ tính toán ở trên cho backward-safe, không dùng để chấm
   }
 
   /* FIX 4 v3 — Show success/warning pill badge trong .step3-exercise wrapper */
@@ -2394,28 +2382,13 @@
    * gentle nudge that respects the user's effort.
    */
   function applyBrokenState(builtSql, s3) {
-    if (!s3 || !s3.expected_sql) return;
-
-    const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ').toUpperCase();
-    const built = (builtSql || '').replace(/\s+/g, ' ').toUpperCase();
-
-    /* Only show "broken" if:
-     *   1. User has placed ALL the expected blocks (count matches)
-     *   2. But the built SQL doesn't match expected (order/format wrong)
-     */
-    const totalBlocks = Object.values(state.step3Blocks).reduce((s, a) => s + a.length, 0);
-    const totalAvailable = s3.blocks.length;
-    const allPlaced = totalBlocks === totalAvailable;
-    const isBroken = allPlaced && built !== expected;
-
+    /* v4 FIX: KHÔNG tự chấm "sai vị trí" trước khi người học bấm Chạy — chỉ dọn class .broken cũ.
+       (Trước đây: kéo đủ block là auto-báo sai + zone co lại → gây khó chịu, spoiler.)
+       Run mới là trọng tài (drag_game.runQuery → finishExecution). */
+    if (!s3 || !s3.drop_zones) return;
     s3.drop_zones.forEach(zone => {
       const lineEl = document.querySelector(`.drop-line[data-zone="${zone.id}"]`);
-      if (!lineEl) return;
-      if (isBroken) {
-        lineEl.classList.add('broken');
-      } else {
-        lineEl.classList.remove('broken');
-      }
+      if (lineEl) lineEl.classList.remove('broken');
     });
   }
 
@@ -5099,16 +5072,26 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
 
     container.querySelector('#mg-match-check').onclick = () => {
       const sol = mg.solution || {};
-      let allCorrect = pairs.length === Object.keys(matches).length;
+      const allMatched = pairs.length === Object.keys(matches).length;
+      if (!allMatched) {
+        showMiniFeedback(container, 'mg-match-feedback', false, `Hãy nối đủ ${pairs.length} cặp trước khi kiểm tra.`);
+        return;
+      }
+      // v4 FIX: chấm TỪNG cặp → tô xanh (đúng ✓) / đỏ (sai ✗) rõ ràng, không còn "luôn hiện đúng".
       let correctCount = 0;
       Object.keys(matches).forEach(leftId => {
-        if (sol[leftId] === matches[leftId]) correctCount++;
+        const rightId = matches[leftId];
+        const ok = sol[leftId] === rightId;
+        if (ok) correctCount++;
+        const leftEl = container.querySelector(`#mg-match-left .mg-match-item[data-left-id="${leftId}"]`);
+        const rightEl = container.querySelector(`#mg-match-right .mg-match-item[data-right-id="${rightId}"]`);
+        [leftEl, rightEl].forEach(el => { if (el) { el.classList.remove('matched'); el.classList.add(ok ? 'correct' : 'incorrect'); } });
       });
-      if (allCorrect && correctCount === pairs.length) {
-        showMiniFeedback(container, 'mg-match-feedback', true, `Hoàn hảo! Nối đúng ${correctCount}/${pairs.length} cặp. +${mg.xp || 20} XP`);
+      if (correctCount === pairs.length) {
+        showMiniFeedback(container, 'mg-match-feedback', true, `Hoàn hảo! Đúng ${correctCount}/${pairs.length} cặp. +${mg.xp || 20} XP`);
         awardXP(mg.xp || 20);
       } else {
-        showMiniFeedback(container, 'mg-match-feedback', false, `Sai ${pairs.length - correctCount} cặp. Thử lại nhé!`);
+        showMiniFeedback(container, 'mg-match-feedback', false, `Đúng ${correctCount}/${pairs.length} cặp — ô ĐỎ là nối sai. Bấm "Làm lại" để thử lại.`);
       }
     };
     container.querySelector('#mg-match-reset').onclick = () => renderMiniGameMatch(container, mg);

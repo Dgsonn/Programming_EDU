@@ -6509,22 +6509,35 @@ body.light .mcq-option .t-number  { color: #B45309; }
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0,0,0,.28);
 }
-/* matched → hiện dấu ✓ nhỏ (rõ đã nối đúng) */
-.mg-match-item.matched::after {
-  content: '✓'; position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
-  color: var(--success); font-weight: 900; font-size: 13px;
-}
-
 .mg-match-item.selected {
   border-color: var(--primary);
   background: var(--primary-soft);
 }
 
+/* v4 FIX: "đã nối" = NEUTRAL cyan (chỉ nghĩa là đã liên kết) — KHÔNG xanh-success,
+   tránh gây cảm giác "luôn đúng" trước khi bấm Kiểm tra. */
 .mg-match-item.matched {
-  background: var(--success-soft);
-  border-color: var(--success);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
-  animation: matchGlow 0.5s ease-out;
+  background: rgba(34,211,238,.08);
+  border-color: rgba(34,211,238,.55);
+  box-shadow: 0 0 10px rgba(34,211,238,.18);
+  animation: matchGlow 0.4s ease-out;
+}
+
+/* CHỈ sau khi bấm Kiểm tra: đúng = xanh ✓, sai = đỏ ✗ (rõ ô nào nối sai). */
+.mg-match-item.correct {
+  background: var(--success-soft); border-color: var(--success);
+  box-shadow: 0 0 12px rgba(34,197,94,.3);
+}
+.mg-match-item.correct::after {
+  content: '✓'; position: absolute; top: 50%; right: 11px; transform: translateY(-50%);
+  color: var(--success); font-weight: 900; font-size: 14px;
+}
+.mg-match-item.incorrect {
+  background: var(--danger-soft); border-color: var(--danger);
+}
+.mg-match-item.incorrect::after {
+  content: '✗'; position: absolute; top: 50%; right: 11px; transform: translateY(-50%);
+  color: var(--danger); font-weight: 900; font-size: 14px;
 }
 
 .mg-match-item.wrong {
@@ -6544,10 +6557,10 @@ body.light .mcq-option .t-number  { color: #B45309; }
 }
 
 .mg-match-svg line {
-  stroke: var(--success);
+  stroke: rgba(34,211,238,.7);   /* neutral link (was success-green → misleading) */
   stroke-width: 2;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.5));
+  filter: drop-shadow(0 0 4px rgba(34,211,238,.45));
 }
 
 @keyframes matchGlow {
@@ -6813,11 +6826,11 @@ body.light .mcq-option .t-number  { color: #B45309; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 9px 15px;   /* v4: to hơn cho dễ cầm-thả (was 6px 12px) */
+  border-radius: 9px;
   background: var(--primary-soft);
   color: var(--primary);
-  font-size: 12px;
+  font-size: 13.5px;
   cursor: grab;
   user-select: none;
   border: 1px solid rgba(6, 182, 212, 0.3);
@@ -6859,12 +6872,12 @@ body.light .mcq-option .t-number  { color: #B45309; }
 
 .mini-bin {
   flex: 1;
-  min-width: 160px;
+  min-width: 190px;
   background: rgba(15, 23, 42, 0.5);
   border: 1.5px dashed rgba(148, 163, 184, 0.3);
-  border-radius: 10px;
-  padding: 10px 12px;
-  min-height: 80px;
+  border-radius: 12px;
+  padding: 14px 16px;   /* v4: drop target to hơn, dễ thả (was 10px 12px / 80px) */
+  min-height: 112px;
   transition: all var(--anim-fast) ease;
 }
 
@@ -6893,8 +6906,8 @@ body.light .mcq-option .t-number  { color: #B45309; }
 .mini-bin-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  min-height: 24px;
+  gap: var(--space-2);
+  min-height: 42px;   /* v4: vùng thả trong bin rộng hơn */
 }
 .mini-bin-chips:empty {
   align-items: center;
