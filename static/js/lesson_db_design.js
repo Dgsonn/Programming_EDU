@@ -3457,26 +3457,11 @@
       zoneCorrect[zone.id] = (exp != null) && normClause(raw) === normClause(exp);
     });
 
-    // v4 FIX: chẩn đoán THEO TỪNG MỆNH ĐỀ (thay diagnoseDiff parse SQL rác — trước đây cho
-    // cùng 1 lời giải thích dù build khác nhau). Chỉ nêu zone THIẾU/SAI + nội dung đúng.
-    const clauseName = { 'select-line': 'SELECT', 'from-line': 'FROM', 'where-line': 'WHERE', 'group-line': 'GROUP BY', 'having-line': 'HAVING', 'order-line': 'ORDER BY' };
-    const diagParts = [];
-    (s3.drop_zones || []).forEach(zone => {
-      const blocks = state.step3Blocks[zone.id] || [];
-      const exp = expZone[zone.id];
-      const nm = clauseName[zone.id] || zone.id;
-      if (!blocks.length) {
-        if (exp) diagParts.push('Thiếu ' + nm + ' — cần: “' + exp + '”.');
-      } else if (exp && normClause(blocks.map(b => b.token).join(' ')) !== normClause(exp)) {
-        diagParts.push(nm + ': bạn đang để “' + blocks.map(b => b.token).join(' ') + '” — đúng phải là “' + exp + '”.');
-      }
-    });
-    const diagText = diagParts.slice(0, 3).join(' ');
-
+    // v4: KHÔNG gửi lời giải thích per-clause nữa (user chốt: chỉ "Chưa đúng", không làm hộ).
+    // zoneCorrect vẫn dùng để tô ĐỎ đúng ga sai trên bản đồ (người học tự nhìn ra).
     window.DragGame.update({
       zoneFills: zoneFills,
-      zoneCorrect: zoneCorrect,   // v4: per-clause correctness cho pipeline
-      diag: diagText,             // v4: chẩn đoán per-clause cho feedback khi sai
+      zoneCorrect: zoneCorrect,   // v4: per-clause correctness cho pipeline (tô đỏ ga sai)
       isComplete: isComplete,
       expected: expected,    // FIX 2g-A4: pass for diagnostic on incorrect feedback
       userBuilt: builtSQL,   // FIX 2g-A4: pass for diagnostic on incorrect feedback

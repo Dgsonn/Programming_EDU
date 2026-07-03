@@ -1347,11 +1347,11 @@
           '<button class="feedback-btn filled correct" data-action="continue">Tiếp tục →</button>' +
         '</div>';
     } else {
-      /* v4: ưu tiên chẩn đoán per-clause (chính xác, không parse SQL rác); fallback diagnoseDiff. */
-      var diagnosis = lastDiag || diagnoseDiff(lastUserBuilt, lastExpected);
+      /* v4: KHÔNG giải thích / KHÔNG lộ đáp án (user chốt) — chỉ báo "Chưa đúng".
+         Ga sai đã tô ĐỎ trên bản đồ để người học tự nhìn ra; "Xem gợi ý" cho ai chủ động muốn hint.
+         (Trước đây liệt kê "đúng phải là ..." = làm hộ, không cho động não.) */
       fb.innerHTML =
         '<span class="feedback-pill incorrect">✗ Chưa đúng.</span>' +
-        (diagnosis ? '<div class="feedback-diagnosis">' + diagnosis + '</div>' : '') +
         '<div class="feedback-actions">' +
           '<button class="feedback-btn outlined" data-action="hint">Xem gợi ý</button>' +
           '<button class="feedback-btn filled incorrect" data-action="retry">Thử lại</button>' +
