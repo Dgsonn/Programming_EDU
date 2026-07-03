@@ -139,12 +139,12 @@ window.LESSON_CONTENT['db_design'] = {
             ]
           },
           {
-            question: 'Bảng <code>game_catalog</code> có 2 dòng tên "Elden Ring" (id 101 và 104). Để chỉ lấy bản Action RPG giá 60$ bạn dùng:',
+            question: 'Bảng <code>game_catalog</code> có 2 dòng <strong>CÙNG TÊN</strong> "Elden Ring" (id 101 &amp; 104). Muốn chốt <strong>CHÍNH XÁC</strong> bản id 101 (không lẫn bản kia) một cách <strong>đáng tin cậy nhất</strong>, bạn dùng:',
             options: [
-              { id: 'a', text: '<code>WHERE name = "Elden Ring"</code> — vì tên phân biệt được', correct: false, explanation: 'name KHÔNG unique — có 2 dòng trùng tên. WHERE name sẽ trả về 2 dòng chứ không phải 1.' },
-              { id: 'b', text: '<code>WHERE id = 101</code> — dùng PK để chốt đúng 1 record', correct: true, explanation: 'Chính xác — id là PK nên unique. WHERE id = 101 chốt đúng 1 record cần tìm.' },
-              { id: 'c', text: '<code>WHERE price = 60</code> — lọc theo giá là đủ', correct: false, explanation: 'price có thể trùng (nhiều game cùng giá 60$). WHERE price = 60 có thể trả về nhiều dòng — không chốt được đúng 1.' },
-              { id: 'd', text: 'Không cần WHERE — SELECT trả về hết cũng được', correct: false, explanation: 'SELECT không có WHERE trả về TOÀN BỘ table. Vi phạm nguyên tắc truy vấn — không lọc kết quả.' }
+              { id: 'a', text: '<code>WHERE name = \'Elden Ring\'</code>', correct: false, explanation: 'name KHÔNG unique — có 2 dòng trùng tên "Elden Ring". WHERE name sẽ trả về CẢ 2 dòng, không chốt được đúng 1.' },
+              { id: 'b', text: '<code>WHERE id = 101</code>', correct: true, explanation: 'Chính xác — id là Primary Key nên KHÔNG BAO GIỜ trùng. WHERE id = 101 luôn chốt đúng 1 record duy nhất.' },
+              { id: 'c', text: '<code>WHERE price = 60</code>', correct: false, explanation: 'price CÓ THỂ trùng — nhiều game khác cũng giá 60$ (Baldur\'s Gate 3, Red Dead 2…). WHERE price = 60 trả về nhiều dòng, không đáng tin để chốt 1 record.' },
+              { id: 'd', text: '<code>WHERE genre = \'Action RPG\'</code>', correct: false, explanation: 'genre cũng KHÔNG unique — nhiều game cùng thể loại Action RPG. Chỉ có Primary Key (id) mới đảm bảo đúng 1 dòng.' }
             ]
           }
         ],

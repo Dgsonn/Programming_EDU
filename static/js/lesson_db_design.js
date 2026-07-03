@@ -1250,9 +1250,11 @@
     wrap.hidden = false;
     state.miniGamePlacements = {};
     state.miniGameLocked = false;
+    state.miniSelectedChip = null;   // v4: click-to-place selection
 
     document.getElementById('mini-game-title').textContent = mg.title || 'Phân loại nhanh';
-    document.getElementById('mini-game-instruction').innerHTML = mg.instruction || '';
+    document.getElementById('mini-game-instruction').innerHTML = (mg.instruction || '') +
+      ' <span class="mini-hint-inline">💡 Kéo thả, HOẶC bấm thẻ rồi bấm ô để đặt.</span>';
     document.getElementById('mini-game-feedback').classList.add('hidden');
     document.getElementById('btn-mini-reset').onclick = () => renderMiniGame(mg);
 
@@ -1265,12 +1267,7 @@
       el.draggable = true;
       el.dataset.chipId = chip.id;
       el.innerHTML = `<i class="fa-solid fa-cube"></i> ${chip.label}`;
-      el.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', chip.id);
-        e.dataTransfer.effectAllowed = 'move';
-        el.classList.add('dragging');
-      });
-      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+      attachMiniChipDrag(el, chip.id);   // v4: drag + click-to-place (dùng chung)
       chipsHost.appendChild(el);
     });
 
@@ -1300,6 +1297,15 @@
         el.classList.remove('drag-over');
         const chipId = e.dataTransfer.getData('text/plain');
         handleMiniDrop(chipId, bin.id);
+      });
+      // v4: CLICK-để-đặt — nếu đã chọn 1 thẻ, bấm ô này để thả vào.
+      el.addEventListener('click', () => {
+        if (state.miniGameLocked) return;
+        if (state.miniSelectedChip) {
+          handleMiniDrop(state.miniSelectedChip, bin.id);
+          state.miniSelectedChip = null;
+          document.querySelectorAll('.mini-chip.selected').forEach(c => c.classList.remove('selected'));
+        }
       });
       binsHost.appendChild(el);
     });
@@ -1352,6 +1358,15 @@
       el.classList.add('dragging');
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    // v4: CLICK-để-đặt (fallback khi HTML5 drag kén) — bấm thẻ để chọn, bấm ô để đặt.
+    el.addEventListener('click', () => {
+      if (state.miniGameLocked) return;
+      const wasSel = el.classList.contains('selected');
+      document.querySelectorAll('.mini-chip.selected').forEach(c => c.classList.remove('selected'));
+      if (wasSel) { state.miniSelectedChip = null; return; }
+      state.miniSelectedChip = chipId;
+      el.classList.add('selected');
+    });
   }
 
   window.checkMiniGame = function () {
@@ -3442,9 +3457,26 @@
       zoneCorrect[zone.id] = (exp != null) && normClause(raw) === normClause(exp);
     });
 
+    // v4 FIX: chẩn đoán THEO TỪNG MỆNH ĐỀ (thay diagnoseDiff parse SQL rác — trước đây cho
+    // cùng 1 lời giải thích dù build khác nhau). Chỉ nêu zone THIẾU/SAI + nội dung đúng.
+    const clauseName = { 'select-line': 'SELECT', 'from-line': 'FROM', 'where-line': 'WHERE', 'group-line': 'GROUP BY', 'having-line': 'HAVING', 'order-line': 'ORDER BY' };
+    const diagParts = [];
+    (s3.drop_zones || []).forEach(zone => {
+      const blocks = state.step3Blocks[zone.id] || [];
+      const exp = expZone[zone.id];
+      const nm = clauseName[zone.id] || zone.id;
+      if (!blocks.length) {
+        if (exp) diagParts.push('Thiếu ' + nm + ' — cần: “' + exp + '”.');
+      } else if (exp && normClause(blocks.map(b => b.token).join(' ')) !== normClause(exp)) {
+        diagParts.push(nm + ': bạn đang để “' + blocks.map(b => b.token).join(' ') + '” — đúng phải là “' + exp + '”.');
+      }
+    });
+    const diagText = diagParts.slice(0, 3).join(' ');
+
     window.DragGame.update({
       zoneFills: zoneFills,
       zoneCorrect: zoneCorrect,   // v4: per-clause correctness cho pipeline
+      diag: diagText,             // v4: chẩn đoán per-clause cho feedback khi sai
       isComplete: isComplete,
       expected: expected,    // FIX 2g-A4: pass for diagnostic on incorrect feedback
       userBuilt: builtSQL,   // FIX 2g-A4: pass for diagnostic on incorrect feedback

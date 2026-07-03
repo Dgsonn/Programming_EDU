@@ -67,6 +67,7 @@
   /* FIX 2g-A4: expected + userBuilt dùng cho chẩn đoán khi feedback sai */
   let lastExpected = '';
   let lastUserBuilt = '';
+  let lastDiag = '';  /* v4: chẩn đoán per-clause (từ lesson_db_design) */
   /* F6 (PHASE 3.8): in-memory fail counter + cancellation token.
      Reset 0 khi: celebrate (đúng) · reset (handleDragReset) · đổi bài (page reload).
      KHÔNG localStorage (persist = trừng phạt user, vô nghĩa). */
@@ -662,6 +663,7 @@
     /* FIX 2g-A4: lưu expected SQL + user-built để showFeedback chẩn đoán khi sai */
     lastExpected = (state.expected || '').toUpperCase();
     lastUserBuilt = (state.userBuilt || '').toUpperCase();
+    lastDiag = state.diag || '';
 
     /* ── 5. Narration ── */
     updateNarration(state, progress);
@@ -1345,7 +1347,8 @@
           '<button class="feedback-btn filled correct" data-action="continue">Tiếp tục →</button>' +
         '</div>';
     } else {
-      var diagnosis = diagnoseDiff(lastUserBuilt, lastExpected);
+      /* v4: ưu tiên chẩn đoán per-clause (chính xác, không parse SQL rác); fallback diagnoseDiff. */
+      var diagnosis = lastDiag || diagnoseDiff(lastUserBuilt, lastExpected);
       fb.innerHTML =
         '<span class="feedback-pill incorrect">✗ Chưa đúng.</span>' +
         (diagnosis ? '<div class="feedback-diagnosis">' + diagnosis + '</div>' : '') +

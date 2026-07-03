@@ -6854,6 +6854,20 @@ body.light .mcq-option .t-number  { color: #B45309; }
   opacity: 0.55;
 }
 
+/* v4: thẻ đang được CHỌN (click-to-place) — vòng sáng rõ */
+.mini-chip.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary), 0 0 14px rgba(6,182,212,.4);
+  transform: translateY(-2px);
+}
+.mini-hint-inline {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11.5px;
+  color: var(--text-500);
+  font-style: italic;
+}
+
 .mini-chip.correct {
   background: var(--success-soft);
   color: var(--success);
