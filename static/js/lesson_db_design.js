@@ -1459,6 +1459,12 @@
     document.querySelectorAll('.mini-bin.awaiting').forEach(b => b.classList.remove('awaiting'));
   }
 
+  function clearMiniSelection() {
+    state.miniSelectedChip = null;
+    document.querySelectorAll('.mini-chip.selected').forEach(c => c.classList.remove('selected'));
+    clearMiniAwaiting();
+  }
+
   function attachMiniChipDrag(el, chipId) {
     el.addEventListener('dragstart', e => {
       if (state.miniGameLocked) { e.preventDefault(); return; }
@@ -1467,14 +1473,26 @@
       el.classList.add('dragging');
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
-    // v5: CLICK-để-đặt là CHÍNH (drag chỉ là phụ vì HTML5 drag kén trên nhiều máy).
+    // v6: CLICK-để-đặt là CHÍNH (drag chỉ là phụ vì HTML5 drag kén trên nhiều máy).
     // Bấm thẻ để chọn (viền sáng + các ô "chờ" pulse), bấm ô để đặt.
+    // FIX bug: khi 1 thẻ đang được chọn mà click TRÚNG thẻ khác đã nằm trong ô,
+    // thì THẢ thẻ đang chọn vào chính ô đó (trước đây stopPropagation nuốt mất → đặt hụt).
     el.addEventListener('click', (e) => {
-      e.stopPropagation();               // đừng để nổi bọt xuống ô đang chứa thẻ này
+      e.stopPropagation();
       if (state.miniGameLocked) return;
+      const sel = state.miniSelectedChip;
+      if (sel && sel !== chipId) {
+        const parentBin = el.closest('.mini-bin');
+        if (parentBin) {                       // click trúng thẻ đang ở trong 1 ô → thả thẻ đang chọn vào ô đó
+          handleMiniDrop(sel, parentBin.dataset.binId);
+          clearMiniSelection();
+          return;
+        }
+        // click 1 thẻ khác trong pool → chuyển lựa chọn sang thẻ này (rơi xuống dưới)
+      }
       const wasSel = el.classList.contains('selected');
-      document.querySelectorAll('.mini-chip.selected').forEach(c => c.classList.remove('selected'));
-      if (wasSel) { clearMiniAwaiting(); state.miniSelectedChip = null; return; }
+      clearMiniSelection();
+      if (wasSel) return;                       // bấm lại thẻ đang chọn = bỏ chọn
       state.miniSelectedChip = chipId;
       el.classList.add('selected');
       document.querySelectorAll('.mini-bin').forEach(b => b.classList.add('awaiting'));  // mời bấm ô
