@@ -125,13 +125,45 @@ def init_db():
             correct_action    TEXT    DEFAULT ''
         )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS notifications (
-            user_id        INTEGER PRIMARY KEY,
+        # ── Thông báo theo ERD v2.1 ──
+        # Bảng "notifications" cũ THỰC CHẤT là CÀI ĐẶT thông báo -> đổi tên thành
+        # notification_settings cho đúng nghĩa, rồi dùng tên "notifications" cho
+        # DÒNG thông báo (feed). Guarded: chỉ rename khi bảng cũ đúng là settings.
+        try:
+            c.execute('''DO $$
+            BEGIN
+              IF EXISTS (SELECT 1 FROM information_schema.columns
+                         WHERE table_name='notifications' AND column_name='email_notif')
+                 AND NOT EXISTS (SELECT 1 FROM information_schema.tables
+                                 WHERE table_name='notification_settings') THEN
+                ALTER TABLE notifications RENAME TO notification_settings;
+              END IF;
+            END $$;''')
+        except Exception:
+            conn.rollback()
+
+        c.execute('''CREATE TABLE IF NOT EXISTS notification_settings (
+            user_id        INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
             email_notif    INTEGER DEFAULT 1,
             push_notif     INTEGER DEFAULT 0,
             study_remind   INTEGER DEFAULT 1,
             content_update INTEGER DEFAULT 0
         )''')
+
+        # notifications (FEED) — dòng thông báo hiện lên chuông
+        c.execute('''CREATE TABLE IF NOT EXISTS notifications (
+            id         SERIAL PRIMARY KEY,
+            user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            type       TEXT,          -- mention | comment_reply | system ...
+            title      TEXT,
+            body       TEXT,
+            ref_type   TEXT,          -- post | comment ...
+            ref_id     INTEGER,
+            is_read    BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMPTZ DEFAULT now()
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_notifications_user '
+                  'ON notifications(user_id, is_read, created_at DESC)')
 
         c.execute('''CREATE TABLE IF NOT EXISTS surveys (
             id         SERIAL PRIMARY KEY,

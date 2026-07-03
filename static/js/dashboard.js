@@ -61,13 +61,43 @@ toggleUserMenu = function () {
   _origToggleUserMenu();
 };
 
-/* ── Bell notification panel ── */
-var _bellNotifs = [
-  { icon: '✅', text: 'Bạn đã hoàn thành bài học đầu tiên trong khóa C++!', time: '5 phút trước', unread: true },
-  { icon: '🔥', text: 'Streak 7 ngày liên tiếp! Tiếp tục phát huy nhé!', time: '2 giờ trước', unread: true },
-  { icon: '📖', text: 'Khóa học Python vừa được cập nhật thêm nội dung mới.', time: 'Hôm qua', unread: true },
-  { icon: '🏅', text: 'Bạn đã đạt huy hiệu "Người mới bắt đầu". Chúc mừng!', time: '3 ngày trước', unread: false },
-];
+/* ── Bell notification panel — nối với /api/notifications/feed (DB thật) ── */
+var _bellNotifs = [];
+var _BELL_ICON = { mention: '💬', comment_reply: '↩️', system: '🔔' };
+
+function _bellTimeAgo(iso) {
+  if (!iso) return '';
+  var s = /[Zz]|[+][0-9]/.test(iso) ? iso : String(iso).replace(' ', 'T') + 'Z';
+  var diff = Math.floor((Date.now() - new Date(s).getTime()) / 1000);
+  if (isNaN(diff)) return '';
+  if (diff < 60) return 'vừa xong';
+  if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
+  return Math.floor(diff / 86400) + ' ngày trước';
+}
+
+function _escBell(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function loadBellNotifs() {
+  return fetch('/api/notifications/feed')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) return;
+      _bellNotifs = (d.items || []).map(function (n) {
+        return {
+          id: n.id, icon: _BELL_ICON[n.type] || '🔔',
+          title: n.title || '', body: n.body || '',
+          time: _bellTimeAgo(n.created_at), unread: !n.is_read,
+          refType: n.ref_type || null, refId: n.ref_id || null
+        };
+      });
+      _renderBellItems();
+      _updateBellDot();
+    })
+    .catch(function () {});
+}
 
 function _renderBellItems() {
   var body = document.getElementById('bell-panel-body');
@@ -80,8 +110,8 @@ function _renderBellItems() {
     return '<div class="bell-item' + (n.unread ? ' unread' : '') + '" onclick="readBellItem(' + i + ')" role="menuitem" tabindex="0">'
       + '<div class="bell-item-icon">' + n.icon + '</div>'
       + '<div class="bell-item-body">'
-      + '<div class="bell-item-text">' + n.text + '</div>'
-      + '<div class="bell-item-time">' + n.time + '</div>'
+      + '<div class="bell-item-text">' + _escBell(n.title) + (n.body ? ': ' + _escBell(n.body) : '') + '</div>'
+      + '<div class="bell-item-time">' + _escBell(n.time) + '</div>'
       + '</div>'
       + (n.unread ? '<div class="bell-unread-dot"></div>' : '')
       + '</div>';
@@ -104,6 +134,7 @@ function toggleBellPanel() {
     btn.setAttribute('aria-expanded', 'false');
   } else {
     closeUserMenu();
+    loadBellNotifs();   // tải mới mỗi lần mở
     _renderBellItems();
     panel.classList.add('open');
     btn.setAttribute('aria-expanded', 'true');
@@ -117,19 +148,56 @@ function closeBellPanel() {
   if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
+// Điều hướng tới bài viết của thông báo và mở khung bình luận chứa @mention.
+function _focusForumPost(postId) {
+  closeBellPanel();
+  if (typeof window.navigate === 'function') window.navigate('forum');
+  // renderPosts chạy async (chờ API) -> thử tìm card nhiều lần rồi scroll + mở comment.
+  var tries = 0;
+  var timer = setInterval(function () {
+    tries++;
+    var card = document.getElementById('fpc-' + postId);
+    if (card) {
+      clearInterval(timer);
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Nhấp nháy nhẹ để user nhận ra bài
+      card.style.transition = 'box-shadow .3s';
+      card.style.boxShadow = '0 0 0 2px var(--blue, #3B82F6)';
+      setTimeout(function () { card.style.boxShadow = ''; }, 1600);
+      // Mở khung bình luận để thấy @mention
+      if (typeof window.forumToggleComments === 'function') {
+        var section = document.getElementById('fpc-cmt-' + postId);
+        if (section && !section.classList.contains('open')) window.forumToggleComments(postId);
+      }
+    } else if (tries > 40) {  // ~10s (Neon cold-start) rồi bỏ cuộc
+      clearInterval(timer);
+    }
+  }, 250);
+}
+
 function readBellItem(idx) {
-  if (_bellNotifs[idx]) {
-    _bellNotifs[idx].unread = false;
+  var n = _bellNotifs[idx];
+  if (!n) return;
+  if (n.unread) {
+    n.unread = false;
     _renderBellItems();
     _updateBellDot();
+    if (n.id) fetch('/api/notifications/feed/' + n.id + '/read', { method: 'POST' }).catch(function () {});
   }
+  // Di chuyển tới bài viết có @mention
+  if (n.refType === 'post' && n.refId) _focusForumPost(n.refId);
 }
 
 function markAllBellRead() {
   _bellNotifs.forEach(function (n) { n.unread = false; });
   _renderBellItems();
   _updateBellDot();
+  fetch('/api/notifications/feed/read-all', { method: 'POST' }).catch(function () {});
 }
+
+// Tải thông báo lúc vào trang để cập nhật chấm đỏ trên chuông
+if (document.readyState !== 'loading') loadBellNotifs();
+else document.addEventListener('DOMContentLoaded', loadBellNotifs);
 
 document.addEventListener('click', function (e) {
   var wrap = document.getElementById('bell-wrap');
@@ -564,6 +632,141 @@ function skSkillToggle(row) {
   /* Mảng post vừa render — để reaction handler patch tại chỗ, không cần GET lại. */
   var _lastRenderedPosts = [];
 
+  /* ═══════════════════════════════════════════════════════
+     Predictive Comment Prefetch System
+     — IntersectionObserver + hover + request queue —
+     ═══════════════════════════════════════════════════════ */
+  var _prefetchInFlight = {};   // postId -> Promise (đang fetch)
+  var _prefetchQueue = [];      // [{postId, priority}] — chờ xử lý
+  var _prefetchActive = 0;      // số request đang chạy
+  var _PREFETCH_CONCURRENCY = 2; // tối đa 2 request song song
+  var _commentObserver = null;  // IntersectionObserver instance
+
+  // Prefetch chỉ fetch + cache, KHÔNG render. Trả Promise.
+  function _prefetchComments(postId) {
+    // Bỏ qua mock posts
+    if (_isMockPost(postId)) return Promise.resolve();
+    // Đã có cache → skip
+    if (_commentsCache[postId]) return Promise.resolve();
+    // Đang fetch → trả promise hiện tại
+    if (_prefetchInFlight[postId]) return _prefetchInFlight[postId];
+
+    var p = forumApi.getComments(postId).then(function (res) {
+      var tree = _buildCommentTree((res && res.comments) || []);
+      _commentsCache[postId] = tree;
+      // Cập nhật badge nếu post đang hiển thị
+      var post = _lastRenderedPosts.find(function (pp) { return String(pp.id) === String(postId); });
+      if (post) {
+        post.comments = tree.length;
+        _setCommentBadge(postId, tree.length);
+      }
+      delete _prefetchInFlight[postId];
+      _prefetchActive--;
+      _drainPrefetchQueue();
+    }).catch(function () {
+      delete _prefetchInFlight[postId];
+      _prefetchActive--;
+      _drainPrefetchQueue();
+    });
+    _prefetchInFlight[postId] = p;
+    _prefetchActive++;
+    return p;
+  }
+
+  // Thêm postId vào hàng đợi prefetch (priority: 1=high, 2=medium, 3=low)
+  function _enqueuePrefetch(postId, priority) {
+    if (_isMockPost(postId)) return;
+    if (_commentsCache[postId]) return;
+    if (_prefetchInFlight[postId]) return;
+    // Tránh duplicate trong queue
+    for (var i = 0; i < _prefetchQueue.length; i++) {
+      if (_prefetchQueue[i].postId === postId) {
+        // Nâng priority nếu request mới ưu tiên hơn
+        if (priority < _prefetchQueue[i].priority) _prefetchQueue[i].priority = priority;
+        return;
+      }
+    }
+    _prefetchQueue.push({ postId: postId, priority: priority || 3 });
+    _drainPrefetchQueue();
+  }
+
+  // Xử lý queue: chạy tối đa _PREFETCH_CONCURRENCY request cùng lúc
+  function _drainPrefetchQueue() {
+    while (_prefetchActive < _PREFETCH_CONCURRENCY && _prefetchQueue.length > 0) {
+      // Sort theo priority (thấp = ưu tiên hơn)
+      _prefetchQueue.sort(function (a, b) { return a.priority - b.priority; });
+      var next = _prefetchQueue.shift();
+      // Double-check cache (có thể đã được fetch bởi request khác)
+      if (_commentsCache[next.postId] || _prefetchInFlight[next.postId]) continue;
+      _prefetchComments(next.postId);
+    }
+  }
+
+  // IntersectionObserver: khi post card sắp vào viewport → enqueue prefetch
+  function _setupCommentObserver() {
+    // Hủy observer cũ nếu có
+    if (_commentObserver) { _commentObserver.disconnect(); _commentObserver = null; }
+    // Không hỗ trợ IntersectionObserver → fallback prefetch 3 post đầu
+    if (typeof IntersectionObserver === 'undefined') {
+      _lastRenderedPosts.slice(0, 3).forEach(function (p) {
+        if (!_isMockPost(p.id)) _enqueuePrefetch(String(p.id), 3);
+      });
+      return;
+    }
+
+    _commentObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var card = entry.target;
+        var postId = card.id.replace('fpc-', '');
+        if (!postId) return;
+        // Prefetch post này (medium priority)
+        _enqueuePrefetch(postId, 2);
+        // Dự đoán: prefetch post KẾ TIẾP trong danh sách (low priority)
+        var nextCard = card.nextElementSibling;
+        if (nextCard && nextCard.id && nextCard.id.startsWith('fpc-')) {
+          var nextId = nextCard.id.replace('fpc-', '');
+          _enqueuePrefetch(nextId, 3);
+        }
+        // Đã prefetch → ngừng theo dõi post này
+        _commentObserver.unobserve(card);
+      });
+    }, {
+      root: null,
+      rootMargin: '300px 0px',  // Bắt đầu prefetch khi post còn cách 300px
+      threshold: 0
+    });
+
+    // Observe tất cả post cards trong danh sách
+    var list = document.getElementById('forum-list');
+    if (!list) return;
+    var cards = list.querySelectorAll('.forum-post-card[id^="fpc-"]');
+    cards.forEach(function (card) {
+      var postId = card.id.replace('fpc-', '');
+      // Chỉ observe post thật chưa có cache
+      if (!_isMockPost(postId) && !_commentsCache[postId]) {
+        _commentObserver.observe(card);
+      }
+    });
+  }
+
+  // Hover prefetch: khi user di chuột vào nút comment → fetch ngay (high priority)
+  function _setupHoverPrefetch() {
+    var list = document.getElementById('forum-list');
+    if (!list) return;
+    // Dùng event delegation để tránh gắn listener lên từng nút
+    list.addEventListener('mouseenter', function (e) {
+      var btn = e.target.closest('.fpc-comment-btn');
+      if (!btn) return;
+      var postId = btn.id.replace('fpc-cmtbtn-', '');
+      if (!postId || _isMockPost(postId)) return;
+      if (_commentsCache[postId]) return;
+      // High priority — user đang hướng tới bấm
+      _enqueuePrefetch(postId, 1);
+    }, true);
+  }
+  var _hoverPrefetchSetup = false;
+
   var CAT_LABELS = { question: '❓ Câu hỏi', share: '💡 Chia sẻ', discuss: '💬 Thảo luận' };
   var CAT_COLORS = { question: '#F87171', share: '#FCD34D', discuss: '#A78BFA' };
   var CAT_BG = { question: 'rgba(248,113,113,0.1)', share: 'rgba(252,211,77,0.1)', discuss: 'rgba(167,139,250,0.1)' };
@@ -793,6 +996,17 @@ function skSkillToggle(row) {
       );
     }).join('');
     if (window.mountIcons) mountIcons(list);
+
+    // Kích hoạt prefetch system sau mỗi lần render posts
+    // Dùng requestIdleCallback nếu có, để không chặn paint
+    var _schedPrefetch = window.requestIdleCallback || function (cb) { setTimeout(cb, 100); };
+    _schedPrefetch(function () {
+      _setupCommentObserver();
+      if (!_hoverPrefetchSetup) {
+        _setupHoverPrefetch();
+        _hoverPrefetchSetup = true;
+      }
+    });
   }
 
   function escHtml(s) {
@@ -823,6 +1037,51 @@ function skSkillToggle(row) {
     forumSetReaction(postId, 'like');
   };
 
+  /* ── Patch DOM tại chỗ cho reaction post — không re-render toàn bộ ── */
+  function _patchPostReactionDOM(postId, reactions, myReaction) {
+    var card = document.getElementById('fpc-' + postId);
+    if (!card) return;
+    var wrap = card.querySelector('.fpc-react-wrap');
+    if (!wrap) return;
+    var btn = wrap.querySelector('.fpc-react-btn');
+    if (!btn) return;
+
+    var totalR = Object.values(reactions).reduce(function (a, b) { return a + b; }, 0);
+    var liked = !!myReaction;
+
+    // Update button classes
+    btn.className = 'fpc-react-btn' + (liked ? ' liked' : '') + (myReaction ? ' reacted-' + myReaction : '');
+
+    // Update onclick to toggle current reaction
+    btn.setAttribute('onclick', "forumSetReaction('" + postId + "','" + (myReaction || 'like') + "')");
+
+    // Update icon color
+    var icon = btn.querySelector('[data-icon]');
+    if (icon) {
+      if (liked) { icon.setAttribute('data-color', '#60A5FA'); } else { icon.removeAttribute('data-color'); }
+      if (window.mountIcons) mountIcons(btn);
+    }
+
+    // Update count
+    var countEl = btn.querySelector('.fpc-react-count');
+    if (totalR > 0) {
+      if (countEl) {
+        countEl.textContent = totalR;
+      } else {
+        var span = document.createElement('span');
+        span.className = 'fpc-react-count';
+        span.textContent = totalR;
+        btn.appendChild(span);
+      }
+    } else if (countEl) {
+      countEl.remove();
+    }
+
+    // Quick pop animation on the button
+    btn.style.transform = 'scale(1.15)';
+    setTimeout(function () { btn.style.transform = ''; }, 180);
+  }
+
   window.forumSetReaction = function (postId, key) {
     function applyReaction(post) {
       if (!post.reactions) {
@@ -841,16 +1100,25 @@ function skSkillToggle(row) {
     }
     var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
     if (mockIdx !== -1) {
-      // MOCK_POSTS (chỉ admin thấy) — thao tác cục bộ, không chạm DB
+      // MOCK_POSTS (chỉ admin thấy) — thao tác cục bộ, patch DOM tại chỗ
       applyReaction(MOCK_POSTS[mockIdx]);
-      renderPosts();
+      _patchPostReactionDOM(postId, MOCK_POSTS[mockIdx].reactions, MOCK_POSTS[mockIdx].myReaction);
     } else {
-      // Bài thật — gọi API, cập nhật ĐÚNG từ response (không GET lại)
+      // Bài thật — optimistic update: patch DOM ngay, API chạy nền
+      var post = _lastRenderedPosts.find(function (p) { return String(p.id) === String(postId); });
+      if (post) {
+        // Optimistic: update data ngay
+        applyReaction(post);
+        _patchPostReactionDOM(postId, post.reactions, post.myReaction);
+      }
+      // Gọi API nền — nếu server trả khác thì patch lại
       forumApi.react(postId, key).then(function (res) {
         if (!res || res.error) return;
-        var post = _lastRenderedPosts.find(function (p) { return String(p.id) === String(postId); });
-        if (post) { post.reactions = res.reactions; post.myReaction = res.my_reaction; }
-        _renderPosts(_lastRenderedPosts);
+        if (post) {
+          post.reactions = res.reactions;
+          post.myReaction = res.my_reaction;
+          _patchPostReactionDOM(postId, res.reactions, res.my_reaction);
+        }
       });
     }
   };
@@ -934,11 +1202,20 @@ function skSkillToggle(row) {
     var isOpen = section.classList.toggle('open');
     if (btn) btn.classList.toggle('active', isOpen);
     if (isOpen) {
-      // Bài thật: lazy-load comment lần đầu mở. Bài mock: render ngay từ MOCK_POSTS.
-      if (!_isMockPost(postId) && !_commentsCache[postId]) {
-        _refreshComments(postId);
-      } else {
+      if (_isMockPost(postId)) {
+        // Mock posts: render ngay từ MOCK_POSTS
         forumRenderComments(postId);
+      } else if (_commentsCache[postId]) {
+        // Đã prefetch xong → render ngay, không chờ API
+        forumRenderComments(postId);
+      } else if (_prefetchInFlight[postId]) {
+        // Prefetch đang chạy → chờ nó xong rồi render (không tạo request mới)
+        _prefetchInFlight[postId].then(function () {
+          forumRenderComments(postId);
+        });
+      } else {
+        // Chưa có gì → fetch + render (fallback)
+        _refreshComments(postId);
       }
       setTimeout(function () {
         var inp = document.getElementById('fpc-cmt-inp-' + postId);
@@ -1086,15 +1363,33 @@ function skSkillToggle(row) {
       _setCommentBadge(postId, MOCK_POSTS[mockIdx].comments);
       return;
     }
-    // Bài thật — lưu DB rồi tải lại comment (server là nguồn sự thật)
+    // Bài thật — optimistic: hiển thị comment ngay, API chạy nền
+    inp.value = '';
+    var nameEl = document.getElementById('chip-name');
+    var myName = (nameEl && nameEl.textContent.trim() && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn';
+    var tempComment = {
+      id: 'temp-' + Date.now(), author: myName, avatar: '🧑',
+      time: Date.now(), text: text,
+      reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
+      myReaction: null, replies: []
+    };
+    // Thêm vào cache ngay
+    if (!_commentsCache[postId]) _commentsCache[postId] = [];
+    _commentsCache[postId].push(tempComment);
+    forumRenderComments(postId);
+    // Cập nhật badge số comment
+    var post = _lastRenderedPosts.find(function (p) { return String(p.id) === String(postId); });
+    if (post) { post.comments = _commentsCache[postId].length; }
+    _setCommentBadge(postId, _commentsCache[postId].length);
+    // Scroll tới comment mới
+    var listEl = document.getElementById('fpc-cmt-list-' + postId);
+    if (listEl && listEl.lastElementChild)
+      listEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // API nền — refresh cache từ server (silent, không re-render nếu không cần)
     forumApi.addComment(postId, text, null).then(function (res) {
       if (res && res.error) { alert(res.error); return; }
-      inp.value = '';
-      _refreshComments(postId).then(function () {
-        var listEl = document.getElementById('fpc-cmt-list-' + postId);
-        if (listEl && listEl.lastElementChild)
-          listEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
+      // Refresh cache từ server để có ID thật + dữ liệu chính xác
+      _refreshComments(postId);
     });
   };
 
@@ -1122,20 +1417,94 @@ function skSkillToggle(row) {
     }
   }
 
+  /* ── Patch DOM tại chỗ cho reaction comment — không re-render toàn bộ comment list ── */
+  function _patchCmtReactionDOM(postId, targetId, reactions, myReaction) {
+    // Tìm comment item chứa reaction cần patch
+    var commentEl = document.getElementById('fpc-ci-' + postId + '-' + targetId);
+    // Nếu không tìm thấy (có thể là reply), tìm trong toàn bộ comment section
+    if (!commentEl) {
+      var section = document.getElementById('fpc-cmt-' + postId);
+      if (!section) return;
+      // Tìm bất kỳ phần tử nào có onclick chứa targetId
+      var allBtns = section.querySelectorAll('.fpc-cmt-like-btn');
+      for (var i = 0; i < allBtns.length; i++) {
+        var onclick = allBtns[i].getAttribute('onclick') || '';
+        if (onclick.indexOf("'" + targetId + "'") !== -1) {
+          commentEl = allBtns[i].closest('.fpc-cmt-item, .fpc-reply-item');
+          break;
+        }
+      }
+    }
+    if (!commentEl) return;
+
+    var totalR = Object.values(reactions).reduce(function (a, b) { return a + b; }, 0);
+    var reactEmoji = myReaction ? REACT_EMOJIS[myReaction] : '👍';
+    var reactLabel = myReaction ? REACT_LABELS[myReaction] : 'Thích';
+    var reactCls = myReaction ? 'cmt-reacted-' + myReaction : '';
+
+    // Update the like button
+    var likeBtn = commentEl.querySelector('.fpc-cmt-like-btn');
+    if (likeBtn) {
+      likeBtn.className = 'fpc-cmt-act-btn fpc-cmt-like-btn ' + reactCls;
+      likeBtn.innerHTML = reactEmoji + ' ' + reactLabel;
+      // Pop animation
+      likeBtn.style.transform = 'scale(1.2)';
+      setTimeout(function () { likeBtn.style.transform = ''; }, 180);
+    }
+
+    // Update reaction summary
+    var actions = commentEl.querySelector('.fpc-cmt-actions');
+    if (actions) {
+      var summaryEl = actions.querySelector('.fpc-cmt-react-summary');
+      if (totalR > 0) {
+        var topEmojis = Object.keys(reactions)
+          .filter(function (k) { return reactions[k] > 0; })
+          .sort(function (a, b) { return reactions[b] - reactions[a]; })
+          .slice(0, 2).map(function (k) { return REACT_EMOJIS[k]; }).join('');
+        if (summaryEl) {
+          summaryEl.innerHTML = topEmojis + ' ' + totalR;
+        } else {
+          var span = document.createElement('span');
+          span.className = 'fpc-cmt-react-summary';
+          span.innerHTML = topEmojis + ' ' + totalR;
+          // Insert after the react-wrap
+          var reactWrap = actions.querySelector('.fpc-cmt-react-wrap');
+          if (reactWrap && reactWrap.nextSibling) {
+            actions.insertBefore(span, reactWrap.nextSibling);
+          } else {
+            actions.appendChild(span);
+          }
+        }
+      } else if (summaryEl) {
+        summaryEl.remove();
+      }
+    }
+  }
+
   // React trên 1 comment/reply bất kỳ (targetId là comment id thật). Dùng chung
   // cho cả comment gốc lẫn reply — backend cùng bảng comment_likes, cùng endpoint.
   function _reactOnComment(postId, targetId, key, findInMock) {
     var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
     if (mockIdx !== -1) {
-      _applyReactionLocal(findInMock(MOCK_POSTS[mockIdx]), key);
-      forumRenderComments(postId);
+      var mockNode = findInMock(MOCK_POSTS[mockIdx]);
+      _applyReactionLocal(mockNode, key);
+      if (mockNode) _patchCmtReactionDOM(postId, targetId, mockNode.reactions, mockNode.myReaction);
       return;
     }
+    // Optimistic: update data + DOM ngay
+    var node = _findCommentNode(_commentsCache[postId] || [], targetId);
+    if (node) {
+      _applyReactionLocal(node, key);
+      _patchCmtReactionDOM(postId, targetId, node.reactions, node.myReaction);
+    }
+    // API chạy nền — reconcile nếu server trả khác
     forumApi.reactComment(targetId, key).then(function (res) {
       if (!res || res.error) return;
-      var node = _findCommentNode(_commentsCache[postId] || [], targetId);
-      if (node) { node.reactions = res.reactions; node.myReaction = res.my_reaction; }
-      forumRenderComments(postId);
+      if (node) {
+        node.reactions = res.reactions;
+        node.myReaction = res.my_reaction;
+        _patchCmtReactionDOM(postId, targetId, res.reactions, res.my_reaction);
+      }
     });
   }
 
@@ -1193,16 +1562,33 @@ function skSkillToggle(row) {
       forumRenderComments(postId);
       return;
     }
-    // Bài thật — lưu reply (parent_comment_id = cmtId), tải lại comment
+    // Bài thật — optimistic: hiển thị reply ngay, API chạy nền
+    inp.value = '';
+    var nameEl2 = document.getElementById('chip-name');
+    var myName2 = (nameEl2 && nameEl2.textContent.trim() !== '—') ? nameEl2.textContent.trim() : 'Bạn';
+    var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
+    var replyTo = (row && row.dataset.mention) || '';
+    // Thêm reply vào cache ngay
+    var parentCmt = _findCommentNode(_commentsCache[postId] || [], cmtId);
+    if (parentCmt) {
+      if (!parentCmt.replies) parentCmt.replies = [];
+      parentCmt.replies.push({
+        id: 'temp-r-' + Date.now(), author: myName2, avatar: '🧑',
+        time: Date.now(), text: text, replyTo: replyTo || parentCmt.author,
+        reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
+        myReaction: null
+      });
+    }
+    forumRenderComments(postId);
+    // Scroll tới comment cha
+    setTimeout(function () {
+      var item = document.getElementById('fpc-ci-' + postId + '-' + cmtId);
+      if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+    // API nền
     forumApi.addComment(postId, text, cmtId).then(function (res) {
       if (res && res.error) { alert(res.error); return; }
-      inp.value = '';
-      _refreshComments(postId).then(function () {
-        setTimeout(function () {
-          var item = document.getElementById('fpc-ci-' + postId + '-' + cmtId);
-          if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 50);
-      });
+      _refreshComments(postId);
     });
   };
 

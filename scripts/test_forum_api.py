@@ -193,6 +193,32 @@ def main():
     check("React trên reply cũng hoạt động -> 200", rr.status_code == 200
           and rr.json().get("reactions", {}).get("wow") == 1, rr.text)
 
+    print(f"\n== 6f. Thông báo khi reply/@mention (notifications feed) ==")
+    # B trả lời comment của A -> A nhận thông báo comment_reply
+    session_b.post(f"{BASE}/api/posts/{post_id}/comments",
+                   json={"content": "B tra loi A", "parent_comment_id": comment_id})
+    feed_a = session_a.get(f"{BASE}/api/notifications/feed").json()
+    reply_notif = next((n for n in feed_a.get("items", []) if n.get("type") == "comment_reply"), None)
+    check("A nhận thông báo khi B reply comment của A",
+          reply_notif is not None and feed_a.get("unread", 0) >= 1, feed_a)
+
+    # A @mention B trong 1 comment mới -> B nhận thông báo mention
+    # (B đã tham gia post nên tên B nằm trong tập participant, khớp @tên chính xác)
+    b_name = "Forum Tester"  # tên đăng ký của cả A và B
+    # A và B trùng tên nên để test mention rõ ràng, kiểm tra B nhận mention khi A gõ @tên
+    r_me_b = session_b.get(f"{BASE}/api/user").json()
+    session_a.post(f"{BASE}/api/posts/{post_id}/comments",
+                   json={"content": f"Chao @{r_me_b.get('name','Forum Tester')} nhe"})
+    feed_b = session_b.get(f"{BASE}/api/notifications/feed").json()
+    mention_notif = next((n for n in feed_b.get("items", []) if n.get("type") == "mention"), None)
+    check("B nhận thông báo khi được @mention trong comment",
+          mention_notif is not None, feed_b)
+
+    # Đánh dấu đã đọc tất cả -> unread về 0
+    session_a.post(f"{BASE}/api/notifications/feed/read-all")
+    feed_a2 = session_a.get(f"{BASE}/api/notifications/feed").json()
+    check("Đánh dấu đã đọc tất cả -> unread = 0", feed_a2.get("unread", -1) == 0, feed_a2)
+
     print(f"\n== 7. Xóa bài viết -> cascade xóa bình luận ==")
     r_del = session_a.delete(f"{BASE}/api/posts/{post_id}")
     check("Chủ sở hữu xóa bài -> 200", r_del.status_code == 200, r_del.text)

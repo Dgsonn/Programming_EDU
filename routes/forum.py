@@ -8,6 +8,59 @@ _CATEGORIES = ('question', 'share', 'discuss')
 _REACTIONS = ('like', 'love', 'haha', 'wow', 'sad', 'angry')
 
 
+def _notify_mentions(conn, post_id, actor_id, content, parent_id):
+    """Tạo thông báo cho user được @nhắc trong bình luận.
+
+    Hai nguồn mention:
+      1. Reply: người viết reply @nhắc tác giả comment cha -> thông báo cho họ.
+      2. @tên gõ trong nội dung: khớp với tên hiển thị của những người ĐÃ tham gia
+         bài viết đó (tác giả bài + người từng bình luận) — tập giới hạn nên khớp
+         chính xác, tránh quét toàn bộ user và tránh trùng tên mơ hồ.
+    Không tự thông báo cho chính mình.
+    """
+    actor = conn.execute('SELECT name FROM users WHERE id=%s', (actor_id,)).fetchone()
+    actor_name = (actor['name'] if actor else '') or 'Ai đó'
+
+    # target_id -> ('comment_reply'|'mention')
+    targets = {}
+
+    if parent_id:
+        prow = conn.execute(
+            'SELECT user_id FROM comments WHERE id=%s', (parent_id,)
+        ).fetchone()
+        if prow and prow['user_id'] and prow['user_id'] != actor_id:
+            targets[prow['user_id']] = 'comment_reply'
+
+    if '@' in (content or ''):
+        parts = conn.execute(
+            '''SELECT DISTINCT u.id, u.name FROM users u
+               WHERE u.id IN (
+                   SELECT user_id FROM comments WHERE post_id=%s AND user_id IS NOT NULL
+                   UNION
+                   SELECT user_id FROM posts WHERE id=%s AND user_id IS NOT NULL
+               )''',
+            (post_id, post_id)
+        ).fetchall()
+        for p in parts:
+            if p['id'] == actor_id or not p['name']:
+                continue
+            if ('@' + p['name']) in content:
+                targets.setdefault(p['id'], 'mention')
+
+    snippet = (content or '').strip()
+    if len(snippet) > 120:
+        snippet = snippet[:117] + '...'
+    for uid, ntype in targets.items():
+        title = (f'{actor_name} đã trả lời bình luận của bạn'
+                 if ntype == 'comment_reply'
+                 else f'{actor_name} đã nhắc đến bạn trong một bình luận')
+        conn.execute(
+            '''INSERT INTO notifications (user_id, type, title, body, ref_type, ref_id)
+               VALUES (%s, %s, %s, %s, 'post', %s)''',
+            (uid, ntype, title, snippet, post_id)
+        )
+
+
 def _zero_reactions():
     """Dict 6 loại cảm xúc, tất cả = 0 — nền để overlay số đếm thật lên."""
     return {k: 0 for k in _REACTIONS}
@@ -381,11 +434,13 @@ def create_comment(post_id):
                 return jsonify({'error': 'Không tìm thấy bình luận cha'}), 404
             if parent['parent_comment_id'] is not None:
                 return jsonify({'error': 'Không thể trả lời một trả lời'}), 400
+        uid = current_user_id()
         row = conn.execute(
             '''INSERT INTO comments (post_id, user_id, parent_comment_id, content)
                VALUES (%s, %s, %s, %s) RETURNING id''',
-            (post_id, current_user_id(), parent_id, content)
+            (post_id, uid, parent_id, content)
         ).fetchone()
+        _notify_mentions(conn, post_id, uid, content, parent_id)
         conn.commit()
     finally:
         conn.close()
