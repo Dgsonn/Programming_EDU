@@ -6494,17 +6494,25 @@ body.light .mcq-option .t-number  { color: #B45309; }
 }
 
 .mg-match-item {
-  padding: var(--space-2) var(--space-3);
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.6);
+  position: relative;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(20,30,48,.65), rgba(15,23,42,.6));
   border: 1px solid rgba(148, 163, 184, 0.2);
-  font-size: 12px;
+  font-size: 13.5px;
   cursor: pointer;
   transition: all var(--anim-fast) ease;
 }
 
 .mg-match-item:hover {
   border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.28);
+}
+/* matched → hiện dấu ✓ nhỏ (rõ đã nối đúng) */
+.mg-match-item.matched::after {
+  content: '✓'; position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+  color: var(--success); font-weight: 900; font-size: 13px;
 }
 
 .mg-match-item.selected {
