@@ -5,6 +5,90 @@ from utils import api_login_required, current_user_id, _is_admin
 forum_bp = Blueprint('forum', __name__)
 
 _CATEGORIES = ('question', 'share', 'discuss')
+_REACTIONS = ('like', 'love', 'haha', 'wow', 'sad', 'angry')
+
+
+def _zero_reactions():
+    """Dict 6 loại cảm xúc, tất cả = 0 — nền để overlay số đếm thật lên."""
+    return {k: 0 for k in _REACTIONS}
+
+
+def _reaction_map(conn, table, id_col, ids, uid):
+    """Trả (counts_by_id, my_by_id) cho post_likes/comment_likes.
+       counts_by_id[id] = {6 keys}, my_by_id[id] = reaction_type | None.
+       Một query GROUP BY + một query my_reaction, scoped theo ids (không N+1)."""
+    ids = list(ids)
+    counts = {i: _zero_reactions() for i in ids}
+    my = {i: None for i in ids}
+    if not ids:
+        return counts, my
+    rows = conn.execute(
+        f'SELECT {id_col}, reaction_type, count(*) AS n FROM {table} '
+        f'WHERE {id_col} = ANY(%s) GROUP BY {id_col}, reaction_type',
+        (ids,)
+    ).fetchall()
+    for r in rows:
+        counts[r[id_col]][r['reaction_type']] = r['n']
+    mine = conn.execute(
+        f'SELECT {id_col}, reaction_type FROM {table} '
+        f'WHERE {id_col} = ANY(%s) AND user_id = %s',
+        (ids, uid)
+    ).fetchall()
+    for r in mine:
+        my[r[id_col]] = r['reaction_type']
+    return counts, my
+
+
+def _toggle_reaction(table, id_col, parent_table, row_id, reaction):
+    """Logic chung cho react post lẫn comment. Toggle: react cùng loại -> gỡ;
+       loại khác -> upsert. Trả (status_code, json_dict)."""
+    if reaction not in _REACTIONS:
+        return 400, {'error': 'Loại cảm xúc không hợp lệ'}
+    conn = get_db()
+    try:
+        exists = conn.execute(
+            f'SELECT id FROM {parent_table} WHERE id=%s', (row_id,)
+        ).fetchone()
+        if not exists:
+            label = 'bài viết' if parent_table == 'posts' else 'bình luận'
+            return 404, {'error': f'Không tìm thấy {label}'}
+        uid = current_user_id()
+        cur = conn.execute(
+            f'SELECT reaction_type FROM {table} WHERE {id_col}=%s AND user_id=%s',
+            (row_id, uid)
+        ).fetchone()
+        if cur and cur['reaction_type'] == reaction:
+            conn.execute(
+                f'DELETE FROM {table} WHERE {id_col}=%s AND user_id=%s', (row_id, uid)
+            )
+            my_reaction = None
+        else:
+            conn.execute(
+                f'''INSERT INTO {table} ({id_col}, user_id, reaction_type)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT ({id_col}, user_id)
+                    DO UPDATE SET reaction_type = EXCLUDED.reaction_type, created_at = now()''',
+                (row_id, uid, reaction)
+            )
+            my_reaction = reaction
+        # posts giữ cache tổng like_count; comments không có cache -> bỏ qua
+        if parent_table == 'posts':
+            conn.execute(
+                'UPDATE posts SET like_count = '
+                '(SELECT count(*) FROM post_likes WHERE post_id=%s) WHERE id=%s',
+                (row_id, row_id)
+            )
+        rows = conn.execute(
+            f'SELECT reaction_type, count(*) AS n FROM {table} '
+            f'WHERE {id_col}=%s GROUP BY reaction_type', (row_id,)
+        ).fetchall()
+        conn.commit()
+    finally:
+        conn.close()
+    reactions = _zero_reactions()
+    for r in rows:
+        reactions[r['reaction_type']] = r['n']
+    return 200, {'ok': True, 'reactions': reactions, 'my_reaction': my_reaction}
 
 
 def _paging():
@@ -35,11 +119,15 @@ def list_posts():
     category = (request.args.get('category') or '').strip()
     sort = request.args.get('sort', 'newest')
 
-    where = ''
+    conds = []
     params = []
     if category and category in _CATEGORIES:
-        where = 'WHERE p.category = %s'
+        conds.append('p.category = %s')
         params.append(category)
+    if request.args.get('mine'):
+        conds.append('p.user_id = %s')
+        params.append(current_user_id())
+    where = ('WHERE ' + ' AND '.join(conds)) if conds else ''
 
     order = {
         'oldest': 'p.created_at ASC',
@@ -64,11 +152,27 @@ def list_posts():
                 LIMIT %s OFFSET %s''',
             tuple(params) + (per_page, offset)
         ).fetchall()
+
+        posts = [dict(r) for r in rows]
+        ids = [p['id'] for p in posts]
+        counts, my = _reaction_map(conn, 'post_likes', 'post_id', ids, current_user_id())
+        cmt_counts = {i: 0 for i in ids}
+        if ids:
+            for r in conn.execute(
+                'SELECT post_id, count(*) AS n FROM comments '
+                'WHERE post_id = ANY(%s) AND parent_comment_id IS NULL GROUP BY post_id',
+                (ids,)
+            ).fetchall():
+                cmt_counts[r['post_id']] = r['n']
+        for p in posts:
+            p['reactions'] = counts[p['id']]
+            p['my_reaction'] = my[p['id']]
+            p['comment_count'] = cmt_counts[p['id']]
     finally:
         conn.close()
 
     return jsonify({
-        'posts': [dict(r) for r in rows],
+        'posts': posts,
         'page': page,
         'per_page': per_page,
         'total': total,
@@ -115,10 +219,29 @@ def get_post(post_id):
            WHERE p.id = %s''',
         (post_id,)
     ).fetchone()
-    conn.close()
     if not row:
+        conn.close()
         return jsonify({'error': 'Không tìm thấy bài viết'}), 404
-    return jsonify(dict(row))
+    post = dict(row)
+    counts, my = _reaction_map(conn, 'post_likes', 'post_id', [post_id], current_user_id())
+    cmt = conn.execute(
+        'SELECT count(*) AS n FROM comments WHERE post_id=%s AND parent_comment_id IS NULL',
+        (post_id,)
+    ).fetchone()
+    conn.close()
+    post['reactions'] = counts[post_id]
+    post['my_reaction'] = my[post_id]
+    post['comment_count'] = cmt['n']
+    return jsonify(post)
+
+
+@forum_bp.route('/api/posts/<int:post_id>/react', methods=['POST'])
+@api_login_required
+def react_post(post_id):
+    data = request.get_json(silent=True) or {}
+    reaction = (data.get('reaction') or '').strip()
+    status, payload = _toggle_reaction('post_likes', 'post_id', 'posts', post_id, reaction)
+    return jsonify(payload), status
 
 
 @forum_bp.route('/api/posts/<int:post_id>', methods=['PUT'])
@@ -184,25 +307,48 @@ def list_comments(post_id):
         if not post:
             return jsonify({'error': 'Không tìm thấy bài viết'}), 404
 
+        # Phân trang 2 tầng: chỉ đếm/trang theo comment gốc (top-level), reply
+        # được lấy kèm theo cha (không tính vào per_page) để không bị lạc trang.
         total = conn.execute(
-            'SELECT COUNT(*) AS n FROM comments WHERE post_id=%s', (post_id,)
+            'SELECT COUNT(*) AS n FROM comments '
+            'WHERE post_id=%s AND parent_comment_id IS NULL', (post_id,)
         ).fetchone()['n']
 
-        rows = conn.execute(
-            '''SELECT c.id, c.post_id, c.user_id, c.content,
+        top = conn.execute(
+            '''SELECT c.id, c.post_id, c.user_id, c.parent_comment_id, c.content,
                       c.created_at, c.updated_at, u.name AS author_name
                FROM comments c
                LEFT JOIN users u ON u.id = c.user_id
-               WHERE c.post_id = %s
+               WHERE c.post_id = %s AND c.parent_comment_id IS NULL
                ORDER BY c.created_at ASC
                LIMIT %s OFFSET %s''',
             (post_id, per_page, offset)
         ).fetchall()
+        top_ids = [r['id'] for r in top]
+
+        replies = []
+        if top_ids:
+            replies = conn.execute(
+                '''SELECT c.id, c.post_id, c.user_id, c.parent_comment_id, c.content,
+                          c.created_at, c.updated_at, u.name AS author_name
+                   FROM comments c
+                   LEFT JOIN users u ON u.id = c.user_id
+                   WHERE c.parent_comment_id = ANY(%s)
+                   ORDER BY c.created_at ASC''',
+                (top_ids,)
+            ).fetchall()
+
+        comments = [dict(r) for r in top] + [dict(r) for r in replies]
+        cids = [c['id'] for c in comments]
+        counts, my = _reaction_map(conn, 'comment_likes', 'comment_id', cids, current_user_id())
+        for c in comments:
+            c['reactions'] = counts[c['id']]
+            c['my_reaction'] = my[c['id']]
     finally:
         conn.close()
 
     return jsonify({
-        'comments': [dict(r) for r in rows],
+        'comments': comments,
         'page': page,
         'per_page': per_page,
         'total': total,
@@ -218,20 +364,42 @@ def create_comment(post_id):
     if not content:
         return jsonify({'error': 'Nội dung không được để trống'}), 400
 
+    parent_id = data.get('parent_comment_id')
+
     conn = get_db()
     try:
         post = conn.execute('SELECT id FROM posts WHERE id=%s', (post_id,)).fetchone()
         if not post:
             return jsonify({'error': 'Không tìm thấy bài viết'}), 404
+        if parent_id is not None:
+            # Chỉ cho lồng 1 cấp: comment cha phải thuộc cùng post VÀ không phải là reply
+            parent = conn.execute(
+                'SELECT parent_comment_id FROM comments WHERE id=%s AND post_id=%s',
+                (parent_id, post_id)
+            ).fetchone()
+            if not parent:
+                return jsonify({'error': 'Không tìm thấy bình luận cha'}), 404
+            if parent['parent_comment_id'] is not None:
+                return jsonify({'error': 'Không thể trả lời một trả lời'}), 400
         row = conn.execute(
-            '''INSERT INTO comments (post_id, user_id, content)
-               VALUES (%s, %s, %s) RETURNING id''',
-            (post_id, current_user_id(), content)
+            '''INSERT INTO comments (post_id, user_id, parent_comment_id, content)
+               VALUES (%s, %s, %s, %s) RETURNING id''',
+            (post_id, current_user_id(), parent_id, content)
         ).fetchone()
         conn.commit()
     finally:
         conn.close()
     return jsonify({'ok': True, 'id': row['id']})
+
+
+@forum_bp.route('/api/comments/<int:comment_id>/react', methods=['POST'])
+@api_login_required
+def react_comment(comment_id):
+    data = request.get_json(silent=True) or {}
+    reaction = (data.get('reaction') or '').strip()
+    status, payload = _toggle_reaction(
+        'comment_likes', 'comment_id', 'comments', comment_id, reaction)
+    return jsonify(payload), status
 
 
 @forum_bp.route('/api/comments/<int:comment_id>', methods=['PUT'])

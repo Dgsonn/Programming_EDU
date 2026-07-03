@@ -41,7 +41,8 @@ def get_roadmaps():
             matched_id = _pick_roadmap_template(data)
 
     base = ("SELECT id, title, icon, color, mermaid_def, "
-            "COALESCE(nodes_json, '{}'::jsonb) AS nodes_json "
+            "COALESCE(nodes_json, '{}'::jsonb) AS nodes_json, "
+            "COALESCE(edges_json, '[]'::jsonb) AS edges_json "
             "FROM roadmaps WHERE user_id IS NULL")
     if matched_id:
         rows = conn.execute(base + " AND id=%s", (matched_id,)).fetchall()
@@ -54,6 +55,7 @@ def get_roadmaps():
         item = dict(r)
         # JSONB -> psycopg trả dict sẵn, không cần json.loads
         item['nodes'] = item.pop('nodes_json') or {}
+        item['edges'] = item.pop('edges_json') or []
         result.append(item)
     return jsonify(result)
 
@@ -84,13 +86,26 @@ def get_my_roadmap():
     uid  = current_user_id()
     conn = get_db()
     row  = conn.execute(
-        "SELECT mermaid_def FROM roadmaps "
+        "SELECT mermaid_def, title, icon, color, "
+        "COALESCE(nodes_json, '{}'::jsonb) AS nodes_json, "
+        "COALESCE(edges_json, '[]'::jsonb) AS edges_json "
+        "FROM roadmaps "
         "WHERE user_id=%s AND source IN ('generated','custom') "
         "ORDER BY updated_at DESC LIMIT 1",
         (uid,)
     ).fetchone()
     conn.close()
-    return jsonify({'mermaid_def': row['mermaid_def'] if row else ''})
+    if not row:
+        return jsonify({'mermaid_def': '', 'nodes': {}, 'edges': []})
+    return jsonify({
+        'mermaid_def': row['mermaid_def'] or '',
+        'title':       row['title'],
+        'icon':        row['icon'],
+        'color':       row['color'],
+        # JSONB -> psycopg trả dict/list sẵn, không cần json.loads
+        'nodes':       row['nodes_json'] or {},
+        'edges':       row['edges_json'] or [],
+    })
 
 
 @roadmap_bp.route('/api/me/roadmap', methods=['POST'])

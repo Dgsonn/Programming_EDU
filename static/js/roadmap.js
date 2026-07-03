@@ -8,7 +8,9 @@
   var LS_PINNED = 'roadmap_pinned_v1';
   var LS_ACTIVE = 'roadmap_active_v1';
   var LS_PROGRESS = 'roadmap_progress_v2';
+  var LS_SEEN_GENERATED = 'roadmap_generated_seen_v1';
   var DEFAULT_PINNED = ['Frontend', 'Backend'];
+  var MY_ROADMAP_TAB = 'Lộ trình của tôi';
 
   function getPinned() {
     try {
@@ -47,6 +49,15 @@
 
   function escHtmlR(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function esc(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+  /* Sắp xếp node id theo số thứ tự thực (rm_2 < rm_10), không theo alphabet */
+  function sortNodeIds(ids) {
+    return ids.slice().sort(function (a, b) {
+      var na = parseInt(String(a).replace(/\D/g, ''), 10) || 0;
+      var nb = parseInt(String(b).replace(/\D/g, ''), 10) || 0;
+      return na - nb;
+    });
+  }
 
   function normalize(name) {
     var sections = (typeof ROADMAP_DATA !== 'undefined' && ROADMAP_DATA[name]) || [];
@@ -100,18 +111,10 @@
     return '<button type="button" class="' + cls + '" style="background:' + c.childBg + ';border-color:' + c.stroke + ';color:' + c.childText + '" onclick="' + onclick + '">' + escHtmlR(node.label) + dotHtml + '</button>';
   }
 
-  /* ── Flow chính ── */
-  function renderFlow(name) {
-    var wrap = document.getElementById('rm-flow-wrap');
-    if (!wrap) return;
-    var sections = normalize(name);
-    if (!sections.length) {
-      wrap.innerHTML = '<div class="rm-flow-empty">Chưa có dữ liệu cho lộ trình này.</div>';
-      renderStatsPill(name, []);
-      return;
-    }
-    var html = '<div class="rm-spine"></div>';
-    html += sections.map(function (sec) {
+  /* ── HTML cho danh sách section (spine + main + nhánh trái/phải) — dùng chung
+     bởi renderFlow (roadmap tĩnh) và renderGeneratedRoadmap (roadmap cá nhân) ── */
+  function buildSectionsHtml(name, sections) {
+    return sections.map(function (sec) {
       var leftHtml = sec.left.length
         ? '<div class="rm-branch rm-branch--left">' + sec.left.map(function (n) { return nodeBoxHtml(name, n, 'child'); }).join('') + '</div><div class="rm-dash rm-dash--right"></div>'
         : '';
@@ -124,7 +127,92 @@
         '<div class="rm-section-right">' + rightHtml + '</div>' +
         '</div>';
     }).join('');
-    wrap.innerHTML = html;
+  }
+
+  /* ── Header cá nhân hoá cho tab "Lộ trình của tôi" ── */
+  function renderMyHeader(apiData, sections) {
+    var el = document.getElementById('rm-my-header');
+    if (!el) return;
+    var done = 0;
+    sections.forEach(function (sec) {
+      if (getStatus(MY_ROADMAP_TAB, sec.main.id, sec.main.status) === 'done') done++;
+    });
+    var pct = sections.length ? Math.round((done / sections.length) * 100) : 0;
+    el.innerHTML =
+      '<div class="rm-my-header-icon">' + (apiData.icon || '🎯') + '</div>' +
+      '<div class="rm-my-header-body">' +
+        '<span class="rm-my-header-badge">✨ Dựa trên khảo sát của bạn</span>' +
+        '<h3 class="rm-my-header-title">' + escHtmlR(apiData.title || 'Lộ trình của tôi') + '</h3>' +
+        '<p class="rm-my-header-sub">' + sections.length + ' chặng học · Gợi ý riêng cho mục tiêu của bạn</p>' +
+      '</div>' +
+      '<div class="rm-my-header-progress">' +
+        '<span class="rm-my-header-pct">' + pct + '%</span>' +
+        '<div class="rm-my-header-bar"><div class="rm-my-header-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+    el.style.display = 'flex';
+  }
+
+  function hideMyHeader() {
+    var el = document.getElementById('rm-my-header');
+    if (el) el.style.display = 'none';
+  }
+
+  /* Fetch '/api/me/roadmap' đúng 1 lần cho cả vòng đời trang — mọi nơi cần
+     dữ liệu (initRoadmapPage, roadmapSelectTab) đều dùng chung promise này,
+     tránh gửi trùng request khi cả 2 cùng cần dữ liệu lúc mới vào trang. */
+  var _myRoadmapPromise = null;
+  function fetchMyRoadmap() {
+    if (!_myRoadmapPromise) {
+      _myRoadmapPromise = fetch('/api/me/roadmap', { credentials: 'include' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          window._myRoadmapCache = data && data.mermaid_def ? data : null;
+          return window._myRoadmapCache;
+        })
+        .catch(function () { return null; });
+    }
+    return _myRoadmapPromise;
+  }
+
+  /* ── Render roadmap generated từ API (tab "Lộ trình của tôi") ──
+     Tái sử dụng cấu trúc spine+section giống các roadmap tĩnh khác,
+     nhưng mỗi chặng chỉ có 1 node chính (không rẽ nhánh trái/phải) vì
+     đây là chuỗi tuần tự theo đúng thứ tự học. ── */
+  function renderGeneratedRoadmap(apiData) {
+    window._generatedRoadmapData = apiData;
+    var wrap = document.getElementById('rm-flow-wrap');
+    if (!wrap) return;
+    var nodesObj = apiData.nodes || {};
+    var nodeIds = sortNodeIds(Object.keys(nodesObj));
+    if (!nodeIds.length) {
+      hideMyHeader();
+      wrap.innerHTML = '<div class="rm-flow-empty">Bạn chưa có node nào. Sử dụng phần "Cá nhân" để tạo lộ trình của riêng bạn.</div>';
+      renderStatsPill(MY_ROADMAP_TAB, []);
+      return;
+    }
+    var sections = nodeIds.map(function (nid) {
+      var nodeData = nodesObj[nid] || {};
+      var status = getStatus(MY_ROADMAP_TAB, nid, 'locked');
+      return { main: { id: nid, label: nodeData.title || nid, status: status }, left: [], right: [] };
+    });
+    renderMyHeader(apiData, sections);
+    wrap.innerHTML = '<div class="rm-spine"></div>' + buildSectionsHtml(MY_ROADMAP_TAB, sections);
+    renderStatsPill(MY_ROADMAP_TAB, sections);
+    if (window.mountIcons) mountIcons(wrap);
+  }
+
+  /* ── Flow chính (roadmap tĩnh) ── */
+  function renderFlow(name) {
+    hideMyHeader();
+    var wrap = document.getElementById('rm-flow-wrap');
+    if (!wrap) return;
+    var sections = normalize(name);
+    if (!sections.length) {
+      wrap.innerHTML = '<div class="rm-flow-empty">Chưa có dữ liệu cho lộ trình này.</div>';
+      renderStatsPill(name, []);
+      return;
+    }
+    wrap.innerHTML = '<div class="rm-spine"></div>' + buildSectionsHtml(name, sections);
     renderStatsPill(name, sections);
   }
 
@@ -132,7 +220,7 @@
     var pill = document.getElementById('rm-stats-pill');
     if (!pill) return;
     var done = 0, active = 0, locked = 0;
-    sections.forEach(function (sec) {
+    (sections || []).forEach(function (sec) {
       [sec.main].concat(sec.left, sec.right).forEach(function (n) {
         var st = getStatus(name, n.id, n.status);
         if (st === 'done') done++; else if (st === 'active') active++; else locked++;
@@ -151,7 +239,32 @@
     var flowScroll = document.querySelector('.rm-flow-scroll');
     var statsPill = document.getElementById('rm-stats-pill');
     var personalView = document.getElementById('roadmap-personal-view');
-    if (name === 'personal') {
+    if (name === MY_ROADMAP_TAB) {
+      // Render roadmap generated từ API. Lưu ý: .rm-flow-scroll là block
+      // container bình thường (header + flow-wrap xếp DỌC) — không phải flex.
+      if (flowScroll) flowScroll.style.display = '';
+      if (personalView) personalView.style.display = 'none';
+      if (statsPill) statsPill.style.display = 'flex';
+      // GUARD: capture tab được yêu cầu — nếu user chuyển sang tab khác trước
+      // khi fetch xong, callback phải bỏ qua, KHÔNG được ghi đè nội dung tab hiện tại.
+      var requestedTab = name;
+      fetchMyRoadmap().then(function (data) {
+        if (getActive() !== requestedTab) return; // tab đã đổi, không ghi đè
+        if (data) {
+          renderGeneratedRoadmap(data);
+        } else {
+          hideMyHeader();
+          // QUAN TRỌNG: ghi vào #rm-flow-wrap, KHÔNG PHẢI .rm-flow-scroll —
+          // flowScroll là container cha chứa cả #rm-my-header lẫn #rm-flow-wrap,
+          // ghi đè innerHTML của nó sẽ XÓA VĨNH VIỄN 2 element con này khỏi DOM,
+          // khiến các tab khác không tìm thấy #rm-flow-wrap để render nữa nữa
+          // (getElementById trả null) — nội dung "trống" bị dính lại mọi tab.
+          var emptyWrap = document.getElementById('rm-flow-wrap');
+          if (emptyWrap) emptyWrap.innerHTML = '<div class="rm-flow-empty">Bạn chưa có lộ trình gợi ý nào. Hãy hoàn thành bộ khảo sát để nhận lộ trình phù hợp.</div>';
+        }
+      });
+    } else if (name === 'personal') {
+      hideMyHeader();
       if (flowScroll) flowScroll.style.display = 'none';
       if (statsPill) statsPill.style.display = 'none';
       if (personalView) personalView.style.display = 'flex';
@@ -169,6 +282,11 @@
     }
   };
 
+  function courseButtonHtml(courseId) {
+    return '<button type="button" class="rm-course-btn" onclick="window.location.href=\'/courses/' + escHtmlR(courseId) + '\'">' +
+      '<span data-icon="graduation-cap" data-size="15"></span> Xem khóa học</button>';
+  }
+
   /* ── Detail Drawer ── */
   window.roadmapOpenDrawer = function (name, nodeId, label) {
     var drawer = document.getElementById('rm-drawer');
@@ -185,20 +303,43 @@
     var detail = (typeof ROADMAP_DETAILS !== 'undefined') ? ROADMAP_DETAILS[key] : null;
     var descEl = document.getElementById('rm-drawer-desc');
     var resWrap = document.getElementById('rm-drawer-resources');
-    if (detail) {
+
+    // Lấy course_id + desc từ API nếu tab "Lộ trình của tôi"
+    var courseId = null;
+    var genDesc = null;
+    if (name === MY_ROADMAP_TAB && window._generatedRoadmapData) {
+      var nodeData = window._generatedRoadmapData.nodes && window._generatedRoadmapData.nodes[nodeId];
+      if (nodeData) {
+        courseId = nodeData.course_id;
+        genDesc = nodeData.desc;
+      }
+    } else if (detail) {
+      courseId = detail.course_id;
+    }
+
+    // Ưu tiên desc từ nodes_json (roadmap generated) — desc là HTML phong phú
+    if (genDesc) {
+      descEl.innerHTML = genDesc;
+      resWrap.innerHTML = courseId ? courseButtonHtml(courseId) : '';
+    } else if (detail) {
       descEl.textContent = detail.desc;
       resWrap.innerHTML = detail.resources.map(function (r, i) {
         var rc = RES_CFG[r.type] || RES_CFG.article;
-        return '<a class="rm-res-item" href="#" onclick="event.preventDefault()" style="animation-delay:' + (i * 0.05) + 's">' +
+        var onclick = r.type === 'course' && (courseId || r.course_id)
+          ? 'window.location.href="/courses/' + (courseId || r.course_id) + '"'
+          : 'event.preventDefault()';
+        return '<a class="rm-res-item" href="#" onclick="' + onclick + '" style="animation-delay:' + (i * 0.05) + 's">' +
           '<span class="rm-res-icon" style="background:' + rc.color + '1A"><span data-icon="' + rc.icon + '" data-size="15" data-color="' + rc.color + '"></span></span>' +
           '<span class="rm-res-body"><span class="rm-res-title">' + escHtmlR(r.title) + '</span>' +
           '<span class="rm-res-meta"><span style="color:' + rc.color + ';font-weight:600">' + rc.label + '</span> · ' + escHtmlR(r.source) + '</span></span>' +
           '<span data-icon="external-link" data-size="14" data-color="#64748B"></span>' +
           '</a>';
       }).join('');
+      // Thêm nút "Xem khóa học" nếu node có course_id
+      if (courseId) resWrap.innerHTML += courseButtonHtml(courseId);
     } else {
       descEl.textContent = 'Chưa có mô tả chi tiết cho mục này. Hãy tự tìm hiểu thêm về "' + label + '" qua tài liệu chính thức hoặc khóa học liên quan.';
-      resWrap.innerHTML = '';
+      resWrap.innerHTML = courseId ? courseButtonHtml(courseId) : '';
     }
     if (window.mountIcons) mountIcons(resWrap);
     drawer.classList.add('open');
@@ -297,7 +438,36 @@
 
   /* ── Entry point — gọi từ navigate('roadmap') ── */
   window.initRoadmapPage = function () {
+    // Render ngay tab hiện có — không chờ fetch, tránh màn hình trống khi
+    // Neon DB cold-start (có thể mất vài giây để phản hồi).
     renderTabs();
     window.roadmapSelectTab(getActive());
+
+    // Kiểm tra xem user đã có roadmap gợi ý từ khảo sát chưa. Nếu có VÀ đây
+    // là lần đầu phát hiện (chưa từng "seen"), tự động ghim + chuyển vào tab
+    // đó đúng 1 lần duy nhất — các lần load trang sau tôn trọng tab user
+    // đang chọn, không tự ý nhảy tab.
+    fetchMyRoadmap().then(function (data) {
+      if (!data) return;
+
+      var pinned = getPinned();
+      if (pinned.indexOf(MY_ROADMAP_TAB) === -1) {
+        pinned.unshift(MY_ROADMAP_TAB);
+        setPinned(pinned);
+      }
+
+      var alreadySeen = localStorage.getItem(LS_SEEN_GENERATED) === '1';
+      if (!alreadySeen) {
+        localStorage.setItem(LS_SEEN_GENERATED, '1');
+        setActive(MY_ROADMAP_TAB);
+        renderTabs();
+        window.roadmapSelectTab(MY_ROADMAP_TAB);
+      } else {
+        renderTabs();
+        // Nếu tab đang mở đúng là "Lộ trình của tôi" (vd. lần load đầu đã
+        // render placeholder rỗng vì fetch chưa xong), render lại với data thật.
+        if (getActive() === MY_ROADMAP_TAB) renderGeneratedRoadmap(data);
+      }
+    });
   };
 })();

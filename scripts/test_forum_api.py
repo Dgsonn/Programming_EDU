@@ -128,6 +128,71 @@ def main():
     r_other_c = session_b.put(f"{BASE}/api/comments/{comment_id}", json={"content": "Hack!"})
     check("User B sửa bình luận của A -> 403", r_other_c.status_code == 403, r_other_c.text)
 
+    print(f"\n== 6b. Reaction bài viết (POST /api/posts/<id>/react) ==")
+    # React lần lượt 6 loại — mỗi loại thay thế loại trước (1 reaction/user/post)
+    for rtype in ("like", "love", "haha", "wow", "sad", "angry"):
+        rr = session_a.post(f"{BASE}/api/posts/{post_id}/react", json={"reaction": rtype})
+        jd = rr.json() if rr.status_code == 200 else {}
+        ok = (rr.status_code == 200 and jd.get("my_reaction") == rtype
+              and jd.get("reactions", {}).get(rtype) == 1
+              and sum(jd.get("reactions", {}).values()) == 1)
+        check(f"React '{rtype}' -> chỉ loại đó =1, còn lại 0", ok, rr.text)
+
+    # Đổi loại: đang 'angry', chuyển sang 'like' -> angry về 0, like =1
+    rr = session_a.post(f"{BASE}/api/posts/{post_id}/react", json={"reaction": "like"})
+    jd = rr.json()
+    check("Đổi reaction: loại cũ giảm, loại mới tăng",
+          jd.get("reactions", {}).get("angry") == 0 and jd.get("reactions", {}).get("like") == 1
+          and jd.get("my_reaction") == "like", rr.text)
+
+    # React lại cùng loại 'like' -> gỡ bỏ (toggle off)
+    rr = session_a.post(f"{BASE}/api/posts/{post_id}/react", json={"reaction": "like"})
+    jd = rr.json()
+    check("React lại cùng loại -> gỡ (my_reaction=None, count=0)",
+          jd.get("my_reaction") is None and jd.get("reactions", {}).get("like") == 0, rr.text)
+
+    rr = session_a.post(f"{BASE}/api/posts/{post_id}/react", json={"reaction": "xxx"})
+    check("Reaction không hợp lệ -> 400", rr.status_code == 400, rr.text)
+
+    print(f"\n== 6c. Reaction cô lập theo user + GET trả reactions/my_reaction ==")
+    session_a.post(f"{BASE}/api/posts/{post_id}/react", json={"reaction": "love"})
+    ra = session_a.get(f"{BASE}/api/posts/{post_id}").json()
+    rb = session_b.get(f"{BASE}/api/posts/{post_id}").json()
+    check("A thấy tổng love=1 và my_reaction='love'",
+          ra.get("reactions", {}).get("love") == 1 and ra.get("my_reaction") == "love", ra)
+    check("B thấy cùng tổng love=1 nhưng my_reaction=None (cô lập theo user)",
+          rb.get("reactions", {}).get("love") == 1 and rb.get("my_reaction") is None, rb)
+    check("GET post có field comment_count", "comment_count" in ra, ra)
+
+    print(f"\n== 6d. Reply lồng nhau (parent_comment_id) ==")
+    rr = session_a.post(f"{BASE}/api/posts/{post_id}/comments",
+                        json={"content": "Trả lời cho A", "parent_comment_id": comment_id})
+    check("Reply vào comment gốc -> 200", rr.status_code == 200, rr.text)
+    reply_id = rr.json().get("id") if rr.status_code == 200 else None
+
+    rc = session_a.get(f"{BASE}/api/posts/{post_id}/comments").json()
+    reply_row = next((c for c in rc.get("comments", []) if c.get("id") == reply_id), None)
+    check("GET comments trả reply kèm parent_comment_id đúng",
+          reply_row is not None and reply_row.get("parent_comment_id") == comment_id, rc)
+
+    rr2 = session_a.post(f"{BASE}/api/posts/{post_id}/comments",
+                         json={"content": "Reply của reply", "parent_comment_id": reply_id})
+    check("Reply-của-reply (lồng >1 cấp) -> 400", rr2.status_code == 400, rr2.text)
+
+    print(f"\n== 6e. Reaction bình luận (POST /api/comments/<id>/react) ==")
+    rr = session_b.post(f"{BASE}/api/comments/{comment_id}/react", json={"reaction": "haha"})
+    jd = rr.json() if rr.status_code == 200 else {}
+    check("React comment 'haha' -> 200, count=1",
+          rr.status_code == 200 and jd.get("my_reaction") == "haha"
+          and jd.get("reactions", {}).get("haha") == 1, rr.text)
+    rr = session_b.post(f"{BASE}/api/comments/{comment_id}/react", json={"reaction": "haha"})
+    check("React comment lại cùng loại -> gỡ (count=0)",
+          rr.json().get("reactions", {}).get("haha") == 0, rr.text)
+    # React trên reply (cùng bảng comments) cũng hoạt động
+    rr = session_a.post(f"{BASE}/api/comments/{reply_id}/react", json={"reaction": "wow"})
+    check("React trên reply cũng hoạt động -> 200", rr.status_code == 200
+          and rr.json().get("reactions", {}).get("wow") == 1, rr.text)
+
     print(f"\n== 7. Xóa bài viết -> cascade xóa bình luận ==")
     r_del = session_a.delete(f"{BASE}/api/posts/{post_id}")
     check("Chủ sở hữu xóa bài -> 200", r_del.status_code == 200, r_del.text)

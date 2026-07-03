@@ -71,6 +71,46 @@
 .rm-stat-item { display: flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--t3); }
 .rm-stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
+/* ── Header cá nhân hoá (tab "Lộ trình của tôi") ── */
+.rm-my-header {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.10), rgba(255,255,255,0.02));
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 14px;
+  padding: 16px 20px;
+  animation: fadeUp 0.25s ease both;
+}
+.rm-my-header-icon {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.rm-my-header-body { flex: 1; min-width: 0; }
+.rm-my-header-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--blue-light); background: rgba(59,130,246,0.16);
+  border-radius: 5px; padding: 2px 7px; margin-bottom: 5px;
+}
+.rm-my-header-title { font-size: 1rem; font-weight: 700; color: var(--t1); margin: 0; }
+.rm-my-header-sub { font-size: 0.76rem; color: var(--t3); margin: 3px 0 0; }
+.rm-my-header-progress {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  min-width: 74px;
+}
+.rm-my-header-pct { font-size: 1.05rem; font-weight: 700; color: #10B981; }
+.rm-my-header-bar {
+  width: 74px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden;
+}
+.rm-my-header-bar-fill { height: 100%; background: linear-gradient(90deg, #10B981, #34D399); border-radius: 3px; transition: width 0.3s ease; }
+
 /* ── Flow content (lộ trình chính) ── */
 .rm-flow-scroll {
   width: 100%;
@@ -228,6 +268,17 @@
 .rm-res-body { flex: 1; min-width: 0; }
 .rm-res-title { display: block; color: #E2E8F0; font-size: 0.81rem; font-weight: 500; }
 .rm-res-meta { display: block; color: #64748B; font-size: 0.7rem; margin-top: 2px; }
+
+.rm-course-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 4px; padding: 11px 14px;
+  border-radius: 9px; border: 1px solid rgba(167,139,250,0.35);
+  background: rgba(167,139,250,0.12); color: #C4B5FD;
+  font-family: inherit; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  animation: fadeUp 0.22s ease both;
+}
+.rm-course-btn:hover { background: rgba(167,139,250,0.2); border-color: rgba(167,139,250,0.55); transform: translateY(-1px); }
 
 /* ══════════════════════════════════════════════════
    ROADMAP CÁ NHÂN (Canvas kéo-thả)

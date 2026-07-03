@@ -472,67 +472,97 @@ function skSkillToggle(row) {
    ═══════════════════════════════════════════════════════ */
 (function () {
 
-  var STORAGE_KEY = 'edu_forum_posts';
-
-  /* ── Forum API Layer ────────────────────────────────
-     Currently uses localStorage with mock data.
-     Ready to swap to real API by updating these functions.
-  ─────────────────────────────────────────────────── */
+  /* ── Forum API Layer — gọi thẳng Flask API thật (routes/forum.py) ──
+     Trước đây là mock localStorage nên like/comment không lưu được. Giờ mọi
+     thao tác đi thẳng Postgres. Cookie session tự gửi (same-origin), không cần
+     thêm credentials. ─────────────────────────────────────────────────── */
   var forumApi = {
-    getPosts: function () {
-      // TODO: Replace with real API call
-      // return fetch('/api/forum/posts').then(r => r.json());
-      return Promise.resolve().then(function () {
-        var raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      });
+    getPosts: function (opts) {
+      opts = opts || {};
+      var qs = 'per_page=50';
+      if (opts.mine) qs += '&mine=1';
+      return fetch('/api/posts?' + qs).then(function (r) { return r.json(); });
     },
-
-    createPost: function (postData) {
-      // TODO: Replace with real API call
-      // return fetch('/api/forum/posts', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(postData)
-      // }).then(r => r.json());
-      return Promise.resolve().then(function () {
-        var posts = [];
-        try {
-          var raw = localStorage.getItem(STORAGE_KEY);
-          posts = raw ? JSON.parse(raw) : [];
-        } catch (e) { }
-        posts.unshift(postData);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-        return postData;
-      });
+    createPost: function (payload) {
+      return fetch('/api/posts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json(); });
     },
-
     react: function (postId, reactionKey) {
-      // TODO: Replace with real API call
-      // return fetch('/api/forum/posts/' + postId + '/react', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ reaction: reactionKey })
-      // }).then(r => r.json());
-      return Promise.resolve({ success: true });
+      return fetch('/api/posts/' + postId + '/react', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reaction: reactionKey })
+      }).then(function (r) { return r.json(); });
     },
-
-    addComment: function (postId, comment) {
-      // TODO: Replace with real API call
-      // return fetch('/api/forum/posts/' + postId + '/comments', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(comment)
-      // }).then(r => r.json());
-      return Promise.resolve(comment);
+    reactComment: function (commentId, reactionKey) {
+      return fetch('/api/comments/' + commentId + '/react', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reaction: reactionKey })
+      }).then(function (r) { return r.json(); });
     },
-
+    getComments: function (postId) {
+      return fetch('/api/posts/' + postId + '/comments?per_page=50').then(function (r) { return r.json(); });
+    },
+    addComment: function (postId, text, parentCommentId) {
+      return fetch('/api/posts/' + postId + '/comments', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: text, parent_comment_id: parentCommentId || null })
+      }).then(function (r) { return r.json(); });
+    },
     deletePost: function (postId) {
-      // TODO: Replace with real API call
-      // return fetch('/api/forum/posts/' + postId, { method: 'DELETE' }).then(r => r.json());
-      return Promise.resolve({ success: true });
+      return fetch('/api/posts/' + postId, { method: 'DELETE' }).then(function (r) { return r.json(); });
     }
   };
+
+  /* Chuyển row API (category/content/author_name/created_at) -> model UI (cat/body/author/time). */
+  function _apiTime(s) {
+    if (!s) return Date.now();
+    // created_at là TIMESTAMP không timezone -> append 'Z' để parse thành UTC,
+    // nếu không new Date() coi là giờ local và timeAgo() sẽ lệch theo múi giờ.
+    var iso = /[Zz]|[+][0-9]/.test(s) ? s : s.replace(' ', 'T') + 'Z';
+    var t = new Date(iso).getTime();
+    return isNaN(t) ? Date.now() : t;
+  }
+  function _emptyReactions() { return { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }; }
+  function _apiPostToUi(row) {
+    return {
+      id: row.id, cat: row.category, title: row.title || '', body: row.content || '',
+      author: row.author_name || 'Ẩn danh', avatar: '🙋', time: _apiTime(row.created_at),
+      reactions: row.reactions || _emptyReactions(), myReaction: row.my_reaction || null,
+      comments: row.comment_count || 0, commentList: null, media: []
+    };
+  }
+  function _apiCommentToUi(row) {
+    return {
+      id: row.id, author: row.author_name || 'Ẩn danh', avatar: '🧑',
+      time: _apiTime(row.created_at), text: row.content || '',
+      reactions: row.reactions || _emptyReactions(), myReaction: row.my_reaction || null,
+      parent_comment_id: row.parent_comment_id || null, replies: []
+    };
+  }
+  /* Dựng cây 1 cấp từ mảng comment phẳng của API. */
+  function _buildCommentTree(flat) {
+    var byId = {}, roots = [];
+    flat.forEach(function (row) { byId[row.id] = _apiCommentToUi(row); });
+    flat.forEach(function (row) {
+      var node = byId[row.id];
+      if (row.parent_comment_id && byId[row.parent_comment_id]) {
+        node.replyTo = byId[row.parent_comment_id].author;
+        byId[row.parent_comment_id].replies.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+    return roots;
+  }
+  function _isAdminUser() {
+    return !!(window.__currentUser && window.__currentUser.role === 'admin');
+  }
+  /* Cache comment tree theo postId (lazy-load khi mở khung bình luận). */
+  var _commentsCache = {};
+  /* Mảng post vừa render — để reaction handler patch tại chỗ, không cần GET lại. */
+  var _lastRenderedPosts = [];
 
   var CAT_LABELS = { question: '❓ Câu hỏi', share: '💡 Chia sẻ', discuss: '💬 Thảo luận' };
   var CAT_COLORS = { question: '#F87171', share: '#FCD34D', discuss: '#A78BFA' };
@@ -618,32 +648,18 @@ function skSkillToggle(row) {
     },
   ];
 
+  // Lấy post thật từ API, đã map sang model UI. Trả Promise<Array>.
   function loadPosts() {
-    // Returns Promise - use async/await or .then()
-    return forumApi.getPosts();
+    return forumApi.getPosts().then(function (res) {
+      return (res.posts || []).map(_apiPostToUi);
+    });
   }
 
-  function savePosts(posts) {
-    // Returns Promise - use async/await or .then()
-    if (!posts.length) return Promise.resolve();
-    return forumApi.createPost(posts[0]); // Save first user post
-  }
-
-  function allPosts() {
-    // NOTE: This is sync for backward compat with some functions.
-    // For async loading, use getAllPostsAsync() instead.
-    var user = [];
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      user = raw ? JSON.parse(raw) : [];
-    } catch (e) { }
-    return MOCK_POSTS.concat(user);
-  }
-
-  // Async version - use this for API-first loading
+  // Async: post thật từ DB; admin thấy kèm 5 bài demo (MOCK_POSTS) ở đầu để
+  // biết mà quản lý — user thường chỉ thấy bài thật.
   function getAllPostsAsync() {
-    return loadPosts().then(function (userPosts) {
-      return MOCK_POSTS.concat(userPosts);
+    return loadPosts().then(function (realPosts) {
+      return _isAdminUser() ? MOCK_POSTS.concat(realPosts) : realPosts;
     });
   }
 
@@ -667,9 +683,9 @@ function skSkillToggle(row) {
     return Math.floor(diff / 86400) + ' ngày trước';
   }
 
-  // Reload posts from API and re-render
+  // Reload posts from API and re-render. Trả Promise để caller chờ được.
   function reloadPosts() {
-    getAllPostsAsync().then(function (allP) {
+    return getAllPostsAsync().then(function (allP) {
       var posts = filteredSorted(allP);
       _renderPosts(posts);
     });
@@ -689,6 +705,7 @@ function skSkillToggle(row) {
   }
 
   function _renderPosts(posts) {
+    _lastRenderedPosts = posts;
     var list = document.getElementById('forum-list');
     var empty = document.getElementById('forum-empty');
     if (!list) return;
@@ -824,18 +841,16 @@ function skSkillToggle(row) {
     }
     var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
     if (mockIdx !== -1) {
-      // MOCK_POSTS - just apply locally
+      // MOCK_POSTS (chỉ admin thấy) — thao tác cục bộ, không chạm DB
       applyReaction(MOCK_POSTS[mockIdx]);
       renderPosts();
     } else {
-      // User post - call API then reload
-      forumApi.react(postId, key).then(function () {
-        // Apply reaction locally for immediate feedback
-        loadPosts().then(function (userPosts) {
-          var uIdx = userPosts.findIndex(function (p) { return p.id === postId; });
-          if (uIdx !== -1) { applyReaction(userPosts[uIdx]); }
-          reloadPosts();
-        });
+      // Bài thật — gọi API, cập nhật ĐÚNG từ response (không GET lại)
+      forumApi.react(postId, key).then(function (res) {
+        if (!res || res.error) return;
+        var post = _lastRenderedPosts.find(function (p) { return String(p.id) === String(postId); });
+        if (post) { post.reactions = res.reactions; post.myReaction = res.my_reaction; }
+        _renderPosts(_lastRenderedPosts);
       });
     }
   };
@@ -859,22 +874,8 @@ function skSkillToggle(row) {
     var firstLine = body.split('\n')[0];
     var title = firstLine.length > 80 ? firstLine.slice(0, 77) + '…' : firstLine;
 
-    var userName = document.getElementById('sidebar-name').textContent || 'Bạn';
-    var newPost = {
-      id: 'u' + Date.now(),
-      cat: _selectedCat,
-      title: title,
-      body: body,
-      author: userName,
-      avatar: '🙋',
-      time: Date.now(),
-      reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
-      myReaction: null,
-      comments: 0,
-      media: [],
-    };
-
-    forumApi.createPost(newPost).then(function () {
+    forumApi.createPost({ category: _selectedCat, title: title, content: body }).then(function (res) {
+      if (res && res.error) { alert(res.error); return; }
       ta.value = '';
       document.getElementById('fcb-submit-btn').disabled = true;
       _selectedCat = 'question';
@@ -890,6 +891,42 @@ function skSkillToggle(row) {
     });
   };
 
+  function _isMockPost(postId) {
+    return MOCK_POSTS.findIndex(function (p) { return p.id === postId; }) !== -1;
+  }
+
+  // Cập nhật số bình luận trên nút, giữ icon (không dùng getAllPostsAsync -> đỡ 1 request).
+  function _setCommentBadge(postId, count) {
+    var btn = document.getElementById('fpc-cmtbtn-' + postId);
+    if (!btn) return;
+    btn.innerHTML = '<span data-icon="message-circle" data-size="13"></span> ' + count + ' bình luận';
+    if (window.mountIcons) mountIcons(btn);
+  }
+
+  // Tải lại comment 1 post từ API -> cache -> render + cập nhật badge.
+  function _refreshComments(postId) {
+    return forumApi.getComments(postId).then(function (res) {
+      var tree = _buildCommentTree((res && res.comments) || []);
+      _commentsCache[postId] = tree;
+      forumRenderComments(postId);
+      var post = _lastRenderedPosts.find(function (p) { return String(p.id) === String(postId); });
+      if (post) post.comments = tree.length;
+      _setCommentBadge(postId, tree.length);
+    });
+  }
+
+  // Tìm 1 comment hoặc reply theo id trong cây (id API là int, onclick truyền string).
+  function _findCommentNode(tree, id) {
+    for (var i = 0; i < tree.length; i++) {
+      if (String(tree[i].id) === String(id)) return tree[i];
+      var reps = tree[i].replies || [];
+      for (var j = 0; j < reps.length; j++) {
+        if (String(reps[j].id) === String(id)) return reps[j];
+      }
+    }
+    return null;
+  }
+
   window.forumToggleComments = function (postId) {
     var section = document.getElementById('fpc-cmt-' + postId);
     var btn = document.getElementById('fpc-cmtbtn-' + postId);
@@ -897,7 +934,12 @@ function skSkillToggle(row) {
     var isOpen = section.classList.toggle('open');
     if (btn) btn.classList.toggle('active', isOpen);
     if (isOpen) {
-      forumRenderComments(postId);
+      // Bài thật: lazy-load comment lần đầu mở. Bài mock: render ngay từ MOCK_POSTS.
+      if (!_isMockPost(postId) && !_commentsCache[postId]) {
+        _refreshComments(postId);
+      } else {
+        forumRenderComments(postId);
+      }
       setTimeout(function () {
         var inp = document.getElementById('fpc-cmt-inp-' + postId);
         if (inp) inp.focus();
@@ -908,9 +950,10 @@ function skSkillToggle(row) {
   window.forumRenderComments = function (postId) {
     var list = document.getElementById('fpc-cmt-list-' + postId);
     if (!list) return;
-    var post = MOCK_POSTS.find(function (p) { return p.id === postId; });
-    if (!post) post = loadPosts().find(function (p) { return p.id === postId; });
-    var cmts = (post && post.commentList) ? post.commentList.slice() : [];
+    var mockPost = MOCK_POSTS.find(function (p) { return p.id === postId; });
+    var cmts = mockPost
+      ? ((mockPost.commentList || []).slice())
+      : ((_commentsCache[postId] || []).slice());
     var sortDir = _cmtSortMap[postId] || 'newest';
     cmts.sort(function (a, b) { return sortDir === 'oldest' ? a.time - b.time : b.time - a.time; });
     if (!cmts.length) {
@@ -1025,51 +1068,35 @@ function skSkillToggle(row) {
     if (!inp) return;
     var text = inp.value.trim();
     if (!text) return;
-    var nameEl = document.getElementById('chip-name');
-    var comment = {
-      id: 'c' + Date.now(),
-      author: (nameEl && nameEl.textContent.trim() && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn',
-      avatar: '🧑',
-      time: Date.now(),
-      text: text,
-    };
     var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
 
     if (mockIdx !== -1) {
-      // MOCK_POSTS - just apply locally
+      // MOCK_POSTS (chỉ admin) — thao tác cục bộ
+      var nameEl = document.getElementById('chip-name');
+      var comment = {
+        id: 'c' + Date.now(),
+        author: (nameEl && nameEl.textContent.trim() && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn',
+        avatar: '🧑', time: Date.now(), text: text,
+      };
       if (!MOCK_POSTS[mockIdx].commentList) MOCK_POSTS[mockIdx].commentList = [];
       MOCK_POSTS[mockIdx].commentList.push(comment);
       MOCK_POSTS[mockIdx].comments = MOCK_POSTS[mockIdx].commentList.length;
       inp.value = '';
       forumRenderComments(postId);
-      updateCommentCount(postId);
-    } else {
-      // User post - call API then reload
-      forumApi.addComment(postId, comment).then(function () {
-        inp.value = '';
-        // Reload comments from API
-        forumRenderComments(postId);
-        // Update comment count by reloading posts
-        reloadPosts().then(function () {
-          updateCommentCount(postId);
-        });
-      });
+      _setCommentBadge(postId, MOCK_POSTS[mockIdx].comments);
+      return;
     }
-    var listEl = document.getElementById('fpc-cmt-list-' + postId);
-    if (listEl && listEl.lastElementChild)
-      listEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  };
-
-  function updateCommentCount(postId) {
-    var btn = document.getElementById('fpc-cmtbtn-' + postId);
-    if (!btn) return;
-    getAllPostsAsync().then(function (allP) {
-      var post = allP.find(function (p) { return p.id === postId; });
-      if (post) {
-        btn.textContent = '💬 ' + (post.comments || 0) + ' bình luận';
-      }
+    // Bài thật — lưu DB rồi tải lại comment (server là nguồn sự thật)
+    forumApi.addComment(postId, text, null).then(function (res) {
+      if (res && res.error) { alert(res.error); return; }
+      inp.value = '';
+      _refreshComments(postId).then(function () {
+        var listEl = document.getElementById('fpc-cmt-list-' + postId);
+        if (listEl && listEl.lastElementChild)
+          listEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
     });
-  }
+  };
 
   window.forumSetCmtSort = function (postId, dir) {
     _cmtSortMap[postId] = dir;
@@ -1080,70 +1107,49 @@ function skSkillToggle(row) {
     forumRenderComments(postId);
   };
 
-  window.forumSetCmtReaction = function (postId, cmtId, key) {
-    function apply(post) {
-      var cmt = (post.commentList || []).find(function (c) { return c.id === cmtId; });
-      if (!cmt) return;
-      if (!cmt.reactions) cmt.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
-      var prev = cmt.myReaction || null;
-      if (prev === key) {
-        cmt.myReaction = null;
-        if (cmt.reactions[key] > 0) cmt.reactions[key]--;
-      } else {
-        if (prev && cmt.reactions[prev] > 0) cmt.reactions[prev]--;
-        cmt.myReaction = key;
-        cmt.reactions[key] = (cmt.reactions[key] || 0) + 1;
-      }
+  // Toggle reaction cục bộ trên 1 node (dùng cho MOCK_POSTS).
+  function _applyReactionLocal(node, key) {
+    if (!node) return;
+    if (!node.reactions) node.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+    var prev = node.myReaction || null;
+    if (prev === key) {
+      node.myReaction = null;
+      if (node.reactions[key] > 0) node.reactions[key]--;
+    } else {
+      if (prev && node.reactions[prev] > 0) node.reactions[prev]--;
+      node.myReaction = key;
+      node.reactions[key] = (node.reactions[key] || 0) + 1;
     }
+  }
+
+  // React trên 1 comment/reply bất kỳ (targetId là comment id thật). Dùng chung
+  // cho cả comment gốc lẫn reply — backend cùng bảng comment_likes, cùng endpoint.
+  function _reactOnComment(postId, targetId, key, findInMock) {
     var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
     if (mockIdx !== -1) {
-      apply(MOCK_POSTS[mockIdx]);
+      _applyReactionLocal(findInMock(MOCK_POSTS[mockIdx]), key);
       forumRenderComments(postId);
+      return;
     }
-    else {
-      // Call API then reload
-      forumApi.react(postId, key).then(function () {
-        loadPosts().then(function (posts) {
-          var uIdx = posts.findIndex(function (p) { return p.id === postId; });
-          if (uIdx !== -1) { apply(posts[uIdx]); }
-          forumRenderComments(postId);
-        });
-      });
-    }
+    forumApi.reactComment(targetId, key).then(function (res) {
+      if (!res || res.error) return;
+      var node = _findCommentNode(_commentsCache[postId] || [], targetId);
+      if (node) { node.reactions = res.reactions; node.myReaction = res.my_reaction; }
+      forumRenderComments(postId);
+    });
+  }
+
+  window.forumSetCmtReaction = function (postId, cmtId, key) {
+    _reactOnComment(postId, cmtId, key, function (post) {
+      return (post.commentList || []).find(function (c) { return c.id === cmtId; });
+    });
   };
 
   window.forumSetReplyReaction = function (postId, cmtId, replyId, key) {
-    function apply(post) {
+    _reactOnComment(postId, replyId, key, function (post) {
       var cmt = (post.commentList || []).find(function (c) { return c.id === cmtId; });
-      if (!cmt) return;
-      var reply = (cmt.replies || []).find(function (r) { return r.id === replyId; });
-      if (!reply) return;
-      if (!reply.reactions) reply.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
-      var prev = reply.myReaction || null;
-      if (prev === key) {
-        reply.myReaction = null;
-        if (reply.reactions[key] > 0) reply.reactions[key]--;
-      } else {
-        if (prev && reply.reactions[prev] > 0) reply.reactions[prev]--;
-        reply.myReaction = key;
-        reply.reactions[key] = (reply.reactions[key] || 0) + 1;
-      }
-    }
-    var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
-    if (mockIdx !== -1) {
-      apply(MOCK_POSTS[mockIdx]);
-      forumRenderComments(postId);
-    }
-    else {
-      // Call API then reload
-      forumApi.react(postId, key).then(function () {
-        loadPosts().then(function (posts) {
-          var uIdx = posts.findIndex(function (p) { return p.id === postId; });
-          if (uIdx !== -1) { apply(posts[uIdx]); }
-          forumRenderComments(postId);
-        });
-      });
-    }
+      return cmt && (cmt.replies || []).find(function (r) { return r.id === replyId; });
+    });
   };
 
   window.forumToggleReply = function (postId, cmtId, mentionName) {
@@ -1170,29 +1176,34 @@ function skSkillToggle(row) {
     if (!inp) return;
     var text = inp.value.trim();
     if (!text) return;
-    var nameEl = document.getElementById('chip-name');
-    var myName = (nameEl && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn';
-    var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
-    var replyTo = (row && row.dataset.mention) || '';
-    function apply(post) {
-      var cmt = (post.commentList || []).find(function (c) { return c.id === cmtId; });
-      if (!cmt) return;
-      if (!cmt.replies) cmt.replies = [];
-      cmt.replies.push({ id: 'r' + Date.now(), author: myName, avatar: '🧑', time: Date.now(), text: text, replyTo: replyTo || cmt.author });
-    }
     var mockIdx = MOCK_POSTS.findIndex(function (p) { return p.id === postId; });
-    if (mockIdx !== -1) { apply(MOCK_POSTS[mockIdx]); }
-    else {
-      var posts = loadPosts();
-      var uIdx = posts.findIndex(function (p) { return p.id === postId; });
-      if (uIdx !== -1) { apply(posts[uIdx]); savePosts(posts); }
+
+    if (mockIdx !== -1) {
+      // MOCK_POSTS (chỉ admin) — thao tác cục bộ
+      var nameEl = document.getElementById('chip-name');
+      var myName = (nameEl && nameEl.textContent.trim() !== '—') ? nameEl.textContent.trim() : 'Bạn';
+      var row = document.getElementById('fpc-reply-row-' + postId + '-' + cmtId);
+      var replyTo = (row && row.dataset.mention) || '';
+      var cmt = (MOCK_POSTS[mockIdx].commentList || []).find(function (c) { return c.id === cmtId; });
+      if (cmt) {
+        if (!cmt.replies) cmt.replies = [];
+        cmt.replies.push({ id: 'r' + Date.now(), author: myName, avatar: '🧑', time: Date.now(), text: text, replyTo: replyTo || cmt.author });
+      }
+      inp.value = '';
+      forumRenderComments(postId);
+      return;
     }
-    inp.value = '';
-    forumRenderComments(postId);
-    setTimeout(function () {
-      var item = document.getElementById('fpc-ci-' + postId + '-' + cmtId);
-      if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 50);
+    // Bài thật — lưu reply (parent_comment_id = cmtId), tải lại comment
+    forumApi.addComment(postId, text, cmtId).then(function (res) {
+      if (res && res.error) { alert(res.error); return; }
+      inp.value = '';
+      _refreshComments(postId).then(function () {
+        setTimeout(function () {
+          var item = document.getElementById('fpc-ci-' + postId + '-' + cmtId);
+          if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+      });
+    });
   };
 
   var _origNavigateForum = window.navigate;
@@ -1319,36 +1330,21 @@ function skSkillToggle(row) {
   function _renderProfPosts() {
     var list = document.getElementById('prof-post-list');
     if (!list) return;
+    list.innerHTML = '<div class="prof-empty">Đang tải...</div>';
 
-    /*
-    ═══════════════════════════════════════════════════════════════════════════
-    [KHI CÓ BACKEND] — Uncomment đoạn dưới và comment đoạn localStorage
-    Endpoint: GET /api/forum/my-posts
-    Response: Array of post objects (giống cấu trúc localStorage)
-    ═══════════════════════════════════════════════════════════════════════════
-    
-    fetch('/api/forum/my-posts')
-      .then(function(r) { return r.json(); })
-      .then(function(myPosts) {
-        if (!myPosts || !myPosts.length) {
-          list.innerHTML = '<div class="prof-empty">Chưa có bài đăng nào.</div>';
-          return;
-        }
-        list.innerHTML = renderPostsHtml(myPosts);
-      })
-      .catch(function(err) {
-        console.error('Error loading profile posts:', err);
-        list.innerHTML = '<div class="prof-empty">Không thể tải bài đăng.</div>';
-      });
-    
-    // Helper function để render posts HTML (reuse cho cả 2 version)
-    function renderPostsHtml(myPosts) {
-      return myPosts.map(function(p) {
+    // Bài của chính user hiện tại, lấy từ DB (server tự lọc theo session).
+    forumApi.getPosts({ mine: true }).then(function (res) {
+      var myPosts = ((res && res.posts) || []).map(_apiPostToUi);
+      if (!myPosts.length) {
+        list.innerHTML = '<div class="prof-empty">Chưa có bài đăng nào.</div>';
+        return;
+      }
+      list.innerHTML = myPosts.map(function (p) {
         var catColor = CAT_COLORS[p.cat] || '#6B7280';
-        var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
+        var catBg = CAT_BG[p.cat] || '#F3F4F6';
         var catLabel = CAT_LABELS[p.cat] || p.cat;
-        var excerpt  = p.body.length > 120 ? p.body.slice(0, 117) + '...' : p.body;
-        var totalR   = Object.values(p.reactions || {}).reduce(function(a, b) { return a + b; }, 0);
+        var excerpt = p.body.length > 120 ? p.body.slice(0, 117) + '...' : p.body;
+        var totalR = Object.values(p.reactions || {}).reduce(function (a, b) { return a + b; }, 0);
         return (
           '<div class="prof-post-card" onclick="window.navigate && window.navigate(\'forum\')" style="cursor:pointer;">' +
             '<div class="prof-post-top">' +
@@ -1364,55 +1360,9 @@ function skSkillToggle(row) {
           '</div>'
         );
       }).join('');
-    }
-    ═══════════════════════════════════════════════════════════════════════════
-    */
-
-    // [HIỆN TẠI] — Lấy posts từ localStorage
-    var userPosts = [];
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      userPosts = raw ? JSON.parse(raw) : [];
-    } catch (e) {}
-
-    // Lấy tên user hiện tại để filter
-    var currentUser = document.getElementById('chip-name').textContent.trim() || '';
-
-    // Filter posts của user hiện tại
-    var myPosts = userPosts.filter(function(p) {
-      return p.author === currentUser;
+    }).catch(function () {
+      list.innerHTML = '<div class="prof-empty">Không thể tải bài đăng.</div>';
     });
-
-    // Sắp xếp mới nhất lên đầu
-    myPosts.sort(function(a, b) { return b.time - a.time; });
-
-    if (!myPosts.length) {
-      list.innerHTML = '<div class="prof-empty">Chưa có bài đăng nào.</div>';
-      return;
-    }
-
-    list.innerHTML = myPosts.map(function(p) {
-      var catColor = CAT_COLORS[p.cat] || '#6B7280';
-      var catBg    = CAT_BG[p.cat]    || '#F3F4F6';
-      var catLabel = CAT_LABELS[p.cat] || p.cat;
-      var excerpt  = p.body.length > 120 ? p.body.slice(0, 117) + '...' : p.body;
-      var totalR   = Object.values(p.reactions || {}).reduce(function(a, b) { return a + b; }, 0);
-
-      return (
-        '<div class="prof-post-card" onclick="window.navigate && window.navigate(\'forum\')" style="cursor:pointer;">' +
-          '<div class="prof-post-top">' +
-            '<span class="prof-post-cat" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
-            '<span class="prof-post-time">' + timeAgo(p.time) + '</span>' +
-          '</div>' +
-          '<div class="prof-post-title">' + escHtml(p.title) + '</div>' +
-          '<div class="prof-post-excerpt">' + escHtml(excerpt) + '</div>' +
-          '<div class="prof-post-stats">' +
-            '<span>👍 ' + totalR + '</span>' +
-            '<span>💬 ' + (p.comments || 0) + '</span>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join('');
   }
 })();
 

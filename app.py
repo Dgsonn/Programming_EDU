@@ -109,4 +109,6 @@ def unhandled_exception(e):
 
 
 if __name__ == "__main__":
-    app.run(debug=Config.DEBUG, port=Config.PORT)
+    # threaded=True: dev server phục vụ nhiều request AJAX đồng thời (frontend
+    # bắn nhiều fetch song song khi load trang) — nếu single-thread sẽ deadlock.
+    app.run(debug=Config.DEBUG, port=Config.PORT, threaded=True)

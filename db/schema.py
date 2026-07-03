@@ -199,6 +199,40 @@ def init_db():
         c.execute('CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id)')
 
+        # parent_comment_id — trả lời lồng nhau (1 cấp). Migration additive cho bảng
+        # comments đã tồn tại; bọc try/except như các migration users ở trên vì ALTER
+        # TABLE có thể fail và làm hỏng transaction của init_db nếu không bắt.
+        try:
+            c.execute('ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_comment_id '
+                      'INTEGER REFERENCES comments(id) ON DELETE CASCADE')
+        except Exception:
+            conn.rollback()
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_comment_id)')
+
+        # ── Reaction (6 loại cảm xúc) cho bài viết ──
+        # 1 reaction / user / post (PK enforce). like_count trên posts = TỔNG mọi loại,
+        # luôn recompute bằng count(*); breakdown từng loại tính live bằng GROUP BY.
+        c.execute('''CREATE TABLE IF NOT EXISTS post_likes (
+            post_id       INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+            user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reaction_type TEXT NOT NULL DEFAULT 'like'
+                          CHECK (reaction_type IN ('like','love','haha','wow','sad','angry')),
+            created_at    TIMESTAMPTZ DEFAULT now(),
+            PRIMARY KEY (post_id, user_id)
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_post_likes_post ON post_likes(post_id)')
+
+        # ── Reaction cho bình luận (dùng chung cho comment gốc lẫn reply) ──
+        c.execute('''CREATE TABLE IF NOT EXISTS comment_likes (
+            comment_id    INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+            user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reaction_type TEXT NOT NULL DEFAULT 'like'
+                          CHECK (reaction_type IN ('like','love','haha','wow','sad','angry')),
+            created_at    TIMESTAMPTZ DEFAULT now(),
+            PRIMARY KEY (comment_id, user_id)
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comment_likes_comment ON comment_likes(comment_id)')
+
         c.execute('SELECT 1 FROM roadmaps LIMIT 1')
         if not c.fetchone():
             # Bỏ classDef + init block để JS palette (main.js _PASTEL_LIGHT/_PASTEL_DARK)
@@ -311,51 +345,51 @@ def init_db():
         # Luôn cập nhật nodes_json (chạy cả khi bảng đã có dữ liệu cũ)
         _nodes_data = {
             'frontend': {
-                'rm_1':  {'title': '1. Internet',         'desc': '<strong>Kiến thức nền tảng về Internet:</strong><ul><li>Mạng Internet hoạt động như thế nào?</li><li>HTTP và HTTPS khác nhau ra sao?</li><li>Cơ chế hoạt động của Trình duyệt</li><li>DNS — Hệ thống phân giải tên miền</li><li>Hosting và Domain</li></ul>'},
-                'rm_2':  {'title': '2. HTML',             'desc': '<strong>Ngôn ngữ cấu trúc trang web:</strong><ul><li>Semantic HTML — Viết mã có ngữ nghĩa</li><li>Làm việc với Forms và Validations</li><li>Accessibility (a11y)</li><li>SEO Basics</li></ul>'},
-                'rm_3':  {'title': '3. CSS',              'desc': '<strong>Ngôn ngữ thiết kế giao diện:</strong><ul><li>Box Model: Margin, Padding, Border</li><li>Selectors, Specificity</li><li>Flexbox &amp; CSS Grid</li><li>Responsive Design</li></ul>'},
-                'rm_4':  {'title': '4. JavaScript',       'desc': '<strong>Ngôn ngữ lập trình cốt lõi:</strong><ul><li>Cú pháp cơ bản: Biến, Hàm, Vòng lặp</li><li>ES6+: Arrow functions, Destructuring</li><li>Bất đồng bộ: Callbacks, Promises, Async/Await</li></ul>'},
-                'rm_5':  {'title': '5. DOM & Events',     'desc': '<strong>Tương tác với giao diện (DOM):</strong><ul><li>Truy vấn phần tử</li><li>Thêm, sửa, xóa DOM</li><li>Event Listeners — Lắng nghe sự kiện</li></ul>'},
-                'rm_6':  {'title': '6. Fetch API',        'desc': '<strong>Giao tiếp với Server/Backend:</strong><ul><li>Gửi HTTP Requests: GET, POST...</li><li>Xử lý dữ liệu JSON</li><li>Hiểu về CORS</li></ul>'},
-                'rm_7':  {'title': '7. Frameworks',       'desc': '<strong>Công cụ xây dựng UI hiện đại:</strong><ul><li>React — Lựa chọn phổ biến nhất</li><li>Vue.js</li><li>Angular</li></ul>'},
-                'rm_8':  {'title': '8. React cơ bản',    'desc': '<strong>Trọng tâm thư viện React:</strong><ul><li>Cú pháp JSX &amp; Components</li><li>Hooks: useState, useEffect</li><li>Truyền dữ liệu bằng Props</li></ul>'},
-                'rm_9':  {'title': '9. State Management', 'desc': '<strong>Quản lý trạng thái toàn cục:</strong><ul><li>Redux Toolkit</li><li>Zustand (Trending)</li><li>React Context API</li></ul>'},
-                'rm_10': {'title': '10. Git & GitHub',    'desc': '<strong>Quản lý mã nguồn:</strong><ul><li>Các lệnh cơ bản: git add, commit, push, pull</li><li>Quản lý nhánh (Branching)</li><li>Xử lý xung đột code</li></ul>'},
-                'rm_11': {'title': '11. Build Tools',     'desc': '<strong>Công cụ đóng gói:</strong><ul><li>Vite — Cực nhanh, khuyên dùng</li><li>Webpack</li><li>NPM Scripts</li></ul>'},
-                'rm_12': {'title': '12. Deployment',      'desc': '<strong>Triển khai ứng dụng thực tế:</strong><ul><li>Vercel</li><li>Netlify</li><li>GitHub Pages</li></ul>'},
+                'rm_1':  {'title': '1. Internet',         'desc': '<strong>Kiến thức nền tảng về Internet:</strong><ul><li>Mạng Internet hoạt động như thế nào?</li><li>HTTP và HTTPS khác nhau ra sao?</li><li>Cơ chế hoạt động của Trình duyệt</li><li>DNS — Hệ thống phân giải tên miền</li><li>Hosting và Domain</li></ul>', 'course_id': None},
+                'rm_2':  {'title': '2. HTML',             'desc': '<strong>Ngôn ngữ cấu trúc trang web:</strong><ul><li>Semantic HTML — Viết mã có ngữ nghĩa</li><li>Làm việc với Forms và Validations</li><li>Accessibility (a11y)</li><li>SEO Basics</li></ul>', 'course_id': 'htmlcss'},
+                'rm_3':  {'title': '3. CSS',              'desc': '<strong>Ngôn ngữ thiết kế giao diện:</strong><ul><li>Box Model: Margin, Padding, Border</li><li>Selectors, Specificity</li><li>Flexbox &amp; CSS Grid</li><li>Responsive Design</li></ul>', 'course_id': 'htmlcss'},
+                'rm_4':  {'title': '4. JavaScript',       'desc': '<strong>Ngôn ngữ lập trình cốt lõi:</strong><ul><li>Cú pháp cơ bản: Biến, Hàm, Vòng lặp</li><li>ES6+: Arrow functions, Destructuring</li><li>Bất đồng bộ: Callbacks, Promises, Async/Await</li></ul>', 'course_id': None},
+                'rm_5':  {'title': '5. DOM & Events',     'desc': '<strong>Tương tác với giao diện (DOM):</strong><ul><li>Truy vấn phần tử</li><li>Thêm, sửa, xóa DOM</li><li>Event Listeners — Lắng nghe sự kiện</li></ul>', 'course_id': None},
+                'rm_6':  {'title': '6. Fetch API',        'desc': '<strong>Giao tiếp với Server/Backend:</strong><ul><li>Gửi HTTP Requests: GET, POST...</li><li>Xử lý dữ liệu JSON</li><li>Hiểu về CORS</li></ul>', 'course_id': None},
+                'rm_7':  {'title': '7. Frameworks',       'desc': '<strong>Công cụ xây dựng UI hiện đại:</strong><ul><li>React — Lựa chọn phổ biến nhất</li><li>Vue.js</li><li>Angular</li></ul>', 'course_id': None},
+                'rm_8':  {'title': '8. React cơ bản',    'desc': '<strong>Trọng tâm thư viện React:</strong><ul><li>Cú pháp JSX &amp; Components</li><li>Hooks: useState, useEffect</li><li>Truyền dữ liệu bằng Props</li></ul>', 'course_id': None},
+                'rm_9':  {'title': '9. State Management', 'desc': '<strong>Quản lý trạng thái toàn cục:</strong><ul><li>Redux Toolkit</li><li>Zustand (Trending)</li><li>React Context API</li></ul>', 'course_id': None},
+                'rm_10': {'title': '10. Git & GitHub',    'desc': '<strong>Quản lý mã nguồn:</strong><ul><li>Các lệnh cơ bản: git add, commit, push, pull</li><li>Quản lý nhánh (Branching)</li><li>Xử lý xung đột code</li></ul>', 'course_id': None},
+                'rm_11': {'title': '11. Build Tools',     'desc': '<strong>Công cụ đóng gói:</strong><ul><li>Vite — Cực nhanh, khuyên dùng</li><li>Webpack</li><li>NPM Scripts</li></ul>', 'course_id': None},
+                'rm_12': {'title': '12. Deployment',      'desc': '<strong>Triển khai ứng dụng thực tế:</strong><ul><li>Vercel</li><li>Netlify</li><li>GitHub Pages</li></ul>', 'course_id': None},
             },
             'backend': {
-                'rm_b1': {'title': '1. Kiến thức cơ bản',    'desc': '<strong>Nền tảng backend:</strong><ul><li>Hệ điều hành Linux/Unix</li><li>Terminal / shell basics</li><li>TCP/IP, HTTP/HTTPS, client-server</li></ul>'},
-                'rm_b2': {'title': '2. Ngôn ngữ Backend',    'desc': '<strong>So sánh runtime:</strong><ul><li>Node.js, Python, Java, C#</li><li>Frameworks: Express, Django, Spring, ASP.NET</li><li>Package manager và môi trường phát triển</li></ul>'},
-                'rm_b3': {'title': '3. DB SQL',              'desc': '<strong>Database quan hệ:</strong><ul><li>Thiết kế schema</li><li>Joins, indexing, transactions</li><li>PostgreSQL / MySQL, migration</li></ul>'},
-                'rm_b4': {'title': '4. DB NoSQL',            'desc': '<strong>NoSQL &amp; caching:</strong><ul><li>MongoDB document model</li><li>Redis caching/session</li><li>Khi nào chọn NoSQL vs SQL</li></ul>'},
-                'rm_b5': {'title': '5. Thiết kế API',        'desc': '<strong>API chuyên nghiệp:</strong><ul><li>RESTful conventions</li><li>GraphQL basics</li><li>Validation, error handling, versioning</li></ul>'},
-                'rm_b6': {'title': '6. Bảo mật & Auth',      'desc': '<strong>An toàn backend:</strong><ul><li>JWT, OAuth2, session</li><li>Hash mật khẩu, encryption</li><li>Chống XSS, CSRF, SQL injection</li></ul>'},
-                'rm_b7': {'title': '7. Container & Docker',  'desc': '<strong>Đóng gói ứng dụng:</strong><ul><li>Dockerfile</li><li>Docker Compose</li><li>Quy trình dev/prod</li></ul>'},
-                'rm_b8': {'title': '8. CI/CD',               'desc': '<strong>Tự động hóa triển khai:</strong><ul><li>Unit test / integration test</li><li>Linting và build</li><li>GitHub Actions / pipeline</li></ul>'},
-                'rm_b9': {'title': '9. Triển khai',          'desc': '<strong>Đưa lên production:</strong><ul><li>AWS, DigitalOcean, Heroku</li><li>Nginx reverse proxy</li><li>SSL/TLS, monitoring, logging</li></ul>'},
+                'rm_b1': {'title': '1. Kiến thức cơ bản',    'desc': '<strong>Nền tảng backend:</strong><ul><li>Hệ điều hành Linux/Unix</li><li>Terminal / shell basics</li><li>TCP/IP, HTTP/HTTPS, client-server</li></ul>', 'course_id': None},
+                'rm_b2': {'title': '2. Ngôn ngữ Backend',    'desc': '<strong>So sánh runtime:</strong><ul><li>Node.js, Python, Java, C#</li><li>Frameworks: Express, Django, Spring, ASP.NET</li><li>Package manager và môi trường phát triển</li></ul>', 'course_id': None},
+                'rm_b3': {'title': '3. DB SQL',              'desc': '<strong>Database quan hệ:</strong><ul><li>Thiết kế schema</li><li>Joins, indexing, transactions</li><li>PostgreSQL / MySQL, migration</li></ul>', 'course_id': 'db_design'},
+                'rm_b4': {'title': '4. DB NoSQL',            'desc': '<strong>NoSQL &amp; caching:</strong><ul><li>MongoDB document model</li><li>Redis caching/session</li><li>Khi nào chọn NoSQL vs SQL</li></ul>', 'course_id': None},
+                'rm_b5': {'title': '5. Thiết kế API',        'desc': '<strong>API chuyên nghiệp:</strong><ul><li>RESTful conventions</li><li>GraphQL basics</li><li>Validation, error handling, versioning</li></ul>', 'course_id': None},
+                'rm_b6': {'title': '6. Bảo mật & Auth',      'desc': '<strong>An toàn backend:</strong><ul><li>JWT, OAuth2, session</li><li>Hash mật khẩu, encryption</li><li>Chống XSS, CSRF, SQL injection</li></ul>', 'course_id': None},
+                'rm_b7': {'title': '7. Container & Docker',  'desc': '<strong>Đóng gói ứng dụng:</strong><ul><li>Dockerfile</li><li>Docker Compose</li><li>Quy trình dev/prod</li></ul>', 'course_id': None},
+                'rm_b8': {'title': '8. CI/CD',               'desc': '<strong>Tự động hóa triển khai:</strong><ul><li>Unit test / integration test</li><li>Linting và build</li><li>GitHub Actions / pipeline</li></ul>', 'course_id': None},
+                'rm_b9': {'title': '9. Triển khai',          'desc': '<strong>Đưa lên production:</strong><ul><li>AWS, DigitalOcean, Heroku</li><li>Nginx reverse proxy</li><li>SSL/TLS, monitoring, logging</li></ul>', 'course_id': None},
             },
             'python': {
-                'rm_p1': {'title': '1. Python Cơ Bản',       'desc': '<strong>Nguyên tắc Python:</strong><ul><li>Biến, kiểu dữ liệu, hàm</li><li>Vòng lặp, điều kiện</li><li>List, tuple, dict, set</li></ul>'},
-                'rm_p2': {'title': '2. Python Nâng Cao',     'desc': '<strong>Lập trình Python chuyên sâu:</strong><ul><li>Class, OOP, kế thừa</li><li>Decorators, generator</li><li>Module &amp; package</li></ul>'},
-                'rm_p3': {'title': '3. Phân Tích Dữ Liệu',  'desc': '<strong>Data science:</strong><ul><li>NumPy arrays</li><li>Pandas DataFrame</li><li>Visualization với Matplotlib/Seaborn</li></ul>'},
-                'rm_p4': {'title': '4. Toán Học Cho AI',     'desc': '<strong>Toán nền tảng:</strong><ul><li>Đại số tuyến tính</li><li>Giải tích cơ bản</li><li>Xác suất &amp; thống kê</li></ul>'},
-                'rm_p5': {'title': '5. Machine Learning',    'desc': '<strong>Học máy truyền thống:</strong><ul><li>Regression, classification</li><li>Feature engineering</li><li>Scikit-Learn</li></ul>'},
-                'rm_p6': {'title': '6. Deep Learning',       'desc': '<strong>Deep learning:</strong><ul><li>PyTorch / TensorFlow</li><li>CNN, RNN</li><li>Overfitting và regularization</li></ul>'},
-                'rm_p7': {'title': '7. Thị Giác Máy Tính',  'desc': '<strong>Computer vision:</strong><ul><li>OpenCV image processing</li><li>Object detection</li><li>CNN / YOLO</li></ul>'},
-                'rm_p8': {'title': '8. Xử Lý Ngôn Ngữ',    'desc': '<strong>NLP cơ bản:</strong><ul><li>Tokenization</li><li>Embedding, word vectors</li><li>Transformer, spaCy</li></ul>'},
-                'rm_p9': {'title': '9. Generative AI',       'desc': '<strong>Generative AI:</strong><ul><li>LLMs, Transformers</li><li>ChatGPT API</li><li>Prompt engineering, LangChain</li></ul>'},
+                'rm_p1': {'title': '1. Python Cơ Bản',       'desc': '<strong>Nguyên tắc Python:</strong><ul><li>Biến, kiểu dữ liệu, hàm</li><li>Vòng lặp, điều kiện</li><li>List, tuple, dict, set</li></ul>', 'course_id': 'python'},
+                'rm_p2': {'title': '2. Python Nâng Cao',     'desc': '<strong>Lập trình Python chuyên sâu:</strong><ul><li>Class, OOP, kế thừa</li><li>Decorators, generator</li><li>Module &amp; package</li></ul>', 'course_id': 'python'},
+                'rm_p3': {'title': '3. Phân Tích Dữ Liệu',  'desc': '<strong>Data science:</strong><ul><li>NumPy arrays</li><li>Pandas DataFrame</li><li>Visualization với Matplotlib/Seaborn</li></ul>', 'course_id': None},
+                'rm_p4': {'title': '4. Toán Học Cho AI',     'desc': '<strong>Toán nền tảng:</strong><ul><li>Đại số tuyến tính</li><li>Giải tích cơ bản</li><li>Xác suất &amp; thống kê</li></ul>', 'course_id': None},
+                'rm_p5': {'title': '5. Machine Learning',    'desc': '<strong>Học máy truyền thống:</strong><ul><li>Regression, classification</li><li>Feature engineering</li><li>Scikit-Learn</li></ul>', 'course_id': None},
+                'rm_p6': {'title': '6. Deep Learning',       'desc': '<strong>Deep learning:</strong><ul><li>PyTorch / TensorFlow</li><li>CNN, RNN</li><li>Overfitting và regularization</li></ul>', 'course_id': None},
+                'rm_p7': {'title': '7. Thị Giác Máy Tính',  'desc': '<strong>Computer vision:</strong><ul><li>OpenCV image processing</li><li>Object detection</li><li>CNN / YOLO</li></ul>', 'course_id': None},
+                'rm_p8': {'title': '8. Xử Lý Ngôn Ngữ',    'desc': '<strong>NLP cơ bản:</strong><ul><li>Tokenization</li><li>Embedding, word vectors</li><li>Transformer, spaCy</li></ul>', 'course_id': None},
+                'rm_p9': {'title': '9. Generative AI',       'desc': '<strong>Generative AI:</strong><ul><li>LLMs, Transformers</li><li>ChatGPT API</li><li>Prompt engineering, LangChain</li></ul>', 'course_id': None},
             },
             'cpp': {
-                'rm_c1': {'title': '1. Cốt Lõi Ngôn Ngữ C',  'desc': '<strong>Cơ bản C:</strong><ul><li>Kiểu dữ liệu, hàm, mảng</li><li>Con trỏ và truyền tham trị</li><li>Quy tắc biên dịch</li></ul>'},
-                'rm_c2': {'title': '2. Con Trỏ & Bộ Nhớ',    'desc': '<strong>Quản lý bộ nhớ:</strong><ul><li>malloc/free</li><li>Stack vs heap</li><li>Memory leak, buffer overflow</li></ul>'},
-                'rm_c3': {'title': '3. Cấu Trúc Dữ Liệu',   'desc': '<strong>DSA C/C++:</strong><ul><li>Struct, linked list</li><li>Stack, queue, tree</li><li>Độ phức tạp thuật toán</li></ul>'},
-                'rm_c4': {'title': '4. C++ OOP',              'desc': '<strong>C++ OOP:</strong><ul><li>Class / object</li><li>Kế thừa, đa hình</li><li>Encapsulation, template</li></ul>'},
-                'rm_c5': {'title': '5. Thư viện STL C++',    'desc': '<strong>STL essentials:</strong><ul><li>Vector, map, set</li><li>Iterator</li><li>Algorithms</li></ul>'},
-                'rm_c6': {'title': '6. Modern C++',           'desc': '<strong>C++ hiện đại:</strong><ul><li>Smart pointers</li><li>Lambda, auto</li><li>Move semantics</li></ul>'},
-                'rm_c7': {'title': '7. Lập Trình Hệ Thống', 'desc': '<strong>Systems programming:</strong><ul><li>Đa luồng, mutex</li><li>Tiến trình và đồng bộ</li><li>Concurrency</li></ul>'},
-                'rm_c8': {'title': '8. Biên Dịch & Công Cụ', 'desc': '<strong>Build tools:</strong><ul><li>Makefile, CMake</li><li>GDB debugging</li><li>Profiling</li></ul>'},
-                'rm_c9': {'title': '9. Nhúng / Socket',      'desc': '<strong>Nhúng &amp; mạng:</strong><ul><li>Socket TCP/UDP</li><li>Vi điều khiển</li><li>Ứng dụng nhúng cơ bản</li></ul>'},
+                'rm_c1': {'title': '1. Cốt Lõi Ngôn Ngữ C',  'desc': '<strong>Cơ bản C:</strong><ul><li>Kiểu dữ liệu, hàm, mảng</li><li>Con trỏ và truyền tham trị</li><li>Quy tắc biên dịch</li></ul>', 'course_id': 'cpp'},
+                'rm_c2': {'title': '2. Con Trỏ & Bộ Nhớ',    'desc': '<strong>Quản lý bộ nhớ:</strong><ul><li>malloc/free</li><li>Stack vs heap</li><li>Memory leak, buffer overflow</li></ul>', 'course_id': 'cpp'},
+                'rm_c3': {'title': '3. Cấu Trúc Dữ Liệu',   'desc': '<strong>DSA C/C++:</strong><ul><li>Struct, linked list</li><li>Stack, queue, tree</li><li>Độ phức tạp thuật toán</li></ul>', 'course_id': 'cpp'},
+                'rm_c4': {'title': '4. C++ OOP',              'desc': '<strong>C++ OOP:</strong><ul><li>Class / object</li><li>Kế thừa, đa hình</li><li>Encapsulation, template</li></ul>', 'course_id': 'cpp'},
+                'rm_c5': {'title': '5. Thư viện STL C++',    'desc': '<strong>STL essentials:</strong><ul><li>Vector, map, set</li><li>Iterator</li><li>Algorithms</li></ul>', 'course_id': 'cpp'},
+                'rm_c6': {'title': '6. Modern C++',           'desc': '<strong>C++ hiện đại:</strong><ul><li>Smart pointers</li><li>Lambda, auto</li><li>Move semantics</li></ul>', 'course_id': 'cpp'},
+                'rm_c7': {'title': '7. Lập Trình Hệ Thống', 'desc': '<strong>Systems programming:</strong><ul><li>Đa luồng, mutex</li><li>Tiến trình và đồng bộ</li><li>Concurrency</li></ul>', 'course_id': 'cpp'},
+                'rm_c8': {'title': '8. Biên Dịch & Công Cụ', 'desc': '<strong>Build tools:</strong><ul><li>Makefile, CMake</li><li>GDB debugging</li><li>Profiling</li></ul>', 'course_id': 'cpp'},
+                'rm_c9': {'title': '9. Nhúng / Socket',      'desc': '<strong>Nhúng &amp; mạng:</strong><ul><li>Socket TCP/UDP</li><li>Vi điều khiển</li><li>Ứng dụng nhúng cơ bản</li></ul>', 'course_id': 'cpp'},
             },
         }
         for _rid, _nodes in _nodes_data.items():
