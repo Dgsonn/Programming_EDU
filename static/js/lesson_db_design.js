@@ -164,24 +164,33 @@
       '<text x="350" y="271" text-anchor="middle" fill="var(--text-400)" font-size="14">max_load</text>' +
       '<text x="350" y="290" text-anchor="middle" fill="var(--text-400)" font-size="14">num_axles</text></svg>',
 
-    db_07: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapping ER diagram thành 3 tables riêng">' +
-      '<text x="120" y="33" text-anchor="middle" fill="var(--text-400)" font-size="15">ER diagram</text>' +
-      '<rect x="45" y="53" width="150" height="75" rx="6" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="120" y="82" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700">Student</text>' +
-      '<text x="120" y="104" text-anchor="middle" fill="var(--text-400)" font-size="13">+ Course</text>' +
-      '<line x1="195" y1="86" x2="300" y2="86" stroke="var(--module-accent)" stroke-width="3" marker-end="url(#arrow-m2)"/>' +
-      '<text x="248" y="77" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">map</text>' +
-      '<text x="458" y="33" text-anchor="middle" fill="var(--text-400)" font-size="15">3 tables</text>' +
-      '<rect x="300" y="53" width="270" height="48" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="300" y="53" width="270" height="18" rx="6" fill="rgba(139,92,246,0.2)"/>' +
-      '<text x="435" y="66" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">students</text>' +
-      '<rect x="300" y="112" width="270" height="48" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="300" y="112" width="270" height="18" rx="6" fill="rgba(139,92,246,0.2)"/>' +
-      '<text x="435" y="125" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">courses</text>' +
-      '<rect x="300" y="170" width="270" height="48" rx="6" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="300" y="170" width="270" height="18" rx="6" fill="rgba(139,92,246,0.2)"/>' +
-      '<text x="435" y="184" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">enrollments</text>' +
-      '<text x="300" y="279" text-anchor="middle" fill="var(--text-400)" font-size="15">Mỗi entity set + relationship → 1 table riêng</text></svg>',
+    db_07: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bảng gộp game_studio_combined: st_country lặp lại (dư thừa) vì phụ thuộc hàm studio_name suy ra st_country">' +
+      '<text x="300" y="28" text-anchor="middle" fill="var(--text-400)" font-size="14">Bảng gộp <tspan font-family="JetBrains Mono, monospace">game_studio_combined</tspan> (chưa chuẩn hoá)</text>' +
+      '<rect x="55" y="46" width="490" height="152" rx="8" fill="rgba(245,158,11,0.04)" stroke="var(--module-accent)" stroke-width="1.5"/>' +
+      '<rect x="55" y="46" width="490" height="30" rx="8" fill="rgba(245,158,11,0.14)"/>' +
+      '<text x="130" y="66" text-anchor="middle" fill="var(--text-200)" font-family="JetBrains Mono, monospace" font-size="12">game_name</text>' +
+      '<text x="305" y="66" text-anchor="middle" fill="var(--text-200)" font-family="JetBrains Mono, monospace" font-size="12">studio_name</text>' +
+      '<text x="467" y="66" text-anchor="middle" fill="var(--text-200)" font-family="JetBrains Mono, monospace" font-size="12">st_country</text>' +
+      '<rect x="388" y="76" width="157" height="122" fill="rgba(239,68,68,0.12)"/>' +
+      '<text x="130" y="97" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">Elden Ring</text>' +
+      '<text x="305" y="97" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">FromSoftware</text>' +
+      '<text x="467" y="97" text-anchor="middle" fill="#fca5a5" font-family="JetBrains Mono, monospace" font-size="12">Japan</text>' +
+      '<text x="130" y="127" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">Sekiro</text>' +
+      '<text x="305" y="127" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">FromSoftware</text>' +
+      '<text x="467" y="127" text-anchor="middle" fill="#fca5a5" font-family="JetBrains Mono, monospace" font-size="12">Japan</text>' +
+      '<text x="130" y="157" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">Bloodborne</text>' +
+      '<text x="305" y="157" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">FromSoftware</text>' +
+      '<text x="467" y="157" text-anchor="middle" fill="#fca5a5" font-family="JetBrains Mono, monospace" font-size="12">Japan</text>' +
+      '<text x="130" y="187" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">Dark Souls III</text>' +
+      '<text x="305" y="187" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="12">FromSoftware</text>' +
+      '<text x="467" y="187" text-anchor="middle" fill="#fca5a5" font-family="JetBrains Mono, monospace" font-size="12">Japan</text>' +
+      '<text x="467" y="220" text-anchor="middle" fill="#f87171" font-size="12" font-weight="700">↑ "Japan" lặp 4 lần = DƯ THỪA</text>' +
+      '<rect x="105" y="250" width="390" height="66" rx="8" fill="rgba(245,158,11,0.06)" stroke="var(--module-accent)" stroke-width="1.5" stroke-dasharray="4,3"/>' +
+      '<text x="300" y="272" text-anchor="middle" fill="var(--text-300)" font-size="12">Phụ thuộc hàm (Functional Dependency)</text>' +
+      '<text x="200" y="299" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600">studio_name</text>' +
+      '<line x1="272" y1="294" x2="332" y2="294" stroke="var(--module-accent)" stroke-width="2" marker-end="url(#arrow)"/>' +
+      '<text x="405" y="299" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600">st_country</text>' +
+      '<text x="300" y="352" text-anchor="middle" fill="var(--text-400)" font-size="13">Biết studio ⇒ suy ra country → country KHÔNG cần lưu lặp, nên tách bảng riêng</text></svg>',
 
     db_08: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="1NF: composite value slice thanh atomic rows">' +
       '<text x="160" y="80" text-anchor="middle" fill="var(--text-400)" font-size="28" font-weight="600">Trước 1NF (vi phạm)</text>' +
