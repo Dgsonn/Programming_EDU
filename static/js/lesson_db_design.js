@@ -575,10 +575,14 @@
     const mount = document.getElementById('lesson-hero');
     if (!mount) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
-    // Normalize: accept 'db_NN', 'BN', 'bNN', 'B0X' formats
-    const m = String(lessonId).match(/\d+/);
-    const key = m ? 'db_' + String(m[0]).padStart(2, '0') : lessonId;
-    const svg = HERO_SVGS[key];
+    // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
+    // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
+    // hiện nhầm hero Bài 1 Basic.
+    let svg = HERO_SVGS[lessonId];
+    if (!svg && /^(db_|b)/i.test(String(lessonId))) {
+      const m = String(lessonId).match(/\d+/);
+      if (m) svg = HERO_SVGS['db_' + String(m[0]).padStart(2, '0')];
+    }
     if (svg) {
       mount.innerHTML = svg;
       // Extract aria-label from SVG root for screen readers
@@ -685,6 +689,9 @@
   /* ── C3: Module / Course completion celebration ─────────────── */
   function triggerModuleCelebration() {
     var lessonNum = (state.currentLessonIdx || 0) + 1;
+    // Mốc release theo COURSE — TC (Community) sẽ có mốc riêng khi Module 4 hoàn chỉnh;
+    // hiện guard để mốc Basic (7/14/20, chữ GAMEHUB vN.0) không misfire sang course khác.
+    if ((state.courseId || 'db_design') !== 'db_design') return;
     var isGraduation = (lessonNum === 20);  // B20 = course complete
     var isTrophy    = (lessonNum === 7 || lessonNum === 14);  // B7 = M1 end, B14 = M2 end
     if (!isGraduation && !isTrophy) return;
@@ -714,7 +721,7 @@
    * Chặn 1 nhịp để người học CẢM được cột mốc (Duolingo/Brilliant style). */
   function showModuleCompleteOverlay(isGraduation, modNum, lessonNum) {
     if (document.querySelector('.module-complete-overlay')) return;
-    var data = window.LESSON_CONTENT && window.LESSON_CONTENT['db_design'];
+    var data = window.LESSON_CONTENT && window.LESSON_CONTENT[state.courseId || 'db_design'];
     var lessons = (data && data.lessons) || [];
     var cur = state.currentLesson || {};
     var modTitle = cur.module_title || ('Chương ' + (modNum || ''));
@@ -793,9 +800,13 @@
   }
 
   function init() {
-    const data = window.LESSON_CONTENT && window.LESSON_CONTENT['db_design'];
+    // SHELL TC (2026-07-04): course id đọc từ <body data-course> (route truyền vào template).
+    // Fallback 'db_design' → Basic giữ nguyên hành vi tuyệt đối.
+    const courseId = (document.body && document.body.dataset.course) || 'db_design';
+    state.courseId = courseId;
+    const data = window.LESSON_CONTENT && window.LESSON_CONTENT[courseId];
     if (!data || !data.lessons || data.lessons.length === 0) {
-      console.error('LESSON_CONTENT[db_design] not found');
+      console.error('LESSON_CONTENT[' + courseId + '] not found');
       showError('Không tìm thấy nội dung bài học. Vui lòng liên hệ admin.');
       return;
     }
@@ -823,7 +834,11 @@
     const MODULE_COLORS = {
       1: { accent: '#F59E0B', softAlpha: '1a', glowAlpha: '59' },  // Amber
       2: { accent: '#8B5CF6', softAlpha: '1a', glowAlpha: '59' },  // Indigo
-      3: { accent: '#10B981', softAlpha: '1a', glowAlpha: '59' }   // Emerald
+      3: { accent: '#10B981', softAlpha: '1a', glowAlpha: '59' },  // Emerald
+      // TC (GameHub Community) — module 4-6, cùng dark palette (ui-ux-pro-max validated)
+      4: { accent: '#38BDF8', softAlpha: '1a', glowAlpha: '59' },  // Sky    — Advanced SQL
+      5: { accent: '#E879F9', softAlpha: '1a', glowAlpha: '59' },  // Fuchsia— Big Data
+      6: { accent: '#FB923C', softAlpha: '1a', glowAlpha: '59' }   // Orange — Storage/Index
     };
     const mod = state.currentLesson.module;
     const mc = MODULE_COLORS[mod] || { accent: data.accent_color || '#06B6D4', softAlpha: '1a', glowAlpha: '59' };
@@ -831,13 +846,16 @@
     document.documentElement.style.setProperty('--module-accent-soft', mc.accent + mc.softAlpha);
     document.documentElement.style.setProperty('--module-accent-glow', mc.accent + mc.glowAlpha);
     // Apply theme-* class to body for per-module sub-themes (Phase 2.3b)
-    const THEME_SLUG = { 1: 'amber', 2: 'indigo', 3: 'emerald' };
+    // REVIEW-FIX 2026-07-04: mở cặp THEME_SLUG/module-N theo MODULE_COLORS (4-6 cho TC)
+    // — trước đây chỉ 1-3 → bài TC có --module-accent đúng nhưng body thiếu class theme
+    // → CSS trang trí theo module (hero ::before, zone-color) rơi về trống.
+    const THEME_SLUG = { 1: 'amber', 2: 'indigo', 3: 'emerald', 4: 'sky', 5: 'fuchsia', 6: 'orange' };
     const themeSlug = THEME_SLUG[mod] || '';
-    document.body.classList.remove('theme-amber', 'theme-indigo', 'theme-emerald');
+    document.body.classList.remove('theme-amber', 'theme-indigo', 'theme-emerald', 'theme-sky', 'theme-fuchsia', 'theme-orange');
     if (themeSlug) document.body.classList.add('theme-' + themeSlug);
     // REDESIGN 2026-06-28 — A4: also tag body with .module-N for layout variations
-    document.body.classList.remove('module-1', 'module-2', 'module-3');
-    if (mod >= 1 && mod <= 3) document.body.classList.add('module-' + mod);
+    document.body.classList.remove('module-1', 'module-2', 'module-3', 'module-4', 'module-5', 'module-6');
+    if (mod >= 1 && mod <= 6) document.body.classList.add('module-' + mod);
 
     // 4.8 Scroll progress bar — thin colored bar at top tracks scroll within active step
     const scrollBar = document.getElementById('scroll-progress');
@@ -1425,9 +1443,11 @@
   function isMiniGameSolved() {
     const mg = state.currentLesson.step_2 && state.currentLesson.step_2.mini_game;
     if (!mg) return true; // no mini-game → "solved" trivially
-    // Premium: dùng cờ chung (match/order/bug_spot set khi solve)
-    if (state.miniGameSolved === true) return true;
-    // Classify (cũ): check placements
+    // Premium (match/order/bug_spot): CHỈ cờ chung quyết định — không có solution map
+    // nên fallback dưới sẽ so {}==={} và trả true oan → CTA khen "Chuẩn!" dù chưa chơi.
+    // REVIEW-FIX 2026-07-04: db_18 khai tường minh type:'classify' — vẫn là classify,
+    // chấm bằng placements; chỉ match/order/bug_spot mới dùng cờ chung.
+    if (mg.type && mg.type !== 'classify') return state.miniGameSolved === true;
     const sol = mg.solution || {};
     const placements = state.miniGamePlacements;
     for (const chipId in sol) {
@@ -1443,6 +1463,9 @@
       wrap.hidden = true;
       return;
     }
+    // REVIEW-FIX 2026-07-04: reset cờ solved TRƯỚC dispatch — không reset thì solve mini
+    // bài N xong, sang bài khác cờ vẫn true → isMiniGameSolved khen oan (stale-flag leak).
+    state.miniGameSolved = false;
     // Premium dispatch: nếu có type, route sang renderer tương ứng
     if (mg.type === 'match') return renderMiniGameMatch(wrap, mg);
     if (mg.type === 'order') return renderMiniGameOrder(wrap, mg);
@@ -3711,14 +3734,21 @@
     });
 
     // Check completion: full SQL matches expected_sql
-    const expected = (s3.expected_sql || '').replace(/;$/, '').trim().replace(/\s+/g, ' ');
-    const builtSQL = buildSQLString().replace(/\s+/g, ' ');
+    // AUDIT-FIX 2026-07-04: dung sai khoảng trắng quanh ->> và quanh dấu ngoặc — block rời
+    // ("settings" + "->>'theme'", "ST_DWithin" + "(geo…)") join bằng space, expected viết liền
+    // → người học lắp ĐÚNG vẫn bị chấm sai (db_14 dòng 1, db_15 dòng 3).
+    const normFull = s => (s || '').replace(/;$/, '').trim().replace(/\s+/g, ' ')
+      .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')');
+    const expected = normFull(s3.expected_sql);
+    const builtSQL = normFull(buildSQLString());
     const isComplete = builtSQL === expected;
 
     // v4 FIX: chấm ĐÚNG/SAI nội dung TỪNG mệnh đề (so nội dung THÔ của zone với expected clause).
     // → pipeline chỉ ✓ 1 ga khi mệnh đề đó THỰC SỰ đúng, không phải cứ có block/đúng-loại là ✓.
     const expZone = expectedZoneContent(s3.expected_sql || '');
-    const normClause = t => (t || '').toUpperCase().replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    const normClause = t => (t || '').toUpperCase().replace(/,/g, ' ')
+      .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')')
+      .replace(/\s+/g, ' ').trim();
     const zoneCorrect = {};
     (s3.drop_zones || []).forEach(zone => {
       const blocks = state.step3Blocks[zone.id] || [];
@@ -3752,16 +3782,37 @@
     });
   }
 
-  /* v4: tách expected_sql thành nội dung MỆNH ĐỀ theo zone (để pipeline chấm từng ga). */
+  /* v4: tách expected_sql thành nội dung MỆNH ĐỀ theo zone (để pipeline chấm từng ga).
+   * AUDIT-FIX 2026-07-04: PAREN-AWARE — mask nội dung trong ngoặc trước khi tìm boundary,
+   * vì "FROM" trong EXTRACT(YEAR FROM CURRENT_DATE) từng bị nhận nhầm là mệnh đề FROM
+   * → expZone select/from sai → db_02 lắp đúng 100% vẫn bị báo "sai dòng 1, 2".
+   * (Cùng lớp lỗi PE_parseSQLToBlocks đã vá ở 4A-E2.) Boundary tìm trên bản MASK,
+   * nội dung cắt từ bản GỐC theo cùng chỉ số (mask giữ nguyên độ dài). */
   function expectedZoneContent(sql) {
     sql = (sql || '').replace(/;$/, '').trim();
-    const m = {}; let mm;
-    if ((mm = sql.match(/\bSELECT\b\s+(.+?)\s+\bFROM\b/i))) m['select-line'] = 'SELECT ' + mm[1].trim();
-    if ((mm = sql.match(/\bFROM\b\s+(.+?)(?=\s+\bWHERE\b|\s+\bGROUP\s+BY\b|\s+\bORDER\s+BY\b|\s+\bHAVING\b|$)/i))) m['from-line'] = 'FROM ' + mm[1].trim();
-    if ((mm = sql.match(/\bWHERE\b\s+(.+?)(?=\s+\bGROUP\s+BY\b|\s+\bORDER\s+BY\b|\s+\bHAVING\b|$)/i))) m['where-line'] = 'WHERE ' + mm[1].trim();
-    if ((mm = sql.match(/\bGROUP\s+BY\b\s+(.+?)(?=\s+\bORDER\s+BY\b|\s+\bHAVING\b|$)/i))) m['group-line'] = 'GROUP BY ' + mm[1].trim();
-    if ((mm = sql.match(/\bHAVING\b\s+(.+?)(?=\s+\bORDER\s+BY\b|$)/i))) m['having-line'] = 'HAVING ' + mm[1].trim();
-    if ((mm = sql.match(/\bORDER\s+BY\b\s+(.+?)$/i))) m['order-line'] = 'ORDER BY ' + mm[1].trim();
+    let masked = sql;
+    for (let guard = 0; guard < 10 && /\([^()]*\)/.test(masked); guard++) {
+      masked = masked.replace(/\([^()]*\)/g, s => '(' + 'X'.repeat(s.length - 2) + ')');
+    }
+    const m = {};
+    const seg = (startRe, endRe, label) => {
+      const sm = masked.match(startRe);
+      if (!sm) return null;
+      const from = sm.index + sm[0].length;
+      const rest = masked.slice(from);
+      const em = endRe ? rest.match(endRe) : null;
+      const to = em ? from + em.index : masked.length;
+      const content = sql.slice(from, to).trim();
+      if (content) m[label[0]] = label[1] + ' ' + content;
+      return null;
+    };
+    const END = /\s+\bWHERE\b|\s+\bGROUP\s+BY\b|\s+\bORDER\s+BY\b|\s+\bHAVING\b/i;
+    seg(/\bSELECT\b\s+/i, /\s+\bFROM\b/i, ['select-line', 'SELECT']);
+    seg(/\bFROM\b\s+/i, END, ['from-line', 'FROM']);
+    seg(/\bWHERE\b\s+/i, /\s+\bGROUP\s+BY\b|\s+\bORDER\s+BY\b|\s+\bHAVING\b/i, ['where-line', 'WHERE']);
+    seg(/\bGROUP\s+BY\b\s+/i, /\s+\bORDER\s+BY\b|\s+\bHAVING\b/i, ['group-line', 'GROUP BY']);
+    seg(/\bHAVING\b\s+/i, /\s+\bORDER\s+BY\b/i, ['having-line', 'HAVING']);
+    seg(/\bORDER\s+BY\b\s+/i, null, ['order-line', 'ORDER BY']);
     return m;
   }
 
@@ -4470,6 +4521,9 @@
       .replace(/\s+/g, ' ')
       .replace(/\s*([,()])\s*/g, '$1')
       .replace(/\s*=\s*/g, '=')
+      // REVIEW-FIX 2026-07-04: cùng dung sai ->> như chấm step-3 (normFull) —
+      // "settings ->> 'lang'" là SQL hợp lệ, không được chấm khác "settings->>'lang'".
+      .replace(/\s*->>\s*/g, '->>')
       .trim()
       .toUpperCase();
   }
@@ -4676,7 +4730,7 @@
 
   window.exitLesson = function () {
     if (confirm('Bạn có chắc muốn thoát? Tiến độ bài này sẽ KHÔNG được lưu (chưa hoàn thành).')) {
-      window.location.href = '/courses/db_design';
+      window.location.href = '/courses/' + (state.courseId || 'db_design');
     }
   };
 
@@ -4692,7 +4746,9 @@
     const l = state.currentLesson;
     const s4 = l.step_4;
     const lessonNum = state.currentLessonIdx + 1;
-    document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/20`;
+    const courseData = window.LESSON_CONTENT[state.courseId || 'db_design'];
+    const totalLessons = (courseData && courseData.lessons && courseData.lessons.length) || 20;
+    document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/${totalLessons}`;
     document.getElementById('success-lesson-title').textContent = l.title;
     document.getElementById('success-message').textContent =
       s4.success_message || 'Bạn đã hoàn thành bài học!';
@@ -4727,8 +4783,8 @@
       }, 30);
     }
 
-    // 5.1 Next lesson preview
-    const data = window.LESSON_CONTENT['db_design'];
+    // 5.1 Next lesson preview (REVIEW-FIX 2026-07-04: theo course hiện tại, không hardcode Basic)
+    const data = window.LESSON_CONTENT[state.courseId || 'db_design'];
     const nextIdx = state.currentLessonIdx + 1;
     const nextLesson = nextIdx < data.lessons.length ? data.lessons[nextIdx] : null;
     const nextTitleEl = document.getElementById('success-next-title');
@@ -4766,12 +4822,14 @@
   };
 
   window.nextLesson = function () {
-    const data = window.LESSON_CONTENT['db_design'];
+    // REVIEW-FIX 2026-07-04: điều hướng theo course hiện tại — user học TC từng bị đá về Basic
+    const courseId = state.courseId || 'db_design';
+    const data = window.LESSON_CONTENT[courseId];
     const nextIdx = state.currentLessonIdx + 1;
     if (nextIdx < data.lessons.length) {
-      window.location.href = `/lesson/db_design?lesson=${nextIdx + 1}`;
+      window.location.href = `/lesson/${courseId}?lesson=${nextIdx + 1}`;
     } else {
-      window.location.href = '/courses/db_design';
+      window.location.href = `/courses/${courseId}`;
     }
   };
 
@@ -5578,8 +5636,18 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
     const el = container.querySelector('#' + feedbackId);
     if (!el) return;
     el.classList.add('flagship-feedback-flex');
+    // AUDIT-FIX 2026-07-04: element sinh ra với inline style="display:none" — inline THẮNG
+    // class .flagship-feedback-flex{display:flex} → feedback match/order/bug_spot chưa từng
+    // hiển thị. Ghi đè inline trực tiếp.
+    el.style.display = 'flex';
     el.classList.toggle('wrong', !ok);
     el.innerHTML = `<i class="fa-solid ${ok ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${msg}`;
+    // FIX dead-end (audit + review 2026-07-04): cả 3 mini premium funnel kết quả qua đây.
+    // Cờ solved CHỈ khi đúng; nhưng CTA mở BẤT KỂ đúng/sai một khi đã thử — mini-game là
+    // BONUS, không được chặn tiến trình (đồng bộ triết lý checkMiniGame của classify).
+    if (ok) state.miniGameSolved = true;
+    const total = ((state.currentLesson.step_2 || {}).mcq || []).length;
+    if (state.mcqAnswers.filter(Boolean).length >= total) revealStep3Cta();
   }
   function flashTip(container, msg) {
     const tip = document.createElement('div');

@@ -10089,8 +10089,11 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   position: relative; flex: 1 1 auto; min-width: 0; min-height: 330px;
 }
 .town-map .qdata {
-  flex: none; width: 100%; max-height: 168px;
-  display: flex; flex-direction: column; min-height: 0;
+  /* AUDIT-FIX 2026-07-04: từng bị overflow:hidden của .town-map CHÉM ~61px (bảng Nguồn
+     cụt giữa dòng ở mọi viewport). Cho phép CO (flex-shrink) + CUỘN nội bộ thay vì cắt. */
+  flex: 0 1 auto; width: 100%; max-height: 168px;
+  display: flex; flex-direction: column; min-height: 56px;
+  overflow-y: auto;
 }
 @media (min-width: 2200px) {
   .town-map { flex-direction: row; align-items: stretch; gap: 16px; }

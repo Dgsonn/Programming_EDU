@@ -966,8 +966,19 @@
         /* 3. Execute SQL clause */
         var result = executeStation(entry.station, entry.input, currentData, table);
 
+        /* AUDIT-FIX 2026-07-04 (tính SỚM, trước khi vẽ manifest): mệnh đề đúng đáp án
+           nhưng engine demo không mô phỏng nổi → coi là pass-mềm, KHÔNG vẽ "⚠ Lỗi xử lý"
+           đỏ (trước đây manifest in lỗi đỏ rồi trạm lại ✓ xanh — mâu thuẫn thị giác). */
+        var engineOnlyFail = result.error && currentZoneCorrect[entry.station.zone] === true;
+
         /* 4. Update manifest (replaces old station-data-area) */
-        updateManifest(entry.station, result, currentData, table);
+        if (engineOnlyFail) {
+          showManifestRest();
+          var softBadge = stationEl.querySelector('[data-qcard-count]');
+          if (softBadge) softBadge.textContent = '✓';
+        } else {
+          updateManifest(entry.station, result, currentData, table);
+        }
 
         /* 5. Per-zone mechanism animation (§B.3) */
         if (!result.error) {
@@ -986,8 +997,12 @@
            v4 FIX: ga chỉ ✓ khi (a) chạy được VÀ (b) nội dung mệnh đề ĐÚNG (zoneCorrect).
            Trước đây FROM luôn ✓ vì "nạp bảng" luôn chạy được, dù zone chứa rác. */
         stationEl.classList.remove('active');
+        /* AUDIT-FIX 2026-07-04: mệnh đề đúng đáp án nhưng engine demo không mô phỏng nổi
+           (JOIN nhiều bảng / EXTRACT / subquery / ->>) → engineOnlyFail (tính ở bước 3)
+           → trạm vẫn QUA, chỉ không cập nhật data. Trước đây: lắp đúng 100% vẫn
+           "✗ Chưa đúng" ở 6 bài (db_02/03/06/08/11/14) — dead-end oan. */
         var clauseWrong = currentZoneCorrect[entry.station.zone] === false;
-        if (result.error || clauseWrong) {
+        if (clauseWrong || (result.error && !engineOnlyFail)) {
           /* F6 (3.8): parse error / sai nội dung → fail animation (xe lượn về KHO). */
           stationEl.classList.add('error');
           shakeTruck();
@@ -996,7 +1011,7 @@
         }
         stationEl.classList.add('done');
         sfxChime();
-        currentData = result.data;
+        if (!engineOnlyFail) currentData = result.data;   /* pass-mềm: giữ data hiện có */
         await wait(80);
       }
       /* F6 (3.8): sau loop, kiểm tra currentIsComplete. Nếu sai (wrong SQL nhưng parse OK) → fail.
