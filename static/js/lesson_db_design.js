@@ -702,6 +702,182 @@
         '<text x="146" y="138" text-anchor="middle" font-size="10" fill="#7f93ad">lặp tới khi không còn dòng mới (fixed point)</text>' +
       '</g>' +
       '<text x="360" y="232" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">JOIN thường = +1 tầng mỗi lần viết · đệ quy = bao nhiêu tầng cũng gom đủ</text>' +
+      '</svg>',
+
+    /* ── TC Module 5 (Big Data & Analytics) — accent fuchsia #E879F9 ── */
+    /* tc_05: OLTP đang phục vụ feed (trái) vs kho STAR riêng (phải): FACT giữa + 2 DIM tia */
+    tc_05: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tách tải phân tích khỏi OLTP: bảng posts phục vụ feed ở trái, kho star schema ở phải với fact_post_action ở giữa nối tia tới dim_date và dim_user">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Star Schema — sân riêng cho câu hỏi phân tích</text>' +
+      '<g transform="translate(26, 52)" font-family="JetBrains Mono, monospace">' +
+        '<rect width="210" height="150" rx="10" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.4"/>' +
+        '<text x="105" y="24" text-anchor="middle" font-size="11" fill="#7f93ad">OLTP — đang phục vụ feed</text>' +
+        '<rect x="14" y="36" width="182" height="22" rx="4" fill="rgba(255,255,255,.04)"/><text x="22" y="51" font-size="10.5" fill="#aebfd6">posts · 2.1M dòng</text>' +
+        '<rect x="14" y="64" width="182" height="22" rx="4" fill="rgba(255,255,255,.04)"/><text x="22" y="79" font-size="10.5" fill="#aebfd6">likes · 38M dòng</text>' +
+        '<rect x="14" y="92" width="182" height="22" rx="4" fill="rgba(255,255,255,.04)"/><text x="22" y="107" font-size="10.5" fill="#aebfd6">comments · 9M dòng</text>' +
+        '<rect x="14" y="120" width="182" height="20" rx="4" fill="rgba(252,211,77,.08)" stroke="rgba(252,211,77,.4)" stroke-width="1"/>' +
+        '<text x="22" y="134" font-size="10" fill="#FCD34D">⚠ query dashboard cào ở đây = feed lag</text>' +
+      '</g>' +
+      '<line x1="242" y1="126" x2="292" y2="126" stroke="rgba(232,121,249,.7)" stroke-width="1.6" stroke-dasharray="5,3"/>' +
+      '<polygon points="292,126 284,122 284,130" fill="rgba(232,121,249,.9)"/>' +
+      '<text x="267" y="116" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#aebfd6">ETL đêm</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        '<line x1="470" y1="122" x2="392" y2="72" stroke="rgba(232,121,249,.6)" stroke-width="1.4"/>' +
+        '<line x1="470" y1="122" x2="392" y2="176" stroke="rgba(232,121,249,.6)" stroke-width="1.4"/>' +
+        '<line x1="470" y1="122" x2="606" y2="122" stroke="rgba(232,121,249,.6)" stroke-width="1.4"/>' +
+        '<rect x="404" y="94" width="150" height="58" rx="10" fill="rgba(232,121,249,.1)" stroke="#E879F9" stroke-width="1.8"/>' +
+        '<text x="479" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="#E879F9">fact_post_action</text>' +
+        '<text x="479" y="136" text-anchor="middle" font-size="9.5" fill="#aebfd6">số đo: act_count</text>' +
+        '<rect x="306" y="48" width="118" height="40" rx="8" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<text x="365" y="66" text-anchor="middle" font-size="11" fill="#38BDF8">dim_date</text>' +
+        '<text x="365" y="80" text-anchor="middle" font-size="9" fill="#7f93ad">ngày · tháng · thứ</text>' +
+        '<rect x="306" y="156" width="118" height="40" rx="8" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<text x="365" y="174" text-anchor="middle" font-size="11" fill="#38BDF8">dim_user</text>' +
+        '<text x="365" y="188" text-anchor="middle" font-size="9" fill="#7f93ad">username · country</text>' +
+        '<rect x="586" y="102" width="108" height="40" rx="8" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<text x="640" y="120" text-anchor="middle" font-size="11" fill="#38BDF8">dim_post</text>' +
+        '<text x="640" y="134" text-anchor="middle" font-size="9" fill="#7f93ad">(mở rộng sau)</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">FACT = con số cần cộng · DIM = các chiều để cắt (ngày, người, nước)</text>' +
+      '</svg>',
+
+    /* tc_06: ROLLUP — 1 query trả đủ 3 tầng: chi tiết / subtotal / grand total */
+    tc_06: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ROLLUP trả một bảng đủ ba tầng: dòng chi tiết theo nước và loại, dòng subtotal mỗi nước, dòng grand total toàn cầu">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">ROLLUP — một query, đủ mọi tầng tổng</text>' +
+      '<g transform="translate(96, 46)" font-family="JetBrains Mono, monospace" font-size="11">' +
+        '<rect width="360" height="26" rx="5" fill="rgba(255,255,255,.05)"/>' +
+        '<text x="14" y="17" fill="#7f93ad">country</text><text x="150" y="17" fill="#7f93ad">action_type</text><text x="300" y="17" fill="#7f93ad">total</text>' +
+        '<rect y="30" width="360" height="24" rx="5" fill="rgba(255,255,255,.03)"/>' +
+        '<text x="14" y="46" fill="#e8edf5">VN</text><text x="150" y="46" fill="#e8edf5">like</text><text x="300" y="46" fill="#e8edf5">9</text>' +
+        '<rect y="58" width="360" height="24" rx="5" fill="rgba(255,255,255,.03)"/>' +
+        '<text x="14" y="74" fill="#e8edf5">VN</text><text x="150" y="74" fill="#e8edf5">post</text><text x="300" y="74" fill="#e8edf5">4</text>' +
+        '<rect y="86" width="360" height="24" rx="5" fill="rgba(232,121,249,.12)" stroke="rgba(232,121,249,.5)" stroke-width="1"/>' +
+        '<text x="14" y="102" fill="#E879F9" font-weight="700">VN</text><text x="150" y="102" fill="#E879F9">NULL ← subtotal VN</text><text x="300" y="102" fill="#E879F9" font-weight="700">13</text>' +
+        '<rect y="114" width="360" height="24" rx="5" fill="rgba(255,255,255,.03)"/>' +
+        '<text x="14" y="130" fill="#e8edf5">JP</text><text x="150" y="130" fill="#e8edf5">like</text><text x="300" y="130" fill="#e8edf5">6</text>' +
+        '<rect y="142" width="360" height="24" rx="5" fill="rgba(232,121,249,.12)" stroke="rgba(232,121,249,.5)" stroke-width="1"/>' +
+        '<text x="14" y="158" fill="#E879F9" font-weight="700">JP</text><text x="150" y="158" fill="#E879F9">NULL ← subtotal JP</text><text x="300" y="158" fill="#E879F9" font-weight="700">6</text>' +
+        '<rect y="170" width="360" height="24" rx="5" fill="rgba(252,211,77,.1)" stroke="rgba(252,211,77,.55)" stroke-width="1.2"/>' +
+        '<text x="14" y="186" fill="#FCD34D" font-weight="700">NULL</text><text x="150" y="186" fill="#FCD34D">NULL ← grand total</text><text x="300" y="186" fill="#FCD34D" font-weight="700">19</text>' +
+      '</g>' +
+      '<g transform="translate(492, 78)" font-family="JetBrains Mono, monospace">' +
+        '<rect width="204" height="88" rx="10" fill="#0e1726" stroke="rgba(232,121,249,.55)" stroke-width="1.6"/>' +
+        '<text x="14" y="24" font-size="11" fill="#e8edf5">GROUP BY</text>' +
+        '<text x="14" y="44" font-size="12" font-weight="700" fill="#E879F9">ROLLUP(country,</text>' +
+        '<text x="14" y="62" font-size="12" font-weight="700" fill="#E879F9">  action_type)</text>' +
+        '<text x="14" y="80" font-size="9.5" fill="#7f93ad">NULL = "gộp hết chiều này"</text>' +
+      '</g>' +
+      '<text x="360" y="228" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Hết cảnh dán 3 query rồi cộng tay lệch số — subtotal sinh cùng một nguồn</text>' +
+      '</svg>',
+
+    /* tc_07: MapReduce — 3 máy MAP phát (tag,1) → SHUFFLE gom theo khóa → REDUCE cộng */
+    tc_07: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MapReduce đếm hashtag: ba máy map phát cặp tag và 1, shuffle gom theo khóa, reduce cộng dồn ra kết quả">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">MapReduce — chia bài toán cho cả cụm máy</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10.5">' +
+        '<rect x="30" y="52" width="150" height="44" rx="8" fill="#0e1726" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<text x="105" y="70" text-anchor="middle" fill="#E879F9" font-weight="700">MAP · máy 1</text>' +
+        '<text x="105" y="86" text-anchor="middle" fill="#aebfd6">(#eldenring, 1) ×2</text>' +
+        '<rect x="30" y="104" width="150" height="44" rx="8" fill="#0e1726" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<text x="105" y="122" text-anchor="middle" fill="#E879F9" font-weight="700">MAP · máy 2</text>' +
+        '<text x="105" y="138" text-anchor="middle" fill="#aebfd6">(#hades2, 1)</text>' +
+        '<rect x="30" y="156" width="150" height="44" rx="8" fill="#0e1726" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<text x="105" y="174" text-anchor="middle" fill="#E879F9" font-weight="700">MAP · máy 3</text>' +
+        '<text x="105" y="190" text-anchor="middle" fill="#aebfd6">(#eldenring, 1)</text>' +
+        '<path d="M184 74 C 250 74, 250 120, 300 120" fill="none" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<path d="M184 126 L 300 124" fill="none" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<path d="M184 178 C 250 178, 250 130, 300 128" fill="none" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<rect x="302" y="92" width="160" height="62" rx="8" fill="rgba(232,121,249,.08)" stroke="#E879F9" stroke-width="1.6" stroke-dasharray="6,3"/>' +
+        '<text x="382" y="114" text-anchor="middle" fill="#E879F9" font-weight="700" font-size="11">SHUFFLE</text>' +
+        '<text x="382" y="130" text-anchor="middle" fill="#aebfd6">gom cùng KHÓA về một chỗ</text>' +
+        '<text x="382" y="146" text-anchor="middle" fill="#7f93ad" font-size="9.5">#eldenring → [1,1,1] · #hades2 → [1]</text>' +
+        '<line x1="464" y1="123" x2="512" y2="123" stroke="rgba(232,121,249,.7)" stroke-width="1.6"/>' +
+        '<polygon points="512,123 504,119 504,127" fill="rgba(232,121,249,.9)"/>' +
+        '<rect x="514" y="92" width="180" height="62" rx="8" fill="#0e1726" stroke="rgba(252,211,77,.55)" stroke-width="1.6"/>' +
+        '<text x="604" y="114" text-anchor="middle" fill="#FCD34D" font-weight="700" font-size="11">REDUCE — cộng dồn</text>' +
+        '<text x="604" y="132" text-anchor="middle" fill="#e8edf5">#eldenring → 3</text>' +
+        '<text x="604" y="146" text-anchor="middle" fill="#e8edf5">#hades2 → 1</text>' +
+      '</g>' +
+      '<text x="360" y="228" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">10 triệu post ÷ N máy — mỗi máy chỉ lo phần mình, khóa nào về nhà nấy</text>' +
+      '</svg>',
+
+    /* tc_08: bảng cứng đầy NULL (trái) vs document JSON tự do (phải) */
+    tc_08: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hồ sơ đa hình: bảng quan hệ mọc cột mới đầy NULL, còn document store lưu mỗi hồ sơ một JSON tự do, truy vấn bằng find">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Document Store — khi mỗi hồ sơ một kiểu</text>' +
+      '<g transform="translate(26, 50)" font-family="JetBrains Mono, monospace" font-size="10">' +
+        '<rect width="310" height="152" rx="10" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.4"/>' +
+        '<text x="155" y="20" text-anchor="middle" fill="#7f93ad" font-size="11">users — cột mọc mãi, NULL tràn lan</text>' +
+        '<text x="14" y="42" fill="#7f93ad">username | bio | stream_url | badge_1 | clan…</text>' +
+        '<text x="14" y="66" fill="#e8edf5">minhkiller | <tspan fill="#F87171">NULL</tspan> | twitch/mk | <tspan fill="#F87171">NULL</tspan> | <tspan fill="#F87171">NULL</tspan></text>' +
+        '<text x="14" y="90" fill="#e8edf5">yuki_sama | 8 dòng | <tspan fill="#F87171">NULL</tspan> | Collector | <tspan fill="#F87171">NULL</tspan></text>' +
+        '<text x="14" y="114" fill="#e8edf5">sara_gg | <tspan fill="#F87171">NULL</tspan> | <tspan fill="#F87171">NULL</tspan> | <tspan fill="#F87171">NULL</tspan> | GG-Clan</text>' +
+        '<text x="14" y="138" fill="#FCD34D" font-size="9.5">⚠ thêm 1 tính năng hồ sơ = ALTER TABLE + NULL cho tất cả</text>' +
+      '</g>' +
+      '<line x1="344" y1="126" x2="382" y2="126" stroke="rgba(232,121,249,.7)" stroke-width="1.6"/>' +
+      '<polygon points="382,126 374,122 374,130" fill="rgba(232,121,249,.9)"/>' +
+      '<g transform="translate(386, 44)" font-family="JetBrains Mono, monospace" font-size="10.5">' +
+        '<rect width="308" height="164" rx="10" fill="rgba(232,121,249,.06)" stroke="#E879F9" stroke-width="1.6"/>' +
+        '<text x="154" y="20" text-anchor="middle" fill="#E879F9" font-size="11" font-weight="700">profiles — mỗi hồ sơ 1 document</text>' +
+        '<text x="16" y="42" fill="#e8edf5">{ "username": <tspan fill="#FCD34D">"yuki_sama"</tspan>,</text>' +
+        '<text x="28" y="60" fill="#e8edf5">"country": <tspan fill="#FCD34D">"JP"</tspan>,</text>' +
+        '<text x="28" y="78" fill="#e8edf5">"bio": <tspan fill="#FCD34D">"Collector 100%"</tspan>,</text>' +
+        '<text x="28" y="96" fill="#e8edf5">"badges": [<tspan fill="#FCD34D">"Nhà sưu tầm"</tspan>, …] }</text>' +
+        '<line x1="16" y1="110" x2="292" y2="110" stroke="rgba(232,121,249,.35)" stroke-width="1"/>' +
+        '<text x="16" y="130" fill="#38BDF8">db.profiles.find({ country: <tspan fill="#FCD34D">\'JP\'</tspan> })</text>' +
+        '<text x="16" y="150" fill="#7f93ad" font-size="9.5">field không có? Bỏ trống — không cần NULL, không ALTER</text>' +
+      '</g>' +
+      '<text x="360" y="230" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">JSONB cột settings (Ticket #15) lớn thành cả CỬA HÀNG document — schemaless có kỷ luật</text>' +
+      '</svg>',
+
+    /* tc_09: cube 3 chiều + 4 thao tác OLAP */
+    tc_09: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Khối OLAP ba chiều ngày, nước, loại hành động với bốn thao tác: slice cắt lát, dice cắt khối, drill-down xuống chi tiết, roll-up gộp lên">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">OLAP — xoay khối dữ liệu tới đâu, trả lời tới đó</text>' +
+      '<g transform="translate(70, 54)" font-family="JetBrains Mono, monospace">' +
+        '<polygon points="60,30 200,30 240,62 100,62" fill="rgba(232,121,249,.14)" stroke="#E879F9" stroke-width="1.5"/>' +
+        '<polygon points="60,30 100,62 100,162 60,130" fill="rgba(232,121,249,.08)" stroke="#E879F9" stroke-width="1.5"/>' +
+        '<polygon points="100,62 240,62 240,162 100,162" fill="rgba(232,121,249,.05)" stroke="#E879F9" stroke-width="1.5"/>' +
+        '<line x1="100" y1="95" x2="240" y2="95" stroke="rgba(232,121,249,.35)" stroke-width="1"/>' +
+        '<line x1="100" y1="128" x2="240" y2="128" stroke="rgba(232,121,249,.35)" stroke-width="1"/>' +
+        '<line x1="146" y1="62" x2="146" y2="162" stroke="rgba(232,121,249,.35)" stroke-width="1"/>' +
+        '<line x1="192" y1="62" x2="192" y2="162" stroke="rgba(232,121,249,.35)" stroke-width="1"/>' +
+        '<rect x="100" y="95" width="46" height="33" fill="rgba(252,211,77,.3)" stroke="#FCD34D" stroke-width="1.5"/>' +
+        '<text x="150" y="190" text-anchor="middle" fill="#7f93ad" font-size="10">ngày × nước × loại hành động</text>' +
+        '<text x="256" y="46" fill="#38BDF8" font-size="10">← trục ngày</text>' +
+        '<text x="256" y="112" fill="#38BDF8" font-size="10">← trục nước</text>' +
+        '<text x="30" y="20" fill="#38BDF8" font-size="10">trục loại ↓</text>' +
+      '</g>' +
+      '<g transform="translate(420, 52)" font-family="JetBrains Mono, monospace" font-size="11">' +
+        '<rect width="274" height="34" rx="7" fill="#0e1726" stroke="rgba(232,121,249,.5)" stroke-width="1.2"/>' +
+        '<text x="12" y="22" fill="#E879F9" font-weight="700">SLICE</text><text x="86" y="22" fill="#aebfd6">cắt 1 lát: WHERE month = 6</text>' +
+        '<rect y="42" width="274" height="34" rx="7" fill="#0e1726" stroke="rgba(232,121,249,.5)" stroke-width="1.2"/>' +
+        '<text x="12" y="64" fill="#E879F9" font-weight="700">DICE</text><text x="86" y="64" fill="#aebfd6">cắt khối con: GROUP BY 2 chiều</text>' +
+        '<rect y="84" width="274" height="34" rx="7" fill="#0e1726" stroke="rgba(252,211,77,.55)" stroke-width="1.2"/>' +
+        '<text x="12" y="106" fill="#FCD34D" font-weight="700">DRILL</text><text x="86" y="106" fill="#aebfd6">tháng → từng ngày (chi tiết hơn)</text>' +
+        '<rect y="126" width="274" height="34" rx="7" fill="#0e1726" stroke="rgba(252,211,77,.55)" stroke-width="1.2"/>' +
+        '<text x="12" y="148" fill="#FCD34D" font-weight="700">ROLL-UP</text><text x="86" y="148" fill="#aebfd6">ngày → tháng (gộp lên — #26)</text>' +
+      '</g>' +
+      '<text x="360" y="228" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Ô vàng = "like của VN trong tháng 6" — mọi câu hỏi của PM là 1 thao tác trên khối</text>' +
+      '</svg>',
+
+    /* tc_10: dòng thời gian chia cửa sổ tumbling 5 phút — ô 14:10 vượt ngưỡng */
+    tc_10: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dòng sự kiện liên tục chia thành cửa sổ tumbling 5 phút khít nhau; cửa sổ 14 giờ 10 chứa 4 post của cùng một user nên báo động spam">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Tumbling Window — đếm ngay trên dòng chảy</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        '<line x1="40" y1="150" x2="690" y2="150" stroke="rgba(148,163,184,.5)" stroke-width="1.6"/>' +
+        '<polygon points="690,150 681,145 681,155" fill="rgba(148,163,184,.7)"/>' +
+        '<text x="668" y="170" fill="#7f93ad" font-size="10">thời gian →</text>' +
+        '<rect x="60" y="70" width="190" height="80" rx="8" fill="rgba(232,121,249,.06)" stroke="rgba(232,121,249,.55)" stroke-width="1.5"/>' +
+        '<rect x="254" y="70" width="190" height="80" rx="8" fill="rgba(232,121,249,.06)" stroke="rgba(232,121,249,.55)" stroke-width="1.5"/>' +
+        '<rect x="448" y="70" width="190" height="80" rx="8" fill="rgba(252,211,77,.1)" stroke="#FCD34D" stroke-width="2"/>' +
+        '<text x="155" y="62" text-anchor="middle" fill="#E879F9" font-size="11" font-weight="700">14:00–14:05</text>' +
+        '<text x="349" y="62" text-anchor="middle" fill="#E879F9" font-size="11" font-weight="700">14:05–14:10</text>' +
+        '<text x="543" y="62" text-anchor="middle" fill="#FCD34D" font-size="11" font-weight="700">14:10–14:15 ⚠</text>' +
+        '<circle cx="96" cy="110" r="7" fill="#38BDF8"/><circle cx="130" cy="96" r="7" fill="#38BDF8"/><circle cx="168" cy="118" r="7" fill="#7f93ad"/>' +
+        '<circle cx="300" cy="106" r="7" fill="#38BDF8"/><circle cx="360" cy="118" r="7" fill="#7f93ad"/>' +
+        '<circle cx="486" cy="98" r="8" fill="#F87171"/><circle cx="522" cy="118" r="8" fill="#F87171"/><circle cx="558" cy="94" r="8" fill="#F87171"/><circle cx="594" cy="112" r="8" fill="#F87171"/>' +
+        '<text x="543" y="140" text-anchor="middle" fill="#F87171" font-size="10" font-weight="700">4 post · CÙNG user trong 1 cửa sổ → chuông reo</text>' +
+        '<text x="155" y="188" text-anchor="middle" fill="#7f93ad" font-size="10.5">khít nhau · không chờm — mỗi sự kiện thuộc ĐÚNG 1 ô</text>' +
+        '<text x="520" y="188" text-anchor="middle" fill="#aebfd6" font-size="10.5">14:04:59 vào ô trước · 14:05:00 sang ô sau</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Kho (Ticket #25) trả lời "hôm qua" — stream trả lời "NGAY BÂY GIỜ"</text>' +
       '</svg>'
   };
 
@@ -2866,7 +3042,11 @@
       { re: /\bwith\s+recursive\b/,                        label: 'WITH RECURSIVE (đệ quy)' },
       { re: /^\s*update\b/m,  label: 'UPDATE (DML)' },
       { re: /^\s*delete\b/m,  label: 'DELETE (DML)' },
-      { re: /^\s*call\b/m,    label: 'CALL procedure' }
+      { re: /^\s*call\b/m,    label: 'CALL procedure' },
+      // M5-TC 2026-07-04: probe thực tế cho thấy engine KHÔNG lỗi với ROLLUP mà trả kết quả
+      // SAI im lặng (gộp hết nhóm) — nguy hiểm hơn error → bắt buộc chặn thành pending.
+      { re: /\brollup\s*\(|\bcube\s*\(|\bgrouping\s+sets\b/, label: 'ROLLUP/CUBE (subtotal)' },
+      { re: /\bdb\.\w+\.(find|aggregate|insert\w*|update\w*|count)\s*\(/, label: 'MongoDB query' }
     ];
     for (var ri = 0; ri < reChecks.length; ri++) {
       if (reChecks[ri].re.test(t)) return { unsupported: true, kw: reChecks[ri].label };
@@ -4551,9 +4731,14 @@
     });
 
     // C4 (STAGE 2d): ghép SQL hoàn chỉnh từ template + inputs, chạy PE_runSQL → render cột 3
+    // M5-TC 2026-07-04: template KHÔNG PHẢI SQL (pseudo-code MapReduce tc_07…) thì đừng đưa
+    // vào engine — parser sẽ đỏ "Lỗi truy vấn" cho code không hề là truy vấn. Render neutral.
     if (s4.template) {
       const parts = s4.template.split('____');
       const assembled = parts.map((p, i) => i < parts.length - 1 ? p + (inputs[i]?.value || '') : p).join('');
+      if (!/\bSELECT\b/i.test(s4.template)) {
+        renderStep4Neutral('Bài này là pseudo-code — chấm theo từng ô điền, không chạy SQL.');
+      } else {
       try {
         if (typeof window.PE_runSQL === 'function') {
           const live = window.PE_runSQL(assembled, s4);
@@ -4562,6 +4747,7 @@
           else if (live && live.cols) renderStep4Results(live.cols, live.rows);
         }
       } catch (e) { /* defensive */ }
+      }
     }
 
     if (correct === inputs.length) {
@@ -4682,6 +4868,20 @@
       };
     }
 
+    // M5-FIX 2026-07-04 (lộ ra khi kiểm chứng Mavis v4 BUG-1): đáp án KHÔNG PHẢI SQL
+    // (ORM Django bài 17, MongoDB find() bài tc_08…) — clause-analysis bên dưới chỉ hiểu
+    // SELECT/FROM/WHERE nên reject từng kèm message rác "Thiếu mệnh đề SELECT" cho bài
+    // không hề có SELECT. Với bài non-SQL: exact-match sau normalize là chuẩn duy nhất;
+    // sai → message trung tính trỏ về gợi ý.
+    const looksLikeSQL = /\bSELECT\b[\s\S]*\bFROM\b/.test(e);
+    if (!looksLikeSQL) {
+      return {
+        correct: false,
+        error: 'Chưa khớp đáp án — bài này chấm truy vấn ORM/document theo từng mắt xích.',
+        suggestion: 'So từng phần với Gợi ý mức 3-4: tên method, tên alias, dấu ngoặc và thứ tự chain.'
+      };
+    }
+
     // Clause-by-clause analysis
     const uClauses = extractClauses(userSQL);
     const eClauses = extractClauses(expectedSQL);
@@ -4707,6 +4907,24 @@
       errors.push('Thiếu mệnh đề WHERE — cần lọc điều kiện để lấy đúng 1 record.');
     } else if (eClauses.where && uClauses.where && uClauses.where !== eClauses.where) {
       errors.push(`WHERE không khớp: bạn viết "${uClauses.where}" nhưng đáp án cần "${eClauses.where}".`);
+    }
+
+    // M5-FIX 2026-07-04: so nốt GROUP BY / HAVING / ORDER BY — trước đây bỏ ngỏ nên
+    // ROLLUP nộp cho đề CUBE (hay GROUP BY sai cột) vẫn được khen "hợp lệ về mặt logic".
+    if (eClauses.groupBy && !uClauses.groupBy) {
+      errors.push('Thiếu mệnh đề GROUP BY.');
+    } else if (eClauses.groupBy && uClauses.groupBy && uClauses.groupBy !== eClauses.groupBy) {
+      errors.push(`GROUP BY không khớp: bạn viết "${uClauses.groupBy}" nhưng đáp án cần "${eClauses.groupBy}".`);
+    }
+    if (eClauses.having && !uClauses.having) {
+      errors.push('Thiếu mệnh đề HAVING — lọc trên kết quả nhóm.');
+    } else if (eClauses.having && uClauses.having && uClauses.having !== eClauses.having) {
+      errors.push(`HAVING không khớp: bạn viết "${uClauses.having}" nhưng đáp án cần "${eClauses.having}".`);
+    }
+    if (eClauses.orderBy && !uClauses.orderBy) {
+      errors.push('Thiếu mệnh đề ORDER BY.');
+    } else if (eClauses.orderBy && uClauses.orderBy && uClauses.orderBy !== eClauses.orderBy) {
+      errors.push(`ORDER BY không khớp: bạn viết "${uClauses.orderBy}" nhưng đáp án cần "${eClauses.orderBy}".`);
     }
 
     if (errors.length === 0) {
@@ -4745,7 +4963,7 @@
   }
 
   function extractClauses(sql) {
-    const result = { select: null, from: null, where: null };
+    const result = { select: null, from: null, where: null, groupBy: null, having: null, orderBy: null };
     const upper = sql.toUpperCase();
 
     // SELECT ... FROM
@@ -4759,6 +4977,17 @@
     // WHERE
     const whereMatch = upper.match(/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|;|$)/i);
     if (whereMatch) result.where = whereMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
+
+    // M5-FIX 2026-07-04 (probe tc_06 tóm được): clause-analysis trước đây KHÔNG so
+    // GROUP BY/HAVING/ORDER BY → nộp ROLLUP cho đề CUBE vẫn "hợp lệ về mặt logic".
+    const groupMatch = upper.match(/GROUP\s+BY\s+(.+?)(?:\s+HAVING|\s+ORDER|\s+LIMIT|;|$)/i);
+    if (groupMatch) result.groupBy = groupMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
+
+    const havingMatch = upper.match(/HAVING\s+(.+?)(?:\s+ORDER|\s+LIMIT|;|$)/i);
+    if (havingMatch) result.having = havingMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
+
+    const orderMatch = upper.match(/ORDER\s+BY\s+(.+?)(?:\s+LIMIT|;|$)/i);
+    if (orderMatch) result.orderBy = orderMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
 
     return result;
   }

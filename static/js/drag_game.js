@@ -42,6 +42,14 @@
     'cte-union':    { icon: '➕', label: 'UNION ALL', sub: 'Nối kết quả',  hint: '<code>UNION ALL</code> nối anchor với các vòng lặp — giữ mọi dòng.' },
     'cte-step':     { icon: '🔁', label: 'Đệ quy',   sub: 'Tự tham chiếu', hint: 'Phần lặp: JOIN bảng gốc với CHÍNH CTE để lấy tầng con tiếp theo.' },
     'cte-final':    { icon: '📤', label: 'SELECT cuối', sub: 'Đọc CTE',   hint: 'Đóng CTE rồi <code>SELECT ... FROM tên_cte</code> để đọc kết quả.' },
+    /* M5-TC 2026-07-04: ga cho bài Big Data (MapReduce tc_07, Document Store tc_08). */
+    'mr-map':       { icon: '🗺️', label: 'MAP',      sub: 'Phát cặp',     hint: 'Mỗi máy đọc phần dữ liệu của mình, phát cặp <code>(khóa, 1)</code>.' },
+    'mr-shuffle':   { icon: '🔀', label: 'SHUFFLE',  sub: 'Gom theo khóa', hint: 'Hệ thống tự gom mọi cặp CÙNG KHÓA về một máy.' },
+    'mr-reduce':    { icon: '➕', label: 'REDUCE',   sub: 'Cộng dồn',     hint: 'Mỗi khóa nhận danh sách giá trị — cộng dồn ra kết quả cuối.' },
+    'doc-coll':     { icon: '🗃️', label: 'Collection', sub: 'Kho document', hint: 'Chọn collection: <code>db.tên_collection</code>' },
+    'doc-filter':   { icon: '🔍', label: 'Filter',   sub: 'Điều kiện',    hint: 'Điều kiện lọc là MỘT document: <code>.find({ field: giá_trị })</code>' },
+    'doc-project':  { icon: '📤', label: 'Projection', sub: 'Chọn field',  hint: 'Tham số 2 của find: <code>{ field: 1 }</code> = chỉ lấy field đó.' },
+    'doc-sort':     { icon: '📈', label: 'Sort',     sub: 'Sắp xếp',      hint: '<code>.sort({ field: -1 })</code> — -1 = giảm dần (như DESC).' },
   };
 
   /* Default schema — Bài 1: Primary Key on game_catalog */

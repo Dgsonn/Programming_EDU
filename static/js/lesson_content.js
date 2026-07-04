@@ -4592,7 +4592,7 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: 'Viết <strong>Django ORM query</strong> đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values(\'event_type\').annotate(count=Count(\'event_id\')).order_by(\'-count\')</code>. ORM Django — không viết SQL thuần.',
+        prompt: 'Viết <strong>Django ORM query</strong> đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values(\'event_type\').annotate(event_count=Count(\'event_id\')).order_by(\'-event_count\')</code>. ORM Django — không viết SQL thuần.',
         context: {
           scenario: "Backend GameHub đã sang Django. Team vận hành nghi user <code>U01</code> có hành vi bất thường — họ cần <strong>bảng đếm hoạt động theo từng loại event</strong> (login, purchase, logout…) của riêng user này, viết bằng ORM cho khớp codebase mới.",
           real_world: "Trong Django thật, <code>.values('x').annotate(Count(...))</code> chính là <code>GROUP BY x</code> + <code>COUNT</code> — ORM chỉ là lớp áo: hiểu SQL bên dưới thì đọc được mọi query <strong>Instagram</strong> (chạy Django) sinh ra, và biết khi nào nó sinh query tệ.",
@@ -4605,7 +4605,10 @@ concept_cards: [
           hint_explore: "Model <code>LogEvent</code> ánh xạ bảng <code>log_events(event_id, user_id, event_type, timestamp)</code> — mọi filter/annotate xoay quanh 4 cột này.",
           expected: "Bảng vài dòng × 2 cột (<code>event_type, event_count</code>) của riêng U01, giảm dần — chính là GROUP BY + COUNT nhưng viết bằng Python."
         },
-        starter: "# Đếm events theo event_type cho user U01 (Django ORM)\n# filter(user_id='U01') + values('event_type') + annotate(count=Count('event_id')) + order_by('-count')\nLogEvent.objects.__________________________________\n",
+        /* M5-FIX 2026-07-04 (lộ ra khi kiểm chứng Mavis v4 BUG-1): starter cũ hướng dẫn
+         * annotate(count=...)+order_by('-count') nhưng expected đòi event_count → học viên
+         * làm ĐÚNG theo hướng dẫn vẫn bị chấm sai. Đồng bộ tên alias với expected/hints. */
+        starter: "# Đếm events theo event_type cho user U01 (Django ORM)\n# filter(user_id='U01') + values('event_type') + annotate(event_count=Count('event_id')) + order_by('-event_count')\nLogEvent.objects.__________________________________\n",
         schema: {
           table_name: 'log_events',
           columns: [
@@ -4643,11 +4646,13 @@ concept_cards: [
          * (engine không chạy ORM syntax). Verify result: login=5 · purchase=2 · logout=2 (3 rows cho user U01). */
         equiv_sql: "SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;",
         expected_sql: "LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')",
+        /* M5-FIX 2026-07-04: hint 2-4 cũ đưa đáp án SQL THUẦN trong khi bài chấm ORM —
+         * copy hint 4 y nguyên cũng bị reject. Toàn bộ hint giờ dẫn về ORM (khớp expected). */
         hints: [
-          { level: 1, text: "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể. Hãy nghĩ: filter user trước, GROUP BY loại event, COUNT, ORDER BY giảm dần." },
-          { level: 2, text: "<code>WHERE user_id = 'U01'</code> — lọc events của user U01." },
-          { level: 3, text: "<code>GROUP BY event_type</code> — nhóm theo loại event." },
-          { level: 4, text: "<code class=\"code\">SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;</code>" }
+          { level: 1, text: "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể — bằng ORM: filter user trước, values() chọn cột nhóm, annotate() đếm, order_by() giảm dần." },
+          { level: 2, text: "Lọc user (WHERE phiên bản ORM): <code>.filter(user_id='U01')</code>." },
+          { level: 3, text: "GROUP BY + COUNT phiên bản ORM: <code>.values('event_type').annotate(event_count=Count('event_id'))</code> — rồi <code>.order_by('-event_count')</code> (dấu trừ = DESC)." },
+          { level: 4, text: "<code class=\"code\">LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')</code>" }
         ],
         success_message: 'values().annotate() = GROUP BY trong SQL. ORM và SQL luôn tương đương — hiểu SQL giúp bạn viết ORM tốt hơn!',
         xp_reward: 60
