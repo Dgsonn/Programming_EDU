@@ -680,12 +680,16 @@
     var skills = modLessons.map(function (l) { return l.title; });
     if (!skills.length) skills = [cur.title || ''];
 
-    var icon = isGraduation ? '🎓' : '🏆';
-    var eyebrow = isGraduation ? 'HOÀN THÀNH KHÓA HỌC' : ('HOÀN THÀNH CHƯƠNG ' + (modNum || ''));
+    // Hệ Ticket + Release (user chốt 2026-07-04): mỗi bài = 1 ticket, xong 1 chương = SHIP 1 bản lớn.
+    // Pace-neutral — không nhắc thời gian học, chỉ nhắc sự kiện do người học tự gây ra.
+    var icon = isGraduation ? '🎓' : '🚀';
+    var eyebrow = isGraduation
+      ? 'GAMEHUB v3.0 — RA MẮT TOÀN CẦU'
+      : ('SHIP THÀNH CÔNG · GAMEHUB v' + (modNum || 1) + '.0');
     var headline = isGraduation ? 'Bạn đã trở thành Nhà thiết kế CSDL!' : modTitle;
     var sub = isGraduation
-      ? 'Bạn đã đi hết 20 bài — từ thực thể đầu tiên tới hệ CSDL hoàn chỉnh. Những gì bạn đã nắm ở chương cuối:'
-      : ('Bạn vừa chinh phục ' + skills.length + ' bài. Những gì bạn đã nắm:');
+      ? 'Bạn đã đóng cả 20 ticket — từ thực thể đầu tiên tới hệ CSDL hoàn chỉnh. Trong bản release cuối:'
+      : (skills.length + ' ticket đã đóng — những gì vừa vào bản release:');
 
     var skillsHTML = skills.map(function (s) {
       return '<li><i class="fa-solid fa-circle-check"></i> ' + escapeHtml(s) + '</li>';
@@ -696,7 +700,7 @@
       nextLabel = 'Hoàn tất 🎉';
       nextAttr = 'data-mco-close="1"';
     } else {
-      nextLabel = 'Tiếp tục Chương ' + ((modNum || 1) + 1) + ' <i class="fa-solid fa-arrow-right"></i>';
+      nextLabel = 'Nhận ticket tiếp theo <i class="fa-solid fa-arrow-right"></i>';
       nextAttr = 'data-mco-next="' + (lessonNum + 1) + '"';
     }
 
@@ -890,7 +894,7 @@
       const st = l.story;
       if (st && st.hook) {
         storyEl.innerHTML =
-          `<span class="story-tag">🏗️ ${st.tag || 'Dự án GameHub'}</span>` +
+          `<span class="story-tag">${st.tag || '🎫 GameHub'}</span>` +
           `<div class="story-hook">${st.hook}</div>`;
         storyEl.hidden = false;
       } else {
