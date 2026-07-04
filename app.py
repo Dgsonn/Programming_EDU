@@ -45,6 +45,37 @@ start_keepalive()
 logger = logging.getLogger(__name__)
 
 
+# ── Security headers ────────────────────────────────────────────────────────
+@app.after_request
+def set_security_headers(resp):
+    # Chặn MIME-sniffing
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    # Chặn nhúng trang vào iframe khác domain (clickjacking)
+    resp.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+    # Hạn chế referrer rò rỉ URL nội bộ
+    resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    # CSP: script/style chỉ từ chính domain + inline (frontend hiện dùng inline
+    # onclick/style nhiều nơi nên cần 'unsafe-inline'; img data: cho avatar/QR;
+    # cdn.jsdelivr.net cho mermaid). Siết dần khi refactor bỏ inline handlers.
+    resp.headers.setdefault(
+        'Content-Security-Policy',
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
+        "https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
+        "https://cdnjs.cloudflare.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: blob:; "
+        "connect-src 'self' https://generativelanguage.googleapis.com; "
+        "frame-ancestors 'self'"
+    )
+    # HSTS chỉ bật ở production (bật trên HTTP localhost sẽ gây phiền khi dev)
+    if Config.FLASK_ENV == 'production':
+        resp.headers.setdefault('Strict-Transport-Security',
+                                'max-age=31536000; includeSubDomains')
+    return resp
+
+
 # ---------------------------------------------------------------------------
 # Helper: tạo JSON error response nhất quán
 # ---------------------------------------------------------------------------

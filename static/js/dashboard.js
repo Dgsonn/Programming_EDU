@@ -596,6 +596,7 @@ function skSkillToggle(row) {
   function _apiPostToUi(row) {
     return {
       id: row.id, cat: row.category, title: row.title || '', body: row.content || '',
+      userId: row.user_id || null,
       author: row.author_name || 'Ẩn danh', avatar: '🙋', time: _apiTime(row.created_at),
       reactions: row.reactions || _emptyReactions(), myReaction: row.my_reaction || null,
       comments: row.comment_count || 0, commentList: null, media: []
@@ -858,6 +859,54 @@ function skSkillToggle(row) {
     });
   }
 
+  /* ── Follow user (nút Theo dõi cạnh tên tác giả trong forum) ─────────── */
+  var _followingIds = {};      // userId -> true (những người mình đang follow)
+  var _followingLoaded = false;
+
+  function _loadFollowing() {
+    var me = window.__currentUser;
+    if (!me || !me.id) return Promise.resolve();
+    return fetch('/api/users/' + me.id + '/following')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        _followingIds = {};
+        ((d && d.following) || []).forEach(function (u) { _followingIds[u.id] = true; });
+        _followingLoaded = true;
+      })
+      .catch(function () { /* offline/lỗi: nút vẫn hoạt động, chỉ thiếu trạng thái đầu */ });
+  }
+
+  window.toggleFollow = function (userId, btn) {
+    var isFollowing = !!_followingIds[userId];
+    btn.disabled = true;
+    fetch('/api/users/' + userId + '/follow', { method: isFollowing ? 'DELETE' : 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok) {
+          if (d.following) _followingIds[userId] = true;
+          else delete _followingIds[userId];
+          // Cập nhật MỌI nút follow của user này đang hiển thị
+          document.querySelectorAll('.fpc-follow-btn[data-user-id="' + userId + '"]').forEach(function (b) {
+            b.classList.toggle('following', !!d.following);
+            b.textContent = d.following ? 'Đang theo dõi' : '+ Theo dõi';
+          });
+        }
+      })
+      .catch(function () {})
+      .then(function () { btn.disabled = false; });
+  };
+
+  function _followBtnHtml(p) {
+    var me = window.__currentUser || {};
+    if (!p.userId || !me.id || p.userId === me.id) return '';
+    var isF = !!_followingIds[p.userId];
+    return '<button class="fpc-follow-btn' + (isF ? ' following' : '') + '"'
+      + ' data-user-id="' + p.userId + '"'
+      + ' style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:12px;border:1px solid var(--border,#d1d5db);background:transparent;cursor:pointer;color:inherit"'
+      + ' onclick="event.stopPropagation();toggleFollow(' + p.userId + ', this)">'
+      + (isF ? 'Đang theo dõi' : '+ Theo dõi') + '</button>';
+  }
+
   // Async: post thật từ DB; admin thấy kèm 5 bài demo (MOCK_POSTS) ở đầu để
   // biết mà quản lý — user thường chỉ thấy bài thật.
   function getAllPostsAsync() {
@@ -901,8 +950,10 @@ function skSkillToggle(row) {
     if (list) list.innerHTML = '<div class="forum-loading">Đang tải...</div>';
 
     // Load from API (uses forumApi which can be swapped to real API)
-    getAllPostsAsync().then(function (allP) {
-      var posts = filteredSorted(allP);
+    // Nạp danh sách following trước 1 lần để nút "Theo dõi" hiện đúng trạng thái
+    var followReady = _followingLoaded ? Promise.resolve() : _loadFollowing();
+    Promise.all([getAllPostsAsync(), followReady]).then(function (res) {
+      var posts = filteredSorted(res[0]);
       _renderPosts(posts);
     });
   }
@@ -951,7 +1002,7 @@ function skSkillToggle(row) {
         '<div class="fpc-top">' +
         '<div class="fpc-avatar" style="background:' + avatarColor(p.author) + '">' + (p.author || '?').charAt(0).toUpperCase() + '</div>' +
         '<div class="fpc-meta">' +
-        '<span class="fpc-author">' + p.author + '</span>' +
+        '<span class="fpc-author">' + p.author + _followBtnHtml(p) + '</span>' +
         '<span class="fpc-time">' + timeAgo(p.time) + '</span>' +
         '</div>' +
         '<span class="fpc-cat-tag" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
@@ -1007,7 +1058,37 @@ function skSkillToggle(row) {
         _hoverPrefetchSetup = true;
       }
     });
+
+    // Nếu vừa được điều hướng từ "Trang của tôi" tới 1 bài cụ thể → cuộn tới + highlight
+    if (_pendingScrollPostId) {
+      var targetCard = document.getElementById('fpc-' + _pendingScrollPostId);
+      _pendingScrollPostId = null;
+      if (targetCard) {
+        requestAnimationFrame(function () {
+          targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetCard.style.transition = 'box-shadow .4s';
+          targetCard.style.boxShadow = '0 0 0 3px rgba(59,130,246,.55)';
+          setTimeout(function () { targetCard.style.boxShadow = ''; }, 2000);
+        });
+      }
+    }
   }
+
+  /* Mở diễn đàn và cuộn tới đúng bài — gọi từ "Bài đăng của tôi" trên Trang của tôi.
+     Reset bộ lọc/tìm kiếm để bài chắc chắn nằm trong danh sách render. */
+  var _pendingScrollPostId = null;
+  window.forumOpenPost = function (postId) {
+    _pendingScrollPostId = String(postId);
+    _currentCat = 'all';
+    _currentSort = 'newest';
+    _forumTextQ = '';
+    var si = document.getElementById('forum-search-input');
+    if (si) si.value = '';
+    document.querySelectorAll('#forum-tabs .filter-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.cat === 'all');
+    });
+    window.navigate('forum');
+  };
 
   function escHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1598,6 +1679,18 @@ function skSkillToggle(row) {
     if (page === 'forum') renderPosts();
   };
 
+  /* Trang của tôi (IIFE khác) cần gọi lại API + helper của diễn đàn để render
+     "Bài đăng của tôi" — expose qua window vì khác scope. */
+  window.forumApi = forumApi;
+  window.forumShared = {
+    apiPostToUi: _apiPostToUi,
+    timeAgo: timeAgo,
+    escHtml: escHtml,
+    CAT_LABELS: CAT_LABELS,
+    CAT_COLORS: CAT_COLORS,
+    CAT_BG: CAT_BG
+  };
+
 })();
 
 /* ═══════════════════════════════════════════════════════
@@ -1610,38 +1703,49 @@ function skSkillToggle(row) {
     if (page === 'profile') _loadProfile();
   };
 
-  /* ── Kinh nghiệm bài học (XP chart) ── */
-  var _xpSubjects = [
-    { icon: '📊', name: 'Data science', xp: 388 },
-    { icon: '📈', name: 'Data analytics', xp: 210 },
-    { icon: '🌐', name: 'Web development', xp: 200 },
-    { icon: '🐍', name: 'Python', xp: 170 },
-    { icon: '🎨', name: 'HTML & CSS', xp: 165 },
-    { icon: '💻', name: 'Computer science', xp: 140 },
-  ];
-  var _XP_MAX = 400;
+  /* ── Kinh nghiệm bài học (XP chart) — dữ liệu thật từ lesson_progress ── */
+  function _courseIcon(courseId) {
+    var c = (window.enrolledCourses || []).filter(function (x) { return x.id === courseId; })[0];
+    return (c && c.icon) || '📘';
+  }
 
   function _renderXPChart() {
     var container = document.getElementById('prof-xp-rows');
     if (!container) return;
-    container.innerHTML = _xpSubjects.map(function (s) {
-      var pct = Math.round(s.xp / _XP_MAX * 100);
-      return '<div class="prof-xp-row">'
-        + '<span class="prof-xp-row-icon">' + s.icon + '</span>'
-        + '<span class="prof-xp-row-name">' + s.name + '</span>'
-        + '<div class="prof-xp-bar-wrap">'
-        + '<div class="prof-xp-bar-fill" style="width:0%"'
-        + ' data-pct="' + pct + '"></div>'
-        + '</div>'
-        + '<span class="prof-xp-row-val">' + s.xp + ' XP</span>'
-        + '</div>';
-    }).join('');
-    /* animate bars after paint */
-    requestAnimationFrame(function () {
-      container.querySelectorAll('.prof-xp-bar-fill').forEach(function (bar) {
-        bar.style.width = bar.getAttribute('data-pct') + '%';
+    container.innerHTML = '<div class="prof-empty">Đang tải...</div>';
+    fetch('/api/stats/xp-by-course')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var subjects = (d && d.subjects) || [];
+        if (!subjects.length) {
+          container.innerHTML = '<div class="prof-empty">Chưa có XP nào — hoàn thành bài học để tích lũy.</div>';
+          return;
+        }
+        // Thang đo: max XP làm tròn lên bội 100 để bar tỉ lệ hợp lý
+        var maxXp = Math.max.apply(null, subjects.map(function (s) { return s.xp; }));
+        var scale = Math.max(100, Math.ceil(maxXp / 100) * 100);
+        container.innerHTML = subjects.map(function (s) {
+          var pct = Math.round(s.xp / scale * 100);
+          return '<div class="prof-xp-row">'
+            + '<span class="prof-xp-row-icon">' + _courseIcon(s.courseId) + '</span>'
+            + '<span class="prof-xp-row-name">' + window.forumShared.escHtml(String(s.title)) + '</span>'
+            + '<div class="prof-xp-bar-wrap">'
+            + '<div class="prof-xp-bar-fill" style="width:0%"'
+            + ' data-pct="' + pct + '"></div>'
+            + '</div>'
+            + '<span class="prof-xp-row-val">' + s.xp + ' XP</span>'
+            + '</div>';
+        }).join('');
+        /* animate bars after paint */
+        requestAnimationFrame(function () {
+          container.querySelectorAll('.prof-xp-bar-fill').forEach(function (bar) {
+            bar.style.width = bar.getAttribute('data-pct') + '%';
+          });
+        });
+      })
+      .catch(function () {
+        container.innerHTML = '<div class="prof-empty">Không thể tải dữ liệu XP.</div>';
       });
-    });
   }
 
   window.navigateToSkills = function () {
@@ -1666,16 +1770,40 @@ function skSkillToggle(row) {
     // Số khóa đang học
     _set('prof-enrolled', enrolledCourses ? enrolledCourses.length : '—');
 
-    // Số bài hoàn thành & streak: lấy từ stat cards dashboard nếu có
-    var streakEl = document.querySelector('.stat-val[data-stat="streak"], #stat-streak');
-    _set('prof-streak', streakEl ? streakEl.textContent : '—');
+    // prof-streak: lấy trực tiếp từ /api/stats thay vì scrape DOM (không tồn tại)
+    fetch('/api/stats')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { _set('prof-streak', d.streakDays); })
+      .catch(function () { /* giữ nguyên '—' nếu lỗi */ });
 
-    var doneEl = document.querySelector('.stat-val[data-stat="done"], #stat-done-lessons');
-    _set('prof-done', doneEl ? doneEl.textContent : '—');
+    // prof-done: cộng completedLessons từ enrolledCourses đã có sẵn, không gọi thêm API
+    var totalDone = (enrolledCourses || []).reduce(function (sum, c) {
+      return sum + (c.completedLessons || 0);
+    }, 0);
+    _set('prof-done', totalDone);
 
-    // Kỹ năng: đếm tổng số skill (sk-skill) nếu sk-grid đã load
-    var skillRows = document.querySelectorAll('#sk-grid .sk-skill');
-    _set('prof-skills', skillRows.length > 0 ? skillRows.length : '—');
+    // Thành tích: đếm thật từ API /api/achievements
+    fetch('/api/achievements')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && typeof d.unlockedCount === 'number') {
+          _set('prof-achievements', d.unlockedCount + '/' + d.totalCount);
+        }
+      })
+      .catch(function () { /* giữ nguyên '—' nếu lỗi */ });
+
+    // Kỹ năng: đếm thật từ API /api/skills (trước đây scrape #sk-grid,
+    // chỉ có sau khi user mở trang Kỹ năng nên thường trống)
+    fetch('/api/skills')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var total = 0;
+        ((d && d.skill_sets) || []).forEach(function (bs) {
+          total += (bs.skills || []).length;
+        });
+        _set('prof-skills', total);
+      })
+      .catch(function () { /* giữ nguyên '—' nếu lỗi */ });
 
     // Khóa học đang học: render từ enrolledCourses
     _renderProfCourses();
@@ -1719,26 +1847,29 @@ function skSkillToggle(row) {
     list.innerHTML = '<div class="prof-empty">Đang tải...</div>';
 
     // Bài của chính user hiện tại, lấy từ DB (server tự lọc theo session).
-    forumApi.getPosts({ mine: true }).then(function (res) {
-      var myPosts = ((res && res.posts) || []).map(_apiPostToUi);
+    // Dùng window.forumApi/forumShared — forumApi gốc nằm ở IIFE diễn đàn,
+    // gọi trực tiếp ở đây là ReferenceError khiến ô này kẹt "Đang tải...".
+    var fs = window.forumShared;
+    window.forumApi.getPosts({ mine: true }).then(function (res) {
+      var myPosts = ((res && res.posts) || []).map(fs.apiPostToUi);
       if (!myPosts.length) {
         list.innerHTML = '<div class="prof-empty">Chưa có bài đăng nào.</div>';
         return;
       }
       list.innerHTML = myPosts.map(function (p) {
-        var catColor = CAT_COLORS[p.cat] || '#6B7280';
-        var catBg = CAT_BG[p.cat] || '#F3F4F6';
-        var catLabel = CAT_LABELS[p.cat] || p.cat;
+        var catColor = fs.CAT_COLORS[p.cat] || '#6B7280';
+        var catBg = fs.CAT_BG[p.cat] || '#F3F4F6';
+        var catLabel = fs.CAT_LABELS[p.cat] || p.cat;
         var excerpt = p.body.length > 120 ? p.body.slice(0, 117) + '...' : p.body;
         var totalR = Object.values(p.reactions || {}).reduce(function (a, b) { return a + b; }, 0);
         return (
-          '<div class="prof-post-card" onclick="window.navigate && window.navigate(\'forum\')" style="cursor:pointer;">' +
+          '<div class="prof-post-card" onclick="window.forumOpenPost && window.forumOpenPost(\'' + p.id + '\')" style="cursor:pointer;">' +
             '<div class="prof-post-top">' +
               '<span class="prof-post-cat" style="background:' + catBg + ';color:' + catColor + '">' + catLabel + '</span>' +
-              '<span class="prof-post-time">' + timeAgo(p.time) + '</span>' +
+              '<span class="prof-post-time">' + fs.timeAgo(p.time) + '</span>' +
             '</div>' +
-            '<div class="prof-post-title">' + escHtml(p.title) + '</div>' +
-            '<div class="prof-post-excerpt">' + escHtml(excerpt) + '</div>' +
+            '<div class="prof-post-title">' + fs.escHtml(p.title) + '</div>' +
+            '<div class="prof-post-excerpt">' + fs.escHtml(excerpt) + '</div>' +
             '<div class="prof-post-stats">' +
               '<span>👍 ' + totalR + '</span>' +
               '<span>💬 ' + (p.comments || 0) + '</span>' +

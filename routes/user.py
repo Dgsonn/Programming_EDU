@@ -148,6 +148,71 @@ def change_password():
     return jsonify({'ok': True})
 
 
+# ── Follow user (nguồn thật cho leaderboard "friends") ─────────────────────
+
+@user_bp.route('/api/users/<int:user_id>/follow', methods=['POST'])
+@api_login_required
+def follow_user(user_id):
+    uid = current_user_id()
+    if user_id == uid:
+        return jsonify({'error': 'Không thể tự follow chính mình'}), 400
+    conn = get_db()
+    try:
+        target = conn.execute('SELECT id FROM users WHERE id=%s', (user_id,)).fetchone()
+        if not target:
+            return jsonify({'error': 'Không tìm thấy người dùng'}), 404
+        # Idempotent: follow lại lần nữa không lỗi
+        conn.execute(
+            '''INSERT INTO user_follows (follower_id, followee_id)
+               VALUES (%s, %s) ON CONFLICT DO NOTHING''',
+            (uid, user_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return jsonify({'ok': True, 'following': True})
+
+
+@user_bp.route('/api/users/<int:user_id>/follow', methods=['DELETE'])
+@api_login_required
+def unfollow_user(user_id):
+    uid  = current_user_id()
+    conn = get_db()
+    try:
+        conn.execute(
+            'DELETE FROM user_follows WHERE follower_id=%s AND followee_id=%s',
+            (uid, user_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return jsonify({'ok': True, 'following': False})
+
+
+@user_bp.route('/api/users/<int:user_id>/following', methods=['GET'])
+@api_login_required
+def get_following(user_id):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            '''SELECT u.id, u.name, u.xp, u.streak, f.created_at
+               FROM user_follows f
+               JOIN users u ON u.id = f.followee_id
+               WHERE f.follower_id = %s
+               ORDER BY f.created_at DESC''',
+            (user_id,)
+        ).fetchall()
+    finally:
+        conn.close()
+    result = []
+    for r in rows:
+        d = dict(r)
+        created_at = d.pop('created_at')
+        d['followedAt'] = created_at.isoformat() if created_at else None
+        result.append(d)
+    return jsonify({'following': result})
+
+
 @user_bp.route('/api/survey', methods=['POST'])
 @api_login_required
 def save_survey():

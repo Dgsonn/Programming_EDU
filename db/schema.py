@@ -40,6 +40,10 @@ def init_db():
             ('last_study_date',         'DATE DEFAULT NULL'),
             ('oauth_provider',          'TEXT DEFAULT NULL'),
             ('oauth_provider_id',       'TEXT DEFAULT NULL'),
+            # ERD v2.1: identity fields bổ sung
+            ('avatar',                  "TEXT DEFAULT ''"),
+            ('is_verified',             'BOOLEAN DEFAULT FALSE'),
+            ('created_at',              'TIMESTAMPTZ DEFAULT now()'),
         ):
             try:
                 c.execute(f'ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {definition}')
@@ -71,6 +75,18 @@ def init_db():
             tag          TEXT
         )''')
 
+        # ERD v2.1: cột bổ sung cho courses (instructor, xp thưởng, trạng thái publish)
+        for col, definition in (
+            ('instructor_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'),
+            ('xp_reward',     'INTEGER DEFAULT 0'),
+            ('is_published',  'BOOLEAN DEFAULT TRUE'),
+            ('created_at',    'TIMESTAMPTZ DEFAULT now()'),
+        ):
+            try:
+                c.execute(f'ALTER TABLE courses ADD COLUMN IF NOT EXISTS {col} {definition}')
+            except Exception:
+                conn.rollback()
+
         c.execute('''CREATE TABLE IF NOT EXISTS lessons (
             id         SERIAL PRIMARY KEY,
             course_id  TEXT REFERENCES courses(id) ON DELETE CASCADE,
@@ -81,6 +97,16 @@ def init_db():
             created_at TIMESTAMP DEFAULT now()
         )''')
         c.execute('CREATE INDEX IF NOT EXISTS idx_lessons_course_id ON lessons(course_id)')
+        # ERD v2.1: loại bài học, XP thưởng, học thử miễn phí
+        for col, definition in (
+            ('lesson_type',     "TEXT DEFAULT 'reading'"),
+            ('xp_reward',       'INTEGER DEFAULT 0'),
+            ('is_free_preview', 'BOOLEAN DEFAULT FALSE'),
+        ):
+            try:
+                c.execute(f'ALTER TABLE lessons ADD COLUMN IF NOT EXISTS {col} {definition}')
+            except Exception:
+                conn.rollback()
 
         c.execute('CREATE EXTENSION IF NOT EXISTS pg_trgm')
         c.execute('CREATE INDEX IF NOT EXISTS idx_courses_level ON courses(level)')
@@ -101,6 +127,29 @@ def init_db():
 
         c.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_user_id ON enrollments(user_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_course_id ON enrollments(course_id)')
+        # ERD v2.1: trạng thái + mốc thời gian đăng ký/hoàn thành
+        for col, definition in (
+            ('status',       "TEXT DEFAULT 'active'"),
+            ('enrolled_at',  'TIMESTAMPTZ DEFAULT now()'),
+            ('completed_at', 'TIMESTAMPTZ'),
+        ):
+            try:
+                c.execute(f'ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS {col} {definition}')
+            except Exception:
+                conn.rollback()
+
+        # ERD v2.1 [NÊN LÀM]: tiến độ TỪNG bài học (nguồn thật; enrollments chỉ cache tổng)
+        c.execute('''CREATE TABLE IF NOT EXISTS lesson_progress (
+            user_id      INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+            lesson_id    INTEGER NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+            course_id    TEXT    REFERENCES courses(id) ON DELETE CASCADE,
+            status       TEXT    DEFAULT 'in_progress',  -- in_progress | completed
+            quiz_score   INTEGER,
+            xp_earned    INTEGER DEFAULT 0,
+            completed_at TIMESTAMPTZ,
+            PRIMARY KEY (user_id, lesson_id)
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_lesson_progress_course ON lesson_progress(user_id, course_id)')
 
         c.execute('''CREATE TABLE IF NOT EXISTS course_ratings (
             user_id    INTEGER,
@@ -109,6 +158,12 @@ def init_db():
             created_at TEXT,
             PRIMARY KEY (user_id, course_id)
         )''')
+        # ERD v2.1: ràng buộc điểm 1-5 (ADD CONSTRAINT không có IF NOT EXISTS -> try/except)
+        try:
+            c.execute('ALTER TABLE course_ratings ADD CONSTRAINT chk_rating_range '
+                      'CHECK (rating BETWEEN 1 AND 5)')
+        except Exception:
+            conn.rollback()  # đã tồn tại
 
         c.execute('CREATE INDEX IF NOT EXISTS idx_course_ratings_course_id ON course_ratings(course_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_course_ratings_user_id ON course_ratings(user_id)')
@@ -171,13 +226,30 @@ def init_db():
             data_json  TEXT,
             created_at TEXT
         )''')
+        # ERD v2.1: data_json TEXT -> JSONB (dữ liệu cũ là JSON hợp lệ nên cast được;
+        # nếu DB đã convert rồi thì ALTER no-op, nếu có row hỏng thì rollback giữ TEXT)
+        try:
+            c.execute("ALTER TABLE surveys ALTER COLUMN data_json TYPE JSONB "
+                      "USING data_json::jsonb")
+        except Exception:
+            conn.rollback()
+        c.execute('CREATE INDEX IF NOT EXISTS idx_surveys_user_id ON surveys(user_id)')
+
+        # ERD v2.1 [NÊN LÀM]: log XP theo ngày — để leaderboard TUẦN tính thật
+        # (trước đây leaderboard weekly lấy tạm XP tích luỹ toàn thời gian)
+        c.execute('''CREATE TABLE IF NOT EXISTS user_daily_xp_logs (
+            id        SERIAL PRIMARY KEY,
+            user_id   INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            log_date  DATE NOT NULL,
+            xp_earned INTEGER DEFAULT 0,
+            UNIQUE (user_id, log_date)
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_daily_xp_user_date '
+                  'ON user_daily_xp_logs(user_id, log_date)')
 
         # ── Roadmap (ERD v2.1): bảng roadmaps hợp nhất template + cá nhân ──
-        # DB test rỗng nên DROP các bảng roadmap cũ rồi tạo schema mới sạch.
-        c.execute('DROP TABLE IF EXISTS user_roadmaps')
-        c.execute('DROP TABLE IF EXISTS roadmap_progress')
-        c.execute('DROP TABLE IF EXISTS roadmaps')
-
+        # KHÔNG DROP ở đây: init_db chạy mỗi lần khởi động, DROP sẽ xóa sạch
+        # lộ trình generated/custom + tiến độ của mọi user sau mỗi restart.
         c.execute('''CREATE TABLE IF NOT EXISTS roadmaps (
             id                       TEXT PRIMARY KEY,
             user_id                  INTEGER     REFERENCES users(id) ON DELETE CASCADE,
@@ -264,6 +336,51 @@ def init_db():
             PRIMARY KEY (comment_id, user_id)
         )''')
         c.execute('CREATE INDEX IF NOT EXISTS idx_comment_likes_comment ON comment_likes(comment_id)')
+
+        # ── Achievements (thành tích) — thay cho kế hoạch "badges" cũ ──
+        c.execute('''CREATE TABLE IF NOT EXISTS achievements (
+            id              SERIAL PRIMARY KEY,
+            code            TEXT UNIQUE NOT NULL,
+            name            TEXT NOT NULL,
+            description     TEXT,
+            icon            TEXT,
+            condition_type  TEXT NOT NULL,   -- vd: 'lesson_count', 'streak_days', 'xp_total', 'course_complete'
+            condition_value INTEGER NOT NULL
+        )''')
+        c.execute('''CREATE TABLE IF NOT EXISTS user_achievements (
+            user_id        INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            achievement_id INTEGER REFERENCES achievements(id) ON DELETE CASCADE,
+            awarded_at     TIMESTAMPTZ DEFAULT now(),
+            PRIMARY KEY (user_id, achievement_id)
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id)')
+
+        # Seed achievement mẫu — idempotent theo code
+        achievements_seed = [
+            ('first_lesson', 'Khởi đầu',       'Hoàn thành bài học đầu tiên',            '🎯', 'lesson_count',    1),
+            ('lessons_10',   'Chăm chỉ',       'Hoàn thành 10 bài học',                  '📚', 'lesson_count',    10),
+            ('streak_7',     'Chuỗi 7 ngày',   'Duy trì chuỗi học 7 ngày liên tiếp',     '🔥', 'streak_days',     7),
+            ('streak_30',    'Kiên trì thép',  'Duy trì chuỗi học 30 ngày liên tiếp',    '⚡', 'streak_days',     30),
+            ('xp_1000',      '1000 XP',        'Đạt tổng cộng 1000 XP',                  '💎', 'xp_total',        1000),
+            ('first_course', 'Về đích',        'Hoàn thành trọn vẹn 1 khóa học',         '🏆', 'course_complete', 1),
+        ]
+        c.executemany(
+            '''INSERT INTO achievements
+                   (code, name, description, icon, condition_type, condition_value)
+               VALUES (%s,%s,%s,%s,%s,%s)
+               ON CONFLICT (code) DO NOTHING''',
+            achievements_seed
+        )
+
+        # ── Follow user (nguồn thật cho leaderboard "friends") ──
+        c.execute('''CREATE TABLE IF NOT EXISTS user_follows (
+            follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            followee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at  TIMESTAMPTZ DEFAULT now(),
+            PRIMARY KEY (follower_id, followee_id),
+            CHECK (follower_id != followee_id)
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_user_follows_followee ON user_follows(followee_id)')
 
         c.execute('SELECT 1 FROM roadmaps LIMIT 1')
         if not c.fetchone():

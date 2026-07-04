@@ -2300,10 +2300,45 @@
   /* ═══════════════════════════════════════════════════════════════
    * Success modal
    * ═══════════════════════════════════════════════════════════════ */
+  // Ghi tiến độ THẬT lên server (lesson_progress + cache enrollments + XP log).
+  // Guard chống gửi trùng khi modal mở lại trong cùng phiên.
+  let _progressSaved = false;
+  function saveLessonProgress() {
+    if (_progressSaved) return;
+    _progressSaved = true;
+    const l = state.currentLesson;
+    const lessonNum = state.currentLessonIdx + 1;
+    fetch('/api/lessons/' + lessonNum + '/complete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': (document.querySelector('meta[name=csrf-token]') || {}).content || ''
+      },
+      body: JSON.stringify({
+        courseId: 'db_design',
+        lessonTitle: l.title,
+        xpEarned: state.xpEarned || (l.step_4 && l.step_4.xp_reward) || 50
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        // Achievement mới → báo nhẹ bằng alert-style trong success modal
+        if (d && d.newAchievements && d.newAchievements.length) {
+          const msgEl = document.getElementById('success-message');
+          if (msgEl) {
+            msgEl.textContent += ' Thành tích mới: ' +
+              d.newAchievements.map(function (a) { return a.icon + ' ' + a.name; }).join(', ');
+          }
+        }
+      })
+      .catch(function () { _progressSaved = false; /* cho phép thử lại nếu lỗi mạng */ });
+  }
+
   function showSuccess() {
     const l = state.currentLesson;
     const s4 = l.step_4;
     const lessonNum = state.currentLessonIdx + 1;
+    saveLessonProgress();
     document.getElementById('success-lesson-num').textContent = `Bài ${lessonNum}/18`;
     document.getElementById('success-lesson-title').textContent = l.title;
     document.getElementById('success-message').textContent =

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from datetime import date, timedelta
 from db import get_db, MissionRepository
+from db.repositories.achievements import check_and_award_achievements
 from utils import api_login_required, current_user_id
 
 stats_bp = Blueprint('stats', __name__)
@@ -55,6 +56,31 @@ def get_stats():
         'certificates':  summary['certificates']
     })
 
+@stats_bp.route('/api/stats/xp-by-course', methods=['GET'])
+@api_login_required
+def xp_by_course():
+    """XP tích lũy theo từng khóa học — nguồn thật từ lesson_progress (không phải mock)."""
+    uid  = current_user_id()
+    conn = get_db()
+    rows = conn.execute('''
+        SELECT lp.course_id, c.title, SUM(lp.xp_earned) AS xp
+        FROM lesson_progress lp
+        LEFT JOIN courses c ON c.id = lp.course_id
+        WHERE lp.user_id = %s AND lp.status = 'completed'
+        GROUP BY lp.course_id, c.title
+        ORDER BY xp DESC
+    ''', (uid,)).fetchall()
+    conn.close()
+    return jsonify({'subjects': [
+        {
+            'courseId': r['course_id'],
+            'title':    r['title'] or r['course_id'] or 'Khóa học',
+            'xp':       int(r['xp'] or 0),
+        }
+        for r in rows
+    ]})
+
+
 # # Đáp án đúng cho từng khóa học — đã được chuyển vào bảng missions (DB)
 # Xem MissionRepository trong models.py
 
@@ -97,7 +123,17 @@ def complete_mission():
         'UPDATE users SET gems = gems + %s, xp = xp + %s, streak = %s, last_study_date = %s WHERE id=%s',
         (xp_reward, xp_reward, new_streak, today, uid)
     )
+    # Ghi log XP theo ngày (nguồn cho leaderboard tuần) — upsert cộng dồn trong ngày
+    conn.execute(
+        '''INSERT INTO user_daily_xp_logs (user_id, log_date, xp_earned)
+           VALUES (%s, %s, %s)
+           ON CONFLICT (user_id, log_date)
+           DO UPDATE SET xp_earned = user_daily_xp_logs.xp_earned + EXCLUDED.xp_earned''',
+        (uid, today, xp_reward)
+    )
     user = conn.execute('SELECT gems, xp, streak FROM users WHERE id=%s', (uid,)).fetchone()
+    # Trao achievement nếu vừa đạt điều kiện (xp_total / streak_days...)
+    check_and_award_achievements(uid, conn)
     conn.commit()
     conn.close()
 
