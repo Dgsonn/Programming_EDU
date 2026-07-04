@@ -1982,6 +1982,863 @@ window.LESSON_CONTENT['db_design_tc'] = {
         success_message: 'Ticket #30 đóng — Module 5 hoàn tất, GameHub Community v2.0 lên kệ! 🚀 Module 6: dữ liệu phình theo từng release — feed bắt đầu chậm, và câu trả lời nằm SÂU dưới lớp SQL: Storage, Index & Performance.',
         xp_reward: 120
       }
+    },
+
+    /* ═══════════ MODULE 6 — Storage, Indexing & Performance (Ticket #31-#41) ═══════════
+     * Arc đợt 1 (tc_11-15): "feed chậm" truy xuống tầng hầm — hierarchy → seq/random →
+     * buffer → trang & heap file → row/column. Toàn tier-3 khái niệm: step-3 dùng zone
+     * tự khai station meta (drag_game M6) + expected_zones; step-4 xoay mcq_code /
+     * fill_blank (không nhét SQL vào chỗ không có SQL — plan §2). */
+
+    /* ── tc_11 — Ticket #31 · Storage Hierarchy ── */
+    {
+      id: 'tc_11', index: 11,
+      title: 'Storage Hierarchy — dữ liệu thật sự nằm ở đâu',
+      subtitle: 'Tháp lưu trữ: càng nhanh càng nhỏ càng đắt — và đĩa chậm hơn RAM trăm lần',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'storage_tiers',
+          columns: ['tầng', 'độ_trễ', 'sức_chứa', 'mất_điện'],
+          dataRows: [
+            ['CPU Cache', '~1 ns',    'vài MB',    'mất sạch'],
+            ['RAM',       '~100 ns',  'vài chục GB', 'mất sạch'],
+            ['SSD',       '~100 µs',  'vài TB',    'giữ nguyên'],
+            ['HDD',       '~10 ms',   'chục TB',   'giữ nguyên']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #31',
+        hook: 'Community v2.0 lên báo, 50 nghìn tài khoản mới một tuần — và lần đầu tiên spinner của feed quay quá 3 giây. Bạn soi lại: <em>câu SQL không hề đổi</em>, chỉ có dữ liệu là phình ra. Thủ phạm không nằm trong SQL — nằm dưới TẦNG HẦM: dữ liệu sống trên đĩa, mà đĩa chậm hơn RAM hàng trăm lần. Ticket #31: xuống hầm xem một dòng post thật sự NẰM Ở ĐÂU, và đi đường nào lên màn hình.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Tháp lưu trữ: CPU cache → RAM → SSD → HDD — càng lên cao càng nhanh, càng nhỏ, càng đắt',
+            'Dữ liệu database phải BỀN VỮNG → bản gốc luôn nằm ở đĩa (SSD/HDD); RAM mất sạch khi cúp điện',
+            'CPU không đọc thẳng từ đĩa: dữ liệu được nạp lên RAM theo TRANG (page ~8KB) rồi mới xử lý'
+          ],
+          intro: 'Trước giờ bạn viết SQL như thể dữ liệu "ở đó sẵn". Sự thật: mỗi dòng post nằm trong một TRANG 8KB trên đĩa. Muốn đọc, Postgres phải khiêng nguyên trang đó lên RAM — và cái giá mỗi tầng khác nhau khủng khiếp: RAM tính bằng nano-giây, SSD micro-giây, HDD mili-giây. Feed chậm không phải vì SQL dở đi — vì số chuyến khiêng-trang-từ-đĩa tăng theo dữ liệu. Mọi kỹ thuật của Module 6 quy về đúng một câu: <strong>giảm số lần chạm đĩa</strong>.',
+          example: 'Đọc 1 post trong RAM ≈ 100 ns · từ SSD ≈ 100 µs (chậm hơn ~1.000×) · từ HDD ≈ 10 ms (chậm hơn ~100.000×).'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-layer-group',
+            title: 'Tháp đánh đổi ba chiều',
+            body: 'Không tồn tại bộ nhớ vừa nhanh, vừa to, vừa rẻ — nên máy tính xếp THÁP: đỉnh nhanh-nhỏ-đắt (cache, RAM), đáy chậm-to-rẻ (SSD, HDD). Hệ thống giỏi là hệ thống giữ dữ liệu NÓNG ở gần đỉnh, dữ liệu nguội ở đáy.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 12 — Physical Storage Systems'
+          },
+          {
+            icon: 'fa-plug-circle-xmark',
+            title: 'Volatile vs bền vững — ranh giới sống còn',
+            body: 'CPU cache và RAM là <strong>volatile</strong>: cúp điện là trắng tay. Database cam kết dữ liệu KHÔNG MẤT (nhớ delete_user #22 chạy trọn gói?) — nên bản gốc bắt buộc nằm từ SSD trở xuống. RAM chỉ là chỗ LÀM VIỆC, không phải chỗ Ở.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Nhìn bảng storage_tiers bên cạnh: SSD → RAM chênh ~1.000 lần. Nghĩa là MỘT trang được giữ lại trên RAM (thay vì đọc lại từ đĩa) tiết kiệm bằng cả nghìn lần đọc RAM — đó chính là lý do tồn tại của buffer ở Ticket #33.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'storage_tiers',
+            columns: [
+              { name: 'tầng', type: 'TEXT', key: '', icon: '🏗️' },
+              { name: 'độ_trễ', type: 'TEXT', key: '', icon: '⏱️' },
+              { name: 'sức_chứa', type: 'TEXT', key: '', icon: '📦' },
+              { name: 'mất_điện', type: 'TEXT', key: '', icon: '🔌' }
+            ]
+          },
+          data_preview: [
+            ['CPU Cache', '~1 ns',    'vài MB',      'mất sạch'],
+            ['RAM',       '~100 ns',  'vài chục GB', 'mất sạch'],
+            ['SSD',       '~100 µs',  'vài TB',      'giữ nguyên'],
+            ['HDD',       '~10 ms',   'chục TB',     'giữ nguyên']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao KHÔNG để cả database Community nằm hẳn trong RAM cho nhanh?',
+            options: [
+              { id: 'a', text: 'RAM vừa đắt vừa VOLATILE — cúp điện là mất sạch; dữ liệu bền vững bắt buộc phải có mặt trên đĩa', correct: true, explanation: 'Đúng cả hai vế — chi phí và tính bay hơi. RAM là bàn làm việc, đĩa mới là két sắt.' },
+              { id: 'b', text: 'Vì RAM đọc chậm hơn SSD', correct: false, explanation: 'Sai — RAM nhanh hơn SSD cỡ nghìn lần; vấn đề là giá và tính bay hơi.' },
+              { id: 'c', text: 'Vì SQL không truy cập được dữ liệu trong RAM', correct: false, explanation: 'Sai — ngược lại: CPU CHỈ xử lý được dữ liệu đã ở RAM; SQL nào cũng đi qua RAM.' },
+              { id: 'd', text: 'Vì luật bảo mật cấm để dữ liệu người dùng trong RAM', correct: false, explanation: 'Sai — không có luật nào như vậy; mọi hệ thống đều xử lý dữ liệu trong RAM.' }
+            ]
+          },
+          {
+            question: 'Postgres cần đúng MỘT dòng post 200 byte đang nằm trên đĩa — nó đọc lên bao nhiêu?',
+            options: [
+              { id: 'a', text: 'Nguyên TRANG ~8KB chứa dòng đó — đĩa và RAM nói chuyện theo đơn vị trang, không theo dòng', correct: true, explanation: 'Đúng — page/block là đơn vị vận chuyển. Muốn 200 byte vẫn khiêng 8KB; vì thế xếp các dòng hay đọc-cùng-nhau vào cùng trang là ăn tiền (hẹn Ticket #34).' },
+              { id: 'b', text: 'Đúng 200 byte của dòng đó', correct: false, explanation: 'Sai — phần cứng không phục vụ lẻ; giao dịch tối thiểu là 1 trang.' },
+              { id: 'c', text: 'Cả bảng posts', correct: false, explanation: 'Sai — chỉ khi full scan mới đọc mọi trang của bảng; đọc 1 dòng chỉ cần 1 trang.' },
+              { id: 'd', text: 'Chỉ cột được SELECT của dòng đó', correct: false, explanation: 'Sai — row-store lưu cả dòng liền nhau trong trang; đọc theo cột là chuyện của Ticket #35.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'RAM hay Đĩa?',
+          instruction: 'Mỗi đặc tính thuộc về tầng nào? Kéo vào đúng ô.',
+          xp: 20,
+          chips: [
+            { id: 'h1', label: 'Cúp điện là mất sạch (volatile)' },
+            { id: 'h2', label: 'Bản gốc database bắt buộc nằm ở đây' },
+            { id: 'h3', label: 'Độ trễ tính bằng nano-giây' },
+            { id: 'h4', label: 'Rẻ, chứa hàng TB, giữ dữ liệu khi tắt máy' }
+          ],
+          bins: [
+            { id: 'ram', label: 'RAM', correct: 'ram' },
+            { id: 'disk', label: 'ĐĨA (SSD/HDD)', correct: 'disk' }
+          ],
+          solution: { h1: 'ram', h2: 'disk', h3: 'ram', h4: 'disk' }
+        }
+      },
+      step_3: {
+        mission: 'Dựng lại THÁP LƯU TRỮ từ nhanh nhất xuống chậm nhất — gắn đúng vai của từng tầng với hệ Community. Có một khối bịa đặt trong khay.',
+        blocks: [
+          { type: 'op', token: 'RAM — vài chục GB, nơi buffer của Postgres sống, mất sạch khi cúp điện', slot: 'tier-2' },
+          { type: 'op', token: 'CPU Cache — vài MB, nano-giây, đắt nhất', slot: 'tier-1' },
+          { type: 'op', token: 'HDD / băng từ — rẻ nhất, cho backup & dữ liệu nguội', slot: 'tier-4' },
+          { type: 'op', token: 'SSD — bền vững, database Community đang nằm đây', slot: 'tier-3' },
+          { type: 'op', token: 'CPU register — to hàng TB, rẻ như cho', slot: 'tier-x' }
+        ],
+        drop_zones: [
+          { id: 'tier-1', placeholder: 'Tầng 1 — nhanh nhất, nhỏ nhất', accepts: ['op'], multi: false,
+            station: { icon: '⚡', label: 'Tầng 1', sub: 'Đỉnh tháp', hint: 'Sát CPU nhất: dung lượng vài MB nhưng độ trễ nano-giây.' } },
+          { id: 'tier-2', placeholder: 'Tầng 2 — bàn làm việc của database', accepts: ['op'], multi: false,
+            station: { icon: '🧠', label: 'Tầng 2', sub: 'Bàn làm việc', hint: 'Nơi mọi trang dữ liệu phải đi qua trước khi CPU xử lý — nhưng volatile.' } },
+          { id: 'tier-3', placeholder: 'Tầng 3 — nhà của dữ liệu Community', accepts: ['op'], multi: false,
+            station: { icon: '💾', label: 'Tầng 3', sub: 'Két sắt chính', hint: 'Bền vững + đủ nhanh — bản gốc database ở đây.' } },
+          { id: 'tier-4', placeholder: 'Tầng 4 — kho nguội', accepts: ['op'], multi: false,
+            station: { icon: '🗄️', label: 'Tầng 4', sub: 'Đáy tháp', hint: 'Chậm nhất, rẻ nhất — chỗ của backup và dữ liệu ít đụng tới.' } }
+        ],
+        expected_sql: 'CPU Cache — vài MB, nano-giây, đắt nhất RAM — vài chục GB, nơi buffer của Postgres sống, mất sạch khi cúp điện SSD — bền vững, database Community đang nằm đây HDD / băng từ — rẻ nhất, cho backup & dữ liệu nguội',
+        expected_zones: {
+          'tier-1': 'CPU Cache — vài MB, nano-giây, đắt nhất',
+          'tier-2': 'RAM — vài chục GB, nơi buffer của Postgres sống, mất sạch khi cúp điện',
+          'tier-3': 'SSD — bền vững, database Community đang nằm đây',
+          'tier-4': 'HDD / băng từ — rẻ nhất, cho backup & dữ liệu nguội'
+        },
+        reveal_hints: {
+          'tier-1': 'Đỉnh tháp nhanh nhất: <strong>CPU Cache</strong>. Khối "CPU register to hàng TB" là bịa — register còn nhỏ hơn cache nhiều.',
+          'tier-2': 'Bàn làm việc volatile: <strong>RAM</strong> — buffer của Ticket #33 sẽ sống ở đây.',
+          'tier-3': 'Két sắt chính, bền vững: <strong>SSD</strong>.',
+          'tier-4': 'Đáy tháp: <strong>HDD/băng từ</strong> cho backup.'
+        }
+      },
+      step_4: {
+        prompt: 'Một người dùng mở post #501. Dòng dữ liệu đó đi ĐƯỜNG NÀO từ đĩa lên màn hình? Chọn mô tả đúng:',
+        challenge_type: 'mcq_code',
+        options: [
+          { text: 'Đĩa → nạp NGUYÊN TRANG 8KB chứa dòng vào buffer trên RAM → CPU đọc dòng từ RAM. Lần mở sau, nếu trang còn trong buffer thì khỏi chạm đĩa.', correct: true },
+          { text: 'CPU đọc thẳng dòng 200 byte từ đĩa, không cần qua RAM — vì SSD hiện đại đã đủ nhanh.', correct: false },
+          { text: 'Cả bảng posts được nạp vào RAM ngay khi Postgres khởi động, nên không bao giờ phải chạm đĩa.', correct: false },
+          { text: 'Dòng được đọc từ đĩa lên CPU cache trước, rồi mới chuyển xuống RAM cho Postgres.', correct: false }
+        ],
+        context: {
+          scenario: 'Đây là chuyến đi mà MỌI truy vấn của Community đều thực hiện — từ Bài 1 tới giờ, chỉ là bạn chưa từng nhìn thấy nó. Hiểu chuyến đi này thì mọi kỹ thuật còn lại của Module 6 chỉ là "rút ngắn đường".',
+          real_world: 'Câu "database của tôi nhanh vì có nhiều RAM" mà dev hay nói — bản chất là: nhiều RAM = buffer to = nhiều trang nóng khỏi phải xuống đĩa lấy lại.',
+          steps: [
+            'Bản gốc dòng nằm trong 1 trang ~8KB trên SSD.',
+            'Đơn vị vận chuyển là TRANG — không phải dòng (MCQ 2).',
+            'Trang phải lên RAM thì CPU mới xử lý được.',
+            'Trang ở lại RAM sau lần đọc → lần sau miễn phí chuyến đĩa (Ticket #33 khai thác điều này).'
+          ],
+          hint_explore: 'Ngó lại bảng <code>storage_tiers</code> ở Step 1 — chênh lệch SSD↔RAM là ~1.000 lần.',
+          expected: 'Chọn đúng đường đi 3 chặng: đĩa → trang → RAM → CPU, kèm quyền "ở lại" của trang trong buffer.'
+        },
+        hints: [
+          { level: 1, text: 'Nhớ 2 luật từ MCQ: CPU chỉ xử lý được dữ liệu ĐÃ Ở RAM, và đĩa↔RAM giao dịch theo TRANG.' },
+          { level: 2, text: 'Loại phương án nào cho CPU "đọc thẳng từ đĩa" hoặc nạp "cả bảng" — cả hai đều phạm luật trên.' },
+          { level: 3, text: 'CPU cache là chuyện giữa CPU và RAM — dữ liệu không đi đường đĩa → cache → RAM.' },
+          { level: 4, text: 'Đáp án: phương án mô tả Đĩa → TRANG vào buffer RAM → CPU, có "lần sau khỏi chạm đĩa".' }
+        ],
+        success_message: 'Ticket #31 đóng! Bạn đã thấy tầng hầm — giờ mọi chữ "chậm" đều truy được về "bao nhiêu chuyến xuống đĩa". Ticket #32: cùng 100 post, vì sao cuộn timeline thì mượt mà mở bookmark rải rác thì ì ạch?',
+        xp_reward: 120
+      }
+    },
+
+    /* ── tc_12 — Ticket #32 · Sequential vs Random Access ── */
+    {
+      id: 'tc_12', index: 12,
+      title: 'Sequential vs Random — cách chạm đĩa quyết định tốc độ',
+      subtitle: 'Cùng 100 dòng: đọc liền dải trả 1 lần seek, đọc rải rác trả 100 lần',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'io_benchmark',
+          columns: ['thao_tác', 'số_dòng', 'cách_đọc', 'thời_gian'],
+          dataRows: [
+            ['Cuộn timeline',      '100', 'liền dải',  '12 ms'],
+            ['Mở bookmark rải rác', '100', 'nhảy cóc', '980 ms'],
+            ['Full scan kho #25',  '38M', 'liền dải',  '41 s'],
+            ['Tra 1000 id trộn',   '1000', 'nhảy cóc', '9.8 s']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #32',
+        hook: 'Đo thử hai thao tác cùng đọc đúng 100 post: cuộn timeline mượt như bơ — 12 mili-giây; mở 100 post đã bookmark rải rác — gần MỘT GIÂY. Cùng số dòng, cùng bảng, cùng SQL độ khó như nhau. Khác đúng một thứ: <em>cách chạm đĩa</em> — một bên đọc liền một dải, một bên nhảy cóc trăm nơi. Ticket #32: mổ xẻ vì sao random đắt thế, và database làm gì để né nó.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Một lần đọc HDD = seek (di chuyển đầu đọc) + rotate (chờ đĩa quay) + transfer (đọc thật)',
+            'Sequential trả seek+rotate MỘT lần rồi transfer suốt; random trả TỪNG dòng một',
+            'Database né random bằng cách GOM: sort trước khi đọc, xếp dữ liệu hay đọc-cùng-nhau nằm cạnh nhau'
+          ],
+          intro: 'Trên HDD, đầu đọc là cánh tay cơ khí thật: muốn đọc chỗ khác phải DI CHUYỂN (seek, vài ms) rồi CHỜ đĩa quay tới nơi (rotate). Phần đọc dữ liệu thật (transfer) lại rất nhanh. Đọc 100 post nằm liền nhau: trả seek+rotate MỘT lần, transfer 100 dòng một hơi. Đọc 100 post rải rác: trả đủ bộ seek+rotate MỘT TRĂM lần — tiền vé đắt hơn tiền hàng. SSD không có cánh tay cơ khí nên đỡ hơn nhiều, nhưng đọc liền dải vẫn thắng nhờ đọc theo trang và prefetch.',
+          example: 'io_benchmark: 100 dòng liền dải 12ms vs 100 dòng nhảy cóc 980ms — chênh ~80 lần, toàn bộ là tiền seek.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-compact-disc',
+            title: 'Giải phẫu một lần đọc đĩa',
+            body: 'HDD: <strong>seek</strong> (đầu đọc dời track, ~vài ms) + <strong>rotational delay</strong> (chờ sector quay tới, ~vài ms) + <strong>transfer</strong> (đọc dải dữ liệu — phần rẻ). Random access = trả 2 khoản đầu cho MỖI lần đọc; sequential chỉ trả 1 lần cho cả chuyến.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 12 — Physical Storage Systems / Magnetic Disks'
+          },
+          {
+            icon: 'fa-bolt',
+            title: 'SSD có thoát nạn không?',
+            body: 'SSD không có đầu đọc cơ khí — random rẻ hơn HDD cả trăm lần. NHƯNG sequential vẫn thắng: đọc theo trang liền kề tận dụng prefetch và băng thông nội bộ. Nguyên tắc "gom việc đọc liền mạch" sống lâu hơn mọi đời phần cứng.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Mẹo rẻ nhất để cứu random: <strong>SORT danh sách vị trí trước khi đọc</strong> — 100 điểm rải rác sau khi sắp xếp thành lộ trình một chiều, seek ngắn dần thay vì nhảy loạn. Mini-game bên dưới có đúng bug này.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'io_benchmark',
+            columns: [
+              { name: 'thao_tác', type: 'TEXT', key: '', icon: '🖱️' },
+              { name: 'số_dòng', type: 'INT', key: '', icon: '🔢' },
+              { name: 'cách_đọc', type: 'TEXT', key: '', icon: '🧭' },
+              { name: 'thời_gian', type: 'TEXT', key: '', icon: '⏱️' }
+            ]
+          },
+          data_preview: [
+            ['Cuộn timeline',       '100',  'liền dải', '12 ms'],
+            ['Mở bookmark rải rác', '100',  'nhảy cóc', '980 ms'],
+            ['Full scan kho #25',   '38M',  'liền dải', '41 s'],
+            ['Tra 1000 id trộn',    '1000', 'nhảy cóc', '9.8 s']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Cùng đọc 100 post, vì sao bản "rải rác" chậm hơn bản "liền dải" tới ~80 lần?',
+            options: [
+              { id: 'a', text: 'Vì phải trả seek + rotate cho TỪNG post — còn liền dải chỉ trả một lần rồi transfer suốt', correct: true, explanation: 'Đúng — tiền vé (seek+rotate) đắt hơn tiền hàng (transfer); random trả vé 100 lần.' },
+              { id: 'b', text: 'Vì 100 post rải rác có dung lượng lớn hơn', correct: false, explanation: 'Sai — cùng 100 dòng, cùng dung lượng; khác nhau ở số lần DI CHUYỂN.' },
+              { id: 'c', text: 'Vì SQL của bản rải rác phức tạp hơn', correct: false, explanation: 'Sai — độ phức tạp SQL như nhau; chi phí nằm ở tầng vật lý.' },
+              { id: 'd', text: 'Vì bản rải rác không dùng được RAM', correct: false, explanation: 'Sai — cả hai đều đi qua RAM; khác nhau ở số chuyến XUỐNG ĐĨA.' }
+            ]
+          },
+          {
+            question: 'Chuyển hết sang SSD (không còn đầu đọc cơ khí) — bài học "đọc liền dải" còn giá trị không?',
+            options: [
+              { id: 'a', text: 'Còn — random trên SSD rẻ hơn HDD nhiều nhưng sequential vẫn thắng nhờ đọc theo trang liền kề + prefetch', correct: true, explanation: 'Đúng — chênh lệch co lại (từ ~100× còn vài lần) nhưng không biến mất; nguyên tắc gom liền mạch vẫn ăn tiền.' },
+              { id: 'b', text: 'Hết — trên SSD random và sequential nhanh y hệt nhau', correct: false, explanation: 'Sai — prefetch, kích thước trang và băng thông nội bộ vẫn ưu ái đọc liền dải.' },
+              { id: 'c', text: 'Ngược lại — SSD đọc random còn nhanh hơn sequential', correct: false, explanation: 'Sai — không có phần cứng phổ biến nào như vậy.' },
+              { id: 'd', text: 'SSD không đọc được theo kiểu random', correct: false, explanation: 'Sai — đọc được và khá nhanh; chỉ là vẫn thua liền dải.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'bug_spot',
+          title: 'Cứu trang bookmark',
+          instruction: 'Code mở danh sách bookmark chạy chậm gấp chục lần mức cần thiết. Click DÒNG có lỗi (gợi ý: thứ tự!).',
+          xp: 25,
+          code: 'bookmarks = [8821, 302, 4577, 91, 15023]\nfor post_id in bookmarks:\n    vi_tri = locate_on_disk(post_id)\n    page = disk.read_page(vi_tri)\n    render(page.get(post_id))',
+          bugType: 'performance',
+          bugs: [
+            { line: 2, description: 'Duyệt theo thứ tự NGẪU NHIÊN của danh sách → đầu đọc nhảy loạn (seek tối đa). Sort danh sách theo vị trí trên đĩa trước khi đọc — lộ trình thành một chiều, random hóa gần-tuần-tự.' }
+          ]
+        }
+      },
+      step_3: {
+        mission: 'Mổ xẻ MỘT lần đọc random trên HDD thành 3 chặng chi phí, đúng thứ tự — và vạch mặt chặng mà đọc TUẦN TỰ cũng phải trả. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Transfer: đọc dải dữ liệu — chặng DUY NHẤT mà đọc tuần tự cũng phải trả', slot: 'io-3' },
+          { type: 'op', token: 'Seek: đầu đọc DI CHUYỂN tới đúng track — vài mili-giây mỗi lần', slot: 'io-1' },
+          { type: 'op', token: 'Compile: đĩa biên dịch lại câu SQL trước khi đọc', slot: 'io-x' },
+          { type: 'op', token: 'Rotational delay: CHỜ sector cần đọc quay tới dưới đầu đọc', slot: 'io-2' }
+        ],
+        drop_zones: [
+          { id: 'io-1', placeholder: 'Chặng 1 — trả tiền di chuyển', accepts: ['op'], multi: false,
+            station: { icon: '🎯', label: 'Chặng 1', sub: 'Di chuyển', hint: 'Cánh tay cơ khí phải TỚI ĐÚNG track trước đã — khoản đắt nhất.' } },
+          { id: 'io-2', placeholder: 'Chặng 2 — trả tiền chờ', accepts: ['op'], multi: false,
+            station: { icon: '⏳', label: 'Chặng 2', sub: 'Chờ quay', hint: 'Tới track rồi vẫn phải chờ đĩa quay đến đúng sector.' } },
+          { id: 'io-3', placeholder: 'Chặng 3 — mua hàng thật', accepts: ['op'], multi: false,
+            station: { icon: '📤', label: 'Chặng 3', sub: 'Đọc dữ liệu', hint: 'Phần rẻ nhất — và là phần duy nhất sequential cũng trả.' } }
+        ],
+        expected_sql: 'Seek: đầu đọc DI CHUYỂN tới đúng track — vài mili-giây mỗi lần Rotational delay: CHỜ sector cần đọc quay tới dưới đầu đọc Transfer: đọc dải dữ liệu — chặng DUY NHẤT mà đọc tuần tự cũng phải trả',
+        expected_zones: {
+          'io-1': 'Seek: đầu đọc DI CHUYỂN tới đúng track — vài mili-giây mỗi lần',
+          'io-2': 'Rotational delay: CHỜ sector cần đọc quay tới dưới đầu đọc',
+          'io-3': 'Transfer: đọc dải dữ liệu — chặng DUY NHẤT mà đọc tuần tự cũng phải trả'
+        },
+        reveal_hints: {
+          'io-1': 'Trước khi đọc phải TỚI NƠI: <strong>Seek</strong>. Khối "Compile" là bịa — đĩa không biết SQL là gì.',
+          'io-2': 'Tới track rồi còn phải <strong>chờ đĩa quay</strong> tới đúng sector.',
+          'io-3': 'Cuối cùng mới là <strong>Transfer</strong> — sequential chỉ phải trả đúng chặng này (sau lần seek đầu).'
+        }
+      },
+      step_4: {
+        prompt: 'Điền 3 con số/từ chốt hạ bài toán 100 post — nhìn lại io_benchmark nếu cần.',
+        challenge_type: 'fill_blank',
+        template: '# Đọc 100 post LIỀN DẢI trên đĩa:\n#   → trả seek + rotate ____ lần, rồi transfer một mạch\n\n# Đọc 100 post RẢI RÁC:\n#   → trả seek + rotate ____ lần — mỗi post một vé\n\n# Mẹo của database khi buộc phải đọc rải rác:\n#   → ____ danh sách vị trí trước khi đọc (bug ở mini-game!),\n#     biến lộ trình nhảy loạn thành một chiều gần-tuần-tự',
+        blanks: [
+          { id: 'b1', hint: 'mấy lần?', expected: '1' },
+          { id: 'b2', hint: 'mấy lần?', expected: '100' },
+          { id: 'b3', hint: 'tiếng Anh, 4 chữ cái', expected: 'sort' }
+        ],
+        context: {
+          scenario: 'Ba ô này là toàn bộ "kinh tế học" của I/O: vé (seek+rotate) đắt, hàng (transfer) rẻ — mua sỉ một chuyến thay vì mua lẻ trăm chuyến.',
+          real_world: 'Elevator algorithm của hệ điều hành, bitmap heap scan của Postgres — đều là "sort vị trí trước khi đọc" ở quy mô công nghiệp.',
+          steps: [
+            'Liền dải: một vé cho cả chuyến — seek + rotate đúng 1 lần.',
+            'Rải rác: mỗi post một vé — 100 lần.',
+            'Không đổi được vị trí dữ liệu ngay? Đổi THỨ TỰ GHÉ: sort.',
+            'Muốn triệt để hơn — xếp dữ liệu nằm sẵn cạnh nhau: chờ clustering ở Ticket #37.'
+          ],
+          hint_explore: 'Bảng io_benchmark Step 1: 12ms vs 980ms cho cùng 100 dòng — toàn bộ chênh lệch là tiền vé.',
+          expected: 'Điền đúng 3/3: 1 · 100 · sort. Bài pseudo-code — chấm theo ô điền.'
+        },
+        hints: [
+          { level: 1, text: 'Tiền vé = seek + rotate. Liền dải mua vé mấy lần? Rải rác mấy lần?' },
+          { level: 2, text: 'Ô 1 và ô 2: 1 và 100 — đó chính là chênh lệch ~80× trong io_benchmark.' },
+          { level: 3, text: 'Ô 3: mini-game vừa sửa bug gì? Sắp xếp danh sách vị trí = <code>sort</code>.' },
+          { level: 4, text: 'Đáp án: <code>1</code> · <code>100</code> · <code>sort</code>.' }
+        ],
+        success_message: 'Ticket #32 đóng! Từ giờ thấy chữ "chậm" là bạn hỏi ngay: bao nhiêu vé seek? Ticket #33: post viral bị mở 10.000 lần/phút — và lý do đĩa không bốc cháy tên là BUFFER.',
+        xp_reward: 120
+      }
+    },
+
+    /* ── tc_13 — Ticket #33 · Buffer Manager ── */
+    {
+      id: 'tc_13', index: 13,
+      title: 'Buffer Manager — trí nhớ ngắn hạn của database',
+      subtitle: 'Trang nóng ở lại RAM: hit thì miễn phí, miss mới xuống đĩa, chật thì LRU đuổi',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 18, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'buffer_state',
+          columns: ['khung', 'trang', 'lần_dùng_cuối'],
+          dataRows: [
+            ['F1', 'P7 (post 501 viral)', 'vừa xong'],
+            ['F2', 'P2 (feed trang đầu)', '5 phút trước'],
+            ['F3', 'P9 (hồ sơ cũ)',       '30 phút trước']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #33',
+        hook: 'Post "GuildBoard sập" (Ticket #24) lại viral — <strong>10.000 lượt mở mỗi phút</strong>. Không lẽ đĩa bị chạm 10.000 lần cho CÙNG MỘT trang dữ liệu? May là không: Postgres giữ các trang nóng trong <em>buffer</em> trên RAM — lần mở đầu tốn một chuyến đĩa, 9.999 lần sau lấy thẳng từ RAM. Ticket #33: vận hành trí nhớ ngắn hạn ấy — hit, miss, và luật đuổi khách LRU khi buffer chật.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Buffer = dàn khung (frame) trên RAM giữ bản sao các trang đĩa đang nóng',
+            'HIT: trang cần đã ở buffer → miễn phí chuyến đĩa · MISS: phải xuống đĩa khiêng lên',
+            'Buffer chật → đuổi trang theo LRU: trang LÂU-KHÔNG-DÙNG-NHẤT ra đi'
+          ],
+          intro: 'Mọi trang dữ liệu muốn được đọc đều phải qua RAM (Ticket #31) — buffer manager tận dụng luôn: <strong>đã khiêng lên thì giữ lại</strong>. Trang post viral nằm lì trong buffer, 10.000 request chỉ tốn 1 chuyến đĩa. Nghệ thuật nằm ở lúc CHẬT: khung có hạn, nạp trang mới là phải đuổi trang cũ. Đuổi ai? <strong>LRU</strong> — Least Recently Used: kẻ lâu không được hỏi thăm nhất, với niềm tin "quá khứ gần dự báo tương lai gần".',
+          example: 'buffer_state bên cạnh: 3 khung F1-F3. Request trang P2 → HIT (đang ở F2). Request P4 → MISS + buffer đầy → đuổi P9 (30 phút không ai đụng).'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-memory',
+            title: 'Hit ratio — chỉ số ăn tiền nhất',
+            body: 'Tỷ lệ request được phục vụ ngay từ buffer gọi là <strong>hit ratio</strong>. 99% hit nghĩa là 100 request chỉ 1 chuyến đĩa. Câu thần chú "thêm RAM cho database" thực chất là: buffer to hơn → giữ được nhiều trang nóng hơn → hit ratio tăng.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 13 — Data Storage Structures / Buffer Manager'
+          },
+          {
+            icon: 'fa-door-open',
+            title: 'LRU — luật đuổi khách',
+            body: 'Chật chỗ thì đuổi trang <strong>lâu-không-dùng-nhất</strong> — vì trang vừa được đọc nhiều khả năng sắp được đọc lại (locality). Chú ý bẫy ngược: một cú full-scan bảng khổng lồ có thể "xả lũ" đuổi sạch trang nóng — nên Postgres dùng ring buffer riêng cho scan lớn.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Vì sao trang đầu feed lúc nào cũng mở nhanh còn hồ sơ cũ 2 năm thì khựng một nhịp? Trang feed được cả nghìn người giữ NÓNG hộ nhau trong buffer; hồ sơ cũ là MISS gần như chắc chắn — một chuyến đĩa trọn gói seek + rotate + transfer (Ticket #32).'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'buffer_state',
+            columns: [
+              { name: 'khung', type: 'TEXT', key: 'frame', icon: '🖼️' },
+              { name: 'trang', type: 'TEXT', key: 'page', icon: '📄' },
+              { name: 'lần_dùng_cuối', type: 'TEXT', key: 'LRU', icon: '🕐' }
+            ]
+          },
+          data_preview: [
+            ['F1', 'P7 (post 501 viral)', 'vừa xong'],
+            ['F2', 'P2 (feed trang đầu)', '5 phút trước'],
+            ['F3', 'P9 (hồ sơ cũ)',       '30 phút trước']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: '10.000 lượt mở post 501 trong một phút — đĩa bị chạm bao nhiêu lần (buffer đủ chỗ)?',
+            options: [
+              { id: 'a', text: '~1 lần: chuyến MISS đầu tiên khiêng trang lên; 9.999 lượt sau là HIT ngay trên RAM', correct: true, explanation: 'Đúng — đó là toàn bộ phép màu của buffer: trả tiền đĩa một lần, dùng cả phút.' },
+              { id: 'b', text: '10.000 lần — mỗi request một chuyến đĩa', correct: false, explanation: 'Sai — thế thì đĩa cháy thật; buffer tồn tại để chặn đúng thảm họa này.' },
+              { id: 'c', text: '0 lần — dữ liệu viral tự động sinh ra trong RAM', correct: false, explanation: 'Sai — bản gốc luôn từ đĩa (Ticket #31); lần đầu bắt buộc là một chuyến MISS.' },
+              { id: 'd', text: '5.000 lần — buffer chỉ phục vụ được một nửa', correct: false, explanation: 'Sai — một trang đã ở buffer phục vụ được mọi request tới nó, không chia phần trăm.' }
+            ]
+          },
+          {
+            question: 'Buffer đầy, cần nạp trang mới — LRU chọn đuổi trang nào?',
+            options: [
+              { id: 'a', text: 'Trang có lần-dùng-cuối XA NHẤT — đặt cược rằng ai lâu không được hỏi thăm thì sắp tới cũng không', correct: true, explanation: 'Đúng — Least Recently Used: quá khứ gần dự báo tương lai gần (locality).' },
+              { id: 'b', text: 'Trang vừa được dùng xong — vì nhu cầu của nó đã được đáp ứng', correct: false, explanation: 'Sai — đó là MRU, thường tệ: trang vừa dùng rất hay được dùng lại ngay (F5!).' },
+              { id: 'c', text: 'Trang có kích thước lớn nhất để lấy nhiều chỗ', correct: false, explanation: 'Sai — các trang cùng cỡ (8KB); không có "trang to trang nhỏ" để chọn.' },
+              { id: 'd', text: 'Ngẫu nhiên — cho công bằng', correct: false, explanation: 'Sai — random bỏ phí thông tin truy cập; LRU dùng chính lịch sử để đoán tương lai.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'HIT hay MISS?',
+          instruction: 'Với buffer_state ở Step 1 (P7 · P2 · P9 đang trong buffer), mỗi request sau là HIT hay MISS?',
+          xp: 20,
+          chips: [
+            { id: 'k1', label: 'Mở lại post 501 (trang P7) — viral, vừa đọc 1 giây trước' },
+            { id: 'k2', label: 'Mở hồ sơ user từ 2 năm trước (trang P44, lần đầu được đụng)' },
+            { id: 'k3', label: 'F5 trang feed (trang P2) lần thứ ba liên tiếp' },
+            { id: 'k4', label: 'Mở trang P31 — vừa bị LRU đuổi khỏi buffer sáng nay' }
+          ],
+          bins: [
+            { id: 'hit', label: 'HIT — có sẵn trong buffer', correct: 'hit' },
+            { id: 'miss', label: 'MISS — phải xuống đĩa', correct: 'miss' }
+          ],
+          solution: { k1: 'hit', k2: 'miss', k3: 'hit', k4: 'miss' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp quy trình buffer xử lý MỘT request trang, đúng thứ tự 4 bước. Trong khay có một luật đuổi khách giả mạo.',
+        blocks: [
+          { type: 'op', token: 'MISS: xuống đĩa đọc trang — chuyến đi đắt nhất của request', slot: 'buf-2' },
+          { type: 'op', token: 'Tra buffer trước: trang đã ở RAM chưa? Có = HIT, trả ngay, miễn phí chuyến đĩa', slot: 'buf-1' },
+          { type: 'op', token: 'Nạp trang mới vào khung trống — request sau tới trang này sẽ là HIT', slot: 'buf-4' },
+          { type: 'op', token: 'Buffer đầy: đuổi trang LÂU-KHÔNG-DÙNG-NHẤT (LRU) để lấy chỗ', slot: 'buf-3' },
+          { type: 'op', token: 'Buffer đầy: đuổi trang VỪA-MỚI-DÙNG-XONG — nó được đọc rồi còn gì', slot: 'buf-x' }
+        ],
+        drop_zones: [
+          { id: 'buf-1', placeholder: 'Bước 1 — hỏi ai trước?', accepts: ['op'], multi: false,
+            station: { icon: '🔍', label: 'CHECK', sub: 'Tra buffer', hint: 'Luôn hỏi RAM trước khi làm phiền đĩa.' } },
+          { id: 'buf-2', placeholder: 'Bước 2 — khi câu trả lời là "chưa có"', accepts: ['op'], multi: false,
+            station: { icon: '💸', label: 'MISS', sub: 'Xuống đĩa', hint: 'Không có trong buffer thì đành trả tiền vé seek + rotate + transfer.' } },
+          { id: 'buf-3', placeholder: 'Bước 3 — hết chỗ thì sao?', accepts: ['op'], multi: false,
+            station: { icon: '🚪', label: 'EVICT', sub: 'Đuổi khách', hint: 'Chọn nạn nhân theo LỊCH SỬ truy cập — không phải theo cảm tính.' } },
+          { id: 'buf-4', placeholder: 'Bước 4 — chốt hạ', accepts: ['op'], multi: false,
+            station: { icon: '📥', label: 'LOAD', sub: 'Nạp & nhớ', hint: 'Trang mới vào khung — và từ giờ nó phục vụ mọi request miễn phí.' } }
+        ],
+        expected_sql: 'Tra buffer trước: trang đã ở RAM chưa? Có = HIT, trả ngay, miễn phí chuyến đĩa MISS: xuống đĩa đọc trang — chuyến đi đắt nhất của request Buffer đầy: đuổi trang LÂU-KHÔNG-DÙNG-NHẤT (LRU) để lấy chỗ Nạp trang mới vào khung trống — request sau tới trang này sẽ là HIT',
+        expected_zones: {
+          'buf-1': 'Tra buffer trước: trang đã ở RAM chưa? Có = HIT, trả ngay, miễn phí chuyến đĩa',
+          'buf-2': 'MISS: xuống đĩa đọc trang — chuyến đi đắt nhất của request',
+          'buf-3': 'Buffer đầy: đuổi trang LÂU-KHÔNG-DÙNG-NHẤT (LRU) để lấy chỗ',
+          'buf-4': 'Nạp trang mới vào khung trống — request sau tới trang này sẽ là HIT'
+        },
+        reveal_hints: {
+          'buf-1': 'Bước rẻ nhất đi trước: <strong>tra buffer</strong> — HIT là xong việc.',
+          'buf-2': 'Chưa có mới phải <strong>xuống đĩa</strong> (MISS).',
+          'buf-3': 'Đuổi theo LỊCH SỬ: <strong>LRU — lâu không dùng nhất</strong>. Khối "đuổi trang vừa dùng xong" là MRU giả mạo — trang vừa đọc rất hay bị đọc lại (F5!).',
+          'buf-4': 'Khép vòng: <strong>nạp trang mới</strong> — lần sau nó là HIT.'
+        }
+      },
+      step_4: {
+        prompt: 'Buffer 3 khung đang giữ: P7 (vừa dùng xong) · P2 (dùng 5 phút trước) · P9 (dùng 30 phút trước). Request mới cần trang P4. Theo LRU, chuyện gì xảy ra?',
+        challenge_type: 'mcq_code',
+        options: [
+          { text: 'MISS → buffer đầy → đuổi P9 (lâu-không-dùng-nhất, 30 phút) → nạp P4 vào khung vừa trống.', correct: true },
+          { text: 'MISS → đuổi P7 — nó vừa được dùng xong nên nhu cầu đã hết.', correct: false },
+          { text: 'HIT — P4 chắc chắn có sẵn trong buffer vì buffer chứa mọi trang.', correct: false },
+          { text: 'MISS → từ chối request P4 vì buffer đã đầy — người dùng thử lại sau.', correct: false }
+        ],
+        context: {
+          scenario: 'Đây chính là quyết định buffer manager đưa ra hàng triệu lần mỗi giây trên server Community — và bạn vừa lắp đủ 4 bước của nó ở Step 3.',
+          real_world: 'shared_buffers của Postgres, buffer pool của MySQL/InnoDB, page cache của hệ điều hành — tất cả chạy vòng CHECK → MISS → EVICT(LRU-ish) → LOAD y như bạn vừa học.',
+          steps: [
+            'P4 không có trong {P7, P2, P9} → MISS.',
+            '3 khung đều bận → phải đuổi trước khi nạp.',
+            'So lần-dùng-cuối: P7 vừa xong · P2 5 phút · P9 30 phút → P9 là LRU.',
+            'Đuổi P9, nạp P4 — và ghi lại thời điểm dùng cho vòng sau.'
+          ],
+          hint_explore: 'Xem lại bảng buffer_state ở Step 1 — cột lần_dùng_cuối là toàn bộ dữ liệu LRU cần.',
+          expected: 'Chọn phương án MISS → đuổi P9 → nạp P4.'
+        },
+        hints: [
+          { level: 1, text: 'Ba câu hỏi theo thứ tự Step 3: có trong buffer không? còn khung trống không? đuổi ai?' },
+          { level: 2, text: 'P4 không nằm trong 3 khung → MISS chắc chắn. Loại ngay phương án HIT và phương án "từ chối request".' },
+          { level: 3, text: 'LRU nhìn lần-dùng-cuối XA NHẤT: 30 phút > 5 phút > vừa xong.' },
+          { level: 4, text: 'Đáp án: MISS → đuổi P9 → nạp P4.' }
+        ],
+        success_message: 'Ticket #33 đóng! Giờ bạn hiểu vì sao "thêm RAM" là câu thần chú — và vì sao nó không cứu được MISS đầu tiên. Ticket #34: một user sửa bio dài gấp ba, và dòng dữ liệu… không còn vừa chỗ cũ trên trang.',
+        xp_reward: 120
+      }
+    },
+
+    /* ── tc_14 — Ticket #34 · Record Layout & Heap File ── */
+    {
+      id: 'tc_14', index: 14,
+      title: 'Record Layout & Heap File — dòng nằm trên trang thế nào',
+      subtitle: 'Slotted page: con trỏ mọc xuôi, dữ liệu mọc ngược — và chuyện dòng phình không vừa chỗ cũ',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 18, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'page_042 (một trang 8KB của bảng profiles)',
+          columns: ['slot', 'trỏ_tới', 'record'],
+          dataRows: [
+            ['#1', 'offset 8000', 'minhkiller · bio 40B'],
+            ['#2', 'offset 7710', 'yuki_sama · bio 250B'],
+            ['#3', 'offset 7680', 'toxic_lord · bio 28B'],
+            ['#4', '(trống)',     '— free space —']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #34',
+        hook: 'yuki_sama trổ tài viết lại bio dài gấp ba — <code>UPDATE profiles SET bio = …</code> chạy ngon, nhưng bên dưới là một vụ dọn nhà: <strong>dòng mới không còn vừa chỗ cũ</strong> trên trang 8KB. Ticket #34: mở một trang ra xem — dòng nằm thế nào, <em>slotted page</em> xoay xở ra sao khi dòng phình, và vì sao bảng kiểu "túi trang" (heap file) tìm gì cũng phải quét.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Trang 8KB có sơ đồ: header → slot directory (con trỏ, mọc XUÔI) → free space giữa → records (mọc NGƯỢC từ đáy)',
+            'Slot directory = lớp gián tiếp: dòng dời chỗ TRONG trang thì chỉ sửa con trỏ, địa chỉ dòng (RID) không đổi',
+            'Heap file = túi các trang, chèn đâu trống đó — ghi nhanh, nhưng TÌM thì phải quét (động lực cho index)'
+          ],
+          intro: 'Phóng to một trang 8KB của bảng profiles: đầu trang là <strong>header</strong>, kế đó là <strong>slot directory</strong> — mảng con trỏ đánh số, mọc xuôi; dữ liệu thật (records) mọc NGƯỢC từ đáy trang lên; khoảng giữa là <strong>free space</strong>. Hai đầu ăn dần vào giữa — gặp nhau là trang đầy. Kiến trúc "con trỏ một đằng, dữ liệu một nẻo" nghe vòng vèo nhưng chính nó cho phép dòng co giãn, dời chỗ trong trang mà cả thế giới bên ngoài vẫn gọi đúng địa chỉ cũ.',
+          example: 'RID của một dòng = (số trang, số slot) — ví dụ (page_042, #2). Dòng #2 dời offset trong trang? Chỉ con trỏ ở slot #2 đổi, RID giữ nguyên.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-table-cells-large',
+            title: 'Slotted page — căn hộ có sổ địa chỉ',
+            body: 'Records dài ngắn khác nhau (bio 28B vs 250B) nên không chia ô cứng được. <strong>Slot directory</strong> giải quyết: mỗi dòng một con trỏ (offset + độ dài). Xóa dòng? Dồn dữ liệu cho liền, sửa con trỏ — slot khác không suy suyển.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 13 — Data Storage Structures / Slotted-Page Structure'
+          },
+          {
+            icon: 'fa-person-walking-luggage',
+            title: 'Dòng phình — vụ dọn nhà có báo trước',
+            body: 'Bio 40B thành 500B, chỗ cũ không đủ: dòng CHUYỂN sang trang khác còn chỗ, chỗ cũ để lại <strong>forwarding pointer</strong> trỏ tới nhà mới. Ai cầm RID cũ vẫn tìm được — chỉ tốn thêm một bước nhảy. Nhiều forwarding = đọc chậm dần → đó là việc VACUUM của Postgres dọn dẹp.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Heap file chèn dòng mới vào TRANG NÀO CÒN CHỖ — ghi cực nhanh, nhưng "tìm profile của yuki_sama" nghĩa là mở TỪNG trang ra soi (full scan — vé sequential của #32, nhưng phải đọc hết). Muốn nhảy thẳng tới đúng trang? Đó là INDEX — Ticket #36 mở màn đợt sau.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'page_042 (slotted page)',
+            columns: [
+              { name: 'slot', type: 'PTR', key: 'mọc xuôi ⤵', icon: '📌' },
+              { name: 'trỏ_tới', type: 'OFFSET', key: '', icon: '🎯' },
+              { name: 'record', type: 'BYTES', key: 'mọc ngược ⤴', icon: '📦' }
+            ]
+          },
+          data_preview: [
+            ['#1', 'offset 8000', 'minhkiller · bio 40B'],
+            ['#2', 'offset 7710', 'yuki_sama · bio 250B'],
+            ['#3', 'offset 7680', 'toxic_lord · bio 28B'],
+            ['#4', '(trống)',     '— free space —']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao trang không chia ô CỨNG bằng nhau cho các dòng, mà phải bày ra slot directory?',
+            options: [
+              { id: 'a', text: 'Vì record dài ngắn khác nhau (bio 28B vs 250B) — ô cứng sẽ lãng phí hoặc không vừa; con trỏ cho phép xếp sát nhau và co giãn', correct: true, explanation: 'Đúng — variable-length record là lý do tồn tại của slotted page: dữ liệu nằm sát, con trỏ lo địa chỉ.' },
+              { id: 'b', text: 'Vì chia ô cứng là bất hợp pháp trong chuẩn SQL', correct: false, explanation: 'Sai — SQL không quy định tầng vật lý; đây là bài toán kỹ thuật thuần túy.' },
+              { id: 'c', text: 'Vì con trỏ đọc nhanh hơn dữ liệu', correct: false, explanation: 'Sai — con trỏ không "nhanh hơn"; nó thêm MỘT bước gián tiếp, đổi lấy sự linh hoạt.' },
+              { id: 'd', text: 'Để mã hóa dữ liệu người dùng', correct: false, explanation: 'Sai — slot directory là sơ đồ địa chỉ, không liên quan mã hóa.' }
+            ]
+          },
+          {
+            question: 'Dòng bio của yuki_sama phình từ 250B lên 900B, trang hết chỗ. Chuyện gì xảy ra với RID cũ (page_042, #2)?',
+            options: [
+              { id: 'a', text: 'Vẫn dùng được — chỗ cũ để lại forwarding pointer trỏ sang nhà mới; ai giữ RID cũ đi thêm đúng một bước nhảy', correct: true, explanation: 'Đúng — hợp đồng "RID không đổi" được giữ bằng con trỏ chuyển tiếp; giá phải trả là +1 lần đọc.' },
+              { id: 'b', text: 'RID cũ bị hủy, mọi nơi tham chiếu phải cập nhật ngay lập tức', correct: false, explanation: 'Sai — cập-nhật-mọi-nơi là thảm họa (index, transaction đang chạy…); forwarding tồn tại để né đúng việc này.' },
+              { id: 'c', text: 'UPDATE bị từ chối vì trang đầy', correct: false, explanation: 'Sai — database không từ chối vì một trang đầy; nó dọn nhà cho dòng.' },
+              { id: 'd', text: 'Trang tự nở từ 8KB lên 16KB', correct: false, explanation: 'Sai — kích thước trang là hằng số của hệ thống (đơn vị vận chuyển đĩa↔RAM, Ticket #31).' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'order',
+          title: 'Vụ dọn nhà của một dòng phình',
+          instruction: 'Xếp đúng trình tự những gì xảy ra khi UPDATE làm dòng dài hơn chỗ cũ.',
+          xp: 20,
+          items: [
+            { id: 'u1', label: 'UPDATE bio — bản mới dài hơn bản cũ' },
+            { id: 'u2', label: 'Thử ghi lại chỗ cũ trong trang → không vừa, free space không cứu nổi' },
+            { id: 'u3', label: 'Chuyển record sang trang khác còn chỗ' },
+            { id: 'u4', label: 'Chỗ cũ để lại forwarding pointer trỏ tới nhà mới' },
+            { id: 'u5', label: 'RID cũ vẫn hoạt động — người giữ địa chỉ cũ đi thêm 1 bước nhảy' }
+          ],
+          solution: { u1: 1, u2: 2, u3: 3, u4: 4, u5: 5 }
+        }
+      },
+      step_3: {
+        mission: 'Lắp SƠ ĐỒ một trang 8KB theo đúng vị trí từ ĐẦU trang xuống ĐÁY trang. Có một khối mô tả sai kiến trúc.',
+        blocks: [
+          { type: 'op', token: 'Records: dữ liệu thật, mọc NGƯỢC từ đáy trang lên', slot: 'pg-recs' },
+          { type: 'op', token: 'Header: metadata của trang (số slot, con trỏ free space…)', slot: 'pg-header' },
+          { type: 'op', token: 'Records xếp xuôi ngay sau header, không cần con trỏ gì cả', slot: 'pg-x' },
+          { type: 'op', token: 'Slot directory: mảng con trỏ đánh số, mọc XUÔI ngay sau header', slot: 'pg-slots' },
+          { type: 'op', token: 'Free space: khoảng trống ở GIỮA — hai đầu ăn dần vào đây', slot: 'pg-free' }
+        ],
+        drop_zones: [
+          { id: 'pg-header', placeholder: 'Đầu trang — ai đứng đây?', accepts: ['op'], multi: false,
+            station: { icon: '🏷️', label: 'Header', sub: 'Đầu trang', hint: 'Metadata đi trước: trang này có mấy slot, free space bắt đầu từ đâu.' } },
+          { id: 'pg-slots', placeholder: 'Ngay sau header — sổ địa chỉ', accepts: ['op'], multi: false,
+            station: { icon: '📌', label: 'Slots', sub: 'Sổ địa chỉ', hint: 'Mảng con trỏ đánh số — lớp gián tiếp cho phép dòng dời chỗ mà RID không đổi.' } },
+          { id: 'pg-free', placeholder: 'Khoảng giữa trang', accepts: ['op'], multi: false,
+            station: { icon: '⬜', label: 'Free', sub: 'Đất dự trữ', hint: 'Nằm giữa để CẢ HAI phía cùng mọc vào — slot thêm từ trên, record thêm từ dưới.' } },
+          { id: 'pg-recs', placeholder: 'Đáy trang — dữ liệu thật', accepts: ['op'], multi: false,
+            station: { icon: '📦', label: 'Records', sub: 'Đáy trang', hint: 'Dữ liệu thật xếp sát nhau, mọc ngược lên — dài ngắn tùy dòng.' } }
+        ],
+        expected_sql: 'Header: metadata của trang (số slot, con trỏ free space…) Slot directory: mảng con trỏ đánh số, mọc XUÔI ngay sau header Free space: khoảng trống ở GIỮA — hai đầu ăn dần vào đây Records: dữ liệu thật, mọc NGƯỢC từ đáy trang lên',
+        expected_zones: {
+          'pg-header': 'Header: metadata của trang (số slot, con trỏ free space…)',
+          'pg-slots': 'Slot directory: mảng con trỏ đánh số, mọc XUÔI ngay sau header',
+          'pg-free': 'Free space: khoảng trống ở GIỮA — hai đầu ăn dần vào đây',
+          'pg-recs': 'Records: dữ liệu thật, mọc NGƯỢC từ đáy trang lên'
+        },
+        reveal_hints: {
+          'pg-header': 'Metadata luôn mở màn: <strong>Header</strong>.',
+          'pg-slots': 'Sổ địa chỉ kế ngay sau: <strong>slot directory mọc xuôi</strong>. Khối "records xếp xuôi không cần con trỏ" là sai kiến trúc — dòng co giãn thì ai giữ địa chỉ?',
+          'pg-free': 'Ở giữa là <strong>free space</strong> — vùng đệm cho cả hai phía cùng mọc.',
+          'pg-recs': 'Đáy trang: <strong>records mọc ngược lên</strong>.'
+        }
+      },
+      step_4: {
+        prompt: 'Điền 3 từ khóa chốt hạ tầng vật lý của một bảng — nghĩ về sổ địa chỉ, vụ dọn nhà, và cái giá của heap file.',
+        challenge_type: 'fill_blank',
+        template: '# Dòng dời chỗ TRONG trang: chỉ sửa con trỏ trong slot ____\n#   → RID (trang, slot) giữ nguyên với cả thế giới bên ngoài\n\n# Dòng phình KHÔNG vừa trang: chuyển trang khác,\n#   chỗ cũ để lại ____ pointer trỏ tới nhà mới\n\n# Heap file không có trật tự: tìm 1 dòng khi chưa có index\n#   → đành full-____ mọi trang của bảng',
+        blanks: [
+          { id: 'p1', hint: 'sổ địa chỉ của trang', expected: 'directory' },
+          { id: 'p2', hint: 'con trỏ chuyển tiếp', expected: 'forwarding' },
+          { id: 'p3', hint: 'quét (tiếng Anh)', expected: 'scan' }
+        ],
+        context: {
+          scenario: 'Ba từ này là ba mảnh ghép của tầng vật lý: gián tiếp trong trang (directory), gián tiếp giữa các trang (forwarding), và cái giá khi không có lối tắt (scan).',
+          real_world: 'Postgres gọi record là tuple, forwarding chồng chất là lý do bảng "phình" (bloat) và VACUUM tồn tại; "Seq Scan" bạn sẽ gặp trong EXPLAIN ở Capstone chính là full-scan này.',
+          steps: [
+            'Trong trang: slot ____ đổi con trỏ, RID bất biến.',
+            'Giữa các trang: ____ pointer giữ lời hứa RID.',
+            'Chưa có index: full-____ là lựa chọn duy nhất của heap file.',
+            'Ticket #36 (đợt sau) sẽ xây LỐI TẮT để khỏi scan — index.'
+          ],
+          hint_explore: 'Nhìn lại bảng page_042 ở Step 1: cột slot chính là "sổ địa chỉ" đang nói tới.',
+          expected: 'Điền đúng 3/3: directory · forwarding · scan. Bài pseudo-code — chấm theo ô điền.'
+        },
+        hints: [
+          { level: 1, text: 'Ba khái niệm đến từ 3 concept card của Step 1 — mỗi card một từ.' },
+          { level: 2, text: 'Ô 1: mảng con trỏ trong trang tên đầy đủ là slot <code>directory</code>.' },
+          { level: 3, text: 'Ô 2: con trỏ CHUYỂN TIẾP = <code>forwarding</code>. Ô 3: quét toàn bộ = <code>scan</code>.' },
+          { level: 4, text: 'Đáp án: <code>directory</code> · <code>forwarding</code> · <code>scan</code>.' }
+        ],
+        success_message: 'Ticket #34 đóng! Bạn vừa đọc được sơ đồ căn hộ của dữ liệu. Ticket #35 (chốt đợt này): dashboard kho chỉ cần 2 cột trong 12 — mà row-store bắt khiêng cả dòng. Đến lúc xoay dọc kho dữ liệu.',
+        xp_reward: 120
+      }
+    },
+
+    /* ── tc_15 — Ticket #35 · Row-Store vs Column-Store ── */
+    {
+      id: 'tc_15', index: 15,
+      title: 'Row-Store vs Column-Store — xếp ngang hay xếp dọc',
+      subtitle: 'Feed đọc nguyên dòng thì xếp ngang; kho chỉ cộng 2 cột thì xếp dọc',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'fact_post_action (12 cột, dashboard chỉ cần 2)',
+          columns: ['action_id', 'user_id', 'date_id', 'action_type', 'act_count', '…7 cột nữa'],
+          dataRows: [
+            ['1',  '7',  'D1', 'like',    '3', '…'],
+            ['4',  '7',  'D2', 'like',    '5', '…'],
+            ['5',  '9',  'D2', 'like',    '4', '…'],
+            ['10', '12', 'D3', 'like',    '6', '…']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #35',
+        hook: 'Dashboard kho (Ticket #25) chạy <code>SUM(act_count)</code> — chỉ đụng <strong>2 cột trong 12</strong>, vậy mà row-store vẫn khiêng NGUYÊN TỪNG DÒNG qua RAM: trả tiền vận chuyển cho 10 cột vứt đi. Ticket #35: <em>column-store</em> — xoay kho 90 độ, mỗi CỘT nằm liền một dải; đọc đúng cột cần, nén sướng tay. Nhưng khoan bê cả Community sang: feed đọc nguyên post thì xếp ngang vẫn vô địch. Chốt đợt này: chọn đúng trận địa cho từng kho.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Row-store: các giá trị CÙNG DÒNG nằm cạnh nhau — đọc/ghi nguyên bản ghi cực nhanh (OLTP)',
+            'Column-store: các giá trị CÙNG CỘT nằm liền dải — analytics chỉ chạm đúng cột cần (OLAP)',
+            'Cột đồng kiểu nén cực tốt (act_count toàn số nhỏ) → ít trang hơn = ít I/O hơn'
+          ],
+          intro: 'Cùng một bảng, hai cách trải xuống đĩa. <strong>Xếp ngang</strong> (row): dòng 1 trọn vẹn, rồi dòng 2… — mở 1 post lấy đủ 12 cột trong MỘT trang, feed mê. <strong>Xếp dọc</strong> (column): cột act_count của MỌI dòng nằm liền nhau thành dải — <code>SUM(act_count)</code> đọc đúng dải đó, 10 cột kia không tốn một byte vận chuyển. Thêm quà: cột đồng kiểu nén được gấp nhiều lần (toàn số nhỏ, giá trị lặp) — dải đã ngắn còn ngắn nữa. Giá phải trả: ghi 1 dòng mới phải chạm 12 dải — OLTP khóc.',
+          example: 'SUM(act_count) trên 38M dòng × 12 cột: row-store đọc ~4GB (cả bảng) · column-store đọc ~30MB (một cột đã nén) — chênh trăm lần, đúng bằng số cột bỏ qua × tỷ lệ nén.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-table-columns',
+            title: 'Xoay 90 độ — cùng dữ liệu, khác hàng xóm',
+            body: 'Row-store: hàng xóm của <code>act_count</code> dòng 1 là <code>action_type</code> dòng 1. Column-store: hàng xóm của nó là <code>act_count</code> dòng 2. "Ai nằm cạnh ai" quyết định query nào được đọc LIỀN DẢI (bài học Ticket #32) — chọn layout là chọn query mình cưng.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 13 — Data Storage Structures / Column-Oriented Storage'
+          },
+          {
+            icon: 'fa-file-zipper',
+            title: 'Nén — vũ khí bí mật của cột',
+            body: 'Một dải toàn <code>like, like, like, comment, like…</code> nén kiểu run-length còn vài phần trăm. Nén tốt = ít trang = ít chuyến đĩa = ít RAM buffer. Row-store nén kém hơn hẳn vì mỗi dòng trộn đủ kiểu dữ liệu.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'GameHub cần CẢ HAI: feed/likes ghi-đọc từng dòng → Postgres row-store ở lại. Kho fact_post_action chỉ để SUM/GROUP BY → bản sao column-store (kiểu Redshift/BigQuery/Parquet). ETL đêm (Ticket #25) chính là cây cầu chở dữ liệu giữa hai thế giới.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'fact_post_action — 2 cách trải xuống đĩa',
+            columns: [
+              { name: 'row-store', type: 'dòng liền dòng', key: 'feed ❤', icon: '↔️' },
+              { name: 'column-store', type: 'cột liền dải', key: 'kho 📊', icon: '↕️' }
+            ]
+          },
+          data_preview: [
+            ['[1,7,D1,like,3,…] [4,7,D2,like,5,…]', 'action_id: [1,4,5,10…]'],
+            ['[5,9,D2,like,4,…] [10,12,D3,like,6,…]', 'act_count: [3,5,4,6…] ← SUM chỉ đọc dải này'],
+            ['mở 1 post = 1 trang có đủ 12 cột', 'action_type: [like,like,like,like…] ← nén cực gọn'],
+            ['ghi 1 dòng = chạm 1 trang', 'ghi 1 dòng = chạm 12 dải 😱']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: '<code>SUM(act_count)</code> trên 38M dòng × 12 cột — vì sao column-store đọc ít hơn cả TRĂM lần?',
+            options: [
+              { id: 'a', text: 'Nó chỉ vận chuyển DẢI CỘT act_count (bỏ qua 11 cột kia) — và dải đồng kiểu đó còn được nén thêm nhiều lần', correct: true, explanation: 'Đúng — hai tầng tiết kiệm nhân nhau: bỏ cột thừa × tỷ lệ nén. Row-store buộc khiêng cả dòng dù chỉ cần 1 cột.' },
+              { id: 'b', text: 'Vì column-store dùng RAM nhanh hơn', correct: false, explanation: 'Sai — cùng RAM, cùng đĩa; khác nhau ở SỐ BYTE phải khiêng.' },
+              { id: 'c', text: 'Vì column-store bỏ bớt dòng, chỉ tính mẫu đại diện', correct: false, explanation: 'Sai — kết quả chính xác tuyệt đối, đủ 38M giá trị; chỉ là chúng nằm gọn trong ít trang hơn.' },
+              { id: 'd', text: 'Vì SUM là phép tính riêng của column-store', correct: false, explanation: 'Sai — SUM chạy ở đâu cũng được; layout quyết định CHI PHÍ ĐỌC, không phải khả năng tính.' }
+            ]
+          },
+          {
+            question: 'Vì sao KHÔNG bê luôn bảng posts của feed sang column-store cho "nhanh"?',
+            options: [
+              { id: 'a', text: 'Feed đọc/ghi NGUYÊN DÒNG: mở 1 post cần đủ mọi cột (row = 1 trang), ghi 1 post mới vào column-store phải chạm đủ 12 dải', correct: true, explanation: 'Đúng — workload OLTP ngược hẳn sở trường của cột. Chọn layout là chọn theo QUERY, không theo mốt.' },
+              { id: 'b', text: 'Vì column-store không lưu được chữ, chỉ lưu được số', correct: false, explanation: 'Sai — lưu được mọi kiểu; chữ lặp nhiều còn nén tốt là đằng khác.' },
+              { id: 'c', text: 'Vì Postgres cấm column-store', correct: false, explanation: 'Sai — không ai cấm (có cả extension); vấn đề là workload không hợp.' },
+              { id: 'd', text: 'Vì column-store bắt buộc phải trả phí bản quyền', correct: false, explanation: 'Sai — Parquet/ClickHouse miễn phí đầy; đây là bài toán kỹ thuật, không phải giấy phép.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'match',
+          title: 'Hệ nào xếp kiểu nào?',
+          instruction: 'Nối mỗi hệ thống với layout nó chọn — và lý do.',
+          xp: 20,
+          pairs: [
+            { left: 'Feed Community — mở/ghi nguyên post', leftId: 'y1', rightId: 'z1', right: { id: 'z1', label: 'Row-store — 1 dòng gọn trong 1 trang' } },
+            { left: 'Kho fact 38M dòng — toàn SUM/GROUP BY', leftId: 'y2', rightId: 'z2', right: { id: 'z2', label: 'Column-store — đọc đúng dải cột cần' } },
+            { left: 'File Parquet đội data đưa cho ML', leftId: 'y3', rightId: 'z3', right: { id: 'z3', label: 'Column-store — nén sâu, quét cột nhanh' } },
+            { left: 'Bảng likes — INSERT dồn dập từng dòng', leftId: 'y4', rightId: 'z4', right: { id: 'z4', label: 'Row-store — mỗi lần ghi chạm 1 chỗ' } }
+          ],
+          solution: { y1: 'z1', y2: 'z2', y3: 'z3', y4: 'z4' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp bức tranh "xoay 90 độ": row-store trải thế nào, column-store trải thế nào, và dashboard đọc kiểu gì trên bản xếp dọc. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Column-store: act_count của MỌI dòng nằm liền một dải — [3,5,4,6,…] nén cực gọn', slot: 'lay-col' },
+          { type: 'op', token: 'Row-store: mỗi dòng trọn vẹn 12 cột nằm cạnh nhau — [1,7,D1,like,3,…] rồi tới dòng kế', slot: 'lay-row' },
+          { type: 'op', token: 'Column-store: mỗi cột được in ra giấy và cất vào két riêng ở chi nhánh khác thành phố', slot: 'lay-x' },
+          { type: 'op', token: 'Dashboard SUM(act_count): chỉ kéo dải act_count qua RAM — 11 cột kia không tốn một byte', slot: 'lay-read' }
+        ],
+        drop_zones: [
+          { id: 'lay-row', placeholder: 'Xếp NGANG — cách của feed', accepts: ['op'], multi: false,
+            station: { icon: '↔️', label: 'Xếp ngang', sub: 'Row-store', hint: 'Hàng xóm của một giá trị là các cột CÙNG DÒNG — mở 1 post lấy đủ bộ.' } },
+          { id: 'lay-col', placeholder: 'Xếp DỌC — cách của kho', accepts: ['op'], multi: false,
+            station: { icon: '↕️', label: 'Xếp dọc', sub: 'Column-store', hint: 'Hàng xóm là giá trị CÙNG CỘT của dòng kế — dải đồng kiểu, nén sướng.' } },
+          { id: 'lay-read', placeholder: 'Và dashboard đọc thế nào?', accepts: ['op'], multi: false,
+            station: { icon: '📊', label: 'Đọc kho', sub: 'Đúng cột cần', hint: 'SUM một cột = kéo đúng MỘT dải liền mạch — bài học Ticket #32 hiện nguyên hình.' } }
+        ],
+        expected_sql: 'Row-store: mỗi dòng trọn vẹn 12 cột nằm cạnh nhau — [1,7,D1,like,3,…] rồi tới dòng kế Column-store: act_count của MỌI dòng nằm liền một dải — [3,5,4,6,…] nén cực gọn Dashboard SUM(act_count): chỉ kéo dải act_count qua RAM — 11 cột kia không tốn một byte',
+        expected_zones: {
+          'lay-row': 'Row-store: mỗi dòng trọn vẹn 12 cột nằm cạnh nhau — [1,7,D1,like,3,…] rồi tới dòng kế',
+          'lay-col': 'Column-store: act_count của MỌI dòng nằm liền một dải — [3,5,4,6,…] nén cực gọn',
+          'lay-read': 'Dashboard SUM(act_count): chỉ kéo dải act_count qua RAM — 11 cột kia không tốn một byte'
+        },
+        reveal_hints: {
+          'lay-row': 'Xếp ngang = <strong>dòng trọn vẹn nằm cạnh nhau</strong> — trận địa của feed.',
+          'lay-col': 'Xếp dọc = <strong>cột liền dải</strong>. Khối "in ra giấy cất két chi nhánh" là bịa cho vui — column-store vẫn là file trên đĩa.',
+          'lay-read': 'Đọc kho = <strong>kéo đúng dải cột cần</strong>, phần còn lại miễn vận chuyển.'
+        }
+      },
+      step_4: {
+        prompt: 'CTO hỏi câu chốt đợt: "Community nên lưu thế nào?" — chọn phương án ĐÚNG TRẬN ĐỊA cho cả hai hệ:',
+        challenge_type: 'mcq_code',
+        options: [
+          { text: 'Feed/likes/comments ở lại Postgres row-store (đọc-ghi nguyên dòng); kho fact_post_action sang column-store cho SUM/GROUP BY — ETL đêm làm cầu nối như Ticket #25.', correct: true },
+          { text: 'Bê toàn bộ sang column-store — công nghệ mới hơn thì nhanh hơn ở mọi việc.', correct: false },
+          { text: 'Bê toàn bộ sang row-store kể cả kho — đồng bộ một kiểu cho dễ quản.', correct: false },
+          { text: 'Lưu mỗi bảng HAI bản row + column và ghi thẳng vào cả hai trong mọi INSERT của feed.', correct: false }
+        ],
+        context: {
+          scenario: 'Đây là quyết định kiến trúc thật sự của mọi công ty có cả app lẫn dashboard — và là câu chốt của cả đợt storage: KHÔNG có layout vô địch, chỉ có layout ĐÚNG TRẬN ĐỊA.',
+          real_world: 'Đúng mô hình công nghiệp: Postgres/MySQL phục vụ app + Redshift/BigQuery/ClickHouse phục vụ phân tích, nối bằng ETL/CDC. Phương án "ghi thẳng 2 bản trong mọi INSERT" chết ở độ trễ ghi — nên người ta mới cần ETL đêm.',
+          steps: [
+            'Workload feed: đọc/ghi nguyên dòng, độ trễ thấp → row.',
+            'Workload kho: quét ít cột trên núi dòng → column.',
+            'Cầu nối: ETL đêm (đã dựng ở Ticket #25) — không bắt INSERT của feed gánh 2 lần ghi.',
+            'Loại 2 phương án "một kiểu cho tất cả": mỗi kiểu thua đau ở trận địa còn lại.'
+          ],
+          hint_explore: 'Xem lại 2 dòng cuối bảng minh họa Step 1: chi phí GHI của mỗi layout — chính nó loại phương án cuối.',
+          expected: 'Chọn phương án hai-thế-giới: feed row + kho column, ETL làm cầu.'
+        },
+        hints: [
+          { level: 1, text: 'Nhớ MCQ 2: vì sao KHÔNG bê feed sang column? Rồi nghĩ ngược cho kho.' },
+          { level: 2, text: 'Loại 2 phương án "tất cả một kiểu" — mỗi layout đều có trận địa thua đau.' },
+          { level: 3, text: 'Phương án ghi 2 bản trong MỌI INSERT bắt feed trả giá ghi ×12 dải — ETL đêm tồn tại để né đúng việc này.' },
+          { level: 4, text: 'Đáp án: feed row-store + kho column-store, ETL đêm làm cầu.' }
+        ],
+        success_message: 'Ticket #35 đóng — nửa đầu Module 6 hoàn tất! Bạn đã thuộc lòng tầng hầm: tháp lưu trữ, giá vé seek, buffer, trang, và hai kiểu xếp kho. Đợt sau: xây LỐI TẮT xuyên qua tất cả — INDEX, B+-Tree, và vụ án tốt nghiệp "Social Graph Detective".',
+        xp_reward: 120
+      }
     }
   ]
 };

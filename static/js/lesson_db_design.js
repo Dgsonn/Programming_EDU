@@ -878,6 +878,144 @@
         '<text x="520" y="188" text-anchor="middle" fill="#aebfd6" font-size="10.5">14:04:59 vào ô trước · 14:05:00 sang ô sau</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Kho (Ticket #25) trả lời "hôm qua" — stream trả lời "NGAY BÂY GIỜ"</text>' +
+      '</svg>',
+
+    /* ── TC Module 6 (Storage, Indexing & Performance) — accent orange #FB923C ── */
+    /* tc_11: tháp lưu trữ 4 tầng — càng lên nhanh-nhỏ-đắt, càng xuống chậm-to-rẻ */
+    tc_11: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tháp lưu trữ bốn tầng: CPU cache nhanh nhất và nhỏ nhất, rồi RAM, SSD nơi database nằm, HDD chậm nhất rẻ nhất">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Tháp lưu trữ — dữ liệu Community nằm ở đâu?</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="11">' +
+        '<polygon points="300,44 420,44 440,82 280,82" fill="rgba(251,146,60,.22)" stroke="#FB923C" stroke-width="1.6"/>' +
+        '<text x="360" y="67" text-anchor="middle" fill="#e8edf5" font-weight="700">CPU Cache · ~1 ns</text>' +
+        '<polygon points="280,86 440,86 462,124 258,124" fill="rgba(251,146,60,.14)" stroke="rgba(251,146,60,.8)" stroke-width="1.5"/>' +
+        '<text x="360" y="109" text-anchor="middle" fill="#e8edf5" font-weight="700">RAM · ~100 ns <tspan fill="#7f93ad">— buffer sống ở đây · volatile</tspan></text>' +
+        '<polygon points="258,128 462,128 484,166 236,166" fill="rgba(56,189,248,.1)" stroke="rgba(56,189,248,.7)" stroke-width="1.5"/>' +
+        '<text x="360" y="151" text-anchor="middle" fill="#e8edf5" font-weight="700">SSD · ~100 µs <tspan fill="#38BDF8">— database Community 🏠</tspan></text>' +
+        '<polygon points="236,170 484,170 506,208 214,208" fill="rgba(255,255,255,.03)" stroke="rgba(148,163,184,.5)" stroke-width="1.4"/>' +
+        '<text x="360" y="193" text-anchor="middle" fill="#aebfd6" font-weight="700">HDD / băng từ · ~10 ms — backup, kho nguội</text>' +
+        '<text x="180" y="60" text-anchor="end" fill="#FB923C" font-size="10">nhanh · nhỏ · đắt ▲</text>' +
+        '<text x="180" y="196" text-anchor="end" fill="#7f93ad" font-size="10">chậm · to · rẻ ▼</text>' +
+        '<text x="548" y="60" fill="#7f93ad" font-size="10">mất điện = mất sạch</text>' +
+        '<line x1="540" y1="48" x2="540" y2="120" stroke="rgba(251,146,60,.4)" stroke-width="1" stroke-dasharray="3,3"/>' +
+        '<text x="548" y="150" fill="#7f93ad" font-size="10">bền vững qua cúp điện</text>' +
+        '<line x1="540" y1="130" x2="540" y2="204" stroke="rgba(56,189,248,.4)" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '</g>' +
+      '<text x="360" y="230" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">SSD ↔ RAM chênh ~1.000 lần — mọi tối ưu Module 6 = giảm số chuyến xuống đĩa</text>' +
+      '</svg>',
+
+    /* tc_12: sequential (1 vé, đọc liền dải) vs random (mỗi dòng một vé seek) */
+    tc_12: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="So sánh đọc tuần tự một dải liền trả một lần seek với đọc ngẫu nhiên nhảy cóc trả seek cho từng dòng">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Cùng 100 post — khác cách chạm đĩa</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10.5">' +
+        '<rect x="36" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.5"/>' +
+        '<text x="191" y="70" text-anchor="middle" fill="#38BDF8" font-weight="700" font-size="12">SEQUENTIAL — cuộn timeline</text>' +
+        [0,1,2,3,4,5,6,7].map(function(i){ return '<rect x="' + (58 + i * 30) + '" y="92" width="26" height="26" rx="4" fill="rgba(56,189,248,.18)" stroke="rgba(56,189,248,.6)" stroke-width="1"/>'; }).join('') +
+        '<line x1="58" y1="134" x2="298" y2="134" stroke="#38BDF8" stroke-width="2"/>' +
+        '<polygon points="298,134 289,129 289,139" fill="#38BDF8"/>' +
+        '<text x="191" y="158" text-anchor="middle" fill="#e8edf5">1 vé seek + transfer một mạch</text>' +
+        '<text x="191" y="180" text-anchor="middle" fill="#38BDF8" font-weight="700">100 dòng · 12 ms</text>' +
+        '<rect x="374" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(251,146,60,.55)" stroke-width="1.5"/>' +
+        '<text x="529" y="70" text-anchor="middle" fill="#FB923C" font-weight="700" font-size="12">RANDOM — mở bookmark rải rác</text>' +
+        [0,1,2,3,4,5,6,7].map(function(i){ return '<rect x="' + (396 + i * 30) + '" y="92" width="26" height="26" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(148,163,184,.4)" stroke-width="1"/>'; }).join('') +
+        '<rect x="426" y="92" width="26" height="26" rx="4" fill="rgba(251,146,60,.2)" stroke="#FB923C" stroke-width="1.2"/>' +
+        '<rect x="576" y="92" width="26" height="26" rx="4" fill="rgba(251,146,60,.2)" stroke="#FB923C" stroke-width="1.2"/>' +
+        '<rect x="486" y="92" width="26" height="26" rx="4" fill="rgba(251,146,60,.2)" stroke="#FB923C" stroke-width="1.2"/>' +
+        '<path d="M439 134 C 480 160, 560 160, 589 134" fill="none" stroke="#FB923C" stroke-width="1.6"/>' +
+        '<path d="M589 134 C 560 168, 520 168, 499 134" fill="none" stroke="#FB923C" stroke-width="1.6" stroke-dasharray="4,3"/>' +
+        '<text x="529" y="158" text-anchor="middle" fill="#e8edf5">seek + rotate cho TỪNG post</text>' +
+        '<text x="529" y="180" text-anchor="middle" fill="#FB923C" font-weight="700">100 dòng · 980 ms 😱</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Tiền vé (seek+rotate) đắt hơn tiền hàng (transfer) — nên database gom việc đọc liền mạch</text>' +
+      '</svg>',
+
+    /* tc_13: buffer 3 khung — HIT trả ngay từ RAM, MISS xuống đĩa, LRU đuổi trang nguội */
+    tc_13: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Buffer ba khung trên RAM: request trang có sẵn là HIT trả ngay, trang chưa có là MISS phải xuống đĩa và LRU đuổi trang lâu không dùng nhất">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Buffer — trí nhớ ngắn hạn của database</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10.5">' +
+        '<rect x="250" y="52" width="330" height="88" rx="10" fill="rgba(251,146,60,.07)" stroke="#FB923C" stroke-width="1.6"/>' +
+        '<text x="415" y="70" text-anchor="middle" fill="#FB923C" font-weight="700" font-size="11">BUFFER trên RAM — 3 khung</text>' +
+        '<rect x="266" y="80" width="94" height="46" rx="6" fill="rgba(56,189,248,.14)" stroke="#38BDF8" stroke-width="1.3"/>' +
+        '<text x="313" y="99" text-anchor="middle" fill="#e8edf5">P7 · viral</text>' +
+        '<text x="313" y="115" text-anchor="middle" fill="#7f93ad" font-size="9">vừa dùng xong</text>' +
+        '<rect x="368" y="80" width="94" height="46" rx="6" fill="rgba(255,255,255,.04)" stroke="rgba(148,163,184,.5)" stroke-width="1.2"/>' +
+        '<text x="415" y="99" text-anchor="middle" fill="#e8edf5">P2 · feed</text>' +
+        '<text x="415" y="115" text-anchor="middle" fill="#7f93ad" font-size="9">5 phút trước</text>' +
+        '<rect x="470" y="80" width="94" height="46" rx="6" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.55)" stroke-width="1.2" stroke-dasharray="5,3"/>' +
+        '<text x="517" y="99" text-anchor="middle" fill="#F87171">P9 · hồ sơ cũ</text>' +
+        '<text x="517" y="115" text-anchor="middle" fill="#F87171" font-size="9">30 phút — LRU đuổi ⚠</text>' +
+        '<rect x="36" y="64" width="160" height="34" rx="8" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.3"/>' +
+        '<text x="116" y="86" text-anchor="middle" fill="#38BDF8">mở post 501 (P7)</text>' +
+        '<line x1="196" y1="81" x2="246" y2="90" stroke="rgba(56,189,248,.7)" stroke-width="1.5"/>' +
+        '<text x="222" y="72" text-anchor="middle" fill="#38BDF8" font-size="10" font-weight="700">HIT ✓</text>' +
+        '<rect x="36" y="120" width="160" height="34" rx="8" fill="#0e1726" stroke="rgba(251,146,60,.5)" stroke-width="1.3"/>' +
+        '<text x="116" y="142" text-anchor="middle" fill="#FB923C">mở trang P4 (mới)</text>' +
+        '<line x1="196" y1="137" x2="246" y2="120" stroke="rgba(251,146,60,.7)" stroke-width="1.5"/>' +
+        '<text x="222" y="152" text-anchor="middle" fill="#FB923C" font-size="10" font-weight="700">MISS ✗</text>' +
+        '<ellipse cx="415" cy="188" rx="60" ry="11" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.4"/>' +
+        '<path d="M355,188 v18 a60,11 0 0 0 120,0 v-18" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.4"/>' +
+        '<text x="415" y="205" text-anchor="middle" fill="#aebfd6" font-size="10">ĐĨA — chỉ MISS mới phải xuống đây</text>' +
+        '<line x1="470" y1="140" x2="445" y2="176" stroke="rgba(251,146,60,.6)" stroke-width="1.4" stroke-dasharray="4,3"/>' +
+      '</g>' +
+      '<text x="360" y="234" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">10.000 lượt mở post viral = 1 chuyến đĩa + 9.999 lần HIT miễn phí</text>' +
+      '</svg>',
+
+    /* tc_14: slotted page — header, slots mọc xuôi, free space giữa, records mọc ngược */
+    tc_14: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sơ đồ slotted page: header đầu trang, slot directory mọc xuôi, free space ở giữa, records mọc ngược từ đáy; dòng phình chuyển trang để lại forwarding pointer">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Slotted Page — sơ đồ căn hộ 8KB</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10.5">' +
+        '<rect x="60" y="46" width="300" height="164" rx="10" fill="#0e1726" stroke="rgba(251,146,60,.55)" stroke-width="1.6"/>' +
+        '<rect x="72" y="56" width="276" height="22" rx="4" fill="rgba(251,146,60,.16)" stroke="#FB923C" stroke-width="1.2"/>' +
+        '<text x="210" y="71" text-anchor="middle" fill="#FB923C" font-weight="700">HEADER — metadata trang</text>' +
+        '<rect x="72" y="82" width="66" height="20" rx="4" fill="rgba(56,189,248,.15)" stroke="#38BDF8" stroke-width="1"/>' +
+        '<text x="105" y="96" text-anchor="middle" fill="#38BDF8">slot #1</text>' +
+        '<rect x="142" y="82" width="66" height="20" rx="4" fill="rgba(56,189,248,.15)" stroke="#38BDF8" stroke-width="1"/>' +
+        '<text x="175" y="96" text-anchor="middle" fill="#38BDF8">slot #2</text>' +
+        '<rect x="212" y="82" width="66" height="20" rx="4" fill="rgba(56,189,248,.15)" stroke="#38BDF8" stroke-width="1"/>' +
+        '<text x="245" y="96" text-anchor="middle" fill="#38BDF8">slot #3</text>' +
+        '<text x="316" y="96" fill="#7f93ad" font-size="9.5">mọc xuôi →</text>' +
+        '<rect x="72" y="108" width="276" height="40" rx="4" fill="rgba(255,255,255,.02)" stroke="rgba(148,163,184,.35)" stroke-width="1" stroke-dasharray="5,4"/>' +
+        '<text x="210" y="132" text-anchor="middle" fill="#7f93ad">FREE SPACE — hai đầu ăn dần vào giữa</text>' +
+        '<rect x="72" y="152" width="276" height="48" rx="4" fill="rgba(232,121,249,.08)" stroke="rgba(232,121,249,.5)" stroke-width="1.2"/>' +
+        '<text x="210" y="170" text-anchor="middle" fill="#E879F9">rec 3 · toxic_lord 28B | rec 2 · yuki 250B</text>' +
+        '<text x="210" y="188" text-anchor="middle" fill="#E879F9">| rec 1 · minhkiller 40B</text>' +
+        '<text x="316" y="204" fill="#7f93ad" font-size="9.5">← mọc ngược</text>' +
+        '<path d="M105 102 C 105 130, 150 176, 190 182" fill="none" stroke="rgba(56,189,248,.45)" stroke-width="1.2"/>' +
+        '<g transform="translate(420, 60)">' +
+          '<rect width="266" height="130" rx="10" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.4"/>' +
+          '<text x="133" y="24" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="11">Dòng phình → dọn nhà</text>' +
+          '<text x="16" y="48" fill="#aebfd6">bio 250B → 900B: chỗ cũ chật</text>' +
+          '<text x="16" y="70" fill="#aebfd6">→ record CHUYỂN sang trang 043</text>' +
+          '<text x="16" y="92" fill="#FB923C" font-weight="700">→ chỗ cũ: forwarding pointer ↷</text>' +
+          '<text x="16" y="114" fill="#7f93ad" font-size="9.5">RID (042, #2) vẫn đúng — đi thêm 1 bước</text>' +
+        '</g>' +
+      '</g>' +
+      '<text x="360" y="230" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Slot directory = lớp gián tiếp: dòng dời chỗ, địa chỉ RID không đổi</text>' +
+      '</svg>',
+
+    /* tc_15: row-store (dòng liền dòng) vs column-store (cột liền dải, nén) */
+    tc_15: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Row-store xếp mỗi dòng trọn vẹn nằm cạnh nhau hợp cho feed; column-store xếp mỗi cột liền một dải nén tốt hợp cho kho SUM hai cột">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Xếp ngang hay xếp dọc — chọn theo trận địa</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10">' +
+        '<rect x="36" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.5"/>' +
+        '<text x="191" y="68" text-anchor="middle" fill="#38BDF8" font-weight="700" font-size="12">ROW-STORE — feed ❤</text>' +
+        '<rect x="54" y="80" width="274" height="24" rx="4" fill="rgba(56,189,248,.12)" stroke="rgba(56,189,248,.5)" stroke-width="1"/>' +
+        '<text x="191" y="96" text-anchor="middle" fill="#e8edf5">dòng 1: [1 · 7 · D1 · like · 3 · …12 cột]</text>' +
+        '<rect x="54" y="110" width="274" height="24" rx="4" fill="rgba(56,189,248,.12)" stroke="rgba(56,189,248,.5)" stroke-width="1"/>' +
+        '<text x="191" y="126" text-anchor="middle" fill="#e8edf5">dòng 2: [4 · 7 · D2 · like · 5 · …12 cột]</text>' +
+        '<text x="191" y="158" text-anchor="middle" fill="#aebfd6">mở 1 post = 1 trang có ĐỦ 12 cột</text>' +
+        '<text x="191" y="180" text-anchor="middle" fill="#38BDF8" font-weight="700">đọc/ghi nguyên dòng = vô địch OLTP</text>' +
+        '<rect x="374" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(251,146,60,.55)" stroke-width="1.5"/>' +
+        '<text x="529" y="68" text-anchor="middle" fill="#FB923C" font-weight="700" font-size="12">COLUMN-STORE — kho 📊</text>' +
+        '<rect x="392" y="80" width="274" height="20" rx="4" fill="rgba(255,255,255,.03)" stroke="rgba(148,163,184,.35)" stroke-width="1"/>' +
+        '<text x="529" y="94" text-anchor="middle" fill="#7f93ad">action_id: [1, 4, 5, 10, …]</text>' +
+        '<rect x="392" y="106" width="274" height="20" rx="4" fill="rgba(251,146,60,.18)" stroke="#FB923C" stroke-width="1.3"/>' +
+        '<text x="529" y="120" text-anchor="middle" fill="#FB923C" font-weight="700">act_count: [3, 5, 4, 6, …] ← SUM chỉ đọc dải này</text>' +
+        '<rect x="392" y="132" width="274" height="20" rx="4" fill="rgba(255,255,255,.03)" stroke="rgba(148,163,184,.35)" stroke-width="1"/>' +
+        '<text x="529" y="146" text-anchor="middle" fill="#7f93ad">action_type: [like, like, like…] → nén cực gọn</text>' +
+        '<text x="529" y="172" text-anchor="middle" fill="#aebfd6">11 cột kia: không tốn một byte vận chuyển</text>' +
+        '<text x="529" y="190" text-anchor="middle" fill="#FB923C" font-weight="700">quét ít cột trên núi dòng = vô địch OLAP</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Không có layout vô địch — feed ở lại row, kho sang column, ETL đêm (Ticket #25) làm cầu</text>' +
       '</svg>'
   };
 

@@ -177,8 +177,11 @@
       .map(({ z }) => z);
 
     const zoneStations = sortedZones.map(z => {
-      const cfg = ZONE_CONFIG[z.id] || { icon: '📋', label: z.id, sub: '' };
-      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, zone: z.id };
+      /* M6-TC 2026-07-05: drop_zone tự khai meta ga qua z.station {icon,label,sub,hint} —
+         khỏi phình ZONE_CONFIG mỗi lần thêm bài khái niệm (M6 storage, NC engine).
+         ZONE_CONFIG giữ vai trò meta chung cho zone chuẩn/tái dùng. */
+      const cfg = z.station || ZONE_CONFIG[z.id] || { icon: '📋', label: z.id, sub: '' };
+      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, hint: cfg.hint, zone: z.id };
     });
 
     return [start, ...zoneStations];
@@ -1486,7 +1489,8 @@
   function showStationHint(station) {
     if (!statusEl) return;
     const text = statusEl.querySelector('.status-text');
-    const cfg = ZONE_CONFIG[station.zone || station.id];
+    /* M6-TC 2026-07-05: ưu tiên hint tự khai trên station (từ drop_zone.station) */
+    const cfg = station.hint ? station : ZONE_CONFIG[station.zone || station.id];
     if (cfg && cfg.hint) {
       text.innerHTML = `💡 ${cfg.hint}`;
     } else if (station.id === 'start') {
