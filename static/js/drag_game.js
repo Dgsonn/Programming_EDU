@@ -63,6 +63,7 @@
   let isRunning = false;
   let currentZoneFills = {};
   let currentZoneCorrect = {};  /* v4: per-clause correctness (từ lesson_db_design) */
+  let currentWrongLines = [];   /* v5: số dòng sai (1-based) — chỉ SỐ, không nội dung */
   let currentIsComplete = false;
   /* FIX 2g-A4: expected + userBuilt dùng cho chẩn đoán khi feedback sai */
   let lastExpected = '';
@@ -659,6 +660,7 @@
     /* ── 4. Phase A: Store state for runQuery() ── */
     currentZoneFills = zoneFills;
     currentZoneCorrect = state.zoneCorrect || {};
+    currentWrongLines = state.wrongLines || [];  /* v5: số dòng sai cho feedback */
     currentIsComplete = !!state.isComplete;
     /* FIX 2g-A4: lưu expected SQL + user-built để showFeedback chẩn đoán khi sai */
     lastExpected = (state.expected || '').toUpperCase();
@@ -1347,11 +1349,15 @@
           '<button class="feedback-btn filled correct" data-action="continue">Tiếp tục →</button>' +
         '</div>';
     } else {
-      /* v4: KHÔNG giải thích / KHÔNG lộ đáp án (user chốt) — chỉ báo "Chưa đúng".
-         Ga sai đã tô ĐỎ trên bản đồ để người học tự nhìn ra; "Xem gợi ý" cho ai chủ động muốn hint.
-         (Trước đây liệt kê "đúng phải là ..." = làm hộ, không cho động não.) */
+      /* v5: KHÔNG giải thích / KHÔNG lộ đáp án (user chốt) — nhưng CHỈ SỐ DÒNG sai
+         để người học biết nhìn vào đâu mà tự động não (user: "sai ở line 1 line 2 line 3 thôi").
+         Ga sai vẫn tô ĐỎ trên bản đồ; "Xem gợi ý" cho ai chủ động muốn hint. */
+      var lineTxt = '';
+      if (currentWrongLines && currentWrongLines.length) {
+        lineTxt = ' Xem lại dòng ' + currentWrongLines.join(', ') + '.';
+      }
       fb.innerHTML =
-        '<span class="feedback-pill incorrect">✗ Chưa đúng.</span>' +
+        '<span class="feedback-pill incorrect">✗ Chưa đúng.' + lineTxt + '</span>' +
         '<div class="feedback-actions">' +
           '<button class="feedback-btn outlined" data-action="hint">Xem gợi ý</button>' +
           '<button class="feedback-btn filled incorrect" data-action="retry">Thử lại</button>' +

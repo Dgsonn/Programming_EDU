@@ -3662,11 +3662,24 @@
       zoneCorrect[zone.id] = (exp != null) && normClause(raw) === normClause(exp);
     });
 
+    // v5: số DÒNG sai (1-based theo thứ tự drop_zones = số dòng hiển thị trong editor).
+    // Chỉ SỐ DÒNG — không nói sai gì / đúng phải là gì (user chốt: không làm hộ).
+    // Dòng sai = (có block nhưng nội dung sai) HOẶC (bỏ trống trong khi đáp án cần).
+    const wrongLines = [];
+    (s3.drop_zones || []).forEach((zone, i) => {
+      const filled = (state.step3Blocks[zone.id] || []).length > 0;
+      const exp = expZone[zone.id];
+      if ((filled && zoneCorrect[zone.id] === false) || (!filled && exp != null)) {
+        wrongLines.push(i + 1);
+      }
+    });
+
     // v4: KHÔNG gửi lời giải thích per-clause nữa (user chốt: chỉ "Chưa đúng", không làm hộ).
     // zoneCorrect vẫn dùng để tô ĐỎ đúng ga sai trên bản đồ (người học tự nhìn ra).
     window.DragGame.update({
       zoneFills: zoneFills,
       zoneCorrect: zoneCorrect,   // v4: per-clause correctness cho pipeline (tô đỏ ga sai)
+      wrongLines: wrongLines,     // v5: số dòng sai (chỉ SỐ, không nội dung) cho feedback
       isComplete: isComplete,
       expected: expected,    // FIX 2g-A4: pass for diagnostic on incorrect feedback
       userBuilt: builtSQL,   // FIX 2g-A4: pass for diagnostic on incorrect feedback
