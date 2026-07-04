@@ -411,6 +411,9 @@ _LESSON_TEMPLATES = {
     'java':     'lesson_java.html',
     'htmlcss':  'lesson_htmlcss.html',
     'db_design': 'lesson_db_design.html',
+    # TC (GameHub Community) dùng CHUNG template/renderer với Basic — chỉ khác data file
+    # (docs/TC_NC_IMPLEMENTATION_PLAN_2026-07-04.md §1)
+    'db_design_tc': 'lesson_db_design.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
@@ -434,7 +437,7 @@ def lesson_view(course_id):
     template = _LESSON_TEMPLATES.get(course_id)
     if not template:
         return redirect(_LESSON_URLS.get(course_id, f'/courses/{course_id}'))
-    return render_template(template, lesson_idx=lesson_idx, **_user_stats())
+    return render_template(template, lesson_idx=lesson_idx, course_id=course_id, **_user_stats())
 
 
 @main_bp.route('/courses/<course_id>')

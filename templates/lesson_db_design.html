@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=3" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
-<body class="lesson-focus-mode">
+<body class="lesson-focus-mode" data-course="{{ course_id or 'db_design' }}">
 
   <!-- Scroll progress bar (4.8) — fixed at top, width tracks scroll within active step -->
   <div class="scroll-progress" id="scroll-progress"></div>
@@ -594,6 +594,10 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/lesson_content.js') }}?v=10"></script>
+  {% if course_id == 'db_design_tc' %}
+  <!-- TC (GameHub Community) — data riêng, renderer dùng chung -->
+  <script src="{{ url_for('static', filename='js/lesson_content_tc.js') }}?v=1"></script>
+  {% endif %}
   <script src="{{ url_for('static', filename='js/table_explorer.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/decomp_game.js') }}?v=1"></script>
