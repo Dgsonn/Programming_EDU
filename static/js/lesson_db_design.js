@@ -882,6 +882,22 @@
       });
     }
 
+    // Story banner — dự án GameHub xuyên suốt (lesson.story = { tag, hook }).
+    // Hook mở VẤN ĐỀ của dự án trước, hero minh hoạ ngay dưới (problem-first, Brilliant style).
+    // Bài chưa có story → ẩn hẳn, không để khoảng chết.
+    const storyEl = document.getElementById('story-banner');
+    if (storyEl) {
+      const st = l.story;
+      if (st && st.hook) {
+        storyEl.innerHTML =
+          `<span class="story-tag">🏗️ ${st.tag || 'Dự án GameHub'}</span>` +
+          `<div class="story-hook">${st.hook}</div>`;
+        storyEl.hidden = false;
+      } else {
+        storyEl.hidden = true;
+      }
+    }
+
     // Intro & example (hide empty ones so removed paragraphs leave no dead gap)
     const introEl = document.getElementById('lesson-intro');
     const exampleEl = document.getElementById('lesson-example');

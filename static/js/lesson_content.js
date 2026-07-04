@@ -36,6 +36,10 @@ window.LESSON_CONTENT['db_design'] = {
       estimated_minutes: 18,
       xp_reward: 50,
       project_piece: '🗝️ Mở khóa "Huy hiệu Lập trình viên Cơ sở"',
+      story: {
+        tag: 'Dự án GameHub · Tuần 1',
+        hook: 'Bạn vừa nhận việc: <strong>kỹ sư dữ liệu đầu tiên của GameHub</strong> — cửa hàng game sắp khai trương. Ngày nhập liệu đầu tiên đã có chuyện: kho có <em>2 bản "Elden Ring"</em> (bản thường & bản Deluxe). Khách bấm mua bản 60$… hệ thống trừ tiền <strong>bản kia</strong>. Khiếu nại đầu tiên trong lịch sử công ty. Nhiệm vụ tuần này: tìm cách chốt <strong>chính xác 1 dòng</strong> — dù tên có trùng.'
+      },
       drag_type: 'chip',
       challenge_type: 'full_ide',
 
@@ -274,6 +278,10 @@ window.LESSON_CONTENT['db_design'] = {
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 22, xp_reward: 50,
       project_piece: '🧬 Mở khóa "Hệ thống Hồ sơ Người chơi"',
+      story: {
+        tag: 'Dự án GameHub · Tuần 2',
+        hook: 'GameHub mở đăng ký thành viên — <strong>500 người chơi</strong> trong 3 ngày. Nhưng form cũ lưu địa chỉ vào <em>1 ô text dài</em>: marketing muốn gửi ưu đãi cho "người chơi ở Tokyo" mà đành… đọc tay từng dòng. Tệ hơn, có người điền sẵn <code>tuổi</code> — sang năm là sai hết. Tuần này bạn thiết kế lại hồ sơ: cột nào nên <strong>tách nhỏ</strong>, cột nào nên <strong>tách bảng</strong>, cột nào <strong>đừng lưu mà hãy tính</strong>?'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -550,6 +558,10 @@ concept_cards: [
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 25, xp_reward: 60,
       project_piece: '🔗 Mở khóa "Kênh cung ứng Nhà Phát Hành"',
+      story: {
+        tag: 'Dự án GameHub · Tuần 3',
+        hook: 'Tin lớn: <strong>các nhà phát hành ký hợp đồng</strong> với GameHub. Thực tập sinh nhanh nhảu <em>gõ thẳng tên nhà phát hành vào từng dòng game</em>. Hai tuần sau Rockstar đổi thông tin liên hệ — phải sửa <strong>hàng trăm dòng</strong>, sót 3 dòng, dữ liệu vênh nhau. Tuần này bạn nối 2 bảng theo cách chuẩn: mỗi game chỉ giữ <strong>1 con số trỏ về</strong> nhà phát hành của nó.'
+      },
       drag_type: 'connector',
       challenge_type: 'full_ide',
       drag_map: {
@@ -815,6 +827,10 @@ concept_cards: [
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 22, xp_reward: 55,
       project_piece: '🌉 Khởi động "Cầu nối Liên Bảng"',
+      story: {
+        tag: 'Dự án GameHub · Tuần 4',
+        hook: 'Tính năng được chờ nhất lên sóng: <strong>"Thư viện của tôi"</strong>. Nhưng DragonLord sở hữu 2 game, Elden Ring lại có <em>hàng nghìn chủ</em> — nhét danh sách vào 1 cột ở bên nào cũng vỡ. Giải pháp của tuần: dựng <strong>bảng nối</strong> <code>player_game_library</code> đứng giữa — mỗi dòng ghi đúng 1 lượt sở hữu, hai bên là hai quan hệ <strong>1:N</strong> gọn gàng. Rồi tập truy vấn <strong>xuyên 3 bảng</strong> qua cây cầu đó.'
+      },
       drag_type: 'connector',
       challenge_type: 'full_ide',
       drag_map: {
@@ -848,7 +864,7 @@ concept_cards: [
             'Không thể nhét FK vào bên nào → cần Bảng trung gian (Junction Table)',
             'Junction Table chỉ chứa 2 FK + tạo cặp (player_id, game_id) cho mỗi lượt mua'
           ],
-          intro: 'Quan hệ M:N xuất hiện khắp nơi: SV học nhiều môn, môn có nhiều SV; khách mua nhiều game, game bán cho nhiều khách. Không thể đặt FK vào bên nào (sẽ lặp). Giải pháp: <strong>Bảng trung gian (Junction Table)</strong> chỉ chứa 2 FK, tạo 1 dòng cho mỗi cặp. Truy vấn M:N nghĩa là <strong>Double JOIN chuỗi</strong> qua bảng trung gian.',
+          intro: 'Bảng nối <code>player_game_library</code> không có gì bí ẩn: nó là <strong>hai quan hệ 1:N ghép lại</strong> — 1 player có N dòng sở hữu, 1 game cũng có N dòng sở hữu. Mỗi dòng giữ 2 Khóa ngoại (<code>ref_p_id</code>, <code>ref_game_id</code>), mỗi FK trỏ về phía "1" của nó. Muốn biết DragonLord sở hữu game gì? <strong>JOIN 2 lần</strong>: player → bảng nối → game.',
           example: 'Bảng <code>player_game_library</code> ở giữa chỉ chứa <code>ref_p_id</code> + <code>ref_game_id</code>. Khi DragonLord (p_id=7) mua Elden Ring (game_id=101) → 1 dòng (7, 101) trong library. Khi cùng DragonLord mua Hades (game_id=103) → 1 dòng (7, 103). Khi NoobMaster (p_id=8) cũng mua Elden Ring → 1 dòng (8, 101).'
         },
                 intro: 'Năm ngoái, một intern mới vào team thiết kế schema cho ứng dụng đặt lịch học. Cô ấy vẽ 1 bảng <code>enrollment</code> với 8 cột: student_name, course_name, instructor, room, time... Cuối cùng 1 SV đăng ký 3 môn = 3 dòng, mỗi dòng lặp lại tên SV. Insert sai = sai toàn bộ. Bài này dạy <strong>M:N qua junction table</strong>.',
@@ -1124,6 +1140,10 @@ concept_cards: [
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 22, xp_reward: 60,
       project_piece: '🧩 Xây "Thư viện game" của người chơi',
+      story: {
+        tag: 'Dự án GameHub · Tuần 5',
+        hook: 'Cây cầu tuần trước chạy tốt tới mức sếp muốn <strong>chuẩn hoá nó thành mô hình chính thức</strong>. Quan hệ "nhiều người ↔ nhiều game" có tên riêng: <em>M:N</em> — và bảng nối của nó cần một khoá chính <strong>ghép từ 2 cột</strong>. Kèm một đơn đặt hàng từ team Gamification: đếm <strong>mỗi người sở hữu bao nhiêu game</strong> để trao huy hiệu "Nhà sưu tầm". Dữ liệu đã có đủ — chỉ chờ truy vấn của bạn.'
+      },
       drag_type: 'chip',
       challenge_type: 'full_ide',
       drag_map: {
@@ -1364,6 +1384,10 @@ concept_cards: [
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 24, xp_reward: 60,
       project_piece: '🧩 Khởi động "Máy Chia Trung Gian"',
+      story: {
+        tag: 'Dự án GameHub · Tuần 6',
+        hook: 'Doanh thu mới xuất hiện: <strong>các game bắt đầu bán DLC</strong>. Nhưng đơn hàng đầu tiên đã gây bối rối — khách mua <em>"Gói #2"</em>… mà game nào cũng có Gói #2! Hoá ra DLC <strong>không tự đứng một mình được</strong>: nó chỉ có nghĩa khi gắn với game gốc. Tuần này bạn học cách thiết kế những "thực thể sống nhờ" như vậy — với khoá chính <strong>ghép</strong> từ khoá của cha + số thứ tự riêng.'
+      },
       drag_type: 'chip',
       challenge_type: 'full_ide',
       drag_map: {
@@ -1574,6 +1598,10 @@ concept_cards: [
       module: 1, module_title: 'Giới thiệu & Nền tảng Database',
       estimated_minutes: 22, xp_reward: 65,
       project_piece: '🗺️ Mở khóa "Bản đồ dịch ER → Bảng"',
+      story: {
+        tag: 'Dự án GameHub · Tuần 7 — chốt Chương 1',
+        hook: 'Sau 6 tuần, GameHub đã có <strong>cả một hệ bảng</strong>: danh mục, hồ sơ, nhà phát hành, cầu nối sở hữu, kệ DLC. Sếp đặt lên bàn yêu cầu cuối cùng của chương: <em>"Vẽ cho tôi bản thiết kế tổng — để team backend dựng database thật."</em> Mọi hình vẽ ER phải <strong>dịch được thành bảng vật lý</strong> theo đúng 7 quy tắc kinh điển. Dịch xong là bạn chốt sổ Chương 1. 🏆'
+      },
       drag_type: 'chip',
       challenge_type: 'full_ide',
       drag_map: {

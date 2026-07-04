@@ -6993,6 +6993,39 @@ body.light .mcq-option .t-number  { color: #B45309; }
 /* v4: bỏ khối "🎯 Nhiệm vụ" ở Step 1 (tất cả bài) — nhiệm vụ đã có ở Step 3, để Step 1 thuần lý thuyết. */
 .step-1-content .mission-card { display: none !important; }
 
+/* ═══ Story banner — dự án GameHub xuyên suốt (step 1, trên hero) ═══ */
+.story-banner {
+  margin: 4px 0 22px;
+  padding: 16px 20px 15px;
+  border-left: 3px solid var(--module-accent, #F59E0B);
+  border-radius: 0 14px 14px 0;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.09), rgba(245, 158, 11, 0.02) 60%, transparent);
+}
+.story-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--module-accent, #F59E0B);
+  margin-bottom: 7px;
+}
+.story-hook {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-100, #E2E8F0);
+  max-width: 72ch;
+}
+.story-hook strong { color: var(--text-50, #F8FAFC); }
+.story-hook em { color: var(--module-accent, #F59E0B); font-style: normal; font-weight: 600; }
+.story-hook code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: rgba(148, 163, 184, 0.12);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
 .mini-chip.correct {
   background: var(--success-soft);
   color: var(--success);
