@@ -1159,6 +1159,58 @@
         '<text x="529" y="188" text-anchor="middle" fill="#7f93ad">bỏ hàm bọc cột → index mở mắt trở lại</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Index có sẵn chưa chắc được dùng — EXPLAIN là lời khai duy nhất đáng tin</text>' +
+      '</svg>',
+
+    /* tc_21 BOSS: bảng điều tra — hiện trường like ảo 02:00 + đồ thị mạng lưới mời mọc từ #401 */
+    tc_21: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bảng điều tra chuyên án GH-2026: hiện trường chùm like ảo lúc 2 giờ sáng và đồ thị mạng lưới mời mọc ba tầng tỏa ra từ tài khoản 401 seed_master">' +
+      '<rect x="14" y="14" width="692" height="212" rx="12" fill="none" stroke="rgba(248,113,113,.35)" stroke-width="1.4" stroke-dasharray="7,5"/>' +
+      '<text x="360" y="36" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">CHUYÊN ÁN #GH-2026 · Social Graph Detective</text>' +
+      '<g transform="translate(600, 44) rotate(9)">' +
+        '<rect width="88" height="26" rx="5" fill="none" stroke="#f87171" stroke-width="2"/>' +
+        '<text x="44" y="17" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="800" font-size="11" fill="#f87171" letter-spacing="3">MẬT</text>' +
+      '</g>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="9.5">' +
+        '<rect x="36" y="56" width="286" height="148" rx="10" fill="#0e1726" stroke="rgba(251,191,36,.5)" stroke-width="1.4"/>' +
+        '<text x="179" y="76" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="11">HIỆN TRƯỜNG — like_log · 02:00</text>' +
+        '<rect x="58" y="150" width="22" height="38" fill="rgba(248,113,113,.7)"/>' +
+        '<rect x="88" y="150" width="22" height="38" fill="rgba(248,113,113,.7)"/>' +
+        '<rect x="118" y="162" width="22" height="26" fill="rgba(248,113,113,.55)"/>' +
+        '<rect x="148" y="180" width="22" height="8" fill="rgba(148,163,184,.5)"/>' +
+        '<rect x="178" y="182" width="22" height="6" fill="rgba(148,163,184,.5)"/>' +
+        '<rect x="208" y="178" width="22" height="10" fill="rgba(148,163,184,.5)"/>' +
+        '<text x="69" y="145" text-anchor="middle" fill="#f87171" font-weight="700" font-size="8.5">404</text>' +
+        '<text x="99" y="145" text-anchor="middle" fill="#f87171" font-weight="700" font-size="8.5">405</text>' +
+        '<text x="129" y="157" text-anchor="middle" fill="#f87171" font-weight="700" font-size="8.5">406</text>' +
+        '<text x="186" y="170" fill="#7f93ad" font-size="8.5">dân thường</text>' +
+        '<text x="179" y="106" text-anchor="middle" fill="#aebfd6">3 tài khoản like ≥3 lần / 5 phút</text>' +
+        '<text x="179" y="122" text-anchor="middle" fill="#7f93ad">HAVING COUNT(*) &gt;= 3 khoanh vùng</text>' +
+      '</g>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="9.5">' +
+        '<rect x="342" y="56" width="342" height="148" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.5)" stroke-width="1.4"/>' +
+        '<text x="513" y="76" text-anchor="middle" fill="#f87171" font-weight="700" font-size="11">MẠNG LƯỚI MỜI MỌC — WITH RECURSIVE</text>' +
+        '<circle cx="513" cy="104" r="15" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1.8"/>' +
+        '<text x="513" y="108" text-anchor="middle" fill="#f87171" font-weight="800" font-size="9">401</text>' +
+        '<text x="556" y="97" fill="#f87171" font-size="8.5">seed_master — chủ mưu?</text>' +
+        '<circle cx="433" cy="150" r="12" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>' +
+        '<text x="433" y="154" text-anchor="middle" fill="#fbbf24" font-size="8.5">404</text>' +
+        '<circle cx="513" cy="150" r="12" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>' +
+        '<text x="513" y="154" text-anchor="middle" fill="#fbbf24" font-size="8.5">405</text>' +
+        '<circle cx="593" cy="150" r="12" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>' +
+        '<text x="593" y="154" text-anchor="middle" fill="#fbbf24" font-size="8.5">406</text>' +
+        '<path d="M504 117 L 441 139" stroke="rgba(248,113,113,.6)" stroke-width="1.3" fill="none"/>' +
+        '<path d="M513 119 L 513 138" stroke="rgba(248,113,113,.6)" stroke-width="1.3" fill="none"/>' +
+        '<path d="M522 117 L 585 139" stroke="rgba(248,113,113,.6)" stroke-width="1.3" fill="none"/>' +
+        '<g fill="rgba(148,163,184,.14)" stroke="rgba(148,163,184,.5)" stroke-width="1">' +
+          '<circle cx="409" cy="186" r="9"/><circle cx="457" cy="186" r="9"/><circle cx="513" cy="186" r="9"/><circle cx="569" cy="186" r="9"/><circle cx="617" cy="186" r="9"/>' +
+        '</g>' +
+        '<text x="409" y="189" text-anchor="middle" fill="#aebfd6" font-size="7.5">407</text>' +
+        '<text x="457" y="189" text-anchor="middle" fill="#aebfd6" font-size="7.5">408</text>' +
+        '<text x="513" y="189" text-anchor="middle" fill="#aebfd6" font-size="7.5">409</text>' +
+        '<text x="569" y="189" text-anchor="middle" fill="#aebfd6" font-size="7.5">410</text>' +
+        '<text x="617" y="189" text-anchor="middle" fill="#aebfd6" font-size="7.5">411</text>' +
+        '<path d="M428 161 L 412 177 M 438 161 L 453 177 M 513 162 L 513 176 M 588 161 L 572 177 M 598 161 L 613 177" stroke="rgba(148,163,184,.45)" stroke-width="1.1" fill="none"/>' +
+      '</g>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">4 vụ án liên hoàn · mọi vũ khí của Trung cấp — HAVING · Index/EXPLAIN · WITH RECURSIVE · lệnh kết án</text>' +
       '</svg>'
   };
 
@@ -1514,6 +1566,10 @@
     renderStep2();
     renderStep3();
     initStep4();
+
+    // BOSS 2026-07-05: vỏ "hồ sơ vụ án" cho bài có l.boss (tc_21) — phải chạy
+    // TRƯỚC goToStep(1) để updateBossStamps trong goToStep thấy thẻ đã gắn.
+    applyBossSkin(state.currentLesson);
 
     // Default to step 1
     goToStep(1);
@@ -5366,6 +5422,50 @@
     }
   });
 
+  /* ═══ BOSS SKIN — "hồ sơ vụ án" (tc_21 Social Graph Detective) ═══
+   * User chốt 2026-07-05: đổi vỏ step 1-4 thành Vụ án 1-4 — thẻ hồ sơ đầu mỗi case,
+   * dấu ĐÃ PHÁ ÁN khi vượt qua case, manh mối case trước hiện lại ở đầu case sau.
+   * Lesson khai l.boss = { code, nav[4], cases[4]{tag,title,suspect,brief,clue} };
+   * bài thường không có l.boss → cả hai hàm no-op, không đụng layout cũ. */
+  function applyBossSkin(l) {
+    if (!l || !l.boss) return;
+    const b = l.boss;
+    // Nhãn stepper: Lý thuyết/Trắc nghiệm/Kéo thả/Tự code → Vụ án 1..4
+    document.querySelectorAll('#progress-track .progress-step .step-label-tiny').forEach((el, i) => {
+      if (b.nav && b.nav[i]) el.textContent = b.nav[i];
+    });
+    // Thẻ hồ sơ đầu mỗi step-pane (case 3-4 bản slim — không chèn ép bàn kéo-thả/IDE)
+    document.querySelectorAll('.step-pane').forEach(pane => {
+      const n = parseInt(pane.getAttribute('data-step'), 10);
+      const c = b.cases && b.cases[n - 1];
+      if (!c || pane.querySelector('.case-file-card')) return;
+      const pill = pane.querySelector('.step-pill');
+      if (pill) pill.textContent = 'Vụ án ' + n + ' / 4';
+      const card = document.createElement('div');
+      card.className = 'case-file-card' + (n >= 3 ? ' cfc-slim' : '');
+      card.innerHTML =
+        '<div class="cfc-head">' +
+          '<span class="cfc-code">' + (b.code || 'CHUYÊN ÁN') + '</span>' +
+          '<span class="cfc-tag">' + (c.tag || '') + '</span>' +
+          '<span class="cfc-stamp" data-case-stamp="' + n + '">ĐÃ PHÁ ÁN ✓</span>' +
+        '</div>' +
+        '<div class="cfc-title">' + (c.title || '') + '</div>' +
+        (c.suspect ? '<div class="cfc-suspect">🎯 Nghi vấn: ' + c.suspect + '</div>' : '') +
+        (c.brief ? '<div class="cfc-brief">' + c.brief + '</div>' : '') +
+        (n > 1 && b.cases[n - 2] && b.cases[n - 2].clue
+          ? '<div class="cfc-prev"><span class="cfc-prev-label">🧩 Manh mối từ Vụ án ' + (n - 1) + ':</span> ' + b.cases[n - 2].clue + '</div>'
+          : '');
+      pane.insertBefore(card, pane.firstElementChild);
+    });
+    updateBossStamps();
+  }
+  function updateBossStamps() {
+    document.querySelectorAll('.cfc-stamp').forEach(st => {
+      const n = parseInt(st.getAttribute('data-case-stamp'), 10);
+      st.classList.toggle('stamped', state.currentStep > n);
+    });
+  }
+
   window.goToStep = function (step) {
     if (step < 1 || step > TOTAL_STEPS) return;
 
@@ -5410,6 +5510,9 @@
 
     state.currentStep = step;
     updateNavFooter();
+
+    // BOSS 2026-07-05: qua case nào đóng dấu ĐÃ PHÁ ÁN case đó (bài thường: no-op)
+    if (state.currentLesson && state.currentLesson.boss) updateBossStamps();
 
     // Refresh CodeMirror layout (CodeMirror needs explicit refresh after becoming visible)
     if (step === 4 && state.cmEditor) {

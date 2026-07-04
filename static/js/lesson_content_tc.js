@@ -3746,6 +3746,236 @@ window.LESSON_CONTENT['db_design_tc'] = {
         success_message: 'TICKET #40 ĐÓNG — MODULE 6 HOÀN TẤT! Bạn đã đi trọn tầng hầm: tháp lưu trữ → giá vé I/O → buffer → trang & RID → row/column → index → B+-Tree → composite/bitmap → và hôm nay là EXPLAIN, chiếc đèn soi tất cả. Còn đúng MỘT bài: hồ sơ CHUYÊN ÁN TỐT NGHIỆP vừa đặt lên bàn — "Social Graph Detective": 4 vụ án liên hoàn, dùng mọi vũ khí của cả ba module. Hẹn ở phòng thẩm vấn. 🕵️',
         xp_reward: 140
       }
+    },
+
+    /* ═══════════ tc_21 — BOSS · Social Graph Detective (TỐT NGHIỆP) ═══════════
+     * User chốt 2026-07-05: "1 đường dây, 4 vụ liên hoàn" + vỏ hồ sơ/dấu/manh mối
+     * (l.boss → applyBossSkin). Case 2↔3 hoán vị so với phác thảo ban đầu vì khung
+     * 4 bước: thẩm vấn MCQ/EXPLAIN nằm ở bước 2, kéo-thả CTE ở bước 3.
+     * Engine: step-3 CTE zones (như tc_04, scan pending) + expected_zones;
+     * step-4 SELECT thật (probe_engine_m6b t6/t9: HAVING >= + ORDER BY alias OK).
+     * Graduation: COURSE_MILESTONES db_design_tc → overlay GAMEHUB COMMUNITY v3.0. */
+    {
+      id: 'tc_21', index: 21,
+      title: 'BOSS · Social Graph Detective — chuyên án tốt nghiệp',
+      subtitle: 'Bốn vụ án liên hoàn: khoanh vùng → dựng lối tắt → lần mạng lưới → kết án',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 30, xp_reward: 200,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      boss: {
+        code: 'CHUYÊN ÁN #GH-2026',
+        nav: ['Vụ án 1', 'Vụ án 2', 'Vụ án 3', 'Vụ án 4'],
+        cases: [
+          {
+            tag: 'VỤ ÁN 1/4 · KHOANH VÙNG',
+            title: 'Like ảo lúc 2 giờ sáng',
+            suspect: 'nhóm tài khoản like dồn dập trong một cửa sổ 5 phút',
+            brief: 'Bài quảng cáo lậu leo top đêm qua. Hiện trường: bảng <code>like_log</code> — cửa sổ 02:00 có chùm like dày bất thường. Việc của bạn: đọc biên bản khoanh vùng mà trợ lý đã chạy bằng <code>GROUP BY + HAVING</code>.',
+            clue: 'Ba tài khoản lộ mặt: <code>404 · 405 · 406</code> — cùng like ≥ 3 lần trong 5 phút, hồ sơ đăng ký cùng một ngày.'
+          },
+          {
+            tag: 'VỤ ÁN 2/4 · MÁY TRA ÁN QUÁ CHẬM',
+            title: 'Tra một nghi phạm mất 12 giây',
+            suspect: 'like_log 40 triệu dòng — phòng án chưa có lối tắt',
+            brief: 'Muốn soi từng nghi phạm nhưng mỗi lệnh tra quét cả 40 triệu dòng. EXPLAIN đã nộp bản khai — đọc nó, rồi chọn đúng index cho phòng án.',
+            clue: 'Index <code>(user_id, window_5m)</code> dựng xong — tra án còn 0,2s. Và chi tiết chết người lộ ra: cả 3 nghi phạm đều được MỜI vào Community bởi tài khoản <code>#401 · seed_master</code>.'
+          },
+          {
+            tag: 'VỤ ÁN 3/4 · LẦN MẠNG LƯỚI',
+            title: 'Bạn-của-bạn của seed_master',
+            suspect: '#401 và mạng lưới mời mọc nhiều tầng phía dưới',
+            brief: 'Bảng <code>invites</code> chỉ ghi từng cặp (ai mời ai). Muốn tóm TOÀN BỘ đường dây phải lần theo nhiều tầng — dựng truy vấn đệ quy xuất phát từ tài khoản gốc 401.',
+            clue: 'Mạng lưới 3 tầng, 8 tài khoản: 401 mời 404/405/406, chúng tỏa tiếp 407 → 411. Đủ người — giờ cần CON SỐ để kết án.'
+          },
+          {
+            tag: 'VỤ ÁN 4/4 · HỒ SƠ KẾT ÁN',
+            title: 'Con số buộc tội',
+            suspect: 'kẻ nào chiêu mộ từ 2 tài khoản trở lên',
+            brief: 'Lệnh cuối cùng của chuyên án: đếm số "đàn em" từng kẻ đã mời, giữ kẻ mời ≥ 2, xếp kẻ nặng tội nhất lên đầu — bảng này đóng vào hồ sơ gửi ban quản trị.',
+            clue: ''
+          }
+        ]
+      },
+      drag_map: {
+        table: {
+          name: 'invites — ai mời ai vào Community',
+          columns: ['invite_id', 'inviter_id', 'invitee_id'],
+          dataRows: [
+            ['1', '401', '404'],
+            ['2', '401', '405'],
+            ['3', '401', '406'],
+            ['4', '404', '407'],
+            ['5', '404', '408'],
+            ['6', '405', '409'],
+            ['7', '406', '410'],
+            ['8', '406', '411']
+          ]
+        }
+      },
+      story: {
+        tag: '🕵️ CHUYÊN ÁN #GH-2026 · Social Graph Detective — BÀI TỐT NGHIỆP',
+        hook: '02:14 đêm qua, chuông cảnh báo reo: một bài quảng cáo lậu leo thẳng TOP TREND nhờ chùm like dày đặc lúc 2 giờ sáng. Admin đặt lên bàn bạn một tập HỒ SƠ đóng dấu MẬT: <strong>4 vụ án liên hoàn</strong> — manh mối vụ trước mở khóa vụ sau. Đây là bài tốt nghiệp Trung cấp: bạn sẽ rút TỪNG vũ khí đã học — <code>HAVING</code> khoanh vùng, <code>Index + EXPLAIN</code> dựng lối tắt, <code>WITH RECURSIVE</code> lần mạng lưới — và khép hồ sơ bằng một lệnh SELECT kết án. Phá xong: GameHub Community v3.0 ra mắt, có tên bạn trong credits.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Đọc hiện trường: chùm like bất thường dồn vào MỘT cửa sổ 5 phút — dấu vân tay của bot',
+            'Khoanh vùng bằng ngưỡng: GROUP BY user_id + HAVING COUNT(*) ≥ 3 (vũ khí Ticket #30)',
+            'Kế hoạch chuyên án 4 vụ: khoanh vùng → dựng lối tắt tra án → lần mạng lưới → kết án'
+          ],
+          intro: 'Hiện trường đây: bảng <code>like_log</code> ghi từng cú like kèm cửa sổ 5 phút (<code>window_5m</code> — kỹ thuật tumbling window của Ticket #30). Người thật rải like cả ngày; bot dội <strong>cả chùm vào một cửa sổ</strong>. Trợ lý đã chạy lệnh khoanh vùng: <code>SELECT user_id, COUNT(*) AS likes_5m FROM like_log WHERE window_5m = \'02:00\' GROUP BY user_id HAVING COUNT(*) >= 3;</code> — gom theo thủ phạm, đếm mật độ, và <code>HAVING</code> chỉ giữ kẻ vượt ngưỡng. Biên bản trả về ba cái tên: <strong>404, 405, 406</strong>. Trùng hợp rợn người: cả ba đăng ký cùng một ngày. Vụ án 1 khép — nhưng nó chỉ là mắt xích đầu của đường dây.',
+          example: 'Ngưỡng HAVING là con dao hai lưỡi đã học ở Ticket #30: đặt 2 thì oan dân cuồng game, đặt 5 thì lọt bot rén. Phòng án chốt ≥ 3/5 phút sau khi đo phân phối like của người thật (99,7% < 3).'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-magnifying-glass-chart',
+            title: 'Vũ khí 1 · Khoanh vùng bằng HAVING',
+            body: 'WHERE lọc TỪNG DÒNG trước khi gom; HAVING lọc TỪNG NHÓM sau khi đếm. Truy tìm "kẻ làm việc X quá N lần" luôn là bộ ba: <code>GROUP BY thủ_phạm</code> → <code>COUNT(*)</code> → <code>HAVING ≥ ngưỡng</code>. Bạn sẽ tự tay viết lại bộ ba này ở Vụ án 4.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 3 & 5 — Aggregation (HAVING) · Recursive Queries'
+          },
+          {
+            icon: 'fa-route',
+            title: 'Kế hoạch chuyên án — 4 vụ, 3 module',
+            body: 'Vụ 1 khoanh vùng (M5 · HAVING) → Vụ 2 dựng lối tắt tra án (M6 · Index + EXPLAIN) → Vụ 3 lần mạng lưới nhiều tầng (M4 · WITH RECURSIVE) → Vụ 4 lệnh kết án (SELECT tổng hợp chạy thật). Manh mối vụ trước nằm ngay đầu hồ sơ vụ sau — đừng bỏ qua khung màu vàng.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Nhìn biên bản bên cạnh: vì sao user 7 (minhkiller) thoát án dù cũng like lúc 02:00? Vì mật độ 1 like/5 phút là hành vi người thật — ngưỡng HAVING ≥ 3 để yên cho anh ta. Khoanh vùng đúng = bắt gọn bot, không oan dân.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'BIÊN BẢN KHOANH VÙNG — like_log @ 02:00',
+            columns: [
+              { name: 'user_id', type: 'nghi phạm', key: '🎯', icon: '🕵️' },
+              { name: 'likes_5m', type: 'COUNT(*) trong cửa sổ', key: '≥3', icon: '📊' }
+            ]
+          },
+          data_preview: [
+            ['404', '3 like / 5 phút — VƯỢT NGƯỠNG 🚨'],
+            ['405', '3 like / 5 phút — VƯỢT NGƯỠNG 🚨'],
+            ['406', '3 like (cửa sổ 02:05) — VƯỢT NGƯỠNG 🚨'],
+            ['7 · minhkiller', '1 like — dân thường, loại khỏi hồ sơ ✓']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Phòng án tra nghi phạm đầu tiên, máy khai: <code>Seq Scan on like_log (cost=0.00..812000 rows=40000000) Filter: user_id = 404</code> — và chạy mất 12 giây. Bản khai nói gì?',
+            options: [
+              { id: 'a', text: 'Máy quét TUẦN TỰ cả 40 triệu dòng rồi lọc từng dòng — like_log chưa có index trên user_id nên không có lối tắt nào để đi', correct: true, explanation: 'Đúng — Seq Scan + Filter trên 40M dòng cho MỘT nghi phạm: bài học Ticket #36/#40 hiện nguyên hình. Phòng án cần mục lục.' },
+              { id: 'b', text: 'Tài khoản 404 có 40 triệu cú like nên đọc lâu là phải', correct: false, explanation: 'Sai — rows=40M là số dòng máy phải QUÉT, không phải số like của 404 (hắn chỉ có vài chục).' },
+              { id: 'c', text: 'cost=812000 nghĩa là truy vấn tốn 812.000 đồng tiền điện', correct: false, explanation: 'Sai — cost là điểm ước tính nội bộ để so sánh đường đi (Ticket #40), không phải tiền.' },
+              { id: 'd', text: 'Máy bị hỏng index nên phải quét tạm', correct: false, explanation: 'Sai — không có index nào để hỏng; Seq Scan là lựa chọn DUY NHẤT khi chưa xây mục lục.' }
+            ]
+          },
+          {
+            question: 'Phòng án cần tra 2 kiểu: "mọi like của MỘT nghi phạm" và "like của nghi phạm TRONG một cửa sổ". Xây index nào cho <code>like_log</code>?',
+            options: [
+              { id: 'a', text: 'Composite (user_id, window_5m) — đủ Họ là tra được kiểu 1, đủ Họ+Tên là trúng dải kiểu 2: một index phục vụ cả hai (leftmost prefix)', correct: true, explanation: 'Đúng — bài học Ticket #39: cột lọc-ở-mọi-query đứng đầu. Một cây, hai kiểu tra.' },
+              { id: 'b', text: 'Composite (window_5m, user_id) — cửa sổ đứng trước cho dễ nhìn', correct: false, explanation: 'Sai — tra "mọi like của một nghi phạm" sẽ THIẾU cột đầu → trượt prefix, quét sổ như cũ.' },
+              { id: 'c', text: 'Index đơn trên post_id — bài bị like ảo mới là trung tâm vụ án', correct: false, explanation: 'Sai — hai query của phòng án lọc theo user_id/window_5m; index post_id không đỡ được query nào.' },
+              { id: 'd', text: 'Khỏi index — mua thêm RAM là 40 triệu dòng nằm gọn trong buffer', correct: false, explanation: 'Sai — nằm trong RAM vẫn phải QUÉT đủ 40M dòng mỗi lần tra (Ticket #38 MCQ đã vạch trần chiêu này).' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Lối tắt (user_id, window_5m) cứu lệnh tra nào?',
+          instruction: 'Index của phòng án đã dựng. Kéo từng lệnh tra vào đúng giỏ — nhớ luật danh bạ Họ-rồi-Tên.',
+          xp: 25,
+          chips: [
+            { id: 'p1', label: 'WHERE user_id = 404 (soi trọn hồ sơ một nghi phạm)' },
+            { id: 'p2', label: "WHERE user_id = 405 AND window_5m = '02:00'" },
+            { id: 'p3', label: "WHERE window_5m = '02:00' (cả cửa sổ, mọi user)" },
+            { id: 'p4', label: 'WHERE post_id = 900 (lần theo bài bị bơm like)' }
+          ],
+          bins: [
+            { id: 'hit',  label: 'TRÚNG DẢI 🎯' },
+            { id: 'miss', label: 'TRƯỢT — quét sổ 🐢' }
+          ],
+          solution: { p1: 'hit', p2: 'hit', p3: 'miss', p4: 'miss' }
+        }
+      },
+      step_3: {
+        mission: 'Vụ án 3: lần TOÀN BỘ mạng lưới mời mọc từ tài khoản gốc 401 — tầng nào cũng phải tóm. Lắp truy vấn đệ quy; có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'SELECT i.invitee_id FROM invites i JOIN ring r ON i.inviter_id = r.invitee_id', slot: 'cte-step' },
+          { type: 'kw', token: 'WITH RECURSIVE ring AS (', slot: 'cte-head' },
+          { type: 'op', token: 'SELECT * FROM invites ORDER BY RANDOM() — xáo hồ sơ lên, ai đen thì lộ', slot: 'cte-x' },
+          { type: 'op', token: 'SELECT invitee_id FROM invites WHERE inviter_id = 401', slot: 'cte-anchor' },
+          { type: 'kw', token: ') SELECT * FROM ring;', slot: 'cte-final' },
+          { type: 'kw', token: 'UNION ALL', slot: 'cte-union' }
+        ],
+        drop_zones: [
+          { id: 'cte-head', placeholder: 'WITH ____ — mở sổ truy nã lặp lại được', accepts: ['kw'], acceptedKeywords: ['WITH'], multi: false },
+          { id: 'cte-anchor', placeholder: 'anchor — tầng 1: ai được 401 mời TRỰC TIẾP?', accepts: ['op'], multi: false },
+          { id: 'cte-union', placeholder: 'nối tầng 1 với các tầng lần ra sau', accepts: ['kw'], multi: false },
+          { id: 'cte-step', placeholder: 'bước đệ quy — người trong sổ mời tiếp ai?', accepts: ['op'], multi: false },
+          { id: 'cte-final', placeholder: ') đọc toàn bộ sổ truy nã', accepts: ['kw'], multi: false }
+        ],
+        expected_sql: 'WITH RECURSIVE ring AS ( SELECT invitee_id FROM invites WHERE inviter_id = 401 UNION ALL SELECT i.invitee_id FROM invites i JOIN ring r ON i.inviter_id = r.invitee_id ) SELECT * FROM ring;',
+        expected_zones: {
+          'cte-head': 'WITH RECURSIVE ring AS (',
+          'cte-anchor': 'SELECT invitee_id FROM invites WHERE inviter_id = 401',
+          'cte-union': 'UNION ALL',
+          'cte-step': 'SELECT i.invitee_id FROM invites i JOIN ring r ON i.inviter_id = r.invitee_id',
+          'cte-final': ') SELECT * FROM ring;'
+        },
+        reveal_hints: {
+          'cte-head': 'Mở sổ truy nã bằng <strong>WITH RECURSIVE ring AS (</strong> — đúng vũ khí Ticket #24.',
+          'cte-anchor': 'Tầng 1 = hàng mồi: <strong>ai được 401 mời trực tiếp</strong> (WHERE inviter_id = 401). Khối "ORDER BY RANDOM()" là bịa — xáo hồ sơ không phải điều tra.',
+          'cte-union': '<strong>UNION ALL</strong> — chồng tầng mới lần ra lên các tầng đã có.',
+          'cte-step': 'Bước đệ quy: <strong>JOIN với chính ring</strong> — "người ĐÃ trong sổ mời tiếp ai?" chạy đến khi không lần thêm được.',
+          'cte-final': 'Đóng ngoặc rồi <strong>SELECT * FROM ring;</strong> — đọc trọn mạng lưới 3 tầng.'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Vụ án 4 — lệnh kết án:</strong> từ bảng <code>invites</code>, đếm mỗi kẻ đã mời bao nhiêu tài khoản (đặt tên cột đếm là <code>recruits</code>), chỉ giữ kẻ mời <strong>từ 2 trở lên</strong>, xếp kẻ nặng tội nhất lên đầu.',
+        schema: {
+          table_name: 'invites',
+          columns: [
+            { name: 'invite_id', type: 'INT', key: 'PK' },
+            { name: 'inviter_id', type: 'INT', key: '🔎 kẻ mời' },
+            { name: 'invitee_id', type: 'INT', key: 'người được mời' }
+          ],
+          data: [
+            ['1', '401', '404'],
+            ['2', '401', '405'],
+            ['3', '401', '406'],
+            ['4', '404', '407'],
+            ['5', '404', '408'],
+            ['6', '405', '409'],
+            ['7', '406', '410'],
+            ['8', '406', '411']
+          ]
+        },
+        context: {
+          scenario: 'Bảng kết quả này đóng thẳng vào hồ sơ gửi ban quản trị: ai chiêu mộ bao nhiêu, kẻ nào cầm đầu. Đây là bộ ba khoanh-vùng của Vụ án 1 — nhưng lần này chính TAY BẠN viết, trên dữ liệu mạng lưới vừa lần ra ở Vụ án 3.',
+          real_world: 'Trust & Safety của các mạng xã hội thật săn bot ring đúng quy trình này: ngưỡng hành vi (HAVING) → đồ thị quan hệ (recursive/graph) → bảng buộc tội xếp hạng (aggregate + ORDER BY).',
+          steps: [
+            'Đếm theo kẻ mời: GROUP BY inviter_id, COUNT(*) đặt tên recruits.',
+            'Ngưỡng buộc tội: HAVING COUNT(*) >= 2 — mời lẻ 1 người chưa đủ kết luận.',
+            'Kẻ nặng tội nhất lên đầu: ORDER BY recruits DESC.',
+            'Đối chiếu hồ sơ: 401 mời 3 · 404 mời 2 · 406 mời 2 · (405 mời 1 — thoát ngưỡng).'
+          ],
+          hint_explore: 'Khám phá trước: <code>SELECT * FROM invites</code> rồi Run — đếm bằng mắt xem ai xuất hiện ở cột inviter_id nhiều nhất.',
+          expected: 'Bảng kết án 3 dòng: 401·3, 404·2, 406·2 — seed_master đứng đầu.'
+        },
+        hints: [
+          { level: 1, text: 'Bộ ba khoanh vùng của Vụ án 1: GROUP BY thủ phạm → COUNT(*) → HAVING ngưỡng. Thủ phạm ở đây là cột nào?' },
+          { level: 2, text: 'Đếm và đặt tên: <code>COUNT(*) AS recruits</code>. Gom theo <code>inviter_id</code>.' },
+          { level: 3, text: 'Ngưỡng ≥ 2 đặt ở <code>HAVING COUNT(*) >= 2</code> (lọc NHÓM, không phải WHERE). Nặng tội nhất lên đầu: <code>ORDER BY recruits DESC</code>.' },
+          { level: 4, text: '<code class="code">SELECT inviter_id, COUNT(*) AS recruits FROM invites GROUP BY inviter_id HAVING COUNT(*) >= 2 ORDER BY recruits DESC;</code>' }
+        ],
+        expected_sql: 'SELECT inviter_id, COUNT(*) AS recruits FROM invites GROUP BY inviter_id HAVING COUNT(*) >= 2 ORDER BY recruits DESC;',
+        success_message: 'CHUYÊN ÁN #GH-2026 KHÉP HỒ SƠ — cả đường dây seed_master bị trục xuất, bài quảng cáo lậu rớt khỏi top trong 5 phút. Bạn vừa dùng trọn vũ khí của cả ba module trong MỘT cuộc điều tra: HAVING khoanh vùng, EXPLAIN + Index dựng lối tắt, WITH RECURSIVE lần mạng lưới, và lệnh SELECT kết án. TỐT NGHIỆP TRUNG CẤP — GameHub Community v3.0 ra mắt, tên bạn nằm trong credits. 🎓🕵️',
+        xp_reward: 200
+      }
     }
   ]
 };

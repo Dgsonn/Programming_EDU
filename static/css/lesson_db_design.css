@@ -10245,3 +10245,56 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   font-size: 13.5px; padding: 10px 14px;
 }
 .step3-editor .bank-label { font-size: 12px; }
+
+/* ═══════════ BOSS tc_21 — thẻ "hồ sơ vụ án" (2026-07-05) ═══════════
+ * Chỉ render khi lesson có l.boss (applyBossSkin) — bài thường không đụng. */
+.case-file-card {
+  position: relative;
+  max-width: 920px;
+  margin: 6px auto 18px;
+  padding: 14px 18px;
+  border: 1px solid rgba(248, 113, 113, .32);
+  border-left: 4px solid #f87171;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(248, 113, 113, .07), rgba(14, 23, 38, .92));
+  font-family: 'JetBrains Mono', monospace;
+}
+.cfc-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cfc-code {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  color: #f87171; border: 1px solid rgba(248, 113, 113, .55);
+  padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+}
+.cfc-tag { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #fbbf24; }
+.cfc-stamp {
+  margin-left: auto;
+  font-size: 11px; font-weight: 800; letter-spacing: .14em;
+  color: #34d399; border: 2px double #34d399;
+  padding: 3px 10px; border-radius: 6px;
+  transform: rotate(-6deg) scale(1.5);
+  opacity: 0;
+  transition: opacity .35s ease, transform .35s cubic-bezier(.2, 1.6, .4, 1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.cfc-stamp.stamped { opacity: 1; transform: rotate(-6deg) scale(1); }
+.cfc-title { margin-top: 8px; font-size: 17px; font-weight: 800; color: #e8edf5; }
+.cfc-suspect { margin-top: 4px; font-size: 12px; color: #aebfd6; }
+.cfc-brief { margin-top: 8px; font-size: 12.5px; line-height: 1.6; color: #aebfd6; }
+.cfc-brief code, .cfc-prev code {
+  color: #fbbf24; background: rgba(251, 191, 36, .08);
+  padding: 0 4px; border-radius: 3px;
+}
+.cfc-prev {
+  margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+  background: rgba(251, 191, 36, .08);
+  border: 1px dashed rgba(251, 191, 36, .4);
+  font-size: 12px; line-height: 1.55; color: #fbbf24;
+}
+.cfc-prev-label { font-weight: 700; }
+/* Bản slim cho case 3-4 — không chèn ép bàn kéo-thả / IDE */
+.case-file-card.cfc-slim { max-width: none; margin: 6px 10px 10px; padding: 9px 14px; }
+.case-file-card.cfc-slim .cfc-brief { display: none; }
+.case-file-card.cfc-slim .cfc-title { font-size: 13.5px; margin-top: 4px; }
+.case-file-card.cfc-slim .cfc-prev { margin-top: 6px; padding: 6px 10px; }
+@media (prefers-reduced-motion: reduce) { .cfc-stamp { transition: none; } }
