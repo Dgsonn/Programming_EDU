@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0f172a"/>
-      <stop offset="100%" style="stop-color:#1a2744"/>
+      <stop offset="100%" style="stop-color:#16324a"/>
     </linearGradient>
     <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
       <circle cx="20" cy="20" r="1.5" fill="white" opacity="0.12"/>
@@ -10,18 +10,17 @@
   </defs>
   <rect width="600" height="400" fill="url(#g)"/>
   <rect width="600" height="400" fill="url(#dots)"/>
-  <!-- Database cylinders -->
-  <ellipse cx="300" cy="130" rx="60" ry="16" fill="none" stroke="#60A5FA" stroke-width="2.5" opacity="0.9"/>
-  <rect x="240" y="130" width="120" height="42" fill="none" stroke="#60A5FA" stroke-width="2.5" opacity="0.9"/>
-  <ellipse cx="300" cy="172" rx="60" ry="16" fill="#1e3a5f" stroke="#60A5FA" stroke-width="2.5" opacity="0.9"/>
-  <!-- Second cylinder -->
-  <ellipse cx="300" cy="185" rx="60" ry="16" fill="none" stroke="#93C5FD" stroke-width="2" opacity="0.7"/>
-  <rect x="240" y="185" width="120" height="40" fill="none" stroke="#93C5FD" stroke-width="2" opacity="0.7"/>
-  <ellipse cx="300" cy="225" rx="60" ry="16" fill="#152d4a" stroke="#93C5FD" stroke-width="2" opacity="0.7"/>
-  <!-- Highlight lines on cylinders -->
-  <line x1="265" y1="145" x2="265" y2="170" stroke="#60A5FA" stroke-width="1.5" opacity="0.4"/>
-  <line x1="300" y1="138" x2="300" y2="170" stroke="#60A5FA" stroke-width="1.5" opacity="0.4"/>
-  <line x1="265" y1="198" x2="265" y2="223" stroke="#93C5FD" stroke-width="1.5" opacity="0.35"/>
-  <text x="300" y="285" font-family="system-ui,sans-serif" font-size="34" font-weight="800" fill="white" text-anchor="middle" opacity="0.95">Database Design</text>
-  <text x="300" y="320" font-family="system-ui,sans-serif" font-size="14" fill="#93C5FD" text-anchor="middle" opacity="0.75">SQL · ER Diagram · Query Optimization</text>
+  <!-- Trụ đĩa CSDL 3 tầng — art thuần, KHÔNG chữ (chữ nướng cứng từng đè lên tiêu đề card) -->
+  <ellipse cx="300" cy="120" rx="88" ry="24" fill="none" stroke="#22D3EE" stroke-width="3" opacity="0.95"/>
+  <rect x="212" y="120" width="176" height="56" fill="none" stroke="#22D3EE" stroke-width="3" opacity="0.95"/>
+  <ellipse cx="300" cy="176" rx="88" ry="24" fill="#134155" stroke="#22D3EE" stroke-width="3" opacity="0.95"/>
+  <ellipse cx="300" cy="196" rx="88" ry="24" fill="none" stroke="#60A5FA" stroke-width="2.5" opacity="0.75"/>
+  <rect x="212" y="196" width="176" height="52" fill="none" stroke="#60A5FA" stroke-width="2.5" opacity="0.75"/>
+  <ellipse cx="300" cy="248" rx="88" ry="24" fill="#12304e" stroke="#60A5FA" stroke-width="2.5" opacity="0.75"/>
+  <line x1="252" y1="140" x2="252" y2="172" stroke="#22D3EE" stroke-width="2" opacity="0.4"/>
+  <line x1="300" y1="132" x2="300" y2="172" stroke="#22D3EE" stroke-width="2" opacity="0.4"/>
+  <line x1="252" y1="214" x2="252" y2="244" stroke="#60A5FA" stroke-width="2" opacity="0.35"/>
+  <!-- Khóa chính lấp lánh -->
+  <circle cx="416" cy="120" r="17" fill="none" stroke="#FBBF24" stroke-width="2.5" opacity="0.9"/>
+  <path d="M 428 132 L 452 156 M 444 148 l 8 -8 M 436 140 l 8 -8" stroke="#FBBF24" stroke-width="2.5" fill="none" opacity="0.9" stroke-linecap="round"/>
 </svg>

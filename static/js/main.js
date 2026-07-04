@@ -995,8 +995,8 @@ function renderCourses() {
       (activeEnrollmentFilter === "not-enrolled" && !c.enrolled);
     var matchLevel =
       levelFilter === "all" ||
-      // Map: Cơ bản == Phù hợp người mới (DB hiện normalize theo 'Phù hợp người mới')
-      (levelFilter === "Cơ bản" && /phù hợp người mới/i.test(c.level)) ||
+      // Map: Cơ bản == Phù hợp người mới (khóa DB Design Cơ bản dùng level 'Cơ bản' trực tiếp)
+      (levelFilter === "Cơ bản" && /(cơ bản|phù hợp người mới)/i.test(c.level)) ||
       (levelFilter === "Trung cấp" && /trung cấp/i.test(c.level)) ||
       (levelFilter === "Nâng cao" && /nâng cao/i.test(c.level)) ||
       (levelFilter === "Phù hợp người mới" && /phù hợp người mới/i.test(c.level));
@@ -1964,16 +1964,16 @@ var _DB_DESIGN_CARDS = [
     tag: 'DATABASE & BACKEND', enrolled: false
   },
   {
-    id: 'db_design_tc', title: 'SQL nâng cao, Dữ liệu lớn & Hiệu năng', subtitle: 'Phần 2 — GameHub Community',
+    id: 'db_design_tc', title: 'SQL nâng cao, Dữ liệu lớn & Hiệu năng', subtitle: 'GameHub Community — mạng xã hội của gamers',
     description: 'Advanced SQL (Trigger, Procedure, Recursive CTE), Big Data & Analytics, Storage & Indexing — xây mạng cộng đồng gamers của GameHub.',
-    image: 'static/images/db_design.svg', level: 'Trung cấp', duration: '~7 giờ',
+    image: 'static/images/db_design_tc.svg', level: 'Trung cấp', duration: '~7 giờ',
     students: '0', rating: 4.9, lessons: 21, color: '#0C4A6E', accentColor: '#38BDF8',
     tag: 'DATABASE & BACKEND', enrolled: false
   },
   {
-    id: 'db_design_nc', title: 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', subtitle: 'Phần 3 — GameHub Marketplace',
+    id: 'db_design_nc', title: 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', subtitle: 'GameHub Marketplace — sàn giao dịch vật phẩm',
     description: 'Query Processing & Optimization, Concurrency Control, Crash Recovery — vận hành chợ giao dịch triệu người dùng của GameHub.',
-    image: 'static/images/db_design.svg', level: 'Nâng cao', duration: '~9 giờ',
+    image: 'static/images/db_design_nc.svg', level: 'Nâng cao', duration: '~9 giờ',
     students: '0', rating: 4.9, lessons: 25, color: '#7C2D12', accentColor: '#FB923C',
     tag: 'DATABASE & BACKEND', enrolled: false
   }

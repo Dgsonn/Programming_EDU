@@ -500,12 +500,18 @@ def init_db():
         # Sync 2026-07-04b (user chốt): tiêu đề ỨNG DỤNG (badge đã nói cấp độ, title không lặp)
         # + duration TRÒN GIỜ đồng bộ với tổng phút giáo trình (1 nguồn chân lý).
         # Idempotent: set cùng giá trị mỗi lần start.
-        for _cid, _title, _dur in [
-            ('db_design',    'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh', '~6 giờ'),
-            ('db_design_tc', 'SQL nâng cao, Dữ liệu lớn & Hiệu năng',               '~7 giờ'),
-            ('db_design_nc', 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', '~9 giờ'),
+        # + subtitle theo LĨNH VỰC chủ đạo (recommendation §4: TC = social network,
+        #   NC = e-commerce; GameHub chỉ là cầu nối) + ảnh card riêng từng khóa (không chữ).
+        for _cid, _title, _dur, _sub, _img in [
+            ('db_design',    'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh', '~6 giờ',
+             'Nền tảng thiết kế CSDL — dự án GameHub', 'static/images/db_design.svg'),
+            ('db_design_tc', 'SQL nâng cao, Dữ liệu lớn & Hiệu năng',               '~7 giờ',
+             'GameHub Community — mạng xã hội của gamers', 'static/images/db_design_tc.svg'),
+            ('db_design_nc', 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', '~9 giờ',
+             'GameHub Marketplace — sàn giao dịch vật phẩm', 'static/images/db_design_nc.svg'),
         ]:
-            c.execute('UPDATE courses SET title=%s, duration=%s WHERE id=%s', (_title, _dur, _cid))
+            c.execute('UPDATE courses SET title=%s, duration=%s, subtitle=%s, image=%s WHERE id=%s',
+                      (_title, _dur, _sub, _img, _cid))
 
         # Seed missions sau courses vì có FK: course_id REFERENCES courses(id)
         c.execute('SELECT 1 FROM missions LIMIT 1')

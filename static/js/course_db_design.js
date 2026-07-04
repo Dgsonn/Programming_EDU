@@ -53,28 +53,47 @@ var CD_COURSE_ID = (document.body && document.body.dataset.course) || 'db_design
 var COURSE_PAGE_META = {
   db_design: {
     heroTitle: 'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh',
-    heroSubtitle: 'Phần 1 saga GameHub · ER Mapping, Phụ thuộc hàm & Chuẩn hóa — theo giáo trình Silberschatz',
+    heroSubtitle: 'Dự án GameHub — cửa hàng game đầu tay · ER, Chuẩn hóa & SQL ứng dụng · giáo trình Silberschatz',
     moduleNames: { 1: 'ER Model & Mapping', 2: 'FD & Normalization', 3: 'Application Design' },
     lessonBase: '/lesson/db_design',
     lessonCount: 20,
     curriculumLabel: 'Khóa Cơ bản: 20 bài · 3 module',
     includes3: ['20 bài học (dự án GameHub)', '3 module (ER / Normalization / Application)', '~6 giờ học'],
-    outcomeFix: { find: 'Mạng Xã Hội Gamers', replace: 'diễn đàn GuildBoard' }
+    overviewHTML:
+      'Bạn có một ý tưởng sản phẩm — nhưng mở editor ra thì… <em>bảng đầu tiên đặt tên gì, cột nào, nối với nhau ra sao?</em> ' +
+      'Khóa này đưa bạn vào vai <strong>kỹ sư dữ liệu đầu tiên của GameHub</strong>, một cửa hàng game vừa khai trương — ' +
+      'nơi mỗi bài học là một sự cố có thật: khách bị trừ tiền nhầm vì trùng tên game, dữ liệu vênh vì copy tay, bảng phình vì nhét tất cả vào một chỗ.' +
+      '<br><br>Qua <strong>20 ticket</strong> (3 module), bạn dựng GameHub từ bảng đầu tiên đến hệ CSDL hoàn chỉnh: ' +
+      '<strong>vẽ ER và ánh xạ thành bảng</strong>, <strong>chuẩn hóa 1NF→4NF</strong> để dữ liệu không bao giờ tự mâu thuẫn, ' +
+      'rồi <strong>đưa SQL vào ứng dụng thật</strong> (JSON, bản đồ, ORM, API, bảo mật).',
+    outcomeFix: { find: 'Mạng Xã Hội Gamers', replace: 'diễn đàn GuildBoard' },
+    achievements: [
+      { m: 1, icon: 'fa-compass-drafting', title: 'Kiến trúc sư ER',        desc: 'Vẽ thực thể – quan hệ và ánh xạ thành bảng vật lý' },
+      { m: 1, icon: 'fa-key',              title: 'Người giữ Khóa',         desc: 'PK, FK, khóa ghép — chốt đúng 1 dòng trong mọi tình huống' },
+      { m: 1, icon: 'fa-rocket',           title: 'Ship GameHub v1.0',      desc: 'Đóng 7 ticket đầu — nền móng cửa hàng lên sóng' },
+      { m: 2, icon: 'fa-magnifying-glass', title: 'Thợ săn Dư thừa',        desc: 'Đánh hơi phụ thuộc hàm, tách bảng diệt dữ liệu lặp' },
+      { m: 2, icon: 'fa-scale-balanced',   title: 'Bậc thầy Chuẩn hóa',     desc: '1NF → BCNF → 4NF + biết khi nào nên dừng ở 3NF' },
+      { m: 2, icon: 'fa-rocket',           title: 'Ship GameHub v2.0',      desc: 'Mùa tư vấn toàn thắng — kể cả boss GuildBoard' },
+      { m: 3, icon: 'fa-toolbox',          title: 'Kỹ sư Ứng dụng',         desc: 'JSONB, spatial, ORM Django, REST API trên dữ liệu thật' },
+      { m: 3, icon: 'fa-shield-halved',    title: 'Vệ binh Dữ liệu',        desc: 'Chặn SQL Injection, băm mật khẩu đúng chuẩn' },
+      { m: 3, icon: 'fa-graduation-cap',   title: 'GameHub v3.0 toàn cầu',  desc: 'Tốt nghiệp — hệ CSDL hoàn chỉnh chạy thật' }
+    ]
   },
   db_design_tc: {
     heroTitle: 'SQL nâng cao, Dữ liệu lớn & Hiệu năng',
-    heroSubtitle: 'Phần 2 saga GameHub — xây GameHub Community · Ticket #21–#41 · Silberschatz Ch 5, 10–14',
+    heroSubtitle: 'GameHub Community — mạng xã hội của gamers · Feed, cây bình luận & triệu lượt like · Silberschatz Ch 5, 10–14',
     moduleNames: { 1: 'Advanced SQL', 2: 'Big Data & Analytics', 3: 'Storage, Indexing & Performance' },
     lessonBase: '/lesson/db_design_tc',
     lessonCount: 21,
     curriculumLabel: 'Khóa Trung cấp: 21 bài · 3 module',
     includes3: ['21 bài học (GameHub Community)', '3 module (Advanced SQL / Big Data / Storage-Index)', '~7 giờ học'],
     overviewHTML:
-      'GameHub v3.0 đã ra mắt toàn cầu — và bây giờ công ty xây <strong>mạng cộng đồng riêng cho gamers</strong>. ' +
-      'Bạn, từ kỹ sư dữ liệu đầu tiên, giờ là <em>lead engineer của GameHub Community</em>.' +
-      '<br><br>Trong <strong>21 bài</strong> (3 module), database sẽ không chỉ trả lời truy vấn nữa: nó <strong>tự làm việc</strong> ' +
-      '(Trigger, Stored Procedure, Recursive CTE duyệt cây bình luận), <strong>kể chuyện từ triệu hành vi người dùng</strong> ' +
-      '(Star Schema, OLAP Cube, MapReduce, Streaming) và <strong>chạy nhanh có chủ đích</strong> (Storage, Buffer, B+-Tree, EXPLAIN).',
+      'Một mạng xã hội sống bằng ba thứ: <em>feed hiện ngay, bình luận xếp đúng cây, và con số like không bao giờ sai</em>. ' +
+      'Đằng sau cả ba là database — và ở <strong>GameHub Community</strong>, mạng xã hội của gamers, bạn là người chịu trách nhiệm cho nó.' +
+      '<br><br>Qua <strong>21 bài</strong> (3 module), bạn xử những bài toán đặc sản của social: dạy database <strong>tự cập nhật like_count</strong> ' +
+      'khi có tim mới (Trigger), <strong>duyệt cây bình luận sâu n tầng</strong> trong 1 truy vấn (Recursive CTE), ' +
+      '<strong>đếm triệu hành vi theo giờ/ngày/tháng</strong> (Star Schema, OLAP, MapReduce, Streaming), ' +
+      'và trả lời câu hỏi kinh điển <em>"vì sao feed load chậm?"</em> bằng Storage, Buffer, B+-Tree và EXPLAIN.',
     outcomes: [
       '⚙️ <strong>Viết Function, Stored Procedure & Trigger</strong> — để database tự phản ứng (tự cập nhật like_count, tự dọn dữ liệu)',
       '🌳 <strong>Duyệt cây bình luận bằng Recursive CTE</strong> — truy vấn đệ quy mà vòng lặp ứng dụng không làm nổi',
@@ -88,15 +107,16 @@ var COURSE_PAGE_META = {
       { text: 'Hiểu khóa chính/khóa ngoại & chuẩn hóa cơ bản (1NF–3NF)', status: 'info' },
       { text: 'Trình duyệt web hiện đại — không cần cài database', status: 'info' }
     ],
-    skills: [
-      { m: 1, icon: 'fa-gears',            title: 'Stored Procedure & Function', desc: 'Đóng gói logic vào database, gọi 1 lệnh' },
-      { m: 1, icon: 'fa-bolt',             title: 'Trigger',                     desc: 'Database tự phản ứng khi dữ liệu đổi' },
-      { m: 1, icon: 'fa-sitemap',          title: 'Recursive CTE',               desc: 'WITH RECURSIVE — duyệt cây, đồ thị' },
-      { m: 2, icon: 'fa-star',             title: 'Star Schema & OLAP',          desc: 'Fact/Dim, ROLLUP, CUBE, slice-dice-drill' },
-      { m: 2, icon: 'fa-diagram-project',  title: 'MapReduce & Streaming',       desc: 'Chia-gom dữ liệu lớn, tumbling window' },
-      { m: 3, icon: 'fa-hard-drive',       title: 'Storage & Buffer',            desc: 'Vì sao đọc đĩa chậm, cache nóng/lạnh' },
-      { m: 3, icon: 'fa-tree',             title: 'B+-Tree & các loại Index',    desc: 'Dense/Sparse/Clustering/Composite/Bitmap' },
-      { m: 3, icon: 'fa-gauge-high',       title: 'EXPLAIN & Tuning',            desc: 'Đọc kế hoạch chạy, chọn index cho query thật' }
+    achievements: [
+      { m: 1, icon: 'fa-gears',            title: 'Bậc thầy Trigger & Procedure', desc: 'Database tự cập nhật like_count, tự dọn dữ liệu' },
+      { m: 1, icon: 'fa-sitemap',          title: 'Người gọi Đệ quy',             desc: 'WITH RECURSIVE — duyệt cây bình luận n tầng' },
+      { m: 1, icon: 'fa-rocket',           title: 'Ship Community v1.0',          desc: 'Backend biết tự làm việc — module Advanced SQL đóng' },
+      { m: 2, icon: 'fa-star',             title: 'Kiến trúc sư Star Schema',     desc: 'Fact/Dim + ROLLUP/CUBE — cắt dữ liệu mọi chiều' },
+      { m: 2, icon: 'fa-diagram-project',  title: 'Phù thủy OLAP & Streaming',    desc: 'MapReduce, tumbling window trên triệu hành vi' },
+      { m: 2, icon: 'fa-rocket',           title: 'Ship Community v2.0',          desc: 'Dashboard phân tích cộng đồng lên sóng' },
+      { m: 3, icon: 'fa-tree',             title: 'Người thuần hóa B+-Tree',      desc: 'Chọn đúng index: dense/sparse/composite/bitmap' },
+      { m: 3, icon: 'fa-gauge-high',       title: 'Thợ săn Query chậm',           desc: 'Đọc EXPLAIN, trị tận gốc "feed load chậm"' },
+      { m: 3, icon: 'fa-user-secret',      title: 'Social Graph Detective',       desc: 'Boss Battle — điều tra hiệu năng toàn Community' }
     ],
     lessons: [
       { n: 1,  m: 1, t: 'SQL từ ngôn ngữ lập trình — JDBC & Cursor', min: 25 },
@@ -124,18 +144,19 @@ var COURSE_PAGE_META = {
   },
   db_design_nc: {
     heroTitle: 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi',
-    heroSubtitle: 'Phần 3 saga GameHub — vận hành GameHub Marketplace · Ticket #42–#66 · Silberschatz Ch 15–19',
+    heroSubtitle: 'GameHub Marketplace — sàn giao dịch vật phẩm · Checkout, kho hàng & thanh toán an toàn · Silberschatz Ch 15–19',
     moduleNames: { 1: 'Engine Room (Query Processing)', 2: 'Concurrency Control', 3: 'Crash Recovery' },
     lessonBase: '/lesson/db_design_nc',
     lessonCount: 25,
     curriculumLabel: 'Khóa Nâng cao: 25 bài · 3 module',
     includes3: ['25 bài học (GameHub Marketplace)', '3 module (Engine / Concurrency / Recovery)', '~9 giờ học'],
     overviewHTML:
-      'GameHub mở <strong>Marketplace</strong> — chợ giao dịch vật phẩm với hàng triệu lượt mua bán đồng thời. ' +
-      'Ở quy mô này, viết đúng SQL chưa đủ: bạn phải hiểu <em>chuyện gì xảy ra bên trong engine</em>.' +
-      '<br><br>Trong <strong>25 bài</strong> (3 module), bạn mở nắp capo database: câu SQL biến thành <strong>execution plan</strong> ' +
-      'thế nào và vì sao chậm (Engine Room); điều gì xảy ra khi <strong>1000 người cùng mua 1 món</strong> ' +
-      '(Locks, 2PL, Deadlock, MVCC); và làm sao <strong>tiền không bay hơi khi server sập</strong> giữa giao dịch (WAL, ARIES).',
+      'Trên một sàn giao dịch, mỗi giây đều có người <em>tìm hàng, tranh nhau món cuối trong kho, và bấm thanh toán</em>. ' +
+      'Chỉ cần engine xử lý sai một nhịp: bán trùng 1 vật phẩm cho 2 người, hoặc tiền trừ rồi mà đơn biến mất. ' +
+      'Ở <strong>GameHub Marketplace</strong>, bạn là người đảm bảo điều đó không bao giờ xảy ra.' +
+      '<br><br>Qua <strong>25 bài</strong> (3 module), bạn mở nắp capo database: câu search <strong>biến thành execution plan</strong> ' +
+      'ra sao và vì sao chậm (Engine Room); chuyện gì xảy ra khi <strong>1000 người cùng mua 1 món</strong> ' +
+      '(Locks, 2PL, Deadlock, MVCC); và làm sao <strong>tiền không bay hơi khi server sập giữa thanh toán</strong> (WAL, checkpoint, ARIES).',
     outcomes: [
       '🔬 <strong>Đọc & giải thích execution plan</strong> — ước lượng cost I/O, biết query chậm ở toán tử nào',
       '🤝 <strong>Chọn đúng thuật toán Join</strong> (Nested / Merge / Hash) theo kích thước & index của dữ liệu',
@@ -149,16 +170,16 @@ var COURSE_PAGE_META = {
       { text: 'Thành thạo JOIN nhiều bảng & GROUP BY', status: 'info' },
       { text: 'Từng gặp deadlock/timeout ngoài đời là một lợi thế (không bắt buộc)', status: 'info' }
     ],
-    skills: [
-      { m: 1, icon: 'fa-diagram-next',   title: 'SQL → Execution Plan',        desc: 'Parser, đại số quan hệ, cây toán tử' },
-      { m: 1, icon: 'fa-coins',          title: 'Cost Model & Scan',           desc: 'Block transfer, random I/O, full vs index scan' },
-      { m: 1, icon: 'fa-shuffle',        title: 'Join Algorithms',             desc: 'Nested / Block / Merge / Hash — chọn theo dữ liệu' },
-      { m: 1, icon: 'fa-magnifying-glass-chart', title: 'Optimizer & EXPLAIN', desc: 'Pushdown, join reorder, materialized view' },
-      { m: 2, icon: 'fa-lock',           title: 'Locks & 2PL',                 desc: 'S/X matrix, growing–shrinking, granularity' },
-      { m: 2, icon: 'fa-arrows-spin',    title: 'Deadlock & Phantom',          desc: 'Wait-for graph, index locking' },
-      { m: 2, icon: 'fa-camera',         title: 'MVCC & Isolation',            desc: 'Snapshot, lost update, write skew, FOR UPDATE' },
-      { m: 3, icon: 'fa-file-lines',     title: 'WAL & Checkpoint',            desc: 'Log record, commit point, redo/undo' },
-      { m: 3, icon: 'fa-heart-pulse',    title: 'ARIES Recovery',              desc: 'LSN, PageLSN, DirtyPageTable — phục hồi chuẩn công nghiệp' }
+    achievements: [
+      { m: 1, icon: 'fa-diagram-next',   title: 'Người đọc Execution Plan',   desc: 'Nhìn plan biết ngay query chậm ở toán tử nào' },
+      { m: 1, icon: 'fa-shuffle',        title: 'Chiến lược gia Join',        desc: 'Nested/Merge/Hash — chọn đúng theo dữ liệu & index' },
+      { m: 1, icon: 'fa-rocket',         title: 'Ship Marketplace v1.0',      desc: 'Search + filter + sort nhanh có chủ đích' },
+      { m: 2, icon: 'fa-lock',           title: 'Trọng tài Giao dịch',        desc: '2PL, wait-for graph — gỡ deadlock giờ cao điểm' },
+      { m: 2, icon: 'fa-camera',         title: 'Bậc thầy MVCC',              desc: 'Snapshot isolation, chặn lost update bằng FOR UPDATE' },
+      { m: 2, icon: 'fa-rocket',         title: 'Ship Marketplace v2.0',      desc: 'Kho hàng sống sót 1000 người tranh 1 món' },
+      { m: 3, icon: 'fa-file-lines',     title: 'Kỹ sư Phục hồi',             desc: 'WAL, checkpoint, ARIES — tiền không bao giờ bay hơi' },
+      { m: 3, icon: 'fa-fire',           title: 'Engine Under Fire',          desc: 'Boss Battle — query chậm + 100 user + crash, xử trọn' },
+      { m: 3, icon: 'fa-graduation-cap', title: 'Kiến trúc sư Database',      desc: 'Tốt nghiệp cả saga — hiểu database từ vỏ tới lõi' }
     ],
     lessons: [
       { n: 1,  m: 1, t: 'SQL → Execution Plan',                      min: 20 },
@@ -263,11 +284,12 @@ if (CD_META.lessons) COURSE_LESSONS = CD_META.lessons;
       }).join('');
     }
   }
-  // Kỹ năng đạt được (giữ data-module để logic unlock chạy)
-  if (CD_META.skills) {
+  // Thành tựu (rename từ "Kỹ năng" — user 2026-07-04: kỹ năng sẽ tách db riêng)
+  // — badge mở khóa theo milestone module, giữ data-module để logic unlock chạy
+  if (CD_META.achievements) {
     var grid = document.querySelector('.cd-skills');
     if (grid) {
-      grid.innerHTML = CD_META.skills.map(function (k) {
+      grid.innerHTML = CD_META.achievements.map(function (k) {
         return '<div class="cd-skill-item" data-module="' + k.m + '">' +
           '<div class="cd-skill-icon"><i class="fas ' + k.icon + '"></i></div>' +
           '<div class="cd-skill-body"><div class="cd-skill-title">' + esc(k.title) + '</div>' +
