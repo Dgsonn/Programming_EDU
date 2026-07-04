@@ -1146,3 +1146,206 @@ body.light .cd-progress-label { color: #64748B; }
   .cd-roadmap-node.current .cd-roadmap-node-circle,
   .cd-roadmap-node.current .cd-roadmap-node-circle::before { animation: none !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * REDESIGN 2026-06-28 — PHASE D: brand signatures on course detail
+ * Author: Mavis (autonomous session, user vắng 4-5h)
+ * References:
+ *   - shadcn/ui: card grid + dark mode tokens (D2 polish)
+ *   - Brilliant.org: hero course stats with achievement icons
+ *   - Codecademy: course hero with progress ring + CTA hierarchy
+ *   - design.md repo: token alignment with lesson player
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+/* Module color strips + accent on course hero */
+.course-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.course-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 32px;
+  right: 32px;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--module-amber, #F59E0B) 0%,
+    var(--module-indigo, #8B5CF6) 50%,
+    var(--module-emerald, #10B981) 100%);
+  border-radius: 0 0 4px 4px;
+  z-index: 1;
+}
+
+/* Course title — gradient text (matches dashboard brand text) */
+.course-title {
+  background: linear-gradient(135deg, #F8FAFC 0%, #06B6D4 60%, #A855F7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.025em;
+}
+
+/* Eyebrow badge — green pulse dot (matches brand canvas) */
+.course-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.course-eyebrow::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  animation: course-eyebrow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes course-eyebrow-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(0.85); }
+}
+
+/* Stats card — glassmorphism + module accent */
+.course-stats-card {
+  position: relative;
+  border-radius: 16px;
+  isolation: isolate;
+}
+
+.course-stats-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(6, 182, 212, 0.35),
+    rgba(168, 85, 247, 0.25) 50%,
+    rgba(16, 185, 129, 0.30));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.course-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.course-stat-mini {
+  padding: 14px 16px;
+  background: rgba(11, 17, 33, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  border-radius: 12px;
+  transition: all var(--anim-fast, 200ms) ease;
+}
+
+.course-stat-mini:hover {
+  border-color: rgba(6, 182, 212, 0.30);
+  transform: translateY(-2px);
+}
+
+.course-stat-mini-num {
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #06B6D4, #A855F7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+/* Primary CTA — shadcn-style green button with glow */
+.course-cta-primary {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  box-shadow:
+    0 8px 24px rgba(16, 185, 129, 0.25),
+    0 0 0 1px rgba(16, 185, 129, 0.30);
+  transition: all var(--anim-fast, 200ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1));
+}
+
+.course-cta-primary:hover {
+  box-shadow:
+    0 12px 32px rgba(16, 185, 129, 0.40),
+    0 0 0 2px rgba(16, 185, 129, 0.50);
+  transform: translateY(-2px);
+}
+
+/* Learning outcomes — module accent strip per item */
+.learning-outcome {
+  position: relative;
+  padding-left: 16px;
+  border-left: 3px solid transparent;
+  transition: all var(--anim-fast, 200ms) ease;
+}
+
+.learning-outcome::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg,
+    var(--module-amber, #F59E0B),
+    var(--module-indigo, #8B5CF6));
+  border-radius: 2px;
+  opacity: 0.5;
+  transition: opacity var(--anim-fast, 200ms);
+}
+
+.learning-outcome:hover {
+  border-left-color: transparent;
+}
+
+.learning-outcome:hover::before {
+  opacity: 1;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .course-eyebrow::before {
+    animation: none !important;
+  }
+}
+
+/* ═══ Easter-egg: Vũ trụ GameHub — refs liên kết 3 khóa (2026-07-04) ═══
+   Mờ nhẹ, cuối khối Tổng quan; hover mới sáng — người tinh ý tự nhận ra. */
+.cd-saga-refs {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  opacity: 0.62;
+  transition: opacity 0.25s ease;
+}
+.cd-saga-refs:hover { opacity: 1; }
+.cd-saga-eyebrow {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748B;
+}
+.cd-saga-link {
+  font-size: 12.5px;
+  color: #94A3B8;
+  text-decoration: none;
+  line-height: 1.55;
+}
+.cd-saga-link strong { color: #22D3EE; font-weight: 600; }
+.cd-saga-link code { font-size: 11.5px; }
+.cd-saga-link i { font-size: 10px; opacity: 0.7; margin-left: 2px; }
+.cd-saga-link:hover { color: #E2E8F0; }

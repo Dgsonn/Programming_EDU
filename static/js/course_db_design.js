@@ -62,11 +62,15 @@ var COURSE_PAGE_META = {
     overviewHTML:
       'Bạn có một ý tưởng sản phẩm — nhưng mở editor ra thì… <em>bảng đầu tiên đặt tên gì, cột nào, nối với nhau ra sao?</em> ' +
       'Khóa này đưa bạn vào vai <strong>kỹ sư dữ liệu đầu tiên của GameHub</strong>, một cửa hàng game vừa khai trương — ' +
-      'nơi mỗi bài học là một sự cố có thật: khách bị trừ tiền nhầm vì trùng tên game, dữ liệu vênh vì copy tay, bảng phình vì nhét tất cả vào một chỗ.' +
+      'nơi mỗi bài học là một ticket có thật — sự cố khách hàng, tính năng mới hay cảnh báo bảo mật: khách bị trừ tiền nhầm vì trùng tên game, dữ liệu vênh vì copy tay, API đầu tiên bị tấn công.' +
       '<br><br>Qua <strong>20 ticket</strong> (3 module), bạn dựng GameHub từ bảng đầu tiên đến hệ CSDL hoàn chỉnh: ' +
       '<strong>vẽ ER và ánh xạ thành bảng</strong>, <strong>chuẩn hóa 1NF→4NF</strong> để dữ liệu không bao giờ tự mâu thuẫn, ' +
       'rồi <strong>đưa SQL vào ứng dụng thật</strong> (JSON, bản đồ, ORM, API, bảo mật).',
     outcomeFix: { find: 'Mạng Xã Hội Gamers', replace: 'diễn đàn GuildBoard' },
+    sagaRefs: [
+      { href: '/courses/db_design_tc', text: 'Bảng <code>posts</code> đầu tiên bạn thấy ở đây sẽ lớn thành cả một mạng xã hội — <strong>SQL nâng cao, Dữ liệu lớn & Hiệu năng</strong>' },
+      { href: '/courses/db_design_nc', text: 'Và khi GameHub mở chợ giao dịch, bạn sẽ chui vào tận lõi engine — <strong>Bên trong Database Engine</strong>' }
+    ],
     achievements: [
       { m: 1, icon: 'fa-compass-drafting', title: 'Kiến trúc sư ER',        desc: 'Vẽ thực thể – quan hệ và ánh xạ thành bảng vật lý' },
       { m: 1, icon: 'fa-key',              title: 'Người giữ Khóa',         desc: 'PK, FK, khóa ghép — chốt đúng 1 dòng trong mọi tình huống' },
@@ -106,6 +110,10 @@ var COURSE_PAGE_META = {
       { text: 'Hoàn thành "Thiết kế CSDL" (Phần 1) — hoặc vững SELECT / JOIN / GROUP BY', status: 'lock' },
       { text: 'Hiểu khóa chính/khóa ngoại & chuẩn hóa cơ bản (1NF–3NF)', status: 'info' },
       { text: 'Trình duyệt web hiện đại — không cần cài database', status: 'info' }
+    ],
+    sagaRefs: [
+      { href: '/courses/db_design', text: 'Diễn đàn GuildBoard bạn từng audit ở <strong>khóa Cơ bản</strong> (Ticket #14)? Chính nó truyền cảm hứng cho Community này' },
+      { href: '/courses/db_design_nc', text: 'Khi Community bùng nổ, GameHub mở chợ — hẹn bạn ở <strong>Bên trong Database Engine</strong>' }
     ],
     achievements: [
       { m: 1, icon: 'fa-gears',            title: 'Bậc thầy Trigger & Procedure', desc: 'Database tự cập nhật like_count, tự dọn dữ liệu' },
@@ -169,6 +177,10 @@ var COURSE_PAGE_META = {
       { text: 'Hoàn thành "SQL nâng cao, Dữ liệu lớn & Hiệu năng" (Phần 2) — hoặc vững Index/EXPLAIN', status: 'lock' },
       { text: 'Thành thạo JOIN nhiều bảng & GROUP BY', status: 'info' },
       { text: 'Từng gặp deadlock/timeout ngoài đời là một lợi thế (không bắt buộc)', status: 'info' }
+    ],
+    sagaRefs: [
+      { href: '/courses/db_design', text: 'Bảng <code>game_catalog</code> trong các ví dụ engine? Bạn đã tự tay dựng nó ở <strong>khóa Cơ bản</strong> (Ticket #01)' },
+      { href: '/courses/db_design_tc', text: 'Index B+-Tree mà optimizer chọn ở đây — bạn đã học cách xây nó ở <strong>SQL nâng cao & Hiệu năng</strong>' }
     ],
     achievements: [
       { m: 1, icon: 'fa-diagram-next',   title: 'Người đọc Execution Plan',   desc: 'Nhìn plan biết ngay query chậm ở toán tử nào' },
@@ -295,6 +307,20 @@ if (CD_META.lessons) COURSE_LESSONS = CD_META.lessons;
           '<div class="cd-skill-body"><div class="cd-skill-title">' + esc(k.title) + '</div>' +
           '<div class="cd-skill-desc">' + esc(k.desc) + '</div></div></div>';
       }).join('');
+    }
+  }
+  // Easter-egg saga refs (user 2026-07-04): dải mờ cuối khối Tổng quan — người tinh ý
+  // nhận ra 3 khóa nối nhau; không phô trương, không chen vào flow chính.
+  if (CD_META.sagaRefs) {
+    var ovBody = document.querySelector('.cd-block-body');
+    if (ovBody && !ovBody.querySelector('.cd-saga-refs')) {
+      var egg = document.createElement('div');
+      egg.className = 'cd-saga-refs';
+      egg.innerHTML = '<span class="cd-saga-eyebrow">🥚 Vũ trụ GameHub</span>' +
+        CD_META.sagaRefs.map(function (r) {
+          return '<a class="cd-saga-link" href="' + r.href + '">' + r.text + ' <i class="fas fa-arrow-right"></i></a>';
+        }).join('');
+      ovBody.appendChild(egg);
     }
   }
   // Sidebar KHÓA HỌC BAO GỒM — 3 dòng đầu theo khóa
