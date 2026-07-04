@@ -38,3 +38,17 @@ QODER.md
 # MCP configs
 .mcp.json
 .opencode.json
+# 2026-07-04 (Mavis P0#1): dev artifacts — không cho vào repo
+*.log
+__applog.txt
+__*.json
+_*.json
+__backup/
+__*.js
+probe_*.mjs
+probe_*.py
+debug_*.py
+debug_*.mjs
+dev_artifacts/
+tmp/
+docs/repomix-output*.txt

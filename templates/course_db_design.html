@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/course_db_design.css') }}?v=1" />
 </head>
-<body class="dark">
+<body class="dark" data-course="{{ course_id or 'db_design' }}">
 
 <div id="main">
 
@@ -462,9 +462,9 @@
 </div><!-- /main -->
 
 <script>
-  const COURSE_ID = 'db_design';
+  const COURSE_ID = '{{ course_id or 'db_design' }}';
   const CURRENT_LESSON_IDX = {{ enrollment.completed_lessons if enrollment else 0 }};
-  const LESSON_URL = '/lesson/db_design';
+  const LESSON_URL = '/lesson/' + COURSE_ID;
   const progFill = document.getElementById('prog-fill');
   if (progFill) progFill.style.width = '{{ pct if enrollment else 0 }}%';
 </script>

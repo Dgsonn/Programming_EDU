@@ -469,6 +469,34 @@ def init_db():
                      'static/images/db_design.svg', 'Phù hợp người mới', '40 giờ', '0', 4.9, 60, '#06B6D4', '#0E7490', 'DATABASE & BACKEND')
                 )
 
+        # Migration 2026-07-04: tách DB Design thành 3 KHÓA riêng (saga GameHub 3 phần).
+        # Idempotent: UPDATE đổi row cũ thành khóa Cơ bản (id giữ nguyên → enrollment/tiến độ
+        # hiện có không mất); 2 khóa mới chỉ INSERT khi chưa tồn tại.
+        c.execute(
+            '''UPDATE courses SET title=%s, subtitle=%s, description=%s, level=%s,
+               duration=%s, lessons=%s WHERE id=%s AND title=%s''',
+            ('Database Design Cơ bản', 'Phần 1 — Xây nền tảng GameHub',
+             'Từ thực thể đầu tiên đến hệ CSDL hoàn chỉnh: ER Diagram, khóa chính/ngoại, '
+             'chuẩn hóa 1NF→4NF và SQL ứng dụng thực tế — bạn là kỹ sư dữ liệu đầu tiên của GameHub.',
+             'Cơ bản', '14 giờ', 20, 'db_design', 'Database Design')
+        )
+        _db3_new_courses = [
+            ('db_design_tc', 'Database Design Trung cấp', 'Phần 2 — GameHub Community',
+             'Advanced SQL (Trigger, Procedure, Recursive CTE), Big Data & Analytics, Storage & Indexing — '
+             'xây mạng cộng đồng gamers của GameHub. Nên học sau khóa Cơ bản.',
+             'static/images/db_design.svg', 'Trung cấp', '18 giờ', '0', 4.9, 21,
+             '#0C4A6E', '#38BDF8', 'DATABASE & BACKEND'),
+            ('db_design_nc', 'Database Design Nâng cao', 'Phần 3 — GameHub Marketplace',
+             'Query Processing & Optimization, Concurrency Control, Crash Recovery — vận hành chợ giao dịch '
+             'triệu người dùng của GameHub. Dành cho ai đã vững 2 phần trước.',
+             'static/images/db_design.svg', 'Nâng cao', '22 giờ', '0', 4.9, 25,
+             '#7C2D12', '#FB923C', 'DATABASE & BACKEND'),
+        ]
+        for _row in _db3_new_courses:
+            c.execute('SELECT 1 FROM courses WHERE id = %s', (_row[0],))
+            if not c.fetchone():
+                c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', _row)
+
         # Seed missions sau courses vì có FK: course_id REFERENCES courses(id)
         c.execute('SELECT 1 FROM missions LIMIT 1')
         if not c.fetchone():

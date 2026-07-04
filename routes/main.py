@@ -446,14 +446,17 @@ def course_detail(course_id):
     uid = current_user_id()
     conn = get_db()
 
-    if course_id == 'db_design':
+    # 2026-07-04: DB Design = 3 khóa riêng (Cơ bản / Trung cấp / Nâng cao) — dùng CHUNG
+    # trang chi tiết course_db_design.html; JS đọc data-course để render roadmap đúng khóa.
+    if course_id in ('db_design', 'db_design_tc', 'db_design_nc'):
         user = conn.execute('SELECT name, streak FROM users WHERE id=%s', (uid,)).fetchone()
         enrollment = conn.execute(
-            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, 'db_design')
+            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, course_id)
         ).fetchone()
         conn.close()
         user = dict(user) if user else {}
         return render_template('course_db_design.html',
+            course_id=course_id,
             user_name=user.get('name', ''),
             streak=user.get('streak', 0),
             enrollment=dict(enrollment) if enrollment else None)

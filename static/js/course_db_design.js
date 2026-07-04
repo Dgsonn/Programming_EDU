@@ -46,6 +46,81 @@ function toggleModule(hd) {
  * Files: course_db_design.html + .css + .js
  * ========================================================================== */
 
+/* ═══ 2026-07-04: trang chi tiết dùng CHUNG cho 3 khóa DB Design (saga GameHub) ═══
+ * Course id đọc từ <body data-course>; mọi text/roadmap/link lấy theo COURSE_PAGE_META. */
+var CD_COURSE_ID = (document.body && document.body.dataset.course) || 'db_design';
+
+var COURSE_PAGE_META = {
+  db_design: {
+    heroTitle: 'Database Design Cơ bản',
+    heroSubtitle: 'Phần 1 — Xây nền tảng GameHub · ER Mapping, Phụ thuộc hàm & Chuẩn hóa — theo giáo trình Silberschatz',
+    moduleNames: { 1: 'ER Model & Mapping', 2: 'FD & Normalization', 3: 'Application Design' },
+    lessonBase: '/lesson/db_design'
+  },
+  db_design_tc: {
+    heroTitle: 'Database Design Trung cấp',
+    heroSubtitle: 'Phần 2 — GameHub Community · Advanced SQL, Big Data & Storage/Index — Ticket #21–#41',
+    moduleNames: { 1: 'Advanced SQL', 2: 'Big Data & Analytics', 3: 'Storage, Indexing & Performance' },
+    lessonBase: '/lesson/db_design_tc',
+    lessons: [
+      { n: 1,  m: 1, t: 'SQL từ ngôn ngữ lập trình — JDBC & Cursor', min: 25 },
+      { n: 2,  m: 1, t: 'Functions & Stored Procedures',             min: 20 },
+      { n: 3,  m: 1, t: 'Trigger — database tự phản ứng',            min: 20 },
+      { n: 4,  m: 1, t: 'Recursive Queries (WITH RECURSIVE)',        min: 22 },
+      { n: 5,  m: 2, t: 'Star Schema (Fact + Dim)',                  min: 20 },
+      { n: 6,  m: 2, t: 'ROLLUP & CUBE',                             min: 20 },
+      { n: 7,  m: 2, t: 'MapReduce',                                 min: 20 },
+      { n: 8,  m: 2, t: 'JSON Document Store',                       min: 18 },
+      { n: 9,  m: 2, t: 'OLAP Slice-Dice-Drilldown',                 min: 20 },
+      { n: 10, m: 2, t: 'Tumbling Windows (Streaming)',              min: 20 },
+      { n: 11, m: 3, t: 'Storage Hierarchy',                         min: 15 },
+      { n: 12, m: 3, t: 'Sequential vs Random Access',               min: 15 },
+      { n: 13, m: 3, t: 'Buffer Manager',                            min: 18 },
+      { n: 14, m: 3, t: 'Record Layout & Heap File',                 min: 18 },
+      { n: 15, m: 3, t: 'Row-Store vs Column-Store',                 min: 15 },
+      { n: 16, m: 3, t: 'Index cơ bản (Search Key)',                 min: 15 },
+      { n: 17, m: 3, t: 'Dense / Sparse / Clustering / Secondary',   min: 18 },
+      { n: 18, m: 3, t: 'B+-Tree (Lookup + Range)',                  min: 22 },
+      { n: 19, m: 3, t: 'Composite & Bitmap Index',                  min: 18 },
+      { n: 20, m: 3, t: 'Capstone: Index × EXPLAIN Storage',         min: 25 },
+      { n: 21, m: 3, t: 'Boss Battle — Social Graph Detective', boss: true, min: 30 }
+    ]
+  },
+  db_design_nc: {
+    heroTitle: 'Database Design Nâng cao',
+    heroSubtitle: 'Phần 3 — GameHub Marketplace · Engine, Concurrency & Recovery — Ticket #42–#66',
+    moduleNames: { 1: 'Engine Room (Query Processing)', 2: 'Concurrency Control', 3: 'Crash Recovery' },
+    lessonBase: '/lesson/db_design_nc',
+    lessons: [
+      { n: 1,  m: 1, t: 'SQL → Execution Plan',                      min: 20 },
+      { n: 2,  m: 1, t: 'Cost: Block Transfer + Random I/O',         min: 20 },
+      { n: 3,  m: 1, t: 'Full Scan vs Index Scan',                   min: 18 },
+      { n: 4,  m: 1, t: 'External Sort-Merge',                       min: 20 },
+      { n: 5,  m: 1, t: 'Join I: Nested / Block / Indexed',          min: 22 },
+      { n: 6,  m: 1, t: 'Join II: Merge + Hash Join',                min: 22 },
+      { n: 7,  m: 1, t: 'Aggregation: Sort vs Hash',                 min: 18 },
+      { n: 8,  m: 1, t: 'Materialization vs Pipelining',             min: 18 },
+      { n: 9,  m: 1, t: 'Optimizer: Pushdown, Join Reorder',         min: 20 },
+      { n: 10, m: 1, t: 'Cost-Based Optimizer + EXPLAIN + MV',       min: 25 },
+      { n: 11, m: 2, t: 'Vì sao transaction đồng thời gây lỗi',      min: 18 },
+      { n: 12, m: 2, t: 'S/X Locks — Compatibility Matrix',          min: 18 },
+      { n: 13, m: 2, t: '2PL — Growing & Shrinking',                 min: 20 },
+      { n: 14, m: 2, t: 'Deadlock + Wait-for Graph',                 min: 20 },
+      { n: 15, m: 2, t: 'Multiple Granularity + Intention Lock',     min: 20 },
+      { n: 16, m: 2, t: 'Phantom + Index Locking',                   min: 20 },
+      { n: 17, m: 2, t: 'Optimistic Concurrency',                    min: 20 },
+      { n: 18, m: 2, t: 'MVCC + Snapshot Isolation',                 min: 22 },
+      { n: 19, m: 2, t: 'Lost Update + Write Skew + FOR UPDATE',     min: 22 },
+      { n: 20, m: 2, t: 'Version Number (User Interaction)',         min: 18 },
+      { n: 21, m: 3, t: 'Failure Classification + Storage',          min: 15 },
+      { n: 22, m: 3, t: 'Log Records + Commit Point',                min: 18 },
+      { n: 23, m: 3, t: 'WAL + Checkpoint + Crash Recovery',         min: 22 },
+      { n: 24, m: 3, t: 'ARIES Overview',                            min: 25 },
+      { n: 25, m: 3, t: 'Boss Battle — Engine Under Fire', boss: true, min: 35 }
+    ]
+  }
+};
+
 /** Course lesson data (shared with C2 roadmap + C8 hero time) */
 var COURSE_LESSONS = [
   // Module 1 — ER Mapping (B1-B7) — 7 bài (was 6; thêm M:N junction)
@@ -73,6 +148,18 @@ var COURSE_LESSONS = [
   { n: 20, m: 3, t: 'Password Security',                         min: 20 }
 ];
 
+/* Áp meta theo course: Basic giữ COURSE_LESSONS gốc; TC/NC lấy từ meta.
+ * Hero title/subtitle + <title> tab cũng đổi theo khóa. */
+var CD_META = COURSE_PAGE_META[CD_COURSE_ID] || COURSE_PAGE_META.db_design;
+if (CD_META.lessons) COURSE_LESSONS = CD_META.lessons;
+(function applyCourseHero() {
+  var t = document.querySelector('.cd-hero-title');
+  var s = document.querySelector('.cd-hero-subtitle');
+  if (t) t.textContent = CD_META.heroTitle;
+  if (s) s.textContent = CD_META.heroSubtitle;
+  document.title = CD_META.heroTitle + ' – Programming EDU';
+})();
+
 /** Format minutes → Vietnamese-friendly time string */
 function formatCourseTime(totalMin) {
   if (!totalMin || totalMin <= 0) return '—';
@@ -93,11 +180,11 @@ function formatCourseTime(totalMin) {
 /** Determine which modules are completed given a set of completed lesson numbers
  *  (M1: 1-7, M2: 8-14, M3: 15-20 — per curriculum 18→20 renumber) */
 function computeModuleCompletion(completedSet) {
-  return {
-    m1: [1,2,3,4,5,6,7].every(function (n) { return completedSet.has(n); }),
-    m2: [8,9,10,11,12,13,14].every(function (n) { return completedSet.has(n); }),
-    m3: [15,16,17,18,19,20].every(function (n) { return completedSet.has(n); })
-  };
+  // Generic theo COURSE_LESSONS (mỗi khóa có phân bố module khác nhau)
+  var by = { 1: [], 2: [], 3: [] };
+  COURSE_LESSONS.forEach(function (l) { by[l.m].push(l.n); });
+  var done = function (arr) { return arr.length > 0 && arr.every(function (n) { return completedSet.has(n); }); };
+  return { m1: done(by[1]), m2: done(by[2]), m3: done(by[3]) };
 }
 
 /** C8-2: Apply progressive unlock to .cd-skill-item based on module completion */
@@ -211,11 +298,7 @@ function resolveUserProgress() {
   // Lesson data — use shared COURSE_LESSONS (with .min field for C8 hero time)
   var lessons = COURSE_LESSONS;
 
-  var moduleNames = {
-    1: 'ER Model & Mapping',
-    2: 'FD & Normalization',
-    3: 'Application Design'
-  };
+  var moduleNames = CD_META.moduleNames;
 
   // Group by module
   var byModule = { 1: [], 2: [], 3: [] };
@@ -246,7 +329,7 @@ function resolveUserProgress() {
       html += '<div class="cd-roadmap-row' + reverse + '">';
       row.forEach(function (lesson) {
         var bossCls = lesson.boss ? ' boss' : '';
-        html += '<a href="/lesson/db_design?lesson=' + lesson.n + '" class="cd-roadmap-node js-roadmap-node" data-lesson="' + lesson.n + '" data-module="' + lesson.m + '" data-boss="' + (lesson.boss ? '1' : '0') + '">';
+        html += '<a href="' + CD_META.lessonBase + '?lesson=' + lesson.n + '" class="cd-roadmap-node js-roadmap-node" data-lesson="' + lesson.n + '" data-module="' + lesson.m + '" data-boss="' + (lesson.boss ? '1' : '0') + '">';
         html += '<div class="cd-roadmap-node-circle' + bossCls + '">';
         html += '<span class="cd-roadmap-node-num">' + lesson.n + '</span>';
         html += '</div>';
