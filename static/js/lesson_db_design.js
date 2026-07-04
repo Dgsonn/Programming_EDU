@@ -95,41 +95,75 @@
       '<text x="300" y="344" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">birth_year</text>' +
       '<text x="250" y="404" text-anchor="middle" fill="var(--text-400)" font-size="13">3 kiểu thuộc tính đặc biệt: Composite · Multivalued · Derived</text></svg>',
 
-    db_03: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3 kiểu cardinality: 1:1, 1:N, M:N">' +
-      '<text x="300" y="33" text-anchor="middle" fill="var(--text-400)" font-size="17">3 loại Cardinalities</text>' +
-      '<rect x="30" y="66" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="98" y="94" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Dept</text>' +
-      '<rect x="435" y="66" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="502" y="94" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Building</text>' +
-      '<line x1="165" y1="88" x2="435" y2="88" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="300" y="80" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">1 : 1</text>' +
-      '<rect x="30" y="186" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="98" y="214" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Author</text>' +
-      '<rect x="435" y="186" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="502" y="214" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Book</text>' +
-      '<line x1="165" y1="207" x2="435" y2="207" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="300" y="200" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">1 : N</text>' +
-      '<rect x="30" y="306" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="98" y="334" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Student</text>' +
-      '<rect x="435" y="306" width="135" height="48" rx="6" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="502" y="334" text-anchor="middle" fill="var(--text-100)" font-size="17" font-weight="700">Course</text>' +
-      '<line x1="165" y1="327" x2="435" y2="327" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<text x="300" y="319" text-anchor="middle" fill="var(--module-accent)" font-size="20" font-weight="700">M : N</text></svg>',
+    db_03: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Khóa ngoại pub_id của game trỏ về publisher.id, JOIN ghép 2 bảng">' +
+      '<defs><marker id="ar03" markerWidth="9" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="var(--primary)"/></marker></defs>' +
+      '<text x="300" y="34" text-anchor="middle" fill="var(--text-400)" font-size="16">1 publisher ← N game · nối bằng Khóa ngoại</text>' +
+      /* game table */
+      '<rect x="40" y="66" width="230" height="180" rx="10" fill="rgba(245,158,11,0.06)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="40" y="66" width="230" height="34" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="155" y="90" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="18" font-weight="700">game</text>' +
+      '<text x="60" y="132" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">game_id</text>' +
+      '<rect x="200" y="118" width="46" height="19" rx="9" fill="rgba(245,158,11,0.2)" stroke="var(--module-accent)" stroke-width="1"/>' +
+      '<text x="223" y="132" text-anchor="middle" fill="var(--module-accent)" font-size="11" font-weight="700">PK</text>' +
+      '<text x="60" y="166" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="15">title</text>' +
+      '<rect x="46" y="180" width="218" height="30" rx="6" fill="rgba(6,182,212,0.14)"/>' +
+      '<text x="60" y="200" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">pub_id</text>' +
+      '<rect x="200" y="186" width="46" height="19" rx="9" fill="rgba(6,182,212,0.2)" stroke="var(--primary)" stroke-width="1"/>' +
+      '<text x="223" y="200" text-anchor="middle" fill="var(--primary)" font-size="11" font-weight="700">FK</text>' +
+      /* publisher table */
+      '<rect x="360" y="80" width="210" height="120" rx="10" fill="rgba(245,158,11,0.06)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="360" y="80" width="210" height="34" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="465" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700">publisher</text>' +
+      '<rect x="366" y="128" width="198" height="30" rx="6" fill="rgba(245,158,11,0.14)"/>' +
+      '<text x="380" y="148" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">id</text>' +
+      '<rect x="500" y="134" width="46" height="19" rx="9" fill="rgba(245,158,11,0.2)" stroke="var(--module-accent)" stroke-width="1"/>' +
+      '<text x="523" y="148" text-anchor="middle" fill="var(--module-accent)" font-size="11" font-weight="700">PK</text>' +
+      '<text x="380" y="182" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="15">name</text>' +
+      /* FK arrow game.pub_id → publisher.id */
+      '<path d="M 264 195 C 312 195, 322 143, 360 143" fill="none" stroke="var(--primary)" stroke-width="2.5" marker-end="url(#ar03)"/>' +
+      '<text x="318" y="230" text-anchor="middle" fill="var(--primary)" font-size="12" font-weight="700">FK · N:1</text>' +
+      /* JOIN pill */
+      '<rect x="60" y="300" width="480" height="66" rx="14" fill="rgba(6,182,212,0.08)" stroke="var(--primary)" stroke-width="1.4" stroke-dasharray="5,3"/>' +
+      '<text x="300" y="326" text-anchor="middle" fill="var(--primary)" font-size="12" font-weight="700">JOIN — ghép 2 bảng qua khóa ngoại</text>' +
+      '<text x="300" y="350" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">game JOIN publisher ON game.pub_id = publisher.id</text></svg>',
 
-    db_04: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M:N giữa Student và Course qua bảng trung gian Enrollment">' +
-      '<rect x="30" y="93" width="165" height="105" rx="9" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
-      '<text x="112" y="130" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="21" font-weight="700">Student</text>' +
-      '<text x="112" y="157" text-anchor="middle" fill="var(--module-accent)" font-size="28" font-weight="700">M</text>' +
-      '<rect x="405" y="93" width="165" height="105" rx="9" fill="rgba(245,158,11,0.1)" stroke="var(--module-accent)" stroke-width="3"/>' +
-      '<text x="488" y="130" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="21" font-weight="700">Course</text>' +
-      '<text x="488" y="157" text-anchor="middle" fill="var(--module-accent)" font-size="28" font-weight="700">N</text>' +
-      '<rect x="218" y="133" width="165" height="150" rx="9" fill="rgba(245,158,11,0.18)" stroke="var(--module-accent)" stroke-width="4"/>' +
-      '<text x="300" y="180" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20" font-weight="700">Enrollment</text>' +
-      '<text x="300" y="213" text-anchor="middle" fill="var(--text-400)" font-size="14">(junction)</text>' +
-      '<text x="300" y="239" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14">s_id + c_id</text>' +
-      '<line x1="195" y1="140" x2="218" y2="180" stroke="var(--module-accent)" stroke-width="3"/>' +
-      '<line x1="382" y1="180" x2="405" y2="140" stroke="var(--module-accent)" stroke-width="3"/>' +
-      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="17">Junction table giải quyết M:N</text></svg>',
+    db_04: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="player 1:N player_game_library, N:1 game — nối bằng 2 khóa ngoại">' +
+      '<text x="300" y="34" text-anchor="middle" fill="var(--text-400)" font-size="16">Bảng nối = hai quan hệ 1:N bằng Khóa ngoại</text>' +
+      /* player table */
+      '<rect x="24" y="120" width="150" height="110" rx="10" fill="rgba(245,158,11,0.06)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="24" y="120" width="150" height="32" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="99" y="142" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700">player</text>' +
+      '<text x="40" y="182" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">p_id</text>' +
+      '<rect x="118" y="169" width="42" height="18" rx="9" fill="rgba(245,158,11,0.2)" stroke="var(--module-accent)" stroke-width="1"/>' +
+      '<text x="139" y="182" text-anchor="middle" fill="var(--module-accent)" font-size="10" font-weight="700">PK</text>' +
+      '<text x="40" y="210" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">username</text>' +
+      /* junction table player_game_library */
+      '<rect x="210" y="104" width="180" height="150" rx="10" fill="rgba(245,158,11,0.06)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="210" y="104" width="180" height="32" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="300" y="125" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">player_game_library</text>' +
+      '<rect x="216" y="150" width="168" height="28" rx="6" fill="rgba(6,182,212,0.12)"/>' +
+      '<text x="230" y="169" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">ref_p_id</text>' +
+      '<rect x="330" y="155" width="42" height="18" rx="9" fill="rgba(6,182,212,0.2)" stroke="var(--primary)" stroke-width="1"/>' +
+      '<text x="351" y="168" text-anchor="middle" fill="var(--primary)" font-size="10" font-weight="700">FK</text>' +
+      '<rect x="216" y="184" width="168" height="28" rx="6" fill="rgba(6,182,212,0.12)"/>' +
+      '<text x="230" y="203" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">ref_game_id</text>' +
+      '<rect x="330" y="189" width="42" height="18" rx="9" fill="rgba(6,182,212,0.2)" stroke="var(--primary)" stroke-width="1"/>' +
+      '<text x="351" y="202" text-anchor="middle" fill="var(--primary)" font-size="10" font-weight="700">FK</text>' +
+      '<text x="300" y="234" text-anchor="middle" fill="var(--text-500)" font-size="12">(bảng nối)</text>' +
+      /* game table */
+      '<rect x="426" y="120" width="150" height="110" rx="10" fill="rgba(245,158,11,0.06)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="426" y="120" width="150" height="32" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="501" y="142" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="16" font-weight="700">game</text>' +
+      '<text x="442" y="182" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">game_id</text>' +
+      '<rect x="527" y="169" width="42" height="18" rx="9" fill="rgba(245,158,11,0.2)" stroke="var(--module-accent)" stroke-width="1"/>' +
+      '<text x="548" y="182" text-anchor="middle" fill="var(--module-accent)" font-size="10" font-weight="700">PK</text>' +
+      '<text x="442" y="210" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="14">title</text>' +
+      /* connectors + cardinality */
+      '<line x1="174" y1="175" x2="210" y2="164" stroke="var(--primary)" stroke-width="2.5"/>' +
+      '<text x="192" y="150" text-anchor="middle" fill="var(--module-accent)" font-size="12" font-weight="700">1:N</text>' +
+      '<line x1="390" y1="198" x2="426" y2="175" stroke="var(--primary)" stroke-width="2.5"/>' +
+      '<text x="410" y="223" text-anchor="middle" fill="var(--module-accent)" font-size="12" font-weight="700">N:1</text>' +
+      '<text x="300" y="300" text-anchor="middle" fill="var(--text-500)" font-size="13">Mỗi player có N dòng · mỗi dòng trỏ 1 game — nối bằng 2 Khóa ngoại</text></svg>',
 
     db_05: '<svg viewBox="0 0 560 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Thực thể yếu dlc_content mượn khóa của game qua quan hệ định danh">' +
       /* parent = strong entity: game */
@@ -3528,6 +3562,32 @@
           return projectValue(r, p.col);
         });
       });
+
+      /* 4A-E4: ORDER BY + LIMIT cho path THƯỜNG — trước đây chỉ nhánh aggregate có,
+       * nên `SELECT ... ORDER BY x DESC LIMIT 1` bị BỎ QUA IM LẶNG (silent-wrong). */
+      if (parsed._orderByStr) {
+        var orderBysE1 = parseOrderByCols(parsed._orderByStr);
+        rowsOut.sort(function(a, b) {
+          for (var oiE = 0; oiE < orderBysE1.length; oiE++) {
+            var obE = orderBysE1[oiE];
+            var obCol = stripAliasPrefix(obE.col).toLowerCase();
+            var idxE = -1;
+            for (var piE = 0; piE < projections.length; piE++) {
+              var pE = projections[piE];
+              var pAlias = (pE.alias || '').toLowerCase();
+              var pCol = stripAliasPrefix(pE.col || '').toLowerCase();
+              if (pAlias === obCol || pCol === obCol) { idxE = piE; break; }
+            }
+            if (idxE < 0) continue;
+            var cmpE = compareSqlVals(a[idxE], b[idxE]);
+            if (cmpE !== 0) return obE.dir === 'desc' ? -cmpE : cmpE;
+          }
+          return 0;
+        });
+      }
+      if (parsed._limitN != null && parsed._limitN > 0) {
+        rowsOut = rowsOut.slice(0, parsed._limitN);
+      }
     }
     return { cols: outCols, rows: rowsOut };
   };

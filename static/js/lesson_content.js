@@ -1036,24 +1036,7 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — đi <strong>ngược chiều</strong>: từ 3 bảng, tìm <strong>những người chơi ĐANG SỞ HỮU game \"Elden Ring\"</strong> (thay vì liệt kê game của 1 người).",
-        // FIX 2e-C2: context giàu — Bài 3 mid concept (JOIN qua 3 bảng)
-        context: {
-          scenario: 'Bạn đang xây tính năng "Thư viện game" cho hệ thống gaming. Mỗi player có thể sở hữu nhiều game; mối quan hệ N-N giữa <code>player</code> và <code>game</code> được lưu qua bảng trung gian <code>player_game_library</code>. Cần truy vấn game của riêng <em>DragonLord</em>.',
-          steps: [
-            'Xác định bảng nguồn: bắt đầu từ <code>player</code> (lọc theo <code>username</code>).',
-            'JOIN sang <code>player_game_library</code> qua FK <code>player.p_id = library.ref_p_id</code> để biết player sở hữu game nào.',
-            'JOIN tiếp sang <code>game</code> qua FK <code>library.ref_game_id = game.game_id</code> để lấy <code>title</code>.',
-            'SELECT <code>game.title</code>, kết thúc bằng <code>WHERE player.username = "DragonLord"</code>.'
-          ],
-          hint_explore: 'Bài này có 3 bảng liên kết. Để xem cấu trúc từng bảng: <code>SELECT * FROM player</code>, <code>SELECT * FROM player_game_library</code>, <code>SELECT * FROM game</code> (gõ từng cái, Run, xem kết quả).',
-          example: {
-            question: 'Ví dụ tương tự — lấy <code>title</code> game của player <em>NoobMaster</em>:',
-            sql: 'SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = "NoobMaster";',
-            sample_output: '→ 2 dòng: <code>Elden Ring</code> + <code>Hollow Knight</code> (NoobMaster sở hữu 2 game trong data mẫu)'
-          },
-          expected: "Bảng kết quả 4 dòng × 1 cột <code>username</code>: <code>DragonLord, NoobMaster, ShadowBlade, LootGoblin</code> — 4 người đang sở hữu 'Elden Ring' (id 101). Lần này đi NGƯỢC: lọc theo game → ra người chơi."
-        },
-        starter: "-- Tìm title game của player 'DragonLord'\n-- JOIN 3 bảng: player ↔ player_game_library ↔ game\nSELECT game.\n  FROM player\n  JOIN player_game_library ON player. = player_game_library.\n  JOIN game ON player_game_library. = game.\n WHERE player. = ;\n",
+        starter: "-- Ai đang sở hữu 'Elden Ring'?\n-- Đi NGƯỢC Bước 3: game → bảng trung gian → player\nSELECT \n  FROM game g\n  JOIN \n  JOIN \n WHERE ;\n",
         schema: {
           table_name: 'player',
           columns: [
@@ -1122,9 +1105,9 @@ concept_cards: [
           }
         ],
         hints: [
-          { level: 1, text: 'Bạn cần <em>nối 3 bảng</em> qua các FK: <code>player.p_id</code> ↔ <code>player_game_library.ref_p_id</code> ↔ <code>player_game_library.ref_game_id</code> ↔ <code>game.game_id</code>.' },
-          { level: 2, text: 'SELECT 1 cột: <code>game.title</code>. Filter username = \'DragonLord\'.' },
-          { level: 3, text: 'JOIN thứ 1: <code>player p JOIN player_game_library l ON p.p_id = l.ref_p_id</code>. JOIN thứ 2: <code>JOIN game g ON l.ref_game_id = g.game_id</code>.' },
+          { level: 1, text: 'Đi NGƯỢC chiều Bước 3: bắt đầu từ <code>game</code> (lọc theo <code>title</code>), kết thúc ở <code>player</code> (lấy <code>username</code>). Chuỗi FK vẫn y hệt, chỉ đảo hướng đọc.' },
+          { level: 2, text: 'JOIN thứ 1: <code>game g JOIN player_game_library l ON g.game_id = l.ref_game_id</code> — từ game ra các dòng sở hữu.' },
+          { level: 3, text: 'JOIN thứ 2: <code>JOIN player p ON l.ref_p_id = p.p_id</code>, rồi lọc <code>WHERE g.title = \'Elden Ring\'</code>. SELECT <code>p.username</code>.' },
           { level: 4, text: "<code class=\"code\">SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Elden Ring';</code>" }
         ],
         context: {"scenario":"Quan hệ M:N: 1 người chơi sở hữu nhiều game, 1 game thuộc nhiều người. Bảng trung gian <code>player_game_library</code> nối 2 bên. Lần này đi NGƯỢC: từ 1 game, tìm những người đang sở hữu nó.","real_world":"Chính là tính năng \"<strong>Ai cũng chơi game này</strong>\" trên <strong>Steam</strong>, hay \"<strong>bạn bè đã mua sản phẩm này</strong>\" trên <strong>Shopee</strong>. Đều là JOIN ngược qua bảng trung gian M:N — từ 1 mục ra danh sách người liên quan.","steps":["Bắt đầu từ <code>game</code>, lọc đúng game cần tìm: <code>WHERE g.title = 'Elden Ring'</code>.","JOIN sang bảng trung gian <code>player_game_library</code> qua <code>l.ref_game_id = g.game_id</code>.","JOIN tiếp sang <code>player</code> qua <code>p.p_id = l.ref_p_id</code> để lấy tên người chơi.","SELECT <code>p.username</code>. Run → danh sách người đang sở hữu game đó."],"hint_explore":"Chưa biết bảng trung gian trông thế nào? Gõ <code>SELECT * FROM player_game_library</code> rồi <strong>Run</strong>.","example":{"question":"Ví dụ tương tự — ai đang sở hữu game <strong>Hades</strong>?","sql":"SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Hades';","sample_output":"→ danh sách username sở hữu Hades"},"expected":"Bảng kết quả 1 cột <code>username</code>: những người chơi đang sở hữu \"Elden Ring\". Lần này đi NGƯỢC — lọc theo game → ra người chơi (thay vì lọc theo người → ra game như Bước 3)."},
@@ -1544,25 +1527,8 @@ concept_cards: [
       },
 
       step_4: {
-        prompt: "Nâng độ khó — liệt kê <strong>TẤT CẢ các gói DLC</strong> (số + tên) của game id <code>500</code>, sắp xếp theo <code>dlc_no</code>. Thấy rõ: 1 game yếu → nhiều DLC nên khóa phải GHÉP cả <code>ref_game_id</code> + <code>dlc_no</code>.",
-        // FIX 2e-C2: context giàu — Bài 4 M:N (bảng trung gian có composite key)
-        context: {
-          scenario: 'Trong hệ thống DLC store, mỗi game có nhiều gói DLC, và mỗi DLC được đánh số theo <code>dlc_no</code> trong từng game. Bảng <code>dlc_content</code> dùng khóa tổng hợp (<code>ref_game_id</code> + <code>dlc_no</code>) để xác định duy nhất 1 DLC. Cần lấy tên DLC #2 của game id = 300.',
-          steps: [
-            'SELECT cột <code>dlc_name</code> từ bảng <code>dlc_content</code>.',
-            'WHERE dùng 2 điều kiện AND: <code>ref_game_id = 300</code> (lọc theo game) VÀ <code>dlc_no = 2</code> (lọc theo số DLC).',
-            'Nếu thiếu AND → trả về nhầm DLC của game khác (vd DLC #2 của game 400 = "Corpo Gear Pack").',
-            'Run để verify kết quả chỉ 1 dòng, đúng DLC cần tìm.'
-          ],
-          hint_explore: 'Khám phá: gõ <code>SELECT * FROM dlc_content</code> rồi Run để thấy nhiều game — mỗi game có nhiều DLC đánh số <code>dlc_no</code> riêng (game 300 có 3 DLC: 1,2,3 · game 900 có 2 DLC: 1,2). Củng cố composite PK: ref_game_id + dlc_no định danh duy nhất 1 DLC.',
-          example: {
-            question: 'Ví dụ tương tự — lấy <code>dlc_name</code> của <strong>DLC #1 thuộc game 400</strong>:',
-            sql: 'SELECT dlc_name FROM dlc_content WHERE dlc_no = 1 AND ref_game_id = 400;',
-            sample_output: '→ 1 dòng: <code>Phantom Liberty</code>'
-          },
-          expected: "Bảng kết quả 3 dòng × 2 cột (<code>dlc_no, dlc_name</code>): 3 DLC của game 500. Cùng <code>ref_game_id = 500</code> nhưng <code>dlc_no</code> khác nhau — vì thế khóa chính phải GHÉP cả hai cột."
-        },
-        starter: "-- Lấy dlc_name của DLC #2 thuộc game id 300\n-- Filter: dlc_no = 2 AND ref_game_id = 300\nSELECT \n  FROM \n WHERE  = \n   AND  = ;\n",
+        prompt: "Nâng độ khó — tìm <strong>gói DLC MỚI NHẤT</strong> (số <code>dlc_no</code> LỚN NHẤT) của game id <code>500</code>. Mẫu Top-N kinh điển: <code>ORDER BY ... DESC</code> + <code>LIMIT 1</code> — vẫn trong phạm vi 1 game vì <code>dlc_no</code> chỉ có nghĩa KHI gắn với game.",
+        starter: "-- Gói DLC mới nhất (dlc_no lớn nhất) của game 500\n-- Mẫu Top-N: ORDER BY ... DESC + LIMIT 1\nSELECT ____, ____\n  FROM dlc_content\n WHERE ____ = ____\n ORDER BY ____ DESC\n LIMIT 1;\n",
         schema: {
           table_name: 'dlc_content',
           columns: [
@@ -1593,11 +1559,11 @@ concept_cards: [
             ['900', '2', 'Story Expansion II']
           ]
         },
-        context: {"scenario":"DLC là <strong>thực thể yếu</strong>: KHÔNG có khoá riêng, phải bám vào game gốc. Bảng <code>dlc_content</code> dùng khoá GHÉP <code>(ref_game_id, dlc_no)</code> — mình <code>dlc_no</code> chưa đủ định danh vì game nào cũng có DLC #1, #2…","real_world":"Giống các \"phần con\" phụ thuộc chủ thể: <strong>chương của 1 cuốn sách</strong>, <strong>tập của 1 series Netflix</strong>, <strong>hoá đơn chi tiết của 1 đơn hàng</strong> — \"dòng #2\" chỉ có nghĩa KHI gắn với chủ thể. Vì thế khoá chính phải GHÉP cả hai.","steps":["SELECT 2 cột: <code>dlc_no</code> + <code>dlc_name</code>.","Lọc đúng 1 game gốc: <code>WHERE ref_game_id = 500</code>.","Sắp xếp theo số DLC: <code>ORDER BY dlc_no</code>.","Run → thấy nhiều DLC cùng <code>ref_game_id = 500</code> nhưng <code>dlc_no</code> khác nhau → hiểu vì sao cần khoá ghép."],"hint_explore":"Muốn xem toàn bộ DLC của mọi game? Gõ <code>SELECT * FROM dlc_content</code> rồi <strong>Run</strong>.","example":{"question":"Ví dụ tương tự — tất cả DLC của game <strong>300</strong>:","sql":"SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 300 ORDER BY dlc_no;","sample_output":"→ các DLC của game 300 theo thứ tự số"},"expected":"Bảng kết quả nhiều dòng × 2 cột (<code>dlc_no, dlc_name</code>): các DLC của game 500. Cùng <code>ref_game_id = 500</code> nhưng khác <code>dlc_no</code> → khoá chính BẮT BUỘC phải ghép cả hai cột."},
-        expected_sql: "SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no;",
-        hints: [{'level': 1, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_no = 2;</code> — Sai: thiếu ref_game_id nên trả về cả 2 dòng DLC #2 (của game 300 + 400).'}, {'level': 2, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE ref_game_id = 300;</code> — Sai: ref_game_id chỉ đủ để biết là DLC của game 300, nhưng không định danh được DLC #1 hay #2 → trả về cả 2 dòng.'}, {'level': 3, 'text': 'Loại trừ đáp án <code>SELECT dlc_name FROM dlc_content WHERE dlc_name = </code> — Sai logic: lọc theo name (không phải PK) sẽ đúng trong data này nhưng phá vỡ tính định danh — không dùng tên làm định danh được.'}, {'level': 4, 'text': '<code class="code">SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no;</code>'}],
+        context: {"scenario":"DLC là <strong>thực thể yếu</strong>: KHÔNG có khoá riêng, phải bám vào game gốc — <code>dlc_no</code> chỉ có nghĩa TRONG 1 game. Game 500 vừa ra gói DLC mới; trang cửa hàng cần hiện banner <strong>\"DLC mới nhất\"</strong> = gói có <code>dlc_no</code> lớn nhất của RIÊNG game đó.","real_world":"Chính là mục \"<strong>Chương mới nhất</strong>\" trong app đọc truyện hay \"<strong>tập mới nhất</strong>\" trên Netflix — luôn là <code>ORDER BY ... DESC LIMIT 1</code> TRONG PHẠM VI 1 chủ thể (1 truyện, 1 series, 1 game). Lọc sai phạm vi là hiện nhầm chương của truyện khác.","steps":["Khoanh phạm vi 1 game trước: <code>WHERE ref_game_id = 500</code> (vì dlc_no game nào cũng có #1, #2…).","Đưa gói MỚI NHẤT lên đầu: <code>ORDER BY dlc_no DESC</code> (số lớn nhất = ra sau cùng).","Chỉ lấy đúng 1 dòng đầu: <code>LIMIT 1</code> — mẫu Top-N kinh điển.","SELECT 2 cột <code>dlc_no, dlc_name</code>. Run → đúng 1 dòng duy nhất."],"hint_explore":"Muốn xem toàn bộ DLC của mọi game? Gõ <code>SELECT * FROM dlc_content</code> rồi <strong>Run</strong> — để ý game nào cũng có dlc_no #1, #2… trùng nhau.","example":{"question":"Ví dụ tương tự — gói DLC mới nhất của game <strong>300</strong>:","sql":"SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 300 ORDER BY dlc_no DESC LIMIT 1;","sample_output":"→ 1 dòng: <code>3, Witcher School Gear</code>"},"expected":"Đúng 1 dòng × 2 cột (<code>dlc_no, dlc_name</code>): gói DLC số lớn nhất của game 500 — <code>3, Ranni's Quest Pack</code>. Thiếu WHERE là lấy nhầm DLC mới nhất của game KHÁC."},
+        expected_sql: "SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no DESC LIMIT 1;",
+        hints: [{'level': 1, 'text': 'Khoanh phạm vi 1 game trước đã: <code>WHERE ref_game_id = 500</code> — vì <code>dlc_no</code> game nào cũng có #1, #2… (đúng tinh thần khoá ghép của bài).'}, {'level': 2, 'text': '"Mới nhất" = <code>dlc_no</code> LỚN NHẤT → <code>ORDER BY dlc_no DESC</code> đưa nó lên dòng đầu.'}, {'level': 3, 'text': 'Chỉ cần dòng đầu tiên: thêm <code>LIMIT 1</code>. Bộ đôi <code>ORDER BY ... DESC + LIMIT 1</code> là mẫu Top-N kinh điển.'}, {'level': 4, 'text': '<code class="code">SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no DESC LIMIT 1;</code>'}],
         success_message: 'Bài 7 tiếp theo — chuyển ER Diagram → bảng quan hệ vật lý (7 quy tắc mapping chuẩn).',
-        xp_reward: 30
+        xp_reward: 50
       }
     },
 
