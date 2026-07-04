@@ -1016,6 +1016,149 @@
         '<text x="529" y="190" text-anchor="middle" fill="#FB923C" font-weight="700">quét ít cột trên núi dòng = vô địch OLAP</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Không có layout vô địch — feed ở lại row, kho sang column, ETL đêm (Ticket #25) làm cầu</text>' +
+      '</svg>',
+
+    /* tc_16: index = mục lục — seq scan 25,000 trang vs tra mục lục nhảy đúng chỗ */
+    tc_16: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Không index phải quét tuần tự 25000 trang mất 9 giây; có index email tra mục lục vài bước rồi nhảy đúng trang slot, 40 mili-giây">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Index — mục lục cho 2.000.000 dòng</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10">' +
+        '<rect x="36" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.5)" stroke-width="1.5"/>' +
+        '<text x="191" y="68" text-anchor="middle" fill="#f87171" font-weight="700" font-size="12">KHÔNG INDEX — quét tuần tự 🐢</text>' +
+        '<rect x="54" y="80" width="274" height="18" rx="3" fill="rgba(248,113,113,.10)" stroke="rgba(248,113,113,.4)" stroke-width="1"/>' +
+        '<text x="191" y="93" text-anchor="middle" fill="#aebfd6">trang 00001 … không thấy mai@</text>' +
+        '<rect x="54" y="103" width="274" height="18" rx="3" fill="rgba(248,113,113,.10)" stroke="rgba(248,113,113,.4)" stroke-width="1"/>' +
+        '<text x="191" y="116" text-anchor="middle" fill="#aebfd6">trang 00002 … không thấy mai@</text>' +
+        '<text x="191" y="140" text-anchor="middle" fill="#7f93ad">⋮ lật đủ 25.000 trang ⋮</text>' +
+        '<rect x="54" y="150" width="274" height="18" rx="3" fill="rgba(248,113,113,.10)" stroke="rgba(248,113,113,.4)" stroke-width="1"/>' +
+        '<text x="191" y="163" text-anchor="middle" fill="#aebfd6">trang 08112 … CÓ! (mà đã lật 8112 trang)</text>' +
+        '<text x="191" y="188" text-anchor="middle" fill="#f87171" font-weight="700">CSKH gõ email → đợi ~9 giây</text>' +
+        '<rect x="374" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(251,146,60,.55)" stroke-width="1.5"/>' +
+        '<text x="529" y="68" text-anchor="middle" fill="#FB923C" font-weight="700" font-size="12">CÓ INDEX idx_users_email 📖</text>' +
+        '<rect x="392" y="80" width="176" height="18" rx="3" fill="rgba(251,146,60,.12)" stroke="rgba(251,146,60,.45)" stroke-width="1"/>' +
+        '<text x="480" y="93" text-anchor="middle" fill="#aebfd6">bob@ghub.us → (019, 3)</text>' +
+        '<rect x="392" y="103" width="176" height="18" rx="3" fill="rgba(251,146,60,.28)" stroke="#FB923C" stroke-width="1.4"/>' +
+        '<text x="480" y="116" text-anchor="middle" fill="#FB923C" font-weight="700">mai@ghub.vn → (8112, 4)</text>' +
+        '<rect x="392" y="126" width="176" height="18" rx="3" fill="rgba(251,146,60,.12)" stroke="rgba(251,146,60,.45)" stroke-width="1"/>' +
+        '<text x="480" y="139" text-anchor="middle" fill="#aebfd6">minh@ghub.vn → (007, 1)</text>' +
+        '<rect x="584" y="98" width="86" height="52" rx="6" fill="rgba(52,211,153,.10)" stroke="#34d399" stroke-width="1.3"/>' +
+        '<text x="627" y="120" text-anchor="middle" fill="#34d399" font-weight="700" font-size="9.5">trang 8112</text>' +
+        '<text x="627" y="136" text-anchor="middle" fill="#34d399" font-size="9.5">slot 4 🎯</text>' +
+        '<path d="M568 112 L 582 118" fill="none" stroke="#34d399" stroke-width="1.4" marker-end="none"/>' +
+        '<text x="529" y="170" text-anchor="middle" fill="#aebfd6">mục lục XẾP theo email → vài bước là trúng</text>' +
+        '<text x="529" y="188" text-anchor="middle" fill="#34d399" font-weight="700">→ ~0,04 giây — đọc đúng 1 trang dữ liệu</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Cái giá: mỗi INSERT/UPDATE phải sửa cả sổ chính lẫn MỌI mục lục — đừng rải index bừa</text>' +
+      '</svg>',
+
+    /* tc_17: 4 kiểu mục lục — dense / sparse / clustering / secondary */
+    tc_17: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bốn kiểu index: dense mỗi dòng một mục, sparse mỗi trang một mục cần sổ đã xếp, clustering là chính sổ xếp theo khóa, secondary là mục lục phụ trỏ RID">' +
+      '<text x="360" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Bốn kiểu mục lục — chọn sai là công cốc</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="9.5">' +
+        '<rect x="36" y="42" width="310" height="82" rx="8" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<text x="52" y="62" fill="#38BDF8" font-weight="700" font-size="11">DENSE — mỗi DÒNG 1 mục</text>' +
+        '<text x="52" y="80" fill="#aebfd6">7→(p1,1) · 9→(p1,2) · 12→(p2,1) · 15→(p2,2)</text>' +
+        '<text x="52" y="98" fill="#7f93ad">to hơn, nhưng tra thẳng từng khóa</text>' +
+        '<rect x="374" y="42" width="310" height="82" rx="8" fill="#0e1726" stroke="rgba(251,146,60,.55)" stroke-width="1.4"/>' +
+        '<text x="390" y="62" fill="#FB923C" font-weight="700" font-size="11">SPARSE — mỗi TRANG 1 mục</text>' +
+        '<text x="390" y="80" fill="#aebfd6">7→trang 1 · 12→trang 2 · 21→trang 3</text>' +
+        '<text x="390" y="98" fill="#7f93ad">tí hon — nhưng ĐÒI sổ đã XẾP theo khóa đó</text>' +
+        '<rect x="36" y="132" width="310" height="82" rx="8" fill="#0e1726" stroke="rgba(232,121,249,.5)" stroke-width="1.4"/>' +
+        '<text x="52" y="152" fill="#E879F9" font-weight="700" font-size="11">CLUSTERING — chính sổ xếp theo khóa</text>' +
+        '<text x="52" y="170" fill="#aebfd6">users nằm trên đĩa THEO user_id: 7, 9, 12, 15…</text>' +
+        '<text x="52" y="188" fill="#7f93ad">mỗi bảng chỉ được MỘT — dữ liệu chỉ nằm 1 kiểu</text>' +
+        '<rect x="374" y="132" width="310" height="82" rx="8" fill="#0e1726" stroke="rgba(148,163,184,.45)" stroke-width="1.4"/>' +
+        '<text x="390" y="152" fill="#e8edf5" font-weight="700" font-size="11">SECONDARY — mục lục phụ (email…)</text>' +
+        '<text x="390" y="170" fill="#aebfd6">bob@→RID · mai@→RID · minh@→RID (đủ TỪNG dòng)</text>' +
+        '<text x="390" y="188" fill="#7f93ad">khóa phụ rải khắp sổ → bắt buộc DENSE</text>' +
+      '</g>' +
+      '<text x="360" y="232" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Sparse chỉ sống trên sổ đã xếp (clustering) — secondary thì dense, không có lựa chọn</text>' +
+      '</svg>',
+
+    /* tc_18: B+-Tree — root → internal → leaf móc nhau; đường tra mai@ highlight */
+    tc_18: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cây B+ ba tầng: root chia ngưỡng, internal dẫn xuống, các lá chứa khóa đã xếp và móc nhau bằng con trỏ ngang cho range scan; đường tra mai@ được tô sáng">' +
+      '<text x="360" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">B+-Tree — 2.000.000 khóa, cao đúng 3 tầng</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="9.5">' +
+        '<rect x="285" y="40" width="150" height="26" rx="6" fill="rgba(251,146,60,.18)" stroke="#FB923C" stroke-width="1.5"/>' +
+        '<text x="360" y="57" text-anchor="middle" fill="#FB923C" font-weight="700">ROOT · h… | s…</text>' +
+        '<rect x="120" y="96" width="150" height="26" rx="6" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.2"/>' +
+        '<text x="195" y="113" text-anchor="middle" fill="#7f93ad">a… | d…</text>' +
+        '<rect x="285" y="96" width="150" height="26" rx="6" fill="rgba(251,146,60,.18)" stroke="#FB923C" stroke-width="1.5"/>' +
+        '<text x="360" y="113" text-anchor="middle" fill="#FB923C" font-weight="700">j… | mai… | p…</text>' +
+        '<rect x="450" y="96" width="150" height="26" rx="6" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.2"/>' +
+        '<text x="525" y="113" text-anchor="middle" fill="#7f93ad">t… | x…</text>' +
+        '<path d="M330 66 L 210 94" fill="none" stroke="rgba(148,163,184,.45)" stroke-width="1.2"/>' +
+        '<path d="M360 66 L 360 94" fill="none" stroke="#FB923C" stroke-width="1.8"/>' +
+        '<path d="M390 66 L 510 94" fill="none" stroke="rgba(148,163,184,.45)" stroke-width="1.2"/>' +
+        '<rect x="48" y="156" width="146" height="34" rx="6" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.2"/>' +
+        '<text x="121" y="171" text-anchor="middle" fill="#7f93ad">LÁ · bob@ · duc@…</text>' +
+        '<text x="121" y="184" text-anchor="middle" fill="#7f93ad" font-size="8.5">khóa xếp sẵn + RID</text>' +
+        '<rect x="214" y="156" width="146" height="34" rx="6" fill="rgba(52,211,153,.10)" stroke="#34d399" stroke-width="1.5"/>' +
+        '<text x="287" y="171" text-anchor="middle" fill="#34d399" font-weight="700">LÁ · mai@ → (8112,4)</text>' +
+        '<text x="287" y="184" text-anchor="middle" fill="#34d399" font-size="8.5">3 bước là tới 🎯</text>' +
+        '<rect x="380" y="156" width="146" height="34" rx="6" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.2"/>' +
+        '<text x="453" y="171" text-anchor="middle" fill="#7f93ad">LÁ · pat@ · son@…</text>' +
+        '<rect x="546" y="156" width="146" height="34" rx="6" fill="#0e1726" stroke="rgba(148,163,184,.4)" stroke-width="1.2"/>' +
+        '<text x="619" y="171" text-anchor="middle" fill="#7f93ad">LÁ · tuan@ · yuki@…</text>' +
+        '<path d="M330 122 L 290 154" fill="none" stroke="#34d399" stroke-width="1.8"/>' +
+        '<path d="M194 173 L 212 173" fill="none" stroke="#38BDF8" stroke-width="1.6"/>' +
+        '<path d="M360 173 L 378 173" fill="none" stroke="#38BDF8" stroke-width="1.6"/>' +
+        '<path d="M526 173 L 544 173" fill="none" stroke="#38BDF8" stroke-width="1.6"/>' +
+        '<text x="360" y="207" text-anchor="middle" fill="#38BDF8" font-size="10">→ lá MÓC NHAU: tìm lá đầu rồi đi ngang = range scan không phải leo lại cây</text>' +
+      '</g>' +
+      '<text x="360" y="230" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Mỗi node chứa hàng trăm khóa (fanout) — mỗi tầng nhân trăm lần, nên cây triệu khóa vẫn lùn</text>' +
+      '</svg>',
+
+    /* tc_19: composite (user_id, action_type) như danh bạ Họ-rồi-Tên + bitmap cho cột ít giá trị */
+    tc_19: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Composite index xếp theo user_id rồi action_type như danh bạ họ rồi tên, đủ prefix thì trúng dải; bitmap index cho cột ít giá trị, AND OR trên bit cực nhanh">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Composite &amp; Bitmap — hai vũ khí đặc chủng</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10">' +
+        '<rect x="36" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(251,146,60,.55)" stroke-width="1.5"/>' +
+        '<text x="191" y="68" text-anchor="middle" fill="#FB923C" font-weight="700" font-size="12">COMPOSITE (user_id, action_type)</text>' +
+        '<text x="191" y="88" text-anchor="middle" fill="#aebfd6">xếp như danh bạ: HỌ trước, TÊN sau</text>' +
+        '<rect x="54" y="98" width="130" height="18" rx="3" fill="rgba(255,255,255,.03)" stroke="rgba(148,163,184,.35)" stroke-width="1"/>' +
+        '<text x="119" y="111" text-anchor="middle" fill="#7f93ad">7 · comment</text>' +
+        '<rect x="54" y="121" width="130" height="18" rx="3" fill="rgba(52,211,153,.14)" stroke="#34d399" stroke-width="1.3"/>' +
+        '<text x="119" y="134" text-anchor="middle" fill="#34d399" font-weight="700">7 · like ×2 🎯</text>' +
+        '<rect x="54" y="144" width="130" height="18" rx="3" fill="rgba(255,255,255,.03)" stroke="rgba(148,163,184,.35)" stroke-width="1"/>' +
+        '<text x="119" y="157" text-anchor="middle" fill="#7f93ad">9 · comment</text>' +
+        '<text x="256" y="111" fill="#34d399" font-size="9">user=7 AND type=like</text>' +
+        '<text x="256" y="124" fill="#34d399" font-size="9">→ nhảy trúng dải ✓</text>' +
+        '<text x="256" y="147" fill="#f87171" font-size="9">chỉ type=like (thiếu Họ)</text>' +
+        '<text x="256" y="160" fill="#f87171" font-size="9">→ rải khắp sổ ✗</text>' +
+        '<text x="191" y="186" text-anchor="middle" fill="#FB923C" font-weight="700">luật leftmost prefix: có Họ mới tra được</text>' +
+        '<rect x="374" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.5)" stroke-width="1.5"/>' +
+        '<text x="529" y="68" text-anchor="middle" fill="#38BDF8" font-weight="700" font-size="12">BITMAP — cột ít giá trị (kho 📊)</text>' +
+        '<text x="392" y="94" fill="#aebfd6">action_type ∈ {like, comment, post}</text>' +
+        '<text x="392" y="118" fill="#e8edf5">like:    <tspan fill="#38BDF8" font-weight="700">1 0 1 0 1 1 0 0</tspan></text>' +
+        '<text x="392" y="138" fill="#e8edf5">comment: <tspan fill="#7f93ad">0 1 0 0 0 0 1 0</tspan></text>' +
+        '<text x="392" y="158" fill="#e8edf5">post:    <tspan fill="#7f93ad">0 0 0 1 0 0 0 1</tspan></text>' +
+        '<text x="529" y="184" text-anchor="middle" fill="#38BDF8" font-weight="700">AND/OR trên bit = triệu dòng/nháy mắt</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Composite: chọn THỨ TỰ cột theo query — Bitmap: chỉ đáng khi cột lèo tèo vài giá trị</text>' +
+      '</svg>',
+
+    /* tc_20: EXPLAIN trước/sau — Seq Scan vì UPPER(cột) vs Index Scan sau khi sửa sargable */
+    tc_20: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="EXPLAIN trước: Seq Scan cost 18334 một triệu dòng vì Filter UPPER action_type; EXPLAIN sau khi bỏ hàm bọc cột: Index Scan cost 912, nhanh gấp hai mươi lần">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">EXPLAIN — bắt máy khai nó định làm gì</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="10">' +
+        '<rect x="36" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.5)" stroke-width="1.5"/>' +
+        '<text x="191" y="68" text-anchor="middle" fill="#f87171" font-weight="700" font-size="12">TRƯỚC — dashboard 6,2 giây</text>' +
+        '<text x="54" y="92" fill="#e8edf5">EXPLAIN SELECT … WHERE</text>' +
+        '<text x="54" y="108" fill="#f87171" font-weight="700">  UPPER(action_type) = \'LIKE\'</text>' +
+        '<text x="54" y="132" fill="#f87171">→ Seq Scan on fact_post_action</text>' +
+        '<text x="54" y="148" fill="#aebfd6">    cost=0.00..18334  rows=1000000</text>' +
+        '<text x="54" y="164" fill="#aebfd6">    Filter: UPPER(action_type)=\'LIKE\'</text>' +
+        '<text x="191" y="188" text-anchor="middle" fill="#7f93ad">index xếp theo action_type — KHÔNG theo UPPER(…)</text>' +
+        '<rect x="374" y="48" width="310" height="150" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.55)" stroke-width="1.5"/>' +
+        '<text x="529" y="68" text-anchor="middle" fill="#34d399" font-weight="700" font-size="12">SAU — 0,3 giây, cùng kết quả</text>' +
+        '<text x="392" y="92" fill="#e8edf5">EXPLAIN SELECT … WHERE</text>' +
+        '<text x="392" y="108" fill="#34d399" font-weight="700">  action_type = \'like\'</text>' +
+        '<text x="392" y="132" fill="#34d399">→ Index Scan using idx_fact_type</text>' +
+        '<text x="392" y="148" fill="#aebfd6">    cost=0.43..912  rows=310000</text>' +
+        '<text x="392" y="164" fill="#aebfd6">    Index Cond: action_type=\'like\'</text>' +
+        '<text x="529" y="188" text-anchor="middle" fill="#7f93ad">bỏ hàm bọc cột → index mở mắt trở lại</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Index có sẵn chưa chắc được dùng — EXPLAIN là lời khai duy nhất đáng tin</text>' +
       '</svg>'
   };
 
@@ -3184,6 +3327,12 @@
       // M5-TC 2026-07-04: probe thực tế cho thấy engine KHÔNG lỗi với ROLLUP mà trả kết quả
       // SAI im lặng (gộp hết nhóm) — nguy hiểm hơn error → bắt buộc chặn thành pending.
       { re: /\brollup\s*\(|\bcube\s*\(|\bgrouping\s+sets\b/, label: 'ROLLUP/CUBE (subtotal)' },
+      // M6-TC 2026-07-05: tc_16/tc_19 chấm CREATE INDEX exact-match (DDL-head guard) —
+      // engine không mô phỏng DDL → pending neutral như FUNCTION/PROCEDURE/TRIGGER.
+      { re: /\bcreate\s+(?:unique\s+)?index\b/, label: 'CREATE INDEX (DDL)' },
+      // M6-TC 2026-07-05: probe t5 (probe_engine_m6b) — WHERE UPPER(col)='X' engine trả bảng
+      // SAI im lặng (predicate bị bỏ qua, lấy mọi dòng) → chặn pending như vụ ROLLUP.
+      { re: /\bupper\s*\(|\blower\s*\(/, label: 'hàm UPPER/LOWER( )' },
       { re: /\bdb\.\w+\.(find|aggregate|insert\w*|update\w*|count)\s*\(/, label: 'MongoDB query' }
     ];
     for (var ri = 0; ri < reChecks.length; ri++) {

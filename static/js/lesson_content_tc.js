@@ -2839,6 +2839,913 @@ window.LESSON_CONTENT['db_design_tc'] = {
         success_message: 'Ticket #35 đóng — nửa đầu Module 6 hoàn tất! Bạn đã thuộc lòng tầng hầm: tháp lưu trữ, giá vé seek, buffer, trang, và hai kiểu xếp kho. Đợt sau: xây LỐI TẮT xuyên qua tất cả — INDEX, B+-Tree, và vụ án tốt nghiệp "Social Graph Detective".',
         xp_reward: 120
       }
+    },
+
+    /* ═══════════ tc_16 — Ticket #36 · Index cơ bản (Search Key) ═══════════
+     * Engine tier: step-3 = zone khái niệm tự khai station + expected_zones;
+     * step-4 = CREATE INDEX → scan pending (M6 reCheck mới) + DDL-head exact-match
+     * + equiv_sql SELECT WHERE email (probe t1 OK). */
+    {
+      id: 'tc_16', index: 16,
+      title: 'Index — mục lục cho 2 triệu dòng',
+      subtitle: 'Tra email trúng ngay khỏi lật cả sổ — nhưng mỗi mục lục là một món nợ khi ghi',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'users (2.000.000 dòng — mẫu 6)',
+          columns: ['user_id', 'username', 'email', 'country'],
+          dataRows: [
+            ['7',  'minhkiller', 'minh@ghub.vn', 'VN'],
+            ['9',  'yuki_sama',  'yuki@ghub.jp', 'JP'],
+            ['12', 'toxic_lord', 'toxic@ghub.vn', 'VN'],
+            ['15', 'sara_gg',    'sara@ghub.us', 'US'],
+            ['21', 'mai_speed',  'mai@ghub.vn',  'VN'],
+            ['24', 'bob_afk',    'bob@ghub.us',  'US']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #36',
+        hook: 'CSKH than trời: khách đọc email qua điện thoại, gõ vào ô tra cứu — và ĐỢI <strong>9 GIÂY</strong>. Đằng sau ô đó là <code>WHERE email = ?</code> quét tuần tự 2 triệu dòng × 25.000 trang, đúng kiểu "lật sổ từ bìa" của Ticket #32. Ticket #36: xây <em>MỤC LỤC</em> — index. Chọn <strong>search key</strong> là email, mục lục tự xếp thứ tự, mỗi mục trỏ thẳng (trang, slot). Nhưng khoan rải index khắp nơi: mỗi cuốn mục lục là một món nợ phải trả ở MỌI lần ghi.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Index = cấu trúc PHỤ xếp theo search key, mỗi mục trỏ về chỗ dòng nằm — RID (trang, slot)',
+            'Tra điểm (point query) đi qua mục lục: vài trang thay vì cả bảng',
+            'Cái giá: INSERT/UPDATE phải cập nhật sổ chính + MỌI index — index thừa = thuế ghi vô ích'
+          ],
+          intro: 'Cuốn giáo trình 1.200 trang không ai đọc từ bìa để tìm chữ "trigger" — người ta mở MỤC LỤC: từ khóa xếp ABC, kèm số trang. Index của database y hệt: một cấu trúc <strong>tách riêng</strong>, xếp thứ tự theo <strong>search key</strong> (cột bạn hay tra), mỗi mục là cặp <code>khóa → RID (trang, slot)</code> — địa chỉ nhà của dòng, đúng RID bạn gặp ở Ticket #34. Tra <code>mai@ghub.vn</code>: lần vài bước trong mục lục, lấy RID, nhảy thẳng tới trang 8112 slot 4. Hết chuyện lật 25.000 trang.',
+          example: 'users 2M dòng ≈ 25.000 trang: seq scan đọc 25.000 trang (~9s) · qua index email: ~3 trang mục lục + 1 trang dữ liệu (~0,04s) — nhanh hơn nghìn lần cho MỘT dòng cần tìm.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-book-open',
+            title: 'Search key — cột nào làm mục lục?',
+            body: 'Một index gắn với MỘT search key. Mục trong index là cặp <code>(giá trị khóa, con trỏ)</code> — khóa xếp thứ tự nên tìm nhanh, con trỏ dẫn về dòng thật. Tra cột nào nhiều thì đánh mục lục cột đó: <code>users.email</code> (đăng nhập, CSKH), <code>posts.user_id</code> (mở tường nhà).',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — Indexing: search key & index entry'
+          },
+          {
+            icon: 'fa-file-invoice-dollar',
+            title: 'Món nợ của mục lục',
+            body: 'User mới đăng ký → ghi 1 dòng vào sổ chính VÀ chèn 1 mục vào ĐÚNG CHỖ của từng index. 5 index = 6 lần ghi cho 1 INSERT. Index không ai tra = trả thuế ghi vô ích + tốn chỗ. Nguyên tắc: đánh index theo QUERY thật, không đánh "cho chắc".'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Soi GameHub: <code>email</code> — tra hoài, đáng. <code>user_id</code> trong posts — mở tường nhà ai cũng cần, đáng. <code>bio</code> — đời nào lọc theo bio, khỏi. Còn "đếm cả 2M dòng theo country"? Đằng nào cũng đụng gần cả bảng — mục lục không cứu được seq scan chính đáng (Ticket #32).'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'idx_users_email — mục lục xếp theo email',
+            columns: [
+              { name: 'search key', type: 'email (xếp ABC)', key: '🔑', icon: '📖' },
+              { name: 'con trỏ', type: 'RID (trang, slot)', key: '→', icon: '🎯' }
+            ]
+          },
+          data_preview: [
+            ['bob@ghub.us',  '→ (trang 00019, slot 3)'],
+            ['mai@ghub.vn',  '→ (trang 08112, slot 4) ← tra 1 phát trúng'],
+            ['minh@ghub.vn', '→ (trang 00007, slot 1)'],
+            ['ghi 1 user mới', '= sổ chính + chèn đúng chỗ MỌI mục lục 💸']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Tra <code>WHERE email = \'mai@ghub.vn\'</code> KHÔNG có index — vì sao phải đọc tới ~25.000 trang dù dòng cần tìm chỉ có MỘT?',
+            options: [
+              { id: 'a', text: 'Máy không biết dòng đó nằm đâu — heap file không có trật tự, đành lật tuần tự đến khi gặp (xui thì trang cuối)', correct: true, explanation: 'Đúng — bài học Ticket #34: heap không trật tự → full scan. Index chính là "trật tự gắn ngoài" để khỏi lật.' },
+              { id: 'b', text: 'Vì email là kiểu chữ, so sánh chữ chậm hơn so sánh số', correct: false, explanation: 'Sai — so sánh chữ chậm hơn chút nhưng không phải lý do; vấn đề là SỐ TRANG phải khiêng.' },
+              { id: 'c', text: 'Vì RAM không đủ chứa 2 triệu dòng', correct: false, explanation: 'Sai — buffer (Ticket #33) xử lý chuyện đó; kể cả đủ RAM vẫn phải đọc từng trang lần đầu.' },
+              { id: 'd', text: 'Vì database chỉ đọc được 1 dòng mỗi lần', correct: false, explanation: 'Sai — đọc theo TRANG (Ticket #31); vấn đề là phải đọc GẦN HẾT các trang.' }
+            ]
+          },
+          {
+            question: 'Index email cứu CSKH ngoạn mục — vậy sao không đánh index cho MỌI cột của users luôn "cho chắc"?',
+            options: [
+              { id: 'a', text: 'Mỗi INSERT/UPDATE phải cập nhật sổ chính + TỪNG index — index thừa là thuế ghi trả mãi cho thứ không ai tra', correct: true, explanation: 'Đúng — index là món nợ khi ghi. Đánh theo query thật sự chạy, không theo cảm giác an toàn.' },
+              { id: 'b', text: 'Vì mỗi bảng chỉ được phép có tối đa 2 index', correct: false, explanation: 'Sai — không có giới hạn kiểu đó; giới hạn là chi phí.' },
+              { id: 'c', text: 'Vì index làm chậm cả việc ĐỌC những cột khác', correct: false, explanation: 'Sai — đọc không bị chậm đi vì có thêm index; chỉ GHI mới gánh.' },
+              { id: 'd', text: 'Không sao cả — index miễn phí, đánh hết là đúng bài', correct: false, explanation: 'Sai — "miễn phí" là cái bẫy; hãy nhớ 1 INSERT phải chèn vào đúng chỗ của từng mục lục.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Index email cứu được query nào?',
+          instruction: 'Kéo từng query vào đúng giỏ — mục lục email chỉ cứu được người tra THEO EMAIL, và chỉ khi lấy ÍT dòng.',
+          xp: 20,
+          chips: [
+            { id: 'q1', label: "WHERE email = 'mai@ghub.vn' (CSKH tra 1 khách)" },
+            { id: 'q2', label: 'WHERE user_id = 735 (mở hồ sơ theo id)' },
+            { id: 'q3', label: "WHERE email = 'bob@ghub.us' (đăng nhập)" },
+            { id: 'q4', label: 'Gom đếm CẢ 2 triệu dòng theo country' }
+          ],
+          bins: [
+            { id: 'saved',  label: 'Index email CỨU 📖' },
+            { id: 'nosave', label: 'Index email BÓ TAY 🐢' }
+          ],
+          solution: { q1: 'saved', q3: 'saved', q2: 'nosave', q4: 'nosave' }
+        }
+      },
+      step_3: {
+        mission: 'Xếp hai con đường tra "mai@ghub.vn" — không mục lục và có mục lục. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Nhảy thẳng tới trang 8112, slot 4 — đọc đúng MỘT trang dữ liệu', slot: 'path-jump' },
+          { type: 'op', token: 'Không index: lật tuần tự trang 1 → 2 → 3… đến khi gặp mai@ghub.vn — xui thì gần 25.000 trang', slot: 'path-seq' },
+          { type: 'op', token: 'Index nhanh vì toàn bộ 2 triệu dòng đã được chép sẵn vào RAM từ lúc tạo', slot: 'path-x' },
+          { type: 'op', token: 'Có index: lần theo mục lục xếp ABC — vài bước ra mục "mai@ghub.vn → (8112, 4)"', slot: 'path-idx' }
+        ],
+        drop_zones: [
+          { id: 'path-seq', placeholder: 'Con đường KHÔNG mục lục', accepts: ['op'], multi: false,
+            station: { icon: '🐢', label: 'Quét tuần tự', sub: 'Lật từ bìa', hint: 'Heap không trật tự (Ticket #34) — không biết dòng ở đâu thì phải lật đến khi gặp.' } },
+          { id: 'path-idx', placeholder: 'Có mục lục — bước 1: tra ở đâu?', accepts: ['op'], multi: false,
+            station: { icon: '📖', label: 'Tra mục lục', sub: 'Theo search key', hint: 'Mục lục XẾP THỨ TỰ theo email — tìm trong đống đã xếp chỉ vài bước.' } },
+          { id: 'path-jump', placeholder: 'Có mục lục — bước 2: rồi làm gì?', accepts: ['op'], multi: false,
+            station: { icon: '🎯', label: 'Nhảy đúng chỗ', sub: 'Theo RID', hint: 'Mục lục trả về RID (trang, slot) — nhảy thẳng, đọc đúng 1 trang.' } }
+        ],
+        expected_sql: 'Không index: lật tuần tự trang 1 → 2 → 3… đến khi gặp mai@ghub.vn — xui thì gần 25.000 trang Có index: lần theo mục lục xếp ABC — vài bước ra mục "mai@ghub.vn → (8112, 4)" Nhảy thẳng tới trang 8112, slot 4 — đọc đúng MỘT trang dữ liệu',
+        expected_zones: {
+          'path-seq': 'Không index: lật tuần tự trang 1 → 2 → 3… đến khi gặp mai@ghub.vn — xui thì gần 25.000 trang',
+          'path-idx': 'Có index: lần theo mục lục xếp ABC — vài bước ra mục "mai@ghub.vn → (8112, 4)"',
+          'path-jump': 'Nhảy thẳng tới trang 8112, slot 4 — đọc đúng MỘT trang dữ liệu'
+        },
+        reveal_hints: {
+          'path-seq': 'Không mục lục = <strong>lật tuần tự từng trang</strong> — chính là seq scan 9 giây của CSKH.',
+          'path-idx': 'Bước 1 của con đường index: <strong>tra mục lục theo email</strong>. Khối "chép sẵn vào RAM" là bịa — index nằm trên đĩa như mọi thứ khác, cũng đọc theo trang.',
+          'path-jump': 'Bước 2: cầm RID <strong>nhảy thẳng tới (trang, slot)</strong> — một cú random access đáng giá.'
+        }
+      },
+      step_4: {
+        prompt: 'Đóng Ticket #36 bằng chính tay bạn: tạo mục lục email cho CSKH. Cú pháp: <code>CREATE INDEX tên_index ON bảng(cột);</code> — đặt tên <code>idx_users_email</code> theo chuẩn đặt tên của đội.',
+        schema: {
+          table_name: 'users',
+          columns: [
+            { name: 'user_id', type: 'INT', key: 'PK' },
+            { name: 'username', type: 'VARCHAR', key: '' },
+            { name: 'email', type: 'VARCHAR', key: '🔑 sắp làm search key' },
+            { name: 'country', type: 'CHAR(2)', key: '' }
+          ],
+          data: [
+            ['7',  'minhkiller', 'minh@ghub.vn', 'VN'],
+            ['9',  'yuki_sama',  'yuki@ghub.jp', 'JP'],
+            ['12', 'toxic_lord', 'toxic@ghub.vn', 'VN'],
+            ['15', 'sara_gg',    'sara@ghub.us', 'US'],
+            ['21', 'mai_speed',  'mai@ghub.vn',  'VN'],
+            ['24', 'bob_afk',    'bob@ghub.us',  'US']
+          ]
+        },
+        /* CREATE INDEX → scan pending (M6 reCheck); validateSQL DDL-guard chấm exact;
+         * equiv render bảng "tra 1 phát trúng ngay" (probe_engine_m6b t1 OK). */
+        equiv_sql: "SELECT user_id, email FROM users WHERE email = 'mai@ghub.vn';",
+        context: {
+          scenario: 'Lệnh này bảo database: xây mục lục xếp theo <code>email</code> cho bảng <code>users</code>, tự cập nhật mãi mãi về sau. Chạy xong, ô tra cứu của CSKH từ 9 giây còn ~0,04 giây — không sửa một dòng code app nào.',
+          real_world: 'Đây là câu lệnh tăng tốc phổ biến nhất nghề backend. Postgres còn có <code>CREATE INDEX CONCURRENTLY</code> để xây mục lục trên bảng đang chạy thật mà không khóa ghi.',
+          steps: [
+            'Từ khóa mở đầu: <code>CREATE INDEX</code>.',
+            'Tên index: <code>idx_users_email</code> — chuẩn đặt tên idx_bảng_cột.',
+            'Gắn vào đâu: <code>ON users(email)</code> — bảng users, search key là email.',
+            'Khung kết quả minh họa: tra mai@ghub.vn trúng ngay 1 dòng — engine demo không chạy DDL, đáp án chấm khi Run/Submit.'
+          ],
+          hint_explore: 'Xem lại bảng minh họa Step 1: mục lục chính là cặp email → (trang, slot). Lệnh của bạn ra lệnh XÂY cái bảng đó.',
+          expected: 'Khung kết quả minh họa tra email qua index: 1 dòng (user 21, mai@ghub.vn).'
+        },
+        hints: [
+          { level: 1, text: 'Khung: <code>CREATE INDEX tên ON bảng(cột);</code> — ba chỗ trống: tên, bảng, cột.' },
+          { level: 2, text: 'Tên theo chuẩn đội: <code>idx_users_email</code>. Bảng: <code>users</code>.' },
+          { level: 3, text: 'Search key là cột CSKH tra: <code>(email)</code>.' },
+          { level: 4, text: '<code class="code">CREATE INDEX idx_users_email ON users(email);</code>' }
+        ],
+        expected_sql: 'CREATE INDEX idx_users_email ON users(email);',
+        success_message: 'Ticket #36 đóng — CSKH gửi hẳn trà sữa cảm ơn! Nhưng khoan: đội thấy sướng tay đòi đánh index MỌI THỨ. Ticket #37: học phân loại mục lục trước khi rải — dense hay sparse, sổ chính hay mục lục phụ.',
+        xp_reward: 120
+      }
+    },
+
+    /* ═══════════ tc_17 — Ticket #37 · Dense/Sparse & Clustering/Secondary ═══════════
+     * Engine tier: khái niệm thuần — step-3 zone tự khai + expected_zones;
+     * step-4 fill_blank pseudo (non-SELECT → neutral guard, chấm theo ô). */
+    {
+      id: 'tc_17', index: 17,
+      title: 'Dense vs Sparse · Clustering vs Secondary — bốn kiểu mục lục',
+      subtitle: 'Mục lục từng dòng hay từng trang; sổ xếp theo khóa hay mục lục phụ trỏ về',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'users — sổ chính XẾP THEO user_id (mẫu 3 trang)',
+          columns: ['trang', 'chứa các user_id', 'ghi chú'],
+          dataRows: [
+            ['trang 1', '7, 9',   'dòng nằm đúng thứ tự khóa'],
+            ['trang 2', '12, 15', '→ tra user_id: mỗi trang chỉ cần 1 mục'],
+            ['trang 3', '21, 24', '→ tra email: khóa rải khắp 3 trang']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #37',
+        hook: 'Sau cú ăn tiền của idx_users_email, cả đội hăng máu: "index hết mọi cột đi!". Khoan — Ticket #37 là buổi REVIEW trước khi rải. Mục lục có <strong>bốn kiểu tính cách</strong>: <em>dense</em> ghi đủ từng dòng, <em>sparse</em> tí hon mỗi trang một mục nhưng ĐÒI sổ đã xếp; <em>clustering</em> là chính cuốn sổ nằm theo khóa (mỗi bảng chỉ được MỘT), <em>secondary</em> là mục lục phụ trỏ RID. Chọn sai kiểu = xây mục lục vô dụng.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Dense index: MỖI DÒNG một mục — to hơn, tra thẳng từng khóa',
+            'Sparse index: MỖI TRANG một mục — tí hon, nhưng CHỈ sống trên sổ đã xếp theo khóa đó',
+            'Clustering = chính sổ xếp theo khóa (1 bảng 1 cái) · Secondary = mục lục phụ trỏ RID, bắt buộc dense'
+          ],
+          intro: 'Nhìn bảng users bên cạnh: sổ chính đang NẰM THEO user_id — 7, 9 ở trang 1; 12, 15 ở trang 2. Tra user_id chỉ cần mục lục ghi "user 7 → từ trang 1, user 12 → từ trang 2": mỗi TRANG một mục — đó là <strong>sparse</strong>, tí hon mà đủ dùng, vì tới trang là lần ra dòng (trang đã xếp!). Nhưng tra <code>email</code>? Email rải lung tung khắp các trang — mục lục email phải ghi đủ TỪNG email kèm RID: đó là <strong>dense</strong>, và vì nó là mục lục PHỤ trên sổ xếp-theo-thứ-khác, người ta gọi nó là <strong>secondary index</strong>. Còn cái quyền "sổ chính nằm theo khóa nào" — <strong>clustering index</strong> — mỗi bảng chỉ trao cho MỘT khóa duy nhất.',
+          example: 'users 2M dòng: sparse theo user_id ≈ 25.000 mục (mỗi trang 1) · dense theo email = đủ 2.000.000 mục. Chênh 80 lần — nhưng dense là lựa chọn DUY NHẤT cho khóa phụ.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-layer-group',
+            title: 'Dense vs Sparse — ghi từng dòng hay từng trang',
+            body: 'Dense: mục lục có mục cho MỌI giá trị khóa. Sparse: chỉ một mục cho mỗi trang/khối, tra tới trang rồi lần trong trang. Sparse nhỏ hơn hàng chục lần — nhưng chỉ dùng được khi dữ liệu NẰM SẴN theo thứ tự khóa đó.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — Dense & Sparse Indices'
+          },
+          {
+            icon: 'fa-crown',
+            title: 'Clustering — ngai vàng chỉ có một',
+            body: 'Dữ liệu vật lý chỉ nằm được theo MỘT thứ tự (Ticket #35 đã dạy: "ai nằm cạnh ai" là quyết định lớn nhất). Chọn khóa nào cho sổ chính = trao ngai clustering cho khóa đó. Mọi khóa khác muốn có mục lục đành làm secondary — trỏ RID về, và phải dense.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'GameHub: bảng users nằm theo <code>user_id</code> → clustering thuộc về user_id, tra id dùng sparse là đủ. <code>idx_users_email</code> hôm qua bạn tạo? Nó là secondary + dense — đúng kiểu duy nhất có thể. Đòi "sparse theo email cho nhẹ" là đòi điều không tồn tại.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'hai mục lục trên cùng bảng users (xếp theo user_id)',
+            columns: [
+              { name: 'sparse · user_id', type: 'mỗi trang 1 mục', key: '🪶', icon: '📖' },
+              { name: 'dense · email', type: 'mỗi dòng 1 mục', key: '🔖', icon: '📚' }
+            ]
+          },
+          data_preview: [
+            ['7 → trang 1',  'bob@ghub.us → RID(3,2)'],
+            ['12 → trang 2', 'mai@ghub.vn → RID(3,1)'],
+            ['21 → trang 3', 'minh@ghub.vn → RID(1,1)'],
+            ['3 mục cho 6 dòng 🪶', '6 mục cho 6 dòng — không được thiếu ai']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Sparse index tí hon so với dense — vậy sao KHÔNG dùng sparse cho mục lục email của Ticket #36?',
+            options: [
+              { id: 'a', text: 'Sparse chỉ sống trên dữ liệu ĐÃ XẾP theo khóa đó — users nằm theo user_id, email rải lung tung nên "mỗi trang 1 mục email" chẳng dẫn tới đâu', correct: true, explanation: 'Đúng — sparse ghi "từ trang này trở đi là khóa ≥ X", chỉ có nghĩa khi trang thật sự xếp theo X.' },
+              { id: 'b', text: 'Vì email dài quá, không nhét vừa mục lục sparse', correct: false, explanation: 'Sai — độ dài khóa không phải vấn đề; THỨ TỰ nằm của dữ liệu mới là vấn đề.' },
+              { id: 'c', text: 'Vì sparse chỉ dùng được cho khóa kiểu số', correct: false, explanation: 'Sai — khóa chữ hay số đều được, miễn dữ liệu xếp theo nó.' },
+              { id: 'd', text: 'Dùng được, chỉ là tra chậm hơn dense một chút', correct: false, explanation: 'Sai — không phải "chậm hơn chút" mà là VÔ NGHĨA: tới trang rồi cũng không biết email cần tìm có ở đó không.' }
+            ]
+          },
+          {
+            question: 'Vì sao mỗi bảng chỉ có được MỘT clustering index?',
+            options: [
+              { id: 'a', text: 'Vì dữ liệu vật lý trên đĩa chỉ nằm được theo MỘT thứ tự — muốn thứ tự thứ hai phải chép cả bảng lần nữa', correct: true, explanation: 'Đúng — bài học Ticket #35: "ai nằm cạnh ai" chỉ chọn được một lần. Các khóa khác đành làm secondary.' },
+              { id: 'b', text: 'Vì Postgres thu phí theo số clustering index', correct: false, explanation: 'Sai — đây là giới hạn vật lý, không phải giấy phép.' },
+              { id: 'c', text: 'Vì clustering index chiếm trọn RAM buffer', correct: false, explanation: 'Sai — buffer không liên quan; vấn đề là chỗ nằm trên đĩa.' },
+              { id: 'd', text: 'Không đúng — cứ tạo bao nhiêu clustering cũng được', correct: false, explanation: 'Sai — tạo nhiều INDEX thì được, nhưng chỉ một cái được quyền quyết định thứ tự nằm của sổ chính.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'match',
+          title: 'Bốn kiểu mục lục — ai là ai?',
+          instruction: 'Nối mỗi mô tả với đúng tên gọi của nó.',
+          xp: 20,
+          pairs: [
+            { left: 'Mục lục ghi đủ TỪNG giá trị khóa', leftId: 'k1', rightId: 'v1', right: { id: 'v1', label: 'Dense index' } },
+            { left: 'Mỗi TRANG một mục — đòi sổ đã xếp theo khóa', leftId: 'k2', rightId: 'v2', right: { id: 'v2', label: 'Sparse index' } },
+            { left: 'Chính sổ chính nằm theo thứ tự khóa này', leftId: 'k3', rightId: 'v3', right: { id: 'v3', label: 'Clustering index' } },
+            { left: 'Mục lục phụ trên khóa khác, trỏ RID về sổ', leftId: 'k4', rightId: 'v4', right: { id: 'v4', label: 'Secondary index' } }
+          ],
+          solution: { k1: 'v1', k2: 'v2', k3: 'v3', k4: 'v4' }
+        }
+      },
+      step_3: {
+        mission: 'Đội đề xuất 4 phương án index cho bảng users (đang nằm theo user_id) — xếp mỗi phương án vào đúng ga. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Mục lục email ghi đủ TỪNG email kèm RID — vì email rải khắp sổ, không được thiếu ai', slot: 'ix-secondary' },
+          { type: 'op', token: 'Chọn user_id làm khóa xếp sổ chính — cả bảng nằm trên đĩa theo thứ tự nó', slot: 'ix-cluster' },
+          { type: 'op', token: 'Tra act_count kiểu lười: mỗi trang ghi 1 mục theo act_count, kệ chuyện sổ đang xếp theo user_id', slot: 'ix-x' },
+          { type: 'op', token: 'Tra user_id chỉ cần mỗi trang 1 mục "7 → trang 1, 12 → trang 2…" — sổ đã xếp, tới trang là lần ra', slot: 'ix-sparse' }
+        ],
+        drop_zones: [
+          { id: 'ix-cluster', placeholder: 'Ngai vàng — thứ tự nằm của sổ chính', accepts: ['op'], multi: false,
+            station: { icon: '👑', label: 'Clustering', sub: 'Mỗi bảng một ngai', hint: 'Ai quyết định "dòng nào nằm cạnh dòng nào"? Khóa được trao ngai đó.' } },
+          { id: 'ix-sparse', placeholder: 'Mục lục tí hon trên khóa của ngai', accepts: ['op'], multi: false,
+            station: { icon: '🪶', label: 'Sparse', sub: 'Mỗi trang 1 mục', hint: 'Chỉ sống trên sổ ĐÃ XẾP theo khóa — tới trang là lần ra dòng.' } },
+          { id: 'ix-secondary', placeholder: 'Mục lục phụ cho khóa rải rác', accepts: ['op'], multi: false,
+            station: { icon: '🔖', label: 'Secondary', sub: 'Dense + RID', hint: 'Khóa phụ rải khắp sổ → phải ghi đủ từng dòng, trỏ RID về.' } }
+        ],
+        expected_sql: 'Chọn user_id làm khóa xếp sổ chính — cả bảng nằm trên đĩa theo thứ tự nó Tra user_id chỉ cần mỗi trang 1 mục "7 → trang 1, 12 → trang 2…" — sổ đã xếp, tới trang là lần ra Mục lục email ghi đủ TỪNG email kèm RID — vì email rải khắp sổ, không được thiếu ai',
+        expected_zones: {
+          'ix-cluster': 'Chọn user_id làm khóa xếp sổ chính — cả bảng nằm trên đĩa theo thứ tự nó',
+          'ix-sparse': 'Tra user_id chỉ cần mỗi trang 1 mục "7 → trang 1, 12 → trang 2…" — sổ đã xếp, tới trang là lần ra',
+          'ix-secondary': 'Mục lục email ghi đủ TỪNG email kèm RID — vì email rải khắp sổ, không được thiếu ai'
+        },
+        reveal_hints: {
+          'ix-cluster': 'Ngai vàng = <strong>quyền quyết định thứ tự nằm</strong> — user_id đang giữ nó.',
+          'ix-sparse': 'Sparse = <strong>mỗi trang 1 mục</strong>, chỉ có nghĩa trên khóa của ngai. Khối "act_count kiểu lười" là bịa — sparse trên cột không xếp là mục lục dẫn vào hư không.',
+          'ix-secondary': 'Khóa phụ rải rác = <strong>dense + trỏ RID</strong> — chính là idx_users_email của Ticket #36.'
+        }
+      },
+      step_4: {
+        prompt: 'Điền hồ sơ index cho bảng users — 4 ô, toàn thuật ngữ vừa học (gõ tiếng Anh).',
+        challenge_type: 'fill_blank',
+        template: '-- HỒ SƠ INDEX · bảng users (sổ chính nằm theo user_id)\n\n-- Quyền quyết định thứ tự nằm của sổ thuộc về user_id\n--   → user_id đang giữ index kiểu: ____\n\n-- Mục lục tra user_id: mỗi TRANG chỉ cần 1 mục\n--   → kiểu mục lục: ____\n\n-- Mục lục email: phải ghi đủ TỪNG email, không thiếu ai\n--   → kiểu mục lục: ____\n\n-- Vị thế của mục lục email so với sổ chính: ____',
+        blanks: [
+          { id: 'b1', hint: 'ngai vàng', expected: 'CLUSTERING' },
+          { id: 'b2', hint: 'tí hon, mỗi trang 1 mục', expected: 'SPARSE' },
+          { id: 'b3', hint: 'đủ từng dòng', expected: 'DENSE' },
+          { id: 'b4', hint: 'mục lục phụ', expected: 'SECONDARY' }
+        ],
+        context: {
+          scenario: 'Đây chính là 4 quyết định bạn sẽ điền (trong đầu) mỗi lần định gõ CREATE INDEX ở công ty: sổ đang xếp theo gì, mục lục mới thưa hay dày, chính hay phụ.',
+          real_world: 'Trong Postgres: PRIMARY KEY thường kiêm luôn vai clustering (InnoDB/MySQL thì bắt buộc); mọi CREATE INDEX thêm vào đều là secondary. Lệnh <code>CLUSTER</code> của Postgres cho phép xếp lại sổ theo một index — đúng nghĩa trao lại ngai.',
+          steps: [
+            'Ô 1: ai quyết định thứ tự nằm? — kiểu index của user_id.',
+            'Ô 2: sổ đã xếp theo user_id → mục lục user_id được phép thưa.',
+            'Ô 3: email rải khắp sổ → mục lục email phải ghi đủ.',
+            'Ô 4: mục lục email đứng ở vị thế nào so với sổ chính?'
+          ],
+          hint_explore: 'Nhìn lại bảng 3 trang ở Step 3: user_id 7, 9 nằm trang 1 theo đúng thứ tự — còn email thì nhảy loạn giữa các trang.',
+          expected: 'Điền đúng 4/4: clustering · sparse · dense · secondary. Bài pseudo-code — chấm theo ô điền.'
+        },
+        hints: [
+          { level: 1, text: 'Bốn thuật ngữ của bài: dense, sparse, clustering, secondary — mỗi ô một cái, không lặp.' },
+          { level: 2, text: 'Ô 1 hỏi về NGAI VÀNG (thứ tự nằm) — không phải về độ dày mục lục.' },
+          { level: 3, text: 'Cặp ô 2-3: sổ đã xếp thì mục lục được THƯA; khóa rải rác thì mục lục phải DÀY.' },
+          { level: 4, text: 'Đáp án: <code>clustering</code> · <code>sparse</code> · <code>dense</code> · <code>secondary</code>.' }
+        ],
+        success_message: 'Ticket #37 đóng — đội hết dám rải index bừa! Nhưng có người hỏi xoáy: "mục lục email tự nó cũng 2 triệu mục — tra trong MỤC LỤC kiểu gì cho nhanh?". Câu hỏi trúng tim: Ticket #38 mở nắp capo — bên trong mọi index xịn là một CÁI CÂY.',
+        xp_reward: 120
+      }
+    },
+
+    /* ═══════════ tc_18 — Ticket #38 · B+-Tree ═══════════
+     * Engine tier: khái niệm thuần — step-3 lookup path 4 ga tự khai;
+     * step-4 mcq_code (range scan — khác point lookup của step-3, anti-boredom). */
+    {
+      id: 'tc_18', index: 18,
+      title: 'B+-Tree — cái cây sống trong mọi index',
+      subtitle: '2 triệu khóa, cao đúng 3 tầng — và những chiếc lá móc nhau cân luôn range query',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'idx_users_email — B+-Tree 3 tầng (mỗi ô = 1 trang 8KB)',
+          columns: ['tầng', 'node', 'chứa gì'],
+          dataRows: [
+            ['1 · ROOT',     '1 trang',      'ngưỡng chia: "h…" | "s…" — chỉ đường xuống'],
+            ['2 · INTERNAL', '~100 trang',   'ngưỡng chia mịn hơn: "j…" | "mai…" | "p…"'],
+            ['3 · LEAF',     '~25.000 trang', 'khóa ĐÃ XẾP + RID — và móc sang lá kế →'],
+            ['(sổ chính)',   '25.000 trang', 'heap: nơi RID trỏ về']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #38',
+        hook: 'Câu hỏi xoáy cuối Ticket #37 vẫn treo đó: mục lục email tự nó cũng 2 TRIỆU mục — chẳng lẽ tra mục lục lại phải… quét mục lục? Ticket #38 mở nắp capo: mọi index bạn từng CREATE đều là một <strong>B+-Tree</strong> — cây phân tầng mà mỗi node là MỘT TRANG chứa hàng trăm ngưỡng chia. Root hỏi một câu, internal hỏi câu nữa, tầng ba đã là lá chứa đáp án. Và những chiếc lá <em>móc tay nhau</em> — bí mật giúp index cân luôn câu hỏi "từ ngày X đến ngày Y".'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'B+-Tree: root → internal → leaf; mỗi node = 1 trang chứa HÀNG TRĂM khóa (fanout lớn)',
+            'Cao 3-4 tầng cho hàng triệu khóa → tra 1 khóa = 3-4 lần đọc trang, mãi mãi',
+            'Lá chứa khóa đã xếp + RID, và MÓC sang lá kế → range scan đi ngang, khỏi leo lại cây'
+          ],
+          intro: 'Đừng tưởng tượng cây gia phả lèo tèo 2 nhánh — node của B+-Tree là MỘT TRANG 8KB (Ticket #31) nhét được hàng trăm ngưỡng chia. Tra <code>mai@ghub.vn</code>: ROOT nói "m nằm giữa h và s → nhánh giữa"; INTERNAL nói "xuống lá 812"; LÁ 812 mở ra — khóa xếp sẵn, <code>mai@… → RID(8112, 4)</code>. Ba lần đọc trang, xong. Vì mỗi tầng NHÂN hàng trăm lần sức chứa, 100³ đã là một tỷ — cây triệu khóa vẫn lùn tịt. Còn INSERT? Node đầy thì tách đôi, cây tự cân bằng — không ai phải "chạy lại index".',
+          example: 'Tra 1 email trong 2M khóa: seq scan mục lục ~25.000 trang · B+-Tree: root + internal + lá = 3 trang. Log₁₀₀ của 2 triệu ≈ 3,05 — con số 3-4 tầng không phải may mắn, nó là toán.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-tree',
+            title: 'Fanout — vì sao cây triệu khóa vẫn lùn',
+            body: 'Node = 1 trang chứa n ngưỡng chia (n hàng trăm) → mỗi tầng nhân n lần số khóa với tới được. Chiều cao ~log_n(N): với n=100, một tỷ khóa cũng chỉ cần 4-5 tầng. Root với internal nóng hổi nằm lì trong buffer (Ticket #33) — thực tế thường chỉ tốn 1 lần đọc đĩa cho lá.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — B+-Tree Index Files'
+          },
+          {
+            icon: 'fa-link',
+            title: 'Lá móc nhau — vũ khí của range query',
+            body: '"Post từ 01/06 đến 30/06"? Lần cây tìm lá chứa 01/06 (3 bước), rồi ĐI NGANG theo con trỏ lá-sang-lá, gom khóa đến khi vượt 30/06 thì dừng. Khỏi leo cây lại từ đầu cho từng ngày — lá đã xếp thứ tự và nắm tay nhau sẵn.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Vậy idx_users_email của Ticket #36 thực chất là gì? Một B+-Tree khóa email. Còn feed "20 post mới nhất"? B+-Tree trên created_at: lần tới lá mới nhất rồi đi ngược 20 mục. Mọi CREATE INDEX bạn gõ từ giờ — trong đầu hãy thấy một cái cây.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'lookup mai@ghub.vn — 3 lần đọc trang',
+            columns: [
+              { name: 'ROOT', type: '"m" giữa h và s', key: '1️⃣', icon: '🌳' },
+              { name: 'INTERNAL', type: '→ lá 812', key: '2️⃣', icon: '🌿' },
+              { name: 'LEAF 812', type: 'mai@ → RID', key: '3️⃣', icon: '🍃' }
+            ]
+          },
+          data_preview: [
+            ['h… | s…', 'j… | mai… | p…', 'mai@ghub.vn → (8112, 4) 🎯'],
+            ['1 trang', '~100 trang cùng tầng', 'lá móc lá kế →'],
+            ['thường nằm lì trong buffer', 'hay trúng buffer', 'đọc đĩa thật sự: thường chỉ 1'],
+            ['INSERT làm node đầy?', 'tách đôi node', 'cây TỰ cân bằng — không ai phải xây lại']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: '2 triệu khóa mà B+-Tree chỉ cao 3 tầng — phép màu nằm ở đâu?',
+            options: [
+              { id: 'a', text: 'Mỗi node là 1 TRANG chứa hàng trăm ngưỡng chia — mỗi tầng nhân hàng trăm lần, 100³ đã vượt 2 triệu', correct: true, explanation: 'Đúng — fanout lớn là toàn bộ phép màu. Cây nhị phân 2 nhánh phải cao ~21 tầng cho 2M khóa; cây trang-8KB chỉ cần 3.' },
+              { id: 'b', text: 'Vì database nén 2 triệu khóa xuống còn vài nghìn', correct: false, explanation: 'Sai — đủ 2 triệu khóa nằm ở lá; chỉ là đường XUỐNG tới chúng rất ngắn.' },
+              { id: 'c', text: 'Vì cây được chép toàn bộ vào RAM nên coi như 0 tầng', correct: false, explanation: 'Sai — root/internal hay trúng buffer thật, nhưng cấu trúc 3 tầng vẫn là 3 tầng; lá vẫn phải đọc.' },
+              { id: 'd', text: 'Vì chỉ những khóa hay tra mới được đưa vào cây', correct: false, explanation: 'Sai — index dense: đủ mọi khóa (Ticket #37). Không ai bị bỏ rơi.' }
+            ]
+          },
+          {
+            question: 'Vì sao các LÁ móc nhau (con trỏ lá → lá kế) là vũ khí quyết định cho câu "posts từ 01/06 đến 30/06"?',
+            options: [
+              { id: 'a', text: 'Tìm lá chứa 01/06 xong chỉ việc ĐI NGANG gom dần tới 30/06 — mỗi ngày không phải leo cây lại từ root', correct: true, explanation: 'Đúng — lá đã xếp thứ tự + nắm tay nhau = range scan thành một đường đi bộ thẳng.' },
+              { id: 'b', text: 'Vì con trỏ giúp các lá chia sẻ RAM với nhau', correct: false, explanation: 'Sai — con trỏ là đường đi, không phải cơ chế chia RAM.' },
+              { id: 'c', text: 'Vì lá móc nhau giúp INSERT nhanh hơn', correct: false, explanation: 'Sai — INSERT hưởng lợi từ cơ chế tách node; móc lá phục vụ ĐỌC DẢI.' },
+              { id: 'd', text: 'Không quan trọng — range query nào cũng phải quét cả bảng', correct: false, explanation: 'Sai — chính nhờ móc lá mà range query KHÔNG phải quét cả bảng.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'order',
+          title: 'Range scan tháng 6',
+          instruction: 'Xếp đúng trình tự B+-Tree trả lời "mọi post từ 01/06 đến 30/06".',
+          xp: 20,
+          items: [
+            { id: 'r1', label: 'Từ ROOT lần ngưỡng chia xuống INTERNAL' },
+            { id: 'r2', label: 'Tới LÁ chứa khóa 01/06 — điểm khởi hành' },
+            { id: 'r3', label: 'Đọc các mục trong lá, theo RID lấy dòng' },
+            { id: 'r4', label: 'Đi ngang sang lá kế qua con trỏ móc' },
+            { id: 'r5', label: 'Gặp khóa vượt 30/06 → dừng, trả kết quả' }
+          ],
+          solution: { r1: 1, r2: 2, r3: 3, r4: 4, r5: 5 }
+        }
+      },
+      step_3: {
+        mission: 'Lắp đường tra "mai@ghub.vn" xuyên cây — từ root xuống lá, rồi về sổ chính. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'LÁ 812: khóa xếp sẵn — thấy ngay mục "mai@ghub.vn → RID (8112, 4)"', slot: 'bt-leaf' },
+          { type: 'op', token: 'ROOT: "m…" nằm giữa ngưỡng "h…" và "s…" → rẽ nhánh giữa', slot: 'bt-root' },
+          { type: 'op', token: 'Duyệt lần lượt TỪNG LÁ từ trái sang phải cho chắc ăn', slot: 'bt-x' },
+          { type: 'op', token: 'Cầm RID về sổ chính: trang 8112, slot 4 — đọc đúng 1 dòng', slot: 'bt-heap' },
+          { type: 'op', token: 'INTERNAL: so tiếp "mai…" với ngưỡng mịn hơn → chỉ xuống lá 812', slot: 'bt-mid' }
+        ],
+        drop_zones: [
+          { id: 'bt-root', placeholder: 'Tầng 1 — cửa vào duy nhất', accepts: ['op'], multi: false,
+            station: { icon: '🌳', label: 'ROOT', sub: 'Hỏi câu đầu', hint: 'Một trang, vài trăm ngưỡng chia — trả lời "đi nhánh nào?".' } },
+          { id: 'bt-mid', placeholder: 'Tầng 2 — chỉ đường mịn hơn', accepts: ['op'], multi: false,
+            station: { icon: '🌿', label: 'INTERNAL', sub: 'Hỏi câu nữa', hint: 'Ngưỡng chia mịn hơn — chốt xuống đúng chiếc lá.' } },
+          { id: 'bt-leaf', placeholder: 'Tầng 3 — nơi đáp án nằm', accepts: ['op'], multi: false,
+            station: { icon: '🍃', label: 'LEAF', sub: 'Khóa + RID', hint: 'Lá chứa khóa ĐÃ XẾP kèm RID — và móc sang lá kế cho range scan.' } },
+          { id: 'bt-heap', placeholder: 'Trạm cuối — ra khỏi index', accepts: ['op'], multi: false,
+            station: { icon: '🏠', label: 'Sổ chính', sub: 'RID trỏ về', hint: 'RID (trang, slot) — đúng địa chỉ nhà của Ticket #34.' } }
+        ],
+        expected_sql: 'ROOT: "m…" nằm giữa ngưỡng "h…" và "s…" → rẽ nhánh giữa INTERNAL: so tiếp "mai…" với ngưỡng mịn hơn → chỉ xuống lá 812 LÁ 812: khóa xếp sẵn — thấy ngay mục "mai@ghub.vn → RID (8112, 4)" Cầm RID về sổ chính: trang 8112, slot 4 — đọc đúng 1 dòng',
+        expected_zones: {
+          'bt-root': 'ROOT: "m…" nằm giữa ngưỡng "h…" và "s…" → rẽ nhánh giữa',
+          'bt-mid': 'INTERNAL: so tiếp "mai…" với ngưỡng mịn hơn → chỉ xuống lá 812',
+          'bt-leaf': 'LÁ 812: khóa xếp sẵn — thấy ngay mục "mai@ghub.vn → RID (8112, 4)"',
+          'bt-heap': 'Cầm RID về sổ chính: trang 8112, slot 4 — đọc đúng 1 dòng'
+        },
+        reveal_hints: {
+          'bt-root': 'Cửa vào là <strong>ROOT</strong> — so khóa với ngưỡng chia để rẽ nhánh.',
+          'bt-mid': '<strong>INTERNAL</strong> hỏi câu thứ hai, mịn hơn. Khối "duyệt từng lá" là bịa — duyệt hết lá chính là seq scan, thứ ta đang chạy trốn.',
+          'bt-leaf': 'Đáp án nằm ở <strong>LÁ</strong>: khóa xếp sẵn + RID.',
+          'bt-heap': 'RID dẫn <strong>về sổ chính</strong> — đọc đúng 1 trang, 1 dòng.'
+        }
+      },
+      step_4: {
+        prompt: 'Feed cần "20 post MỚI NHẤT kể từ 2026-06-28" — bảng posts có B+-Tree trên <code>created_at</code>. Cây giúp kiểu gì?',
+        challenge_type: 'mcq_code',
+        options: [
+          { text: 'Lần từ root xuống lá chứa 2026-06-28 (3-4 trang), rồi đi ngang theo con trỏ lá móc nhau gom đủ 20 post — đọc vài chục trang thay vì cả bảng.', correct: true },
+          { text: 'B+-Tree vẫn phải đọc đủ 2 triệu mục lá, nhưng đọc trong RAM nên coi như miễn phí.', correct: false },
+          { text: 'Cây tự xếp lại toàn bộ sổ chính theo created_at mỗi lần có INSERT, nên đọc lúc nào cũng nhanh.', correct: false },
+          { text: 'Không giúp gì — index chỉ dùng được cho WHERE bằng (=), khoảng ngày thì chịu.', correct: false }
+        ],
+        context: {
+          scenario: 'Đây là truy vấn NẶNG NHẤT của mọi mạng xã hội — trang feed. Nó sống được là nhờ đúng hai thứ bạn vừa học: lần cây (điểm khởi hành) + đi ngang lá (gom dải).',
+          real_world: 'Postgres đọc index theo cả hai chiều nên "mới nhất" chỉ là đi ngang từ lá cuối ngược về. Cặp <code>ORDER BY created_at DESC LIMIT 20</code> + B+-Tree là xương sống feed của mọi mạng xã hội thật.',
+          steps: [
+            'Điều kiện ≥ 2026-06-28 là RANGE — nhớ mini-game: tìm lá đầu rồi đi ngang.',
+            'Loại phương án "đọc đủ 2 triệu mục": đọc đủ thì cần cây làm gì.',
+            'Loại phương án "tự xếp lại sổ chính": đó là chuyện của clustering (Ticket #37), và không ai xếp lại cả bảng mỗi INSERT.',
+            'Loại phương án "chỉ dùng cho =": lá móc nhau sinh ra ĐỂ phục vụ khoảng.'
+          ],
+          hint_explore: 'Xem lại mini-game range scan tháng 6 — thay 01/06→30/06 bằng 28/06→mới nhất là ra đáp án.',
+          expected: 'Chọn phương án lần-cây-rồi-đi-ngang (3-4 trang + vài chục trang lá).'
+        },
+        hints: [
+          { level: 1, text: 'Câu hỏi là RANGE (từ ngày X trở đi) — vũ khí nào của B+-Tree sinh ra cho range?' },
+          { level: 2, text: 'Hai bước: lần cây tìm ĐIỂM KHỞI HÀNH, rồi đi ngang theo lá móc nhau.' },
+          { level: 3, text: 'Ba phương án sai đều phạm một lỗi đã học: đọc đủ mọi mục = seq scan; xếp lại sổ mỗi INSERT = phá giá ghi; "chỉ dùng cho =" quên mất lá móc nhau.' },
+          { level: 4, text: 'Đáp án: lần từ root xuống lá 2026-06-28 rồi đi ngang gom 20 post.' }
+        ],
+        success_message: 'Ticket #38 đóng — từ giờ mỗi CREATE INDEX trong đầu bạn là một cái cây 3 tầng. Ticket #39: trang "hoạt động của tôi" lọc HAI điều kiện cùng lúc — một cột không đủ, đến giờ học mục lục hai lớp.',
+        xp_reward: 120
+      }
+    },
+
+    /* ═══════════ tc_19 — Ticket #39 · Composite & Bitmap Index ═══════════
+     * Engine tier: step-3 zone tự khai; step-4 CREATE INDEX composite → scan pending
+     * + DDL-guard exact + equiv_sql WHERE 2 điều kiện (probe t2/t3 OK). */
+    {
+      id: 'tc_19', index: 19,
+      title: 'Composite & Bitmap — mục lục hai lớp và mục lục bàn cờ',
+      subtitle: 'Danh bạ xếp Họ-rồi-Tên: đủ prefix thì trúng dải — và bitmap cho cột lèo tèo giá trị',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 15, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'idx (user_id, action_type) — trang danh bạ đã xếp',
+          columns: ['user_id', 'action_type', 'RID'],
+          dataRows: [
+            ['7',  'comment', '(p3, 1)'],
+            ['7',  'like',    '(p1, 1) ← cụm "7·like"'],
+            ['7',  'like',    '(p2, 2) ← nằm LIỀN nhau'],
+            ['9',  'comment', '(p1, 2)'],
+            ['9',  'like',    '(p2, 1)'],
+            ['12', 'post',    '(p2, 3)']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #39',
+        hook: 'Trang "hoạt động của tôi" lọc HAI điều kiện: <code>WHERE user_id = ? AND action_type = ?</code>. Index đơn trên user_id vẫn phải bới tiếp trong cả nghìn hành động của user đó. Ticket #39: <strong>composite index</strong> — danh bạ xếp <em>Họ trước, Tên sau</em>: mọi mục "user 7 · like" nằm LIỀN thành một dải. Nhưng danh bạ có luật sắt: <strong>thiếu Họ thì đừng mơ tra Tên</strong> (leftmost prefix). Khuyến mãi cuối: kho analytics có vũ khí riêng cho cột lèo tèo giá trị — <em>bitmap index</em>.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Composite index (a, b): xếp theo a trước, cùng a xếp tiếp theo b — cụm (a,b) nằm liền dải',
+            'Luật leftmost prefix: tra được (a) và (a,b); tra riêng (b) là mù — như tra Tên mà không biết Họ',
+            'Bitmap index: mỗi giá trị một dãy bit — chỉ đáng cho cột ÍT giá trị, kho đọc-nhiều-ghi-ít'
+          ],
+          intro: 'Danh bạ điện thoại xếp Họ trước, Tên sau: mọi người họ Nguyễn đứng cạnh nhau, trong đó Nguyễn An đứng trước Nguyễn Bình. Composite index <code>(user_id, action_type)</code> y hệt: cây B+ vẫn là cây B+ (Ticket #38), chỉ khác KHÓA là cặp ghép. Tra "user 7 AND like": lần cây tới thẳng cụm <code>7·like</code> — cả dải cần lấy nằm liền nhau. Tra "user 7" thôi cũng ngon: cả khối họ-7 đứng cạnh nhau. Nhưng tra "mọi like của mọi người"? Cụm like RẢI theo từng user khắp danh bạ — index bó tay, quét sổ. Muốn tra Tên không cần Họ thì phải xây danh bạ khác xếp (action_type, user_id) — và trả thêm một món nợ ghi.',
+          example: 'User 7 có 1.200 hành động, trong đó 300 like: index đơn user_id → đọc 1.200 mục rồi lọc · composite (user_id, action_type) → nhảy thẳng dải 300 mục. Càng lọc sâu, composite càng thắng đậm.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-address-book',
+            title: 'Leftmost prefix — luật sắt của danh bạ',
+            body: 'Index (a, b) phục vụ được: WHERE a = ? · WHERE a = ? AND b = ? · thậm chí a = ? AND b > ?. KHÔNG phục vụ được: WHERE chỉ có b. Thứ tự cột trong CREATE INDEX vì thế là quyết định thiết kế — cột nào query nào cũng lọc, cột đó đứng đầu.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — Indices on Multiple Keys'
+          },
+          {
+            icon: 'fa-chess-board',
+            title: 'Bitmap — mục lục bàn cờ của kho',
+            body: 'Cột action_type chỉ có 3-4 giá trị? Mỗi giá trị một dãy bit dài bằng số dòng: like = 10110100… AND/OR hai điều kiện = phép bit trên triệu dòng trong nháy mắt. Đổi lại, UPDATE một dòng phải sửa cả dãy bit — nên bitmap sống ở KHO analytics (Ticket #35), không sống nổi ở feed OLTP.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'GameHub: trang "hoạt động của tôi" → composite (user_id, action_type) cho fact_post_action. Dashboard kho lọc action_type + date_id (cả hai đều lèo tèo giá trị) → cặp bitmap, AND bit là xong. Chọn vũ khí theo TRẬN ĐỊA — bài học không bao giờ cũ.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'hai vũ khí đặc chủng',
+            columns: [
+              { name: 'composite', type: '(user_id, action_type)', key: '📇', icon: '🌳' },
+              { name: 'bitmap', type: 'action_type ∈ {like,comment,post}', key: '♟', icon: '📊' }
+            ]
+          },
+          data_preview: [
+            ['7·comment → RID', 'like:    1 0 1 0 1 1 0 0'],
+            ['7·like ×2 → RID (liền dải 🎯)', 'comment: 0 1 0 0 0 0 1 0'],
+            ['9·comment → RID', 'post:    0 0 0 1 0 0 0 1'],
+            ['thiếu Họ = mù (leftmost!)', 'AND/OR bit = triệu dòng/nháy mắt']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Composite (user_id, action_type) — vì sao tra "mọi <code>action_type = \'like\'</code> của MỌI user" lại KHÔNG dùng được nó?',
+            options: [
+              { id: 'a', text: 'Danh bạ xếp Họ trước — cụm "like" bị rải theo từng user khắp danh bạ, không nằm liền dải nào để nhảy tới', correct: true, explanation: 'Đúng — luật leftmost prefix: thiếu cột ĐẦU là mù. Muốn tra riêng action_type phải có index khác đặt nó lên đầu.' },
+              { id: 'b', text: 'Vì composite chỉ dùng được khi WHERE có đủ CẢ HAI cột', correct: false, explanation: 'Sai — WHERE user_id = 7 (thiếu cột SAU) vẫn ngon: cả khối họ-7 nằm liền. Chỉ thiếu cột ĐẦU mới chết.' },
+              { id: 'c', text: 'Vì like là giá trị chữ, composite chỉ nhận số', correct: false, explanation: 'Sai — kiểu dữ liệu không liên quan; vị trí cột trong khóa ghép mới quyết định.' },
+              { id: 'd', text: 'Dùng được bình thường — index nào cũng tra được mọi cột của nó', correct: false, explanation: 'Sai — thử tra danh bạ tìm mọi người tên "An" mà không biết họ xem: lật từng trang.' }
+            ]
+          },
+          {
+            question: 'Bitmap index đáng dùng cho cột nào — và tại sao nó sống ở KHO chứ không sống nổi ở feed?',
+            options: [
+              { id: 'a', text: 'Cột ÍT giá trị khác nhau (action_type 3-4 loại): mỗi giá trị 1 dãy bit, AND/OR cực nhanh — nhưng mỗi UPDATE phải sửa dãy bit nên chỉ hợp kho đọc-nhiều-ghi-ít', correct: true, explanation: 'Đúng — low cardinality + workload OLAP là môi trường sống của bitmap.' },
+              { id: 'b', text: 'Cột duy-nhất-từng-dòng như email — càng nhiều giá trị bitmap càng lợi', correct: false, explanation: 'Sai — 2 triệu email = 2 triệu dãy bit × 2 triệu dòng: thảm họa. Ngược hẳn môi trường sống của bitmap.' },
+              { id: 'c', text: 'Mọi cột — bitmap là phiên bản nâng cấp của B+-Tree', correct: false, explanation: 'Sai — hai vũ khí khác trận địa, không ai "nâng cấp" ai.' },
+              { id: 'd', text: 'Cột kiểu ngày tháng, vì bit xếp theo thời gian', correct: false, explanation: 'Sai — ngày tháng thường nhiều giá trị; tiêu chí là SỐ GIÁ TRỊ KHÁC NHAU ít.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Composite (user_id, action_type) cứu query nào?',
+          instruction: 'Kéo từng WHERE vào đúng giỏ — nhớ luật danh bạ: có Họ mới tra được.',
+          xp: 20,
+          chips: [
+            { id: 'w1', label: "WHERE user_id = 7 AND action_type = 'like'" },
+            { id: 'w2', label: 'WHERE user_id = 7 (chỉ Họ)' },
+            { id: 'w3', label: "WHERE action_type = 'like' (chỉ Tên)" },
+            { id: 'w4', label: 'WHERE act_count > 3 (cột ngoài danh bạ)' }
+          ],
+          bins: [
+            { id: 'hit',  label: 'TRÚNG DẢI 🎯' },
+            { id: 'miss', label: 'BÓ TAY 🚫' }
+          ],
+          solution: { w1: 'hit', w2: 'hit', w3: 'miss', w4: 'miss' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp bức tranh composite (user_id, action_type): danh bạ xếp thế nào, query nào trúng dải, query nào trượt. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: "WHERE action_type = 'like' (thiếu Họ): cụm like rải theo từng user khắp danh bạ → quét sổ", slot: 'cp-miss' },
+          { type: 'op', token: 'Danh bạ xếp: 7·comment, 7·like, 7·like, 9·comment, 9·like… — cùng Họ đứng cạnh, trong Họ xếp theo Tên', slot: 'cp-order' },
+          { type: 'op', token: 'Thấy query cần thì index tự đảo thành (action_type, user_id) — danh bạ biết tự xoay', slot: 'cp-x' },
+          { type: 'op', token: "WHERE user_id = 7 AND action_type = 'like': lần cây tới thẳng cụm 7·like — cả dải nằm liền", slot: 'cp-hit' }
+        ],
+        drop_zones: [
+          { id: 'cp-order', placeholder: 'Trang danh bạ — xếp kiểu gì?', accepts: ['op'], multi: false,
+            station: { icon: '📇', label: 'Danh bạ', sub: 'Họ rồi Tên', hint: 'Khóa ghép: so cột đầu trước, hòa thì so cột sau — như xếp tên người.' } },
+          { id: 'cp-hit', placeholder: 'Query TRÚNG dải', accepts: ['op'], multi: false,
+            station: { icon: '🎯', label: 'Trúng dải', sub: 'Đủ prefix', hint: 'Đủ Họ (+ Tên càng tốt) → nhảy thẳng cụm liền mạch.' } },
+          { id: 'cp-miss', placeholder: 'Query TRƯỢT prefix', accepts: ['op'], multi: false,
+            station: { icon: '🚫', label: 'Trượt prefix', sub: 'Thiếu cột đầu', hint: 'Thiếu Họ → giá trị cần tìm rải khắp nơi, không có dải nào để nhảy.' } }
+        ],
+        expected_sql: "Danh bạ xếp: 7·comment, 7·like, 7·like, 9·comment, 9·like… — cùng Họ đứng cạnh, trong Họ xếp theo Tên WHERE user_id = 7 AND action_type = 'like': lần cây tới thẳng cụm 7·like — cả dải nằm liền WHERE action_type = 'like' (thiếu Họ): cụm like rải theo từng user khắp danh bạ → quét sổ",
+        expected_zones: {
+          'cp-order': 'Danh bạ xếp: 7·comment, 7·like, 7·like, 9·comment, 9·like… — cùng Họ đứng cạnh, trong Họ xếp theo Tên',
+          'cp-hit': "WHERE user_id = 7 AND action_type = 'like': lần cây tới thẳng cụm 7·like — cả dải nằm liền",
+          'cp-miss': "WHERE action_type = 'like' (thiếu Họ): cụm like rải theo từng user khắp danh bạ → quét sổ"
+        },
+        reveal_hints: {
+          'cp-order': 'Danh bạ = <strong>so cột đầu trước, hòa mới so cột sau</strong>. Khối "index tự đảo" là bịa — thứ tự khóa chốt từ lúc CREATE, muốn chiều ngược phải xây danh bạ khác.',
+          'cp-hit': 'Đủ prefix (Họ, hoặc Họ+Tên) = <strong>nhảy thẳng vào dải liền mạch</strong>.',
+          'cp-miss': 'Thiếu cột đầu = <strong>giá trị rải khắp danh bạ</strong> — trở về kiếp quét sổ.'
+        }
+      },
+      step_4: {
+        prompt: 'Đóng Ticket #39: tạo composite index cho trang "hoạt động của tôi" — bảng <code>fact_post_action</code>, lọc theo <code>user_id</code> rồi <code>action_type</code> (đúng thứ tự đó!). Tên index: <code>idx_act_user_type</code>.',
+        schema: {
+          table_name: 'fact_post_action',
+          columns: [
+            { name: 'action_id', type: 'INT', key: 'PK' },
+            { name: 'user_id', type: 'INT', key: '🔑 Họ' },
+            { name: 'date_id', type: 'CHAR(2)', key: '' },
+            { name: 'action_type', type: 'VARCHAR', key: '🔑 Tên' },
+            { name: 'act_count', type: 'INT', key: '' }
+          ],
+          data: [
+            ['1', '7',  'D1', 'like',    '3'],
+            ['2', '9',  'D1', 'comment', '2'],
+            ['3', '7',  'D2', 'like',    '5'],
+            ['4', '12', 'D2', 'post',    '1'],
+            ['5', '9',  'D2', 'like',    '4'],
+            ['6', '15', 'D3', 'like',    '2'],
+            ['7', '7',  'D3', 'comment', '1'],
+            ['8', '9',  'D3', 'post',    '1']
+          ]
+        },
+        /* CREATE INDEX composite → scan pending; DDL-guard exact-match;
+         * equiv render dải "7·like" (probe_engine_m6b t2/t3 OK). */
+        equiv_sql: "SELECT date_id, act_count FROM fact_post_action WHERE user_id = 7 AND action_type = 'like';",
+        context: {
+          scenario: 'Thứ tự cột trong ngoặc chính là bài học của cả ticket: user_id đứng đầu (query nào của trang này cũng lọc user), action_type đứng sau. Viết ngược là danh bạ xếp Tên-trước-Họ — trang "hoạt động của tôi" trượt prefix ngay.',
+          real_world: 'Chọn thứ tự cột composite là câu hỏi phỏng vấn backend kinh điển. Quy tắc thực chiến: cột lọc-bằng (=) ở mọi query đứng trước, cột lọc-khoảng hoặc lọc-tùy-lúc đứng sau.',
+          steps: [
+            'Cú pháp không đổi: <code>CREATE INDEX tên ON bảng(cột1, cột2);</code>',
+            'Tên: <code>idx_act_user_type</code>.',
+            'Thứ tự trong ngoặc: <code>(user_id, action_type)</code> — Họ trước, Tên sau.',
+            'Khung kết quả minh họa dải "7·like" — engine demo không chạy DDL, đáp án chấm khi Run/Submit.'
+          ],
+          hint_explore: 'Nhìn lại bảng danh bạ ở Step 3: cụm "7·like" nằm liền là NHỜ user_id đứng trước. Lệnh của bạn quyết định điều đó.',
+          expected: 'Khung kết quả minh họa: 2 dòng dải 7·like (D1·3, D2·5).'
+        },
+        hints: [
+          { level: 1, text: 'Giống Ticket #36 nhưng trong ngoặc có HAI cột, cách nhau dấu phẩy.' },
+          { level: 2, text: 'Tên index: <code>idx_act_user_type</code>, bảng <code>fact_post_action</code>.' },
+          { level: 3, text: 'Thứ tự cột là linh hồn bài này: Họ = <code>user_id</code> đứng TRƯỚC, Tên = <code>action_type</code> đứng sau.' },
+          { level: 4, text: '<code class="code">CREATE INDEX idx_act_user_type ON fact_post_action(user_id, action_type);</code>' }
+        ],
+        expected_sql: 'CREATE INDEX idx_act_user_type ON fact_post_action(user_id, action_type);',
+        success_message: 'Ticket #39 đóng — trang "hoạt động của tôi" mượt như bơ! Nhưng Ticket #40 mở ra với dòng chữ lạnh gáy: "dashboard VẪN 6 giây — index có mà như không". Đến lúc bắt máy tự khai: EXPLAIN.',
+        xp_reward: 120
+      }
+    },
+
+    /* ═══════════ tc_20 — Ticket #40 · Capstone: Index × EXPLAIN ═══════════
+     * EXPLAIN mô phỏng (user chốt 2026-07-05): output plan in sẵn đúng hình hài Postgres
+     * để ĐỌC; phần chạy thật là SELECT. Step-4 bug_fix sargable — probe t4 (fixed chạy OK)
+     * + t5 (buggy bị engine trả SAI im lặng → đã chặn UPPER/LOWER thành pending). */
+    {
+      id: 'tc_20', index: 20,
+      title: 'Capstone: EXPLAIN — bắt máy khai nó định làm gì',
+      subtitle: 'Index có sẵn mà vẫn ì — lời khai Seq Scan chỉ mặt thủ phạm: hàm bọc quanh cột',
+      module: 6, module_title: 'Storage, Indexing & Performance',
+      estimated_minutes: 18, xp_reward: 140,
+      drag_type: 'chip',
+      challenge_type: 'bug_fix',
+      drag_map: {
+        table: {
+          name: 'EXPLAIN (mô phỏng Postgres) — lời khai của máy',
+          columns: ['#', 'dòng plan', 'nghĩa là gì'],
+          dataRows: [
+            ['1', 'Seq Scan on fact_post_action', 'cách lấy dữ liệu: quét tuần tự cả bảng 🐢'],
+            ['2', 'cost=0.00..18334.00', 'giá vé ước tính: bắt đầu..kết thúc'],
+            ['3', 'rows=1000000', 'máy ĐOÁN số dòng phải xử lý'],
+            ['4', "Filter: UPPER(action_type) = 'LIKE'", 'lọc TỪNG dòng sau khi đã khiêng lên ⚠️']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Community · Ticket #40 — CAPSTONE',
+        hook: 'Tin dữ: dashboard "tổng like theo user" VẪN 6,2 GIÂY — dù index <code>idx_fact_type</code> trên action_type đã nằm đó từ tuần trước. Index có mà như không?! Ticket #40 dạy chiêu cuối của Module 6: <strong>đừng đoán — bắt máy KHAI</strong>. Gõ <code>EXPLAIN</code> trước query, máy nộp bản kế hoạch: đi đường nào, tốn bao nhiêu, bao nhiêu dòng. Và bản khai lần này chỉ thẳng mặt thủ phạm: một chiếc <em>hàm bọc quanh cột</em> đã bịt mắt index. (Engine demo không chạy EXPLAIN — các bản plan trong bài là <em>mô phỏng đúng định dạng Postgres</em> để bạn tập đọc.)'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'EXPLAIN = bản KẾ HOẠCH máy nộp trước khi chạy: node (đi đường nào) · cost (giá vé ước tính) · rows (đoán số dòng)',
+            'Seq Scan + Filter = quét cả bảng rồi lọc từng dòng · Index Scan = đi lối tắt qua cây',
+            'Index xếp theo GIÁ TRỊ CỘT — bọc hàm quanh cột (UPPER, ngày cộng trừ…) là index mù: sửa QUERY, đừng vội thêm index'
+          ],
+          intro: 'Đọc bản khai như đọc vé máy bay. Dòng đầu — <strong>node</strong>: máy đi đường nào (<code>Seq Scan</code> = lật sổ từ bìa; <code>Index Scan using idx…</code> = leo cây 3 tầng của Ticket #38). <code>cost=0.00..18334</code> — giá vé ƯỚC TÍNH từ lúc khởi hành tới lúc xong (đơn vị nội bộ, để SO SÁNH các đường, không phải giây). <code>rows=1000000</code> — máy ĐOÁN phải xử lý bао nhiêu dòng. Và dòng đắt giá nhất hôm nay: <code>Filter: UPPER(action_type) = \'LIKE\'</code> — nghĩa là máy khiêng TỪNG dòng lên rồi mới lọc. Vì sao không dùng index? Cây idx_fact_type xếp theo <code>action_type</code> — chứ không xếp theo <code>UPPER(action_type)</code>. Bọc hàm quanh cột là phát cho index một cặp kính mù.',
+          example: "Cùng kết quả, hai bản khai: TRƯỚC — Seq Scan, cost=0.00..18334, Filter: UPPER(action_type)='LIKE' → 6,2s. SAU khi bỏ UPPER — Index Scan using idx_fact_type, cost=0.43..912, Index Cond: action_type='like' → 0,3s. Không thêm index nào — chỉ sửa MỘT dòng WHERE."
+        },
+        concept_cards: [
+          {
+            icon: 'fa-file-lines',
+            title: 'Đọc bản khai: node → cost → rows',
+            body: 'Node nói CÁCH đi (Seq Scan / Index Scan / Bitmap Heap Scan…). Cost nói giá vé ước tính — con số đầu là chi phí trước dòng kết quả đầu tiên, con số sau là trọn gói. Rows là số dòng máy ĐOÁN (dựa thống kê) — đoán lệch xa thực tế cũng là manh mối quý.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15/16 — Query Processing & Optimization (EXPLAIN)'
+          },
+          {
+            icon: 'fa-glasses',
+            title: 'Sargable — đừng bịt mắt index',
+            body: 'Index tra được khi vế cột đứng TRẦN TRỤI một bên phép so sánh: <code>action_type = \'like\'</code> ✓. Bọc hàm — <code>UPPER(action_type)</code>, <code>date + 7</code> — là cây phải tính hàm cho TỪNG dòng mới so được: hết đường tra. Chuyển phép biến đổi sang vế HẰNG SỐ (hoặc sửa dữ liệu từ gốc) là nghề của backend có sạn.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Quy trình thực chiến khi có query ì: (1) EXPLAIN — nhìn node; (2) thấy Seq Scan + Filter trên cột ĐÃ có index → soi WHERE tìm hàm bọc/kiểu lệch; (3) sửa query cho sargable; (4) EXPLAIN lại — node đổi thành Index Scan là thắng. Thêm index chỉ là phương án khi index CHƯA có.'
+          }
+        ],
+        visual: {
+          schema: {
+            table_name: 'hai bản khai — cùng kết quả, khác số phận',
+            columns: [
+              { name: 'TRƯỚC', type: "UPPER(action_type)='LIKE'", key: '🐢', icon: '📋' },
+              { name: 'SAU', type: "action_type='like'", key: '🚀', icon: '📋' }
+            ]
+          },
+          data_preview: [
+            ['Seq Scan on fact_post_action', 'Index Scan using idx_fact_type'],
+            ['cost=0.00..18334.00', 'cost=0.43..912.00'],
+            ['rows=1000000 · Filter: UPPER(…)', "rows=310000 · Index Cond: ='like'"],
+            ['dashboard: 6,2 giây 🐢', 'dashboard: 0,3 giây 🚀']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: "Bản khai: <code>Seq Scan on fact_post_action (cost=0.00..18334) Filter: UPPER(action_type)='LIKE'</code> — máy đang thú nhận điều gì?",
+            options: [
+              { id: 'a', text: 'Nó sẽ quét TUẦN TỰ cả bảng, khiêng từng dòng lên rồi mới lọc bằng hàm — index không được dùng', correct: true, explanation: 'Đúng — Seq Scan + Filter là cặp bài trùng "lật sổ từ bìa rồi soi từng dòng". Có chữ Filter trên cột đã-có-index là đèn đỏ.' },
+              { id: 'b', text: 'Nó đã chạy xong query hết 18334 giây', correct: false, explanation: 'Sai hai lần — cost là ƯỚC TÍNH trước khi chạy, và đơn vị là điểm nội bộ để so sánh, không phải giây.' },
+              { id: 'c', text: 'Nó sẽ dùng index nhưng giấu tên index đi', correct: false, explanation: 'Sai — dùng index thì node ghi rõ "Index Scan using tên_index". Seq Scan nghĩa là KHÔNG.' },
+              { id: 'd', text: 'Bảng fact_post_action bị hỏng nên phải quét lại', correct: false, explanation: 'Sai — Seq Scan là lựa chọn kế hoạch bình thường, không phải tín hiệu hỏng hóc.' }
+            ]
+          },
+          {
+            question: "Sửa WHERE thành <code>action_type = 'like'</code>, bản khai mới: <code>Index Scan using idx_fact_type (cost=0.43..912) rows=310000</code>. Vì sao nhanh gấp ~20 lần dù vẫn đụng 310 nghìn dòng?",
+            options: [
+              { id: 'a', text: 'Cây dẫn thẳng tới dải lá chứa toàn "like" — máy chỉ đọc các trang liên quan, khỏi khiêng 690 nghìn dòng còn lại lên để rồi vứt', correct: true, explanation: 'Đúng — leo cây (Ticket #38) + đi dải lá: chi phí tỷ lệ với số dòng CẦN, không phải số dòng CÓ.' },
+              { id: 'b', text: 'Vì Postgres thưởng tốc độ cho query viết đúng chính tả', correct: false, explanation: 'Sai — không có hệ thưởng phạt nào; chỉ có đường đi ngắn hơn.' },
+              { id: 'c', text: 'Vì kết quả lần này ít dòng hơn hẳn lần trước', correct: false, explanation: 'Sai — cùng kết quả! Khác nhau ở số dòng phải KHIÊNG để lọc ra kết quả đó.' },
+              { id: 'd', text: 'Vì index vừa được xây lại nên còn nóng', correct: false, explanation: 'Sai — idx_fact_type nằm đó từ tuần trước; nó chỉ vừa được THÁO KÍNH MÙ.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'bug_spot',
+          title: 'Soi bản khai — dòng nào tố cáo?',
+          instruction: 'Bản EXPLAIN của dashboard 6,2s đây. Click DÒNG cho biết vì sao index bị bỏ xó.',
+          xp: 25,
+          code: "EXPLAIN SELECT user_id, SUM(act_count)\n       FROM fact_post_action ...;\n----------------------------------------\nSeq Scan on fact_post_action\n  (cost=0.00..18334.00 rows=1000000)\n  Filter: UPPER(action_type) = 'LIKE'",
+          bugType: 'performance',
+          bugs: [
+            { line: 6, description: "Chính nó — Filter: UPPER(action_type) = 'LIKE'. Index xếp theo action_type, KHÔNG xếp theo UPPER(action_type) → máy đành quét cả bảng rồi tính hàm cho từng dòng. Bỏ hàm bọc cột là index mở mắt lại ngay." }
+          ]
+        }
+      },
+      step_3: {
+        mission: 'Giải phẫu bản khai Seq Scan — gắn từng mảnh lời khai vào đúng ý nghĩa. Có một khối bịa.',
+        blocks: [
+          { type: 'op', token: 'rows=1000000 — máy ĐOÁN số dòng phải xử lý, dựa trên thống kê (không phải đo thật)', slot: 'ex-rows' },
+          { type: 'op', token: "Filter: UPPER(action_type) = 'LIKE' — khiêng TỪNG dòng lên rồi mới lọc bằng hàm", slot: 'ex-filter' },
+          { type: 'op', token: 'Seq Scan on fact_post_action — cách lấy dữ liệu: quét tuần tự cả bảng, không đi qua index nào', slot: 'ex-node' },
+          { type: 'op', token: 'cost=0.00..18334.00 — số dòng máy đã XÓA khỏi bảng trong lần dọn dẹp gần nhất', slot: 'ex-x' },
+          { type: 'op', token: 'cost=0.00..18334.00 — giá vé ƯỚC TÍNH: trước dòng đầu tiên .. trọn gói (điểm nội bộ để so đường đi)', slot: 'ex-cost' }
+        ],
+        drop_zones: [
+          { id: 'ex-node', placeholder: 'Dòng 1 — máy đi ĐƯỜNG nào?', accepts: ['op'], multi: false,
+            station: { icon: '🧭', label: 'Node', sub: 'Cách lấy dữ liệu', hint: 'Seq Scan / Index Scan / Bitmap Heap Scan — chữ đầu tiên của bản khai luôn là con đường.' } },
+          { id: 'ex-cost', placeholder: 'Giá vé ước tính', accepts: ['op'], multi: false,
+            station: { icon: '💰', label: 'Cost', sub: 'khởi hành..trọn gói', hint: 'Hai con số: chi phí trước dòng kết quả đầu tiên, và trọn chuyến. Đơn vị nội bộ — để SO SÁNH.' } },
+          { id: 'ex-rows', placeholder: 'Máy đoán bao nhiêu dòng?', accepts: ['op'], multi: false,
+            station: { icon: '📏', label: 'Rows', sub: 'Ước lượng', hint: 'Đoán từ thống kê — đoán lệch xa thực tế cũng là manh mối chẩn bệnh.' } },
+          { id: 'ex-filter', placeholder: 'Và dòng tố cáo thủ phạm', accepts: ['op'], multi: false,
+            station: { icon: '🧹', label: 'Filter', sub: 'Lọc sau khi khiêng', hint: 'Filter = lọc TỪNG dòng sau khi đã đọc lên — thấy nó trên cột có index là đèn đỏ.' } }
+        ],
+        expected_sql: "Seq Scan on fact_post_action — cách lấy dữ liệu: quét tuần tự cả bảng, không đi qua index nào cost=0.00..18334.00 — giá vé ƯỚC TÍNH: trước dòng đầu tiên .. trọn gói (điểm nội bộ để so đường đi) rows=1000000 — máy ĐOÁN số dòng phải xử lý, dựa trên thống kê (không phải đo thật) Filter: UPPER(action_type) = 'LIKE' — khiêng TỪNG dòng lên rồi mới lọc bằng hàm",
+        expected_zones: {
+          'ex-node': 'Seq Scan on fact_post_action — cách lấy dữ liệu: quét tuần tự cả bảng, không đi qua index nào',
+          'ex-cost': 'cost=0.00..18334.00 — giá vé ƯỚC TÍNH: trước dòng đầu tiên .. trọn gói (điểm nội bộ để so đường đi)',
+          'ex-rows': 'rows=1000000 — máy ĐOÁN số dòng phải xử lý, dựa trên thống kê (không phải đo thật)',
+          'ex-filter': "Filter: UPPER(action_type) = 'LIKE' — khiêng TỪNG dòng lên rồi mới lọc bằng hàm"
+        },
+        reveal_hints: {
+          'ex-node': 'Dòng đầu bản khai luôn là <strong>con đường</strong> — Seq Scan nghĩa là lật sổ từ bìa.',
+          'ex-cost': 'Cost = <strong>giá vé ước tính</strong> hai chặng. Khối "số dòng đã xóa" là bịa — EXPLAIN không kể chuyện dọn dẹp.',
+          'ex-rows': 'Rows = <strong>máy đoán</strong> — từ thống kê, không phải đếm thật.',
+          'ex-filter': 'Filter = <strong>lọc sau khi khiêng</strong> — trên cột đã có index thì đây chính là dòng tố cáo.'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #40 — màn chốt:</strong> đây là query dashboard 6,2 giây. Index <code>idx_fact_type ON fact_post_action(action_type)</code> nằm sẵn. Bản khai vừa đọc đã chỉ mặt dòng WHERE — <strong>tháo kính mù cho index</strong> (giá trị trong bảng là chữ thường <code>like</code>).',
+        challenge_type: 'bug_fix',
+        buggy: "SELECT user_id, SUM(act_count) AS total_act\nFROM fact_post_action\nWHERE UPPER(action_type) = 'LIKE'\nGROUP BY user_id\nORDER BY total_act DESC;",
+        buggy_line: 2,
+        schema: {
+          table_name: 'fact_post_action',
+          columns: [
+            { name: 'action_id', type: 'INT', key: 'PK' },
+            { name: 'user_id', type: 'INT', key: '' },
+            { name: 'date_id', type: 'CHAR(2)', key: '' },
+            { name: 'action_type', type: 'VARCHAR', key: '🔑 idx_fact_type' },
+            { name: 'act_count', type: 'INT', key: '' }
+          ],
+          data: [
+            ['1', '7',  'D1', 'like',    '3'],
+            ['2', '9',  'D1', 'comment', '2'],
+            ['3', '7',  'D2', 'like',    '5'],
+            ['4', '12', 'D2', 'post',    '1'],
+            ['5', '9',  'D2', 'like',    '4'],
+            ['6', '15', 'D3', 'like',    '2'],
+            ['7', '7',  'D3', 'comment', '1'],
+            ['8', '9',  'D3', 'post',    '1']
+          ]
+        },
+        context: {
+          scenario: 'Sửa xong, bản khai mô phỏng đổi thành: <code>Index Scan using idx_fact_type (cost=0.43..912) Index Cond: action_type=\'like\'</code> — dashboard 6,2s → 0,3s. Không thêm index nào, chỉ MỘT dòng WHERE.',
+          real_world: 'Lỗi "hàm bọc cột" đứng đầu danh sách nguyên nhân query ì trong code thật — thường lẻn vào từ thói quen "cứ UPPER cho chắc". Chữa từ gốc: chuẩn hóa dữ liệu khi GHI (lưu toàn chữ thường), thì lúc ĐỌC khỏi bọc hàm.',
+          steps: [
+            'Dòng tô đỏ: WHERE đang bọc UPPER( ) quanh action_type.',
+            'Dữ liệu trong bảng vốn là chữ thường: like, comment, post.',
+            "Bỏ hàm bọc, so trần trụi: action_type = 'like'.",
+            'Các dòng khác giữ nguyên — SUM/GROUP BY/ORDER BY không có tội.'
+          ],
+          hint_explore: 'Chạy thử trước khi sửa để xem engine nói gì — rồi sửa dòng đỏ và chạy lại, bảng kết quả thật sẽ hiện ra.',
+          expected: 'Kết quả sau sửa: user 7 → 8, user 9 → 4, user 15 → 2 (tổng act_count các dòng like).'
+        },
+        hints: [
+          { level: 1, text: 'Bản khai Step 3 tố dòng nào? Filter: UPPER(action_type) — hàm đang bọc quanh cột có index.' },
+          { level: 2, text: 'Index xếp theo <code>action_type</code>, không xếp theo <code>UPPER(action_type)</code> — bỏ lớp bọc đi.' },
+          { level: 3, text: "Giá trị trong bảng là chữ thường: so thẳng với <code>'like'</code> (viết thường, trong nháy đơn)." },
+          { level: 4, text: "Dòng WHERE đúng: <code>WHERE action_type = 'like'</code> — các dòng khác giữ nguyên." }
+        ],
+        expected_sql: "SELECT user_id, SUM(act_count) AS total_act FROM fact_post_action WHERE action_type = 'like' GROUP BY user_id ORDER BY total_act DESC;",
+        success_message: 'TICKET #40 ĐÓNG — MODULE 6 HOÀN TẤT! Bạn đã đi trọn tầng hầm: tháp lưu trữ → giá vé I/O → buffer → trang & RID → row/column → index → B+-Tree → composite/bitmap → và hôm nay là EXPLAIN, chiếc đèn soi tất cả. Còn đúng MỘT bài: hồ sơ CHUYÊN ÁN TỐT NGHIỆP vừa đặt lên bàn — "Social Graph Detective": 4 vụ án liên hoàn, dùng mọi vũ khí của cả ba module. Hẹn ở phòng thẩm vấn. 🕵️',
+        xp_reward: 140
+      }
     }
   ]
 };
