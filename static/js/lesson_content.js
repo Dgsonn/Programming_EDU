@@ -1905,6 +1905,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 22, xp_reward: 70,
       project_piece: '🛰️ Khởi động "Còi báo động Hệ thống Dọn Rác"',
+      story: {
+        tag: '🎫 GameHub · Ticket #08',
+        hook: 'GameHub v1.0 chạy ngon — nhưng một bảng ghép vội từ thuở đầu bắt đầu bốc mùi: <code>game_studio_combined</code> lưu <em>"Japan" lặp lại ở mọi dòng game</em> của cùng 1 studio. Sửa quốc gia 1 studio = sửa hàng loạt dòng, sót 1 là dữ liệu vênh. Ticket này mở cả một chương mới: truy ra <strong>gốc bệnh dư thừa</strong> — thứ tên là <strong>phụ thuộc hàm</strong> — trước khi nó lan khắp hệ thống.'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -2156,6 +2160,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 22, xp_reward: 70,
       project_piece: '🧪 Thu thập "Bộ Chia Nguyên tử"',
+      story: {
+        tag: '🎫 GameHub Consulting · Ticket #09',
+        hook: 'Tiếng lành đồn xa — GameHub nhận <strong>hợp đồng tư vấn đầu tiên</strong>: một trường đại học mở ngành esports đang khổ sở với bảng <code>student_raw</code>: cột phones nhét <em>"0901-111, 0902-222" chung 1 ô</em>. Muốn tìm ai giữ 1 số điện thoại? Mò từng dòng. Ticket của bạn: đưa dữ liệu về <strong>1NF — mỗi ô đúng 1 giá trị</strong>, tách bảng <code>student_phone</code> chuẩn chỉnh.'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -2418,6 +2426,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 22, xp_reward: 70,
       project_piece: '🔬 Thu thập "Kính hiển vi Phụ thuộc hàm"',
+      story: {
+        tag: '🎫 GameHub Consulting · Ticket #10',
+        hook: 'Khách tiếp theo: <strong>thư viện thành phố</strong>. Sổ mượn của họ dùng khoá ghép nhưng lại <em>chép dính thông tin thành viên vào từng lượt mượn</em> — đổi tên 1 người là sửa cả trăm dòng. Ticket yêu cầu: mọi cột phải phụ thuộc <strong>TRỌN khoá</strong> của bảng nó (2NF) — tách <code>members</code> / <code>loans</code>, rồi chứng minh dữ liệu vẫn nguyên vẹn bằng truy vấn đếm lượt mượn.'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -2644,6 +2656,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 25, xp_reward: 80,
       project_piece: '🛡️ Phân hệ "Đặc vụ Guild tối ưu hệ thống"',
+      story: {
+        tag: '🎫 GameHub Consulting · Ticket #11',
+        hook: 'Sàn phụ kiện game <strong>GearShop</strong> gõ cửa: sếp họ cần <em>doanh thu theo ngành hàng</em> nhưng bảng <code>products</code> nhét lẫn thông tin category — phụ thuộc <strong>bắc cầu</strong> (product → category → mô tả ngành) khiến sửa 1 ngành hàng là rung cả bảng. Ticket: dọn về <strong>3NF</strong>, rồi trả lời câu sếp hỏi bằng JOIN 3 bảng + <code>SUM(qty × price)</code>.'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -2903,6 +2919,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 25, xp_reward: 80,
       project_piece: '🛰️ Thu thập "Máy Cưa Không Gian"',
+      story: {
+        tag: '🎫 GameHub Consulting · Ticket #12',
+        hook: 'Ca khó nhất từ đầu mùa tư vấn: <strong>phòng khám thể thao điện tử</strong> — nơi trị mỏi cổ tay cho game thủ chuyên nghiệp. Hồ sơ trị liệu của họ <em>chép chuyên khoa bác sĩ vào từng ca</em>: bác sĩ đổi chuyên khoa là dữ liệu cũ mâu thuẫn dữ liệu mới. Ticket: phân rã <strong>phi tổn thất</strong> về <strong>BCNF</strong> (<code>doctors</code>/<code>patients</code>/<code>treatments</code>), rồi thống kê số ca theo chuyên khoa để chứng minh không mất gì.'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -3256,6 +3276,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 22, xp_reward: 75,
       project_piece: '🧬 Mở khóa "Máy Tách Tập Độc Lập"',
+      story: {
+        tag: '🎫 GameHub Consulting · Ticket #13',
+        hook: 'Trung tâm đào tạo game dev gửi ticket lạ: 1 khoá học có <em>nhiều giáo trình</em> VÀ <em>nhiều giảng viên</em> — hai danh sách <strong>độc lập</strong> nhưng bị nhét chung 1 bảng, thế là mỗi cặp (giáo trình × giảng viên) đẻ ra 1 dòng: 3 giáo trình × 4 giảng viên = <strong>12 dòng rác tổ hợp</strong>. Ticket: tách <code>course_textbook</code> / <code>course_instructor</code> (<strong>4NF</strong>) và đếm lại từng chiều cho sạch.'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -3470,6 +3494,10 @@ concept_cards: [
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 30, xp_reward: 100,
       project_piece: '👑 Mở khóa Vương Miện "Kiến Trúc Sư CSDL Nội tại"',
+      story: {
+        tag: '🎫 GameHub Consulting · Ticket #14 — BOSS',
+        hook: 'Khách lớn nhất lịch sử công ty: <strong>mạng xã hội dành cho gamers</strong> với hàng triệu <code>users</code> và <code>posts</code>, đòi audit <strong>toàn bộ thiết kế</strong> — mọi kỹ năng bạn tích từ Ticket #01 tới giờ đều được gọi tên: chuẩn hoá, JOIN, aggregate, top-N. Đóng được ticket này, mùa tư vấn khép lại vẻ vang — và GameHub đủ tiền <strong>ship bản v2.0</strong>. ⚔️'
+      },
       drag_type: 'box',
       challenge_type: 'full_ide',
       drag_map: {
@@ -3839,6 +3867,10 @@ concept_cards: [
 
     {
       id: 'db_14', index: 15,
+      story: {
+        tag: '🎫 GameHub · Ticket #15',
+        hook: 'Về nhà — <strong>GameHub v2.0 khởi động</strong>. Tính năng đầu tiên: cho người chơi tuỳ biến app (theme tối/sáng, ngôn ngữ, thông báo). Đội sản phẩm muốn nhét cả cụm cài đặt vào <em>1 cột JSONB</em> <code>settings</code> thay vì đẻ 10 cột mới. Hợp lý — nhưng truy vấn kiểu gì vào TRONG một cục JSON? Ticket: làm chủ <strong>path expression <code>->></code></strong> để đếm user theo theme, theo ngôn ngữ.'
+      },
       title: 'JSON trong Database — Path Expressions',
       subtitle: 'Lưu và truy vấn JSON bên trong cột quan hệ',
       module: 3, module_title: 'Application Design',
@@ -4080,6 +4112,10 @@ concept_cards: [
 
     {
       id: 'db_15', index: 16,
+      story: {
+        tag: '🎫 GameHub · Ticket #16',
+        hook: 'GameHub bước ra đời thật: mở <strong>chuỗi cửa hàng vật lý</strong> (<code>shop_branches</code> kèm toạ độ <code>geo_location</code>). Marketing hỏi ngay: <em>"bao nhiêu chi nhánh TP.HCM nằm trong bán kính 10km quanh kho trung tâm?"</em> — câu hỏi mà <code>WHERE</code> thường bó tay, vì khoảng cách trên mặt cầu không phải phép trừ. Ticket: mở kho vũ khí <strong>spatial</strong> — <code>ST_DWithin</code> và những người bạn.'
+      },
       title: 'Spatial Data — Dữ liệu Không gian',
       subtitle: 'Truy vấn tọa độ GPS, tìm điểm gần nhất',
       module: 3, module_title: 'Application Design',
@@ -4319,6 +4355,10 @@ concept_cards: [
 
     {
       id: 'db_16', index: 17,
+      story: {
+        tag: '🎫 GameHub · Ticket #17',
+        hook: 'Backend GameHub chuyển sang <strong>Django</strong> — và junior mới vào hoảng hốt: <em>"viết SQL ở đâu?!"</em>. Không đâu cả: ORM ánh xạ <strong>class ↔ bảng</strong>, bảng <code>log_events</code> giờ truy vấn bằng Python. Nhưng đừng lo mất nghề — mỗi <code>.filter()</code>, <code>.annotate()</code> đều dịch ngược ra đúng câu SQL bạn đã thạo. Ticket: dịch kỹ năng SQL sang ORM mà không đánh rơi tư duy database.'
+      },
       title: 'ORM với Django — Ánh xạ Class ↔ Table',
       subtitle: 'Từ Python class đến SQL query tự động',
       module: 3, module_title: 'Application Design',
@@ -4516,6 +4556,10 @@ concept_cards: [
       module: 3, module_title: 'Application Design',
       estimated_minutes: 22, xp_reward: 70,
       project_piece: '🌐 Dựng API cho web shop game',
+      story: {
+        tag: '🎫 GameHub · Ticket #18',
+        hook: 'Đối tác khắp nơi muốn dữ liệu GameHub — đến lúc mở <strong>public API</strong>. Mỗi request như <code>/api/games?genre=Action&minPrice=50</code> phải được dịch thành <em>đúng 1 câu SQL</em> trên <code>game_catalog</code> — bảng đầu tiên bạn dựng ở Ticket #01, giờ phục vụ cả thế giới. Ticket: nối App ↔ Database qua <strong>REST</strong>, hiểu vì sao mỗi request phải stateless.'
+      },
       drag_type: 'chip',
       challenge_type: 'full_ide',
       drag_map: {
@@ -4719,6 +4763,10 @@ concept_cards: [
 
     {
       id: 'db_17', index: 19,
+      story: {
+        tag: '🎫 GameHub · Ticket #19 — KHẨN 🚨',
+        hook: 'API vừa mở, <strong>báo động đỏ</strong>: log ghi nhận ai đó gõ <code>\' OR \'1\'=\'1</code> vào ô đăng nhập — và <em>lọt qua</em>. Toàn bộ <code>user_accounts</code> có nguy cơ phơi ra ánh sáng. Đây là <strong>SQL Injection</strong> — lỗ hổng đã đánh gục cả những công ty tỷ đô. Ticket khẩn: hiểu cú lừa từ gốc, rồi vá bằng <strong>Prepared Statement</strong> để input không bao giờ biến thành code.'
+      },
       title: 'SQL Injection — Lỗ hổng chết người',
       subtitle: 'Tấn công bằng input độc hại và phòng chống',
       module: 3, module_title: 'Application Design',
@@ -4914,6 +4962,10 @@ concept_cards: [
 
     {
       id: 'db_18', index: 20,
+      story: {
+        tag: '🎫 GameHub · Ticket #20 — ticket cuối cùng',
+        hook: 'Sau vụ tấn công hụt, CEO ra lệnh <strong>tổng kiểm tra két mật khẩu</strong> <code>security_users_vault</code>: tài khoản nào còn băm bằng thuật toán yếu (<em>md5, sha1?</em>) phải bị lôi ra ánh sáng trước khi hacker kịp làm điều đó. Ticket cuối cùng của bạn: xếp hạng bảo mật từng user bằng <strong>CASE WHEN</strong> — bảng audit hoàn tất là <strong>GameHub v3.0 ra mắt toàn cầu</strong>. 🎓'
+      },
       title: 'Password Security — Salt & Hashing',
       subtitle: 'Từ plain text đến bcrypt — chọn thuật toán nào?',
       module: 3, module_title: 'Application Design',
