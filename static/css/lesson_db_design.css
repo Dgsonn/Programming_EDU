@@ -383,6 +383,15 @@ body.lesson-focus-mode::before {
   transform: translateX(0);
 }
 
+/* ROOT-FIX (2026-07-04): pane ẨN vẫn nuốt click — pointer-events:none ở pane cha
+   bị con re-enable (vd .town-station{pointer-events:auto} của step-3 đè lên chip
+   mini-game step-2 ở ~1520px → "bấm id/name không ăn"). Ép TOÀN BỘ hậu duệ của
+   pane không active bỏ hit-testing — chặn cả lớp lỗi này vĩnh viễn. */
+.step-pane:not(.active),
+.step-pane:not(.active) * {
+  pointer-events: none !important;
+}
+
 /* Step 1: Theory */
 .step-1-content {
   max-width: 880px;
