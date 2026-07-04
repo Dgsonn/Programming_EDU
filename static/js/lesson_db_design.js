@@ -265,52 +265,97 @@
       '<text x="400" y="430" text-anchor="middle" fill="var(--text-400)" font-size="20">Không list, set, hay composite</text>' +
       '</svg>',
 
-    db_09: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="2NF: partial dependency bị cắt, tách thành 2 bảng">' +
-      '<rect x="30" y="53" width="540" height="66" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="30" y="53" width="540" height="21" rx="0" fill="rgba(139,92,246,0.2)"/>' +
-      '<text x="300" y="69" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">enrollments (PK: s_id + c_id)</text>' +
-      '<text x="45" y="100" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">s_id | c_id | grade | student_name</text>' +
-      '<line x1="90" y1="133" x2="255" y2="133" stroke="var(--danger)" stroke-width="3" stroke-dasharray="5,3"/>' +
-      '<text x="172" y="153" text-anchor="middle" fill="var(--danger)" font-size="15">partial dep (X)</text>' +
-      '<line x1="405" y1="133" x2="405" y2="160" stroke="var(--danger)" stroke-width="3" stroke-dasharray="3,2"/>' +
-      '<text x="442" y="153" text-anchor="middle" fill="var(--danger)" font-size="15">full dep (X)</text>' +
-      '<rect x="30" y="200" width="270" height="75" rx="0" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="30" y="200" width="270" height="21" rx="0" fill="rgba(139,92,246,0.2)"/>' +
-      '<text x="165" y="215" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">enrollments_clean</text>' +
-      '<text x="45" y="246" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">s_id | c_id | grade</text>' +
-      '<rect x="315" y="200" width="255" height="75" rx="0" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
-      '<rect x="315" y="200" width="255" height="21" rx="0" fill="rgba(139,92,246,0.2)"/>' +
-      '<text x="442" y="215" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">students</text>' +
-      '<text x="330" y="246" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">s_id | student_name</text>' +
-      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="15">Tách → mỗi bảng phụ thuộc full key</text></svg>',
+    db_09: '<svg viewBox="0 0 600 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="2NF: member_name chỉ phụ thuộc member_id (1 phần khoá) trong book_loan_raw, tách thành loans + members">' +
+      /* bảng vi phạm: sổ mượn thư viện */
+      '<rect x="30" y="30" width="540" height="76" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="30" width="540" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="300" y="47" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">book_loan_raw — PK: (book_id + copy_no)</text>' +
+      '<text x="52" y="83" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">book_id | copy_no | member_id |</text>' +
+      '<rect x="332" y="66" width="128" height="24" rx="5" fill="rgba(239,68,68,0.15)" stroke="var(--danger)" stroke-width="1.4"/>' +
+      '<text x="344" y="83" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">member_name</text>' +
+      /* mũi tên FD: member_id → member_name (chỉ 1 phần khoá) */
+      '<path d="M 296 96 C 296 122, 380 122, 388 98" fill="none" stroke="var(--danger)" stroke-width="2" stroke-dasharray="5,3"/>' +
+      '<text x="300" y="140" text-anchor="middle" fill="var(--danger)" font-size="13" font-weight="600">member_name chỉ phụ thuộc member_id — KHÔNG phụ thuộc trọn khoá ✗ 2NF</text>' +
+      /* mũi tên tách */
+      '<line x1="300" y1="152" x2="300" y2="182" stroke="var(--module-accent)" stroke-width="2.5"/>' +
+      '<polygon points="300,192 293,180 307,180" fill="var(--module-accent)"/>' +
+      '<text x="352" y="174" fill="var(--module-accent)" font-size="13" font-weight="700">tách 2NF</text>' +
+      /* 2 bảng sạch */
+      '<rect x="30" y="204" width="300" height="82" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="204" width="300" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="180" y="221" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">loans</text>' +
+      '<text x="48" y="256" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">book_id | copy_no | loan_date</text>' +
+      '<text x="48" y="276" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="13">member_id (FK)</text>' +
+      '<rect x="360" y="204" width="210" height="82" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="360" y="204" width="210" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="465" y="221" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">members</text>' +
+      '<text x="378" y="256" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">member_id (PK)</text>' +
+      '<text x="378" y="276" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">member_name</text>' +
+      /* FK nối */
+      '<line x1="330" y1="266" x2="360" y2="248" stroke="var(--module-accent)" stroke-width="1.6" stroke-dasharray="4,3"/>' +
+      '<text x="300" y="330" text-anchor="middle" fill="var(--text-400)" font-size="14">Tên thành viên chỉ còn 1 chỗ — đổi tên 1 lần, mọi lượt mượn tự đúng</text></svg>',
 
-    db_10: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BCNF: FD graph A→B→C, arrow A→C bị redirect">' +
-      '<text x="90" y="80" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="50" font-weight="700">A</text>' +
-      '<text x="300" y="80" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="50" font-weight="700">B</text>' +
-      '<text x="510" y="80" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="50" font-weight="700">C</text>' +
-      '<line x1="135" y1="106" x2="255" y2="106" stroke="var(--module-accent)" stroke-width="4"/>' +
-      '<text x="195" y="96" text-anchor="middle" fill="var(--module-accent)" font-size="17">A→B</text>' +
-      '<line x1="345" y1="106" x2="465" y2="106" stroke="var(--module-accent)" stroke-width="4"/>' +
-      '<text x="405" y="96" text-anchor="middle" fill="var(--module-accent)" font-size="17">B→C</text>' +
-      '<line x1="135" y1="226" x2="255" y2="226" stroke="var(--danger)" stroke-width="3" stroke-dasharray="4,2"/>' +
-      '<line x1="345" y1="226" x2="465" y2="226" stroke="var(--success)" stroke-width="4"/>' +
-      '<line x1="255" y1="86" x2="345" y2="200" stroke="var(--danger)" stroke-width="2" stroke-dasharray="3,3"/>' +
-      '<text x="135" y="253" text-anchor="middle" fill="var(--danger)" font-size="15">A→C vi phạm BCNF</text>' +
-      '<text x="405" y="253" text-anchor="middle" fill="var(--success)" font-size="15">B→C vẫn OK</text>' +
-      '<text x="300" y="319" text-anchor="middle" fill="var(--text-400)" font-size="15">BCNF: mọi FD phải có superkey ở vế trái</text></svg>',
+    db_10: '<svg viewBox="0 0 600 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BCNF: doctor_specialty lặp theo doctor_id trong hồ sơ trị liệu, phân rã phi tổn thất thành doctors + treatments">' +
+      /* hồ sơ trị liệu vi phạm */
+      '<rect x="30" y="30" width="540" height="76" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="30" width="540" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="300" y="47" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">treatments_raw — hồ sơ trị liệu phòng khám esports</text>' +
+      '<text x="52" y="83" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14">t_id | patient | doctor_id |</text>' +
+      '<rect x="318" y="66" width="180" height="24" rx="5" fill="rgba(239,68,68,0.15)" stroke="var(--danger)" stroke-width="1.4"/>' +
+      '<text x="330" y="83" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">doctor_specialty</text>' +
+      /* FD vi phạm */
+      '<path d="M 282 96 C 282 122, 390 122, 400 98" fill="none" stroke="var(--danger)" stroke-width="2" stroke-dasharray="5,3"/>' +
+      '<text x="300" y="140" text-anchor="middle" fill="var(--danger)" font-size="13" font-weight="600">FD: doctor_id → doctor_specialty — vế trái KHÔNG phải superkey ✗ BCNF</text>' +
+      /* mũi tên phân rã */
+      '<line x1="300" y1="152" x2="300" y2="182" stroke="var(--module-accent)" stroke-width="2.5"/>' +
+      '<polygon points="300,192 293,180 307,180" fill="var(--module-accent)"/>' +
+      '<text x="378" y="174" fill="var(--module-accent)" font-size="13" font-weight="700">phân rã PHI TỔN THẤT</text>' +
+      /* 2 bảng sạch */
+      '<rect x="30" y="204" width="255" height="82" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="204" width="255" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="157" y="221" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">doctors</text>' +
+      '<text x="48" y="256" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">doctor_id (PK) | name</text>' +
+      '<text x="48" y="276" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">doctor_specialty</text>' +
+      '<rect x="315" y="204" width="255" height="82" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="315" y="204" width="255" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="442" y="221" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">treatments</text>' +
+      '<text x="333" y="256" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">t_id (PK) | patient_id</text>' +
+      '<text x="333" y="276" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="13">doctor_id (FK)</text>' +
+      '<line x1="285" y1="266" x2="315" y2="266" stroke="var(--module-accent)" stroke-width="1.6" stroke-dasharray="4,3"/>' +
+      '<text x="300" y="330" text-anchor="middle" fill="var(--text-400)" font-size="14">JOIN 2 bảng tái tạo đủ 100% dữ liệu gốc — phi tổn thất, hết lặp chuyên khoa</text></svg>',
 
-    db_11: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3NF: transitive dependency A→B→C, B→C bị cắt vì B không phải key">' +
-      '<text x="90" y="106" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="53" font-weight="700">A</text>' +
-      '<text x="300" y="106" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="53" font-weight="700">B</text>' +
-      '<text x="510" y="106" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="53" font-weight="700">C</text>' +
-      '<line x1="142" y1="106" x2="255" y2="106" stroke="var(--module-accent)" stroke-width="4"/>' +
-      '<text x="195" y="96" text-anchor="middle" fill="var(--module-accent)" font-size="17">A→B</text>' +
-      '<line class="hero-pulse" x1="352" y1="106" x2="465" y2="106" stroke="var(--danger)" stroke-width="4" stroke-dasharray="6,3"/>' +
-      '<line x1="442" y1="106" x2="562" y2="80" stroke="var(--danger)" stroke-width="3" stroke-dasharray="2,2"/>' +
-      '<line x1="442" y1="106" x2="562" y2="133" stroke="var(--danger)" stroke-width="3" stroke-dasharray="2,2"/>' +
-      '<text x="412" y="153" text-anchor="middle" fill="var(--danger)" font-size="15">B→C transitive (X)</text>' +
-      '<text x="300" y="266" text-anchor="middle" fill="var(--text-400)" font-size="15">Tách: (A,B) + (B,C) → C phụ thuộc trực tiếp key</text>' +
-      '<text x="300" y="293" text-anchor="middle" fill="var(--text-400)" font-size="14">3NF cho phép nếu B là key của (B,C)</text></svg>',
+    db_11: '<svg viewBox="0 0 600 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3NF: chuỗi bắc cầu product_id → category → cat_description trong products_raw của GearShop, tách products + categories">' +
+      /* chuỗi bắc cầu bằng cột thật */
+      '<rect x="40" y="36" width="150" height="42" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="115" y="63" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">product_id</text>' +
+      '<line x1="190" y1="57" x2="238" y2="57" stroke="var(--module-accent)" stroke-width="2.5"/>' +
+      '<polygon points="248,57 236,50 236,64" fill="var(--module-accent)"/>' +
+      '<rect x="252" y="36" width="130" height="42" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<text x="317" y="63" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">category</text>' +
+      '<line x1="382" y1="57" x2="430" y2="57" stroke="var(--danger)" stroke-width="2.5" stroke-dasharray="6,3"/>' +
+      '<polygon points="440,57 428,50 428,64" fill="var(--danger)"/>' +
+      '<rect x="444" y="36" width="130" height="42" rx="8" fill="rgba(239,68,68,0.12)" stroke="var(--danger)" stroke-width="2"/>' +
+      '<text x="509" y="57" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="700">cat_manager,</text>' +
+      '<text x="509" y="71" text-anchor="middle" fill="var(--danger)" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="700">mô tả ngành…</text>' +
+      '<text x="300" y="110" text-anchor="middle" fill="var(--danger)" font-size="13" font-weight="600">Bắc cầu: key → category → thông tin ngành (category KHÔNG phải key) ✗ 3NF</text>' +
+      '<text x="300" y="130" text-anchor="middle" fill="var(--text-400)" font-size="12.5">Sửa mô tả 1 ngành = sửa ở MỌI sản phẩm thuộc ngành đó</text>' +
+      /* mũi tên tách */
+      '<line x1="300" y1="142" x2="300" y2="172" stroke="var(--module-accent)" stroke-width="2.5"/>' +
+      '<polygon points="300,182 293,170 307,170" fill="var(--module-accent)"/>' +
+      '<text x="352" y="164" fill="var(--module-accent)" font-size="13" font-weight="700">tách 3NF</text>' +
+      /* 2 bảng sạch */
+      '<rect x="30" y="194" width="300" height="82" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="30" y="194" width="300" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="180" y="211" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">products</text>' +
+      '<text x="48" y="246" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">product_id (PK) | name | price</text>' +
+      '<text x="48" y="266" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="13">category (FK)</text>' +
+      '<rect x="360" y="194" width="210" height="82" rx="8" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
+      '<rect x="360" y="194" width="210" height="24" rx="8" fill="rgba(139,92,246,0.2)"/>' +
+      '<text x="465" y="211" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">categories</text>' +
+      '<text x="378" y="246" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">category (PK)</text>' +
+      '<text x="378" y="266" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="13">mô tả, quản lý ngành</text>' +
+      '<line x1="330" y1="256" x2="360" y2="238" stroke="var(--module-accent)" stroke-width="1.6" stroke-dasharray="4,3"/>' +
+      '<text x="300" y="320" text-anchor="middle" fill="var(--text-400)" font-size="14">Thông tin ngành hàng chỉ còn 1 chỗ — hết phụ thuộc bắc cầu</text></svg>',
 
     db_12: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="4NF: multi-valued dependency tách thành nhiều bảng độc lập">' +
       '<rect x="30" y="53" width="540" height="75" fill="rgba(139,92,246,0.05)" stroke="var(--module-accent)" stroke-width="2"/>' +
@@ -331,31 +376,29 @@
       '<text x="480" y="253" text-anchor="middle" fill="var(--text-400)" font-size="14">2NF-style</text>' +
       '<text x="300" y="306" text-anchor="middle" fill="var(--text-400)" font-size="15">4NF: tách MVD độc lập thành bảng riêng</text></svg>',
 
-    db_13: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boss Battle Grand integrated schema 12 bài">' +
-      '<rect x="60" y="80" width="180" height="110" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse"/>' +
-      '<rect x="60" y="80" width="180" height="32" rx="8" fill="var(--module-accent)"/>' +
-      '<text x="150" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700">Student</text>' +
-      '<text x="150" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">id, name</text>' +
-      '<text x="150" y="178" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="16">(6 attrs)</text>' +
-      '<rect x="310" y="80" width="180" height="110" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.3s"/>' +
-      '<rect x="310" y="80" width="180" height="32" rx="8" fill="var(--module-accent)"/>' +
-      '<text x="400" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700">Course</text>' +
-      '<text x="400" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">id, title</text>' +
-      '<text x="400" y="178" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="16">(5 attrs)</text>' +
-      '<rect x="560" y="80" width="180" height="110" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.6s"/>' +
-      '<rect x="560" y="80" width="180" height="32" rx="8" fill="var(--module-accent)"/>' +
-      '<text x="650" y="104" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700">Grade</text>' +
-      '<text x="650" y="155" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">letter</text>' +
-      '<text x="650" y="178" text-anchor="middle" fill="var(--text-400)" font-family="JetBrains Mono, monospace" font-size="16">(A, B, C)</text>' +
-      '<line x1="150" y1="190" x2="320" y2="295" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,6"/>' +
-      '<line x1="400" y1="190" x2="400" y2="295" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,6"/>' +
-      '<line x1="650" y1="190" x2="480" y2="295" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,6"/>' +
-      '<rect x="240" y="295" width="320" height="100" rx="8" fill="rgba(139,92,246,0.2)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.9s"/>' +
-      '<rect x="240" y="295" width="320" height="36" rx="8" fill="var(--module-accent)"/>' +
-      '<text x="400" y="320" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="26" font-weight="700">ENROLLMENT</text>' +
-      '<text x="400" y="370" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="20">student_id + course_id</text>' +
-      '<text x="400" y="425" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="32" font-weight="700">★ BOSS BATTLE ★</text>' +
-      '<text x="400" y="455" text-anchor="middle" fill="var(--text-400)" font-size="20">Tích hợp 12 bài (B1-B12)</text>' +
+    db_13: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boss Battle: audit mạng xã hội gamers — users JOIN posts, lọc premium VN, GROUP BY, top 3">' +
+      /* 2 bảng thật của khách: users + posts */
+      '<rect x="70" y="70" width="280" height="150" rx="10" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse"/>' +
+      '<rect x="70" y="70" width="280" height="36" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="210" y="95" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">users</text>' +
+      '<text x="90" y="134" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">user_id (PK) | username</text>' +
+      '<text x="90" y="162" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">country | is_premium</text>' +
+      '<text x="90" y="196" fill="var(--text-400)" font-size="14">hàng triệu thành viên</text>' +
+      '<rect x="450" y="70" width="280" height="150" rx="10" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse" style="animation-delay: 0.3s"/>' +
+      '<rect x="450" y="70" width="280" height="36" rx="10" fill="var(--module-accent)"/>' +
+      '<text x="590" y="95" text-anchor="middle" fill="#0F172A" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">posts</text>' +
+      '<text x="470" y="134" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">post_id (PK)</text>' +
+      '<text x="470" y="162" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="16">user_id (FK) | content</text>' +
+      '<text x="470" y="196" fill="var(--text-400)" font-size="14">bài đăng của cộng đồng</text>' +
+      /* FK nối */
+      '<line x1="350" y1="145" x2="450" y2="145" stroke="var(--module-accent)" stroke-width="3"/>' +
+      '<text x="400" y="133" text-anchor="middle" fill="var(--module-accent)" font-size="15" font-weight="700">JOIN 1:N</text>' +
+      /* pipeline kỹ năng hội tụ */
+      '<rect x="100" y="270" width="600" height="60" rx="14" fill="rgba(139,92,246,0.12)" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,3"/>' +
+      '<text x="400" y="296" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">JOIN → WHERE premium + VN → GROUP BY → COUNT → ORDER BY → LIMIT 3</text>' +
+      '<text x="400" y="318" text-anchor="middle" fill="var(--text-400)" font-size="13">mọi kỹ năng từ Ticket #01 hội tụ trong 1 câu lệnh</text>' +
+      '<text x="400" y="398" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="30" font-weight="700">⚔ BOSS: AUDIT MẠNG XÃ HỘI GAMERS ⚔</text>' +
+      '<text x="400" y="430" text-anchor="middle" fill="var(--text-400)" font-size="17">Đóng ticket này — GameHub đủ lực ship v2.0</text>' +
       '</svg>',
 
     db_14: '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JSON path: $.settings.theme navigate nested object">' +
