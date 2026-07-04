@@ -3075,12 +3075,12 @@ concept_cards: [
             ]
           },
           {
-            question: "Bảng <code>teaches(prof, course, dept)</code> với FD <code>prof → dept</code> vi phạm chuẩn nào?",
+            question: "Bảng <code>teaches(prof, course, dept)</code> có 2 FD: <code>prof → dept</code> và <code>(course, dept) → prof</code> (mỗi prof thuộc 1 dept; mỗi cặp course+dept do đúng 1 prof phụ trách). Bảng vi phạm chuẩn CAO NHẤT nào?",
             options: [
 { id: "a", text: "1NF — vì có redundancy trong dept", correct: false, explanation: "Sai — 1NF chỉ về atomic values. Redundancy là vấn đề normalization khác (2NF/3NF/BCNF), không phải 1NF." },
           { id: "b", text: "BCNF — tách thành 2 bảng", correct: true, format: "diagram", diagram: "┌──────┬─────────┬──────┐     ┌──────┬──────┐\n│ prof │ course  │ dept │  →  │ prof │ dept │\n├──────┼─────────┼──────┤     ├──────┼──────┤\n│ An   │ DB101   │ CS   │     │ An   │ CS   │\n│ An   │ AI201   │ CS   │     │ Bình │ Math │\n│ Bình │ DB101   │ Math │     └──────┴──────┘\n└──────┴─────────┴──────┘     ┌──────┬─────────┐\n                             │ prof │ course  │\n (dept lặp ở mỗi dòng)       ├──────┼─────────┤\n  ← VI PHẠM BCNF             │ An   │ DB101   │\n                             │ An   │ AI201   │\n                             │ Bình │ DB101   │\n                             └──────┴─────────┘", explanation: "Đúng — prof → dept, nhưng prof KHÔNG phải superkey (1 prof dạy N courses, không unique). Theo định nghĩa BCNF, X bên trái FD phải là superkey → vi phạm. Tách thành 2 bảng: profs(prof, dept) + teaches(prof, course) → không còn redundancy." },
           { id: "c", text: "Không vi phạm gì cả", correct: false, explanation: "Sai — bảng có redundant dept (cùng prof luôn cùng dept). Phải tách thành profs(prof_id, dept) + teaches(prof, course) để tránh dư thừa." },
-          { id: "d", text: "2NF — vì thiếu partial dependency check", correct: false, explanation: "Sai — 2NF chỉ áp dụng khi có composite PK. teaches có PK = (prof, course) composite. 2NF: mọi non-prime attribute phải phụ thuộc TOÀN BỘ PK. dept phụ thuộc prof (1 phần PK) → cũng vi phạm 2NF, nhưng BCNF là cấp strict hơn." }
+          { id: "d", text: "2NF — dept phụ thuộc 1 phần khóa", correct: false, explanation: "Bẫy hay! Nhờ FD (course, dept) → prof, bảng có khóa dự tuyển thứ 2 là (course, dept) → dept là thuộc tính PRIME (thuộc 1 khóa dự tuyển) → 2NF và 3NF đều ĐẠT. Đây chính là ca kinh điển '3NF ok nhưng BCNF fail' (Silberschatz Ch 7.5)." }
             ]
           }
         ],
@@ -4030,8 +4030,8 @@ concept_cards: [
           {
             question: "Filter user có <code>notifications = true</code> trong JSONB. Cú pháp nào ĐÚNG?",
             options: [
-              { id: 'a', text: "<code>WHERE settings->>notifications = true</code> — JSON value", correct: false, explanation: 'Sai — không có nháy quanh \'notifications\'. JSONB path yêu cầu chuỗi trong nháy. Và so sánh với true (boolean) không khớp với text \'true\'.' },
-              { id: 'b', text: "<code>WHERE settings->>notifications = 'true'</code> — text với nháy đơn", correct: true, explanation: 'Đúng — ->> trả text, so sánh với \'true\' (string có nháy). Trong JSONB path \'notifications\' cần nháy đơn.' },
+              { id: 'a', text: "<code>WHERE settings->>'notifications' = true</code> — so sánh boolean", correct: false, explanation: 'Sai — ->> luôn trả TEXT, so sánh với true (boolean) là lỗi kiểu. Phải so với chuỗi \'true\' (có nháy).' },
+              { id: 'b', text: "<code>WHERE settings->>'notifications' = 'true'</code> — key có nháy, so sánh text", correct: true, explanation: 'Đúng — key JSON phải nằm trong nháy đơn (\'notifications\'), và ->> trả TEXT nên vế phải cũng là chuỗi \'true\'.' },
               { id: 'c', text: "<code>WHERE notifications = true</code> — cột thường", correct: false, explanation: 'Sai — không có cột \'notifications\' (chỉ có \'settings\' JSONB). Phải dùng ->> để extract field.' },
               { id: 'd', text: "<code>WHERE settings LIKE '%notifications%'</code> — string match (chậm + sai)", correct: false, explanation: 'Sai — LIKE chỉ match substring trong text representation. Không hiệu quả, sai ngữ nghĩa. Dùng ->>.' }
             ]
@@ -4779,7 +4779,19 @@ concept_cards: [
               { id: 'd', text: 'Bắt buộc của HTTP', correct: false, explanation: 'Sai — HTTP không ép; đây là best practice bảo mật.' }
             ]
           }
-        ]
+        ],
+        mini_game: {
+          "type": "match",
+          "title": "Dịch tham số URL → mảnh SQL",
+          "instruction": "API là máy dịch query-string → SQL. Nối mỗi tham số URL với mảnh SQL nó sinh ra.",
+          "xp": 20,
+          "pairs": [
+            { "left": "?genre=Action",  "leftId": "u1", "rightId": "s1", "right": { "id": "s1", "label": "WHERE genre = 'Action'" } },
+            { "left": "&minPrice=50",   "leftId": "u2", "rightId": "s2", "right": { "id": "s2", "label": "AND price >= 50" } },
+            { "left": "&sort=desc",     "leftId": "u3", "rightId": "s3", "right": { "id": "s3", "label": "ORDER BY price DESC" } },
+            { "left": "&limit=10",      "leftId": "u4", "rightId": "s4", "right": { "id": "s4", "label": "LIMIT 10" } }
+          ]
+        }
       },
 
       step_3: {
@@ -5190,7 +5202,7 @@ concept_cards: [
               { id: 'a', text: 'md5 — quá nhanh + không có salt → rainbow table attack', correct: true, explanation: 'Đúng — md5 là cryptographic hash bị broken (collision attacks từ 2004) + không có salt built-in → rainbow table attack trivial. 1 GPU crack md5 ~50 GH/s.' },
               { id: 'b', text: 'bcrypt — cost factor chỉnh được, salt tự động', correct: false, explanation: 'Sai — bcrypt là thuật toán hash password AN TOÀN hiện đại. cost factor làm chậm brute-force (1 hash ~100ms), salt tự động 16-byte chống rainbow table. Bcrypt = recommended.' },
               { id: 'c', text: 'argon2 — winner của Password Hashing Competition 2015', correct: false, explanation: 'Sai — argon2 là winner PHC 2015, hiện đại nhất. Memory-hard → chống GPU/ASIC attack (parallel crack khó hơn bcrypt). Recommended cho new systems.' },
-              { id: 'd', text: 'plain text — lưu nguyên password, không hash', correct: true, explanation: 'Đúng — plain text = KHÔNG có bảo mật. DB compromise → lộ toàn bộ password. Nguyên tắc #1: KHÔNG BAO GIỜ lưu plain text password. Luôn hash dù là user demo.' }
+              { id: 'd', text: 'scrypt — memory-hard, cần nhiều RAM để tính', correct: false, explanation: 'Sai — scrypt là thuật toán AN TOÀN: memory-hard khiến GPU/ASIC khó crack song song. Cùng nhóm recommended với bcrypt/argon2.' }
             ]
           },
           {
