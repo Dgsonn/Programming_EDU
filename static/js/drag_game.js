@@ -1342,12 +1342,15 @@
     fb.className = 'query-feedback ' + type;
 
     if (type === 'correct') {
+      /* UX fix (user 2026-07-04): BỎ nút "Tiếp tục" trong bar — trùng với footer "Tiếp theo"
+         ngay bên dưới (2 CTA chồng nhau ở góc phải). Footer là CTA duy nhất, cho nó pulse. */
       fb.innerHTML =
         '<span class="feedback-pill correct">✓ Chính xác!</span>' +
         '<div class="feedback-actions">' +
           '<button class="feedback-btn outlined" data-action="explain">Tại sao?</button>' +
-          '<button class="feedback-btn filled correct" data-action="continue">Tiếp tục →</button>' +
         '</div>';
+      var footNext = document.getElementById('nav-next');
+      if (footNext) footNext.classList.add('cta-pulse');
     } else {
       /* v5: KHÔNG giải thích / KHÔNG lộ đáp án (user chốt) — nhưng CHỈ SỐ DÒNG sai
          để người học biết nhìn vào đâu mà tự động não (user: "sai ở line 1 line 2 line 3 thôi").

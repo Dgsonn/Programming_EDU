@@ -63,7 +63,7 @@ var COURSE_LESSONS = [
   { n: 11, m: 2, t: '3NF — Phụ thuộc bắc cầu',                   min: 15 },
   { n: 12, m: 2, t: 'BCNF — Phân rã phi tổn thất',               min: 20 },
   { n: 13, m: 2, t: '4NF — Phụ thuộc đa trị',                    min: 15 },
-  { n: 14, m: 2, t: 'Boss Battle — Mạng Xã Hội Gamers', boss: true, min: 30 },
+  { n: 14, m: 2, t: 'Boss Battle — Diễn đàn GuildBoard', boss: true, min: 30 },
   // Module 3 — App Design (B15-B20) — 6 bài (was 5; thêm Web Services)
   { n: 15, m: 3, t: 'JSON trong Relational DB',                  min: 18 },
   { n: 16, m: 3, t: 'Spatial Data & Truy vấn tọa độ',           min: 18 },

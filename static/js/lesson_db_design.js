@@ -324,7 +324,7 @@
       '<line x1="285" y1="266" x2="315" y2="266" stroke="var(--module-accent)" stroke-width="1.6" stroke-dasharray="4,3"/>' +
       '<text x="300" y="330" text-anchor="middle" fill="var(--text-400)" font-size="14">JOIN 2 bảng tái tạo đủ 100% dữ liệu gốc — phi tổn thất, hết lặp chuyên khoa</text></svg>',
 
-    db_11: '<svg viewBox="0 0 600 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3NF: chuỗi bắc cầu product_id → category → cat_description trong products_raw của GearShop, tách products + categories">' +
+    db_11: '<svg viewBox="0 0 600 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3NF: chuỗi bắc cầu product_id → category → cat_description trong products_raw của chuỗi cyber-café GamerBrew, tách products + categories">' +
       /* chuỗi bắc cầu bằng cột thật */
       '<rect x="40" y="36" width="150" height="42" rx="8" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="2"/>' +
       '<text x="115" y="63" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="14" font-weight="700">product_id</text>' +
@@ -376,7 +376,7 @@
       '<text x="480" y="253" text-anchor="middle" fill="var(--text-400)" font-size="14">2NF-style</text>' +
       '<text x="300" y="306" text-anchor="middle" fill="var(--text-400)" font-size="15">4NF: tách MVD độc lập thành bảng riêng</text></svg>',
 
-    db_13: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boss Battle: audit mạng xã hội gamers — users JOIN posts, lọc premium VN, GROUP BY, top 3">' +
+    db_13: '<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boss Battle: audit diễn đàn GuildBoard — users JOIN posts, lọc premium VN, GROUP BY, top 3">' +
       /* 2 bảng thật của khách: users + posts */
       '<rect x="70" y="70" width="280" height="150" rx="10" fill="rgba(139,92,246,0.1)" stroke="var(--module-accent)" stroke-width="3" class="hero-pulse"/>' +
       '<rect x="70" y="70" width="280" height="36" rx="10" fill="var(--module-accent)"/>' +
@@ -397,7 +397,7 @@
       '<rect x="100" y="270" width="600" height="60" rx="14" fill="rgba(139,92,246,0.12)" stroke="var(--module-accent)" stroke-width="2" stroke-dasharray="6,3"/>' +
       '<text x="400" y="296" text-anchor="middle" fill="var(--text-100)" font-family="JetBrains Mono, monospace" font-size="15">JOIN → WHERE premium + VN → GROUP BY → COUNT → ORDER BY → LIMIT 3</text>' +
       '<text x="400" y="318" text-anchor="middle" fill="var(--text-400)" font-size="13">mọi kỹ năng từ Ticket #01 hội tụ trong 1 câu lệnh</text>' +
-      '<text x="400" y="398" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="30" font-weight="700">⚔ BOSS: AUDIT MẠNG XÃ HỘI GAMERS ⚔</text>' +
+      '<text x="400" y="398" text-anchor="middle" fill="var(--module-accent)" font-family="JetBrains Mono, monospace" font-size="30" font-weight="700">⚔ BOSS: AUDIT DIỄN ĐÀN GUILDBOARD ⚔</text>' +
       '<text x="400" y="430" text-anchor="middle" fill="var(--text-400)" font-size="17">Đóng ticket này — GameHub đủ lực ship v2.0</text>' +
       '</svg>',
 
@@ -1634,7 +1634,10 @@
     } else {
       fb.classList.add('wrong');
       const correctCount = Object.keys(sol).filter(c => placements[c] === sol[c]).length;
-      fb.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Đúng ${correctCount}/${Object.keys(sol).length}. Bấm 🔄 để thử lại.`;
+      fb.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Đúng ${correctCount}/${Object.keys(sol).length}. Kéo/bấm thẻ đỏ sang ô khác rồi Kiểm tra lại.`;
+      // UX fix: SAI thì KHÔNG khóa — người học sửa trực tiếp và Kiểm tra lại
+      // (trước đây lock cứng, chỉ nút 🔄 mở được → "thẻ không tương tác được").
+      state.miniGameLocked = false;
     }
 
     // Enable "next step" button regardless (mini-game is bonus) — label stays honest
@@ -4573,6 +4576,10 @@
 
   window.goToStep = function (step) {
     if (step < 1 || step > TOTAL_STEPS) return;
+
+    // Gỡ pulse của footer "Tiếp theo" (bật khi hoàn thành step-3) khi đã chuyển bước
+    const navNextEl = document.getElementById('nav-next');
+    if (navNextEl) navNextEl.classList.remove('cta-pulse');
 
     // Fade transition giữa các step
     const currentActive = document.querySelector('.step-pane.active');

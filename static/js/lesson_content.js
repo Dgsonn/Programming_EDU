@@ -2162,7 +2162,7 @@ concept_cards: [
       project_piece: '🧪 Thu thập "Bộ Chia Nguyên tử"',
       story: {
         tag: '🎫 GameHub Consulting · Ticket #09',
-        hook: 'Tiếng lành đồn xa — GameHub nhận <strong>hợp đồng tư vấn đầu tiên</strong>: một trường đại học mở ngành esports đang khổ sở với bảng <code>student_raw</code>: cột phones nhét <em>"0901-111, 0902-222" chung 1 ô</em>. Muốn tìm ai giữ 1 số điện thoại? Mò từng dòng. Ticket của bạn: đưa dữ liệu về <strong>1NF — mỗi ô đúng 1 giá trị</strong>, tách bảng <code>student_phone</code> chuẩn chỉnh.'
+        hook: 'Tiếng lành đồn xa — GameHub nhận <strong>hợp đồng tư vấn đầu tiên</strong>: một học viện đào tạo game thủ chuyên nghiệp đang khổ sở với bảng <code>student_raw</code> lưu học viên: cột phones nhét <em>"0901-111, 0902-222" chung 1 ô</em>. Muốn tìm ai giữ 1 số điện thoại? Mò từng dòng. Ticket của bạn: đưa dữ liệu về <strong>1NF — mỗi ô đúng 1 giá trị</strong>, tách bảng <code>student_phone</code> chuẩn chỉnh.'
       },
       drag_type: 'box',
       challenge_type: 'full_ide',
@@ -2682,7 +2682,7 @@ concept_cards: [
       project_piece: '🛡️ Phân hệ "Đặc vụ Guild tối ưu hệ thống"',
       story: {
         tag: '🎫 GameHub Consulting · Ticket #11',
-        hook: 'Sàn phụ kiện game <strong>GearShop</strong> gõ cửa: sếp họ cần <em>doanh thu theo ngành hàng</em> nhưng bảng <code>products</code> nhét lẫn thông tin category — phụ thuộc <strong>bắc cầu</strong> (product → category → mô tả ngành) khiến sửa 1 ngành hàng là rung cả bảng. Ticket: dọn về <strong>3NF</strong>, rồi trả lời câu sếp hỏi bằng JOIN 3 bảng + <code>SUM(qty × price)</code>.'
+        hook: 'Chuỗi cyber-café <strong>GamerBrew</strong> gõ cửa: sếp họ cần <em>doanh thu theo ngành hàng</em> (đồ uống, snack, giờ chơi, phụ kiện) nhưng bảng <code>products</code> nhét lẫn thông tin category — phụ thuộc <strong>bắc cầu</strong> (product → category → mô tả ngành) khiến sửa 1 ngành hàng là rung cả bảng. Ticket: dọn về <strong>3NF</strong>, rồi trả lời câu sếp hỏi bằng JOIN 3 bảng + <code>SUM(qty × price)</code>.'
       },
       drag_type: 'box',
       challenge_type: 'full_ide',
@@ -2869,7 +2869,7 @@ concept_cards: [
       step_4: {
         prompt: "Nâng độ khó — tính doanh thu theo category nhưng chỉ cho đơn <strong>trong khoảng 2024-04-10 → 2024-04-20</strong> (thêm 2 điều kiện <code>AND</code> ngày), sắp xếp giảm dần.",
         context: {
-          scenario: "GearShop đã về 3NF: <code>products</code> / <code>orders</code> / <code>categories</code> tách bạch. Sếp GearShop muốn số liệu cho đợt sale giữa tháng 4: <strong>doanh thu từng ngành hàng trong khung 10→20/04</strong> — cột mô tả ngành giờ chỉ nằm ở <code>categories</code>, không sợ bắc cầu kéo sai.",
+          scenario: "GamerBrew đã về 3NF: <code>products</code> / <code>orders</code> / <code>categories</code> tách bạch. Sếp chuỗi cyber-café muốn số liệu cho đợt khuyến mãi giữa tháng 4: <strong>doanh thu từng ngành hàng trong khung 10→20/04</strong> — cột mô tả ngành giờ chỉ nằm ở <code>categories</code>, không sợ bắc cầu kéo sai.",
           real_world: "Báo cáo campaign của <strong>Shopee/Tiki</strong> đúng khuôn này: JOIN đơn hàng ↔ sản phẩm ↔ ngành hàng, chặn 2 đầu ngày, SUM(số lượng × đơn giá). Doanh thu là cột DẪN XUẤT — không lưu sẵn, tính lúc truy vấn.",
           steps: [
             "JOIN 3 bảng: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ...</code>.",
@@ -3530,7 +3530,7 @@ concept_cards: [
           { level: 3, text: 'GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook. ORDER BY DESC sắp xếp giảm dần. LIMIT 5 lấy top 5.' },
           { level: 4, text: "<code class=\"code\">SELECT course_id, COUNT(*) AS instructor_count FROM course_instructor GROUP BY course_id ORDER BY instructor_count DESC;</code>" }
         ],
-        success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 14 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Mạng Xã Hội Gamers.',
+        success_message: 'Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 14 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Diễn đàn GuildBoard.',
         xp_reward: 75
       }
     },
@@ -3538,13 +3538,13 @@ concept_cards: [
     {
       id: 'db_13', index: 14,
       title: 'Trận chiến cuối — Siêu hệ thống chuẩn hóa',
-      subtitle: 'Tổng hợp mọi quy tắc — Boss battle Mạng Xã Hội Gamers',
+      subtitle: 'Tổng hợp mọi quy tắc — Boss battle Diễn đàn GuildBoard',
       module: 2, module_title: 'Chuẩn hóa dữ liệu (Normal Forms)',
       estimated_minutes: 30, xp_reward: 100,
       project_piece: '👑 Mở khóa Vương Miện "Kiến Trúc Sư CSDL Nội tại"',
       story: {
         tag: '🎫 GameHub Consulting · Ticket #14 — BOSS',
-        hook: 'Khách lớn nhất lịch sử công ty: <strong>mạng xã hội dành cho gamers</strong> với hàng triệu <code>users</code> và <code>posts</code>, đòi audit <strong>toàn bộ thiết kế</strong> — mọi kỹ năng bạn tích từ Ticket #01 tới giờ đều được gọi tên: chuẩn hoá, JOIN, aggregate, top-N. Đóng được ticket này, mùa tư vấn khép lại vẻ vang — và GameHub đủ tiền <strong>ship bản v2.0</strong>. ⚔️'
+        hook: 'Khách lớn nhất lịch sử công ty: <strong>GuildBoard</strong> — diễn đàn guild lớn nhất khu vực, hàng triệu <code>users</code> và <code>posts</code>, đòi audit <strong>toàn bộ thiết kế</strong> — mọi kỹ năng bạn tích từ Ticket #01 tới giờ đều được gọi tên: chuẩn hoá, JOIN, aggregate, top-N. Đóng được ticket này, mùa tư vấn khép lại vẻ vang — và GameHub đủ tiền <strong>ship bản v2.0</strong>. ⚔️'
       },
       drag_type: 'box',
       challenge_type: 'full_ide',
@@ -3573,17 +3573,17 @@ concept_cards: [
         primer: {
           goal: [
             'Áp dụng 1NF → 2NF → 3NF → BCNF tuần tự trên cùng một bảng phức tạp',
-            'Mục tiêu: từ 1 bảng "siêu lộn xộn" thành schema sạch cho Mạng Xã Hội Gamers',
+            'Mục tiêu: từ 1 bảng "siêu lộn xộn" thành schema sạch cho Diễn đàn GuildBoard',
             'Đây là bài tổng hợp — chuẩn bị nhận Vương Miện Kiến Trúc Sư!'
           ],
           intro: 'BOSS BATTLE! Bạn nhận được một bảng <code class="code">gamers_social</code> khổng lồ — mỗi dòng chứa thông tin user + post + game + tag + platform, lẫn lộn. Bạn sẽ trải qua <strong>4 vòng chiến</strong>, mỗi vòng áp dụng 1 dạng chuẩn lên bảng trung gian. Mỗi stage sẽ có một bảng nhỏ hơn, tập trung vào một tập con cột.',
-          example: 'Sau 4 vòng, bạn sẽ có một schema sạch cho Mạng Xã Hội Gamers: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction. Đó là sản phẩm thực tế của một Database Engineer chuyên nghiệp.'
+          example: 'Sau 4 vòng, bạn sẽ có một schema sạch cho Diễn đàn GuildBoard: <code class="code">users</code>, <code class="code">posts</code>, <code class="code">games</code>, <code class="code">genres</code>, <code class="code">platforms</code>, và các bảng junction. Đó là sản phẩm thực tế của một Database Engineer chuyên nghiệp.'
         },
                 intro: 'Bạn nhận brief: <em>"Thiết kế database cho MXH Gamers, scale 1 triệu user, 10 triệu post, 100 triệu like, query response &lt;100ms"</em>. 8 giờ deadline. Bạn bắt đầu từ đâu? Bài này là <strong>boss battle</strong> — tổng hợp 1NF → BCNF → M:N → indexing. Giải xong = pass môn.',
 concept_cards: [
             {
                   "icon": "fa-crown",
-                  "title": "Boss Battle — Hệ thống Mạng Xã Hội Gamers",
+                  "title": "Boss Battle — Hệ thống Diễn đàn GuildBoard",
                   "body": "Bạn được giao thiết kế schema cho MXH Gamers: users, posts, games, genres, platforms, friends, likes, comments. Áp lực: 1 triệu user, 10 triệu post, 100 triệu like. <strong>Bạn bắt đầu từ đâu?</strong>",
                   "extra": "<strong>Liệt kê entity trước</strong> → xác định quan hệ → áp 1NF → BCNF → cuối cùng mới thêm junction table. Bắt đầu bằng entity giúp bạn không bỏ sót concept nào trước khi vẽ quan hệ.",
                   "variant": "interactive"
@@ -3597,7 +3597,7 @@ concept_cards: [
             {
               "icon": "fa-hand-pointer",
               "title": "Thử ngay (Apply)",
-              "body": "Boss battle: 1 bảng \"Mạng Xã Hội Gamers\" nhồi đủ thứ (user, post, game, platform) đang vi phạm cả 1NF→4NF. Nhiệm vụ: soi từng cột, hỏi \"nó phụ thuộc vào ai?\", rồi tách cho đúng chuẩn."
+              "body": "Boss battle: 1 bảng \"Diễn đàn GuildBoard\" nhồi đủ thứ (user, post, game, platform) đang vi phạm cả 1NF→4NF. Nhiệm vụ: soi từng cột, hỏi \"nó phụ thuộc vào ai?\", rồi tách cho đúng chuẩn."
             }
           ],
                 visual: {
@@ -3632,7 +3632,7 @@ concept_cards: [
       step_2: {
         mcq: [
           {
-            question: 'Sau khi áp dụng đầy đủ 1NF → 2NF → 3NF → BCNF, Mạng Xã Hội Gamers nên có tối thiểu bao nhiêu bảng?',
+            question: 'Sau khi áp dụng đầy đủ 1NF → 2NF → 3NF → BCNF, Diễn đàn GuildBoard nên có tối thiểu bao nhiêu bảng?',
             options: [
               { id: 'a', text: '1 bảng (gamers_social)', correct: false, explanation: 'Sai — 1 bảng chứa hết = vi phạm mọi NF (multivalued, partial dep, transitive dep). Schema nguyên thủy của Boss Battle.' },
               { id: 'b', text: '2 bảng (users + games)', correct: false, explanation: 'Sai — quá ít. Thiếu posts (1:N từ users), genres, platforms (M:N qua junction), và các junction tables.' },
@@ -3795,7 +3795,7 @@ concept_cards: [
             }
           ]
         },
-        mini_game: {"type": "order", "title": "Thiết kế schema Boss Battle — sắp xếp thứ tự", "instruction": "Kéo thả theo thứ tự đúng để thiết kế Mạng Xã Hội Gamers.", "items": [{"id": "i1", "label": "1. Xác định entity: users, posts, games, genres, platforms"}, {"id": "i2", "label": "2. Tách game ↔ genre (M:N → junction table)"}, {"id": "i3", "label": "3. Tách post ↔ game (M:N → junction)"}, {"id": "i4", "label": "4. Kiểm tra BCNF cho từng bảng"}], "solution": {"i1": 1, "i2": 2, "i3": 3, "i4": 4}}
+        mini_game: {"type": "order", "title": "Thiết kế schema Boss Battle — sắp xếp thứ tự", "instruction": "Kéo thả theo thứ tự đúng để thiết kế Diễn đàn GuildBoard.", "items": [{"id": "i1", "label": "1. Xác định entity: users, posts, games, genres, platforms"}, {"id": "i2", "label": "2. Tách game ↔ genre (M:N → junction table)"}, {"id": "i3", "label": "3. Tách post ↔ game (M:N → junction)"}, {"id": "i4", "label": "4. Kiểm tra BCNF cho từng bảng"}], "solution": {"i1": 1, "i2": 2, "i3": 3, "i4": 4}}
       },
 
       step_3: {
@@ -3845,7 +3845,7 @@ concept_cards: [
       step_4: {
         prompt: "BOSS+ — thu hẹp còn <strong>user premium ở Việt Nam (country = 'VN')</strong>: top 3 người đăng nhiều post nhất (thêm điều kiện <code>AND u.country = 'VN'</code>).",
         context: {
-          scenario: "Vòng chốt hợp đồng với mạng xã hội gamers: CEO của họ muốn danh sách trao thưởng <strong>creator premium Việt Nam</strong> — top 3 người đăng nhiều post nhất trong nhóm <code>is_premium = true</code> và <code>country = 'VN'</code>. Một câu SQL gói mọi kỹ năng của cả mùa tư vấn.",
+          scenario: "Vòng chốt hợp đồng với diễn đàn GuildBoard: CEO của họ muốn danh sách trao thưởng <strong>thành viên premium Việt Nam</strong> — top 3 người đăng nhiều bài nhất trong nhóm <code>is_premium = true</code> và <code>country = 'VN'</code>. Một câu SQL gói mọi kỹ năng của cả mùa tư vấn.",
           real_world: "Bảng xếp hạng creator của <strong>TikTok/YouTube</strong> chạy đúng khuôn: JOIN user ↔ content, lọc phân khúc (quốc gia, gói trả phí), GROUP BY, rồi <code>LIMIT</code> lấy top. Thêm 1 điều kiện AND = đổi cả tệp trao thưởng — vì thế WHERE phải chính xác tuyệt đối.",
           steps: [
             "Nối: <code>users u JOIN posts p ON p.user_id = u.user_id</code>.",
@@ -3920,7 +3920,7 @@ concept_cards: [
           { level: 3, text: '<code>WHERE is_premium = true</code> + <code>GROUP BY u.user_id, u.username, u.country</code>' },
           { level: 4, text: "<code class=\"code\">SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true AND u.country = 'VN' GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;</code>" }
         ],
-        success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 14 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Mạng Xã Hội Gamers phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Web Services, Bảo mật).',
+        success_message: '👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 14 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Diễn đàn GuildBoard phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Web Services, Bảo mật).',
         xp_reward: 100
       }
     },
