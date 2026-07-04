@@ -2377,6 +2377,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — <strong>đếm mỗi sinh viên có bao nhiêu số điện thoại</strong> (JOIN student ↔ student_phone + <code>GROUP BY</code> + <code>COUNT</code>), sắp xếp nhiều → ít. Nhờ 1NF mỗi số là 1 dòng nên đếm được.",
+        context: {
+          scenario: "Ticket tư vấn cho trường esports đã xong phần tách bảng: <code>student_phone</code> giờ mỗi dòng đúng 1 số. Phòng đào tạo muốn nghiệm thu: <strong>mỗi sinh viên đang đăng ký bao nhiêu số?</strong> — câu hỏi KHÔNG THỂ trả lời khi phones còn dính chùm 1 ô.",
+          real_world: "Đây là phép thử kinh điển sau khi đưa dữ liệu về 1NF: <strong>Zalo/Telegram</strong> lưu mỗi số 1 dòng nên đếm/tìm/khoá từng số dễ dàng — thử đếm số điện thoại trong 1 ô text \"0901-111, 0902-222\" bằng SQL mà xem, ác mộng ngay.",
+          steps: [
+            "Nối 2 bảng: <code>student s JOIN student_phone sp ON s.student_id = sp.student_id</code>.",
+            "Gộp theo sinh viên: <code>GROUP BY s.name</code> — mỗi nhóm = 1 người.",
+            "Đếm số dòng mỗi nhóm (= số điện thoại): <code>COUNT(*) AS phone_count</code>.",
+            "Sắp xếp nhiều → ít: <code>ORDER BY phone_count DESC</code>. Run → bảng nghiệm thu."
+          ],
+          hint_explore: "Chưa nhớ 2 bảng có gì? Gõ <code>SELECT * FROM student</code> rồi <code>SELECT * FROM student_phone</code>, Run từng cái để xem.",
+          expected: "Bảng nhiều dòng × 2 cột (<code>name, phone_count</code>): mỗi sinh viên kèm số lượng số điện thoại, xếp giảm dần — chỉ đếm được vì dữ liệu đã đạt 1NF."
+        },
         schema: {
           table_name: 'student_phone',
           columns: [
@@ -2597,6 +2609,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — chỉ tính <strong>lượt mượn TỪ 2024-02-01</strong> (thêm <code>WHERE loan_date &gt;= ...</code>), đếm theo thành viên, sắp xếp nhiều → ít (bỏ giới hạn top 3).",
+        context: {
+          scenario: "Thư viện thành phố đã nhận bàn giao 2 bảng sạch <code>members</code> / <code>loans</code> (2NF). Giám đốc thư viện muốn báo cáo quý mới: <strong>ai mượn nhiều nhất kể từ 2024-02-01?</strong> — giờ tên thành viên chỉ nằm 1 chỗ, đếm bao nhiêu cũng không sợ lệch.",
+          real_world: "Mọi hệ thống điểm thưởng thành viên (<strong>thư viện, Starbucks, hãng bay</strong>) đều chạy đúng truy vấn này: JOIN bảng người dùng với bảng giao dịch + lọc theo kỳ + GROUP BY. Nếu tên khách còn chép dính trong từng giao dịch (vi phạm 2NF), 1 lần đổi tên là báo cáo sai.",
+          steps: [
+            "Nối: <code>members m JOIN loans l ON l.member_id = m.member_id</code>.",
+            "Lọc theo kỳ báo cáo: <code>WHERE l.loan_date >= '2024-02-01'</code>.",
+            "Gộp + đếm: <code>GROUP BY m.member_name</code>, <code>COUNT(*) AS loan_count</code>.",
+            "Sắp xếp nhiều → ít: <code>ORDER BY loan_count DESC</code>."
+          ],
+          hint_explore: "Xem dữ liệu gốc: <code>SELECT * FROM loans</code> (chú ý cột <code>loan_date</code>) và <code>SELECT * FROM members</code>.",
+          expected: "Bảng nhiều dòng × 2 cột (<code>member_name, loan_count</code>): thành viên kèm số lượt mượn TỪ 2024-02-01, xếp giảm dần."
+        },
         starter: "-- Top 3 thành viên mượn nhiều sách nhất\n-- JOIN loans ↔ members + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT m., COUNT(*) AS \n  FROM members m\n  JOIN loans l ON l. = m.\n GROUP BY m., m.\n ORDER BY  DESC\n LIMIT 3;\n",
         schema: {
           table_name: 'members',
@@ -2844,6 +2868,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — tính doanh thu theo category nhưng chỉ cho đơn <strong>trong khoảng 2024-04-10 → 2024-04-20</strong> (thêm 2 điều kiện <code>AND</code> ngày), sắp xếp giảm dần.",
+        context: {
+          scenario: "GearShop đã về 3NF: <code>products</code> / <code>orders</code> / <code>categories</code> tách bạch. Sếp GearShop muốn số liệu cho đợt sale giữa tháng 4: <strong>doanh thu từng ngành hàng trong khung 10→20/04</strong> — cột mô tả ngành giờ chỉ nằm ở <code>categories</code>, không sợ bắc cầu kéo sai.",
+          real_world: "Báo cáo campaign của <strong>Shopee/Tiki</strong> đúng khuôn này: JOIN đơn hàng ↔ sản phẩm ↔ ngành hàng, chặn 2 đầu ngày, SUM(số lượng × đơn giá). Doanh thu là cột DẪN XUẤT — không lưu sẵn, tính lúc truy vấn.",
+          steps: [
+            "JOIN 3 bảng: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ...</code>.",
+            "Chặn 2 đầu kỳ: <code>WHERE o.order_date >= '2024-04-10' AND o.order_date <= '2024-04-20'</code>.",
+            "Tính tiền: <code>SUM(o.qty * p.price) AS total_revenue</code>, gộp <code>GROUP BY c.category</code>.",
+            "Sắp xếp: <code>ORDER BY total_revenue DESC</code>."
+          ],
+          hint_explore: "Xem từng bảng: <code>SELECT * FROM orders</code> / <code>products</code> / <code>categories</code> — chú ý cột nối giữa chúng.",
+          expected: "Bảng vài dòng × 2 cột (<code>category, total_revenue</code>): doanh thu mỗi ngành hàng TRONG khung 10→20/04, giảm dần."
+        },
         starter: "-- Tổng doanh thu theo category từ 2024-04-05\n-- JOIN orders ↔ products ↔ categories + GROUP BY + SUM + ORDER BY\nSELECT c., SUM(o.qty * p.) AS \n  FROM orders o\n  JOIN products p ON o. = p.\n  JOIN categories c ON p. = c.\n WHERE o. >= '2024-04-05'\n GROUP BY c.\n ORDER BY  DESC;\n",
         schema: {
           table_name: 'products',
@@ -3432,6 +3468,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — sang chiều còn lại của 4NF: <strong>đếm số GIẢNG VIÊN mỗi khóa</strong> (bảng <code>course_instructor</code>), sắp xếp nhiều → ít. (Textbook &amp; instructor là 2 chiều đa trị ĐỘC LẬP.)",
+        context: {
+          scenario: "Trung tâm đào tạo game dev đã tách xong 2 bảng <code>course_textbook</code> / <code>course_instructor</code> (4NF) — hết cảnh 3 giáo trình × 4 giảng viên đẻ 12 dòng tổ hợp. Nghiệm thu nốt chiều thứ hai: <strong>mỗi khóa có bao nhiêu giảng viên?</strong>",
+          real_world: "<strong>Coursera/Udemy</strong> lưu giáo trình và giảng viên của 1 khóa ở 2 bảng riêng đúng kiểu này — 2 danh sách độc lập thì tách riêng, thêm 1 giảng viên không đụng gì tới giáo trình. Đếm mỗi chiều = 1 truy vấn GROUP BY đơn giản trên đúng bảng của nó.",
+          steps: [
+            "Chỉ cần 1 bảng cho chiều này: <code>FROM course_instructor</code>.",
+            "Gộp theo khóa: <code>GROUP BY course_id</code>.",
+            "Đếm giảng viên: <code>COUNT(*) AS instructor_count</code>.",
+            "Sắp xếp nhiều → ít: <code>ORDER BY instructor_count DESC</code>."
+          ],
+          hint_explore: "So sánh 2 chiều: <code>SELECT * FROM course_textbook</code> và <code>SELECT * FROM course_instructor</code> — mỗi bảng 1 quan hệ đa trị độc lập.",
+          expected: "Bảng vài dòng × 2 cột (<code>course_id, instructor_count</code>): số giảng viên mỗi khóa, giảm dần — đối xứng với bài đếm textbook ở Bước 3."
+        },
         starter: "-- Top khóa học có nhiều textbook nhất\n-- GROUP BY course_id + COUNT + ORDER BY DESC\nSELECT , COUNT(*) AS \n  FROM course_textbook\n GROUP BY \n ORDER BY  DESC;\n",
         schema: {
           table_name: 'course_textbook',
@@ -3796,6 +3844,18 @@ concept_cards: [
 
       step_4: {
         prompt: "BOSS+ — thu hẹp còn <strong>user premium ở Việt Nam (country = 'VN')</strong>: top 3 người đăng nhiều post nhất (thêm điều kiện <code>AND u.country = 'VN'</code>).",
+        context: {
+          scenario: "Vòng chốt hợp đồng với mạng xã hội gamers: CEO của họ muốn danh sách trao thưởng <strong>creator premium Việt Nam</strong> — top 3 người đăng nhiều post nhất trong nhóm <code>is_premium = true</code> và <code>country = 'VN'</code>. Một câu SQL gói mọi kỹ năng của cả mùa tư vấn.",
+          real_world: "Bảng xếp hạng creator của <strong>TikTok/YouTube</strong> chạy đúng khuôn: JOIN user ↔ content, lọc phân khúc (quốc gia, gói trả phí), GROUP BY, rồi <code>LIMIT</code> lấy top. Thêm 1 điều kiện AND = đổi cả tệp trao thưởng — vì thế WHERE phải chính xác tuyệt đối.",
+          steps: [
+            "Nối: <code>users u JOIN posts p ON p.user_id = u.user_id</code>.",
+            "Lọc phân khúc: <code>WHERE u.is_premium = true AND u.country = 'VN'</code>.",
+            "Gộp + đếm: <code>GROUP BY u.user_id, u.username, u.country</code> (gộp theo PK cho chuẩn), <code>COUNT(p.post_id) AS post_count</code>.",
+            "Xếp hạng lấy top: <code>ORDER BY post_count DESC LIMIT 3</code>."
+          ],
+          hint_explore: "Trinh sát trước trận: <code>SELECT * FROM users</code> (chú ý <code>is_premium</code>, <code>country</code>) và <code>SELECT * FROM posts</code>.",
+          expected: "Đúng tối đa 3 dòng (<code>username, country, post_count</code>): creator premium VN đăng nhiều nhất, giảm dần. Đóng ticket = mùa Consulting toàn thắng. ⚔️"
+        },
         starter: "-- BOSS BATTLE: Top 3 user premium có nhiều post nhất\n-- JOIN 2 bảng (users ↔ posts) + GROUP BY + ORDER BY + LIMIT\nSELECT u., u., COUNT(p.) AS post_count\n  FROM users u\n  JOIN posts p ON p. = u.\n WHERE u. = \n GROUP BY u., u., u.\n ORDER BY post_count DESC\n LIMIT 3;\n",
         schema: {
           table_name: 'users',
@@ -4065,6 +4125,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — trích key JSON KHÁC: <strong>đếm user theo <code>settings-&gt;&gt;'lang'</code></strong> (ngôn ngữ), sắp xếp nhiều → ít. Cùng kỹ thuật path expression, key khác.",
+        context: {
+          scenario: "GameHub v2.0 lưu tuỳ biến người chơi trong cột JSONB <code>settings</code> của <code>app_users</code>. Đội địa phương hoá cần quyết định dịch ngôn ngữ nào trước — họ hỏi: <strong>người chơi đang đặt <code>lang</code> gì nhiều nhất?</strong> Câu trả lời nằm TRONG cục JSON.",
+          real_world: "<strong>Discord/Spotify</strong> đều lưu user preferences dạng JSON và thống kê bằng path expression: <code>-&gt;&gt;</code> rút giá trị ra thành text để GROUP BY như cột thường — linh hoạt schema mà vẫn truy vấn được.",
+          steps: [
+            "Rút ngôn ngữ từ JSON: <code>settings->>'lang' AS lang</code>.",
+            "Gộp theo chính biểu thức đó: <code>GROUP BY settings->>'lang'</code>.",
+            "Đếm user mỗi nhóm: <code>COUNT(*) AS user_count</code>.",
+            "Sắp xếp nhiều → ít: <code>ORDER BY user_count DESC</code>."
+          ],
+          hint_explore: "Xem cục JSON thật: <code>SELECT * FROM app_users</code> — để ý cột <code>settings</code> chứa gì.",
+          expected: "Bảng vài dòng × 2 cột (<code>lang, user_count</code>): mỗi ngôn ngữ kèm số người dùng, giảm dần — dữ liệu cho quyết định địa phương hoá."
+        },
         starter: "-- Đếm user theo theme (extract từ JSONB)\n-- GROUP BY settings->>'theme' + ORDER BY count DESC\nSELECT settings->>'theme' AS , COUNT(*) AS \n  FROM app_users\n GROUP BY settings->>'theme'\n ORDER BY  DESC;\n",
         schema: {
           table_name: 'app_users',
@@ -4298,6 +4370,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — dùng cột cờ <strong>đã tính sẵn <code>within_10km = 'yes'</code></strong> (thay <code>ST_DWithin</code>) để đếm cửa hàng TP.HCM trong bán kính 10km theo zone, sắp xếp giảm dần — chạy được ngay.",
+        context: {
+          scenario: "Chuỗi cửa hàng GameHub tại TP.HCM (<code>shop_branches</code>) cần chia tuyến giao hàng: <strong>mỗi zone có bao nhiêu chi nhánh nằm trong bán kính 10km quanh kho trung tâm?</strong> Kết quả <code>ST_DWithin</code> đã được tính sẵn vào cột cờ <code>within_10km</code> — việc của bạn là thống kê trên nó.",
+          real_world: "<strong>GrabFood/ShopeeFood</strong> làm y hệt: tính toán không gian (PostGIS) chạy nền rồi lưu cờ/khoảng cách vào cột, để truy vấn thống kê hằng ngày chỉ cần WHERE thường — nhanh hơn nhiều lần so với tính lại hình học mỗi lượt.",
+          steps: [
+            "Lọc phạm vi: <code>WHERE city = 'TP.HCM' AND within_10km = 'yes'</code>.",
+            "Gộp theo khu: <code>GROUP BY zone</code>.",
+            "Đếm chi nhánh: <code>COUNT(*) AS branch_count</code>.",
+            "Sắp xếp giảm dần: <code>ORDER BY branch_count DESC</code>."
+          ],
+          hint_explore: "Xem bảng chi nhánh: <code>SELECT * FROM shop_branches</code> — chú ý <code>zone</code>, <code>within_10km</code> và toạ độ <code>geo_location</code>.",
+          expected: "Bảng vài dòng × 2 cột (<code>zone, branch_count</code>): số chi nhánh trong bán kính 10km theo từng zone TP.HCM, giảm dần."
+        },
         starter: "-- Đếm cửa hàng theo zone (TP.HCM, bán kính 10km từ trung tâm)\n-- ST_DWithin + GROUP BY zone + ORDER BY count DESC\nSELECT , COUNT(*) AS \n  FROM shop_branches\n WHERE city = 'TP.HCM'\n   AND ST_DWithin(geo_location, ST_MakePoint(, ), )\n GROUP BY \n ORDER BY  DESC;\n",
         /* 4A-E3-equiv Bài 16: equiv_sql dùng cột phẳng within_10km — engine không làm PostGIS,
          * council tính khoảng cách 22 branch từ tâm B01 (106.7009, 10.7769), bán kính 10km:
@@ -4500,6 +4584,18 @@ concept_cards: [
 
       step_4: {
         prompt: 'Viết <strong>Django ORM query</strong> đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values(\'event_type\').annotate(count=Count(\'event_id\')).order_by(\'-count\')</code>. ORM Django — không viết SQL thuần.',
+        context: {
+          scenario: "Backend GameHub đã sang Django. Team vận hành nghi user <code>U01</code> có hành vi bất thường — họ cần <strong>bảng đếm hoạt động theo từng loại event</strong> (login, purchase, logout…) của riêng user này, viết bằng ORM cho khớp codebase mới.",
+          real_world: "Trong Django thật, <code>.values('x').annotate(Count(...))</code> chính là <code>GROUP BY x</code> + <code>COUNT</code> — ORM chỉ là lớp áo: hiểu SQL bên dưới thì đọc được mọi query <strong>Instagram</strong> (chạy Django) sinh ra, và biết khi nào nó sinh query tệ.",
+          steps: [
+            "Khoanh vùng user: <code>LogEvent.objects.filter(user_id='U01')</code>.",
+            "Chọn cột gộp (tương đương GROUP BY): <code>.values('event_type')</code>.",
+            "Đếm trong nhóm: <code>.annotate(event_count=Count('event_id'))</code>.",
+            "Xếp giảm dần: <code>.order_by('-event_count')</code> — dấu trừ = DESC."
+          ],
+          hint_explore: "Model <code>LogEvent</code> ánh xạ bảng <code>log_events(event_id, user_id, event_type, timestamp)</code> — mọi filter/annotate xoay quanh 4 cột này.",
+          expected: "Bảng vài dòng × 2 cột (<code>event_type, event_count</code>) của riêng U01, giảm dần — chính là GROUP BY + COUNT nhưng viết bằng Python."
+        },
         starter: "# Đếm events theo event_type cho user U01 (Django ORM)\n# filter(user_id='U01') + values('event_type') + annotate(count=Count('event_id')) + order_by('-count')\nLogEvent.objects.__________________________________\n",
         schema: {
           table_name: 'log_events',
@@ -4713,6 +4809,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Endpoint /api/games?genre=Action&amp;minPrice=50&amp;sort=desc — nâng độ khó: lấy game <strong>Action giá ≥ 50</strong>, <strong>sắp xếp giá giảm dần</strong> (thêm <code>AND price &gt;= 50 ORDER BY price DESC</code>).",
+        context: {
+          scenario: "Public API của GameHub nhận request đầu tiên từ đối tác: <code>GET /api/games?genre=Action&minPrice=50&sort=desc</code>. Server phải dịch 3 tham số đó thành <strong>đúng 1 câu SQL</strong> trên <code>game_catalog</code> — bảng bạn dựng từ Ticket #01, giờ phục vụ thế giới.",
+          real_world: "Mọi REST API đọc dữ liệu (<strong>Steam Web API</strong>, API của Shopee) đều là máy dịch <em>query-string → SQL</em>: mỗi param ứng 1 mảnh WHERE/ORDER BY. Request stateless — server không nhớ gì giữa 2 lần gọi, nên mọi điều kiện phải nằm trọn trong 1 câu lệnh.",
+          steps: [
+            "Param <code>genre=Action</code> → <code>WHERE genre = 'Action'</code>.",
+            "Param <code>minPrice=50</code> → nối thêm <code>AND price >= 50</code>.",
+            "Param <code>sort=desc</code> → <code>ORDER BY price DESC</code>.",
+            "Chọn cột trả về cho JSON: <code>SELECT name, price</code>. Run → chính là body response."
+          ],
+          hint_explore: "Xem catalog hiện có gì: <code>SELECT * FROM game_catalog</code> — đủ 4 cột id, name, genre, price.",
+          expected: "Bảng vài dòng × 2 cột (<code>name, price</code>): game Action giá ≥ 50, giá giảm dần — đúng dữ liệu mà endpoint sẽ đóng gói thành JSON trả đối tác."
+        },
         starter: "-- Lấy name + price các game Action\n-- Filter: genre = 'Action'\nSELECT ____, ____\n  FROM ____\n WHERE ____ = ____;",
         schema: {
           table_name: 'game_catalog',
@@ -4910,6 +5018,18 @@ concept_cards: [
 
       step_4: {
         prompt: 'Viết lại login query bằng <strong>Prepared Statement</strong> với <code>%s</code> placeholder. Sau đó viết query đếm <strong>số user theo role</strong> (aggregation an toàn, không có input).',
+        context: {
+          scenario: "Ticket KHẨN: kẻ tấn công đã thử <code>' OR '1'='1</code> vào form đăng nhập GameHub. Nhiệm vụ 2 phần: (1) <strong>vá lỗ hổng</strong> — viết lại login query bằng Prepared Statement để input vĩnh viễn chỉ là DỮ LIỆU; (2) <strong>đánh giá thiệt hại</strong> — đếm <code>user_accounts</code> theo <code>role</code> xem bao nhiêu tài khoản admin nằm trong vùng nguy hiểm.",
+          real_world: "SQL Injection đứng nhiều năm trong <strong>OWASP Top 10</strong> — các vụ rò dữ liệu Sony, TalkTalk đều từ chuỗi nối SQL. Chuẩn ngành: KHÔNG BAO GIỜ nối input vào câu lệnh — driver gửi câu lệnh và tham số <em>tách kênh</em> qua <code>%s</code>/<code>?</code>.",
+          steps: [
+            "Login an toàn: <code>SELECT * FROM user_accounts WHERE username = %s AND password_hash = %s;</code> — 2 placeholder, không nối chuỗi.",
+            "Xuống dòng, viết câu audit: đếm theo vai trò <code>GROUP BY role</code>.",
+            "<code>COUNT(user_id) AS user_count</code> + <code>ORDER BY user_count DESC</code>.",
+            "Run → câu 1 là khiên chắn, câu 2 là bảng thiệt hại tiềm năng."
+          ],
+          hint_explore: "Xem danh sách tài khoản đang bảo vệ: <code>SELECT * FROM user_accounts</code> — chú ý cột <code>role</code>.",
+          expected: "Prepared Statement chuẩn với <code>%s</code> + bảng vài dòng (<code>role, user_count</code>) giảm dần. Input của hacker từ giờ chỉ còn là chuỗi ký tự vô hại."
+        },
         starter: "-- Query 1: Login an toàn (Prepared Statement)\n-- WHERE username = %s AND password_hash = %s\n\n-- Query 2: Đếm user theo role\n-- SELECT role, COUNT(*) ... GROUP BY role ORDER BY count DESC\nSELECT , COUNT() AS \n  FROM user_accounts\n GROUP BY \n ORDER BY  DESC;\n",
         schema: {
           table_name: 'user_accounts',
@@ -5147,6 +5267,18 @@ concept_cards: [
 
       step_4: {
         prompt: "Nâng độ khó — thay vì đếm gộp, hãy <strong>liệt kê TỪNG user kèm mức bảo mật</strong> (dùng lại <code>CASE WHEN</code>) làm bảng audit, sắp xếp theo <code>username</code>.",
+        context: {
+          scenario: "Ticket cuối cùng: CEO cần <strong>bảng audit két mật khẩu</strong> <code>security_users_vault</code> — từng user kèm nhãn mức bảo mật suy từ thuật toán băm (bcrypt/argon2 = HIGH, sha256 = MEDIUM, còn lại = nguy hiểm). Nộp bảng này là GameHub v3.0 ra mắt toàn cầu.",
+          real_world: "Sau các vụ rò rỉ, những công ty như <strong>LinkedIn</strong> (từng lộ hash SHA-1 không salt) đều phải chạy audit đúng kiểu này để ép nâng cấp thuật toán. <code>CASE WHEN</code> là công cụ phân loại tại chỗ — biến giá trị kỹ thuật thành nhãn mà sếp đọc hiểu ngay.",
+          steps: [
+            "Chọn cột định danh: <code>SELECT username, hash_algorithm</code>.",
+            "Gắn nhãn: <code>CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code> (đúng mẫu ở Bước 3).",
+            "Sắp xếp danh bạ audit: <code>ORDER BY username</code>.",
+            "Run → mỗi user 1 dòng kèm nhãn — bảng nộp CEO."
+          ],
+          hint_explore: "Mở két xem trước: <code>SELECT * FROM security_users_vault</code> — chú ý cột <code>hash_algorithm</code>.",
+          expected: "Bảng mỗi user 1 dòng × 3 cột (<code>username, hash_algorithm, security_level</code>) theo alphabet. Đóng ticket này — 🎓 GameHub v3.0 ra mắt toàn cầu."
+        },
         starter: "-- CASE WHEN phân loại security level\n-- HIGH (bcrypt/argon2/scrypt), MEDIUM (sha256), LOW (md5/sha1)\nSELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN ''\n            WHEN hash_algorithm = '' THEN ''\n            ELSE '' END AS security_level,\n       COUNT() AS \n  FROM security_users_vault\n GROUP BY security_level\n ORDER BY  DESC;\n",
         schema: {
           table_name: 'security_users_vault',
