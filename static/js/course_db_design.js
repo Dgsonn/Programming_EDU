@@ -52,16 +52,52 @@ var CD_COURSE_ID = (document.body && document.body.dataset.course) || 'db_design
 
 var COURSE_PAGE_META = {
   db_design: {
-    heroTitle: 'Database Design Cơ bản',
-    heroSubtitle: 'Phần 1 — Xây nền tảng GameHub · ER Mapping, Phụ thuộc hàm & Chuẩn hóa — theo giáo trình Silberschatz',
+    heroTitle: 'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh',
+    heroSubtitle: 'Phần 1 saga GameHub · ER Mapping, Phụ thuộc hàm & Chuẩn hóa — theo giáo trình Silberschatz',
     moduleNames: { 1: 'ER Model & Mapping', 2: 'FD & Normalization', 3: 'Application Design' },
-    lessonBase: '/lesson/db_design'
+    lessonBase: '/lesson/db_design',
+    lessonCount: 20,
+    curriculumLabel: 'Khóa Cơ bản: 20 bài · 3 module',
+    includes3: ['20 bài học (dự án GameHub)', '3 module (ER / Normalization / Application)', '~6 giờ học'],
+    outcomeFix: { find: 'Mạng Xã Hội Gamers', replace: 'diễn đàn GuildBoard' }
   },
   db_design_tc: {
-    heroTitle: 'Database Design Trung cấp',
-    heroSubtitle: 'Phần 2 — GameHub Community · Advanced SQL, Big Data & Storage/Index — Ticket #21–#41',
+    heroTitle: 'SQL nâng cao, Dữ liệu lớn & Hiệu năng',
+    heroSubtitle: 'Phần 2 saga GameHub — xây GameHub Community · Ticket #21–#41 · Silberschatz Ch 5, 10–14',
     moduleNames: { 1: 'Advanced SQL', 2: 'Big Data & Analytics', 3: 'Storage, Indexing & Performance' },
     lessonBase: '/lesson/db_design_tc',
+    lessonCount: 21,
+    curriculumLabel: 'Khóa Trung cấp: 21 bài · 3 module',
+    includes3: ['21 bài học (GameHub Community)', '3 module (Advanced SQL / Big Data / Storage-Index)', '~7 giờ học'],
+    overviewHTML:
+      'GameHub v3.0 đã ra mắt toàn cầu — và bây giờ công ty xây <strong>mạng cộng đồng riêng cho gamers</strong>. ' +
+      'Bạn, từ kỹ sư dữ liệu đầu tiên, giờ là <em>lead engineer của GameHub Community</em>.' +
+      '<br><br>Trong <strong>21 bài</strong> (3 module), database sẽ không chỉ trả lời truy vấn nữa: nó <strong>tự làm việc</strong> ' +
+      '(Trigger, Stored Procedure, Recursive CTE duyệt cây bình luận), <strong>kể chuyện từ triệu hành vi người dùng</strong> ' +
+      '(Star Schema, OLAP Cube, MapReduce, Streaming) và <strong>chạy nhanh có chủ đích</strong> (Storage, Buffer, B+-Tree, EXPLAIN).',
+    outcomes: [
+      '⚙️ <strong>Viết Function, Stored Procedure & Trigger</strong> — để database tự phản ứng (tự cập nhật like_count, tự dọn dữ liệu)',
+      '🌳 <strong>Duyệt cây bình luận bằng Recursive CTE</strong> — truy vấn đệ quy mà vòng lặp ứng dụng không làm nổi',
+      '⭐ <strong>Dựng Star Schema & cắt OLAP Cube</strong> — trả lời "like theo giờ/ngày/tháng" trong 1 câu lệnh',
+      '🗺️ <strong>Giải thích MapReduce & Tumbling Window</strong> — đếm hành vi trên dữ liệu lớn hơn 1 máy',
+      '🚀 <strong>Chọn đúng Index</strong> (B+-Tree / Composite / Bitmap) và <strong>đọc EXPLAIN</strong> để biết vì sao feed nhanh hay chậm',
+      '🏆 <strong>Boss Battle — Social Graph Detective</strong>: điều tra hiệu năng toàn hệ Community từ A–Z'
+    ],
+    requirements: [
+      { text: 'Hoàn thành "Thiết kế CSDL" (Phần 1) — hoặc vững SELECT / JOIN / GROUP BY', status: 'lock' },
+      { text: 'Hiểu khóa chính/khóa ngoại & chuẩn hóa cơ bản (1NF–3NF)', status: 'info' },
+      { text: 'Trình duyệt web hiện đại — không cần cài database', status: 'info' }
+    ],
+    skills: [
+      { m: 1, icon: 'fa-gears',            title: 'Stored Procedure & Function', desc: 'Đóng gói logic vào database, gọi 1 lệnh' },
+      { m: 1, icon: 'fa-bolt',             title: 'Trigger',                     desc: 'Database tự phản ứng khi dữ liệu đổi' },
+      { m: 1, icon: 'fa-sitemap',          title: 'Recursive CTE',               desc: 'WITH RECURSIVE — duyệt cây, đồ thị' },
+      { m: 2, icon: 'fa-star',             title: 'Star Schema & OLAP',          desc: 'Fact/Dim, ROLLUP, CUBE, slice-dice-drill' },
+      { m: 2, icon: 'fa-diagram-project',  title: 'MapReduce & Streaming',       desc: 'Chia-gom dữ liệu lớn, tumbling window' },
+      { m: 3, icon: 'fa-hard-drive',       title: 'Storage & Buffer',            desc: 'Vì sao đọc đĩa chậm, cache nóng/lạnh' },
+      { m: 3, icon: 'fa-tree',             title: 'B+-Tree & các loại Index',    desc: 'Dense/Sparse/Clustering/Composite/Bitmap' },
+      { m: 3, icon: 'fa-gauge-high',       title: 'EXPLAIN & Tuning',            desc: 'Đọc kế hoạch chạy, chọn index cho query thật' }
+    ],
     lessons: [
       { n: 1,  m: 1, t: 'SQL từ ngôn ngữ lập trình — JDBC & Cursor', min: 25 },
       { n: 2,  m: 1, t: 'Functions & Stored Procedures',             min: 20 },
@@ -87,10 +123,43 @@ var COURSE_PAGE_META = {
     ]
   },
   db_design_nc: {
-    heroTitle: 'Database Design Nâng cao',
-    heroSubtitle: 'Phần 3 — GameHub Marketplace · Engine, Concurrency & Recovery — Ticket #42–#66',
+    heroTitle: 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi',
+    heroSubtitle: 'Phần 3 saga GameHub — vận hành GameHub Marketplace · Ticket #42–#66 · Silberschatz Ch 15–19',
     moduleNames: { 1: 'Engine Room (Query Processing)', 2: 'Concurrency Control', 3: 'Crash Recovery' },
     lessonBase: '/lesson/db_design_nc',
+    lessonCount: 25,
+    curriculumLabel: 'Khóa Nâng cao: 25 bài · 3 module',
+    includes3: ['25 bài học (GameHub Marketplace)', '3 module (Engine / Concurrency / Recovery)', '~9 giờ học'],
+    overviewHTML:
+      'GameHub mở <strong>Marketplace</strong> — chợ giao dịch vật phẩm với hàng triệu lượt mua bán đồng thời. ' +
+      'Ở quy mô này, viết đúng SQL chưa đủ: bạn phải hiểu <em>chuyện gì xảy ra bên trong engine</em>.' +
+      '<br><br>Trong <strong>25 bài</strong> (3 module), bạn mở nắp capo database: câu SQL biến thành <strong>execution plan</strong> ' +
+      'thế nào và vì sao chậm (Engine Room); điều gì xảy ra khi <strong>1000 người cùng mua 1 món</strong> ' +
+      '(Locks, 2PL, Deadlock, MVCC); và làm sao <strong>tiền không bay hơi khi server sập</strong> giữa giao dịch (WAL, ARIES).',
+    outcomes: [
+      '🔬 <strong>Đọc & giải thích execution plan</strong> — ước lượng cost I/O, biết query chậm ở toán tử nào',
+      '🤝 <strong>Chọn đúng thuật toán Join</strong> (Nested / Merge / Hash) theo kích thước & index của dữ liệu',
+      '🔒 <strong>Chẩn đoán deadlock & race condition</strong> — S/X lock, 2PL, wait-for graph, isolation level',
+      '📸 <strong>Giải thích MVCC / Snapshot Isolation</strong> và chặn Lost Update bằng <code>FOR UPDATE</code> / version number',
+      '🧯 <strong>Thiết kế phục hồi sau sập</strong> — log record, WAL, checkpoint, tư duy ARIES',
+      '🏆 <strong>Boss Battle — Engine Under Fire</strong>: query chậm + 100 user đồng thời + crash giữa thanh toán, xử hết trong 1 trận'
+    ],
+    requirements: [
+      { text: 'Hoàn thành "SQL nâng cao, Dữ liệu lớn & Hiệu năng" (Phần 2) — hoặc vững Index/EXPLAIN', status: 'lock' },
+      { text: 'Thành thạo JOIN nhiều bảng & GROUP BY', status: 'info' },
+      { text: 'Từng gặp deadlock/timeout ngoài đời là một lợi thế (không bắt buộc)', status: 'info' }
+    ],
+    skills: [
+      { m: 1, icon: 'fa-diagram-next',   title: 'SQL → Execution Plan',        desc: 'Parser, đại số quan hệ, cây toán tử' },
+      { m: 1, icon: 'fa-coins',          title: 'Cost Model & Scan',           desc: 'Block transfer, random I/O, full vs index scan' },
+      { m: 1, icon: 'fa-shuffle',        title: 'Join Algorithms',             desc: 'Nested / Block / Merge / Hash — chọn theo dữ liệu' },
+      { m: 1, icon: 'fa-magnifying-glass-chart', title: 'Optimizer & EXPLAIN', desc: 'Pushdown, join reorder, materialized view' },
+      { m: 2, icon: 'fa-lock',           title: 'Locks & 2PL',                 desc: 'S/X matrix, growing–shrinking, granularity' },
+      { m: 2, icon: 'fa-arrows-spin',    title: 'Deadlock & Phantom',          desc: 'Wait-for graph, index locking' },
+      { m: 2, icon: 'fa-camera',         title: 'MVCC & Isolation',            desc: 'Snapshot, lost update, write skew, FOR UPDATE' },
+      { m: 3, icon: 'fa-file-lines',     title: 'WAL & Checkpoint',            desc: 'Log record, commit point, redo/undo' },
+      { m: 3, icon: 'fa-heart-pulse',    title: 'ARIES Recovery',              desc: 'LSN, PageLSN, DirtyPageTable — phục hồi chuẩn công nghiệp' }
+    ],
     lessons: [
       { n: 1,  m: 1, t: 'SQL → Execution Plan',                      min: 20 },
       { n: 2,  m: 1, t: 'Cost: Block Transfer + Random I/O',         min: 20 },
@@ -149,25 +218,79 @@ var COURSE_LESSONS = [
 ];
 
 /* Áp meta theo course: Basic giữ COURSE_LESSONS gốc; TC/NC lấy từ meta.
- * Hero title/subtitle + <title> tab cũng đổi theo khóa. */
+ * Override toàn bộ block per-course: hero, tổng quan, outcomes, giáo trình label,
+ * yêu cầu, kỹ năng, sidebar — hết placeholder Basic trên trang TC/NC. */
 var CD_META = COURSE_PAGE_META[CD_COURSE_ID] || COURSE_PAGE_META.db_design;
 if (CD_META.lessons) COURSE_LESSONS = CD_META.lessons;
-(function applyCourseHero() {
+(function applyCourseContent() {
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); };
   var t = document.querySelector('.cd-hero-title');
   var s = document.querySelector('.cd-hero-subtitle');
   if (t) t.textContent = CD_META.heroTitle;
   if (s) s.textContent = CD_META.heroSubtitle;
   document.title = CD_META.heroTitle + ' – Programming EDU';
+  // Hero meta: số bài học
+  var metaVals = document.querySelectorAll('.cd-meta-item .val');
+  if (metaVals[1]) metaVals[1].textContent = CD_META.lessonCount;
+  // Block Tổng quan + outcomes
+  if (CD_META.overviewHTML) {
+    var desc = document.querySelector('.cd-block-body .cd-desc');
+    if (desc) desc.innerHTML = CD_META.overviewHTML;
+  }
+  if (CD_META.outcomes) {
+    var out = document.querySelector('.cd-outcomes');
+    if (out) out.innerHTML = CD_META.outcomes.map(function (o) { return '<li>' + o + '</li>'; }).join('');
+  }
+  if (CD_META.outcomeFix) {
+    var outEl = document.querySelector('.cd-outcomes');
+    if (outEl) outEl.innerHTML = outEl.innerHTML.split(CD_META.outcomeFix.find).join(CD_META.outcomeFix.replace);
+  }
+  // Header giáo trình ("Khóa …: N bài · 3 module")
+  document.querySelectorAll('.cd-block-hd span').forEach(function (sp) {
+    if (/Khóa .*bài/.test(sp.textContent)) sp.textContent = CD_META.curriculumLabel;
+  });
+  // Yêu cầu
+  if (CD_META.requirements) {
+    var reqList = document.querySelector('.cd-req-list');
+    if (reqList) {
+      reqList.innerHTML = CD_META.requirements.map(function (r) {
+        var icon = r.status === 'lock' ? '<i class="fas fa-lock"></i>'
+                 : r.status === 'ok'   ? '<i class="fas fa-check"></i>'
+                 : '<i class="fas fa-lightbulb"></i>';
+        var cls = r.status === 'info' ? ' is-info' : (r.status === 'ok' ? ' is-ok' : '');
+        return '<li><span class="cd-req-text">' + esc(r.text) + '</span>' +
+               '<span class="cd-req-status' + cls + '">' + icon + '</span></li>';
+      }).join('');
+    }
+  }
+  // Kỹ năng đạt được (giữ data-module để logic unlock chạy)
+  if (CD_META.skills) {
+    var grid = document.querySelector('.cd-skills');
+    if (grid) {
+      grid.innerHTML = CD_META.skills.map(function (k) {
+        return '<div class="cd-skill-item" data-module="' + k.m + '">' +
+          '<div class="cd-skill-icon"><i class="fas ' + k.icon + '"></i></div>' +
+          '<div class="cd-skill-body"><div class="cd-skill-title">' + esc(k.title) + '</div>' +
+          '<div class="cd-skill-desc">' + esc(k.desc) + '</div></div></div>';
+      }).join('');
+    }
+  }
+  // Sidebar KHÓA HỌC BAO GỒM — 3 dòng đầu theo khóa
+  if (CD_META.includes3) {
+    var incs = document.querySelectorAll('.cd-inc-item');
+    var icons3 = ['fa-book-open', 'fa-project-diagram', 'fa-clock'];
+    CD_META.includes3.forEach(function (txt, i) {
+      if (incs[i]) incs[i].innerHTML = '<i class="fas ' + icons3[i] + '"></i> ' + esc(txt);
+    });
+  }
 })();
 
-/** Format minutes → Vietnamese-friendly time string */
+/** Format minutes → giờ TRÒN (user 2026-07-04: "5 giờ 45 phút" lẻ khó cảm nhận;
+ *  1 nguồn chân lý = tổng phút giáo trình, card DB duration đồng bộ cùng giá trị). */
 function formatCourseTime(totalMin) {
   if (!totalMin || totalMin <= 0) return '—';
-  var h = Math.floor(totalMin / 60);
-  var m = totalMin % 60;
-  if (h === 0) return '~' + m + ' phút';
-  if (m === 0) return '~' + h + ' giờ';
-  return '~' + h + ' giờ ' + m + ' phút';
+  if (totalMin < 60) return '~' + totalMin + ' phút';
+  return '~' + Math.round(totalMin / 60) + ' giờ';
 }
 
 /** C8-1: Update hero time from lessons.min (sync, runs on page load) */

@@ -1957,23 +1957,23 @@ var _COURSES_CACHE_KEY = 'edu_courses_cache_v1';
 /* 2026-07-04: DB Design tách 3 KHÓA (saga GameHub 3 phần) — fallback khớp seed DB */
 var _DB_DESIGN_CARDS = [
   {
-    id: 'db_design', title: 'Database Design Cơ bản', subtitle: 'Phần 1 — Xây nền tảng GameHub',
+    id: 'db_design', title: 'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh', subtitle: 'Phần 1 — Xây nền tảng GameHub',
     description: 'Từ thực thể đầu tiên đến hệ CSDL hoàn chỉnh: ER Diagram, khóa chính/ngoại, chuẩn hóa 1NF→4NF và SQL ứng dụng thực tế.',
-    image: 'static/images/db_design.svg', level: 'Cơ bản', duration: '14 giờ',
+    image: 'static/images/db_design.svg', level: 'Cơ bản', duration: '~6 giờ',
     students: '0', rating: 4.9, lessons: 20, color: '#06B6D4', accentColor: '#0E7490',
     tag: 'DATABASE & BACKEND', enrolled: false
   },
   {
-    id: 'db_design_tc', title: 'Database Design Trung cấp', subtitle: 'Phần 2 — GameHub Community',
+    id: 'db_design_tc', title: 'SQL nâng cao, Dữ liệu lớn & Hiệu năng', subtitle: 'Phần 2 — GameHub Community',
     description: 'Advanced SQL (Trigger, Procedure, Recursive CTE), Big Data & Analytics, Storage & Indexing — xây mạng cộng đồng gamers của GameHub.',
-    image: 'static/images/db_design.svg', level: 'Trung cấp', duration: '18 giờ',
+    image: 'static/images/db_design.svg', level: 'Trung cấp', duration: '~7 giờ',
     students: '0', rating: 4.9, lessons: 21, color: '#0C4A6E', accentColor: '#38BDF8',
     tag: 'DATABASE & BACKEND', enrolled: false
   },
   {
-    id: 'db_design_nc', title: 'Database Design Nâng cao', subtitle: 'Phần 3 — GameHub Marketplace',
+    id: 'db_design_nc', title: 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', subtitle: 'Phần 3 — GameHub Marketplace',
     description: 'Query Processing & Optimization, Concurrency Control, Crash Recovery — vận hành chợ giao dịch triệu người dùng của GameHub.',
-    image: 'static/images/db_design.svg', level: 'Nâng cao', duration: '22 giờ',
+    image: 'static/images/db_design.svg', level: 'Nâng cao', duration: '~9 giờ',
     students: '0', rating: 4.9, lessons: 25, color: '#7C2D12', accentColor: '#FB923C',
     tag: 'DATABASE & BACKEND', enrolled: false
   }

@@ -497,6 +497,16 @@ def init_db():
             if not c.fetchone():
                 c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', _row)
 
+        # Sync 2026-07-04b (user chốt): tiêu đề ỨNG DỤNG (badge đã nói cấp độ, title không lặp)
+        # + duration TRÒN GIỜ đồng bộ với tổng phút giáo trình (1 nguồn chân lý).
+        # Idempotent: set cùng giá trị mỗi lần start.
+        for _cid, _title, _dur in [
+            ('db_design',    'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh', '~6 giờ'),
+            ('db_design_tc', 'SQL nâng cao, Dữ liệu lớn & Hiệu năng',               '~7 giờ'),
+            ('db_design_nc', 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', '~9 giờ'),
+        ]:
+            c.execute('UPDATE courses SET title=%s, duration=%s WHERE id=%s', (_title, _dur, _cid))
+
         # Seed missions sau courses vì có FK: course_id REFERENCES courses(id)
         c.execute('SELECT 1 FROM missions LIMIT 1')
         if not c.fetchone():
