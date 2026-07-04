@@ -26,6 +26,22 @@
     'slice-zone':   { icon: '✂️', label: 'Slice',    sub: 'Giới hạn',     hint: 'Giới hạn số kết quả: <code>[:10]</code> = LIMIT 10.' },
     'select-zone':  { icon: '📤', label: 'SELECT',   sub: 'Chọn cột',     hint: 'Chọn cột cần xuất.' },
     'inject-zone':  { icon: '💉', label: 'Inject',   sub: 'Chèn SQL',     hint: 'Phần SQL bị inject — quan sát cách attacker phá logic query.' },
+    /* M4-TC 2026-07-04: ga cho bài DDL khóa Trung cấp (procedure / trigger / recursive CTE).
+       Hint KHÔNG tiết lộ đáp án (bảng nào ở bước nào) — chỉ nhắc luật chung. */
+    'proc-head':    { icon: '📜', label: 'CREATE',   sub: 'Khai báo',     hint: 'Khai báo procedure: <code>CREATE PROCEDURE tên(tham_số) LANGUAGE SQL AS $$</code>' },
+    'del-1':        { icon: '🧹', label: 'Xóa ①',    sub: 'Dọn trước',    hint: 'Luật FK: bảng KHÔNG bị ai trỏ vào được xóa trước tiên.' },
+    'del-2':        { icon: '🧹', label: 'Xóa ②',    sub: 'Dọn tiếp',     hint: 'Xóa xong bảng trỏ vào nó thì bảng này mới được xóa.' },
+    'del-3':        { icon: '🧹', label: 'Xóa ③',    sub: 'Gốc cuối cùng', hint: 'Bảng cha bị mọi bảng khác trỏ vào — chỉ xóa được khi các bảng con đã sạch.' },
+    'proc-end':     { icon: '✅', label: 'Đóng',     sub: 'Kết thúc thân', hint: 'Đóng thân procedure: <code>$$;</code>' },
+    'trig-name':    { icon: '⚡', label: 'TRIGGER',  sub: 'Đặt tên',      hint: 'Khai báo: <code>CREATE TRIGGER tên_trigger</code>' },
+    'trig-event':   { icon: '📡', label: 'Sự kiện',  sub: 'Khi nào chạy', hint: 'Thời điểm + sự kiện + bảng: <code>AFTER INSERT ON bảng</code>' },
+    'trig-scope':   { icon: '🎯', label: 'Phạm vi',  sub: 'Mỗi dòng',     hint: '<code>FOR EACH ROW</code> — chạy 1 lần cho MỖI dòng bị chèn.' },
+    'trig-action':  { icon: '🔧', label: 'Hành động', sub: 'Làm gì',       hint: 'Việc trigger làm: <code>EXECUTE FUNCTION tên_hàm()</code>' },
+    'cte-head':     { icon: '🌀', label: 'CTE',      sub: 'Khai báo đệ quy', hint: 'Mở CTE đệ quy: <code>WITH RECURSIVE tên AS (</code>' },
+    'cte-anchor':   { icon: '🌱', label: 'Anchor',   sub: 'Hàng khởi đầu', hint: 'Anchor = hàng bắt đầu của cây (comment gốc), có depth khởi điểm.' },
+    'cte-union':    { icon: '➕', label: 'UNION ALL', sub: 'Nối kết quả',  hint: '<code>UNION ALL</code> nối anchor với các vòng lặp — giữ mọi dòng.' },
+    'cte-step':     { icon: '🔁', label: 'Đệ quy',   sub: 'Tự tham chiếu', hint: 'Phần lặp: JOIN bảng gốc với CHÍNH CTE để lấy tầng con tiếp theo.' },
+    'cte-final':    { icon: '📤', label: 'SELECT cuối', sub: 'Đọc CTE',   hint: 'Đóng CTE rồi <code>SELECT ... FROM tên_cte</code> để đọc kết quả.' },
   };
 
   /* Default schema — Bài 1: Primary Key on game_catalog */

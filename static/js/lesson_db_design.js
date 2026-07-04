@@ -568,6 +568,140 @@
       '<polygon points="160,148 168,144 168,152" fill="rgba(34,211,238,.9)"/>' +
       '<text x="190" y="167" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">JSON</text>' +
       '<text x="360" y="210" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Stateless: mỗi request độc lập — param truyền qua ? (parameterized)</text>' +
+      '</svg>',
+
+    /* ── TC (GameHub Community) — Module 4 Advanced SQL, accent sky #38BDF8 ── */
+    /* tc_01: vòng đời JDBC — code backend → PreparedStatement(?) → DB posts → ResultSet đọc TỪNG dòng */
+    tc_01: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Backend gọi SQL qua JDBC: PreparedStatement với placeholder ?, database posts trả ResultSet, cursor rs.next() đọc từng dòng">' +
+      '<text x="360" y="30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">JDBC — code nói chuyện với database</text>' +
+      '<g transform="translate(28, 62)">' +
+        '<rect width="240" height="118" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="14" y="24" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">// Backend Java</text>' +
+        '<text x="14" y="48" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#e8edf5">prepareStatement(</text>' +
+        '<text x="24" y="66" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#aebfd6">"…WHERE user_id = <tspan fill="#FCD34D" font-weight="700">?</tspan>")</text>' +
+        '<text x="14" y="90" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#e8edf5">setInt(1, <tspan fill="#FCD34D">7</tspan>)</text>' +
+        '<text x="14" y="108" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#e8edf5">executeQuery()</text>' +
+      '</g>' +
+      '<line x1="268" y1="100" x2="330" y2="100" stroke="rgba(56,189,248,.7)" stroke-width="1.6"/>' +
+      '<polygon points="330,100 322,96 322,104" fill="rgba(56,189,248,.9)"/>' +
+      '<text x="299" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">SQL + tham số</text>' +
+      '<text x="299" y="115" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#7f93ad">2 kênh riêng</text>' +
+      '<g transform="translate(332, 70)">' +
+        '<ellipse cx="60" cy="12" rx="60" ry="12" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<path d="M0,12 v40 a60,12 0 0 0 120,0 v-40" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="60" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="13" fill="#e8edf5">posts</text>' +
+      '</g>' +
+      '<line x1="452" y1="100" x2="514" y2="100" stroke="rgba(56,189,248,.7)" stroke-width="1.6" stroke-dasharray="4,2"/>' +
+      '<polygon points="514,100 506,96 506,104" fill="rgba(56,189,248,.9)"/>' +
+      '<text x="483" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">ResultSet</text>' +
+      '<g transform="translate(516, 60)">' +
+        '<rect width="180" height="126" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="90" y="22" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">cursor — while(rs.next())</text>' +
+        '<rect x="12" y="32" width="156" height="24" rx="5" fill="rgba(56,189,248,0.16)" stroke="#38BDF8" stroke-width="1.2"/>' +
+        '<text x="22" y="48" font-family="JetBrains Mono, monospace" font-size="11" fill="#e8edf5">post 501 ◀ đang đọc</text>' +
+        '<rect x="12" y="62" width="156" height="24" rx="5" fill="rgba(255,255,255,0.03)"/>' +
+        '<text x="22" y="78" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">post 503</text>' +
+        '<rect x="12" y="92" width="156" height="24" rx="5" fill="rgba(255,255,255,0.03)"/>' +
+        '<text x="22" y="108" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">post 507</text>' +
+      '</g>' +
+      '<text x="360" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Đọc TỪNG dòng — kết quả lớn hơn RAM vẫn xử lý được</text>' +
+      '</svg>',
+
+    /* tc_02: stored procedure delete_user — 1 CALL = trọn gói 3 DELETE đúng thứ tự FK (con → cha) */
+    tc_02: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CALL delete_user(7) chạy trọn gói 3 lệnh DELETE theo thứ tự khóa ngoại: comments trước, posts sau, users cuối cùng">' +
+      '<text x="360" y="30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Stored Procedure — database tự làm trọn gói</text>' +
+      '<g transform="translate(28, 92)">' +
+        '<rect width="170" height="56" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="85" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="13" fill="#e8edf5">CALL</text>' +
+        '<text x="85" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#38BDF8">delete_user(7)</text>' +
+      '</g>' +
+      '<line x1="198" y1="120" x2="252" y2="120" stroke="rgba(56,189,248,.7)" stroke-width="1.6"/>' +
+      '<polygon points="252,120 244,116 244,124" fill="rgba(56,189,248,.9)"/>' +
+      '<text x="225" y="112" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#aebfd6">1 lệnh</text>' +
+      '<g transform="translate(254, 52)">' +
+        '<rect width="278" height="140" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6" stroke-dasharray="6,3"/>' +
+        '<text x="139" y="22" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">bên trong procedure — chạy tuần tự</text>' +
+        '<text x="16" y="52" font-family="JetBrains Mono, monospace" font-size="12" fill="#e8edf5"><tspan fill="#38BDF8" font-weight="700">①</tspan> DELETE FROM comments…</text>' +
+        '<text x="16" y="84" font-family="JetBrains Mono, monospace" font-size="12" fill="#e8edf5"><tspan fill="#38BDF8" font-weight="700">②</tspan> DELETE FROM posts…</text>' +
+        '<text x="16" y="116" font-family="JetBrains Mono, monospace" font-size="12" fill="#e8edf5"><tspan fill="#38BDF8" font-weight="700">③</tspan> DELETE FROM users…</text>' +
+      '</g>' +
+      '<g transform="translate(560, 52)" font-family="JetBrains Mono, monospace">' +
+        '<rect width="132" height="34" rx="7" fill="rgba(255,255,255,0.03)" stroke="rgba(252,211,77,.5)" stroke-width="1.2"/>' +
+        '<text x="66" y="22" text-anchor="middle" font-size="11" fill="#FCD34D">comments</text>' +
+        '<rect y="53" width="132" height="34" rx="7" fill="rgba(255,255,255,0.03)" stroke="rgba(252,211,77,.5)" stroke-width="1.2"/>' +
+        '<text x="66" y="75" text-anchor="middle" font-size="11" fill="#FCD34D">posts</text>' +
+        '<rect y="106" width="132" height="34" rx="7" fill="rgba(255,255,255,0.03)" stroke="rgba(252,211,77,.5)" stroke-width="1.2"/>' +
+        '<text x="66" y="128" text-anchor="middle" font-size="11" fill="#FCD34D">users</text>' +
+        '<line x1="30" y1="53" x2="30" y2="87" stroke="rgba(252,211,77,.6)" stroke-width="1.2"/><polygon points="30,53 26,61 34,61" fill="rgba(252,211,77,.8)"/>' +
+        '<line x1="30" y1="106" x2="30" y2="140" stroke="rgba(252,211,77,.6)" stroke-width="1.2"/><polygon points="30,106 26,114 34,114" fill="rgba(252,211,77,.8)"/>' +
+        '<text x="86" y="46" font-size="9" fill="#7f93ad">FK trỏ lên</text>' +
+        '<text x="86" y="100" font-size="9" fill="#7f93ad">FK trỏ lên</text>' +
+      '</g>' +
+      '<text x="360" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">Thứ tự sống còn: bảng CON (bị FK trỏ tới cha) phải xóa TRƯỚC — cha xóa CUỐI</text>' +
+      '</svg>',
+
+    /* tc_03: trigger — INSERT INTO likes ⚡ tự động UPDATE posts.like_count (không ai gọi) */
+    tc_03: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trigger: sự kiện INSERT INTO likes tự động kích hoạt UPDATE posts SET like_count + 1 — like_count của post 501 nhảy từ 3 lên 4">' +
+      '<text x="360" y="30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Trigger — database tự phản ứng</text>' +
+      '<g transform="translate(28, 84)">' +
+        '<rect width="188" height="66" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="94" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">sự kiện (ai đó bấm ❤)</text>' +
+        '<text x="94" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="12.5" fill="#e8edf5">INSERT INTO likes</text>' +
+      '</g>' +
+      '<line x1="216" y1="117" x2="272" y2="117" stroke="rgba(56,189,248,.7)" stroke-width="1.6"/>' +
+      '<polygon points="272,117 264,113 264,121" fill="rgba(56,189,248,.9)"/>' +
+      '<g transform="translate(274, 76)">' +
+        '<rect width="190" height="82" rx="10" fill="rgba(56,189,248,0.08)" stroke="#38BDF8" stroke-width="1.8"/>' +
+        '<text x="95" y="26" text-anchor="middle" font-size="18">⚡</text>' +
+        '<text x="95" y="48" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="12" fill="#38BDF8">AFTER INSERT ON likes</text>' +
+        '<text x="95" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#aebfd6">FOR EACH ROW — tự chạy</text>' +
+      '</g>' +
+      '<line x1="464" y1="117" x2="520" y2="117" stroke="rgba(56,189,248,.7)" stroke-width="1.6"/>' +
+      '<polygon points="520,117 512,113 512,121" fill="rgba(56,189,248,.9)"/>' +
+      '<g transform="translate(522, 76)">' +
+        '<rect width="176" height="82" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="88" y="24" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">hành động tự động</text>' +
+        '<text x="88" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#e8edf5">UPDATE posts SET</text>' +
+        '<text x="88" y="62" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#e8edf5">like_count <tspan fill="#FCD34D" font-weight="700">+ 1</tspan></text>' +
+      '</g>' +
+      '<g transform="translate(190, 178)">' +
+        '<rect width="340" height="30" rx="6" fill="rgba(252,211,77,0.07)" stroke="rgba(252,211,77,0.45)" stroke-width="1" stroke-dasharray="4 3"/>' +
+        '<text x="170" y="20" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#FCD34D">post 501 · like_count: 3 → 4 (không ai gọi UPDATE)</text>' +
+      '</g>' +
+      '</svg>',
+
+    /* tc_04: WITH RECURSIVE — cây comment sâu N tầng, anchor + UNION ALL lặp tới khi hết con */
+    tc_04: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cây bình luận 3 tầng duyệt bằng WITH RECURSIVE: anchor lấy comment gốc, UNION ALL lặp nối con của tầng trước tới khi hết">' +
+      '<text x="360" y="30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">WITH RECURSIVE — duyệt cây không biết trước độ sâu</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        '<rect x="40" y="56" width="220" height="28" rx="6" fill="rgba(56,189,248,0.16)" stroke="#38BDF8" stroke-width="1.4"/>' +
+        '<text x="52" y="75" font-size="11.5" fill="#e8edf5">#1 "Game hay quá!"</text>' +
+        '<text x="238" y="75" font-size="10" fill="#38BDF8" text-anchor="end">depth 1</text>' +
+        '<line x1="70" y1="84" x2="70" y2="104" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<rect x="70" y="104" width="220" height="28" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(56,189,248,.45)" stroke-width="1.2"/>' +
+        '<text x="82" y="123" font-size="11.5" fill="#aebfd6">#2 ↳ "Đồng ý luôn"</text>' +
+        '<text x="268" y="123" font-size="10" fill="#7f93ad" text-anchor="end">depth 2</text>' +
+        '<line x1="70" y1="84" x2="70" y2="152" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<rect x="70" y="152" width="220" height="28" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(56,189,248,.45)" stroke-width="1.2"/>' +
+        '<text x="82" y="171" font-size="11.5" fill="#aebfd6">#3 ↳ "Chê, tụt rank"</text>' +
+        '<text x="268" y="171" font-size="10" fill="#7f93ad" text-anchor="end">depth 2</text>' +
+        '<line x1="100" y1="180" x2="100" y2="200" stroke="rgba(56,189,248,.5)" stroke-width="1.4"/>' +
+        '<rect x="100" y="200" width="220" height="28" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(56,189,248,.45)" stroke-width="1.2"/>' +
+        '<text x="112" y="219" font-size="11.5" fill="#aebfd6">#4 ↳↳ "Gà thì đổ game à?"</text>' +
+        '<text x="298" y="219" font-size="10" fill="#7f93ad" text-anchor="end">depth 3</text>' +
+      '</g>' +
+      '<g transform="translate(400, 56)" font-family="JetBrains Mono, monospace">' +
+        '<rect width="292" height="150" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.6"/>' +
+        '<text x="16" y="26" font-size="11.5" fill="#38BDF8" font-weight="700">WITH RECURSIVE thread AS (</text>' +
+        '<text x="28" y="48" font-size="11" fill="#e8edf5">SELECT … WHERE id = 1   <tspan fill="#7f93ad">← anchor</tspan></text>' +
+        '<text x="28" y="70" font-size="11" fill="#FCD34D" font-weight="700">UNION ALL</text>' +
+        '<text x="28" y="92" font-size="11" fill="#e8edf5">SELECT con JOIN thread   <tspan fill="#7f93ad">← lặp</tspan></text>' +
+        '<text x="16" y="114" font-size="11.5" fill="#38BDF8" font-weight="700">) SELECT * FROM thread;</text>' +
+        '<path d="M 258 62 a 14 14 0 1 1 -0.1 0" fill="none" stroke="rgba(252,211,77,.7)" stroke-width="1.5"/>' +
+        '<polygon points="258,48 252,56 264,56" fill="rgba(252,211,77,.85)"/>' +
+        '<text x="146" y="138" text-anchor="middle" font-size="10" fill="#7f93ad">lặp tới khi không còn dòng mới (fixed point)</text>' +
+      '</g>' +
+      '<text x="360" y="232" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">JOIN thường = +1 tầng mỗi lần viết · đệ quy = bao nhiêu tầng cũng gom đủ</text>' +
       '</svg>'
   };
 
@@ -687,13 +821,32 @@
   }
 
   /* ── C3: Module / Course completion celebration ─────────────── */
+  // M4-TC 2026-07-04: mốc release theo COURSE (trả nợ kỹ thuật COURSE_CFG) — Basic ship
+  // GAMEHUB v1-3 tại bài 7/14/20; TC ship COMMUNITY v1-3 tại bài 4/10/21 (M4/M5/M6+boss).
+  // Course chưa khai mốc (NC sau này) → không celebration, không misfire.
+  var COURSE_MILESTONES = {
+    db_design: {
+      trophies: { 7: 1, 14: 2 }, graduation: 20,
+      shipLabel: function (mod) { return 'SHIP THÀNH CÔNG · GAMEHUB v' + (mod || 1) + '.0'; },
+      gradEyebrow: 'GAMEHUB v3.0 — RA MẮT TOÀN CẦU',
+      gradTitle: 'Bạn đã trở thành Nhà thiết kế CSDL!',
+      gradSub: 'Bạn đã đóng cả 20 ticket — từ thực thể đầu tiên tới hệ CSDL hoàn chỉnh. Trong bản release cuối:'
+    },
+    db_design_tc: {
+      trophies: { 4: 1, 10: 2 }, graduation: 21,
+      shipLabel: function (mod) { return 'SHIP THÀNH CÔNG · COMMUNITY v' + ((mod || 4) - 3) + '.0'; },
+      gradEyebrow: 'GAMEHUB COMMUNITY v3.0 — RA MẮT',
+      gradTitle: 'Bạn đã làm chủ SQL nâng cao & dữ liệu lớn!',
+      gradSub: 'Bạn đã đóng cả 21 ticket của GameHub Community — mạng xã hội gamers giờ chạy trên nền dữ liệu bạn dựng. Trong bản release cuối:'
+    }
+  };
+
   function triggerModuleCelebration() {
     var lessonNum = (state.currentLessonIdx || 0) + 1;
-    // Mốc release theo COURSE — TC (Community) sẽ có mốc riêng khi Module 4 hoàn chỉnh;
-    // hiện guard để mốc Basic (7/14/20, chữ GAMEHUB vN.0) không misfire sang course khác.
-    if ((state.courseId || 'db_design') !== 'db_design') return;
-    var isGraduation = (lessonNum === 20);  // B20 = course complete
-    var isTrophy    = (lessonNum === 7 || lessonNum === 14);  // B7 = M1 end, B14 = M2 end
+    var msCfg = COURSE_MILESTONES[state.courseId || 'db_design'];
+    if (!msCfg) return;
+    var isGraduation = (lessonNum === msCfg.graduation);
+    var isTrophy    = !!msCfg.trophies[lessonNum];
     if (!isGraduation && !isTrophy) return;
 
     // Module-specific element pulse (ER nodes / schema rows / IDE) — subtle backdrop life.
@@ -732,22 +885,28 @@
 
     // Hệ Ticket + Release (user chốt 2026-07-04): mỗi bài = 1 ticket, xong 1 chương = SHIP 1 bản lớn.
     // Pace-neutral — không nhắc thời gian học, chỉ nhắc sự kiện do người học tự gây ra.
+    // M4-TC: text mốc lấy từ COURSE_MILESTONES theo course (Basic = GAMEHUB, TC = COMMUNITY).
+    var msCfg = COURSE_MILESTONES[state.courseId || 'db_design'] || COURSE_MILESTONES.db_design;
     var icon = isGraduation ? '🎓' : '🚀';
-    var eyebrow = isGraduation
-      ? 'GAMEHUB v3.0 — RA MẮT TOÀN CẦU'
-      : ('SHIP THÀNH CÔNG · GAMEHUB v' + (modNum || 1) + '.0');
-    var headline = isGraduation ? 'Bạn đã trở thành Nhà thiết kế CSDL!' : modTitle;
+    var eyebrow = isGraduation ? msCfg.gradEyebrow : msCfg.shipLabel(modNum);
+    var headline = isGraduation ? msCfg.gradTitle : modTitle;
     var sub = isGraduation
-      ? 'Bạn đã đóng cả 20 ticket — từ thực thể đầu tiên tới hệ CSDL hoàn chỉnh. Trong bản release cuối:'
+      ? msCfg.gradSub
       : (skills.length + ' ticket đã đóng — những gì vừa vào bản release:');
 
     var skillsHTML = skills.map(function (s) {
       return '<li><i class="fa-solid fa-circle-check"></i> ' + escapeHtml(s) + '</li>';
     }).join('');
 
+    // M4-TC 2026-07-04: khóa đang xây dần (TC mới có M4) — bài kế chưa tồn tại thì nút
+    // "Nhận ticket tiếp theo" chỉ reload bài cũ (init clamp idx) → đổi thành nút đóng.
+    var hasNext = lessons.some(function (l) { return (l.index || 0) === lessonNum + 1; });
     var nextLabel, nextAttr;
     if (isGraduation) {
       nextLabel = 'Hoàn tất 🎉';
+      nextAttr = 'data-mco-close="1"';
+    } else if (!hasNext) {
+      nextLabel = 'Hoàn tất 🎉 — các ticket tiếp theo sắp ra mắt';
       nextAttr = 'data-mco-close="1"';
     } else {
       nextLabel = 'Nhận ticket tiếp theo <i class="fa-solid fa-arrow-right"></i>';
@@ -2695,7 +2854,23 @@
    * Phải chạy TRƯỚC parser — parser chưa xử lý nested parens (IN-subquery) sẽ trip nhầm,
    * và ORM (LogEvent.objects...) không bắt đầu "SELECT" nên parser fail. */
   function scanUnsupportedTokens(sqlText) {
-    var t = String(sqlText || '').toLowerCase();
+    // M4-TC 2026-07-04: strip comment "--" trước khi scan — comment không cần engine hỗ trợ,
+    // và text như "-- update like_count" không được kích hoạt nhầm check DML bên dưới.
+    var t = String(sqlText || '').toLowerCase().replace(/--[^\n]*/g, ' ');
+    // M4-TC: DDL/DML/CTE của khóa TC (procedure/trigger/recursive) — hợp lệ nhưng engine demo
+    // không mô phỏng → pending neutral; validateSQL vẫn chấm đúng/sai khi Run/Submit.
+    var reChecks = [
+      { re: /\bcreate\s+(?:or\s+replace\s+)?function\b/,  label: 'CREATE FUNCTION (DDL)' },
+      { re: /\bcreate\s+(?:or\s+replace\s+)?procedure\b/, label: 'CREATE PROCEDURE (DDL)' },
+      { re: /\bcreate\s+(?:or\s+replace\s+)?trigger\b/,   label: 'CREATE TRIGGER (DDL)' },
+      { re: /\bwith\s+recursive\b/,                        label: 'WITH RECURSIVE (đệ quy)' },
+      { re: /^\s*update\b/m,  label: 'UPDATE (DML)' },
+      { re: /^\s*delete\b/m,  label: 'DELETE (DML)' },
+      { re: /^\s*call\b/m,    label: 'CALL procedure' }
+    ];
+    for (var ri = 0; ri < reChecks.length; ri++) {
+      if (reChecks[ri].re.test(t)) return { unsupported: true, kw: reChecks[ri].label };
+    }
     var checks = [
       { kw: '.objects.', label: 'Django ORM' },           /* ORM không phải SQL — ngay cả khi không có aggregate, parser cũng fail vì "LogEvent.objects..." không bắt đầu SELECT */
       /* 4A-E3-engine: 3 entries removed — engine-thật Bài 9/15/20 handle these:
@@ -3288,7 +3463,9 @@
      * VẪN đỏ qua renderStep4Error. */
     var scan = scanUnsupportedTokens(sqlText);
     if (scan.unsupported) {
-      return { pending: true, msg: '⚙ Bảng kết quả cho truy vấn này đang được hoàn thiện (E3) — đáp án của bạn ĐÚNG. Clause chưa hỗ trợ: ' + scan.kw + '.' };
+      // M4-TC 2026-07-04: message trung tính — KHÔNG nói "đáp án ĐÚNG" (msg này hiện cả khi
+      // user gõ sai; đúng/sai do validateSQL quyết ở nhịp 600ms sau).
+      return { pending: true, msg: '⚙ Engine demo chưa mô phỏng được: ' + scan.kw + ' — đáp án của bạn sẽ được chấm trực tiếp khi bấm Run/Submit.' };
     }
     var s3Pseudo = { drop_zones: [{id:'select-line'},{id:'from-line'},{id:'where-line'}] };
     var parsed = window.PE_parseSQLToBlocks(sqlText, s3Pseudo);
@@ -3737,17 +3914,26 @@
     // AUDIT-FIX 2026-07-04: dung sai khoảng trắng quanh ->> và quanh dấu ngoặc — block rời
     // ("settings" + "->>'theme'", "ST_DWithin" + "(geo…)") join bằng space, expected viết liền
     // → người học lắp ĐÚNG vẫn bị chấm sai (db_14 dòng 1, db_15 dòng 3).
+    // M4-TC 2026-07-04: dung sai quanh dấu CHẤM — buildSQLString join token bằng space
+    // ("LogEvent .objects") trong khi expected viết liền ("LogEvent.objects") → db_16 lắp
+    // đúng 100% vẫn fail full-match. SQL/ORM không cần space quanh '.' nên normalize an toàn.
     const normFull = s => (s || '').replace(/;$/, '').trim().replace(/\s+/g, ' ')
-      .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')');
+      .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')')
+      .replace(/\s*\.\s*/g, '.');
     const expected = normFull(s3.expected_sql);
     const builtSQL = normFull(buildSQLString());
     const isComplete = builtSQL === expected;
 
     // v4 FIX: chấm ĐÚNG/SAI nội dung TỪNG mệnh đề (so nội dung THÔ của zone với expected clause).
     // → pipeline chỉ ✓ 1 ga khi mệnh đề đó THỰC SỰ đúng, không phải cứ có block/đúng-loại là ✓.
-    const expZone = expectedZoneContent(s3.expected_sql || '');
+    // M4-TC 2026-07-04: bài có zone ĐẶC THÙ (không phải select/from/where/group/having/order —
+    // vd ORM db_16, SQLi db_17, procedure/trigger/CTE khóa TC) khai expected_zones trong step_3:
+    // { zoneId: 'nội dung đúng của zone (kể cả keyword)' } — override/bổ sung kết quả parse.
+    // Trước fix này mọi zone đặc thù bị exp==null → zoneCorrect=false → lắp đúng vẫn "✗ dòng 1,2,3".
+    const expZone = Object.assign(expectedZoneContent(s3.expected_sql || ''), s3.expected_zones || {});
     const normClause = t => (t || '').toUpperCase().replace(/,/g, ' ')
       .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')')
+      .replace(/\s*\.\s*/g, '.')
       .replace(/\s+/g, ' ').trim();
     const zoneCorrect = {};
     (s3.drop_zones || []).forEach(zone => {
@@ -4476,6 +4662,26 @@
       return { correct: true, feedback: 'Cú pháp và giá trị khớp hoàn toàn với đáp án mong đợi.' };
     }
 
+    // M4-TC 2026-07-04: bài DDL/DML/CTE (CREATE FUNCTION/PROCEDURE/TRIGGER, WITH RECURSIVE,
+    // UPDATE, CALL…) — nhánh clause-analysis bên dưới chỉ so SELECT/FROM/WHERE nên sẽ chấm
+    // ĐÚNG OAN cho user gõ mỗi phần SELECT lõi mà thiếu vỏ CREATE/RETURNS. Với các bài này,
+    // exact-match sau normalize (đã có dung sai case/space/comment) là chuẩn duy nhất.
+    const ddlHead = e.match(/^(CREATE (?:OR REPLACE )?(?:FUNCTION|PROCEDURE|TRIGGER|VIEW|INDEX)|WITH RECURSIVE|UPDATE|INSERT|DELETE|CALL)\b/);
+    if (ddlHead) {
+      if (!u.startsWith(ddlHead[1])) {
+        return {
+          correct: false,
+          error: `Đáp án cần bắt đầu bằng ${ddlHead[1]} — bạn đang viết một loại câu lệnh khác.`,
+          suggestion: 'Xem lại cấu trúc câu lệnh ở Gợi ý mức 1-2.'
+        };
+      }
+      return {
+        correct: false,
+        error: 'Đúng loại câu lệnh nhưng nội dung chưa khớp đáp án.',
+        suggestion: 'So từng dòng với gợi ý — chú ý tên bảng/cột, NEW/OLD, RETURNS, thứ tự các phần.'
+      };
+    }
+
     // Clause-by-clause analysis
     const uClauses = extractClauses(userSQL);
     const eClauses = extractClauses(expectedSQL);
@@ -4517,13 +4723,23 @@
 
   function normalizeSQL(s) {
     return s
-      .replace(/;$/, '')
+      // M4-TC 2026-07-04: bỏ comment dòng "-- ..." TRƯỚC khi collapse whitespace — user giữ
+      // comment của starter (hành vi tự nhiên) từng làm exact-match và multi-query set-compare
+      // fail dù SQL đúng. CHỈ áp cho step-4 (normalizeSQL); step-3 normFull KHÔNG strip vì
+      // db_17 SQLi có token '--' là nội dung đáp án thật.
+      .replace(/--[^\n]*/g, ' ')
+      // M4-TC: ';' cuối + khoảng trắng/newline đuôi — /;$/ cũ miss khi user gõ Enter cuối dòng
+      .replace(/\s*;+\s*$/, '')
       .replace(/\s+/g, ' ')
       .replace(/\s*([,()])\s*/g, '$1')
       .replace(/\s*=\s*/g, '=')
       // REVIEW-FIX 2026-07-04: cùng dung sai ->> như chấm step-3 (normFull) —
       // "settings ->> 'lang'" là SQL hợp lệ, không được chấm khác "settings->>'lang'".
       .replace(/\s*->>\s*/g, '->>')
+      // M4-TC 2026-07-04: dung sai quanh '.' (NEW.post_id) và toán tử số học
+      // (like_count + 1 ≡ like_count+1) — cần cho bài trigger/function TC.
+      .replace(/\s*\.\s*/g, '.')
+      .replace(/\s*([+\-*\/])\s*/g, '$1')
       .trim()
       .toUpperCase();
   }
@@ -4550,11 +4766,17 @@
   function showNextHint() {
     const s4 = state.currentLesson.step_4;
     if (!s4.hints || state.hintLevel >= s4.hints.length) return;
-
-    const hint = s4.hints[state.hintLevel];
-    document.getElementById('hint-level').textContent = `Gợi ý ${state.hintLevel + 1}/${s4.hints.length}`;
-    document.getElementById('hint-text').innerHTML = hint.text;
-    document.getElementById('step4-hint-card').classList.remove('hidden');
+    // M4-TC FIX 2026-07-04: các id cũ #hint-level/#hint-text/#step4-hint-card không còn
+    // tồn tại (panel gợi ý đã thay bằng #hint-panel dạng tab của enhanceHintPanel) →
+    // MỌI lần reject ở step-4 ném TypeError và thang "sai thì tự mở gợi ý tiếp" chết
+    // im lặng. Giờ: kích hoạt tab gợi ý kế tiếp trên panel mới.
+    const tabs = document.querySelectorAll('#hint-level-tabs .hint-level-tab');
+    const body = document.getElementById('hint-body');
+    if (!tabs.length || !body) return;
+    const idx = Math.min(state.hintLevel, tabs.length - 1);
+    tabs.forEach(t => t.classList.remove('active'));
+    tabs[idx].classList.add('active');
+    body.innerHTML = (s4.hints[idx] && s4.hints[idx].text) || '';
     state.hintLevel++;
   }
 

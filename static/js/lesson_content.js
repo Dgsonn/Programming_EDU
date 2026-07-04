@@ -4575,6 +4575,15 @@ concept_cards: [
           { id: 'slice-zone',  placeholder: '[:10]',                                                  accepts: ['kw'],      multi: false }
         ],
         expected_sql: "LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]",
+        /* M4-TC 2026-07-04: zone đặc thù (không phải select/from/where) — expectedZoneContent
+         * không parse được ORM nên trước đây cả 3 zone bị exp==null → lắp đúng 100% vẫn
+         * "✗ sai dòng 1,2,3". expected_zones = nội dung đúng của TỪNG zone (dung sai space
+         * quanh dấu chấm đã có ở normClause/normFull). */
+        expected_zones: {
+          'setup-zone': 'LogEvent.objects',
+          'chain-zone': ".filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')",
+          'slice-zone': '[:10]'
+        },
         reveal_hints: {
           'setup-zone': '<strong>Setup:</strong> <code>LogEvent</code> = Django model class, <code>.objects</code> = manager trả về QuerySet.',
           'chain-zone': '<strong>Chain methods:</strong> <code>.filter(...)</code> = WHERE, <code>.select_related(\'user\')</code> = INNER JOIN, <code>.order_by(\'-timestamp\')</code> = ORDER BY DESC.',
@@ -5021,9 +5030,17 @@ concept_cards: [
           { id: 'select-zone',   placeholder: "SELECT * FROM user_accounts WHERE username = ''",         accepts: ['kw','op','tbl','col'], acceptedKeywords: ['SELECT'], multi: true },
           { id: 'inject-zone',   placeholder: "OR '1'='1' --' AND password_hash = '_ignored'",         accepts: ['kw','op'], acceptedKeywords: ['--', 'OR', '1=1'], multi: true }
         ],
-        expected_sql: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND password_hash = 'hashed_pw_abc'",
+        /* M4-TC 2026-07-04 FIX: expected cũ kết bằng 'hashed_pw_abc' nhưng block chỉ có
+         * '_ignored' → bài này KHÔNG THỂ hoàn thành step-3 (builtSQL không bao giờ khớp).
+         * expected giờ = đúng chuỗi các block ghép ra; kèm expected_zones vì select-zone/
+         * inject-zone là zone đặc thù (expectedZoneContent không parse được). */
+        expected_sql: "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' -- AND password_hash = '_ignored'",
+        expected_zones: {
+          'select-zone': 'SELECT * FROM user_accounts WHERE username',
+          'inject-zone': "= '' OR '1'='1' -- AND password_hash = '_ignored'"
+        },
         reveal_hints: {
-          'select-zone': '<strong>Query ban đầu:</strong> SELECT * FROM user_accounts WHERE username = \'\'',
+          'select-zone': '<strong>Query ban đầu:</strong> SELECT * FROM user_accounts WHERE username — phần app viết sẵn.',
           'inject-zone': '<strong>Phần inject:</strong> <code>OR \'1\'=\'1\'</code> thêm điều kiện luôn đúng. <code>--</code> comment out phần password. Query cuối = <code>SELECT * FROM user_accounts</code> — trả TẤT CẢ!'
         }
       },
