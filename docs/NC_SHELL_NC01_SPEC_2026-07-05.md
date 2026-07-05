@@ -60,3 +60,21 @@ User chốt 4/4 recommended: cụm nc_02+nc_03 · slider RAM thật trong plan v
 - Step 3 = 4 access path (tra PK nhảy 1 phát / khách ít đơn / VIP phản chủ / luật "secondary chỉ đáng khi lấy RẤT ÍT") + khối bịa "cứ có index là dùng"; step 4 full_ide conjunctive (probe OK: `WHERE buyer_id=88 AND status='delivered'` → 2 dòng) — plan mô phỏng "Index Scan → Filter" trong context (1 index + filter phần còn lại, đúng 15.3 complex selection).
 - Card C nc_card_bitmap_scan (đánh dấu block chứa match rồi quét liền mạch — thoát n cú nhảy khi match nhiều) + quiz.
 - Điểm treo ghi báo cáo: PART_6 còn Card D "Secondary Can Be Bad" đặt sau Bài 3 — nội dung đã dạy TRONG nc_03 và trùng ý card cầu TC "Index có phải lúc nào cũng thắng?" → đề xuất bỏ/chờ user quyết.
+
+---
+
+# ADDENDUM ĐỢT 3 (2026-07-05): nc_04 + nc_05 (Card D đã chốt BỎ)
+
+User chốt 4/4 recommended: cụm nc_04+nc_05 (giữa 2 bài không có card — Card E sau bài 6) · sort sim BẤM-TỪNG-BƯỚC ở step 1 · nc_04 fill_blank tính run/pass + nc_05 full_ide JOIN thật · plan visual 3 cây cho 3 join mode. Card D bỏ theo đề xuất đợt 2 (user "Được").
+
+## nc_04 — Ticket #45 External Sort-Merge (Ch 15.4)
+- `renderSortVisual` (component mới, mount chung #plan-visual-mount qua `step_1.sort_visual`): mô hình thu nhỏ ĐÚNG Fig 15.4 sách — 12 block, M=3 → learner bấm 4 mẻ "nạp & sort" sinh 4 run → ra lệnh merge từng cặp (RAM 3 = 2 đường vào + 1 ra → 2 PASS) → output sort tăng dần. Số thật trong bài: 1.000 block, M=100 → 10 run → 1 pass (fill_blank 10/100/1).
+- Step 3: 4 trạm nạp-mẻ/ghi-run/merge-N-way/thêm-pass; khối bịa = "nối đuôi các run khỏi merge" (misconception concatenate).
+
+## nc_05 — Ticket #46 Join I (Ch 15.5.1-3)
+- Retcon chuẩn hóa: orders bỏ item_name chép tay (di sản nc_03) → listing_id FK — story nối saga chuẩn hóa Basic; JOIN từ đây là bắt buộc.
+- Plan visual 3 CÂY (pv-trees--wide): NLJ 303 seek + 120.003 block = 13.212ms · BNLJ 6 + 1.203 = 144ms ✓ chosen · INLJ 303 + 303 = 1.242ms. Twist: index KHÔNG thắng (inner 400 block quá nhỏ); phình 1 triệu món → INLJ lật — nhất quán triết lý nc_03. NLJ vs BNLJ: CÙNG 12 triệu phép so, chỉ khác I/O (nuance sách 15.5.2).
+- Step 4 full_ide JOIN alias (probe_join j1 OK): SELECT o.order_id, l.item_name, o.total … WHERE o.buyer_id = 88.
+
+## Engine guard mới (probe_join j3 — silent wrong)
+`ORDER BY alias.cột` (vd `ORDER BY o.total`) bị engine NUỐT IM LẶNG → thêm reCheck scanUnsupportedTokens chặn pending-neutral (cùng lớp UPPER/ROLLUP). Không expected_sql nào dùng dạng này; tc_08 equiv_sql chạy ngoài scan — không ảnh hưởng (row-order equiv tc_08 vốn cosmetic).

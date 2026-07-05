@@ -1323,6 +1323,86 @@
       '</g>' +
       '<defs><marker id="nc3arr" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#34d399"/></marker></defs>' +
       '<text x="360" y="232" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">access path — optimizer chọn lối vào theo THỐNG KÊ số dòng match</text>' +
+      '</svg>',
+
+    /* nc_04: external sort-merge — kho lộn xộn → 4 run đã sort → phễu merge → output */
+    nc_04: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="External sort-merge: kho 12 block lộn xộn chia thành 4 run đã sort trong RAM 3 block, các run đổ vào phễu merge N-way ra dải output có trật tự">' +
+      '<text x="360" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">External Sort-Merge — sắp xếp thứ TO HƠN bộ nhớ</text>' +
+      '<g font-family="JetBrains Mono, monospace" font-size="9">' +
+        // Kho lộn xộn
+        '<rect x="26" y="44" width="150" height="168" rx="10" fill="#0e1726" stroke="rgba(148,163,184,.45)" stroke-width="1.3"/>' +
+        '<text x="101" y="62" text-anchor="middle" fill="#aebfd6" font-weight="700" font-size="10">📦 KHO 1.000 block</text>' +
+        '<text x="101" y="76" text-anchor="middle" fill="#7f93ad" font-size="8.5">total lộn xộn</text>' +
+        '<g fill="rgba(148,163,184,.14)" stroke="rgba(148,163,184,.4)" stroke-width="1">' +
+          '<rect x="42" y="86" width="34" height="14" rx="3"/><rect x="84" y="86" width="34" height="14" rx="3"/><rect x="126" y="86" width="34" height="14" rx="3"/>' +
+          '<rect x="42" y="106" width="34" height="14" rx="3"/><rect x="84" y="106" width="34" height="14" rx="3"/><rect x="126" y="106" width="34" height="14" rx="3"/>' +
+          '<rect x="42" y="126" width="34" height="14" rx="3"/><rect x="84" y="126" width="34" height="14" rx="3"/><rect x="126" y="126" width="34" height="14" rx="3"/>' +
+        '</g>' +
+        '<text x="59" y="96" text-anchor="middle" fill="#aebfd6">790</text><text x="101" y="96" text-anchor="middle" fill="#aebfd6">45</text><text x="143" y="96" text-anchor="middle" fill="#aebfd6">320</text>' +
+        '<text x="59" y="116" text-anchor="middle" fill="#aebfd6">80</text><text x="101" y="116" text-anchor="middle" fill="#aebfd6">12500</text><text x="143" y="116" text-anchor="middle" fill="#aebfd6">99</text>' +
+        '<text x="59" y="136" text-anchor="middle" fill="#aebfd6">12</text><text x="101" y="136" text-anchor="middle" fill="#aebfd6">510</text><text x="143" y="136" text-anchor="middle" fill="#aebfd6">35</text>' +
+        '<rect x="42" y="156" width="118" height="22" rx="5" fill="rgba(129,140,248,.12)" stroke="rgba(129,140,248,.55)" stroke-width="1.2"/>' +
+        '<text x="101" y="171" text-anchor="middle" fill="#a5b4fc" font-weight="700">🧠 RAM: M = 100 block</text>' +
+        '<text x="101" y="198" text-anchor="middle" fill="#7f93ad" font-size="8.5">nạp từng mẻ M block → sort</text>' +
+        '<path d="M176 128 L 206 128" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc4arr)"/>' +
+        // 4 runs
+        '<rect x="210" y="44" width="180" height="168" rx="10" fill="#0e1726" stroke="rgba(129,140,248,.5)" stroke-width="1.4"/>' +
+        '<text x="300" y="62" text-anchor="middle" fill="#a5b4fc" font-weight="700" font-size="10">🗂️ 10 RUN đã sort</text>' +
+        '<g fill="rgba(129,140,248,.1)" stroke="rgba(129,140,248,.45)" stroke-width="1">' +
+          '<rect x="226" y="74" width="148" height="16" rx="4"/><rect x="226" y="96" width="148" height="16" rx="4"/><rect x="226" y="118" width="148" height="16" rx="4"/><rect x="226" y="140" width="148" height="16" rx="4"/>' +
+        '</g>' +
+        '<text x="300" y="86" text-anchor="middle" fill="#c7d2fe">run 1 · 12 → 45 → 790…</text>' +
+        '<text x="300" y="108" text-anchor="middle" fill="#c7d2fe">run 2 · 35 → 99 → 510…</text>' +
+        '<text x="300" y="130" text-anchor="middle" fill="#c7d2fe">run 3 · 80 → 320 → 12500…</text>' +
+        '<text x="300" y="152" text-anchor="middle" fill="#c7d2fe">run 4…10 · mỗi run 100 block</text>' +
+        '<text x="300" y="178" text-anchor="middle" fill="#7f93ad" font-size="8.5">mảnh CÓ TRẬT TỰ — bé nhất</text>' +
+        '<text x="300" y="190" text-anchor="middle" fill="#7f93ad" font-size="8.5">luôn nằm ở ĐẦU run</text>' +
+        '<path d="M390 128 L 420 128" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc4arr)"/>' +
+        // Phễu merge + output
+        '<rect x="424" y="44" width="270" height="168" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.55)" stroke-width="1.5"/>' +
+        '<text x="559" y="62" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🔀 MERGE N-WAY</text>' +
+        '<path d="M459 78 L 559 108 M509 78 L 559 108 M609 78 L 559 108 M659 78 L 559 108" stroke="rgba(52,211,153,.5)" stroke-width="1.3" fill="none"/>' +
+        '<text x="459" y="74" text-anchor="middle" fill="#aebfd6">12</text><text x="509" y="74" text-anchor="middle" fill="#aebfd6">35</text><text x="609" y="74" text-anchor="middle" fill="#aebfd6">80</text><text x="659" y="74" text-anchor="middle" fill="#aebfd6">…</text>' +
+        '<circle cx="559" cy="115" r="13" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.6"/>' +
+        '<text x="559" y="119" text-anchor="middle" fill="#6ee7b7" font-weight="800" font-size="9">min?</text>' +
+        '<text x="559" y="144" text-anchor="middle" fill="#aebfd6" font-size="8.5">so các ĐẦU run — nhặt bé nhất</text>' +
+        '<rect x="446" y="156" width="226" height="20" rx="5" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.45)" stroke-width="1.1"/>' +
+        '<text x="559" y="170" text-anchor="middle" fill="#6ee7b7" font-weight="700">✅ 12 → 35 → 45 → 80 → 99 → …</text>' +
+        '<text x="559" y="196" text-anchor="middle" fill="#7f93ad" font-size="8.5">10 run &lt; 99 đường vào → MỘT pass là xong</text>' +
+      '</g>' +
+      '<defs><marker id="nc4arr" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(129,140,248,.8)"/></marker></defs>' +
+      '<text x="360" y="230" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">chia mẻ vừa RAM → run đã sort → merge chỉ nhìn ĐẦU run — nền của ORDER BY / DISTINCT / merge join</text>' +
+      '</svg>',
+
+    /* nc_05: đấu trường 3 đời nested loop — hóa đơn 13.212 / 144 / 1.242 ms, đai vô địch BNLJ */
+    nc_05: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ba đời nested loop join cho 300 đơn ghép 40000 món: từng dòng 13212ms, từng block 144ms vô địch, tra index 1242ms — phình kho thì index lật cờ">' +
+      '<text x="360" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">JOIN — đấu trường ba đời Nested Loop</text>' +
+      '<text x="360" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#7f93ad">300 đơn (3 block) ⋈ listings 40.000 món (400 block)</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        // Đời 1
+        '<rect x="30" y="58" width="210" height="130" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.5)" stroke-width="1.3"/>' +
+        '<text x="135" y="78" text-anchor="middle" fill="#f87171" font-weight="700" font-size="10.5">🐌 ĐỜI 1 — TỪNG DÒNG</text>' +
+        '<text x="135" y="97" text-anchor="middle" fill="#aebfd6" font-size="9">mỗi ĐƠN dạo trọn kho</text>' +
+        '<text x="135" y="111" text-anchor="middle" fill="#aebfd6" font-size="9">300 lượt × 400 block</text>' +
+        '<text x="135" y="140" text-anchor="middle" fill="#f87171" font-weight="800" font-size="15">13.212 ms</text>' +
+        '<text x="135" y="162" text-anchor="middle" fill="#fca5a5" font-size="8.5">120.000 block khiêng oan</text>' +
+        // Đời 2 — vô địch
+        '<rect x="256" y="52" width="210" height="142" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.8"/>' +
+        '<text x="361" y="72" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10.5">🚚 ĐỜI 2 — TỪNG BLOCK</text>' +
+        '<text x="361" y="91" text-anchor="middle" fill="#aebfd6" font-size="9">mỗi BLOCK đơn dạo kho 1 lượt</text>' +
+        '<text x="361" y="105" text-anchor="middle" fill="#aebfd6" font-size="9">3 lượt × 400 block — phép so giữ nguyên</text>' +
+        '<text x="361" y="134" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">144 ms</text>' +
+        '<text x="361" y="156" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">🏆 vô địch kho này — I/O giảm 100 lần</text>' +
+        '<text x="361" y="180" text-anchor="middle" fill="#7f93ad" font-size="8.5">outer NHỎ cầm trịch: inner ít bị quét lại</text>' +
+        // Đời 3
+        '<rect x="482" y="58" width="210" height="130" rx="10" fill="#0e1726" stroke="rgba(251,191,36,.5)" stroke-width="1.3"/>' +
+        '<text x="587" y="78" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="10.5">📖 ĐỜI 3 — TRA INDEX</text>' +
+        '<text x="587" y="97" text-anchor="middle" fill="#aebfd6" font-size="9">mỗi đơn 1 cú nhảy PK listings</text>' +
+        '<text x="587" y="111" text-anchor="middle" fill="#aebfd6" font-size="9">300 cú × 4,1ms</text>' +
+        '<text x="587" y="140" text-anchor="middle" fill="#fbbf24" font-weight="800" font-size="15">1.242 ms</text>' +
+        '<text x="587" y="162" text-anchor="middle" fill="#fcd34d" font-size="8.5">phình kho lên 1 triệu món → lật cờ</text>' +
+      '</g>' +
+      '<text x="360" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">cùng một phép ⋈ · cùng 12 triệu phép so (đời 1-2) — hóa đơn chênh 90 lần: JOIN là THUẬT TOÁN, không phải syntax</text>' +
       '</svg>'
   };
 
@@ -1720,6 +1800,117 @@
    *     nodes: [{ op, kind: table|scan|filter|project|join, detail, rows, cost? }] }] }
    * nodes khai ĐÁY→ĐỈNH (leaf = bảng, root = kết quả); rows = số dòng ĐI RA khỏi node
    * (hiện trên mũi tên phía trên nó). cost optional — nc_02+ gắn giá lên node. */
+  /* ── Sort Visual (nc_04 — External Sort-Merge, sim bấm-từng-bước) ──
+   * PART_6 Bài 4 Interaction chính: nạp M block vào RAM → sort → ghi run;
+   * merge N-way; run ≥ M → thêm pass (Fig 15.4 sách: M=3, 12 block → 4 run → 2 pass).
+   * Data: step_1.sort_visual = { eyebrow, caption, buffer_m, items: [{label, v}] }.
+   * User chốt 2026-07-05: learner BẤM từng bước (nạp từng mẻ, ra lệnh từng lượt merge). */
+  function renderSortVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.items)) return;
+    var M = cfg.buffer_m || 3;
+    var nGroups = Math.ceil(cfg.items.length / M);
+    var st = { phase: 'gen', g: 0, runs: [], pass2: [], out: [], busy: false };
+
+    function chipHtml(it, cls) {
+      return '<span class="sv-chip' + (cls ? ' ' + cls : '') + '">' + escapeHtml(String(it.label)) + ' <b>' + escapeHtml(String(it.v)) + '</b></span>';
+    }
+    mount.innerHTML =
+      '<section class="sort-visual" aria-label="Mô phỏng external sort-merge với RAM ' + M + ' block">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'EXTERNAL SORT-MERGE') + '</span></div>' +
+        '<div class="sv-row"><span class="sv-label">📦 KHO — chưa xếp</span><div class="sv-strip" id="sv-src">' +
+          cfg.items.map(function (it, i) { return '<span class="sv-chip" data-sv-i="' + i + '">' + escapeHtml(String(it.label)) + ' <b>' + escapeHtml(String(it.v)) + '</b></span>'; }).join('') +
+        '</div></div>' +
+        '<div class="sv-row"><span class="sv-label">🧠 RAM — ' + M + ' block</span><div class="sv-strip sv-buf" id="sv-buf"><span class="sv-empty">trống</span></div></div>' +
+        '<div class="sv-row"><span class="sv-label">🗂️ PASS 1 — run</span><div class="sv-runs" id="sv-runs"></div></div>' +
+        '<div class="sv-row"><span class="sv-label">🔀 PASS 2 — run lớn</span><div class="sv-runs" id="sv-pass2"></div></div>' +
+        '<div class="sv-row"><span class="sv-label">✅ OUTPUT</span><div class="sv-strip sv-outstrip" id="sv-out"></div></div>' +
+        '<div class="sv-ctl">' +
+          '<button type="button" class="sv-btn" id="sv-btn">Nạp ' + M + ' block vào RAM &amp; sort</button>' +
+          '<span class="sv-status" id="sv-status">Kho ' + cfg.items.length + ' block — RAM chỉ chứa ' + M + ': đành xếp TỪNG MẺ.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function paintRuns(elId, runs, headIdx) {
+      $(elId).innerHTML = runs.map(function (run, ri) {
+        return '<div class="sv-run"><div class="sv-run-name">run ' + (elId === 'sv-pass2' ? 'ABC'[ri] : ri + 1) + '</div>' +
+          run.map(function (it, ii) { return chipHtml(it, (headIdx && headIdx[ri] === ii) ? 'sv-chip--head' : ''); }).join('') + '</div>';
+      }).join('');
+    }
+    function setBtn(label, disabled) { var b = $('sv-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function setStatus(t) { $('sv-status').innerHTML = t; }
+
+    // Merge 2 run (mảng đã sort) từng nhịp — chọn phần tử nhỏ nhất giữa 2 đầu run
+    function animMerge(pair, destPaint, onDone) {
+      var i = 0, j = 0, merged = [];
+      st.busy = true; setBtn('Đang merge…', true);
+      var iv = setInterval(function () {
+        var a = pair[0][i], b = pair[1][j];
+        if (a === undefined && b === undefined) {
+          clearInterval(iv); st.busy = false; onDone(merged); return;
+        }
+        var takeA = (b === undefined) || (a !== undefined && Number(a.v) <= Number(b.v));
+        merged.push(takeA ? a : b);
+        if (takeA) i++; else j++;
+        destPaint(merged, { 0: i, 1: j });
+      }, 380);
+    }
+
+    $('sv-btn').addEventListener('click', function () {
+      if (st.busy) return;
+      if (st.phase === 'gen') {
+        var batch = cfg.items.slice(st.g * M, (st.g + 1) * M);
+        // mờ chip đã lấy khỏi kho
+        batch.forEach(function (_, k) {
+          var el = mount.querySelector('[data-sv-i="' + (st.g * M + k) + '"]');
+          if (el) el.classList.add('sv-chip--taken');
+        });
+        var sorted = batch.slice().sort(function (a, b) { return Number(a.v) - Number(b.v); });
+        $('sv-buf').innerHTML = sorted.map(function (it) { return chipHtml(it, 'sv-chip--buf'); }).join('');
+        st.runs.push(sorted);
+        paintRuns('sv-runs', st.runs);
+        st.g++;
+        if (st.g < nGroups) {
+          setStatus('Mẻ ' + st.g + '/' + nGroups + ': sort trong RAM xong → ghi ra <strong>run ' + st.g + '</strong>. Kho còn ' + (cfg.items.length - st.g * M) + ' block.');
+        } else {
+          st.phase = 'merge1';
+          setBtn('Merge cặp run 1 + 2');
+          setStatus('<strong>' + nGroups + ' run</strong> mà RAM ' + M + ' block chỉ đủ ' + (M - 1) + ' đường vào + 1 ra → phải merge NHIỀU PASS.');
+        }
+      } else if (st.phase === 'merge1' || st.phase === 'merge2') {
+        var idx = st.phase === 'merge1' ? 0 : 1;
+        var pair = [st.runs[idx * 2], st.runs[idx * 2 + 1]];
+        animMerge(pair, function (merged) {
+          var view = st.pass2.slice(); view[idx] = merged;
+          paintRuns('sv-pass2', view);
+        }, function (merged) {
+          st.pass2[idx] = merged;
+          paintRuns('sv-pass2', st.pass2);
+          if (idx === 0) {
+            st.phase = 'merge2'; setBtn('Merge cặp run 3 + 4');
+            setStatus('Run A xong — nửa kho đã liền mạch. Còn cặp run 3+4.');
+          } else {
+            st.phase = 'final'; setBtn('Chung kết: merge A + B → OUTPUT');
+            setStatus('Pass 1 xong: 4 run → 2 run lớn. Giờ mới đủ chỗ merge nốt.');
+          }
+        });
+      } else if (st.phase === 'final') {
+        animMerge([st.pass2[0], st.pass2[1]], function (merged) {
+          $('sv-out').innerHTML = merged.map(function (it) { return chipHtml(it, 'sv-chip--out'); }).join('');
+        }, function (merged) {
+          st.out = merged;
+          $('sv-out').innerHTML = merged.map(function (it) { return chipHtml(it, 'sv-chip--out'); }).join('');
+          st.phase = 'done';
+          setBtn('↺ Chạy lại từ đầu');
+          setStatus('<strong>' + cfg.items.length + ' block · ' + nGroups + ' run · 2 pass merge</strong> — mỗi pass đọc &amp; ghi cả kho đúng một lần. RAM to hơn = run dài hơn = ít pass hơn.');
+        });
+      } else if (st.phase === 'done') {
+        renderSortVisual(mount, cfg);
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -1735,7 +1926,9 @@
     }
     function costOf(io, f) {
       var diskBlocks = Math.round(io.blocks * (1 - f));
-      var diskSeeks = io.access === 'seq' ? (diskBlocks > 0 ? 1 : 0) : Math.round(io.seeks * (1 - f));
+      // seq: số seek do bài khai (1 cho scan đơn lẻ; join quét lại nhiều lượt = nhiều seek),
+      // cache đầy thì khỏi seek. random: cú nhảy giảm theo tỉ lệ cache.
+      var diskSeeks = io.access === 'seq' ? (diskBlocks > 0 ? io.seeks : 0) : Math.round(io.seeks * (1 - f));
       return { blocks: diskBlocks, seeks: diskSeeks, ms: diskSeeks * price.seek_ms + diskBlocks * price.block_ms };
     }
     var maxWorstMs = 0;
@@ -1750,7 +1943,7 @@
         '<span class="pv-price-item">1 block liền mạch = <strong>' + String(price.block_ms).replace('.', ',') + ' ms</strong></span>' +
         (price.note ? '<span class="pv-price-note">' + escapeHtml(price.note) + '</span>' : '') + '</div>';
     }
-    html += '</div><div class="pv-trees">';
+    html += '</div><div class="pv-trees' + (cfg.trees.length >= 3 ? ' pv-trees--wide' : '') + '">';
     cfg.trees.forEach(function (t, ti) {
       html += '<div class="pv-tree' + (t.chosen ? ' pv-tree--chosen' : '') + '">';
       html += '<div class="pv-tree-name">' + escapeHtml(t.name || '') + '</div>';
@@ -1922,11 +2115,15 @@
     }
     // If neither, the panel will be hidden by the decomp-game block below
 
-    // Plan Visual (NC M7) — chỉ hiện khi bài khai step_1.plan_visual (Basic/TC = no-op)
+    // Plan/Sort Visual (NC M7) — chỉ hiện khi bài khai step_1.plan_visual hoặc
+    // step_1.sort_visual (nc_04); Basic/TC = no-op
     const pvMount = document.getElementById('plan-visual-mount');
     if (pvMount) {
       if (s1.plan_visual) {
         renderPlanVisual(pvMount, s1.plan_visual);
+        pvMount.hidden = false;
+      } else if (s1.sort_visual) {
+        renderSortVisual(pvMount, s1.sort_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -3628,6 +3825,10 @@
       // M6-TC 2026-07-05: probe t5 (probe_engine_m6b) — WHERE UPPER(col)='X' engine trả bảng
       // SAI im lặng (predicate bị bỏ qua, lấy mọi dòng) → chặn pending như vụ ROLLUP.
       { re: /\bupper\s*\(|\blower\s*\(/, label: 'hàm UPPER/LOWER( )' },
+      // NC đợt 3 2026-07-05: probe_join j3 — ORDER BY alias.cột (o.total) bị engine NUỐT
+      // IM LẶNG (trả nguyên thứ tự gốc) → cùng lớp silent-wrong với UPPER/ROLLUP, chặn pending.
+      // Không expected_sql nào yêu cầu gõ dạng này (tc_08 equiv chạy ngoài scan — không ảnh hưởng).
+      { re: /\border\s+by\s+[a-z_]\w*\s*\.\s*\w/i, label: 'ORDER BY bảng.cột (alias)' },
       { re: /\bdb\.\w+\.(find|aggregate|insert\w*|update\w*|count)\s*\(/, label: 'MongoDB query' }
     ];
     for (var ri = 0; ri < reChecks.length; ri++) {

@@ -730,6 +730,463 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 120
       },
       concept_cards_after: ['nc_card_bitmap_scan']
+    },
+
+    /* ── nc_04 — Ticket #45 · External Sort-Merge ──
+     * PART_6 Bài 4 (Ch 15.4): run generation + N-way merge + multi-pass.
+     * step_1.sort_visual = sim bấm-từng-bước (user chốt 2026-07-05) — đúng
+     * Fig 15.4 sách: 12 block, M=3 → 4 run → 2 pass merge (M−1 = 2 đường vào). */
+    {
+      id: 'nc_04', index: 4,
+      title: 'External Sort-Merge — sắp xếp thứ TO HƠN bộ nhớ',
+      subtitle: 'Chia mẻ vừa RAM thành run đã sort, rồi merge: chỉ cần nhìn ĐẦU mỗi run',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'orders (100.000 đơn ≈ 1.000 block — mẫu 5)',
+          columns: ['order_id', 'buyer_id', 'seller_id', 'total', 'status'],
+          dataRows: [
+            ['9001', '88', '12', '80', 'delivered'],
+            ['9002', '21', '9', '12500', 'shipped'],
+            ['9003', '34', '12', '99', 'delivered'],
+            ['9004', '88', '15', '790', 'delivered'],
+            ['9005', '707', '12', '45', 'delivered']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #45',
+        hook: 'Kế toán sàn cần <em>"báo cáo 100.000 đơn xếp theo giá trị, lớn trước"</em> — một câu <code>ORDER BY total DESC</code> tưởng hiền lành. Nhưng sort là trò đổi chỗ: muốn đổi chỗ phải CẦM ĐƯỢC dữ liệu trong tay, mà RAM buffer chỉ chứa <strong>100 block</strong> — kho thì 1.000. Không nhét vừa thì sort kiểu gì? Ticket #45: học ngón nghề cổ điển từ thời băng từ mà mọi database hiện đại vẫn xài — <strong>external sort-merge</strong>: chia mẻ, sort từng mẻ thành RUN, rồi merge các run mà chỉ cần nhìn đầu mỗi chồng.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'ORDER BY trên bảng to hơn RAM = external sort: chia MẺ vừa RAM, sort từng mẻ, ghi ra thành RUN (mảnh đã có trật tự)',
+            'Merge N-way: mỗi run chỉ cần 1 block đại diện trong RAM — so các ĐẦU run, nhặt bé nhất đẩy ra output',
+            'Run nhiều hơn chỗ RAM (N ≥ M) → merge NHIỀU PASS; mỗi pass đọc & ghi cả bảng đúng một lượt'
+          ],
+          intro: 'Xếp 12.000 tờ hồ sơ với cái bàn chỉ để vừa 100 tờ: bạn chia chồng 100 tờ, xếp gọn TỪNG CHỒNG (mỗi chồng = một <strong>run</strong>), rồi gộp các chồng đã xếp — mẹo là chỉ cần nhìn <strong>tờ trên cùng</strong> của mỗi chồng, nhặt tờ bé nhất bỏ sang chồng kết quả. Database y hệt: RAM buffer = mặt bàn, bảng trên đĩa = tủ hồ sơ, và <code>ORDER BY</code> của bạn = lệnh dọn tủ.',
+          example: 'orders 1.000 block, RAM M = 100: pass 1 tạo ⌈1.000/100⌉ = <strong>10 run</strong>, mỗi run 100 block đã sort. Merge: RAM đủ 99 đường vào + 1 ra → 10 run gộp MỘT lượt là xong. Tổng thiệt hại: đọc-ghi cả kho ~2 lượt — thay vì "không thể sort nổi".'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-layer-group',
+            title: 'Hai giai đoạn của external sort-merge',
+            body: '<strong>Giai đoạn 1 — tạo run:</strong> lặp: đọc M block → sort trong RAM → ghi ra file run Rᵢ, đến hết bảng. <strong>Giai đoạn 2 — merge:</strong> mở 1 block đầu của mỗi run + 1 block output; chọn tuple NHỎ NHẤT giữa các đầu run đẩy ra output, block nào cạn thì nạp block kế của run đó. Đây là N-way merge — bản tổng quát của merge 2 đường.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.4.1 — External Sort-Merge Algorithm'
+          },
+          {
+            icon: 'fa-water',
+            title: 'Vì sao run cứu được RAM bé',
+            body: 'RAM M block chỉ sort nổi M block một lúc — nhưng một RUN là mảnh <strong>ĐÃ có trật tự</strong>: muốn biết phần tử nhỏ nhất của cả run, chỉ cần nhìn phần tử ĐẦU. Nhờ thế merge 10 run chỉ tốn 10 block đại diện + 1 block output — RAM bé vẫn điều khiển được kho lớn gấp trăm lần.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Không chỉ ORDER BY: <code>DISTINCT</code> (xếp cạnh nhau mới thấy trùng), merge join (bài 6) đều đứng trên vai external sort. Và để ý: sort là toán tử <strong>BLOCKING</strong> — chưa nhìn hết input thì chưa dám nhả dòng nào (dòng bé nhất có thể nằm cuối bảng!). Điều này sẽ quay lại ở bài Materialization vs Pipelining.'
+          }
+        ],
+        sort_visual: {
+          eyebrow: 'EXTERNAL SORT-MERGE — MÔ HÌNH THU NHỎ: KHO 12 BLOCK · RAM M = 3',
+          caption: 'Đúng ví dụ Fig 15.4 trong sách: 12 block · M=3 → 4 run → merge 2 PASS (RAM 3 block chỉ đủ 2 đường vào + 1 ra). Sort theo giá gem tăng dần.',
+          buffer_m: 3,
+          items: [
+            { label: 'Bùa', v: 99 }, { label: 'Kiếm', v: 45 }, { label: 'Giáp', v: 320 },
+            { label: 'Khiên', v: 80 }, { label: 'Skin', v: 790 }, { label: 'Cung', v: 150 },
+            { label: 'Trượng', v: 12 }, { label: 'Nhẫn', v: 510 }, { label: 'Mũ', v: 35 },
+            { label: 'Găng', v: 60 }, { label: 'Ủng', v: 240 }, { label: 'Đai', v: 130 }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'orders — cần ORDER BY total DESC (100.000 đơn ≈ 1.000 block)',
+            columns: [
+              { name: 'order_id', type: 'INT', key: 'PK' },
+              { name: 'buyer_id', type: 'INT', key: 'FK' },
+              { name: 'seller_id', type: 'INT', key: 'FK' },
+              { name: 'total', type: 'INT (gem)', key: '⇅ khóa sort' },
+              { name: 'status', type: 'VARCHAR', key: '' }
+            ]
+          },
+          data_preview: [
+            ['9002', '21', '9', '12500 ← lớn nhất', 'shipped'],
+            ['9004', '88', '15', '790', 'delivered'],
+            ['9003', '34', '12', '99', 'delivered'],
+            ['9001', '88', '12', '80', 'delivered'],
+            ['9005', '707', '12', '45 ← bé nhất', 'delivered']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao engine không nạp cả 1.000 block của orders vào RAM rồi sort một phát cho xong?',
+            options: [
+              { id: 'a', text: 'RAM buffer chỉ có M = 100 block — dữ liệu nằm ngoài RAM thì không so sánh/đổi chỗ được, đành sort từng mẻ M block thành run rồi merge', correct: true, explanation: 'Đúng — sort đòi cầm dữ liệu trong tay. Bảng to hơn RAM là chuyện thường (sách gọi thẳng: external sorting), và run + merge là lời giải kinh điển.' },
+              { id: 'b', text: 'Nạp cả bảng vào RAM là vi phạm chuẩn SQL', correct: false, explanation: 'Sai — chẳng chuẩn nào cấm; vấn đề là VẬT LÝ: RAM không đủ chỗ.' },
+              { id: 'c', text: 'Sort trong RAM chậm hơn sort trên đĩa', correct: false, explanation: 'Sai — ngược đời: RAM nhanh hơn đĩa hàng nghìn lần; vì thế mới cố sort TRONG RAM từng mẻ.' },
+              { id: 'd', text: 'Vì bảng có 100.000 dòng, vượt giới hạn của thuật toán sort', correct: false, explanation: 'Sai — thuật toán sort không có "giới hạn dòng"; giới hạn nằm ở chỗ CHỨA dữ liệu khi sort.' }
+            ]
+          },
+          {
+            question: 'Đến giai đoạn merge 10 run, RAM cần TỐI THIỂU bao nhiêu block?',
+            options: [
+              { id: 'a', text: '11 — mỗi run 1 block đại diện (cạn tới đâu nạp tiếp tới đó) + 1 block cho output', correct: true, explanation: 'Đúng — bí quyết của merge: run ĐÃ sort nên chỉ cần nhìn đầu run. 10 đường vào + 1 ra = 11 block, dù mỗi run dài cả trăm block.' },
+              { id: 'b', text: '1.000 — phải chứa trọn cả bảng thì mới gộp được', correct: false, explanation: 'Sai — nếu cần chứa cả bảng thì external sort vô nghĩa; merge chỉ cần ĐẦU mỗi run.' },
+              { id: 'c', text: '10 × 100 = 1.000 block — mỗi run phải nằm trọn trong RAM', correct: false, explanation: 'Sai — mỗi run chỉ cần 1 block ĐẠI DIỆN trong RAM; phần còn lại nằm yên trên đĩa chờ nạp dần.' },
+              { id: 'd', text: '2 — một vào một ra là đủ cho mọi cuộc merge', correct: false, explanation: 'Sai — 1 đường vào thì lấy gì mà SO? Mỗi run đang merge cần chỗ riêng cho block đầu của nó.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'order',
+          title: 'Xếp đúng dây chuyền external sort-merge',
+          instruction: 'Kéo 5 bước vào đúng thứ tự chạy.',
+          xp: 20,
+          items: [
+            { id: 'r3', label: 'Ghi mẻ đã sort ra đĩa thành RUN' },
+            { id: 'r1', label: 'Nạp M block đầu tiên của bảng vào RAM' },
+            { id: 'r5', label: 'Merge N-way: so các ĐẦU run, nhặt bé nhất ra output' },
+            { id: 'r2', label: 'Sort mẻ đang nằm trong RAM' },
+            { id: 'r4', label: 'Lặp nạp-sort-ghi đến hết bảng — được N run' }
+          ],
+          solution: { r1: 1, r2: 2, r3: 3, r4: 4, r5: 5 }
+        }
+      },
+      step_3: {
+        mission: 'Lắp 4 trạm của dây chuyền sort-ngoài-RAM — có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Mở 1 block ĐẦU của mỗi run + 1 block output — so các đầu run, nhặt bé nhất đẩy ra', slot: 'es-merge' },
+          { type: 'op', token: 'Nạp đúng M block vào RAM — vừa khít sức chứa — sort tại chỗ', slot: 'es-load' },
+          { type: 'op', token: 'Sort xong từng mẻ rồi NỐI ĐUÔI các mẻ lại — thế là cả bảng đã có trật tự, khỏi merge', slot: 'es-x' },
+          { type: 'op', token: 'RAM chỉ đủ M−1 đường vào: gộp M−1 run mỗi lượt, lặp nhiều PASS đến khi còn một', slot: 'es-pass' },
+          { type: 'op', token: 'Ghi mẻ đã sort ra đĩa: một RUN — mảnh dữ liệu CÓ TRẬT TỰ dài đúng M block', slot: 'es-run' }
+        ],
+        drop_zones: [
+          { id: 'es-load', placeholder: 'Trạm 1 — kho to, RAM bé: bắt đầu sao?', accepts: ['op'], multi: false,
+            station: { icon: '📥', label: 'Nạp từng mẻ', sub: 'Trạm 1', hint: 'Sort đòi cầm dữ liệu trong tay — mà tay chỉ rộng M block.' } },
+          { id: 'es-run', placeholder: 'Trạm 2 — mẻ đã sort trong RAM, rồi sao?', accepts: ['op'], multi: false,
+            station: { icon: '🗂️', label: 'Ghi thành run', sub: 'Trạm 2', hint: 'RAM phải trống cho mẻ sau — mẻ đã sort được gửi ra đĩa dưới dạng gì?' } },
+          { id: 'es-merge', placeholder: 'Trạm 3 — có N run rồi, gộp kiểu gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔀', label: 'Merge N-way', sub: 'Trạm 3', hint: 'Run đã sort → phần tử bé nhất của run luôn nằm ở ĐẦU.' } },
+          { id: 'es-pass', placeholder: 'Trạm 4 — run nhiều hơn chỗ RAM thì sao?', accepts: ['op'], multi: false,
+            station: { icon: '♻️', label: 'Thêm pass', sub: 'Trạm 4', hint: 'Mỗi lượt merge chỉ mở được M−1 đường vào — sim ở Step 1 bạn vừa thấy cảnh này.' } }
+        ],
+        expected_sql: 'Nạp đúng M block vào RAM — vừa khít sức chứa — sort tại chỗ Ghi mẻ đã sort ra đĩa: một RUN — mảnh dữ liệu CÓ TRẬT TỰ dài đúng M block Mở 1 block ĐẦU của mỗi run + 1 block output — so các đầu run, nhặt bé nhất đẩy ra RAM chỉ đủ M−1 đường vào: gộp M−1 run mỗi lượt, lặp nhiều PASS đến khi còn một',
+        expected_zones: {
+          'es-load': 'Nạp đúng M block vào RAM — vừa khít sức chứa — sort tại chỗ',
+          'es-run': 'Ghi mẻ đã sort ra đĩa: một RUN — mảnh dữ liệu CÓ TRẬT TỰ dài đúng M block',
+          'es-merge': 'Mở 1 block ĐẦU của mỗi run + 1 block output — so các đầu run, nhặt bé nhất đẩy ra',
+          'es-pass': 'RAM chỉ đủ M−1 đường vào: gộp M−1 run mỗi lượt, lặp nhiều PASS đến khi còn một'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA CHẠY trọn external sort-merge: nạp mẻ → run → merge N-way → thiếu chỗ thì thêm pass. Khối "nối đuôi các mẻ" là bịa: 4 run đã sort NỐI lại vẫn lộn xộn giữa các mảnh — phải MERGE so từng đầu run (sim Step 1 là bằng chứng sống). Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'es-load': 'Trạm 1 mở dây chuyền: kho 1.000 block, tay chỉ rộng M block — bước đầu tiên của MỌI external sort là gì?',
+          'es-run': 'Trạm 1 chốt: nạp M block, sort trong RAM. Mẻ đã gọn rồi — nhưng RAM phải trống cho mẻ kế. Gửi đi đâu, dưới dạng gì?',
+          'es-merge': 'Trạm 2 chốt: mỗi mẻ thành một RUN trên đĩa. Hết bảng thì được N run — giờ gộp chúng mà RAM vẫn bé, mẹo nằm ở ĐẦU mỗi run.',
+          'es-pass': 'Trạm 3 chốt: N-way merge chỉ cần N+1 block. Nhưng nếu N run còn NHIỀU hơn chỗ RAM (như sim: 4 run, RAM 3) — thì sao?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #45 — tự tay chia mẻ:</strong> kho orders 1.000 block, RAM M = 100. Điền 3 con số của kế hoạch sort. (Số viết liền, ví dụ <code>10</code>.)',
+        challenge_type: 'fill_blank',
+        template: "-- KHO orders: 1.000 block · RAM buffer: M = 100 block\n\n-- GIAI DOAN 1 · Tao run: moi me nap 100 block -> sort -> ghi ra dia\nso_run = ⌈1.000 / 100⌉  =  ____ run\ndo_dai_moi_run = ____ block (da sort)\n\n-- GIAI DOAN 2 · Merge: RAM du (M - 1) = 99 duong vao + 1 ra\n-- so_run co vuot 99 duong vao khong? -> so pass merge can dung:\nso_pass_merge = ____",
+        blanks: [
+          { id: 'b1', hint: '? run', expected: '10' },
+          { id: 'b2', hint: '? block', expected: '100' },
+          { id: 'b3', hint: '? pass', expected: '1' }
+        ],
+        schema: {
+          table_name: 'orders',
+          columns: [
+            { name: 'order_id', type: 'INT', key: 'PK' },
+            { name: 'buyer_id', type: 'INT', key: 'FK' },
+            { name: 'total', type: 'INT (gem)', key: '⇅ khóa sort' },
+            { name: 'status', type: 'VARCHAR', key: '' }
+          ],
+          data: [
+            ['9002', '21', '12500', 'shipped'],
+            ['9004', '88', '790', 'delivered'],
+            ['9001', '88', '80', 'delivered']
+          ]
+        },
+        context: {
+          scenario: 'Đây là bản kê engine lập trước khi chạy ORDER BY total DESC cho báo cáo kế toán. Chú ý cái khác với sim Step 1: RAM 100 block tạo run DÀI hơn → ÍT run hơn → merge 1 pass là gọn (sim M=3 mới phải 2 pass).',
+          real_world: 'Postgres gọi vùng RAM này là work_mem — nâng work_mem là cách kinh điển trị ORDER BY/DISTINCT chậm: run dài hơn, ít pass hơn, đôi khi khỏi cần external sort luôn.',
+          steps: [
+            'Số run = kích thước kho ÷ sức chứa RAM, làm tròn LÊN.',
+            'Mỗi run dài đúng bằng những gì RAM ôm được một mẻ.',
+            'So số run với số đường vào (M−1 = 99): ít hơn thì một lượt merge là xong.'
+          ],
+          hint_explore: 'Bí thì bấm lại sim ở Step 1 — cùng công thức, chỉ khác M=3 thu nhỏ.',
+          expected: 'so_run = 10 · do_dai_moi_run = 100 · so_pass_merge = 1.'
+        },
+        hints: [
+          { level: 1, text: 'Chia kho cho sức chứa RAM: 1.000 ÷ 100 — làm tròn lên nếu lẻ.' },
+          { level: 2, text: 'Run = đúng một mẻ RAM ôm được: M block.' },
+          { level: 3, text: '10 run so với 99 đường vào — có phải chia thành nhiều lượt không?' },
+          { level: 4, text: 'so_run = <code>10</code> · do_dai_moi_run = <code>100</code> · so_pass_merge = <code>1</code>.' }
+        ],
+        success_message: 'TICKET #45 ĐÓNG — báo cáo kế toán xếp ngay ngắn 100.000 đơn dù RAM chỉ ôm nổi một góc! 🗂️ Và sort vừa vào tay bạn sẽ sớm thành VŨ KHÍ: bài sau bước vào đấu trường JOIN — orders phải ghép với listings để hiện TÊN vật phẩm, và engine có tới ba đời thuật toán ghép đôi để chọn.',
+        xp_reward: 120
+      }
+    },
+
+    /* ── nc_05 — Ticket #46 · Join I: Nested Loop / Block NL / Indexed NL ──
+     * PART_6 Bài 5 (Ch 15.5.1-3): join là THUẬT TOÁN; outer/inner; 3 chế độ so
+     * comparisons + I/O. Plan visual 3 cây (user chốt 2026-07-05). Số liệu:
+     * outer = 300 đơn seller 4102 ≈ 3 block; inner = listings 400 block.
+     * NLJ 303 seek + 120.003 block = 13.212ms · BNLJ 6 + 1.203 = 144ms (chosen)
+     * · INLJ 303 + 303 = 1.242ms — twist: index KHÔNG thắng vì inner nhỏ.
+     * step-4 full_ide JOIN thật (probe_join j1 OK); orders retcon chuẩn hóa:
+     * bỏ item_name chép tay, thay listing_id FK. */
+    {
+      id: 'nc_05', index: 5,
+      title: 'Join I — Nested Loop ba đời: từng dòng, từng block, tra index',
+      subtitle: 'JOIN không phải syntax — là thuật toán ghép đôi, và chọn sai là trả giá gấp trăm',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 22, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'orders ⋈ listings (mẫu 4 + 4)',
+          columns: ['order_id', 'buyer_id', 'listing_id', 'total', 'status'],
+          dataRows: [
+            ['9001', '88', '3005', '80', 'delivered'],
+            ['9002', '88', '3002', '12500', 'shipped'],
+            ['9004', '88', '3004', '790', 'delivered'],
+            ['9005', '707', '3001', '45', 'delivered']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #46',
+        hook: 'Trang "Lịch sử mua" chạy ngon từ Ticket #44… nhưng khách chỉ thấy <code>listing_id = 3005</code> vô hồn — TÊN vật phẩm nằm bên sổ <code>listings</code>. Đội từng có người đòi chép thẳng <code>item_name</code> vào orders "cho tiện" — bạn gạt ngay: chép tay là mầm lệch giá, bài học xương máu từ thời chuẩn hóa GameHub. Làm tử tế: orders giữ <code>listing_id</code>, muốn có tên thì <strong>JOIN</strong>. Nhưng JOIN là phép đắt nhất sàn diễn — Ticket #46: xem engine ghép 2 bảng bằng thuật toán gì, và vì sao cùng một phép ⋈ có thể chênh nhau cả trăm lần.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'JOIN không phải syntax — là THUẬT TOÁN: engine phải chọn cách ghép từng dòng 2 bảng',
+            'Nested Loop ba đời: từng-DÒNG (nr lượt quét inner) → từng-BLOCK (br lượt) → TRA-INDEX (nr cú nhảy)',
+            'Chọn bảng NHỎ làm outer + chọn đời thuật toán theo kích thước & index — vẫn là cộng hóa đơn I/O'
+          ],
+          intro: 'Ghép danh sách 300 đơn với kho 40.000 món: cách ngây thơ — cầm TỪNG ĐƠN chạy dọc cả kho (nested loop). Khôn hơn — ôm nguyên MỘT TRANG đơn (1 block) rồi đối chiếu cả trang trong MỘT lượt dạo kho (block nested loop): số phép so y hệt, nhưng số lượt DẠO KHO giảm trăm lần. Cách thứ ba — kho có mục lục: cầm mã món TRA THẲNG index (indexed nested loop), khỏi dạo, nhưng mỗi lần tra là một cú nhảy random. Ba đời, một mục đích — hóa đơn khác nhau một trời.',
+          example: '300 đơn ⋈ 40.000 món: NLJ từng-dòng <strong>13.212ms</strong> · Block NLJ <strong>144ms</strong> · Indexed NLJ <strong>1.242ms</strong>. Cùng kết quả, chênh ~90 lần — và quán quân ở kho NÀY lại không phải anh có index.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-circle-nodes',
+            title: 'Outer và Inner — ai cầm trịch?',
+            body: 'Nested loop = 2 vòng lặp: bảng <strong>outer</strong> duyệt một lần, bảng <strong>inner</strong> bị quét ĐI QUÉT LẠI theo từng lượt của outer. Vì thế chọn bảng NHỎ làm outer: outer 3 block → inner chỉ bị quét 3 lượt. Đảo vai (outer 400 block) là hóa đơn phình ngay trăm lần.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.1-15.5.2 — Nested-Loop & Block Nested-Loop Join'
+          },
+          {
+            icon: 'fa-people-arrows',
+            title: 'Ba đời nested loop',
+            body: '<strong>Đời 1 — NLJ:</strong> mỗi DÒNG outer quét trọn inner (nr × bs block). <strong>Đời 2 — Block NLJ:</strong> mỗi BLOCK outer quét inner một lượt (br × bs) — cùng số phép so, I/O giảm theo số dòng/block. <strong>Đời 3 — Indexed NLJ:</strong> mỗi dòng outer TRA index inner — đổi những lượt quét lấy nr cú nhảy random.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Indexed NLJ chính là access path Ticket #44 tái xuất: n cú nhảy × 4,1ms. Nó vô địch khi inner KHỔNG LỒ còn outer bé: phình listings lên 1 triệu món (10.000 block) — Block NLJ thành 3 × 10.000 = 3.001ms, Indexed NLJ vẫn đứng im 1.242ms → lật cờ. Vẫn bài học cũ: cost sống theo DỮ LIỆU.'
+          }
+        ],
+        plan_visual: {
+          query: "SELECT o.order_id, l.item_name, o.total\nFROM orders o JOIN listings l ON o.listing_id = l.listing_id\nWHERE o.seller_id = 4102;  -- 300 đơn ⋈ 40.000 món",
+          caption: 'Cùng phép ⋈ — ba đời thuật toán. Twist: index KHÔNG thắng ở kho này (listings quá nhỏ); phình kho lên 1 triệu món thì Indexed NL lật cờ — cost sống theo dữ liệu.',
+          price: {
+            seek_ms: 4, block_ms: 0.1,
+            note: 'outer = 300 đơn đã lọc ≈ 3 block · inner = listings 40.000 món ≈ 400 block · listings có index PK.'
+          },
+          trees: [
+            {
+              name: 'Đời 1 · NLJ — từng DÒNG',
+              chosen: false,
+              note: 'Mỗi đơn dạo trọn kho: 300 lượt × 400 block',
+              io: { access: 'seq', seeks: 303, blocks: 120003 },
+              nodes: [
+                { op: 'orders (300 đơn)', kind: 'table', detail: 'outer — duyệt từng dòng', rows: '300 dòng' },
+                { op: '⋈ Nested Loop', kind: 'join', detail: 'mỗi DÒNG quét cả listings', rows: '300 dòng ghép', cost: '12.000.000 phép so' }
+              ]
+            },
+            {
+              name: 'Đời 2 · Block NLJ — từng BLOCK',
+              chosen: true,
+              note: '✓ Optimizer chọn — cùng số phép so, I/O giảm 100 lần',
+              io: { access: 'seq', seeks: 6, blocks: 1203 },
+              nodes: [
+                { op: 'orders (3 block)', kind: 'table', detail: 'outer — duyệt từng BLOCK', rows: '3 block' },
+                { op: '⋈ Block Nested Loop', kind: 'join', detail: 'mỗi BLOCK quét listings 1 lượt', rows: '300 dòng ghép', cost: '12.000.000 phép so' }
+              ]
+            },
+            {
+              name: 'Đời 3 · Indexed NLJ — tra index',
+              chosen: false,
+              note: 'Thắng NLJ 10 lần — vẫn thua BNLJ ở kho nhỏ này',
+              io: { access: 'random', seeks: 303, blocks: 303 },
+              nodes: [
+                { op: 'orders (300 đơn)', kind: 'table', detail: 'outer — từng dòng', rows: '300 dòng' },
+                { op: '⋈ Indexed NL (PK listings)', kind: 'join', detail: 'mỗi đơn 1 cú tra index', rows: '300 dòng ghép', cost: '~4.800 phép so trên cây' }
+              ]
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'orders (đã chuẩn hóa — listing_id thay cho item_name chép tay)',
+            columns: [
+              { name: 'order_id', type: 'INT', key: 'PK' },
+              { name: 'buyer_id', type: 'INT', key: 'FK' },
+              { name: 'listing_id', type: 'INT', key: 'FK → listings' },
+              { name: 'total', type: 'INT (gem)', key: '' },
+              { name: 'status', type: 'VARCHAR', key: '' }
+            ]
+          },
+          data_preview: [
+            ['9001', '88', '3005 → Khiên gỗ sồi', '80', 'delivered'],
+            ['9002', '88', '3002 → Giáp rồng', '12500', 'shipped'],
+            ['9004', '88', '3004 → Skin súng Neon', '790', 'delivered'],
+            ['9005', '707', '3001 → Kiếm gỗ', '45', 'delivered']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Block NLJ so với NLJ thường: số PHÉP SO vẫn y nguyên 12 triệu — vậy nó tiết kiệm ở đâu mà hóa đơn giảm từ 13.212ms còn 144ms?',
+            options: [
+              { id: 'a', text: 'Ở I/O: inner chỉ bị quét 3 lượt (mỗi BLOCK outer một lượt) thay vì 300 lượt (mỗi DÒNG một lượt) — phép so là tiền CPU rẻ, khiêng block mới là tiền I/O đắt', correct: true, explanation: 'Đúng — cùng khối lượng so sánh, khác số lần DẠO KHO. Bài học Ticket #43 nguyên vẹn: hóa đơn nằm ở I/O.' },
+              { id: 'b', text: 'Ở phép so — đi theo block giúp so ít cặp hơn hẳn', correct: false, explanation: 'Sai — mọi cặp dòng vẫn phải so như cũ (12 triệu); block chỉ đổi CÁCH ĐỌC, không đổi phép so.' },
+              { id: 'c', text: 'Block NLJ nén dữ liệu nên đọc nhanh hơn', correct: false, explanation: 'Sai — không nén gì cả; nó chỉ tận dụng những dòng ĐÃ nằm cùng block trong một lần đọc.' },
+              { id: 'd', text: 'Nó bỏ qua các dòng không match ngay từ trên đĩa', correct: false, explanation: 'Sai — muốn biết match hay không vẫn phải đọc lên và so; không ai "nhìn xuyên" được block trên đĩa.' }
+            ]
+          },
+          {
+            question: 'Khi nào Indexed NLJ đáng đồng tiền bát gạo nhất?',
+            options: [
+              { id: 'a', text: 'Outer ÍT dòng còn inner RẤT LỚN — vài trăm cú tra index rẻ hơn hẳn việc quét đi quét lại một kho khổng lồ', correct: true, explanation: 'Đúng — mỗi dòng outer đổi "một lượt dạo kho" lấy "một cú nhảy". Kho càng to, cú đổi càng hời; kho bé (400 block) thì BNLJ vẫn rẻ hơn.' },
+              { id: 'b', text: 'Mọi lúc — inner có index thì cứ dùng (nghe quen không?)', correct: false, explanation: 'Sai — đây là người anh em của "cứ có index là dùng" ở Ticket #44; hóa đơn 1.242ms vs 144ms ngay đầu bài đã bác nó.' },
+              { id: 'c', text: 'Khi hai bảng to đúng bằng nhau', correct: false, explanation: 'Sai — kích thước bằng nhau không nói lên gì; thứ quyết định là outer nhỏ + inner lớn + index.' },
+              { id: 'd', text: 'Khi inner bé đến mức nằm gọn trong một block', correct: false, explanation: 'Sai — inner bé thì quét trọn nó còn rẻ hơn tra index; index tỏa sáng khi inner LỚN.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Chọn thuật toán cho từng trận đấu',
+          instruction: 'Nhìn kích thước outer/inner và index — xếp mỗi trận vào đúng góc đài.',
+          xp: 20,
+          chips: [
+            { id: 'm1', label: 'Outer 3 block ⋈ inner 400 block, KHÔNG có index' },
+            { id: 'm2', label: 'Outer 300 dòng ⋈ inner 10.000 block, inner có index PK' },
+            { id: 'm3', label: 'Tra 1 đơn duy nhất ⋈ kho lớn có index' },
+            { id: 'm4', label: 'Inner không có index nào trên cột ghép' }
+          ],
+          bins: [
+            { id: 'b', label: 'Block NLJ 🚚' },
+            { id: 'i', label: 'Indexed NLJ 📖' }
+          ],
+          solution: { m1: 'b', m4: 'b', m2: 'i', m3: 'i' }
+        }
+      },
+      step_3: {
+        mission: 'Dàn trận JOIN: chọn vai + xếp đúng ba đời nested loop. Có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Từng BLOCK outer quét inner một lượt: 3 × 400 = 1.200 block — 144ms, số phép so giữ nguyên', slot: 'jn-bnlj' },
+          { type: 'op', token: 'Chọn bảng NHỎ (300 đơn ≈ 3 block) làm outer — vòng ngoài càng ít lượt, inner càng ít bị quét lại', slot: 'jn-outer' },
+          { type: 'op', token: 'JOIN là phép có sẵn trong CPU — engine ghép 2 bảng trong một nhịp, không tốn I/O nào', slot: 'jn-x' },
+          { type: 'op', token: 'Từng DÒNG outer quét trọn inner: 300 × 400 = 120.000 block — hóa đơn 13.212ms', slot: 'jn-nlj' },
+          { type: 'op', token: 'Từng dòng outer TRA INDEX inner: 300 cú nhảy — 1.242ms, sẽ vô địch khi inner phình to', slot: 'jn-inlj' }
+        ],
+        drop_zones: [
+          { id: 'jn-outer', placeholder: 'Nước đi 1 — chọn vai: bảng nào cầm trịch vòng ngoài?', accepts: ['op'], multi: false,
+            station: { icon: '🎬', label: 'Chọn outer', sub: 'Nước đi 1', hint: 'Inner bị quét lại theo TỪNG LƯỢT của outer — vậy nên để ai cầm trịch?' } },
+          { id: 'jn-nlj', placeholder: 'Đời 1 — cách ngây thơ nhất chạy thế nào?', accepts: ['op'], multi: false,
+            station: { icon: '🐌', label: 'Đời 1 · từng dòng', sub: 'Nested Loop', hint: 'Cầm từng ĐƠN chạy dọc cả kho — đếm xem bao nhiêu lượt dạo.' } },
+          { id: 'jn-bnlj', placeholder: 'Đời 2 — nâng cấp gì mà I/O giảm trăm lần?', accepts: ['op'], multi: false,
+            station: { icon: '🚚', label: 'Đời 2 · từng block', sub: 'Block NL', hint: 'Những dòng nằm CÙNG block được đọc lên trong cùng một lần — tận dụng đi.' } },
+          { id: 'jn-inlj', placeholder: 'Đời 3 — kho có mục lục thì sao?', accepts: ['op'], multi: false,
+            station: { icon: '📖', label: 'Đời 3 · tra index', sub: 'Indexed NL', hint: 'Đổi mỗi lượt dạo kho lấy một cú nhảy — giá cú nhảy thì Ticket #43 đã niêm yết.' } }
+        ],
+        expected_sql: 'Chọn bảng NHỎ (300 đơn ≈ 3 block) làm outer — vòng ngoài càng ít lượt, inner càng ít bị quét lại Từng DÒNG outer quét trọn inner: 300 × 400 = 120.000 block — hóa đơn 13.212ms Từng BLOCK outer quét inner một lượt: 3 × 400 = 1.200 block — 144ms, số phép so giữ nguyên Từng dòng outer TRA INDEX inner: 300 cú nhảy — 1.242ms, sẽ vô địch khi inner phình to',
+        expected_zones: {
+          'jn-outer': 'Chọn bảng NHỎ (300 đơn ≈ 3 block) làm outer — vòng ngoài càng ít lượt, inner càng ít bị quét lại',
+          'jn-nlj': 'Từng DÒNG outer quét trọn inner: 300 × 400 = 120.000 block — hóa đơn 13.212ms',
+          'jn-bnlj': 'Từng BLOCK outer quét inner một lượt: 3 × 400 = 1.200 block — 144ms, số phép so giữ nguyên',
+          'jn-inlj': 'Từng dòng outer TRA INDEX inner: 300 cú nhảy — 1.242ms, sẽ vô địch khi inner phình to'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA DÀN xong trận JOIN: outer nhỏ cầm trịch → đời 1 ngây thơ → đời 2 đi theo block (quán quân kho này) → đời 3 tra index (chờ inner phình to để lật cờ). Khối "JOIN một nhịp CPU" là bịa — JOIN là thuật toán ghép trên block và index, trả tiền I/O như mọi người. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'jn-outer': 'Nước đi 1 — trước khi chọn thuật toán phải chọn VAI: inner sẽ bị quét đi quét lại, vậy bảng nào nên đứng vòng ngoài?',
+          'jn-nlj': 'Vai đã chốt: 300 đơn cầm trịch. Giờ đời 1 — cách ngây thơ nhất: cầm từng gì… chạy dọc đâu?',
+          'jn-bnlj': 'Đời 1 chốt: 120.000 block — 13.212ms, hóa đơn thảm họa. Đời 2 tận dụng những dòng nằm CÙNG block: quét theo đơn vị nào?',
+          'jn-inlj': 'Đời 2 chốt: 1.200 block — 144ms, giảm trăm lần không tốn thêm gì. Đời 3: kho có mục lục PK — mỗi đơn đổi lượt dạo lấy cái gì?'
+        }
+      },
+      step_4: {
+        prompt: 'Đóng Ticket #46: viết query "Lịch sử mua CÓ TÊN vật phẩm" cho khách <strong>#88</strong> — lấy <code>o.order_id, l.item_name, o.total</code> từ <code>orders o</code> ghép <code>listings l</code> qua <code>listing_id</code>, lọc <code>o.buyer_id = 88</code>.',
+        schema: {
+          table_name: 'orders',
+          columns: [
+            { name: 'order_id', type: 'INT', key: 'PK' },
+            { name: 'buyer_id', type: 'INT', key: '🔑 idx_buyer' },
+            { name: 'listing_id', type: 'INT', key: 'FK → listings' },
+            { name: 'total', type: 'INT (gem)', key: '' },
+            { name: 'status', type: 'VARCHAR', key: '' }
+          ],
+          data: [
+            ['9001', '88', '3005', '80', 'delivered'],
+            ['9002', '88', '3002', '12500', 'shipped'],
+            ['9004', '88', '3004', '790', 'delivered'],
+            ['9005', '707', '3001', '45', 'delivered']
+          ],
+          related_schemas: [
+            {
+              table_name: 'listings',
+              columns: [
+                { name: 'listing_id', type: 'INT', key: 'PK' },
+                { name: 'item_name', type: 'VARCHAR', key: '' },
+                { name: 'price', type: 'INT (gem)', key: '' }
+              ],
+              data: [
+                ['3001', 'Kiếm gỗ Newbie', '45'],
+                ['3002', 'Giáp rồng Huyền thoại', '12500'],
+                ['3004', 'Skin súng Neon', '790'],
+                ['3005', 'Khiên gỗ sồi', '80']
+              ]
+            }
+          ]
+        },
+        context: {
+          scenario: 'Plan mô phỏng cho query này: <code>Indexed Nested Loop — Index Scan idx_buyer lấy ~20 đơn của #88 → mỗi đơn tra PK listings lấy tên</code>. Outer bé tí (vài đơn), inner có index khóa chính — đúng sân khấu của đời 3.',
+          real_world: 'Cặp "FK trỏ PK + JOIN" là nhịp tim của mọi schema đã chuẩn hóa — và vì PK luôn có index sẵn, Indexed NLJ gần như miễn phí cho các join "tra theo khóa" kiểu này. Đó là phần thưởng cho việc KHÔNG chép item_name vào orders.',
+          steps: [
+            'Đặt bí danh: <code>orders o</code> và <code>listings l</code>.',
+            'Ghép qua khóa: <code>JOIN listings l ON o.listing_id = l.listing_id</code>.',
+            'Lấy 3 cột: <code>o.order_id, l.item_name, o.total</code>.',
+            'Lọc khách: <code>WHERE o.buyer_id = 88</code>.'
+          ],
+          hint_explore: 'Chạy thử <code>SELECT * FROM orders WHERE buyer_id = 88</code> — thấy toàn listing_id "vô hồn" đúng như khách phàn nàn, rồi hẵng JOIN.',
+          expected: 'Bảng 3 đơn của #88 kèm tên: Khiên gỗ sồi (80) · Giáp rồng Huyền thoại (12500) · Skin súng Neon (790).'
+        },
+        hints: [
+          { level: 1, text: 'Khung JOIN hai bảng: <code>FROM orders o JOIN listings l ON o.listing_id = l.listing_id</code>.' },
+          { level: 2, text: 'Ba cột cần lấy, nhớ tiền tố: <code>o.order_id, l.item_name, o.total</code>.' },
+          { level: 3, text: 'Chốt bằng <code>WHERE o.buyer_id = 88;</code>' },
+          { level: 4, text: '<code class="code">SELECT o.order_id, l.item_name, o.total FROM orders o JOIN listings l ON o.listing_id = l.listing_id WHERE o.buyer_id = 88;</code>' }
+        ],
+        expected_sql: 'SELECT o.order_id, l.item_name, o.total FROM orders o JOIN listings l ON o.listing_id = l.listing_id WHERE o.buyer_id = 88;',
+        success_message: 'TICKET #46 ĐÓNG — "Lịch sử mua" hiện tên vật phẩm, schema vẫn sạch chuẩn hóa! ⋈ Engine Room đã đi 5/10. Nhưng nested loop mới là nửa đầu câu chuyện join: bài sau, hai võ sĩ hạng nặng bước lên đài — <strong>Merge Join</strong> (đứng trên vai external sort của Ticket #45) và <strong>Hash Join</strong> (chia giỏ rồi mới đấu). Kèm một hồ sơ về cú lừa mang tên skew.',
+        xp_reward: 120
+      }
     }
 
   ],
@@ -814,7 +1271,7 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'PART_6 Card C — bitmap index scan (Ch 15.3 note: cách PostgreSQL né random I/O khi match nhiều)',
-      cta: { label: 'Về roadmap khóa Nâng cao', href: '/courses/db_design_nc' }
+      cta: { label: 'Vào Bài 4 — Sắp xếp thứ to hơn RAM', href: '/lesson/db_design_nc?lesson=4' }
     }
   ]
 };
