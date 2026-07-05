@@ -1258,6 +1258,71 @@
       '</g>' +
       '<defs><marker id="nc1arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(129,140,248,.8)"/></marker></defs>' +
       '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">SQL nói LẤY GÌ — plan mới nói LÀM THẾ NÀO · cùng 1 query, nhiều kế hoạch, optimizer chọn bản rẻ</text>' +
+      '</svg>',
+
+    /* nc_02: bảng giá 2 loại vé I/O + 2 hóa đơn — seq scan 104ms thắng index 1.230ms */
+    nc_02: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bảng giá I/O: vé seek 4ms đắt gấp 40 lần vé block 0,1ms; hóa đơn seq scan 104ms rẻ hơn hóa đơn index 300 cú nhảy 1230ms">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Vì sao query có giá? — bảng giá I/O của đĩa</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        // Bảng giá 2 vé
+        '<rect x="30" y="50" width="250" height="158" rx="10" fill="#0e1726" stroke="rgba(251,191,36,.5)" stroke-width="1.4"/>' +
+        '<text x="155" y="72" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="11">💸 BẢNG GIÁ (HDD minh họa)</text>' +
+        '<rect x="48" y="84" width="214" height="44" rx="7" fill="rgba(248,113,113,.1)" stroke="rgba(248,113,113,.55)" stroke-width="1.3"/>' +
+        '<text x="155" y="102" text-anchor="middle" fill="#f87171" font-weight="700" font-size="10.5">VÉ SEEK — nhảy random</text>' +
+        '<text x="155" y="118" text-anchor="middle" fill="#fca5a5" font-weight="800" font-size="13">4 ms / cú</text>' +
+        '<rect x="48" y="136" width="214" height="44" rx="7" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.5)" stroke-width="1.2"/>' +
+        '<text x="155" y="154" text-anchor="middle" fill="#34d399" font-weight="700" font-size="10.5">VÉ BLOCK — liền mạch</text>' +
+        '<text x="155" y="170" text-anchor="middle" fill="#6ee7b7" font-weight="800" font-size="13">0,1 ms / block</text>' +
+        '<text x="155" y="198" text-anchor="middle" fill="#7f93ad" font-size="9">nhảy random đắt gấp 40 lần</text>' +
+        // Hóa đơn A
+        '<rect x="308" y="50" width="190" height="158" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="403" y="72" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="11">HÓA ĐƠN A · Seq Scan</text>' +
+        '<text x="403" y="96" text-anchor="middle" fill="#aebfd6" font-size="9.5">1 seek ............ 4 ms</text>' +
+        '<text x="403" y="112" text-anchor="middle" fill="#aebfd6" font-size="9.5">1.000 block ...... 100 ms</text>' +
+        '<line x1="330" y1="124" x2="476" y2="124" stroke="rgba(148,163,184,.4)" stroke-dasharray="3,3"/>' +
+        '<text x="403" y="146" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">104 ms</text>' +
+        '<text x="403" y="170" text-anchor="middle" fill="#6ee7b7" font-size="9.5">✓ optimizer chọn</text>' +
+        '<text x="403" y="192" text-anchor="middle" fill="#7f93ad" font-size="8.5">khiêng cả kho mà vẫn rẻ</text>' +
+        // Hóa đơn B
+        '<rect x="514" y="50" width="190" height="158" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="609" y="72" text-anchor="middle" fill="#f87171" font-weight="700" font-size="11">HÓA ĐƠN B · Index</text>' +
+        '<text x="609" y="96" text-anchor="middle" fill="#aebfd6" font-size="9.5">300 cú nhảy random</text>' +
+        '<text x="609" y="112" text-anchor="middle" fill="#aebfd6" font-size="9.5">300 × (4 + 0,1) ms</text>' +
+        '<line x1="536" y1="124" x2="682" y2="124" stroke="rgba(148,163,184,.4)" stroke-dasharray="3,3"/>' +
+        '<text x="609" y="146" text-anchor="middle" fill="#f87171" font-weight="800" font-size="16">1.230 ms</text>' +
+        '<text x="609" y="170" text-anchor="middle" fill="#fca5a5" font-size="9.5">✗ đắt gấp 12</text>' +
+        '<text x="609" y="192" text-anchor="middle" fill="#7f93ad" font-size="8.5">đọc ít gấp 3 mà thua</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">cost = block × 0,1ms + cú nhảy × 4ms — đọc ÍT không đồng nghĩa RẺ</text>' +
+      '</svg>',
+
+    /* nc_03: 2 lối vào kho — seq scan thẳng băng 104ms vs index nhảy cóc 5.000 phát 20.500ms */
+    nc_03: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hai lối vào kho orders: seq scan quét liền mạch 104ms được optimizer chọn cho VIP 5000 đơn; index scan nhảy random 5000 cú 20500ms phản chủ; khách 20 đơn thì index 82ms thắng">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Full Scan vs Index Scan — cùng query, lúc bay lúc bò</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        // Lối seq
+        '<rect x="30" y="52" width="330" height="126" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="195" y="73" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="11">🚚 SEQ SCAN — VIP wh4le · 5.000 đơn</text>' +
+        '<g fill="rgba(52,211,153,.35)">' +
+          '<rect x="52" y="88" width="24" height="16" rx="2"/><rect x="80" y="88" width="24" height="16" rx="2"/><rect x="108" y="88" width="24" height="16" rx="2"/><rect x="136" y="88" width="24" height="16" rx="2"/><rect x="164" y="88" width="24" height="16" rx="2"/><rect x="192" y="88" width="24" height="16" rx="2"/><rect x="220" y="88" width="24" height="16" rx="2"/><rect x="248" y="88" width="24" height="16" rx="2"/><rect x="276" y="88" width="24" height="16" rx="2"/><rect x="304" y="88" width="24" height="16" rx="2"/>' +
+        '</g>' +
+        '<path d="M52 112 L 336 112" stroke="#34d399" stroke-width="1.6" marker-end="url(#nc3arr)"/>' +
+        '<text x="195" y="132" text-anchor="middle" fill="#aebfd6" font-size="9">1 cú seek + 1.000 block liền mạch</text>' +
+        '<text x="195" y="155" text-anchor="middle" fill="#34d399" font-weight="800" font-size="15">104 ms · ✓ optimizer chọn</text>' +
+        // Lối index
+        '<rect x="390" y="52" width="300" height="126" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="540" y="73" text-anchor="middle" fill="#f87171" font-weight="700" font-size="11">📖 INDEX SCAN — 5.000 cú nhảy</text>' +
+        '<g stroke="rgba(248,113,113,.6)" stroke-width="1.1" fill="none">' +
+          '<path d="M412 100 L 452 92 M452 92 L 428 108 M428 108 L 478 96 M478 96 L 448 112 M448 112 L 508 94 M508 94 L 472 110 M472 110 L 538 98 M538 98 L 502 112 M502 112 L 568 92 M568 92 L 532 108 M532 108 L 598 100 M598 100 L 562 112 M562 112 L 628 94 M628 94 L 592 110 M592 110 L 658 98"/>' +
+        '</g>' +
+        '<text x="540" y="132" text-anchor="middle" fill="#aebfd6" font-size="9">mỗi đơn 1 cú seek — 5.000 × 4,1 ms</text>' +
+        '<text x="540" y="155" text-anchor="middle" fill="#f87171" font-weight="800" font-size="15">20.500 ms · ✗ phản chủ</text>' +
+        // Lằn ranh
+        '<rect x="30" y="188" width="660" height="26" rx="7" fill="rgba(129,140,248,.08)" stroke="rgba(129,140,248,.3)" stroke-width="1"/>' +
+        '<text x="360" y="205" text-anchor="middle" fill="#a5b4fc" font-size="10.5">Khách thường 20 đơn? Index 82ms THẮNG 104ms — lằn ranh hòa vốn ≈ 25 đơn: index chỉ nhanh KHI LẤY ÍT</text>' +
+      '</g>' +
+      '<defs><marker id="nc3arr" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#34d399"/></marker></defs>' +
+      '<text x="360" y="232" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">access path — optimizer chọn lối vào theo THỐNG KÊ số dòng match</text>' +
       '</svg>'
   };
 
@@ -1657,13 +1722,44 @@
    * (hiện trên mũi tên phía trên nó). cost optional — nc_02+ gắn giá lên node. */
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
+    /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
+     * cfg.price = { seek_ms, block_ms, note } — vắng thì render y như v1 (nc_01 không đổi).
+     * tree.io = { access: 'seq'|'random', seeks, blocks } — hóa đơn worst-case buffer lạnh.
+     * cfg.ram_slider = { table_blocks, label, explain } — kéo M block đã cache:
+     * block cache đọc ~0ms (sách 15.2: tT trong RAM < 1μs); seq giữ 1 cú seek mở màn,
+     * random giảm số cú nhảy theo tỉ lệ (ước lượng kỳ vọng, cache ngẫu nhiên). */
+    var price = cfg.price;
+    function fmtMs(v) {
+      var r = Math.round(v * 10) / 10;
+      return r.toLocaleString('vi-VN') + ' ms';
+    }
+    function costOf(io, f) {
+      var diskBlocks = Math.round(io.blocks * (1 - f));
+      var diskSeeks = io.access === 'seq' ? (diskBlocks > 0 ? 1 : 0) : Math.round(io.seeks * (1 - f));
+      return { blocks: diskBlocks, seeks: diskSeeks, ms: diskSeeks * price.seek_ms + diskBlocks * price.block_ms };
+    }
+    var maxWorstMs = 0;
+    if (price) cfg.trees.forEach(function (t) { if (t.io) maxWorstMs = Math.max(maxWorstMs, costOf(t.io, 0).ms); });
+
     var html = '<section class="plan-visual" aria-label="So sánh các execution plan cho cùng một query">';
     html += '<div class="pv-head"><span class="pv-eyebrow">1 QUERY — ' + cfg.trees.length + ' KẾ HOẠCH</span>' +
-            '<code class="pv-query">' + escapeHtml(cfg.query || '') + '</code></div>';
-    html += '<div class="pv-trees">';
-    cfg.trees.forEach(function (t) {
+            '<code class="pv-query">' + escapeHtml(cfg.query || '') + '</code>';
+    if (price) {
+      html += '<div class="pv-price"><span class="pv-price-tag">💸 BẢNG GIÁ I/O</span>' +
+        '<span class="pv-price-item">1 cú seek (nhảy random) = <strong>' + String(price.seek_ms).replace('.', ',') + ' ms</strong></span>' +
+        '<span class="pv-price-item">1 block liền mạch = <strong>' + String(price.block_ms).replace('.', ',') + ' ms</strong></span>' +
+        (price.note ? '<span class="pv-price-note">' + escapeHtml(price.note) + '</span>' : '') + '</div>';
+    }
+    html += '</div><div class="pv-trees">';
+    cfg.trees.forEach(function (t, ti) {
       html += '<div class="pv-tree' + (t.chosen ? ' pv-tree--chosen' : '') + '">';
       html += '<div class="pv-tree-name">' + escapeHtml(t.name || '') + '</div>';
+      if (price && t.io) {
+        var w = costOf(t.io, 0);
+        html += '<div class="pv-total"><span class="pv-total-ms" data-pv-ms="' + ti + '">💸 ' + fmtMs(w.ms) + '</span>' +
+          '<span class="pv-total-sub" data-pv-sub="' + ti + '">' + w.seeks.toLocaleString('vi-VN') + ' seek · ' + w.blocks.toLocaleString('vi-VN') + ' block từ đĩa</span>' +
+          '<span class="pv-costbar"><span data-pv-bar="' + ti + '" style="width:' + (maxWorstMs ? Math.max(2, Math.round(w.ms / maxWorstMs * 100)) : 0) + '%"></span></span></div>';
+      }
       // DOM đỉnh→đáy (kết quả trên cùng) — dữ liệu chảy NGƯỢC từ bảng lên
       var nodes = (t.nodes || []).slice().reverse();
       if (nodes.length && nodes[0].rows) {
@@ -1686,9 +1782,39 @@
       html += '</div>';
     });
     html += '</div>';
+    if (price && cfg.ram_slider) {
+      var rs = cfg.ram_slider;
+      html += '<div class="pv-slider">' +
+        '<label class="pv-slider-label" for="pv-ram-range">🧠 ' + escapeHtml(rs.label || 'RAM buffer') + ': ' +
+        '<output id="pv-ram-out">0</output>/' + rs.table_blocks.toLocaleString('vi-VN') + ' block của bảng đã nằm sẵn trong RAM</label>' +
+        '<input type="range" id="pv-ram-range" min="0" max="' + rs.table_blocks + '" step="' + Math.max(1, Math.round(rs.table_blocks / 20)) + '" value="0" />' +
+        (rs.explain ? '<p class="pv-slider-explain">' + escapeHtml(rs.explain) + '</p>' : '') +
+        '</div>';
+    }
     if (cfg.caption) html += '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>';
     html += '</section>';
     mount.innerHTML = html;
+
+    // Slider live: kéo M → cost + hóa đơn + bar của TỪNG cây cập nhật
+    var range = mount.querySelector('#pv-ram-range');
+    if (range && price) {
+      range.addEventListener('input', function () {
+        var M = parseInt(range.value, 10) || 0;
+        var f = Math.min(1, M / cfg.ram_slider.table_blocks);
+        var out = mount.querySelector('#pv-ram-out');
+        if (out) out.textContent = M.toLocaleString('vi-VN');
+        cfg.trees.forEach(function (t, ti) {
+          if (!t.io) return;
+          var c = costOf(t.io, f);
+          var msEl = mount.querySelector('[data-pv-ms="' + ti + '"]');
+          var subEl = mount.querySelector('[data-pv-sub="' + ti + '"]');
+          var barEl = mount.querySelector('[data-pv-bar="' + ti + '"]');
+          if (msEl) msEl.textContent = '💸 ' + (c.ms < 0.05 ? '≈ 0 ms (toàn bộ từ RAM)' : fmtMs(c.ms));
+          if (subEl) subEl.textContent = c.seeks.toLocaleString('vi-VN') + ' seek · ' + c.blocks.toLocaleString('vi-VN') + ' block từ đĩa';
+          if (barEl) barEl.style.width = (maxWorstMs ? Math.max(c.ms > 0 ? 2 : 0, Math.round(c.ms / maxWorstMs * 100)) : 0) + '%';
+        });
+      });
+    }
   }
 
   function renderStep1() {

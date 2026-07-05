@@ -42,3 +42,21 @@ User chốt (AskUserQuestion 2026-07-05, 4/4 recommended):
 
 ### Verify (tương tác thật)
 Login → /lesson/db_design_nc?lesson=1: story + hero + plan visual 2 cây; step 2 trả lời đúng/sai thật; step 3 kéo 5 khối (khối bịa bị từ chối, 4 trạm reveal); step 4 click 4 option (sai trước → highlight + explain, reset, đúng → success + link Card A); /card/nc_card_evaluation_primitive: quiz sai → feedback, quiz đúng → feedback ✓; regression: 1 bài Basic + tc_16 + tc_21 boss + card TC còn nguyên; 0 pageerror.
+
+---
+
+# ADDENDUM ĐỢT 2 (2026-07-05): nc_02 + nc_03 + Card B/C
+
+User chốt 4/4 recommended: cụm nc_02+nc_03 · slider RAM thật trong plan visual · cost = đếm block/cú nhảy quy ms theo bảng giá sách (HDD 2018: seek 4ms, block 0,1ms — ghi rõ minh họa) · step-4 nc_02 = fill_blank tự tính.
+
+## nc_02 — Ticket #43 "Vì sao query có giá?" (Ch 15.2)
+- Kịch bản PART_6 nguyên văn: cùng query (300 đơn seller rải rác trong orders 100.000 đơn ≈ 1.000 block): Plan A Seq Scan = 1 seek + 1.000 block = **104ms**; Plan B Index = 300 cú nhảy × 4,1ms = **1.230ms** → optimizer chọn A dù đọc gấp 3 dữ liệu (twist đảo nc_01).
+- renderPlanVisual v2 (backward-compat, nc_01 không đổi): `price{seek_ms,block_ms,note}` bảng giá; `tree.io{access:seq|random,seeks,blocks}` → tổng 💸 trên cây; `ram_slider{table_blocks}` → kéo M block cache: disk_blocks=blocks×(1−M/N), seq giữ 1 seek, random seeks giảm theo — cost live (sách 15.2: worst vs expected khi buffer lớn; RAM tT<1μs ≈ miễn phí).
+- Step 3 = lập HÓA ĐƠN I/O (4 zone: A-seek/A-transfer/B/chốt sổ + khối bịa "nhảy hay liền cũng 0,1ms"); step 4 fill_blank tính 104/1230/A (template không SELECT → neutral render path có sẵn).
+- Card B nc_card_cpu_vs_io (SSD tS≈90μs → cú nhảy rẻ ~44 lần, số block KHÔNG đổi; optimizer hiện đại không chỉ nhìn I/O) + quiz.
+
+## nc_03 — Ticket #44 "Full Scan vs Index Scan" (Ch 15.3)
+- Hook: CÙNG query lịch sử mua lúc nhanh lúc chậm — khách 20 đơn (index 82ms thắng sít) vs VIP 5.000 đơn (5.000 cú nhảy = 20.500ms ≫ seq 104ms; sách A4: "worse than linear search"). Plan visual: 2 cây, chosen = Seq Scan (đảo kỳ vọng), KHÔNG slider.
+- Step 3 = 4 access path (tra PK nhảy 1 phát / khách ít đơn / VIP phản chủ / luật "secondary chỉ đáng khi lấy RẤT ÍT") + khối bịa "cứ có index là dùng"; step 4 full_ide conjunctive (probe OK: `WHERE buyer_id=88 AND status='delivered'` → 2 dòng) — plan mô phỏng "Index Scan → Filter" trong context (1 index + filter phần còn lại, đúng 15.3 complex selection).
+- Card C nc_card_bitmap_scan (đánh dấu block chứa match rồi quét liền mạch — thoát n cú nhảy khi match nhiều) + quiz.
+- Điểm treo ghi báo cáo: PART_6 còn Card D "Secondary Can Be Bad" đặt sau Bài 3 — nội dung đã dạy TRONG nc_03 và trùng ý card cầu TC "Index có phải lúc nào cũng thắng?" → đề xuất bỏ/chờ user quyết.
