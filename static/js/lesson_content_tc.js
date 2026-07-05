@@ -731,7 +731,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
         reveal_hints: {
           'cte-head': 'Mở CTE đệ quy: <strong>WITH RECURSIVE thread AS (</strong>.',
           'cte-anchor': 'Anchor KHÔNG tự tham chiếu — chọn hàng mồi <code>comment_id = 1</code> với <code>1 AS depth</code>. Khối "SELECT * FROM comments" lấy TẤT CẢ là mồi nhử.',
-          'cte-union': 'Cần giữ ĐỦ mọi dòng qua các vòng: <strong>UNION ALL</strong> (UNION thường sẽ khử trùng lặp — vừa chậm vừa có thể dừng sớm).',
+          'cte-union': 'Cần giữ ĐỦ mọi dòng qua các vòng: <strong>UNION ALL</strong> — đúng dạng chuẩn của <code>WITH RECURSIVE</code> (Ch 5.4). UNION thường phải KHỬ TRÙNG LẶP nên tốn công so sánh; nó chỉ đáng giá khi đồ thị CÓ CHU TRÌNH (khử trùng chính là phao chống lặp vô hạn) — cây bình luận thì không có chu trình.',
           'cte-step': 'Bước lặp JOIN bảng gốc với CHÍNH <code>thread</code>: con nào có <code>parent_comment_id</code> = comment của vòng trước thì vào, depth +1.',
           'cte-final': 'Đóng ngoặc rồi đọc: <strong>) SELECT * FROM thread;</strong>'
         }
@@ -836,7 +836,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
             title: 'Fact ở giữa, Dimension tỏa tia',
             body: 'Bảng <strong>fact</strong> chứa SỐ ĐO (measure — cộng/đếm được) + FK trỏ vào các bảng <strong>dimension</strong> mô tả ngữ cảnh (ai, khi nào, loại gì). Vẽ ra đúng hình ngôi sao — vì thế gọi là <em>star schema</em>.',
             variant: 'quote',
-            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 11 — Data Warehousing'
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 11 — Data Analytics / §11.2 Data Warehousing'
           },
           {
             icon: 'fa-truck-ramp-box',
@@ -1596,17 +1596,17 @@ window.LESSON_CONTENT['db_design_tc'] = {
         primer: {
           goal: [
             'Dữ liệu kho = KHỐI nhiều chiều (ngày × nước × loại) — mỗi ô chứa số đo',
-            'SLICE cố định 1 chiều (WHERE month=6) · DICE cắt theo nhiều chiều (GROUP BY 2 cột)',
+            "SLICE cố định MỘT chiều (WHERE month=6) · DICE cố định NHIỀU chiều cùng lúc (WHERE month=6 AND type='like')",
             'DRILL-DOWN đi xuống chi tiết (tháng → ngày) · ROLL-UP gộp lên (chính là #26)'
           ],
-          intro: 'Đừng nghĩ kho là bảng — hãy nghĩ nó là <strong>khối rubik dữ liệu</strong>: trục ngày, trục nước, trục loại hành động; mỗi ô = tổng act_count của tổ hợp đó. Câu hỏi của PM chỉ là các cách CẮT khối: cố định tháng 6 = <em>slice</em>; tách theo nước × loại = <em>dice</em>; từ tháng khoan xuống từng ngày = <em>drill-down</em>; gộp ngược lên = <em>roll-up</em>. SQL bên dưới vẫn là fact JOIN dim — chỉ đổi WHERE và GROUP BY.',
-          example: 'Slice + dice: <code>… WHERE d.month = 6 GROUP BY u.country</code> — cắt lát tháng 6, tách theo nước.'
+          intro: 'Đừng nghĩ kho là bảng — hãy nghĩ nó là <strong>khối rubik dữ liệu</strong>: trục ngày, trục nước, trục loại hành động; mỗi ô = tổng act_count của tổ hợp đó. Câu hỏi của PM chỉ là các cách CẮT khối: cố định tháng 6 = <em>slice</em>; ghim thêm chiều thứ hai (chỉ like) = <em>dice</em> — khối con nhỏ hơn; từ tháng khoan xuống từng ngày = <em>drill-down</em>; gộp ngược lên = <em>roll-up</em>; còn đổi chiều HIỂN THỊ của bảng kết quả là <em>pivot</em>. SQL bên dưới vẫn là fact JOIN dim — chỉ đổi WHERE và GROUP BY.',
+          example: "Dice: <code>… WHERE d.month = 6 AND f.action_type = 'like'</code> — ghim đồng thời chiều thời gian VÀ chiều loại; <code>GROUP BY u.country</code> chỉ là chọn chiều hiển thị."
         },
         concept_cards: [
           {
             icon: 'fa-cube',
             title: 'Slice & Dice — cắt lát, cắt khối',
-            body: '<strong>Slice</strong>: cố định MỘT chiều — <code>WHERE d.month = 6</code> lấy đúng lát tháng 6. <strong>Dice</strong>: nhìn lát đó theo NHIỀU chiều cùng lúc — <code>GROUP BY u.country, f.action_type</code>. PM kéo bộ lọc trên dashboard = bạn đang slice/dice.',
+            body: "<strong>Slice</strong>: cố định MỘT chiều — <code>WHERE d.month = 6</code> lấy đúng lát tháng 6. <strong>Dice</strong>: cố định GIÁ TRỊ trên NHIỀU chiều cùng lúc — <code>WHERE d.month = 6 AND f.action_type = 'like'</code> cắt ra khối con nhỏ hơn. PM kéo bộ lọc trên dashboard = bạn đang slice/dice.",
             variant: 'quote',
             source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 11 — OLAP'
           },
@@ -1649,7 +1649,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
               { id: 'a', text: 'Slice — cố định một giá trị trên chiều thời gian, lấy đúng một lát khối', correct: true, explanation: 'Đúng — slice = WHERE trên 1 chiều; khối 3D thành lát 2D (nước × loại) của riêng tháng 6.' },
               { id: 'b', text: 'Drill-down — vì tháng 6 chi tiết hơn cả năm', correct: false, explanation: 'Sai — drill-down là ĐỔI ĐỘ HẠT của kết quả (tháng → ngày); ở đây chỉ LỌC lấy một giá trị.' },
               { id: 'c', text: 'Roll-up — gộp dữ liệu về tháng', correct: false, explanation: 'Sai — roll-up là gộp NHIỀU mức nhỏ lên mức lớn; đây là chọn đúng 1 lát, không gộp gì.' },
-              { id: 'd', text: 'Dice — vì có điều kiện WHERE', correct: false, explanation: 'Sai — dice là cắt theo NHIỀU chiều cùng lúc; một điều kiện cố định 1 chiều là slice.' }
+              { id: 'd', text: 'Dice — vì có điều kiện WHERE', correct: false, explanation: 'Sai — dice là CỐ ĐỊNH GIÁ TRỊ trên nhiều chiều cùng lúc; một điều kiện cố định 1 chiều là slice.' }
             ]
           },
           {
@@ -1669,7 +1669,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
           xp: 20,
           chips: [
             { id: 'p1', label: '"Chỉ xem dữ liệu của VN thôi"' },
-            { id: 'p2', label: '"Tách bảng theo nước VÀ loại hành động"' },
+            { id: 'p2', label: '"Ghim CẢ tháng 6 LẪN loại like — xem khối con đó thôi"' },
             { id: 'p3', label: '"Tháng 6 cao — tuần nào, ngày nào gánh?"' },
             { id: 'p4', label: '"Gộp số ngày lại thành theo quý cho gọn"' }
           ],
@@ -1683,7 +1683,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
         }
       },
       step_3: {
-        mission: 'Trả lời 2 câu đầu của PM trong MỘT query: <strong>slice tháng 6 + chỉ like</strong>, <strong>dice theo quốc gia</strong> — tổng like nhiều → ít.',
+        mission: 'Trả lời PM trong MỘT query: <strong>dice — ghim đồng thời tháng 6 VÀ loại like</strong>, hiển thị theo quốc gia — tổng like nhiều → ít.',
         blocks: [
           { type: 'kw', token: 'SELECT', slot: 'kw-select' },
           { type: 'col', token: 'u.country', slot: 'col-1' },
@@ -1702,21 +1702,21 @@ window.LESSON_CONTENT['db_design_tc'] = {
         drop_zones: [
           { id: 'select-line', placeholder: 'SELECT ____', accepts: ['kw', 'col', 'fn'], acceptedKeywords: ['SELECT'], multi: true },
           { id: 'from-line', placeholder: 'FROM ____ JOIN 2 chiều', accepts: ['kw', 'tbl', 'op'], acceptedKeywords: ['FROM'], multi: true },
-          { id: 'where-line', placeholder: 'WHERE ____ (slice!)', accepts: ['kw', 'op'], acceptedKeywords: ['WHERE'], multi: true },
-          { id: 'group-line', placeholder: 'GROUP BY ____ (dice!)', accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
+          { id: 'where-line', placeholder: 'WHERE ____ (dice — ghim 2 chiều)', accepts: ['kw', 'op'], acceptedKeywords: ['WHERE'], multi: true },
+          { id: 'group-line', placeholder: 'GROUP BY ____ (chiều hiển thị)', accepts: ['kw', 'col'], acceptedKeywords: ['GROUP BY'], multi: true },
           { id: 'order-line', placeholder: 'ORDER BY ____', accepts: ['kw', 'col'], acceptedKeywords: ['ORDER BY'], multi: true }
         ],
         expected_sql: "SELECT u.country, SUM(f.act_count) AS total FROM fact_post_action f JOIN dim_date d ON f.date_id = d.date_id JOIN dim_user u ON f.user_id = u.user_id WHERE d.month = 6 AND f.action_type = 'like' GROUP BY u.country ORDER BY total DESC;",
         reveal_hints: {
           'select-line': 'Chiều hiển thị + số đo: <strong>u.country, SUM(f.act_count) AS total</strong>.',
           'from-line': 'Cần CẢ HAI chiều: fact nối <strong>dim_date</strong> (để slice tháng) và <strong>dim_user</strong> (để dice nước).',
-          'where-line': 'Slice kép: <strong>d.month = 6 AND f.action_type = \'like\'</strong>.',
-          'group-line': 'Dice theo nước: <strong>u.country</strong>.',
+          'where-line': 'Dice — ghim 2 chiều cùng lúc: <strong>d.month = 6 AND f.action_type = \'like\'</strong>.',
+          'group-line': 'Chiều hiển thị của bảng kết quả: <strong>u.country</strong>.',
           'order-line': 'Nhiều → ít: <strong>total DESC</strong>.'
         }
       },
       step_4: {
-        prompt: 'Câu thứ ba của PM — <strong>drill-down</strong>: "VN trong tháng 6, NGÀY nào sôi động nhất?". Giữ slice tháng 6, đổi lát cắt: lọc thêm <code>u.country = \'VN\'</code>, còn GROUP BY khoan xuống <code>d.full_date</code> (tính MỌI loại hành động, không riêng like).',
+        prompt: 'Câu thứ ba của PM — <strong>drill-down</strong>: "VN trong tháng 6, NGÀY nào sôi động nhất?". Giữ lát tháng 6, đổi chiều ghim: <code>u.country = \'VN\'</code> thay cho loại hành động (tính MỌI loại), còn GROUP BY khoan xuống <code>d.full_date</code> — đổi độ hạt, đúng nghĩa drill-down.',
         starter: "-- Drill-down: VN thang 6 -> tung NGAY (moi loai hanh dong)\nSELECT d.full_date, SUM(f.act_count) AS total\n  FROM fact_post_action f\n  JOIN dim_date d ON f.date_id = d.date_id\n  JOIN ____ ON ____\n WHERE d.month = 6 AND ____\n GROUP BY ____\n ORDER BY total DESC;\n",
         schema: {
           table_name: 'fact_post_action',
@@ -1778,7 +1778,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
           real_world: 'Nút "xem chi tiết" trên mọi dashboard (click cột tháng → nổ ra ngày) chạy đúng thao tác drill-down này — <strong>độ hạt kết quả đổi, nguồn dữ liệu không đổi</strong>.',
           steps: [
             'Giữ chiều thời gian, thêm chiều người: <code>JOIN dim_user u ON f.user_id = u.user_id</code>.',
-            'Slice mới: <code>WHERE d.month = 6 AND u.country = \'VN\'</code> (mọi loại hành động).',
+            'Dice mới: <code>WHERE d.month = 6 AND u.country = \'VN\'</code> (mọi loại hành động).',
             'Khoan độ hạt: <code>GROUP BY d.full_date</code> — tháng vỡ thành ngày.',
             'Nhẩm tay: VN tháng 6 = minhkiller(D1:3) + toxic_lord(D1:1) + minhkiller(D2:5) + toxic_lord(D2:3) → D2=8, D1=4.'
           ],
@@ -1786,7 +1786,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
           expected: 'Bảng 2 dòng: 2026-06-02 → 8 · 2026-06-01 → 4. Ngày 02/06 chính là hôm toxic_lord khẩu chiến (Ticket #24) — drama nuôi số liệu.'
         },
         hints: [
-          { level: 1, text: 'Khung y hệt Step 3 — chỉ ĐỔI VAI: nước chuyển từ GROUP BY (dice) sang WHERE (slice), ngày chuyển từ WHERE sang GROUP BY (drill-down).' },
+          { level: 1, text: 'Khung y hệt Step 3 — chỉ ĐỔI VAI: nước chuyển từ chiều hiển thị (GROUP BY) sang chiều bị ghim (WHERE), ngày chuyển từ WHERE sang GROUP BY (drill-down — đổi độ hạt).' },
           { level: 2, text: 'JOIN đủ 2 chiều rồi lọc: <code>WHERE d.month = 6 AND u.country = \'VN\'</code>.' },
           { level: 3, text: 'Độ hạt ngày: <code>GROUP BY d.full_date</code> — và bỏ điều kiện action_type (đếm mọi loại).' },
           { level: 4, text: '<code class="code">SELECT d.full_date, SUM(f.act_count) AS total FROM fact_post_action f JOIN dim_date d ON f.date_id = d.date_id JOIN dim_user u ON f.user_id = u.user_id WHERE d.month = 6 AND u.country = \'VN\' GROUP BY d.full_date ORDER BY total DESC;</code>' }
@@ -1849,8 +1849,8 @@ window.LESSON_CONTENT['db_design_tc'] = {
           },
           {
             icon: 'fa-table-cells',
-            title: 'Tumbling vs Sliding vs Session',
-            body: '<strong>Tumbling</strong>: ô khít, không chờm — mỗi sự kiện đúng 1 ô (đếm/báo cáo theo khối). <strong>Sliding</strong>: ô trượt chờm nhau — "5 phút GẦN NHẤT, cập nhật mỗi phút". <strong>Session</strong>: ô co giãn theo hành vi — hết im lặng 10 phút là đóng phiên. Chọn sai loại là báo động sai.'
+            title: 'Tumbling · Hopping · Sliding · Session',
+            body: '<strong>Tumbling</strong>: ô khít, không chờm — mỗi sự kiện đúng 1 ô. <strong>Hopping</strong>: bề rộng cố định nhưng tính theo NHỊP riêng — "cửa sổ 5 phút, tính lại mỗi phút", các ô chờm nhau. <strong>Sliding</strong>: cửa sổ trượt quanh TỪNG sự kiện đến (dạng chuẩn SQL hỗ trợ). <strong>Session</strong>: ô co giãn theo hành vi — hết im lặng 10 phút là đóng phiên. Chọn sai loại là báo động sai.'
           },
           {
             icon: 'fa-arrows-turn-to-dots',
@@ -1889,12 +1889,12 @@ window.LESSON_CONTENT['db_design_tc'] = {
             ]
           },
           {
-            question: '"Số post trong 5 phút GẦN NHẤT, cập nhật mỗi phút" — cần loại cửa sổ nào?',
+            question: '"Số post trong cửa sổ 5 phút, TÍNH LẠI mỗi phút" — cần loại cửa sổ nào?',
             options: [
-              { id: 'a', text: 'Sliding — cửa sổ trượt chờm nhau, mỗi sự kiện có thể được đếm ở nhiều cửa sổ', correct: true, explanation: 'Đúng — "gần nhất + cập nhật liên tục" là chữ ký của sliding; tumbling chỉ chốt sổ mỗi 5 phút một lần.' },
-              { id: 'b', text: 'Tumbling — vì vẫn là 5 phút', correct: false, explanation: 'Sai — tumbling trả lời "trong Ô 14:00–14:05 có gì", không trả lời "5 phút tính ngược từ BÂY GIỜ".' },
-              { id: 'c', text: 'Session — vì người dùng đang hoạt động', correct: false, explanation: 'Sai — session co giãn theo khoảng lặng hành vi, không phải khung cố định trượt đều.' },
-              { id: 'd', text: 'Không cần cửa sổ, chỉ cần ORDER BY thời gian', correct: false, explanation: 'Sai — ORDER BY sắp xếp, không khoanh phạm vi đếm trên dòng dữ liệu vô tận.' }
+              { id: 'a', text: 'Hopping — bề rộng cố định 5 phút nhưng tính theo nhịp 1 phút: các cửa sổ CHỜM nhau, một sự kiện có thể được đếm ở nhiều cửa sổ', correct: true, explanation: 'Đúng — "bề rộng cố định + nhịp tính riêng" là chữ ký của hopping (sách xếp nó riêng khỏi sliding); tumbling chỉ chốt sổ mỗi 5 phút một lần.' },
+              { id: 'b', text: 'Sliding — cửa sổ trượt quanh từng sự kiện', correct: false, explanation: 'Sai theo phân loại của sách — sliding trượt quanh TỪNG SỰ KIỆN đến; còn khung cố định tính theo NHỊP đều là hopping.' },
+              { id: 'c', text: 'Tumbling — vì vẫn là 5 phút', correct: false, explanation: 'Sai — tumbling trả lời "trong Ô 14:00–14:05 có gì", các ô không chờm; đây cần ô chờm nhau theo nhịp.' },
+              { id: 'd', text: 'Session — vì người dùng đang hoạt động', correct: false, explanation: 'Sai — session co giãn theo khoảng lặng hành vi, không phải khung cố định tính theo nhịp.' }
             ]
           }
         ],
@@ -2415,7 +2415,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
             question: 'Buffer đầy, cần nạp trang mới — LRU chọn đuổi trang nào?',
             options: [
               { id: 'a', text: 'Trang có lần-dùng-cuối XA NHẤT — đặt cược rằng ai lâu không được hỏi thăm thì sắp tới cũng không', correct: true, explanation: 'Đúng — Least Recently Used: quá khứ gần dự báo tương lai gần (locality).' },
-              { id: 'b', text: 'Trang vừa được dùng xong — vì nhu cầu của nó đã được đáp ứng', correct: false, explanation: 'Sai — đó là MRU, thường tệ: trang vừa dùng rất hay được dùng lại ngay (F5!).' },
+              { id: 'b', text: 'Trang vừa được dùng xong — vì nhu cầu của nó đã được đáp ứng', correct: false, explanation: 'Sai cho tình huống này — đó là MRU. Truy cập kiểu feed thì trang vừa dùng rất hay bị dùng lại ngay (F5!) → LRU đúng; MRU chỉ tỏa sáng ở pattern quét vòng lặp lại (sách 13.5.2 — khóa NC gặp lại ở JOIN).' },
               { id: 'c', text: 'Trang có kích thước lớn nhất để lấy nhiều chỗ', correct: false, explanation: 'Sai — các trang cùng cỡ (8KB); không có "trang to trang nhỏ" để chọn.' },
               { id: 'd', text: 'Ngẫu nhiên — cho công bằng', correct: false, explanation: 'Sai — random bỏ phí thông tin truy cập; LRU dùng chính lịch sử để đoán tương lai.' }
             ]
@@ -2468,7 +2468,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
         reveal_hints: {
           'buf-1': 'Bước rẻ nhất đi trước: <strong>tra buffer</strong> — HIT là xong việc.',
           'buf-2': 'Chưa có mới phải <strong>xuống đĩa</strong> (MISS).',
-          'buf-3': 'Đuổi theo LỊCH SỬ: <strong>LRU — lâu không dùng nhất</strong>. Khối "đuổi trang vừa dùng xong" là MRU giả mạo — trang vừa đọc rất hay bị đọc lại (F5!).',
+          'buf-3': 'Đuổi theo LỊCH SỬ: <strong>LRU — lâu không dùng nhất</strong>. Khối "đuổi trang vừa dùng xong" là MRU đặt SAI CHỖ: chiến lược đó có đất diễn thật ở pattern quét vòng lặp (sách 13.5.2), nhưng với truy cập kiểu feed thì trang vừa đọc rất hay bị đọc lại (F5!).',
           'buf-4': 'Khép vòng: <strong>nạp trang mới</strong> — lần sau nó là HIT.'
         }
       },
@@ -3602,7 +3602,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
           {
             icon: 'fa-file-lines',
             title: 'Đọc bản khai: node → cost → rows',
-            body: 'Node nói CÁCH đi (Seq Scan / Index Scan / Bitmap Heap Scan…). Cost nói giá vé ước tính — con số đầu là chi phí trước dòng kết quả đầu tiên, con số sau là trọn gói. Rows là số dòng máy ĐOÁN (dựa thống kê) — đoán lệch xa thực tế cũng là manh mối quý.',
+            body: 'Node nói CÁCH đi (Seq Scan / Index Scan / Bitmap Heap Scan…). Cost nói giá vé ước tính — con số đầu là chi phí trước dòng kết quả đầu tiên, con số sau là trọn gói. Rows là số dòng máy ĐOÁN (dựa thống kê) — và chính nó quyết định ĐƯỜNG đi: dải cần lấy đủ NHỎ thì index thắng; lấy gần cả bảng thì Seq Scan lại là lựa chọn đúng của máy.',
             variant: 'quote',
             source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15/16 — Query Processing & Optimization (EXPLAIN)'
           },
@@ -3628,7 +3628,7 @@ window.LESSON_CONTENT['db_design_tc'] = {
           data_preview: [
             ['Seq Scan on fact_post_action', 'Index Scan using idx_fact_type'],
             ['cost=0.00..18334.00', 'cost=0.43..912.00'],
-            ['rows=1000000 · Filter: UPPER(…)', "rows=310000 · Index Cond: ='like'"],
+            ['rows=1000000 · Filter: UPPER(…)', "rows=38000 · Index Cond: ='like'"],
             ['dashboard: 6,2 giây 🐢', 'dashboard: 0,3 giây 🚀']
           ]
         }
@@ -3645,9 +3645,9 @@ window.LESSON_CONTENT['db_design_tc'] = {
             ]
           },
           {
-            question: "Sửa WHERE thành <code>action_type = 'like'</code>, bản khai mới: <code>Index Scan using idx_fact_type (cost=0.43..912) rows=310000</code>. Vì sao nhanh gấp ~20 lần dù vẫn đụng 310 nghìn dòng?",
+            question: "Sửa WHERE thành <code>action_type = 'like'</code>, bản khai mới: <code>Index Scan using idx_fact_type (cost=0.43..912) rows=38000</code>. Vì sao nhanh gấp ~20 lần dù vẫn đụng 38 nghìn dòng?",
             options: [
-              { id: 'a', text: 'Cây dẫn thẳng tới dải lá chứa toàn "like" — máy chỉ đọc các trang liên quan, khỏi khiêng 690 nghìn dòng còn lại lên để rồi vứt', correct: true, explanation: 'Đúng — leo cây (Ticket #38) + đi dải lá: chi phí tỷ lệ với số dòng CẦN, không phải số dòng CÓ.' },
+              { id: 'a', text: 'Cây dẫn thẳng tới dải lá chứa "like" — máy chỉ đọc các trang liên quan, khỏi khiêng 962 nghìn dòng còn lại lên để rồi vứt', correct: true, explanation: 'Đúng — leo cây (Ticket #38) + đi dải lá: chi phí tỷ lệ với số dòng CẦN, không phải số dòng CÓ. Chiều ngược cũng phải nhớ: điều kiện lấy GẦN CẢ bảng thì Seq Scan mới là đường rẻ — planner tự so cost hai lối (khóa Nâng cao mổ xẻ tiếp).' },
               { id: 'b', text: 'Vì Postgres thưởng tốc độ cho query viết đúng chính tả', correct: false, explanation: 'Sai — không có hệ thưởng phạt nào; chỉ có đường đi ngắn hơn.' },
               { id: 'c', text: 'Vì kết quả lần này ít dòng hơn hẳn lần trước', correct: false, explanation: 'Sai — cùng kết quả! Khác nhau ở số dòng phải KHIÊNG để lọc ra kết quả đó.' },
               { id: 'd', text: 'Vì index vừa được xây lại nên còn nóng', correct: false, explanation: 'Sai — idx_fact_type nằm đó từ tuần trước; nó chỉ vừa được THÁO KÍNH MÙ.' }

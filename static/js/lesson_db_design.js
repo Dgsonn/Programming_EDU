@@ -1154,7 +1154,7 @@
         '<text x="392" y="92" fill="#e8edf5">EXPLAIN SELECT … WHERE</text>' +
         '<text x="392" y="108" fill="#34d399" font-weight="700">  action_type = \'like\'</text>' +
         '<text x="392" y="132" fill="#34d399">→ Index Scan using idx_fact_type</text>' +
-        '<text x="392" y="148" fill="#aebfd6">    cost=0.43..912  rows=310000</text>' +
+        '<text x="392" y="148" fill="#aebfd6">    cost=0.43..912  rows=38000</text>' +
         '<text x="392" y="164" fill="#aebfd6">    Index Cond: action_type=\'like\'</text>' +
         '<text x="529" y="188" text-anchor="middle" fill="#7f93ad">bỏ hàm bọc cột → index mở mắt trở lại</text>' +
       '</g>' +
