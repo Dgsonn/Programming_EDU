@@ -4406,6 +4406,35 @@
     return true;
   }
 
+  /* ═══ TRẢ-NỢ 2026-07-05 — normalizer dùng chung + memo expZone ═══
+   * glueSQL = lõi dung sai chung của cả 3 normalizer (trước đây 3 bản sao lệch nhau
+   * từng mọc bug riêng: dot-glue db_16, ->> db_15). Semantics KHÁC nhau giữ ở wrapper:
+   * step-3 KHÔNG strip comment '--' (db_17 SQLi có token '--' là đáp án thật),
+   * step-4 (normalizeSQL) strip comment + ';' cuối + uppercase + glue '=',','',toán tử. */
+  function glueSQL(s) {
+    return (s || '')
+      .replace(/\s*->>\s*/g, '->>')
+      .replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')')
+      .replace(/\s*\.\s*/g, '.')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  /* step-3 full-match: giữ nguyên case + comment, chỉ bỏ ';' cuối */
+  function normFullS3(s) { return glueSQL((s || '').replace(/;$/, '')); }
+  /* step-3 per-zone: thêm uppercase + phẩy→space (token join khác dấu phẩy) */
+  function normClauseS3(t) { return glueSQL((t || '').toUpperCase().replace(/,/g, ' ')); }
+
+  /* Memo expZone theo bài — expectedZoneContent chạy parser đầy đủ trên expected_sql
+   * ở MỖI lượt thả block (hot-path updateTruckGrid) dù kết quả bất biến trong 1 bài. */
+  let _expZoneMemo = { key: null, val: null };
+  function getExpectedZones(s3, lessonId) {
+    const key = lessonId || '?';
+    if (_expZoneMemo.key !== key) {
+      _expZoneMemo = { key, val: Object.assign(expectedZoneContent(s3.expected_sql || ''), s3.expected_zones || {}) };
+    }
+    return _expZoneMemo.val;
+  }
+
   /* Extract zone fill status for all drop_zones → feed DragGame.update(). */
   function updateTruckGrid() {
     if (!window.DragGame) return;
@@ -4440,9 +4469,7 @@
     // M4-TC 2026-07-04: dung sai quanh dấu CHẤM — buildSQLString join token bằng space
     // ("LogEvent .objects") trong khi expected viết liền ("LogEvent.objects") → db_16 lắp
     // đúng 100% vẫn fail full-match. SQL/ORM không cần space quanh '.' nên normalize an toàn.
-    const normFull = s => (s || '').replace(/;$/, '').trim().replace(/\s+/g, ' ')
-      .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')')
-      .replace(/\s*\.\s*/g, '.');
+    const normFull = normFullS3; // TRẢ-NỢ 2026-07-05: dùng bản chung (glueSQL)
     const expected = normFull(s3.expected_sql);
     const builtSQL = normFull(buildSQLString());
     const isComplete = builtSQL === expected;
@@ -4453,11 +4480,8 @@
     // vd ORM db_16, SQLi db_17, procedure/trigger/CTE khóa TC) khai expected_zones trong step_3:
     // { zoneId: 'nội dung đúng của zone (kể cả keyword)' } — override/bổ sung kết quả parse.
     // Trước fix này mọi zone đặc thù bị exp==null → zoneCorrect=false → lắp đúng vẫn "✗ dòng 1,2,3".
-    const expZone = Object.assign(expectedZoneContent(s3.expected_sql || ''), s3.expected_zones || {});
-    const normClause = t => (t || '').toUpperCase().replace(/,/g, ' ')
-      .replace(/\s*->>\s*/g, '->>').replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')')
-      .replace(/\s*\.\s*/g, '.')
-      .replace(/\s+/g, ' ').trim();
+    const expZone = getExpectedZones(s3, state.currentLesson && state.currentLesson.id); // memo — hết parse lại mỗi lượt thả
+    const normClause = normClauseS3; // TRẢ-NỢ 2026-07-05: dùng bản chung (glueSQL)
     const zoneCorrect = {};
     (s3.drop_zones || []).forEach(zone => {
       const blocks = state.step3Blocks[zone.id] || [];
@@ -5282,26 +5306,19 @@
     };
   }
 
+  /* TRẢ-NỢ 2026-07-05: lõi dung sai (->> · () · . · whitespace) chuyển về glueSQL dùng chung
+   * với normFullS3/normClauseS3 của step-3 — hết 3 bản sao lệch nhau. Phần RIÊNG của step-4
+   * giữ tại đây: strip comment '--' (M4-TC — step-3 KHÔNG strip vì db_17 SQLi có token '--'
+   * là đáp án thật), ';' cuối + đuôi trắng, glue ','/'='/toán tử, uppercase. */
   function normalizeSQL(s) {
-    return s
-      // M4-TC 2026-07-04: bỏ comment dòng "-- ..." TRƯỚC khi collapse whitespace — user giữ
-      // comment của starter (hành vi tự nhiên) từng làm exact-match và multi-query set-compare
-      // fail dù SQL đúng. CHỈ áp cho step-4 (normalizeSQL); step-3 normFull KHÔNG strip vì
-      // db_17 SQLi có token '--' là nội dung đáp án thật.
-      .replace(/--[^\n]*/g, ' ')
-      // M4-TC: ';' cuối + khoảng trắng/newline đuôi — /;$/ cũ miss khi user gõ Enter cuối dòng
-      .replace(/\s*;+\s*$/, '')
-      .replace(/\s+/g, ' ')
-      .replace(/\s*([,()])\s*/g, '$1')
+    return glueSQL(
+        (s || '')
+          .replace(/--[^\n]*/g, ' ')
+          .replace(/\s*;+\s*$/, '')
+      )
+      .replace(/\s*,\s*/g, ',')
       .replace(/\s*=\s*/g, '=')
-      // REVIEW-FIX 2026-07-04: cùng dung sai ->> như chấm step-3 (normFull) —
-      // "settings ->> 'lang'" là SQL hợp lệ, không được chấm khác "settings->>'lang'".
-      .replace(/\s*->>\s*/g, '->>')
-      // M4-TC 2026-07-04: dung sai quanh '.' (NEW.post_id) và toán tử số học
-      // (like_count + 1 ≡ like_count+1) — cần cho bài trigger/function TC.
-      .replace(/\s*\.\s*/g, '.')
       .replace(/\s*([+\-*\/])\s*/g, '$1')
-      .trim()
       .toUpperCase();
   }
 

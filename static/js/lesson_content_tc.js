@@ -6,6 +6,63 @@
  * Schema 4-step Y HỆT Basic — renderer dùng chung, không fork UI.
  * ═══════════════════════════════════════════════════════════════════ */
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
+
+/* ═══ TRẢ-NỢ 2026-07-05: kho M5 dùng chung ═══
+ * fact_post_action 12 dòng + dim_user + dim_date từng lặp 3 bản y hệt trong
+ * step_4.schema của tc_05/tc_06/tc_09 — sửa data 1 chỗ là lệch 2 chỗ kia.
+ * Engine đọc qua .slice() (PE_runSQL) nên share theo reference an toàn.
+ * drag_map của từng bài vẫn là subset TỰ CHỌN theo câu chuyện — không gộp. */
+const TC_M5_FACT_COLUMNS = [
+  { name: 'action_id', type: 'INT', key: 'PK' },
+  { name: 'user_id', type: 'INT', key: 'FK' },
+  { name: 'date_id', type: 'VARCHAR', key: 'FK' },
+  { name: 'action_type', type: 'VARCHAR', key: '' },
+  { name: 'act_count', type: 'INT', key: '' }
+];
+const TC_M5_FACT_DATA = [
+  ['1',  '7',  'D1', 'like',    '3'],
+  ['2',  '9',  'D1', 'comment', '2'],
+  ['3',  '12', 'D1', 'post',    '1'],
+  ['4',  '7',  'D2', 'like',    '5'],
+  ['5',  '9',  'D2', 'like',    '4'],
+  ['6',  '12', 'D2', 'comment', '3'],
+  ['7',  '15', 'D2', 'like',    '2'],
+  ['8',  '9',  'D3', 'post',    '1'],
+  ['9',  '7',  'D3', 'comment', '1'],
+  ['10', '12', 'D3', 'like',    '6'],
+  ['11', '15', 'D3', 'like',    '1'],
+  ['12', '7',  'D3', 'post',    '1']
+];
+const TC_M5_DIM_USER = {
+  table_name: 'dim_user',
+  columns: [
+    { name: 'user_id', type: 'INT', key: 'PK' },
+    { name: 'username', type: 'VARCHAR', key: '' },
+    { name: 'country', type: 'VARCHAR', key: '' }
+  ],
+  data: [
+    ['7', 'minhkiller', 'VN'],
+    ['9', 'yuki_sama', 'JP'],
+    ['12', 'toxic_lord', 'VN'],
+    ['15', 'sara_gg', 'US']
+  ]
+};
+const TC_M5_DIM_DATE = {
+  table_name: 'dim_date',
+  columns: [
+    { name: 'date_id', type: 'VARCHAR', key: 'PK' },
+    { name: 'full_date', type: 'DATE', key: '' },
+    { name: 'day_name', type: 'VARCHAR', key: '' },
+    { name: 'month', type: 'INT', key: '' },
+    { name: 'year', type: 'INT', key: '' }
+  ],
+  data: [
+    ['D1', '2026-06-01', 'Thứ 2', '6', '2026'],
+    ['D2', '2026-06-02', 'Thứ 3', '6', '2026'],
+    ['D3', '2026-07-01', 'Thứ 4', '7', '2026']
+  ]
+};
+
 window.LESSON_CONTENT['db_design_tc'] = {
   course_id: 'db_design_tc',
   course_title: 'Database Design Trung cấp — GameHub Community',
@@ -936,45 +993,12 @@ window.LESSON_CONTENT['db_design_tc'] = {
       step_4: {
         prompt: 'Câu hỏi thứ hai của sếp khó hơn — đổi CHIỀU và đổi PHÉP TÍNH: <strong>"Bảng xếp hạng quốc gia theo TỔNG SỐ LIKE"</strong>. Lần này phải <code>SUM(act_count)</code> (cộng số đo thật, không đếm dòng), JOIN sang <code>dim_user</code>, và chỉ lấy hành động <code>like</code>.',
         starter: "-- BXH quoc gia theo TONG like (SUM so do, khong phai COUNT dong)\nSELECT u.country, ____(f.act_count) AS total_likes\n  FROM fact_post_action f\n  JOIN ____ ON f.user_id = u.user_id\n WHERE f.action_type = ____\n GROUP BY ____\n ORDER BY total_likes DESC;\n",
+        /* TRẢ-NỢ 2026-07-05: kho M5 dùng chung (khai báo đầu file) */
         schema: {
           table_name: 'fact_post_action',
-          columns: [
-            { name: 'action_id', type: 'INT', key: 'PK' },
-            { name: 'user_id', type: 'INT', key: 'FK' },
-            { name: 'date_id', type: 'VARCHAR', key: 'FK' },
-            { name: 'action_type', type: 'VARCHAR', key: '' },
-            { name: 'act_count', type: 'INT', key: '' }
-          ],
-          data: [
-            ['1',  '7',  'D1', 'like',    '3'],
-            ['2',  '9',  'D1', 'comment', '2'],
-            ['3',  '12', 'D1', 'post',    '1'],
-            ['4',  '7',  'D2', 'like',    '5'],
-            ['5',  '9',  'D2', 'like',    '4'],
-            ['6',  '12', 'D2', 'comment', '3'],
-            ['7',  '15', 'D2', 'like',    '2'],
-            ['8',  '9',  'D3', 'post',    '1'],
-            ['9',  '7',  'D3', 'comment', '1'],
-            ['10', '12', 'D3', 'like',    '6'],
-            ['11', '15', 'D3', 'like',    '1'],
-            ['12', '7',  'D3', 'post',    '1']
-          ],
-          related_schemas: [
-            {
-              table_name: 'dim_user',
-              columns: [
-                { name: 'user_id', type: 'INT', key: 'PK' },
-                { name: 'username', type: 'VARCHAR', key: '' },
-                { name: 'country', type: 'VARCHAR', key: '' }
-              ],
-              data: [
-                ['7', 'minhkiller', 'VN'],
-                ['9', 'yuki_sama', 'JP'],
-                ['12', 'toxic_lord', 'VN'],
-                ['15', 'sara_gg', 'US']
-              ]
-            }
-          ]
+          columns: TC_M5_FACT_COLUMNS,
+          data: TC_M5_FACT_DATA,
+          related_schemas: [TC_M5_DIM_USER]
         },
         context: {
           scenario: 'Widget "Top quốc gia" trên dashboard chạy đúng query này mỗi sáng, trên KHO — không đụng một byte nào của feed. Chú ý: đếm DÒNG fact là sai, phải CỘNG <code>act_count</code> (một dòng có thể gói 6 like).',
@@ -1146,45 +1170,12 @@ window.LESSON_CONTENT['db_design_tc'] = {
       step_4: {
         prompt: 'Sếp xem xong đòi thêm đúng tầng ROLLUP không có: <strong>"mỗi LOẠI hành động cộng trên mọi nước"</strong>. Nâng cấp query của Step 3: đổi <code>ROLLUP</code> thành <code>CUBE</code> — đủ mọi tổ hợp tầng.',
         starter: "-- Dashboard pivot can DU moi to hop tang (ke ca theo LOAI tren moi nuoc)\n-- Khung nhu Step 3, doi ROLLUP -> CUBE\nSELECT u.country, f.action_type, SUM(f.act_count) AS total\n  FROM fact_post_action f\n  JOIN dim_user u ON f.user_id = u.user_id\n GROUP BY ____;\n",
+        /* TRẢ-NỢ 2026-07-05: kho M5 dùng chung (khai báo đầu file) */
         schema: {
           table_name: 'fact_post_action',
-          columns: [
-            { name: 'action_id', type: 'INT', key: 'PK' },
-            { name: 'user_id', type: 'INT', key: 'FK' },
-            { name: 'date_id', type: 'VARCHAR', key: 'FK' },
-            { name: 'action_type', type: 'VARCHAR', key: '' },
-            { name: 'act_count', type: 'INT', key: '' }
-          ],
-          data: [
-            ['1',  '7',  'D1', 'like',    '3'],
-            ['2',  '9',  'D1', 'comment', '2'],
-            ['3',  '12', 'D1', 'post',    '1'],
-            ['4',  '7',  'D2', 'like',    '5'],
-            ['5',  '9',  'D2', 'like',    '4'],
-            ['6',  '12', 'D2', 'comment', '3'],
-            ['7',  '15', 'D2', 'like',    '2'],
-            ['8',  '9',  'D3', 'post',    '1'],
-            ['9',  '7',  'D3', 'comment', '1'],
-            ['10', '12', 'D3', 'like',    '6'],
-            ['11', '15', 'D3', 'like',    '1'],
-            ['12', '7',  'D3', 'post',    '1']
-          ],
-          related_schemas: [
-            {
-              table_name: 'dim_user',
-              columns: [
-                { name: 'user_id', type: 'INT', key: 'PK' },
-                { name: 'username', type: 'VARCHAR', key: '' },
-                { name: 'country', type: 'VARCHAR', key: '' }
-              ],
-              data: [
-                ['7', 'minhkiller', 'VN'],
-                ['9', 'yuki_sama', 'JP'],
-                ['12', 'toxic_lord', 'VN'],
-                ['15', 'sara_gg', 'US']
-              ]
-            }
-          ]
+          columns: TC_M5_FACT_COLUMNS,
+          data: TC_M5_FACT_DATA,
+          related_schemas: [TC_M5_DIM_USER]
         },
         /* Tier-2: probe 2026-07-04 cho thấy engine chạy ROLLUP/CUBE ra kết quả SAI im lặng
          * → scan chặn thành pending; equiv render tầng CHI TIẾT (GROUP BY 2 chiều) — các
@@ -1718,60 +1709,12 @@ window.LESSON_CONTENT['db_design_tc'] = {
       step_4: {
         prompt: 'Câu thứ ba của PM — <strong>drill-down</strong>: "VN trong tháng 6, NGÀY nào sôi động nhất?". Giữ lát tháng 6, đổi chiều ghim: <code>u.country = \'VN\'</code> thay cho loại hành động (tính MỌI loại), còn GROUP BY khoan xuống <code>d.full_date</code> — đổi độ hạt, đúng nghĩa drill-down.',
         starter: "-- Drill-down: VN thang 6 -> tung NGAY (moi loai hanh dong)\nSELECT d.full_date, SUM(f.act_count) AS total\n  FROM fact_post_action f\n  JOIN dim_date d ON f.date_id = d.date_id\n  JOIN ____ ON ____\n WHERE d.month = 6 AND ____\n GROUP BY ____\n ORDER BY total DESC;\n",
+        /* TRẢ-NỢ 2026-07-05: kho M5 dùng chung (khai báo đầu file) */
         schema: {
           table_name: 'fact_post_action',
-          columns: [
-            { name: 'action_id', type: 'INT', key: 'PK' },
-            { name: 'user_id', type: 'INT', key: 'FK' },
-            { name: 'date_id', type: 'VARCHAR', key: 'FK' },
-            { name: 'action_type', type: 'VARCHAR', key: '' },
-            { name: 'act_count', type: 'INT', key: '' }
-          ],
-          data: [
-            ['1',  '7',  'D1', 'like',    '3'],
-            ['2',  '9',  'D1', 'comment', '2'],
-            ['3',  '12', 'D1', 'post',    '1'],
-            ['4',  '7',  'D2', 'like',    '5'],
-            ['5',  '9',  'D2', 'like',    '4'],
-            ['6',  '12', 'D2', 'comment', '3'],
-            ['7',  '15', 'D2', 'like',    '2'],
-            ['8',  '9',  'D3', 'post',    '1'],
-            ['9',  '7',  'D3', 'comment', '1'],
-            ['10', '12', 'D3', 'like',    '6'],
-            ['11', '15', 'D3', 'like',    '1'],
-            ['12', '7',  'D3', 'post',    '1']
-          ],
-          related_schemas: [
-            {
-              table_name: 'dim_date',
-              columns: [
-                { name: 'date_id', type: 'VARCHAR', key: 'PK' },
-                { name: 'full_date', type: 'DATE', key: '' },
-                { name: 'day_name', type: 'VARCHAR', key: '' },
-                { name: 'month', type: 'INT', key: '' },
-                { name: 'year', type: 'INT', key: '' }
-              ],
-              data: [
-                ['D1', '2026-06-01', 'Thứ 2', '6', '2026'],
-                ['D2', '2026-06-02', 'Thứ 3', '6', '2026'],
-                ['D3', '2026-07-01', 'Thứ 4', '7', '2026']
-              ]
-            },
-            {
-              table_name: 'dim_user',
-              columns: [
-                { name: 'user_id', type: 'INT', key: 'PK' },
-                { name: 'username', type: 'VARCHAR', key: '' },
-                { name: 'country', type: 'VARCHAR', key: '' }
-              ],
-              data: [
-                ['7', 'minhkiller', 'VN'],
-                ['9', 'yuki_sama', 'JP'],
-                ['12', 'toxic_lord', 'VN'],
-                ['15', 'sara_gg', 'US']
-              ]
-            }
-          ]
+          columns: TC_M5_FACT_COLUMNS,
+          data: TC_M5_FACT_DATA,
+          related_schemas: [TC_M5_DIM_DATE, TC_M5_DIM_USER]
         },
         context: {
           scenario: 'PM đang nhìn con số tháng — bạn khoan nó vỡ ra thành từng ngày, chỉ trong phạm vi VN. Cùng kho, cùng khung query, chỉ WHERE và GROUP BY đổi vai: đó là toàn bộ nghệ thuật OLAP.',
