@@ -440,6 +440,16 @@ def lesson_view(course_id):
     return render_template(template, lesson_idx=lesson_idx, course_id=course_id, **_user_stats())
 
 
+@main_bp.route('/card/<card_id>')
+@login_required
+def concept_card(card_id):
+    # TRẢ-NỢ 2026-07-05 (recommendation §5 Hybrid): concept card Option-2 — trang card riêng
+    # chen giữa 2 bài. Data nằm trong lesson_content_*.js (course.concept_cards[]); template
+    # hydrate client-side theo card_id. Stateless — không progress riêng (scope cut có chủ đích,
+    # NC cần 22 cards sẽ nối progress sau).
+    return render_template('concept_card.html', card_id=card_id, **_user_stats())
+
+
 @main_bp.route('/courses/<course_id>')
 @login_required
 def course_detail(course_id):

@@ -10298,3 +10298,24 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .case-file-card.cfc-slim .cfc-title { font-size: 13.5px; margin-top: 4px; }
 .case-file-card.cfc-slim .cfc-prev { margin-top: 6px; padding: 6px 10px; }
 @media (prefers-reduced-motion: reduce) { .cfc-stamp { transition: none; } }
+
+/* ═══ Concept card links trong overlay hoàn thành (TRẢ-NỢ 2026-07-05) ═══ */
+.success-card-links {
+  margin: 14px auto 0; max-width: 420px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(251, 191, 36, .07);
+  border: 1px dashed rgba(251, 191, 36, .38);
+  text-align: left;
+}
+.scl-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  color: #fbbf24; margin-bottom: 6px;
+}
+.scl-link {
+  display: block; padding: 4px 0;
+  color: #e8edf5; font-size: 13px; font-weight: 600;
+  text-decoration: none;
+}
+.scl-link:hover { color: #fbbf24; }
+.scl-link i { font-size: 10px; color: #fbbf24; margin-left: 4px; }

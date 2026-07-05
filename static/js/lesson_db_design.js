@@ -5610,6 +5610,23 @@
     document.getElementById('success-lesson-title').textContent = l.title;
     document.getElementById('success-message').textContent =
       s4.success_message || 'Bạn đã hoàn thành bài học!';
+    // TRẢ-NỢ 2026-07-05: concept card Option-2 (recommendation §5 Hybrid) — bài khai
+    // l.concept_cards_after = [cardId,…] → overlay gắn link hồ sơ đọc thêm trước bài kế.
+    const oldCardLinks = document.getElementById('success-card-links');
+    if (oldCardLinks) oldCardLinks.remove();
+    if (l.concept_cards_after && l.concept_cards_after.length) {
+      const allCards = (courseData && courseData.concept_cards) || [];
+      const row = document.createElement('div');
+      row.id = 'success-card-links';
+      row.className = 'success-card-links';
+      row.innerHTML = '<div class="scl-label">📇 Hồ sơ đọc thêm trước giờ G:</div>' +
+        l.concept_cards_after.map(cid => {
+          const c = allCards.find(x => x.id === cid);
+          return c ? `<a class="scl-link" href="/card/${cid}">${c.title} <i class="fa-solid fa-arrow-right"></i></a>` : '';
+        }).join('');
+      const msgEl = document.getElementById('success-message');
+      if (msgEl && msgEl.parentNode) msgEl.parentNode.insertBefore(row, msgEl.nextSibling);
+    }
     document.getElementById('reward-xp').textContent = `+${s4.xp_reward || 50}`;
     // FIX 2g-A2: achievement data-driven — chỉ hiện khi bài CÓ `l.achievement`,
     // KHÔNG fallback "Khóa chính — Khởi đầu" (đúng > sai; bài 2-20 thiếu data → ẩn hẳn).

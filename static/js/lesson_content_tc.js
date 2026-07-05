@@ -3515,6 +3515,8 @@ window.LESSON_CONTENT['db_design_tc'] = {
       estimated_minutes: 18, xp_reward: 140,
       drag_type: 'chip',
       challenge_type: 'bug_fix',
+      /* TRẢ-NỢ 2026-07-05: card Option-2 chen giữa tc_20 → boss (overlay hoàn thành gắn link) */
+      concept_cards_after: ['tc_card_index_vs_scan', 'tc_card_boss_brief'],
       drag_map: {
         table: {
           name: 'EXPLAIN (mô phỏng Postgres) — lời khai của máy',
@@ -3919,6 +3921,70 @@ window.LESSON_CONTENT['db_design_tc'] = {
         success_message: 'CHUYÊN ÁN #GH-2026 KHÉP HỒ SƠ — cả đường dây seed_master bị trục xuất, bài quảng cáo lậu rớt khỏi top trong 5 phút. Bạn vừa dùng trọn vũ khí của cả ba module trong MỘT cuộc điều tra: HAVING khoanh vùng, EXPLAIN + Index dựng lối tắt, WITH RECURSIVE lần mạng lưới, và lệnh SELECT kết án. TỐT NGHIỆP TRUNG CẤP — GameHub Community v3.0 ra mắt, tên bạn nằm trong credits. 🎓🕵️',
         xp_reward: 200
       }
+    }
+  ],
+
+  /* ═══ TRẢ-NỢ 2026-07-05 — Concept cards Option-2 (recommendation §5 Hybrid: M6 = per-lesson
+   * cards + 1-2 card riêng cuối module làm cầu sang Boss). Trang: /card/<id>. Link xuất hiện
+   * ở overlay hoàn thành tc_20 qua lesson.concept_cards_after. NC sẽ dùng chung hạ tầng này
+   * cho 22 cards của PART_6/PART_7. */
+  concept_cards: [
+    {
+      id: 'tc_card_index_vs_scan',
+      eyebrow: 'CONCEPT CARD · MODULE 6 — TRƯỚC GIỜ G',
+      title: 'Index có phải lúc nào cũng thắng?',
+      accent: '#FB923C',
+      intro: 'Bạn vừa dành 5 ticket xây lối tắt — card này cắm biển cảnh báo cuối cùng trước chuyên án: có những cuộc rượt đuổi mà lối tắt lại THUA đường thẳng.',
+      sections: [
+        {
+          icon: 'fa-code-fork',
+          heading: 'Hai con đường, một trọng tài',
+          body: '<strong>Seq Scan</strong> lật tuần tự cả bảng — đắt tổng thể nhưng RẺ TRÊN MỖI TRANG (đọc liền dải, Ticket #32). <strong>Index Scan</strong> leo cây rồi nhảy theo RID — mỗi cú nhảy là một lần truy cập rải rác. Trọng tài là <em>planner</em>: nó ước cost cả hai đường bằng con số <code>rows</code> bạn học đọc ở Ticket #40, rồi chọn đường rẻ hơn.'
+        },
+        {
+          icon: 'fa-scale-unbalanced',
+          heading: 'Điểm gãy — selectivity',
+          body: 'Lấy VÀI PHẦN TRĂM bảng: index thắng đậm (vài chục trang thay vì cả bảng). Lấy GẦN CẢ bảng: mỗi dòng một vé nhảy rải rác — tổng tiền vé vượt cả tiền lật tuần tự, index thua chính seq scan. Vậy nên đừng "thấy chậm là đánh index": hỏi trước — <em>query này lấy bao nhiêu phần của bảng?</em>'
+        },
+        {
+          icon: 'fa-user-secret',
+          heading: 'Đem vào chuyên án',
+          body: 'Tra MỘT nghi phạm giữa 40 triệu dòng → đúng đất của index. Quét TOÀN mạng lưới để tính thống kê → seq scan không phải kẻ thù, nó là công cụ đúng. Khóa Nâng cao sẽ mở hộp đen planner: cost tính thế nào, vì sao nó đoán rows được — hẹn ở Module 7.'
+        }
+      ],
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.3 — Selection Operation · PART_6 Card D (Secondary Index Can Be Bad)',
+      cta: { label: 'Vào chuyên án tốt nghiệp', href: '/lesson/db_design_tc?lesson=21' }
+    },
+    {
+      id: 'tc_card_boss_brief',
+      eyebrow: 'HỒ SƠ CHUẨN BỊ · CHUYÊN ÁN #GH-2026',
+      title: 'Bốn vũ khí mang vào phòng thẩm vấn',
+      accent: '#f87171',
+      intro: 'Trước khi mở tập hồ sơ đóng dấu MẬT, điểm danh lại vũ khí — mỗi món một câu: nó là gì, rút ra KHI NÀO.',
+      sections: [
+        {
+          icon: 'fa-magnifying-glass-chart',
+          heading: 'HAVING — khoanh vùng bằng ngưỡng (Ticket #30)',
+          body: 'Truy "kẻ làm việc X quá N lần": <code>GROUP BY thủ_phạm → COUNT(*) → HAVING ≥ ngưỡng</code>. Rút ra khi cần lọc TRÊN KẾT QUẢ ĐẾM — WHERE không với tới đó.'
+        },
+        {
+          icon: 'fa-address-book',
+          heading: 'Composite index — lối tắt hai lớp (Ticket #39)',
+          body: 'Danh bạ xếp Họ-rồi-Tên: <code>(user_id, window_5m)</code> phục vụ cả tra-một-người lẫn tra-người-trong-khung-giờ. Luật sắt leftmost: thiếu cột đầu là mù.'
+        },
+        {
+          icon: 'fa-diagram-project',
+          heading: 'WITH RECURSIVE — lần mạng lưới nhiều tầng (Ticket #24)',
+          body: 'Hàng mồi (anchor) → <code>UNION ALL</code> → bước đệ quy JOIN với chính CTE — lặp tới khi không lần thêm được ai. Rút ra khi quan hệ CHỒNG TẦNG không báo trước độ sâu: cây bình luận, chuỗi mời mọc.'
+        },
+        {
+          icon: 'fa-file-lines',
+          heading: 'EXPLAIN — bắt máy khai trước khi chạy (Ticket #40)',
+          body: 'Node = đường đi · cost = giá vé ước tính · rows = máy đoán · Filter trên cột có index = đèn đỏ. Rút ra ĐẦU TIÊN mỗi khi có query ì — đừng đoán, bắt máy khai.'
+        }
+      ],
+      source: 'Tổng hợp Ticket #21–#40 — GameHub Community, khóa Trung cấp',
+      cta: { label: 'Mở hồ sơ chuyên án — Vụ án 1/4', href: '/lesson/db_design_tc?lesson=21' }
     }
   ]
 };
