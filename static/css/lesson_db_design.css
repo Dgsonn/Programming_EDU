@@ -10334,3 +10334,139 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .town-map--dense .town-station.qcard-source .qcard-sub { display: block; } /* bảng nguồn giữ "N dòng" */
 .town-map--dense .town-station.qcard .qcard-count { font-size: 10px; padding: 2px 6px; }
 .town-map--dense .town-station.qcard .qcard-ord { width: 17px; height: 17px; font-size: 9.5px; top: -7px; left: -7px; }
+
+/* ═══ Plan Visual (NC M7 — Engine Room, 2026-07-05) ═══
+ * Cây execution plan = visual chính 10 bài Engine Room (NC_SHELL_NC01_SPEC).
+ * 2 cây cạnh nhau cho CÙNG 1 query — số dòng chảy trên mũi tên là "visual cost"
+ * (PART_6: thấy cost trực quan TRƯỚC khi học công thức). */
+.plan-visual {
+  margin: 22px 0;
+  padding: 22px 24px 18px;
+  background: #0e1726;
+  border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 14px;
+}
+.pv-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.pv-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .18em;
+  color: var(--module-accent, #818CF8);
+}
+.pv-query {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px; color: #e8edf5;
+  background: rgba(129, 140, 248, .08);
+  border: 1px solid rgba(129, 140, 248, .22);
+  border-radius: 8px; padding: 9px 13px;
+  overflow-x: auto; white-space: pre;
+}
+.pv-trees {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  align-items: start;
+}
+.pv-tree {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 14px 12px 12px;
+  background: rgba(11, 17, 33, .55);
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 12px;
+}
+.pv-tree--chosen {
+  border-color: rgba(52, 211, 153, .55);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, .25), 0 0 22px rgba(52, 211, 153, .08);
+}
+.pv-tree-name {
+  font-size: 12.5px; font-weight: 700; color: #cbd5e1;
+  margin-bottom: 10px; text-align: center; text-wrap: balance;
+}
+.pv-tree--chosen .pv-tree-name { color: #6ee7b7; }
+.pv-node {
+  width: 100%; max-width: 250px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(148, 163, 184, .3);
+  background: rgba(148, 163, 184, .07);
+  text-align: center;
+}
+.pv-op {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; font-weight: 700; color: #e8edf5;
+}
+.pv-detail { font-size: 11px; color: #8ba0bb; }
+.pv-cost {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 700; color: #fbbf24;
+  background: rgba(251, 191, 36, .1); border-radius: 5px; padding: 1px 7px; margin-top: 3px;
+}
+/* Màu theo vai node — mapping cố định cho cả module (σ xanh lọc bớt, π tím chọn cột, bảng xám nguồn) */
+.pv-node--table   { border-color: rgba(148, 163, 184, .45); background: rgba(148, 163, 184, .1); }
+.pv-node--scan    { border-color: rgba(245, 158, 11, .5);  background: rgba(245, 158, 11, .08); }
+.pv-node--scan    .pv-op { color: #fcd34d; }
+.pv-node--filter  { border-color: rgba(52, 211, 153, .5);  background: rgba(52, 211, 153, .08); }
+.pv-node--filter  .pv-op { color: #6ee7b7; }
+.pv-node--project { border-color: rgba(167, 139, 250, .5); background: rgba(167, 139, 250, .08); }
+.pv-node--project .pv-op { color: #c4b5fd; }
+.pv-node--join    { border-color: rgba(56, 189, 248, .5);  background: rgba(56, 189, 248, .08); }
+.pv-node--join    .pv-op { color: #7dd3fc; }
+.pv-edge {
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 0; min-height: 22px;
+}
+.pv-edge-arrow {
+  color: var(--module-accent, #818CF8);
+  font-size: 11px; line-height: 1;
+  animation: pvFlow 1.6s ease-in-out infinite;
+}
+.pv-rows {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 700; color: #93a8c4;
+  background: rgba(148, 163, 184, .1);
+  border-radius: 999px; padding: 2px 9px;
+}
+.pv-edge--out .pv-rows {
+  color: #6ee7b7; background: rgba(52, 211, 153, .1);
+  margin-bottom: 4px;
+}
+.pv-note {
+  margin-top: 10px; font-size: 11.5px; color: #8ba0bb;
+  text-align: center; text-wrap: balance;
+}
+.pv-note--chosen { color: #6ee7b7; font-weight: 700; }
+.pv-caption {
+  margin-top: 14px; font-size: 12.5px; color: #8ba0bb;
+  text-align: center; font-style: italic;
+}
+@keyframes pvFlow {
+  0%, 100% { transform: translateY(2px); opacity: .45; }
+  50%      { transform: translateY(-2px); opacity: 1; }
+}
+@media (max-width: 720px) {
+  .pv-trees { grid-template-columns: 1fr; }
+  .plan-visual { padding: 16px 14px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-edge-arrow { animation: none; }
+}
+
+/* ═══ Reveal strip (NC pilot — opt-in step_3.reveal_strip) ═══
+ * "Mỗi trạm reveal một phần plan" (PART_6 Bài 1): dải mảnh dưới drop zones,
+ * nhả output trạm trước + dẫn dắt trạm kế. Bài không bật = hidden. */
+.reveal-strip {
+  display: flex; align-items: flex-start; gap: 9px;
+  margin: 10px 0 4px;
+  padding: 9px 13px;
+  background: rgba(129, 140, 248, .07);
+  border: 1px solid rgba(129, 140, 248, .25);
+  border-left: 3px solid var(--module-accent, #818CF8);
+  border-radius: 9px;
+}
+.reveal-strip[hidden] { display: none; }
+.reveal-strip-icon { font-size: 13px; line-height: 1.5; }
+.reveal-strip-text { font-size: 12.5px; color: #aebfd6; line-height: 1.55; }
+.reveal-strip-text code {
+  font-family: 'JetBrains Mono', monospace; font-size: .92em;
+  color: #a5b4fc; background: rgba(129, 140, 248, .1);
+  padding: 0 4px; border-radius: 4px;
+}
+.reveal-strip-text strong { color: #e8edf5; }

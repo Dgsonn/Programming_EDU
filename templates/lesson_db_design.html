@@ -244,6 +244,9 @@
         <!-- SVG Primer (Premium — shadcn/Brilliant inspired) -->
         <div id="primer-svg-mount"></div>
 
+        <!-- Plan Visual (NC M7 — cây execution plan, visual chính Engine Room) -->
+        <div id="plan-visual-mount" hidden></div>
+
         <!-- Visual DB Panel -->
         <div class="visual-db" id="visual-db-panel">
           <div class="db-panel schema-panel">
@@ -366,6 +369,14 @@
         <div class="step3-editor">
 
           <div class="drop-zone-stack" id="drop-zones"></div>
+
+          <!-- Reveal strip (NC pilot — opt-in qua step_3.reveal_strip): mỗi trạm lắp xong
+               nhả 1 phần plan. #reveal-hint-text từng bị bỏ khi compact layout → reveal_hints
+               toàn cục đang không hiển thị; hồi sinh có kiểm soát, bài không bật = ẩn. -->
+          <div class="reveal-strip" id="reveal-strip" hidden>
+            <span class="reveal-strip-icon" aria-hidden="true">🔎</span>
+            <div class="reveal-strip-text" id="reveal-hint-text"></div>
+          </div>
 
           <div class="block-bank-wrap">
             <div class="bank-label">Kho khối lệnh</div>
@@ -597,6 +608,10 @@
   {% if course_id == 'db_design_tc' %}
   <!-- TC (GameHub Community) — data riêng, renderer dùng chung -->
   <script src="{{ url_for('static', filename='js/lesson_content_tc.js') }}?v=1"></script>
+  {% endif %}
+  {% if course_id == 'db_design_nc' %}
+  <!-- NC (GameHub Marketplace) — data riêng, renderer dùng chung -->
+  <script src="{{ url_for('static', filename='js/lesson_content_nc.js') }}?v=1"></script>
   {% endif %}
   <script src="{{ url_for('static', filename='js/table_explorer.js') }}?v=1"></script>
   <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=2"></script>

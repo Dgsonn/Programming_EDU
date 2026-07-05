@@ -414,6 +414,8 @@ _LESSON_TEMPLATES = {
     # TC (GameHub Community) dùng CHUNG template/renderer với Basic — chỉ khác data file
     # (docs/TC_NC_IMPLEMENTATION_PLAN_2026-07-04.md §1)
     'db_design_tc': 'lesson_db_design.html',
+    # NC (GameHub Marketplace) — cùng cơ chế (docs/NC_SHELL_NC01_SPEC_2026-07-05.md)
+    'db_design_nc': 'lesson_db_design.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js

@@ -1211,6 +1211,53 @@
         '<path d="M428 161 L 412 177 M 438 161 L 453 177 M 513 162 L 513 176 M 588 161 L 572 177 M 598 161 L 613 177" stroke="rgba(148,163,184,.45)" stroke-width="1.1" fill="none"/>' +
       '</g>' +
       '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">4 vụ án liên hoàn · mọi vũ khí của Trung cấp — HAVING · Index/EXPLAIN · WITH RECURSIVE · lệnh kết án</text>' +
+      '</svg>',
+
+    /* nc_01: dây chuyền 4 trạm trong engine — SQL đi qua Parser → Cây phép toán →
+     * Optimizer (ngã ba 2 plan, chọn bản rẻ) → Engine → 1.204 dòng kết quả */
+    nc_01: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dây chuyền xử lý query 4 trạm: SQL vào Parser, thành cây phép toán, Optimizer cân 2 plan chọn bản lọc sớm, Engine chạy trả 1204 dòng">' +
+      '<text x="360" y="28" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" fill="#e8edf5">Từ SQL đến Execution Plan — dây chuyền trong engine</text>' +
+      '<g font-family="JetBrains Mono, monospace">' +
+        // Tờ SQL đi vào
+        '<rect x="22" y="96" width="96" height="52" rx="7" fill="#0e1726" stroke="rgba(148,163,184,.55)" stroke-width="1.4"/>' +
+        '<text x="70" y="116" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="10">SELECT …</text>' +
+        '<text x="70" y="130" text-anchor="middle" fill="#7f93ad" font-size="8.5">WHERE price&lt;100</text>' +
+        '<text x="70" y="160" text-anchor="middle" fill="#7f93ad" font-size="8.5">tờ order của bạn</text>' +
+        '<path d="M118 122 L 142 122" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc1arrow)"/>' +
+        // Trạm 1 — Parser
+        '<rect x="146" y="88" width="104" height="68" rx="9" fill="#0e1726" stroke="rgba(129,140,248,.6)" stroke-width="1.5"/>' +
+        '<text x="198" y="107" text-anchor="middle" fill="#a5b4fc" font-weight="700" font-size="10.5">🛂 PARSER</text>' +
+        '<text x="198" y="123" text-anchor="middle" fill="#aebfd6" font-size="8.5">soát syntax</text>' +
+        '<text x="198" y="136" text-anchor="middle" fill="#aebfd6" font-size="8.5">bảng/cột có thật?</text>' +
+        '<text x="198" y="150" text-anchor="middle" fill="#34d399" font-size="8.5">✓ hợp lệ</text>' +
+        '<path d="M250 122 L 274 122" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc1arrow)"/>' +
+        // Trạm 2 — cây phép toán
+        '<rect x="278" y="88" width="104" height="68" rx="9" fill="#0e1726" stroke="rgba(129,140,248,.6)" stroke-width="1.5"/>' +
+        '<text x="330" y="107" text-anchor="middle" fill="#a5b4fc" font-weight="700" font-size="10.5">🌳 CÂY π/σ</text>' +
+        '<text x="330" y="124" text-anchor="middle" fill="#c4b5fd" font-size="9">π item_name,price</text>' +
+        '<text x="330" y="138" text-anchor="middle" fill="#6ee7b7" font-size="9">σ price&lt;100</text>' +
+        '<text x="330" y="151" text-anchor="middle" fill="#7f93ad" font-size="8.5">(listings)</text>' +
+        '<path d="M382 122 L 406 122" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc1arrow)"/>' +
+        // Trạm 3 — Optimizer với ngã ba 2 plan
+        '<rect x="410" y="60" width="128" height="124" rx="9" fill="#0e1726" stroke="rgba(251,191,36,.55)" stroke-width="1.5"/>' +
+        '<text x="474" y="79" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="10.5">⚖️ OPTIMIZER</text>' +
+        '<rect x="422" y="90" width="104" height="30" rx="6" fill="rgba(148,163,184,.08)" stroke="rgba(148,163,184,.4)" stroke-width="1.1"/>' +
+        '<text x="474" y="102" text-anchor="middle" fill="#8ba0bb" font-size="8">Plan A · khiêng hết rồi lọc</text>' +
+        '<text x="474" y="114" text-anchor="middle" fill="#8ba0bb" font-size="8.5">40.000 dòng qua π ✗</text>' +
+        '<rect x="422" y="126" width="104" height="30" rx="6" fill="rgba(52,211,153,.1)" stroke="rgba(52,211,153,.6)" stroke-width="1.3"/>' +
+        '<text x="474" y="138" text-anchor="middle" fill="#6ee7b7" font-size="8">Plan B · lọc sớm ✓ CHỌN</text>' +
+        '<text x="474" y="150" text-anchor="middle" fill="#6ee7b7" font-size="8.5">chỉ khiêng 1.204 dòng</text>' +
+        '<text x="474" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">cân bằng THỐNG KÊ — không chạy thử</text>' +
+        '<path d="M538 122 L 562 122" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc1arrow)"/>' +
+        // Trạm 4 — Engine + kết quả
+        '<rect x="566" y="88" width="104" height="68" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="618" y="107" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10.5">🏃 ENGINE</text>' +
+        '<text x="618" y="123" text-anchor="middle" fill="#aebfd6" font-size="8.5">chạy plan B</text>' +
+        '<text x="618" y="136" text-anchor="middle" fill="#aebfd6" font-size="8.5">trên dữ liệu thật</text>' +
+        '<text x="618" y="150" text-anchor="middle" fill="#34d399" font-weight="700" font-size="8.5">→ 1.204 dòng</text>' +
+      '</g>' +
+      '<defs><marker id="nc1arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(129,140,248,.8)"/></marker></defs>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7f93ad">SQL nói LẤY GÌ — plan mới nói LÀM THẾ NÀO · cùng 1 query, nhiều kế hoạch, optimizer chọn bản rẻ</text>' +
       '</svg>'
   };
 
@@ -1347,6 +1394,13 @@
       gradEyebrow: 'GAMEHUB COMMUNITY v3.0 — RA MẮT',
       gradTitle: 'Bạn đã làm chủ SQL nâng cao & dữ liệu lớn!',
       gradSub: 'Bạn đã đóng cả 21 ticket của GameHub Community — mạng xã hội gamers giờ chạy trên nền dữ liệu bạn dựng. Trong bản release cuối:'
+    },
+    db_design_nc: {
+      trophies: { 10: 1, 20: 2 }, graduation: 25,
+      shipLabel: function (mod) { return 'SHIP THÀNH CÔNG · MARKETPLACE v' + ((mod || 7) - 6) + '.0'; },
+      gradEyebrow: 'GAMEHUB MARKETPLACE v3.0 — RA MẮT',
+      gradTitle: 'Bạn đã vào tận lõi Database Engine!',
+      gradSub: 'Bạn đã đóng cả 25 ticket của GameHub Marketplace — sàn giao dịch sống sót qua query chậm, 1000 người tranh 1 món và cả server sập giữa thanh toán. Trong bản release cuối:'
     }
   };
 
@@ -1506,7 +1560,11 @@
       // TC (GameHub Community) — module 4-6, cùng dark palette (ui-ux-pro-max validated)
       4: { accent: '#38BDF8', softAlpha: '1a', glowAlpha: '59' },  // Sky    — Advanced SQL
       5: { accent: '#E879F9', softAlpha: '1a', glowAlpha: '59' },  // Fuchsia— Big Data
-      6: { accent: '#FB923C', softAlpha: '1a', glowAlpha: '59' }   // Orange — Storage/Index
+      6: { accent: '#FB923C', softAlpha: '1a', glowAlpha: '59' },  // Orange — Storage/Index
+      // NC (GameHub Marketplace) — module 7-9 (NC_SHELL_NC01_SPEC_2026-07-05)
+      7: { accent: '#818CF8', softAlpha: '1a', glowAlpha: '59' },  // Indigo — Engine Room
+      8: { accent: '#FB7185', softAlpha: '1a', glowAlpha: '59' },  // Rose   — Concurrency
+      9: { accent: '#34D399', softAlpha: '1a', glowAlpha: '59' }   // Emerald— Recovery
     };
     const mod = state.currentLesson.module;
     const mc = MODULE_COLORS[mod] || { accent: data.accent_color || '#06B6D4', softAlpha: '1a', glowAlpha: '59' };
@@ -1590,6 +1648,49 @@
   /* ═══════════════════════════════════════════════════════════════
    * STEP 1 — Theory
    * ═══════════════════════════════════════════════════════════════ */
+  /* ── Plan Visual (NC M7 — Engine Room) — cây execution plan trực quan ──
+   * PART_6: learner phải THẤY visual cost trước công thức; plan là nhân vật chính
+   * của module nên visual = feature. Data: step_1.plan_visual =
+   *   { query, caption, trees: [{ name, note, chosen,
+   *     nodes: [{ op, kind: table|scan|filter|project|join, detail, rows, cost? }] }] }
+   * nodes khai ĐÁY→ĐỈNH (leaf = bảng, root = kết quả); rows = số dòng ĐI RA khỏi node
+   * (hiện trên mũi tên phía trên nó). cost optional — nc_02+ gắn giá lên node. */
+  function renderPlanVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
+    var html = '<section class="plan-visual" aria-label="So sánh các execution plan cho cùng một query">';
+    html += '<div class="pv-head"><span class="pv-eyebrow">1 QUERY — ' + cfg.trees.length + ' KẾ HOẠCH</span>' +
+            '<code class="pv-query">' + escapeHtml(cfg.query || '') + '</code></div>';
+    html += '<div class="pv-trees">';
+    cfg.trees.forEach(function (t) {
+      html += '<div class="pv-tree' + (t.chosen ? ' pv-tree--chosen' : '') + '">';
+      html += '<div class="pv-tree-name">' + escapeHtml(t.name || '') + '</div>';
+      // DOM đỉnh→đáy (kết quả trên cùng) — dữ liệu chảy NGƯỢC từ bảng lên
+      var nodes = (t.nodes || []).slice().reverse();
+      if (nodes.length && nodes[0].rows) {
+        html += '<div class="pv-edge pv-edge--out"><span class="pv-rows">' + escapeHtml(nodes[0].rows) + ' → kết quả</span></div>';
+      }
+      nodes.forEach(function (n, i) {
+        html += '<div class="pv-node pv-node--' + (n.kind || 'op') + '">' +
+          '<span class="pv-op">' + escapeHtml(n.op || '') + '</span>' +
+          (n.detail ? '<span class="pv-detail">' + escapeHtml(n.detail) + '</span>' : '') +
+          (n.cost ? '<span class="pv-cost">' + escapeHtml(n.cost) + '</span>' : '') +
+          '</div>';
+        if (i < nodes.length - 1) {
+          var below = nodes[i + 1]; // mũi tên mang số dòng ĐI RA của node phía DƯỚI
+          html += '<div class="pv-edge"><span class="pv-edge-arrow" aria-hidden="true">▲</span>' +
+            (below && below.rows ? '<span class="pv-rows">' + escapeHtml(below.rows) + '</span>' : '') +
+            '</div>';
+        }
+      });
+      if (t.note) html += '<div class="pv-note' + (t.chosen ? ' pv-note--chosen' : '') + '">' + escapeHtml(t.note) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    if (cfg.caption) html += '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>';
+    html += '</section>';
+    mount.innerHTML = html;
+  }
+
   function renderStep1() {
     const l = state.currentLesson;
     const s1 = l.step_1;
@@ -1694,6 +1795,18 @@
       if (svgMount) svgMount.innerHTML = '';
     }
     // If neither, the panel will be hidden by the decomp-game block below
+
+    // Plan Visual (NC M7) — chỉ hiện khi bài khai step_1.plan_visual (Basic/TC = no-op)
+    const pvMount = document.getElementById('plan-visual-mount');
+    if (pvMount) {
+      if (s1.plan_visual) {
+        renderPlanVisual(pvMount, s1.plan_visual);
+        pvMount.hidden = false;
+      } else {
+        pvMount.innerHTML = '';
+        pvMount.hidden = true;
+      }
+    }
 
     // Decomp Game (Normal Forms Bài 6-10) — show ONLY when present
     if (s1.decomp_game) {
@@ -4581,15 +4694,26 @@
     const hintEl = document.getElementById('reveal-hint-text');
     if (!hintEl) return; // element removed in new compact layout
 
+    // NC pilot 2026-07-05: strip hồi sinh theo kiểu OPT-IN (step_3.reveal_strip) —
+    // Basic/TC compact giữ nguyên (reveal_hints của chúng vẫn dormant, chờ user quyết).
+    const strip = document.getElementById('reveal-strip');
+    if (!(s3.reveal_strip && s3.reveal_hints)) { if (strip) strip.hidden = true; return; }
+    if (strip) strip.hidden = false;
+
     if (totalBlocks === 0) {
-      hintEl.innerHTML = 'Bắt đầu bằng cách kéo khối <strong>SELECT</strong> vào dòng đầu tiên.';
+      const first = s3.drop_zones[0];
+      hintEl.innerHTML = (first && s3.reveal_hints[first.id]) ||
+        'Bắt đầu bằng cách kéo khối <strong>SELECT</strong> vào dòng đầu tiên.';
     } else if (filledZones < totalZones) {
       const next = s3.drop_zones.find(z => !state.step3Blocks[z.id] || state.step3Blocks[z.id].length === 0);
       if (next && s3.reveal_hints && s3.reveal_hints[next.id]) {
         hintEl.innerHTML = s3.reveal_hints[next.id];
       }
     } else if (totalBlocks < totalAvailable) {
-      hintEl.innerHTML = 'Còn thừa khối lệnh chưa dùng. Có thể bạn đã chọn dư — bỏ qua cũng được, hoặc bấm <strong>Tới Tự Code</strong>.';
+      // Đủ zone nhưng còn khối trong kho (khối bịa) — bài có reveal_complete thì
+      // nhả reveal chốt ("BẠN VỪA XÂY") thay vì câu than thừa khối.
+      hintEl.innerHTML = s3.reveal_complete ||
+        'Còn thừa khối lệnh chưa dùng. Có thể bạn đã chọn dư — bỏ qua cũng được, hoặc bấm <strong>Tới Tự Code</strong>.';
     } else {
       // All filled — check match (use same build logic as updateIDEFromBlocks)
       const parts = [];

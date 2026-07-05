@@ -69,15 +69,39 @@
       max-width: 560px; margin-top: 15vh; text-align: center; color: #aebfd6;
       font-family: 'JetBrains Mono', monospace;
     }
+    /* NC 2026-07-05 — micro quiz (PART_6: mỗi card = 1 visual + ≤4 dòng + 1 quiz + feedback).
+     * Client-side thuần, chọn 1 phát là khóa; không chấm vào progress (stateless như cả trang). */
+    .cc-quiz { margin-top: 26px; padding-top: 20px; border-top: 1px dashed rgba(148, 163, 184, .25); }
+    .cc-quiz-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+      letter-spacing: .16em; color: var(--cc-accent); margin-bottom: 8px;
+    }
+    .cc-quiz-q { font-size: 15px; font-weight: 700; color: #e8edf5; margin-bottom: 12px; }
+    .cc-quiz-opt {
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      margin-bottom: 8px; padding: 11px 14px; border-radius: 9px;
+      background: rgba(148, 163, 184, .06); border: 1px solid rgba(148, 163, 184, .22);
+      color: #cbd5e1; font-family: 'Inter', sans-serif; font-size: 14px;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    .cc-quiz-opt:hover:not(:disabled) { border-color: var(--cc-accent); background: rgba(148, 163, 184, .1); }
+    .cc-quiz-opt:focus-visible { outline: 2px solid #06B6D4; outline-offset: 2px; }
+    .cc-quiz-opt:disabled { cursor: default; opacity: .55; }
+    .cc-quiz-opt.correct { border-color: #34D399; background: rgba(52, 211, 153, .12); color: #d1fae5; opacity: 1; }
+    .cc-quiz-opt.wrong { border-color: #F87171; background: rgba(248, 113, 113, .12); color: #fee2e2; opacity: 1; }
+    .cc-quiz-feedback { margin-top: 10px; font-size: 14px; padding: 11px 14px; border-radius: 9px; display: none; }
+    .cc-quiz-feedback.ok { display: block; background: rgba(52, 211, 153, .1); border-left: 3px solid #34D399; color: #d1fae5; }
+    .cc-quiz-feedback.ko { display: block; background: rgba(248, 113, 113, .1); border-left: 3px solid #F87171; color: #fee2e2; }
     @media (max-width: 640px) { .cc-card { padding: 26px 20px; } .cc-title { font-size: 22px; } }
-    @media (prefers-reduced-motion: reduce) { .cc-cta { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .cc-cta, .cc-quiz-opt { transition: none; } }
   </style>
 </head>
 <body data-card-id="{{ card_id }}">
-  <div class="cc-top"><a class="cc-back" href="/courses/db_design_tc">← Về roadmap khóa học</a></div>
+  <div class="cc-top"><a class="cc-back" id="cc-back-link" href="/courses/db_design_tc">← Về roadmap khóa học</a></div>
   <main id="card-root"><div class="cc-missing">Đang mở hồ sơ…</div></main>
 
   <script src="{{ url_for('static', filename='js/lesson_content_tc.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lesson_content_nc.js') }}"></script>
   <script>
     (function () {
       var id = document.body.getAttribute('data-card-id');
@@ -96,6 +120,8 @@
       }
       document.title = card.title + ' — Concept Card';
       if (card.accent) document.documentElement.style.setProperty('--cc-accent', card.accent);
+      // NC: card thuộc khóa nào thì link "về roadmap" trỏ khóa đó (trước hardcode TC)
+      if (card.back_href) document.getElementById('cc-back-link').setAttribute('href', card.back_href);
       root.innerHTML =
         '<article class="cc-card">' +
           '<div class="cc-eyebrow">' + (card.eyebrow || 'CONCEPT CARD') + '</div>' +
@@ -105,9 +131,43 @@
             return '<section class="cc-section"><h2><i class="fa-solid ' + (s.icon || 'fa-circle-info') + '"></i>' +
               s.heading + '</h2><p>' + s.body + '</p></section>';
           }).join('') +
+          renderQuiz(card.quiz) +
           (card.source ? '<div class="cc-source">📖 ' + card.source + '</div>' : '') +
           (card.cta ? '<a class="cc-cta" href="' + card.cta.href + '">' + card.cta.label + ' <i class="fa-solid fa-arrow-right"></i></a>' : '') +
         '</article>';
+
+      // Micro quiz (PART_6 format) — 1 câu, chọn là khóa, feedback tại chỗ
+      function renderQuiz(quiz) {
+        if (!quiz || !quiz.options || !quiz.options.length) return '';
+        return '<div class="cc-quiz"><div class="cc-quiz-label">⚡ KIỂM TRA 10 GIÂY</div>' +
+          '<div class="cc-quiz-q">' + escapeText(quiz.question) + '</div>' +
+          quiz.options.map(function (o, i) {
+            return '<button type="button" class="cc-quiz-opt" data-opt="' + i + '">' + escapeText(o.label) + '</button>';
+          }).join('') +
+          '<div class="cc-quiz-feedback" id="cc-quiz-feedback"></div></div>';
+      }
+      function escapeText(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      if (card.quiz && card.quiz.options) {
+        var locked = false;
+        root.querySelectorAll('.cc-quiz-opt').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            if (locked) return;
+            locked = true;
+            var opt = card.quiz.options[parseInt(btn.getAttribute('data-opt'), 10)];
+            var fb = document.getElementById('cc-quiz-feedback');
+            root.querySelectorAll('.cc-quiz-opt').forEach(function (b) {
+              b.disabled = true;
+              var o = card.quiz.options[parseInt(b.getAttribute('data-opt'), 10)];
+              if (o && o.correct) b.classList.add('correct');
+            });
+            if (!opt.correct) btn.classList.add('wrong');
+            fb.textContent = opt.feedback || (opt.correct ? '✓ Chính xác!' : '✗ Chưa đúng — đáp án đúng đã được tô xanh.');
+            fb.className = 'cc-quiz-feedback ' + (opt.correct ? 'ok' : 'ko');
+          });
+        });
+      }
     })();
   </script>
 </body>
