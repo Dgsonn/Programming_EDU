@@ -10319,3 +10319,18 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 }
 .scl-link:hover { color: #fbbf24; }
 .scl-link i { font-size: 10px; color: #fbbf24; margin-left: 4px; }
+
+/* ═══ D4 (Mavis backlog, vá 2026-07-05): skin nén cho map 6+ node ═══
+ * 5 mệnh đề + bảng nguồn ở khung ~700px cao → thẻ chuẩn (~70px) chồng nhau.
+ * Bản nén hạ thẻ còn ~40px: giấu dòng phụ, co glyph/label — hết chồng, ga cuối vào khung. */
+.town-map--dense .town-station.qcard .qcard-inner {
+  padding: 4px 11px; gap: 8px;
+  border-radius: 9px; border-left-width: 3px;
+}
+.town-map--dense .town-station.qcard .qcard-glyph { font-size: 14px; width: 20px; }
+.town-map--dense .town-station.qcard .qcard-label { font-size: 11.5px; letter-spacing: .2px; }
+.town-map--dense .town-station.qcard .qcard-label.mono { font-size: 11.5px; }
+.town-map--dense .town-station.qcard .qcard-sub { display: none; }
+.town-map--dense .town-station.qcard-source .qcard-sub { display: block; } /* bảng nguồn giữ "N dòng" */
+.town-map--dense .town-station.qcard .qcard-count { font-size: 10px; padding: 2px 6px; }
+.town-map--dense .town-station.qcard .qcard-ord { width: 17px; height: 17px; font-size: 9.5px; top: -7px; left: -7px; }

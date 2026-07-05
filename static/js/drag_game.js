@@ -310,7 +310,10 @@
     segments.forEach(function(seg) {
       path.push('C ' + seg.c1.x + ' ' + seg.c1.y + ', ' + seg.c2.x + ' ' + seg.c2.y + ', ' + seg.to.x + ' ' + seg.to.y);
     });
-    return { pathD: path.join(' '), fMap: fMap, khoPos: khoPos, positions: positions };
+    /* D4 2026-07-05: trả thêm zones (đúng thứ tự positions) để regenerateRoute hiệu chỉnh
+     * fMap theo arc-length thật — t tuyến tính ≠ tỉ lệ arc trên đường cong. */
+    return { pathD: path.join(' '), fMap: fMap, khoPos: khoPos, positions: positions,
+             zones: exec.map(function(s){ return s.zone; }) };
   }
 
   /* PHASE 3.6-R-B: regenerate route + positions on container resize (and initial mount).
@@ -326,8 +329,28 @@
     /* Option A v2: đo khung .qflow (cột trái) — route/cards nằm trong đó, panel dữ liệu ở cột phải. */
     var flowEl = mapEl.querySelector('[data-qflow]') || mapEl;
     var r = flowEl.getBoundingClientRect();
-    var W = r.width, H = r.height;
-    if (W < 50 || H < 50) return; // too small / not measured yet
+    /* D4 fix 2026-07-05 (Mavis backlog): ở viewport thấp, chuỗi wrapper overflow:hidden
+     * phía trên (đo thật db_11: wrapper cắt ở đáy 428 trong khi town-map lòi tới 612)
+     * CẮT phần dưới của .qflow → ga CUỐI bị vẽ vào vùng vô hình, elementFromPoint trúng
+     * data-preview bên dưới. → tìm ĐÁY-THẤY-ĐƯỢC thật bằng cách đi ngược tổ tiên, clamp
+     * tại mọi ancestor overflow hidden; layout ga theo phần thấy được đó. */
+    var visBottom = r.bottom;
+    var anc = flowEl.parentElement;
+    while (anc && anc !== document.body) {
+      var ost = getComputedStyle(anc);
+      if ((ost.overflow + ' ' + ost.overflowY).indexOf('hidden') >= 0) {
+        visBottom = Math.min(visBottom, anc.getBoundingClientRect().bottom);
+      }
+      anc = anc.parentElement;
+    }
+    var W = r.width, H = Math.max(140, visBottom - 6 - r.top);
+    if (W < 50) return; // too small / not measured yet
+
+    /* D4 2026-07-05: nhiều node + khung thấp → thẻ chuẩn (~70px) chồng nhau (đo thật
+     * db_11/db_13: 4 cặp chồng) → bật skin nén khi 6+ node HOẶC bước dọc < 74px. */
+    var nGaps = Math.max(1, (activeStations || []).length - 1);
+    mapEl.classList.toggle('town-map--dense',
+      (activeStations || []).length >= 6 || (H - 76) / nGaps < 74);
 
     var computed = computeSerpentineRoute(activeStations, W, H);
     currentFMap = computed.fMap;   /* keep packet stops aligned to cards (Option A) */
@@ -358,6 +381,26 @@
 
     // 5. Re-place stations (fMap từ computed) via getPointAtLength
     var route = mapEl.querySelector('.town-route');
+    /* D4 2026-07-05: fMap t tuyến tính ≠ tỉ lệ ARC-LENGTH trên spline (đoạn giữa uốn
+     * rộng nên dài hơn) → bước dọc giữa các thẻ co giãn, thẻ giữa dính nhau (đo thật
+     * db_11: group×select). Hiệu chỉnh f của từng ga = arc-fraction của điểm neo even-y
+     * mà spline ĐI QUA (positions) — thẻ lẫn điểm dừng packet (currentFMap) cùng khớp. */
+    if (route && computed.positions && computed.positions.length) {
+      var totalArc = route.getTotalLength();
+      var S = 260, samples = [];
+      for (var si = 0; si <= S; si++) samples.push(route.getPointAtLength(totalArc * si / S));
+      (computed.zones || []).forEach(function(z, zi) {
+        var p0 = computed.positions[zi];
+        if (!p0) return;
+        var bf = computed.fMap[z], bd = Infinity;
+        for (var sj = 0; sj <= S; sj++) {
+          var dx = samples[sj].x - p0.x, dy = samples[sj].y - p0.y, d = dx * dx + dy * dy;
+          if (d < bd) { bd = d; bf = sj / S; }
+        }
+        computed.fMap[z] = bf;
+      });
+      currentFMap = computed.fMap;
+    }
     if (route) {
       var total = route.getTotalLength();
       activeStations.forEach(function(s) {
