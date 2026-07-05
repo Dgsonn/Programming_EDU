@@ -1239,15 +1239,15 @@
         '<text x="330" y="151" text-anchor="middle" fill="#7f93ad" font-size="8.5">(listings)</text>' +
         '<path d="M382 122 L 406 122" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc1arrow)"/>' +
         // Trạm 3 — Optimizer với ngã ba 2 plan
-        '<rect x="410" y="60" width="128" height="124" rx="9" fill="#0e1726" stroke="rgba(251,191,36,.55)" stroke-width="1.5"/>' +
+        '<rect x="410" y="60" width="128" height="104" rx="9" fill="#0e1726" stroke="rgba(251,191,36,.55)" stroke-width="1.5"/>' +
         '<text x="474" y="79" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="10.5">⚖️ OPTIMIZER</text>' +
         '<rect x="422" y="90" width="104" height="30" rx="6" fill="rgba(148,163,184,.08)" stroke="rgba(148,163,184,.4)" stroke-width="1.1"/>' +
-        '<text x="474" y="102" text-anchor="middle" fill="#8ba0bb" font-size="8">Plan A · khiêng hết rồi lọc</text>' +
-        '<text x="474" y="114" text-anchor="middle" fill="#8ba0bb" font-size="8.5">40.000 dòng qua π ✗</text>' +
+        '<text x="474" y="102" text-anchor="middle" fill="#8ba0bb" font-size="8">Plan A · lọc CUỐI</text>' +
+        '<text x="474" y="114" text-anchor="middle" fill="#8ba0bb" font-size="8">40.000 dòng qua π ✗</text>' +
         '<rect x="422" y="126" width="104" height="30" rx="6" fill="rgba(52,211,153,.1)" stroke="rgba(52,211,153,.6)" stroke-width="1.3"/>' +
-        '<text x="474" y="138" text-anchor="middle" fill="#6ee7b7" font-size="8">Plan B · lọc sớm ✓ CHỌN</text>' +
-        '<text x="474" y="150" text-anchor="middle" fill="#6ee7b7" font-size="8.5">chỉ khiêng 1.204 dòng</text>' +
-        '<text x="474" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">cân bằng THỐNG KÊ — không chạy thử</text>' +
+        '<text x="474" y="138" text-anchor="middle" fill="#6ee7b7" font-size="8">Plan B · lọc SỚM</text>' +
+        '<text x="474" y="150" text-anchor="middle" fill="#6ee7b7" font-size="8.5">1.204 dòng ✓ CHỌN</text>' +
+        '<text x="474" y="177" text-anchor="middle" fill="#7f93ad" font-size="8">cân bằng THỐNG KÊ — không chạy thử</text>' +
         '<path d="M538 122 L 562 122" stroke="rgba(129,140,248,.8)" stroke-width="1.6" fill="none" marker-end="url(#nc1arrow)"/>' +
         // Trạm 4 — Engine + kết quả
         '<rect x="566" y="88" width="104" height="68" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
@@ -1393,7 +1393,7 @@
         '<text x="361" y="105" text-anchor="middle" fill="#aebfd6" font-size="9">3 lượt × 400 block — phép so giữ nguyên</text>' +
         '<text x="361" y="134" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">144 ms</text>' +
         '<text x="361" y="156" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">🏆 vô địch kho này — I/O giảm 100 lần</text>' +
-        '<text x="361" y="180" text-anchor="middle" fill="#7f93ad" font-size="8.5">outer NHỎ cầm trịch: inner ít bị quét lại</text>' +
+        '<text x="361" y="180" text-anchor="middle" fill="#7f93ad" font-size="8">outer NHỎ cầm trịch — inner ít bị quét</text>' +
         // Đời 3
         '<rect x="482" y="58" width="210" height="130" rx="10" fill="#0e1726" stroke="rgba(251,191,36,.5)" stroke-width="1.3"/>' +
         '<text x="587" y="78" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="10.5">📖 ĐỜI 3 — TRA INDEX</text>' +
@@ -1402,7 +1402,7 @@
         '<text x="587" y="140" text-anchor="middle" fill="#fbbf24" font-weight="800" font-size="15">1.242 ms</text>' +
         '<text x="587" y="162" text-anchor="middle" fill="#fcd34d" font-size="8.5">phình kho lên 1 triệu món → lật cờ</text>' +
       '</g>' +
-      '<text x="360" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">cùng một phép ⋈ · cùng 12 triệu phép so (đời 1-2) — hóa đơn chênh 90 lần: JOIN là THUẬT TOÁN, không phải syntax</text>' +
+      '<text x="360" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">cùng 12 triệu phép so (đời 1-2) — hóa đơn chênh 90 lần: JOIN là THUẬT TOÁN, không phải syntax</text>' +
       '</svg>'
   };
 
