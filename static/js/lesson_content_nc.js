@@ -2072,6 +2072,220 @@ window.LESSON_CONTENT['db_design_nc'] = {
         success_message: 'TICKET #50 ĐÓNG — bạn vừa đảo cây y như optimizer, trung gian teo 2.800 lần! ⚡ Nhưng còn một bí mật chưa khui: nó lấy đâu ra "20 món/shop, 2,5 đơn/món" khi CHƯA chạy query? Bài cuối module mở cuốn sổ quyền lực nhất engine: STATISTICS & HISTOGRAMS — nơi cost-based optimizer đọc tương lai, và lệnh EXPLAIN cho bạn đọc ké. Kèm hai hồ sơ: Histogram & ANALYZE, Top-K.',
         xp_reward: 120
       }
+    },
+
+    /* ── nc_10 — Ticket #51 · Cost-Based Optimizer: Statistics, Histograms,
+     * EXPLAIN & Materialized Views — KHÉP MODULE 7 ──
+     * PART_6 Bài 10 (Ch 16.3-16.5): catalog stats (n dòng/block/distinct);
+     * histogram > uniform assumption (16.3.1 equi-width vs equi-depth); CBO so
+     * nhiều plan; EXPLAIN; materialized view cho dashboard. KHÔNG dạy sâu: công
+     * thức size-estimation chi tiết, dynamic programming, MV maintenance.
+     * Visual = renderHistVisual (user chốt 2026-07-06); bins canonical orders.total:
+     * 30.000/40.000/15.000/10.000/4.980/20 (Σ=100.000) · hòa vốn 25 · đoán đều
+     * 16.667 · cột bị bọc → default ⅓ ≈ 33.333. step-4 bug_fix (total + 0 → guard
+     * pending khi chạy thử; sửa xong chạy thật). Trophy MARKETPLACE v1.0 tại bài 10. */
+    {
+      id: 'nc_10', index: 10,
+      title: 'Cost-Based Optimizer — sổ thống kê, EXPLAIN & materialized view',
+      subtitle: 'Optimizer đọc tương lai bằng histogram — sổ mù là plan vụng: 20 đơn mà phải Seq Scan cả kho',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 22, xp_reward: 140,
+      drag_type: 'chip',
+      challenge_type: 'bug_fix',
+      drag_map: {
+        table: {
+          name: 'orders (100.000 đơn — mẫu 5, có 2 đơn whale ≥10k)',
+          columns: ['order_id', 'buyer_id', 'total'],
+          dataRows: [
+            ['9001', '88', '80'],
+            ['9002', '88', '12500'],
+            ['9004', '88', '790'],
+            ['9010', '707', '15800'],
+            ['9005', '707', '45']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #51',
+        hook: 'Ticket #50 đóng xong, đội vận hành truy đến cùng: <em>"optimizer phán 1 dòng, 20 món, 50 đơn — nó BÓI ở đâu ra khi chưa chạy?"</em>. DBA mở két: bên trong catalog có một cuốn <strong>SỔ THỐNG KÊ</strong> — bao nhiêu dòng, bao nhiêu block, bao nhiêu giá trị khác nhau, và một chiếc <strong>histogram</strong> chia kho theo khoảng giá. Đúng lúc đó, tai nạn ập vào: báo cáo "đơn whale ≥10.000 gem" — cả kho chỉ có <strong>20 đơn</strong> như thế — lại chạy Seq Scan đủng đỉnh 104ms, EXPLAIN khoe estimate <strong>33.333 dòng</strong>?! Ticket #51, vé cuối của Engine Room: học đọc sổ, đọc EXPLAIN — và gỡ mù cho optimizer.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'CBO không chạy thử: nó tra CATALOG STATISTICS — n dòng, n block, n distinct — và HISTOGRAM phân bố giá trị để ƯỚC số dòng mỗi plan phải khiêng, rồi gắn giá bằng bảng giá I/O (bài 2)',
+            'Histogram cứu optimizer khỏi giả định ĐỀU: không sổ thì 100.000 đơn chia đều 6 khoảng ≈ 16.667/khoảng — trong khi khoảng ≥10k thật ra chỉ 20 đơn (dưới hòa vốn 25 → đáng lẽ Index Scan 82ms)',
+            'EXPLAIN = cửa sổ nhìn vào lựa chọn của optimizer (plan + estimate); MATERIALIZED VIEW = tính sẵn kết quả nặng lưu như bảng thật — dashboard đọc ~20 block thay vì quét 1.000, đổi lại phải trả tiền làm mới khi dữ liệu đổi'
+          ],
+          intro: 'Hỏi thủ thư "sách về rồng giá dưới 100 gem còn nhiều không?" — bà ấy KHÔNG đi đếm từng cuốn: bà mở sổ kiểm kê, dò đúng NGĂN "0-100 gem" và đọc con số ghi sẵn. Ước lượng trong 2 giây, sai số chấp nhận được — và mọi quyết định (lấy xe đẩy hay đi tay không) dựa trên con số đó. Optimizer y hệt: cuốn sổ là statistics, các ngăn là histogram — và "xe đẩy hay tay không" chính là Seq Scan hay Index Scan.',
+          example: 'Báo cáo whale: tra histogram → khoảng ≥10k có <strong>20 đơn</strong> → 20 cú nhảy × 4,1ms = <strong>82ms</strong>, rẻ hơn Seq 104ms → Index Scan. Nhưng dev viết <code>WHERE total + 0 &gt; 10000</code>: cột bị bọc trong phép tính, optimizer KHÔNG tra sổ được → đoán mặc định ⅓ kho ≈ 33.333 dòng → Seq Scan oan.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-book',
+            title: 'Cuốn sổ và các ngăn — histogram 2 kiểu',
+            body: 'Histogram chia miền giá trị thành các khoảng, mỗi khoảng ghi SỐ DÒNG rơi vào đó. <strong>Equi-width</strong>: các khoảng RỘNG bằng nhau (như sổ của ta). <strong>Equi-depth</strong>: chỉnh ranh giới sao cho mỗi khoảng CHỨA số dòng bằng nhau — chỉ cần lưu các mốc, ước lượng chuẩn hơn nên được ưa dùng. Không có sổ? Optimizer đành giả định phân bố ĐỀU — và trả giá.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 16.3.1 — Catalog Information & Histograms: equi-width vs equi-depth, uniform assumption'
+          },
+          {
+            icon: 'fa-magnifying-glass-chart',
+            title: 'EXPLAIN — đọc bản án của optimizer',
+            body: 'CBO đặt nhiều plan ứng viên lên bàn cân, gắn giá từng plan bằng ESTIMATE × bảng giá I/O, chọn bản rẻ nhất — tất cả trước khi đụng dữ liệu. <code>EXPLAIN</code> in bản án đó: thuật toán từng tầng + số dòng ƯỚC LƯỢNG. Nghề debug query chậm gói trong một câu: so <strong>rows ước</strong> với <strong>rows thật</strong> — lệch xa là biết sổ có vấn đề.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply) — materialized view',
+            body: 'Bảng vàng seller (bài 7) bị dashboard gọi 500 lần/ngày — mỗi lần quét 1.000 block? <strong>Materialized view</strong>: chạy GROUP BY một lần, LƯU kết quả 2.000 dòng ≈ 20 block như bảng thật — mỗi lần xem chỉ đọc 20 block. Giá phải trả: đơn mới vào thì view CŨ đi, phải làm mới (Postgres: <code>REFRESH MATERIALIZED VIEW</code>) — đánh đổi kinh điển đọc-nhanh / ghi-tốn, đúng vị Ticket #44.'
+          }
+        ],
+        hist_visual: {
+          eyebrow: 'HISTOGRAM orders.total — 100.000 ĐƠN CHIA 6 KHOẢNG GIÁ · HÒA VỐN INDEX ≈ 25 ĐƠN',
+          caption: 'Sổ thật của optimizer: bấm từng khoảng giá mà xem nó ước lượng rồi chọn plan — và nhìn kẻ KHÔNG có sổ đoán đều 16.667 đơn/khoảng: bin whale 20 đơn bị Seq Scan oan.',
+          total_rows: 100000,
+          seq_ms: 104, jump_ms: 4.1, breakeven: 25,
+          bins: [
+            { label: '0-100', count: 30000 },
+            { label: '100-500', count: 40000 },
+            { label: '500-1k', count: 15000 },
+            { label: '1k-5k', count: 10000 },
+            { label: '5k-10k', count: 4980 },
+            { label: '≥10k', count: 20 }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'catalog — sổ thống kê của orders',
+            columns: [
+              { name: 'n_tuples', type: '100.000 đơn', key: '📒' },
+              { name: 'n_blocks', type: '1.000 block', key: '📒' },
+              { name: 'n_distinct(seller_id)', type: '2.000', key: '→ bài 7/9' },
+              { name: 'histogram(total)', type: '6 khoảng giá', key: '→ sim dưới' }
+            ]
+          },
+          data_preview: [
+            ['WHERE total ≥ 10k', 'tra sổ: 20 đơn', 'Index 82ms ✓'],
+            ['WHERE total ≥ 10k', 'không sổ: đoán 16.667', 'Seq 104ms — oan'],
+            ['WHERE total + 0 ≥ 10k', 'cột bị bọc: đoán ⅓ ≈ 33.333', 'Seq 104ms — mù']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'EXPLAIN in "rows=20 (estimate)" cho báo cáo whale — con số 20 đó lấy từ đâu, khi query CHƯA hề chạy?',
+            options: [
+              { id: 'a', text: 'Tra HISTOGRAM trong catalog: khoảng ≥10k gem ghi sẵn 20 đơn — ước lượng bằng sổ, không đụng một dòng dữ liệu nào', correct: true, explanation: 'Đúng — đây là câu trả lời cho câu hỏi treo từ bài 9: mọi con số 1/20/50 đều từ sổ thống kê, và histogram là trang chi tiết nhất của sổ.' },
+              { id: 'b', text: 'Chạy thử query một lần lúc rảnh rồi ghi nhớ kết quả', correct: false, explanation: 'Sai — CBO không chạy thử (bài 1 đã khắc cốt); chạy thử một lần là trả trọn giá một lần.' },
+              { id: 'c', text: 'Đếm nhanh 20 dòng đầu tiên của bảng', correct: false, explanation: 'Sai — 20 dòng đầu chẳng nói gì về tổng số đơn ≥10k; estimate đến từ bản đồ PHÂN BỐ, không từ mẫu tiện tay.' },
+              { id: 'd', text: 'Suy từ tổng số dòng: 100.000 chia đều các khoảng', correct: false, explanation: 'Sai — chia đều là kẻ KHÔNG có histogram: ra 16.667, lệch 833 lần so với 20. Chính vì thoát được phép chia bừa này mà histogram quý.' }
+            ]
+          },
+          {
+            question: 'Materialized view "bảng vàng seller" làm dashboard đọc 20 block thay vì quét 1.000 — cái giá phải trả nằm ở đâu?',
+            options: [
+              { id: 'a', text: 'Ở phía GHI: đơn mới vào là view thành CŨ — phải tốn công làm mới (refresh), và giữa hai lần refresh dashboard có thể hiển thị số liệu trễ', correct: true, explanation: 'Đúng — không có bữa trưa miễn phí: đọc-nhanh đổi bằng ghi-tốn + rủi ro dữ liệu trễ. Chọn MV cho báo cáo chịu được trễ vài phút, đừng chọn cho số dư ví.' },
+              { id: 'b', text: 'Không có giá nào — MV là tối ưu thuần lợi', correct: false, explanation: 'Sai — nếu thuần lợi thì mọi query đã là MV; maintenance và độ trễ là hóa đơn thật.' },
+              { id: 'c', text: 'Ở phía ĐỌC: đọc MV chậm hơn đọc bảng gốc', correct: false, explanation: 'Sai — ngược đời: đọc chính là phần THẮNG của MV (20 block vs 1.000); phần thua nằm ở ghi/làm mới.' },
+              { id: 'd', text: 'MV làm hỏng sổ thống kê của bảng gốc', correct: false, explanation: 'Sai — sổ của bảng gốc không liên quan; MV chỉ là một bảng kết quả được tính sẵn, có sổ riêng của nó.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Ước ĐÚNG hay ước LỆCH?',
+          instruction: 'Mỗi tình huống dẫn tới plan thế nào — xếp về đúng bên.',
+          xp: 20,
+          chips: [
+            { id: 'e1', label: 'Bin ≥10k ghi 20 đơn → Index Scan 82ms' },
+            { id: 'e2', label: 'Bin 100-500 ghi 40.000 đơn → Seq Scan, khỏi nhảy' },
+            { id: 'w1', label: 'Bulk load 50.000 đơn chưa ANALYZE — sổ vẫn ghi số cũ' },
+            { id: 'w2', label: 'WHERE total + 0 > … — cột bị bọc, sổ tra không nổi' }
+          ],
+          bins: [
+            { id: 'e', label: 'ƯỚC ĐÚNG → plan chuẩn 📗' },
+            { id: 'w', label: 'ƯỚC LỆCH → plan vụng 📕' }
+          ],
+          solution: { e1: 'e', e2: 'e', w1: 'w', w2: 'w' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp dây chuyền ra quyết định của cost-based optimizer — có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Ước selectivity: WHERE total ≥ 10k tra histogram → ~20 dòng — tuyệt không chạy thử', slot: 'cbo-est' },
+          { type: 'op', token: 'Mở sổ catalog: n dòng, n block, n distinct + histogram từng khoảng — ANALYZE cập nhật định kỳ', slot: 'cbo-stats' },
+          { type: 'op', token: 'Sổ tự cập nhật theo TỪNG INSERT — số liệu không bao giờ cũ nổi một giây', slot: 'cbo-x' },
+          { type: 'op', token: 'Gắn giá từng plan ứng viên: estimate × bảng giá I/O (seek 4ms · block 0,1ms — Ticket #43)', slot: 'cbo-cost' },
+          { type: 'op', token: 'Chọn plan rẻ nhất — và EXPLAIN in bản án đó ra cho dev soi cùng', slot: 'cbo-pick' }
+        ],
+        drop_zones: [
+          { id: 'cbo-stats', placeholder: 'Trạm 1 — chưa chạy gì cả, optimizer mở gì ra trước?', accepts: ['op'], multi: false,
+            station: { icon: '📒', label: 'Mở sổ thống kê', sub: 'Trạm 1', hint: 'Thủ thư không đi đếm sách — bà mở thứ gì?' } },
+          { id: 'cbo-est', placeholder: 'Trạm 2 — có sổ rồi, WHERE này ăn bao nhiêu dòng?', accepts: ['op'], multi: false,
+            station: { icon: '🔮', label: 'Ước selectivity', sub: 'Trạm 2', hint: 'Khoảng ≥10k của histogram ghi con số nào — và có cần chạy thử không?' } },
+          { id: 'cbo-cost', placeholder: 'Trạm 3 — biết số dòng rồi, quy ra gì để so?', accepts: ['op'], multi: false,
+            station: { icon: '💸', label: 'Gắn giá các plan', sub: 'Trạm 3', hint: 'Ticket #43 tái xuất: mỗi plan ứng viên nhận một hóa đơn ước tính.' } },
+          { id: 'cbo-pick', placeholder: 'Trạm 4 — các hóa đơn nằm trên bàn, chốt sao?', accepts: ['op'], multi: false,
+            station: { icon: '⚖️', label: 'Chọn + EXPLAIN', sub: 'Trạm 4', hint: 'Và dev muốn xem bản án này thì gõ lệnh gì?' } }
+        ],
+        expected_sql: 'Mở sổ catalog: n dòng, n block, n distinct + histogram từng khoảng — ANALYZE cập nhật định kỳ Ước selectivity: WHERE total ≥ 10k tra histogram → ~20 dòng — tuyệt không chạy thử Gắn giá từng plan ứng viên: estimate × bảng giá I/O (seek 4ms · block 0,1ms — Ticket #43) Chọn plan rẻ nhất — và EXPLAIN in bản án đó ra cho dev soi cùng',
+        expected_zones: {
+          'cbo-stats': 'Mở sổ catalog: n dòng, n block, n distinct + histogram từng khoảng — ANALYZE cập nhật định kỳ',
+          'cbo-est': 'Ước selectivity: WHERE total ≥ 10k tra histogram → ~20 dòng — tuyệt không chạy thử',
+          'cbo-cost': 'Gắn giá từng plan ứng viên: estimate × bảng giá I/O (seek 4ms · block 0,1ms — Ticket #43)',
+          'cbo-pick': 'Chọn plan rẻ nhất — và EXPLAIN in bản án đó ra cho dev soi cùng'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA LẮP trọn bộ não CBO: mở sổ → ước lượng → gắn giá → chọn & EXPLAIN. Khối "sổ tự cập nhật theo từng INSERT" là bịa — sổ được lấy MẪU và làm mới ĐỊNH KỲ (ANALYZE), nghĩa là nó CÓ THỂ CŨ: đó chính là gót chân Achilles nằm chờ ở hồ sơ H. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'cbo-stats': 'Trạm 1 — luật bất di bất dịch từ Ticket #42: optimizer KHÔNG chạy thử. Vậy trước mọi phép tính, nó mở thứ gì ra?',
+          'cbo-est': 'Trạm 1 chốt: sổ đã mở — n dòng, histogram sẵn sàng. Giờ nhìn WHERE total ≥ 10k: làm sao ra được "~20 dòng" mà không đụng dữ liệu?',
+          'cbo-cost': 'Trạm 2 chốt: ước ~20 dòng. Nhưng "20 dòng" chưa phải tiền — quy ra hóa đơn cho TỪNG plan ứng viên bằng bảng giá nào?',
+          'cbo-pick': 'Trạm 3 chốt: Index 82ms · Seq 104ms nằm trên bàn. Nước cuối cùng của bộ não này — và cánh cửa cho dev nhìn vào?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #51 — gỡ mù cho optimizer:</strong> báo cáo whale chạy Seq Scan 104ms dù kho chỉ có 20 đơn ≥10.000 gem. EXPLAIN khai: <code>Seq Scan on orders (rows=33333 est) · Filter: total + 0 &gt; 10000</code> — cột <code>total</code> bị BỌC trong phép cộng nên sổ tra không nổi. Sửa dòng đỏ cho optimizer thấy lại cột trần.',
+        challenge_type: 'bug_fix',
+        buggy: "SELECT order_id, buyer_id, total\nFROM orders\nWHERE total + 0 > 10000\nORDER BY total DESC;",
+        buggy_line: 2,
+        schema: {
+          table_name: 'orders',
+          columns: [
+            { name: 'order_id', type: 'INT', key: 'PK' },
+            { name: 'buyer_id', type: 'INT', key: 'FK' },
+            { name: 'total', type: 'INT (gem)', key: '🔑 idx_total · 📒 histogram' }
+          ],
+          data: [
+            ['9001', '88', '80'],
+            ['9002', '88', '12500'],
+            ['9004', '88', '790'],
+            ['9005', '707', '45'],
+            ['9006', '12', '320'],
+            ['9010', '707', '15800']
+          ]
+        },
+        context: {
+          scenario: 'Sửa xong, bản án đổi thành: <code>Index Scan using idx_total (rows=20 est) · Index Cond: total &gt; 10000</code> — 82ms, đúng như sổ hứa. Cùng họ với vụ UPPER( ) ở khóa Trung cấp: BẤT KỲ lớp bọc nào quanh cột — hàm hay phép tính — cũng che mắt cả index LẪN histogram.',
+          real_world: 'Postgres gọi điều kiện "cột trần đứng một bên" là sargable. Các thủ phạm quen mặt trong code thật: <code>total + 0</code>, <code>date(created_at) = …</code>, <code>price * 1.1 &gt; x</code> (đáng lẽ viết <code>price &gt; x / 1.1</code>). Luật vàng: mọi phép biến đổi dồn về phía HẰNG SỐ, để cột đứng trần.',
+          steps: [
+            'Dòng tô đỏ: WHERE đang cộng 0 vào total — vô nghĩa với kết quả, chí mạng với estimate.',
+            'Bỏ lớp bọc: so cột trần với hằng số.',
+            'SELECT / FROM / ORDER BY không có tội — giữ nguyên.'
+          ],
+          hint_explore: 'Chạy thử TRƯỚC khi sửa: engine demo cũng chào thua biểu thức bọc cột (nó sẽ nói thẳng). Sửa xong chạy lại — 2 đơn whale hiện ra, lớn trước.',
+          expected: 'Kết quả sau sửa: 9010 → 15800 · 9002 → 12500 (xếp giảm dần).'
+        },
+        hints: [
+          { level: 1, text: 'EXPLAIN đã chỉ mặt: <code>Filter: total + 0 &gt; 10000</code> — phép cộng 0 đang bọc quanh cột có sổ.' },
+          { level: 2, text: '<code>total + 0</code> và <code>total</code> cho cùng kết quả — nhưng optimizer chỉ tra được sổ/index khi cột đứng TRẦN.' },
+          { level: 3, text: 'Sửa dòng đỏ thành phép so trần trụi giữa <code>total</code> và <code>10000</code>.' },
+          { level: 4, text: 'Dòng WHERE đúng: <code>WHERE total &gt; 10000</code> — các dòng khác giữ nguyên.' }
+        ],
+        expected_sql: 'SELECT order_id, buyer_id, total FROM orders WHERE total > 10000 ORDER BY total DESC;',
+        success_message: 'TICKET #51 ĐÓNG — MODULE 7 ENGINE ROOM HOÀN TẤT! 🏆 Nhìn lại chặng đường: dây chuyền 4 trạm → bảng giá I/O → access path → external sort → ba đời nested loop → merge & hash → aggregation → pipeline → optimizer viết lại query → và hôm nay, cuốn sổ cho nó đôi mắt. Ba hồ sơ tốt nghiệp module đang chờ bên dưới: Histograms & ANALYZE — Top-K — Join Minimization. Hẹn ở Module 8: GIAO DỊCH & CONCURRENCY — nơi 2 khách cùng bấm mua 1 món trong cùng 1 mili-giây. 🛒⚔️',
+        xp_reward: 140
+      },
+      concept_cards_after: ['nc_card_histogram_analyze', 'nc_card_topk', 'nc_card_join_minimization']
     }
 
   ],
@@ -2253,6 +2467,102 @@ window.LESSON_CONTENT['db_design_nc'] = {
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2.2 — Evaluation Algorithms for Pipelining: blocking/pipelined edges, pipeline stages · PART_6 Card G',
       cta: { label: 'Vào Bài 9 — Optimizer viết lại query', href: '/lesson/db_design_nc?lesson=9' }
+    },
+
+    /* Card H — PART_6 đặt sau Bài 10 (1/3); chuỗi H → I → J → trang khóa (user chốt 2026-07-06) */
+    {
+      id: 'nc_card_histogram_analyze',
+      eyebrow: 'HỒ SƠ TỐT NGHIỆP MODULE 7 · 1/3',
+      title: 'Histograms & ANALYZE — cuốn sổ cũng biết nói dối',
+      accent: '#818CF8',
+      back_href: '/courses/db_design_nc',
+      intro: 'Bài 10 trao cho optimizer cuốn sổ thống kê — nhưng có một sự thật chưa nói hết: sổ được lập bằng cách <strong>LẤY MẪU</strong> (đọc một phần bảng, suy ra toàn cục) và chỉ được làm mới <strong>ĐỊNH KỲ</strong>. Nghĩa là con số trong sổ có thể… cũ.',
+      sections: [
+        {
+          icon: 'fa-clock-rotate-left',
+          heading: 'Sổ cũ = án oan',
+          body: 'Nửa đêm import 50.000 đơn khuyến mãi — sáng ra sổ VẪN ghi số của hôm qua: optimizer tưởng bảng bé, chọn plan cho bảng bé, và query ì ạch một cách "bí ẩn". Thuốc đặc trị một dòng: <code>ANALYZE orders;</code> — bắt engine lấy mẫu lại, dựng lại histogram. Postgres có autovacuum tự làm việc này, nhưng sau bulk load lớn thì dân chuyên vẫn ANALYZE bằng tay.'
+        },
+        {
+          icon: 'fa-vial',
+          heading: 'Vì sao chỉ lấy mẫu?',
+          body: 'Đọc trọn 1.000 block chỉ để lập sổ thì bằng chạy không công một Seq Scan — nên engine đọc mẫu vài trăm dòng ngẫu nhiên rồi ngoại suy. Sổ vì thế là bản ƯỚC HỌA, không phải ảnh chụp: đủ đúng để chọn plan, đủ rẻ để làm thường xuyên. Debug plan vụng luôn bắt đầu bằng câu hỏi: "sổ được ANALYZE lần cuối khi nào?"'
+        }
+      ],
+      quiz: {
+        question: 'Import 50.000 đơn lúc 0h. 8h sáng, query trên orders bỗng chậm bất thường dù index còn nguyên. Nghi phạm số một?',
+        options: [
+          { label: 'Sổ thống kê chưa cập nhật — optimizer vẫn tưởng bảng như hôm qua, plan lỗi thời; chạy ANALYZE là tỉnh', correct: true, feedback: '✓ Chuẩn — dữ liệu đổi lớn mà sổ chưa kịp đổi là công thức kinh điển của "query tự nhiên chậm". ANALYZE xong, estimate đúng lại, plan đúng lại.' },
+          { label: 'Index bị import làm hỏng, phải build lại', correct: false, feedback: '✗ Index vẫn được cập nhật theo từng dòng ghi — nó không "hỏng" vì import; thứ KHÔNG tự cập nhật theo từng dòng chính là cuốn sổ.' },
+          { label: 'RAM buffer bị 50.000 đơn mới chiếm hết', correct: false, feedback: '✗ Buffer là chuyện thoáng qua (block cũ bị đẩy ra rồi nạp lại dần) — không giải thích nổi việc PLAN đổi hẳn sang kiểu vụng.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 16.3 — statistics maintenance & sampling · PART_6 Card H',
+      cta: { label: 'Hồ sơ 2/3 — Top-K Optimization', href: '/card/nc_card_topk' }
+    },
+
+    /* Card I — PART_6 đặt sau Bài 10 (2/3) */
+    {
+      id: 'nc_card_topk',
+      eyebrow: 'HỒ SƠ TỐT NGHIỆP MODULE 7 · 2/3',
+      title: 'Top-K — LIMIT 10 không đáng giá một cú sort toàn kho',
+      accent: '#818CF8',
+      back_href: '/courses/db_design_nc',
+      intro: 'Trang chủ chợ hiện "10 đơn lớn nhất hôm nay": <code>ORDER BY total DESC LIMIT 10</code>. Sort là kẻ chặn (Bài 8) — chẳng lẽ vì 10 dòng mà external-sort cả 100.000 đơn? Optimizer có chiêu riêng cho những câu "chỉ cần TOP".',
+      sections: [
+        {
+          icon: 'fa-ranking-star',
+          heading: 'Hai lối tắt của Top-K',
+          body: '<strong>Lối 1 — heap top-10:</strong> quét kho một lượt, nuôi một danh sách 10 phần tử lớn nhất tính đến hiện tại — đọc đủ 100.000 nhưng KHÔNG sort 100.000; RAM chỉ tốn 10 chỗ. <strong>Lối 2 — có index trên total:</strong> đi ngược cây index từ đầu lớn, nhặt đúng 10 dòng rồi… dừng. Không sort, thậm chí không quét kho.'
+        },
+        {
+          icon: 'fa-link',
+          heading: 'Nối lại các bài cũ',
+          body: 'Top-K là màn bắt tay của cả module: LIMIT làm root chỉ đòi 10 cú next() (Card F) — nếu plan không có kẻ chặn thì 10 dòng về là cả cây NGỦ luôn; sort-chặn (Card G) được thay bằng heap-gần-như-chảy; và để chọn giữa heap hay index, optimizer lại… mở sổ ra tra (Bài 10).'
+        }
+      ],
+      quiz: {
+        question: '"10 đơn lớn nhất": ORDER BY total DESC LIMIT 10 trên 100.000 đơn, index idx_total nằm sẵn. Plan giỏi nhất?',
+        options: [
+          { label: 'Đi NGƯỢC index từ đầu lớn, nhặt đúng 10 dòng rồi dừng — không sort, không quét kho', correct: true, feedback: '✓ Chuẩn — index vốn là dữ liệu ĐÃ có trật tự: 10 dòng đầu của chiều ngược chính là top-10; cả query tốn ~10 cú tra.' },
+          { label: 'External sort trọn 100.000 đơn rồi cắt lấy 10 dòng đầu', correct: false, feedback: '✗ Trả tiền sort cả kho (≈3.000 block — Bài 4) cho 10 dòng — đây chính là plan mà Top-K sinh ra để thay thế.' },
+          { label: 'Seq Scan rồi bỏ ORDER BY — có LIMIT thì thứ tự không quan trọng', correct: false, feedback: '✗ Sai nghĩa hoàn toàn: bỏ ORDER BY là trả 10 đơn TÙY HỨNG, không phải 10 đơn LỚN NHẤT — kết quả khác là không được phép (luật tương đương, Bài 9).' }
+        ]
+      },
+      source: 'PART_6 Card I — Top-K optimization (Ch 16.4 note: LIMIT không nên sort toàn bộ nếu có cách tốt hơn)',
+      cta: { label: 'Hồ sơ 3/3 — Join Minimization & Shared Scan', href: '/card/nc_card_join_minimization' }
+    },
+
+    /* Card J — PART_6 đặt CUỐI MODULE; CTA về trang khóa (bài 11/module 8 chưa mở) */
+    {
+      id: 'nc_card_join_minimization',
+      eyebrow: 'HỒ SƠ TỐT NGHIỆP MODULE 7 · 3/3 — CUỐI MODULE',
+      title: 'Join Minimization & Shared Scan — hai ngón nghề cuối',
+      accent: '#818CF8',
+      back_href: '/courses/db_design_nc',
+      intro: 'Trước khi đóng cửa Engine Room, hai chiêu ít người biết của optimizer: <strong>bỏ hẳn một cái join</strong> khi chứng minh được nó vô hại — và <strong>cho nhiều query đi chung một chuyến quét kho</strong>.',
+      sections: [
+        {
+          icon: 'fa-scissors',
+          heading: 'Join minimization — cắt bảng khỏi plan',
+          body: 'Query JOIN listings "cho chắc" nhưng SELECT không đụng cột nào của listings? Nếu FK <code>orders.listing_id → listings</code> (NOT NULL, trỏ PK) đã ĐẢM BẢO mỗi đơn khớp đúng một món — join không thêm không bớt dòng nào — optimizer CẮT hẳn listings khỏi plan. Constraint từ khóa Cơ bản giờ thành công cụ tối ưu: schema sạch là quà tặng cho engine.'
+        },
+        {
+          icon: 'fa-people-group',
+          heading: 'Shared scan — đi chung chuyến xe',
+          body: '10 dashboard cùng quét orders 1.000 block vào 8h sáng? Thay vì 10 chuyến × 1.000 block, engine cho các query BÁM CHUNG một lượt quét đang chạy: một chuyến xe, nhiều hành khách — mỗi block đọc lên phục vụ tất cả. I/O từ 10.000 block về 1.000.'
+        }
+      ],
+      quiz: {
+        question: 'Query JOIN listings nhưng SELECT chỉ lấy cột của orders; FK orders.listing_id (NOT NULL) → PK listings. Optimizer làm gì?',
+        options: [
+          { label: 'Cắt hẳn listings khỏi plan — constraint đảm bảo join 1-1 nên kết quả không đổi, mà bớt được cả một bảng', correct: true, feedback: '✓ Chuẩn — join minimization: luật tương đương + constraint = giấy phép xóa join thừa. Một lý do nữa để khai FK/NOT NULL tử tế.' },
+          { label: 'Vẫn phải join — dev đã viết thì engine phải chạy đúng từng chữ', correct: false, feedback: '✗ Bài 9 đã lật đổ tư duy này: SQL là khai báo — engine chỉ nợ bạn KẾT QUẢ, không nợ từng động tác.' },
+          { label: 'Đổi sang tích Descartes cho đỡ tốn điều kiện nối', correct: false, feedback: '✗ Descartes là thứ optimizer NÉ bằng mọi giá (80 triệu dòng — Bài 9), không bao giờ là "cho đỡ tốn".' }
+        ]
+      },
+      source: 'PART_6 Card J — join minimization & shared scan (Ch 16 Advanced Topics in Query Optimization)',
+      cta: { label: 'Hết Module 7 — Engine Room ✓ · Hẹn Module 8: Giao dịch & Concurrency', href: '/courses/db_design_nc' }
     }
   ]
 };

@@ -128,3 +128,25 @@ User chốt 4/4 recommended: cụm nc_08+nc_09 · sim CHẢY-TUPLE bấm-từng-
 - Step 1 = plan_visual 2 cây (VỤNG vs SAU BIẾN ĐỔI, rows badge trên mũi tên là nhân vật chính; io minh họa ≈580ms vs ≈159ms ghi chú ước lượng). Step 3 = 4 nước biến đổi (đẩy σ xuống / xuất phát từ bảng-sau-lọc nhỏ nhất / π pushdown cắt cột sớm / né cartesian) + bịa "đảo join phải xin phép dev — sợ đổi kết quả" (luật tương đương đảm bảo CÙNG kết quả). Step 2 mini-game order 5 bước biến đổi.
 - Step 4 fill_blank pseudo-code (không SELECT → neutral): điền 1 / 20 / 50.
 - Success tease nc_10: làm sao optimizer BIẾT 1 dòng/20 món mà không chạy thử? → statistics/histograms/EXPLAIN (bài 10, Cards H/I).
+
+---
+
+# ADDENDUM ĐỢT 6 (2026-07-06): nc_10 + Card H/I/J — KHÉP MODULE 7
+
+User chốt 4/4 recommended: nc_10 + 3 card cuối khép module 7 (trophy MARKETPLACE v1.0) · HISTOGRAM TƯƠNG TÁC (component thứ tư) · step-4 bug_fix "sửa query làm optimizer mù" · chuỗi card H → I → J → trang khóa học.
+
+## nc_10 — Ticket #51 "Cost-Based Optimizer: Statistics, Histograms, EXPLAIN & MV" (Ch 16.3-16.5)
+- Trả lời câu treo bài 9: con số 1/20/50 lấy từ CATALOG STATISTICS (n dòng, n block, n distinct) + HISTOGRAM. Sách 16.3.1: equi-width vs equi-depth (equi-depth ưu hơn); không sổ → giả định ĐỀU.
+- **Histogram bins canonical (orders.total)**: [0-100) 30.000 · [100-500) 40.000 · [500-1k) 15.000 · [1k-5k) 10.000 · [5k-10k) 4.980 · [≥10k) **20** — tổng 100.000 ✓. Điểm hòa vốn index ≈ 25 đơn (104/4,1 — khớp nc_03). Đoán đều = 100.000/6 ≈ 16.667/bin; cột bị bọc biểu thức → không tra được sổ → default ⅓ ≈ 33.333.
+- `renderHistVisual` (mount chung, `step_1.hist_visual`): 6 cột bấm được; click bin → panel so 2 kịch bản: 📗 TRA SỔ (ước = count bin → index N×4,1ms vs seq 104ms → verdict theo hòa vốn 25) vs 📕 KHÔNG SỔ (đoán đều 16.667 → luôn seq — bin 20 đơn mất cơ hội index 82ms).
+- Step 3 = 4 trạm CBO: sổ thống kê → ước selectivity (KHÔNG chạy thử) → gắn giá các plan ứng viên (bảng giá bài 2) → chọn rẻ nhất + EXPLAIN in bản án; khối bịa "sổ tự cập nhật theo TỪNG INSERT" (sai — sampling định kỳ, Card H).
+- Step 4 **bug_fix** (khung tc_20): báo cáo whale `WHERE total + 0 > 10000` → optimizer KHÔNG tra được histogram trên cột bị bọc → est ⅓ kho ≈ 33.333 → Seq Scan; sửa dòng 2 thành `WHERE total > 10000` → Index Scan rows=20 est/82ms. Góc dạy KHÁC tc_20 (tc_20: hàm bọc làm INDEX mù; nc_10: biểu thức bọc làm ESTIMATE mù — cùng gốc sargable). Materialized view nằm ở concept card 3 + mcq 2 (bảng vàng seller tính sẵn — đọc ~20 block thay 1.000; giá = maintenance/refresh khi ghi).
+
+## Engine guard mới (probe nc_10 — silent wrong)
+`WHERE … cột±số` (total + 0, total * 1) → engine trả bảng RỖNG im lặng → reCheck `\bwhere\b[^;]*col [+-*/] số` chặn pending. Đã grep: không expected/hint nào dùng số học trong WHERE (tc_03 là UPDATE — guard UPDATE chặn trước); buggy của nc_10 chạy thử sẽ ra pending thay vì bảng rỗng (đúng pattern tc_20/UPPER).
+
+## Card H → I → J (đều đặt sau bài 10, chuỗi như F→G)
+- **H Histograms & ANALYZE**: sổ = lấy MẪU + cập nhật ĐỊNH KỲ (ANALYZE/autovacuum) — có thể CŨ; bulk load nửa đêm → sáng plan lỗi thời → chạy ANALYZE. CTA → I.
+- **I Top-K**: ORDER BY … LIMIT 10 không cần sort trọn — heap top-10 hoặc đi ngược index nhặt đúng 10 dòng; hóa giải sort-blocking bài 8. CTA → J.
+- **J Join Minimization / Shared Scan**: SELECT không đụng cột listings + FK NOT NULL→PK đảm bảo 1-1 → optimizer CẮT listings khỏi plan; nhiều query cùng quét bảng to → đi chung MỘT chuyến scan. CTA → /courses/db_design_nc "Hết Module 7 ✓ · Hẹn Module 8: Giao dịch & Concurrency".
+- Trophy: submit nc_10 → COURSE_MILESTONES db_design_nc {10:1} → overlay MARKETPLACE v1.0 (verify phải bắt).

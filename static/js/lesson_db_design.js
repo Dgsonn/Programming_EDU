@@ -1510,6 +1510,34 @@
       '</g>' +
       '<defs><marker id="nc9arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(52,211,153,.7)"/></marker></defs>' +
       '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">σ đẩy xuống sớm · π cắt cột sớm · join từ bảng-sau-lọc nhỏ nhất · né tích Descartes</text>' +
+      '</svg>',
+
+    /* nc_10 — Cost-Based Optimizer: Statistics & Histograms (Ticket #51) */
+    nc_10: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sổ thống kê histogram của orders.total: bin trên 10k chỉ 20 đơn nên Index Scan 82ms; cột bị bọc biểu thức thì estimate mù một phần ba kho">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Sổ thống kê — optimizer đọc tương lai không cần chạy</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">catalog: n dòng · n block · n distinct · HISTOGRAM phân bố total (100.000 đơn)</text>' +
+        // Histogram card
+        '<rect x="40" y="58" width="310" height="132" rx="10" fill="#0e1726" stroke="rgba(129,140,248,.5)" stroke-width="1.3"/>' +
+        '<text x="195" y="77" text-anchor="middle" fill="#a5b4fc" font-weight="700" font-size="10">📒 HISTOGRAM orders.total</text>' +
+        '<rect x="62"  y="97"  width="34" height="69" rx="3" fill="rgba(129,140,248,.55)"/>' +
+        '<rect x="108" y="86"  width="34" height="80" rx="3" fill="rgba(129,140,248,.55)"/>' +
+        '<rect x="154" y="117" width="34" height="49" rx="3" fill="rgba(129,140,248,.55)"/>' +
+        '<rect x="200" y="126" width="34" height="40" rx="3" fill="rgba(129,140,248,.55)"/>' +
+        '<rect x="246" y="138" width="34" height="28" rx="3" fill="rgba(129,140,248,.55)"/>' +
+        '<rect x="292" y="160" width="34" height="6"  rx="2" fill="#34d399"/>' +
+        '<text x="309" y="154" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">20</text>' +
+        '<text x="195" y="181" text-anchor="middle" fill="#7f93ad" font-size="8.5">0-100 · -500 · -1k · -5k · -10k · ≥10k gem</text>' +
+        // EXPLAIN card
+        '<rect x="390" y="58" width="290" height="132" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.8"/>' +
+        '<text x="535" y="77" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🔎 EXPLAIN — báo cáo whale ≥10k</text>' +
+        '<text x="535" y="99" text-anchor="middle" fill="#aebfd6" font-size="9">📗 tra sổ: rows=20 (est, chưa chạy)</text>' +
+        '<text x="535" y="115" text-anchor="middle" fill="#aebfd6" font-size="9">Index Scan idx_total — dưới hòa vốn 25</text>' +
+        '<text x="535" y="143" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">82 ms</text>' +
+        '<text x="535" y="166" text-anchor="middle" fill="#fca5a5" font-size="8.5">📕 bọc cột +0 → est ⅓ kho → Seq 104ms</text>' +
+        '<text x="535" y="181" text-anchor="middle" fill="#7f93ad" font-size="8">cùng dữ liệu — chỉ khác con mắt đọc sổ</text>' +
+      '</g>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">estimate đúng → plan đúng · sổ cũ / cột bị bọc → plan vụng — ANALYZE giữ sổ luôn mới</text>' +
       '</svg>'
   };
 
@@ -2236,6 +2264,58 @@
     });
   }
 
+  /* ── Hist Visual (nc_10 — histogram tương tác, sổ thống kê của optimizer) ──
+   * PART_6 Bài 10 Interaction chính: "2 plans với estimated rows khác nhau;
+   * cập nhật statistics/histogram thấy optimizer đổi plan".
+   * Data: step_1.hist_visual = { eyebrow, caption, total_rows, seq_ms, jump_ms,
+   *   breakeven, bins: [{label, count}] }. Click bin → so 2 kịch bản:
+   * 📗 tra sổ (est = count → index/seq theo hòa vốn) vs 📕 đoán đều (total/nBins).
+   * User chốt 2026-07-06: histogram tương tác là visual chính. */
+  function renderHistVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.bins)) return;
+    var SEQ = cfg.seq_ms || 104, JUMP = cfg.jump_ms || 4.1, BE = cfg.breakeven || 25;
+    var totalRows = cfg.total_rows || cfg.bins.reduce(function (a, b) { return a + b.count; }, 0);
+    var uniform = Math.round(totalRows / cfg.bins.length);
+    var maxC = Math.max.apply(null, cfg.bins.map(function (b) { return b.count; }));
+    function fmtN(n) { return Number(n).toLocaleString('vi-VN'); }
+    function fmtMs(v) { return (Math.round(v * 10) / 10).toLocaleString('vi-VN') + ' ms'; }
+
+    mount.innerHTML =
+      '<section class="sort-visual hist-visual" aria-label="Histogram phân bố giá trị đơn hàng — bấm một cột để xem optimizer ước lượng">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'HISTOGRAM — SỔ THỐNG KÊ') + '</span></div>' +
+        '<div class="hg-bars" id="hg-bars">' +
+          cfg.bins.map(function (b, i) {
+            var h = Math.max(8, Math.round(Math.sqrt(b.count / maxC) * 96));
+            return '<button type="button" class="hg-bar" data-hg-i="' + i + '" aria-label="Khoảng ' + escapeHtml(b.label) + ': ' + fmtN(b.count) + ' đơn">' +
+              '<span class="hg-count">' + fmtN(b.count) + '</span>' +
+              '<span class="hg-col" style="height:' + h + 'px"></span>' +
+              '<span class="hg-range">' + escapeHtml(b.label) + '</span>' +
+            '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="hg-panel" id="hg-panel">👆 Bấm một cột giá — xem optimizer TRA SỔ ước lượng, rồi so với kẻ không có sổ.</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    mount.querySelectorAll('.hg-bar').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        mount.querySelectorAll('.hg-bar').forEach(function (b) { b.classList.remove('hg-bar--sel'); });
+        btn.classList.add('hg-bar--sel');
+        var bin = cfg.bins[Number(btn.dataset.hgI)];
+        var idxMs = bin.count * JUMP;
+        var pickIdx = bin.count <= BE;
+        var uniIdxMs = uniform * JUMP;
+        mount.querySelector('#hg-panel').innerHTML =
+          '<div class="hg-row"><b>📗 TRA SỔ</b> — WHERE total ∈ ' + escapeHtml(bin.label) + ' gem → ước ≈ <strong>' + fmtN(bin.count) + ' đơn</strong> (chưa chạy dòng nào): ' +
+            'Index ' + fmtN(bin.count) + ' nhảy = ' + fmtMs(idxMs) + ' vs Seq ' + fmtMs(SEQ) +
+            ' → <strong>' + (pickIdx ? '✓ CHỌN INDEX SCAN — dưới hòa vốn ' + BE + ' đơn' : '✓ CHỌN SEQ SCAN — quá hòa vốn ' + BE + ' đơn, nhảy là lỗ') + '</strong></div>' +
+          '<div class="hg-row hg-row--blind"><b>📕 KHÔNG SỔ</b> — đoán ĐỀU: ≈ ' + fmtN(uniform) + ' đơn/khoảng → ' +
+            'Index ' + fmtMs(uniIdxMs) + ' vs Seq ' + fmtMs(SEQ) + ' → luôn Seq' +
+            (pickIdx ? ' — <strong>bin này thật ra chỉ ' + fmtN(bin.count) + ' đơn: mất cơ hội ' + fmtMs(idxMs) + '</strong>.' : ' — lần này đoán bừa mà thoát.') + '</div>';
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -2455,6 +2535,9 @@
         pvMount.hidden = false;
       } else if (s1.flow_visual) {
         renderFlowVisual(pvMount, s1.flow_visual);
+        pvMount.hidden = false;
+      } else if (s1.hist_visual) {
+        renderHistVisual(pvMount, s1.hist_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -4164,6 +4247,11 @@
        * mọi dòng RỖNG, không khử trùng (silent-wrong) → chặn pending. GROUP BY/SUM/COUNT/
        * HAVING/ORDER BY SUM() probe OK nên KHÔNG chặn. */
       { re: /\bselect\s+distinct\b/, label: 'SELECT DISTINCT' },
+      /* NC đợt 6 2026-07-06: probe nc_10 — WHERE có cột bọc trong phép số học
+       * (total + 0 > …) engine trả bảng RỖNG im lặng → chặn pending (silent-wrong
+       * class). SET … = col + 1 của UPDATE không tới đây (UPDATE chặn trước);
+       * số học trong SELECT-list (SUM, price*1.1) không match — chỉ soi sau WHERE. */
+      { re: /\bwhere\b[^;]*[a-z_]\w*\s*[+\-*\/]\s*\d/, label: 'biểu thức số học quanh cột trong WHERE' },
       { re: /\bdb\.\w+\.(find|aggregate|insert\w*|update\w*|count)\s*\(/, label: 'MongoDB query' }
     ];
     for (var ri = 0; ri < reChecks.length; ri++) {
