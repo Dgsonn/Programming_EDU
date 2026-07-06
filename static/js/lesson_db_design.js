@@ -2015,7 +2015,8 @@
         }
       } else if (st.phase === 'merge1' || st.phase === 'merge2') {
         var idx = st.phase === 'merge1' ? 0 : 1;
-        var pair = [st.runs[idx * 2], st.runs[idx * 2 + 1]];
+        // sim kịch bản 4 run (12 item / M=3) — content lệch số run thì lấy run rỗng thay vì crash
+        var pair = [st.runs[idx * 2] || [], st.runs[idx * 2 + 1] || []];
         animMerge(pair, function (merged) {
           var view = st.pass2.slice(); view[idx] = merged;
           paintRuns('sv-pass2', view);
