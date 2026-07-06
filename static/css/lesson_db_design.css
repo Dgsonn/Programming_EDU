@@ -10666,3 +10666,49 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .hg-row strong { color: #e8edf5; }
 .hg-row + .hg-row { margin-top: 7px; padding-top: 7px; border-top: 1px dashed rgba(148, 163, 184, .2); }
 @media (prefers-reduced-motion: reduce) { .hg-bar { transition: none; } }
+
+/* ═══ Txn Visual (M8 Trading Floor — schedule stepper, sim thứ 5) ═══ */
+.txn-visual .tx-grid {
+  display: grid; grid-template-columns: 1fr .85fr 1fr; gap: 12px; margin: 14px 0 4px;
+}
+.txn-visual .tx-col, .txn-visual .tx-wallet {
+  background: rgba(15, 23, 38, .55); border: 1px solid rgba(148, 163, 184, .22);
+  border-radius: 10px; padding: 10px 12px; min-height: 150px;
+}
+.txn-visual .tx-col-name {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+  color: #cbd5e1; margin-bottom: 8px; text-align: center;
+}
+.txn-visual .tx-lines { display: flex; flex-direction: column; gap: 6px; }
+.txn-visual .tx-line {
+  font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.45;
+  color: #cbd5e1; background: rgba(148, 163, 184, .07);
+  border-left: 2px solid rgba(251, 113, 133, .65);
+  padding: 6px 8px; border-radius: 6px;
+}
+.txn-visual .tx-line--warn { border-left-color: #FBBF24; color: #fde68a; background: rgba(251, 191, 36, .06); }
+.txn-visual .tx-line--bad  { border-left-color: #F87171; color: #fecaca; background: rgba(248, 113, 113, .08); }
+.txn-visual .tx-line--ok   { border-left-color: #34D399; color: #d1fae5; background: rgba(52, 211, 153, .08); }
+.txn-visual .tx-line--wait { border-left-color: #FBBF24; color: #fde68a; background: rgba(251, 191, 36, .09); border-left-style: dashed; }
+.txn-visual .tx-wallet { text-align: center; }
+.txn-visual .tx-wallet-val {
+  font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 800;
+  color: #e8edf5; margin-top: 14px; transition: color .25s ease;
+}
+.txn-visual .tx-wallet-val.tx-flash-ok  { color: #34D399; }
+.txn-visual .tx-wallet-val.tx-flash-bad { color: #F87171; }
+.txn-visual .tx-wallet-unit {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7f93ad;
+  letter-spacing: .12em; margin-top: 2px;
+}
+.txn-visual .tx-sys {
+  margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: #7f93ad; display: flex; flex-direction: column; gap: 4px;
+}
+@media (max-width: 760px) {
+  .txn-visual .tx-grid { grid-template-columns: 1fr; }
+  .txn-visual .tx-col, .txn-visual .tx-wallet { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .txn-visual .tx-wallet-val { transition: none; }
+}

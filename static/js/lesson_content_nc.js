@@ -2286,6 +2286,480 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 140
       },
       concept_cards_after: ['nc_card_histogram_analyze', 'nc_card_topk', 'nc_card_join_minimization']
+    },
+
+    /* ═══════════ MODULE 8 — TRADING FLOOR: Giao dịch & Concurrency (PART_7) ═══════════ */
+    /* ── nc_11 — Ticket #52 · Vì sao transaction chạy đồng thời gây lỗi? ──
+     * PART_7 Bài 1 (Ch.18 intro): isolation bị phá khi chạy đồng thời; schedule
+     * xen nhịp quyết định đúng/sai; serial luôn đúng nhưng cả sàn xếp hàng;
+     * 2PL & snapshot isolation là 2 scheme phổ biến. Kịch bản neo: VÍ GEM
+     * DragonForge 500 · T1 +100 · T2 −50 → xen kẽ 450 ❌ / tuần tự 550 ✓
+     * (NC_M8_SPEC_2026-07-06). Sim thứ 5: txn_visual stepper 2 chế độ. */
+    {
+      id: 'nc_11', index: 11,
+      title: 'Hai giao dịch một mili-giây — vì sao gem bốc hơi?',
+      subtitle: 'Isolation là lời hứa dễ vỡ nhất: không ai canh ví, thứ tự XEN NHỊP quyết định tiền đúng hay sai',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'wallets (ví gem của seller — mẫu 3)',
+          columns: ['seller_id', 'ten_shop', 'balance_gem'],
+          dataRows: [
+            ['4102', 'DragonForge', '500'],
+            ['9', 'GrandBazaar', '8200'],
+            ['15', 'NoobMart', '120']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #52',
+        hook: '23:59:59.001 đêm flash-sale: khách MythicSlayer88 trả <strong>100 gem</strong> mua skin Hỏa Long ĐÚNG LÚC DragonForge bấm rút <strong>50 gem</strong> về ngân hàng. Sáng ra ví thiếu đúng 100 gem — khách có biên lai, lệnh rút có log chuẩn, và <em>không ai sai một dòng code nào</em>. Module 7 dạy bạn làm query chạy NHANH; Module 8 mở màn bằng câu hỏi đắt hơn nhiều: nhiều giao dịch chạy <strong>CÙNG LÚC</strong> thì tiền có còn ĐÚNG?'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Isolation — tính chất "mỗi transaction tưởng mình chạy MỘT MÌNH" — bị phá khi nhiều transaction chạy đồng thời mà không ai kiểm soát chỗ chúng ĐỤNG nhau (sách Ch.18 mở màn đúng câu này)',
+            'SCHEDULE = thứ tự xen nhịp các thao tác đọc/ghi: chạy TUẦN TỰ (serial) luôn đúng; xen kẽ thì đúng hay sai TÙY kịch bản xen — lost update là kịch bản xen sai kinh điển',
+            'Không thể bắt cả sàn xếp hàng chạy tuần tự (chậm chết) → cần CONCURRENCY-CONTROL SCHEME; hai họ phổ biến nhất ngoài đời: two-phase locking và snapshot isolation — chính là mạch của cả Module 8'
+          ],
+          intro: 'Hai nhân viên cùng cầm sổ ra két đếm: cả hai thấy <strong>500</strong>, mỗi người về bàn tự cộng trừ trên <em>tờ nháp của mình</em>, rồi lần lượt quay lại GHI ĐÈ con số mới lên két. Người ghi sau không hề biết két đã đổi — tờ nháp của họ vẫn là con số cũ. Database không khóa cũng y hệt: <code>read</code> là chép về nháp, <code>write</code> là đè lên két.',
+          example: 'Ví 500 gem. T1 (khách trả): đọc 500 → tính 600 → ghi. T2 (seller rút): đọc 500 → tính 450 → ghi. Xen kẽ kiểu "cùng đọc trước, lần lượt ghi sau": ví chốt <strong>450</strong> — bản ghi 600 bị đè, <strong>+100 gem của khách bốc hơi không dấu vết</strong>. Chạy tuần tự bất kỳ chiều nào: <strong>550</strong>, đúng từng gem.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-shield-halved',
+            title: 'Isolation vỡ khi nào — theo đúng sách',
+            body: 'Khi nhiều transaction chạy đồng thời, <strong>isolation có thể không còn được bảo toàn</strong> — hệ thống phải kiểm soát tương tác giữa chúng bằng một <em>concurrency-control scheme</em>. Không scheme nào thắng tuyệt đối; hai cơ chế được dùng nhiều nhất trong thực tế là <strong>two-phase locking</strong> và <strong>snapshot isolation</strong>.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18 — Concurrency Control, intro'
+          },
+          {
+            icon: 'fa-arrows-turn-right',
+            title: 'Schedule — kịch bản xen nhịp',
+            body: 'Cùng 4 thao tác <code>T1.đọc · T1.ghi · T2.đọc · T2.ghi</code> có nhiều cách XEN thành một schedule. Serial (hết T1 rồi mới T2) luôn cho kết quả đúng. Xen kẽ thì có bản vẫn đúng (tương đương serial) — có bản làm mất tiền như đêm qua. Kẻ quyết định đúng/sai là <strong>THỨ TỰ XEN</strong>, không phải code của từng transaction: từng dòng lệnh của T1 lẫn T2 đều chuẩn.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Bạn từng thấy số like tụt 1 rồi nhảy lại, lượt xem "đếm thiếu", 2 người cùng đặt trúng 1 ghế chưa? Cùng một họ bệnh: hai phiên cùng <code>đọc → tính trên bản cũ → ghi đè</code>. Nghề gọi là <strong>lost update</strong> — bài này bắt bệnh; các bài sau của Trading Floor lần lượt phát thuốc: khóa, 2PL, MVCC.'
+          }
+        ],
+        txn_visual: {
+          eyebrow: 'LOST UPDATE — VÍ 500 GEM · T1 KHÁCH TRẢ +100 · T2 SELLER RÚT −50',
+          caption: 'Chạy CẢ HAI chế độ mà so: xen kẽ = ví chốt 450 (mất đúng 100 gem của khách) — tuần tự = 550, đúng từng gem. Cùng 4 thao tác, chỉ khác THỨ TỰ XEN.',
+          wallet_label: '💰 VÍ DragonForge',
+          start: 500, unit: 'gem',
+          t1_label: '🧾 T1 — khách trả +100',
+          t2_label: '🏧 T2 — seller rút −50',
+          modes: [
+            {
+              id: 'bad', short: 'XEN KẼ', ok: false,
+              btn: '▶ Chạy XEN KẼ (đêm qua trên prod)',
+              steps: [
+                { who: 't1', text: 'đọc ví → thấy 500', note: 'T1 chép 500 vào TỜ NHÁP của nó — từ giờ nó tính trên nháp, không nhìn lại ví nữa.' },
+                { who: 't2', text: 'đọc ví → cũng thấy 500', cls: 'warn', note: 'Không ai canh ví — T2 cũng chép đúng 500. Hai tờ nháp giống hệt nhau: mầm họa nằm ở nhịp này.' },
+                { who: 't1', text: 'tính 500 + 100 → GHI 600', wallet: 600, note: 'Ví thành 600 — tiền khách đã vào két. Nhưng tờ nháp của T2 vẫn ghi 500…' },
+                { who: 't2', text: 'tính 500 − 50 → GHI 450', wallet: 450, cls: 'bad', note: '' }
+              ],
+              verdict: '❌ Ví chốt 450 — bản ghi 600 bị ĐÈ không thương tiếc: +100 gem của khách bốc hơi. Tên hồ sơ: LOST UPDATE.'
+            },
+            {
+              id: 'good', short: 'TUẦN TỰ', ok: true,
+              btn: '▶ Chạy TUẦN TỰ (serial)',
+              steps: [
+                { who: 't1', text: 'đọc ví → 500', note: 'T1 chạy TRỌN VẸN trước — không ai chen ngang.' },
+                { who: 't1', text: 'tính 500 + 100 → GHI 600', wallet: 600, note: 'T1 xong hẳn. Giờ mới tới lượt T2.' },
+                { who: 't2', text: 'đọc ví → 600 (bản MỚI)', note: 'T2 đọc SAU khi T1 ghi — tờ nháp của nó chép con số đã có tiền khách.' },
+                { who: 't2', text: 'tính 600 − 50 → GHI 550', wallet: 550, cls: 'ok', note: '' }
+              ],
+              verdict: '✓ Ví chốt 550 = 500 + 100 − 50, đúng từng gem. Serial LUÔN đúng — cái giá: cả sàn phải xếp hàng chạy từng giao dịch một.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: '4 thao tác — 2 cách xen',
+            columns: [
+              { name: 'T1: đọc ví → +100 → ghi', type: 'giao dịch thanh toán', key: 'T1' },
+              { name: 'T2: đọc ví → −50 → ghi', type: 'giao dịch rút gem', key: 'T2' },
+              { name: 'schedule', type: 'thứ tự XEN các nhịp', key: '⚡' }
+            ]
+          },
+          data_preview: [
+            ['tuần tự T1→T2', '500 → 600 → 550', 'đúng', '✓'],
+            ['tuần tự T2→T1', '500 → 450 → 550', 'đúng', '✓'],
+            ['đọc-đọc-ghi-ghi', '500 → 600 → 450', 'MẤT 100 của khách', '❌'],
+            ['đọc-đọc-ghi(T2)-ghi(T1)', '500 → 450 → 600', 'MẤT 50 lệnh rút', '❌']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Schedule đêm qua: T1 đọc 500 · T2 đọc 500 · T1 ghi 600 · T2 ghi 450. Vì sao 100 gem của khách biến mất?',
+            options: [
+              { id: 'a', text: 'T2 tính 500−50 trên TỜ NHÁP nó chép từ TRƯỚC khi T1 ghi — rồi ghi 450 ĐÈ lên 600, xóa sạch dấu vết của T1', correct: true, explanation: 'Đúng — read chép về nháp, write đè lên két. T2 không "nhìn lại" ví trước khi ghi, nên bản cập nhật của T1 bị nuốt trọn: lost update.' },
+              { id: 'b', text: 'Vì T2 là lệnh RÚT tiền — rút thì ví phải giảm, mất là đúng rồi', correct: false, explanation: 'Sai — rút 50 từ 600 phải còn 550. Ví chốt 450 nghĩa là mất thêm đúng 100 của khách, không phải chỉ 50 của lệnh rút.' },
+              { id: 'c', text: 'Vì database chạy chậm, ghi của T1 chưa kịp xuống đĩa', correct: false, explanation: 'Sai — ghi 600 đã THÀNH CÔNG vào ví. Nó không chậm, nó bị GHI ĐÈ bởi một transaction cầm số liệu cũ.' },
+              { id: 'd', text: 'Vì hai transaction dùng chung connection nên biến bị lẫn sang nhau', correct: false, explanation: 'Sai — mỗi transaction có vùng nháp riêng, biến không lẫn. Vấn đề là cả hai cùng chép MỘT con số rồi lần lượt đè nhau.' }
+            ]
+          },
+          {
+            question: 'Serial schedule (chạy trọn T1 rồi mới T2) LUÔN đúng — vậy sao GameHub không ép cả sàn chạy tuần tự cho lành?',
+            options: [
+              { id: 'a', text: 'Vì mất sạch concurrency: nghìn giao dịch/giây phải xếp MỘT hàng, giao dịch chậm nhất bắt cả sàn đứng chờ', correct: true, explanation: 'Đúng — sách nói thẳng: cần scheme kiểm soát để vừa chạy đồng thời vừa giữ isolation. Hai họ phổ biến: 2PL (bài sau) và snapshot isolation.' },
+              { id: 'b', text: 'Vì serial vẫn có thể ra kết quả sai nếu xui', correct: false, explanation: 'Sai — serial đúng theo định nghĩa: không ai chen giữa read và write của ai.' },
+              { id: 'c', text: 'Vì CPU nhiều nhân không chạy tuần tự được', correct: false, explanation: 'Sai — chạy tuần tự trên máy nhiều nhân vẫn được, chỉ là phí phạm và chậm.' },
+              { id: 'd', text: 'Vì tuần tự làm hết deadlock nhưng sinh thêm lost update', correct: false, explanation: 'Sai ngược — tuần tự không sinh lost update; nó chỉ trả giá bằng throughput. (Deadlock là hồ sơ của vài bài nữa.)' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Schedule nào an toàn?',
+          instruction: 'Ví 500 · T1 +100 · T2 −50. Xếp mỗi schedule về đúng bên.',
+          xp: 20,
+          chips: [
+            { id: 's1', label: 'T1 trọn vẹn → rồi T2 trọn vẹn' },
+            { id: 's2', label: 'T1 đọc · T2 đọc · T1 ghi · T2 ghi' },
+            { id: 's3', label: 'T2 trọn vẹn → rồi T1 trọn vẹn' },
+            { id: 's4', label: 'T1 đọc · T2 đọc · T2 ghi · T1 ghi' }
+          ],
+          bins: [
+            { id: 'ok', label: 'VÍ CHỐT 550 ✓' },
+            { id: 'lost', label: 'MẤT CẬP NHẬT ❌' }
+          ],
+          solution: { s1: 'ok', s2: 'lost', s3: 'ok', s4: 'lost' }
+        }
+      },
+      step_3: {
+        mission: 'Dựng lại đúng 4 nhịp làm 100 gem bốc hơi — hồ sơ vụ án Ticket #52. Có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'T1 đọc ví: chép 500 vào tờ nháp riêng — từ giờ chỉ tính trên nháp', slot: 'tx-read1' },
+          { type: 'op', token: 'T2 ghi 450 (= 500 nháp cũ − 50) — ĐÈ lên 600, cập nhật của T1 bốc hơi', slot: 'tx-write2' },
+          { type: 'op', token: 'Database thấy 2 giao dịch cùng sửa một ví thì tự báo lỗi, chặn người đến sau', slot: 'tx-x' },
+          { type: 'op', token: 'T2 cũng đọc ví: vẫn 500 — chẳng ai giữ khóa để bắt nó chờ', slot: 'tx-read2' },
+          { type: 'op', token: 'T1 ghi 600 (= 500 + 100) — tiền khách vào két, nhưng nháp của T2 vẫn là 500', slot: 'tx-write1' }
+        ],
+        drop_zones: [
+          { id: 'tx-read1', placeholder: 'Nhịp 1 — T1 mở màn thế nào?', accepts: ['op'], multi: false,
+            station: { icon: '📖', label: 'T1 đọc', sub: 'Nhịp 1', hint: 'read không phải là "nhìn" — nó là CHÉP về vùng nháp riêng.' } },
+          { id: 'tx-read2', placeholder: 'Nhịp 2 — T2 chen vào, thấy gì?', accepts: ['op'], multi: false,
+            station: { icon: '📖', label: 'T2 đọc', sub: 'Nhịp 2', hint: 'T1 đã đọc nhưng CHƯA ghi — và không có cơ chế nào bắt T2 đứng ngoài.' } },
+          { id: 'tx-write1', placeholder: 'Nhịp 3 — T1 quay lại két', accepts: ['op'], multi: false,
+            station: { icon: '✍️', label: 'T1 ghi', sub: 'Nhịp 3', hint: 'Tiền khách vào ví thật — con số trên két đổi. Nhưng có ai báo cho T2 biết không?' } },
+          { id: 'tx-write2', placeholder: 'Nhịp 4 — cú ghi giết chết 100 gem', accepts: ['op'], multi: false,
+            station: { icon: '💥', label: 'T2 ghi đè', sub: 'Nhịp 4', hint: 'T2 tính từ tờ nháp nào? Nó có nhìn lại két trước khi ghi không?' } }
+        ],
+        expected_sql: 'T1 đọc ví: chép 500 vào tờ nháp riêng — từ giờ chỉ tính trên nháp T2 cũng đọc ví: vẫn 500 — chẳng ai giữ khóa để bắt nó chờ T1 ghi 600 (= 500 + 100) — tiền khách vào két, nhưng nháp của T2 vẫn là 500 T2 ghi 450 (= 500 nháp cũ − 50) — ĐÈ lên 600, cập nhật của T1 bốc hơi',
+        expected_zones: {
+          'tx-read1': 'T1 đọc ví: chép 500 vào tờ nháp riêng — từ giờ chỉ tính trên nháp',
+          'tx-read2': 'T2 cũng đọc ví: vẫn 500 — chẳng ai giữ khóa để bắt nó chờ',
+          'tx-write1': 'T1 ghi 600 (= 500 + 100) — tiền khách vào két, nhưng nháp của T2 vẫn là 500',
+          'tx-write2': 'T2 ghi 450 (= 500 nháp cũ − 50) — ĐÈ lên 600, cập nhật của T1 bốc hơi'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA DỰNG lại trọn vụ án: đọc chung một bản → tính trên nháp cũ → ghi đè nhau. Khối "database tự báo lỗi, chặn người đến sau" là BỊA — không khóa, không cơ chế, DB im re cho ghi sau đè ghi trước. Muốn có người gác ví THẬT? Bài sau phát ổ khóa. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'tx-read1': 'Nhịp 1 — mọi giao dịch mở màn bằng việc CHÉP số dư về nháp riêng của mình. T1 chép được bao nhiêu?',
+          'tx-read2': 'Nhịp 1 chốt: nháp T1 = 500. Giờ T2 chen vào đọc — ví ĐÃ đổi chưa? Có ai bắt nó chờ không?',
+          'tx-write1': 'Nhịp 2 chốt: hai tờ nháp cùng ghi 500. T1 về két trước — nó ghi con số nào lên ví?',
+          'tx-write2': 'Nhịp 3 chốt: két = 600. T2 cầm nháp 500 quay lại — cú ghi này lấy 600 − 50 hay 500 − 50?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #52 — phiên tòa kết án:</strong> schedule tang vật ghi 4 nhịp: <code>T1 đọc(500) · T2 đọc(500) · T1 ghi(600) · T2 ghi(?)</code>. Ví DragonForge chốt bao nhiêu — và vì sao?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: 'Ví chốt 450 — T2 tính 500 − 50 trên bản nháp CŨ nó đọc từ nhịp 2, rồi ghi đè lên 600: +100 gem của khách bị nuốt không dấu vết',
+            correct: true
+          },
+          {
+            text: 'Ví chốt 550 — T2 ghi sau cùng nên nó thấy két đang là 600 mà trừ 50',
+            correct: false,
+            explain: 'Sai — T2 ĐÃ đọc từ nhịp 2 (thấy 500) và tính trên nháp. write không "nhìn lại" két trước khi đè; muốn nó thấy 600 thì phải có cơ chế bắt nó đọc LẠI — thứ chưa tồn tại trong bài này.'
+          },
+          {
+            text: 'Ví chốt 600 — cú ghi của T2 bị database từ chối vì phát hiện xung đột',
+            correct: false,
+            explain: 'Sai — không khóa, không validation, không ai "phát hiện" gì cả: DB mặc định cho ghi sau đè ghi trước, im lặng tuyệt đối. (Các scheme biết từ chối là chuyện của những bài sau.)'
+          },
+          {
+            text: 'Ví chốt 500 — hai giao dịch +100 và −50 tự triệt tiêu về số cũ',
+            correct: false,
+            explain: 'Sai — +100 rồi −50 mà "triệt tiêu về 500" thì toán đã sai từ vỡ lòng (500+100−50 = 550). Ví chốt bằng đúng CÚ GHI CUỐI: 450.'
+          }
+        ],
+        schema: {
+          table_name: 'schedule tang vật — 23:59:59 đêm flash-sale',
+          columns: [
+            { name: 'nhịp', type: 'thứ tự thật trên prod', key: '#' },
+            { name: 'thao tác', type: 'read/write ví 4102', key: '' },
+            { name: 'két sau nhịp', type: 'balance_gem', key: '💰' }
+          ],
+          data: [
+            ['1', 'T1 đọc ví → nháp T1 = 500', '500'],
+            ['2', 'T2 đọc ví → nháp T2 = 500', '500'],
+            ['3', 'T1 ghi 500 + 100', '600'],
+            ['4', 'T2 ghi 500 − 50', '❓']
+          ]
+        },
+        context: {
+          scenario: 'Đây là bài "đọc schedule" đầu tiên của Trading Floor — kỹ năng bạn sẽ dùng suốt module: dò từng nhịp, theo dõi NHÁP của từng transaction và KÉT thật, tách bạch hai thứ đó.',
+          real_world: 'Postgres/MySQL mặc định KHÔNG để chuyện này xảy ra trần trụi như sim — vì chúng chạy sẵn locking/MVCC. Nhưng viết app kiểu "SELECT balance rồi UPDATE balance = giá_trị_tính_ở_app" là bạn tự tay tái hiện đúng vụ 450 này, DB nào cũng bó tay.',
+          steps: [
+            'Nhịp 2: T2 đọc TRƯỚC khi T1 ghi → nháp T2 = 500, chốt cứng.',
+            'Nhịp 3: két = 600, nhưng không ai báo cho T2.',
+            'Nhịp 4: T2 ghi 500 − 50 = 450, đè lên 600.',
+            'Két chốt = cú ghi cuối cùng: 450. Mất đúng 100 của khách.'
+          ],
+          hint_explore: 'Chạy lại sim Step 1 chế độ XEN KẼ, nhìn hàng VÍ GEM đổi 500 → 600 → 450 — con số 600 sống được đúng một nhịp.',
+          expected: 'Chọn phương án "450 — T2 tính trên nháp cũ, ghi đè lên 600".'
+        },
+        hints: [
+          { level: 1, text: 'Tách hai thứ: KÉT (ví thật) và NHÁP của mỗi transaction. Nháp T2 chép lúc nào — trước hay sau khi két thành 600?' },
+          { level: 2, text: 'write không nhìn lại két — nó đè nguyên con số tính từ nháp. Nháp T2 = 500 thì cú ghi của T2 là bao nhiêu?' },
+          { level: 3, text: 'Két chốt bằng CÚ GHI CUỐI CÙNG của schedule. Cú cuối là của ai, giá trị nào?' },
+          { level: 4, text: 'Đáp án: 450 — bản ghi 600 của T1 bị đè, +100 của khách bốc hơi. Đó chính là lost update.' }
+        ],
+        success_message: 'TICKET #52 ĐÓNG — thủ phạm không phải code, là SCHEDULE! 🕵️ Bạn vừa học kỹ năng nền của cả Trading Floor: đọc kịch bản xen nhịp và chỉ đúng chỗ isolation vỡ. Nhưng bắt được bệnh chưa phải chữa: bài sau, lock manager ra quầy — phát ổ khóa S/X cho từng giao dịch, ai đọc chung được, ai phải xếp hàng. 🔒',
+        xp_reward: 120
+      }
+    },
+
+    /* ── nc_12 — Ticket #53 · S/X Locks: ai đọc chung được, ai phải chờ? ──
+     * PART_7 Bài 2 (Ch.18.1.1-18.1.2): S-lock đọc chung / X-lock độc quyền;
+     * ma trận tương thích Fig 18.1 (chỉ S+S true); lock-S/lock-X/unlock;
+     * request → grant/wait; unlock quá sớm vẫn sai (banking A/B $250 — trap
+     * nuôi 2PL bài 3). Sim: txn_visual 2 chế độ KHÔNG KHÓA vs KHÓA X → 550 ✓. */
+    {
+      id: 'nc_12', index: 12,
+      title: 'Khóa S/X — ai đọc chung được, ai phải xếp hàng?',
+      subtitle: 'Lock manager ra quầy: khóa S đọc chung, khóa X độc quyền — ma trận tương thích quyết ai chờ ai',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'lock table — quầy lock manager (snapshot 00:00:01)',
+          columns: ['item', 'transaction', 'mode', 'trạng thái'],
+          dataRows: [
+            ['ví 4102', 'T1', 'X', 'GRANTED'],
+            ['ví 4102', 'T2', 'X', '⏳ WAITING'],
+            ['listing 3001', 'T7', 'S', 'GRANTED'],
+            ['listing 3001', 'T9', 'S', 'GRANTED']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #53',
+        hook: 'Thủ phạm vụ 100 gem đã lộ mặt: hai giao dịch cùng chép <strong>một bản 500</strong>. Ticket #53 lắp giải pháp đầu tiên trong lịch sử database: trước khi đụng ví phải <strong>xin KHÓA</strong> ở quầy lock manager. Khóa <strong>S</strong> để đọc — cả chục người cầm chung vô tư; khóa <strong>X</strong> để ghi — độc quyền tuyệt đối, đến cả người MUỐN ĐỌC cũng phải xếp hàng. Cùng chạy lại 2 giao dịch đêm qua, lần này có người gác.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Muốn đụng item nào phải XIN KHÓA item đó ở concurrency-control manager: khóa S (shared) — được đọc, không được ghi; khóa X (exclusive) — đọc lẫn ghi (sách 18.1.1)',
+            'MA TRẬN TƯƠNG THÍCH (Fig 18.1): chỉ S+S là sống chung — nhiều người cùng đọc thoải mái; dính X ở bất kỳ phía nào là VÊNH → transaction đến sau phải CHỜ đến khi khóa vênh được nhả',
+            'Khóa chữa đúng vụ 450: T2 xin X khi T1 đang giữ X → xếp hàng → chỉ được đọc SAU khi T1 ghi xong — nháp của T2 luôn là bản mới. Nhưng hồ sơ sách cảnh báo: có khóa mà NHẢ QUÁ SỚM vẫn đọc sai ($250) — chưa hết chuyện'
+          ],
+          intro: 'Phòng gym có tủ đồ: ai <em>xem</em> lịch tập dán trên tủ thì đứng xem chung cả chục người (khóa S). Ai muốn <em>mở tủ xếp lại đồ</em> phải lấy chìa độc quyền (khóa X) — lúc đó cả người chỉ muốn XEM cũng đứng chờ, vì xem giữa lúc người ta đang bới đồ là thấy cảnh dở dang. Lock manager là anh giữ chìa: phát chìa nếu không vênh, bắt xếp hàng nếu vênh.',
+          example: 'Chạy lại 2 giao dịch đêm qua có khóa: T1 <code>lock-X(ví)</code> → GRANT. T2 xin <code>lock-X(ví)</code> → <strong>vênh X, xếp hàng</strong>. T1 đọc 500, ghi 600, <code>unlock</code> → T2 được đánh thức: đọc <strong>600</strong> (bản mới!), ghi 550. Ví chốt <strong>550 ✓</strong> — lost update chết ngay tại quầy.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-lock',
+            title: 'S, X và ma trận tương thích — theo đúng sách',
+            body: 'Transaction giữ khóa <strong>S</strong> trên Q thì đọc được nhưng không ghi được Q; giữ khóa <strong>X</strong> thì đọc lẫn ghi. Nhiều khóa S cùng tồn tại trên một item; yêu cầu X phải <strong>chờ mọi khóa vênh được nhả</strong>. Xin khóa bằng <code>lock-S(Q)</code> / <code>lock-X(Q)</code>, trả bằng <code>unlock(Q)</code> — và transaction phải giữ khóa CHỪNG NÀO còn truy cập item đó.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.1 — Locks, Fig 18.1'
+          },
+          {
+            icon: 'fa-user-shield',
+            title: 'Quầy lock manager — grant hay xếp hàng',
+            body: 'Mọi yêu cầu khóa đổ về <strong>concurrency-control manager</strong>. Nó tra ma trận: yêu cầu mới TƯƠNG THÍCH với mọi khóa đang được giữ → <strong>GRANT</strong> ngay; vênh dù chỉ một khóa → vào <strong>hàng chờ</strong>, transaction đứng im đúng chỗ đó. Bảng lock table thật (xem panel dữ liệu) ghi từng dòng granted/waiting — nghìn giao dịch/giây vẫn trật tự nhờ đúng cái quầy này.'
+          },
+          {
+            icon: 'fa-triangle-exclamation',
+            title: 'Hồ sơ cảnh báo: nhả khóa quá sớm',
+            body: 'Sách chơi khăm một cú đau: T1 chuyển 50 từ két B sang A, <em>nhả khóa B ngay sau khi trừ</em>. T2 chen giữa, cộng tổng A + B: ra <strong>$250 thay vì $300</strong> — 50 đô "tàng hình" đúng lúc đang bay giữa hai két. Có khóa, khóa xin đúng kiểu, mà vẫn sai — vì nhả QUÁ SỚM. Giữ đến bao giờ mới đủ? Câu trả lời tên là <strong>2PL</strong> — bài sau.'
+          }
+        ],
+        txn_visual: {
+          eyebrow: 'CÙNG 2 GIAO DỊCH ĐÊM QUA — GIỜ CÓ LOCK MANAGER GÁC VÍ',
+          caption: 'Chạy cả hai chế độ: khóa X không cấm chạy đồng thời — nó chỉ bắt T2 CHỜ đúng đoạn đụng ví, và cú chờ đó đổi 450 thành 550.',
+          wallet_label: '💰 VÍ DragonForge',
+          start: 500, unit: 'gem',
+          t1_label: '🧾 T1 — khách trả +100',
+          t2_label: '🏧 T2 — seller rút −50',
+          modes: [
+            {
+              id: 'nolock', short: 'KHÔNG KHÓA', ok: false,
+              btn: '▶ Ôn tập: KHÔNG KHÓA',
+              steps: [
+                { who: 't1', text: 'đọc ví → 500', note: 'Không ai gác — T1 chép 500 về nháp.' },
+                { who: 't2', text: 'đọc ví → cũng 500', cls: 'warn', note: 'T2 cũng chép 500. Hai tờ nháp song sinh — bạn biết chuyện gì sắp xảy ra.' },
+                { who: 't1', text: 'GHI 600', wallet: 600, note: 'Tiền khách vào két…' },
+                { who: 't2', text: 'GHI 450 — đè lên 600', wallet: 450, cls: 'bad', note: '' }
+              ],
+              verdict: '❌ 450 — đúng vụ án Ticket #52. Giờ bấm chế độ CÓ KHÓA X mà xem quầy gác làm việc.'
+            },
+            {
+              id: 'lock', short: 'KHÓA X', ok: true,
+              btn: '▶ Chạy CÓ KHÓA X',
+              steps: [
+                { who: 't1', text: '🔒 lock-X(ví) → GRANT', note: 'T1 xin khóa X — ví đang tự do, lock manager phát chìa ngay.' },
+                { who: 't1', text: 'đọc ví → 500', note: 'T1 cầm chìa độc quyền, ung dung chép 500 về nháp.' },
+                { who: 't2', text: '🔒 xin lock-X(ví) → ⏳ XẾP HÀNG', cls: 'wait', note: 'X vênh X (ma trận Fig 18.1) — T2 bị treo tại quầy, KHÔNG đọc được một byte nào của ví.' },
+                { who: 't1', text: 'tính 500 + 100 → GHI 600', wallet: 600, note: 'T1 ghi xong việc của nó — T2 vẫn đứng im trong hàng.' },
+                { who: 't1', text: '🔓 unlock(ví)', note: 'T1 trả chìa — lock manager lập tức đánh thức T2 ở đầu hàng chờ.' },
+                { who: 't2', text: '✅ GRANT X → đọc ví: 600', note: 'Chờ xong mới được đọc — nên nháp của T2 là bản MỚI, đã có tiền khách.' },
+                { who: 't2', text: 'tính 600 − 50 → GHI 550', wallet: 550, cls: 'ok', note: '' }
+              ],
+              verdict: '✓ Ví chốt 550 — khóa X ép T2 đọc SAU cú ghi của T1. Lost update chết tại quầy, mà T2 cũng chỉ chờ đúng một đoạn.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'Ma trận tương thích (Fig 18.1)',
+            columns: [
+              { name: 'xin S khi đang có S', type: '✓ GRANT — đọc chung', key: '✓' },
+              { name: 'xin S khi đang có X', type: '⏳ CHỜ — đang có người ghi', key: '✗' },
+              { name: 'xin X khi đang có S/X', type: '⏳ CHỜ — ghi là độc quyền', key: '✗' }
+            ]
+          },
+          data_preview: [
+            ['ví 4102', 'T1 giữ X', 'T2 xin X', '⏳ T2 xếp hàng'],
+            ['listing 3001', 'T7 giữ S', 'T9 xin S', '✓ đọc chung'],
+            ['listing 3001', 'T7, T9 giữ S', 'T4 xin X', '⏳ T4 chờ cả hai nhả']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Listing 3001 đang có T7 và T9 cùng giữ khóa S (xem giá). T4 muốn sửa giá — xin lock-X. Chuyện gì xảy ra?',
+            options: [
+              { id: 'a', text: 'T4 xếp hàng chờ CẢ T7 lẫn T9 nhả S — X vênh với mọi khóa, kể cả khóa "chỉ đọc"', correct: true, explanation: 'Đúng — ma trận Fig 18.1: comp(X, S) = false. Sửa giá giữa lúc người khác đang đọc là họ thấy giá dở dang — nên X phải chờ sạch khóa.' },
+              { id: 'b', text: 'T4 được grant ngay — S chỉ là khóa đọc, đâu cản ai ghi', correct: false, explanation: 'Sai — S "yếu" khi so với S khác thôi; với X thì vênh. Người đang đọc có quyền đọc trọn bản nhất quán.' },
+              { id: 'c', text: 'T7 và T9 bị đá văng để nhường X — ghi quan trọng hơn đọc', correct: false, explanation: 'Sai — lock manager không tước khóa đang giữ (chuyện "đá văng" là vũ khí deadlock-prevention, hồ sơ bài sau). T4 chờ, không ai bị đá.' },
+              { id: 'd', text: 'Cả ba cùng giữ khóa — S+S+X sống chung được vì đa số là đọc', correct: false, explanation: 'Sai — ma trận không có khái niệm "biểu quyết đa số": một khóa vênh là đủ để xếp hàng.' }
+            ]
+          },
+          {
+            question: 'Hồ sơ sách: T1 chuyển 50 từ két B sang A nhưng NHẢ khóa B ngay sau khi trừ. T2 chen vào cộng tổng A+B ra $250 (đúng ra $300). Có khóa mà sao vẫn sai?',
+            options: [
+              { id: 'a', text: 'Vì T1 nhả khóa QUÁ SỚM — T2 chen đúng khe "tiền đã rời B, chưa tới A" và đọc được trạng thái dở dang', correct: true, explanation: 'Đúng — xin khóa đúng kiểu chưa đủ, còn phải giữ ĐỦ LÂU. "Giữ đến bao giờ" chính là câu hỏi 2PL trả lời ở bài sau.' },
+              { id: 'b', text: 'Vì T2 quên xin khóa S trước khi đọc', correct: false, explanation: 'Sai — T2 xin S đàng hoàng và được grant, vì B đã bị T1 NHẢ rồi. Vấn đề nằm ở người nhả, không phải người xin.' },
+              { id: 'c', text: 'Vì cộng A+B cần khóa X chứ không phải S', correct: false, explanation: 'Sai — T2 chỉ đọc, S là đúng kiểu. Đọc mà ra số sai là do trạng thái NÓ ĐỌC dở dang, không phải do kiểu khóa.' },
+              { id: 'd', text: 'Vì hai két A và B nằm ở hai bảng khác nhau nên khóa không phủ được', correct: false, explanation: 'Sai — khóa theo item, phủ được hết; kể cả cùng bảng vẫn dính nếu nhả sớm. Thứ tự GIỮ/NHẢ mới là thủ phạm.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Quầy lock manager — grant hay xếp hàng?',
+          instruction: 'Tra ma trận Fig 18.1: mỗi cặp (đang giữ + xin mới) về đúng bên.',
+          xp: 20,
+          chips: [
+            { id: 'c1', label: 'Đang giữ S — xin thêm S' },
+            { id: 'c2', label: 'Đang giữ S — xin X' },
+            { id: 'c3', label: 'Đang giữ X — xin S' },
+            { id: 'c4', label: 'Đang giữ X — xin X' }
+          ],
+          bins: [
+            { id: 'g', label: 'GRANT ✓' },
+            { id: 'w', label: 'XẾP HÀNG ⏳' }
+          ],
+          solution: { c1: 'g', c2: 'w', c3: 'w', c4: 'w' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp quy trình 4 bước của quầy lock manager — có MỘT khối bịa (nghe rất chi là tử tế).',
+        blocks: [
+          { type: 'op', token: 'Tra MA TRẬN: yêu cầu mới có tương thích với MỌI khóa đang giữ trên item không?', slot: 'lk-check' },
+          { type: 'op', token: 'Giao dịch muốn đụng item nào, XIN khóa item đó: lock-S để đọc, lock-X để ghi', slot: 'lk-req' },
+          { type: 'op', token: 'Đọc/ghi xong nhịp nào thì unlock NGAY nhịp đó cho người sau đỡ chờ', slot: 'lk-x' },
+          { type: 'op', token: 'unlock khi xong việc → lock manager đánh thức những ai trong hàng chờ hết vênh', slot: 'lk-unlock' },
+          { type: 'op', token: 'Tương thích → GRANT phát chìa ngay · vênh dù một khóa → vào HÀNG CHỜ đứng im', slot: 'lk-grant' }
+        ],
+        drop_zones: [
+          { id: 'lk-req', placeholder: 'Bước 1 — giao dịch làm gì trước khi đụng ví?', accepts: ['op'], multi: false,
+            station: { icon: '🙋', label: 'Xin khóa', sub: 'Bước 1', hint: 'Đọc xin kiểu gì, ghi xin kiểu gì — hai chế độ, đúng một quầy.' } },
+          { id: 'lk-check', placeholder: 'Bước 2 — quầy tra cứu cái gì?', accepts: ['op'], multi: false,
+            station: { icon: '📋', label: 'Tra ma trận', sub: 'Bước 2', hint: 'Fig 18.1 — bảng 2×2 chỉ có đúng một ô "true".' } },
+          { id: 'lk-grant', placeholder: 'Bước 3 — hai kết cục ở quầy', accepts: ['op'], multi: false,
+            station: { icon: '🔑', label: 'Grant / xếp hàng', sub: 'Bước 3', hint: 'Không có kết cục thứ ba — và cũng không ai bị "đá văng" khỏi khóa đang giữ.' } },
+          { id: 'lk-unlock', placeholder: 'Bước 4 — chìa quay về quầy lúc nào?', accepts: ['op'], multi: false,
+            station: { icon: '🔓', label: 'Unlock & đánh thức', sub: 'Bước 4', hint: 'Nhả chìa thì hàng chờ được xét lại — nhưng NHẢ LÚC NÀO là cả một hồ sơ cảnh báo.' } }
+        ],
+        expected_sql: 'Giao dịch muốn đụng item nào, XIN khóa item đó: lock-S để đọc, lock-X để ghi Tra MA TRẬN: yêu cầu mới có tương thích với MỌI khóa đang giữ trên item không? Tương thích → GRANT phát chìa ngay · vênh dù một khóa → vào HÀNG CHỜ đứng im unlock khi xong việc → lock manager đánh thức những ai trong hàng chờ hết vênh',
+        expected_zones: {
+          'lk-req': 'Giao dịch muốn đụng item nào, XIN khóa item đó: lock-S để đọc, lock-X để ghi',
+          'lk-check': 'Tra MA TRẬN: yêu cầu mới có tương thích với MỌI khóa đang giữ trên item không?',
+          'lk-grant': 'Tương thích → GRANT phát chìa ngay · vênh dù một khóa → vào HÀNG CHỜ đứng im',
+          'lk-unlock': 'unlock khi xong việc → lock manager đánh thức những ai trong hàng chờ hết vênh'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 QUẦY ĐÃ CHẠY: xin khóa → tra ma trận → grant/xếp hàng → unlock & đánh thức. Khối "unlock NGAY từng nhịp cho người sau đỡ chờ" nghe tử tế mà là BẪY — chính là vụ $250 trong hồ sơ sách: nhả sớm để lộ trạng thái dở dang. Giữ khóa đến bao giờ mới đủ an toàn? Bài sau: 2PL. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'lk-req': 'Bước 1 — luật chơi mới của Trading Floor: KHÔNG AI đụng item khi chưa ghé quầy. Ghé để làm gì?',
+          'lk-check': 'Bước 1 chốt: yêu cầu nằm trên quầy. Lock manager mở bảng nào ra dò — và dò với NHỮNG khóa nào?',
+          'lk-grant': 'Bước 2 chốt: đã biết vênh hay không. Hai kết cục có thể xảy ra là gì — và có ai bị tước khóa giữa chừng không?',
+          'lk-unlock': 'Bước 3 chốt: chìa đã phát hoặc người đã vào hàng. Còn chiều ngược lại — chìa quay về quầy thì hàng chờ được gì?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #53 — chốt sổ ca trực:</strong> điền nốt biên bản của quầy lock manager cho 2 giao dịch đêm qua (T1 +100 trước, T2 −50 xin sau).',
+        challenge_type: 'fill_blank',
+        template: "-- MA TRAN TUONG THICH (Fig 18.1): chi S+S song chung\n--   S + S = doc chung ✓   ·   S + X / X + S / X + X = CHO\n\n-- 2 khach cung XEM gia listing 3001 (chi doc):\n--   moi nguoi xin khoa ____\n\n-- T1 muon GHI vi 4102 (+100):\n--   T1 phai xin khoa ____\n\n-- T2 xin X sau -> XEP HANG; T1 doc 500, ghi 600, unlock\n-- T2 duoc grant -> doc 600 -> tinh 600 - 50\n--   vi chot = ____ gem",
+        blanks: [
+          { id: 'b1', hint: 'S / X', expected: 'S' },
+          { id: 'b2', hint: 'S / X', expected: 'X' },
+          { id: 'b3', hint: '? gem', expected: '550' }
+        ],
+        schema: {
+          table_name: 'lock table — ca trực 00:00:01',
+          columns: [
+            { name: 'item', type: 'thứ bị khóa', key: '' },
+            { name: 'transaction', type: 'ai xin', key: '' },
+            { name: 'mode', type: 'S / X', key: '🔑' },
+            { name: 'trạng thái', type: 'granted / waiting', key: '' }
+          ],
+          data: [
+            ['ví 4102', 'T1', 'X', 'GRANTED'],
+            ['ví 4102', 'T2', 'X', '⏳ WAITING'],
+            ['listing 3001', 'T7', 'S', 'GRANTED'],
+            ['listing 3001', 'T9', 'S', 'GRANTED']
+          ]
+        },
+        context: {
+          scenario: 'Biên bản này chính là LOCK TABLE — cấu trúc thật trong mọi DBMS: từng dòng ghi ai giữ khóa gì, ai đang xếp hàng. Bạn điền đúng 3 ô là đọc được nó như nhân viên ca trực.',
+          real_world: 'Postgres cho xem quầy này bằng view pg_locks; MySQL là performance_schema.data_locks. DBA soi hàng WAITING ở đó mỗi khi app "đơ không rõ lý do" — thường là một giao dịch ôm X quá lâu.',
+          steps: [
+            'Chỉ đọc → khóa S; nhiều S sống chung một item.',
+            'Có GHI (dù kèm đọc) → phải là X.',
+            'T2 bị ép đọc SAU cú ghi của T1: nháp của nó là 600.',
+            '600 − 50 = 550. Không mất một gem nào.'
+          ],
+          hint_explore: 'Nhìn lock table bên trái: ví 4102 có một dòng WAITING — đó chính là cú "xếp hàng" đổi 450 thành 550.',
+          expected: 'S · X · 550'
+        },
+        hints: [
+          { level: 1, text: 'Ô 1: hai khách chỉ XEM giá — kiểu khóa nào cho phép cả hai cầm CÙNG LÚC?' },
+          { level: 2, text: 'Ô 2: T1 sẽ GHI vào ví — kiểu khóa nào mới cho ghi? (S chỉ cho đọc.)' },
+          { level: 3, text: 'Ô 3: nhờ xếp hàng, T2 đọc được 600 chứ không phải 500. Lấy 600 trừ 50.' },
+          { level: 4, text: 'Đáp án: S · X · 550 — khóa không cấm đồng thời, nó chỉ ép CHỜ đúng chỗ đụng nhau.' }
+        ],
+        success_message: 'TICKET #53 ĐÓNG — ví chốt 550, đúng từng gem! 🔒 Lock manager đã cứu được vụ lost update… nhưng đừng vội ăn mừng: hồ sơ sách còn một trang cảnh báo — có khóa, xin đúng kiểu, mà NHẢ QUÁ SỚM vẫn đọc ra $250 sai lè. Giữ khóa đến bao giờ mới đủ? Bài sau: TWO-PHASE LOCKING — luật "chỉ gom, hết gom mới nhả" trứ danh, kèm vị khách không mời tên là DEADLOCK. ⛓️'
+        ,
+        xp_reward: 120
+      }
     }
 
   ],

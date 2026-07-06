@@ -1538,6 +1538,74 @@
         '<text x="535" y="181" text-anchor="middle" fill="#7f93ad" font-size="8">cùng dữ liệu — chỉ khác con mắt đọc sổ</text>' +
       '</g>' +
       '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">estimate đúng → plan đúng · sổ cũ / cột bị bọc → plan vụng — ANALYZE giữ sổ luôn mới</text>' +
+      '</svg>',
+
+    /* nc_11 — M8 Trading Floor mở màn: lost update ví DragonForge (Ticket #52) */
+    nc_11: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hai giao dịch cùng đọc ví 500 gem rồi lần lượt ghi đè: xen kẽ chốt 450 mất 100 gem của khách, tuần tự chốt 550 đúng">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Hai giao dịch — một ví: 4 thao tác, hai kết cục</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">23:59:59.001 — T1 khách trả +100 · T2 seller rút −50 · ví DragonForge 500 gem</text>' +
+        // T1 card
+        '<rect x="30" y="56" width="200" height="88" rx="9" fill="#0e1726" stroke="rgba(251,113,133,.55)" stroke-width="1.4"/>' +
+        '<text x="130" y="74" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">🧾 T1 — KHÁCH TRẢ +100</text>' +
+        '<text x="130" y="93" text-anchor="middle" fill="#aebfd6" font-size="8.5">đọc ví → nháp: 500</text>' +
+        '<text x="130" y="108" text-anchor="middle" fill="#aebfd6" font-size="8.5">tính 500 + 100</text>' +
+        '<text x="130" y="126" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="9.5">GHI 600</text>' +
+        // Ví giữa
+        '<rect x="260" y="56" width="200" height="88" rx="9" fill="#0e1726" stroke="rgba(148,163,184,.55)" stroke-width="1.4"/>' +
+        '<text x="360" y="74" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="10">💰 VÍ DragonForge</text>' +
+        '<text x="360" y="102" text-anchor="middle" fill="#fbbf24" font-weight="800" font-size="17">500 → ?</text>' +
+        '<text x="360" y="122" text-anchor="middle" fill="#7f93ad" font-size="8">cả hai cùng đọc — rồi lần lượt ghi đè</text>' +
+        '<text x="360" y="135" text-anchor="middle" fill="#7f93ad" font-size="8">không ai gác, không ai báo ai</text>' +
+        // T2 card
+        '<rect x="490" y="56" width="200" height="88" rx="9" fill="#0e1726" stroke="rgba(251,113,133,.55)" stroke-width="1.4"/>' +
+        '<text x="590" y="74" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">🏧 T2 — SELLER RÚT −50</text>' +
+        '<text x="590" y="93" text-anchor="middle" fill="#aebfd6" font-size="8.5">đọc ví → nháp: cũng 500</text>' +
+        '<text x="590" y="108" text-anchor="middle" fill="#aebfd6" font-size="8.5">tính 500 − 50</text>' +
+        '<text x="590" y="126" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="9.5">GHI 450 — đè lên 600</text>' +
+        '<path d="M230 100 L 254 100 M490 100 L 466 100" stroke="rgba(251,113,133,.7)" stroke-width="1.5" fill="none"/>' +
+        // 2 kết cục
+        '<rect x="40" y="158" width="310" height="44" rx="8" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.55)" stroke-width="1.3"/>' +
+        '<text x="195" y="175" text-anchor="middle" fill="#fca5a5" font-size="9.5">XEN KẼ — hai tờ nháp cùng chép 500</text>' +
+        '<text x="195" y="192" text-anchor="middle" fill="#f87171" font-weight="800" font-size="10.5">ví chốt 450 · +100 của khách BỐC HƠI ✗</text>' +
+        '<rect x="370" y="158" width="310" height="44" rx="8" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.55)" stroke-width="1.3"/>' +
+        '<text x="525" y="175" text-anchor="middle" fill="#6ee7b7" font-size="9.5">TUẦN TỰ — người sau thấy bản mới</text>' +
+        '<text x="525" y="192" text-anchor="middle" fill="#34d399" font-weight="800" font-size="10.5">ví chốt 550 — đúng từng gem ✓</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">cùng 4 thao tác — chỉ khác THỨ TỰ XEN NHỊP: schedule quyết định đúng sai, trước cả code</text>' +
+      '</svg>',
+
+    /* nc_12 — khóa S/X + ma trận tương thích + ca trực có lock manager (Ticket #53) */
+    nc_12: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ma trận tương thích S X: chỉ S cộng S sống chung; ca trực có khóa: T2 xin X phải xếp hàng, đọc 600 sau unlock, ví chốt 550 đúng">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Khóa S/X — ai đọc chung, ai phải xếp hàng</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">lock-S để ĐỌC · lock-X để GHI · lock manager gác ví theo ma trận Fig 18.1</text>' +
+        // Ma trận card
+        '<rect x="36" y="56" width="280" height="130" rx="9" fill="#0e1726" stroke="rgba(251,113,133,.5)" stroke-width="1.4"/>' +
+        '<text x="176" y="74" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">📋 MA TRẬN TƯƠNG THÍCH</text>' +
+        '<text x="130" y="92" text-anchor="middle" fill="#7f93ad" font-size="8">đang giữ S</text>' +
+        '<text x="230" y="92" text-anchor="middle" fill="#7f93ad" font-size="8">đang giữ X</text>' +
+        '<text x="70" y="112" text-anchor="middle" fill="#aebfd6" font-size="8.5">xin S</text>' +
+        '<rect x="92" y="100" width="76" height="18" rx="4" fill="rgba(52,211,153,.12)" stroke="rgba(52,211,153,.55)" stroke-width="1.1"/>' +
+        '<text x="130" y="112" text-anchor="middle" fill="#6ee7b7" font-size="8.5">✓ chung</text>' +
+        '<rect x="192" y="100" width="76" height="18" rx="4" fill="rgba(251,191,36,.08)" stroke="rgba(251,191,36,.45)" stroke-width="1.1"/>' +
+        '<text x="230" y="112" text-anchor="middle" fill="#fcd34d" font-size="8.5">⏳ chờ</text>' +
+        '<text x="70" y="138" text-anchor="middle" fill="#aebfd6" font-size="8.5">xin X</text>' +
+        '<rect x="92" y="126" width="76" height="18" rx="4" fill="rgba(251,191,36,.08)" stroke="rgba(251,191,36,.45)" stroke-width="1.1"/>' +
+        '<text x="130" y="138" text-anchor="middle" fill="#fcd34d" font-size="8.5">⏳ chờ</text>' +
+        '<rect x="192" y="126" width="76" height="18" rx="4" fill="rgba(251,191,36,.08)" stroke="rgba(251,191,36,.45)" stroke-width="1.1"/>' +
+        '<text x="230" y="138" text-anchor="middle" fill="#fcd34d" font-size="8.5">⏳ chờ</text>' +
+        '<text x="176" y="172" text-anchor="middle" fill="#7f93ad" font-size="8.5">chỉ S+S sống chung — X độc quyền tuyệt đối</text>' +
+        // Ca trực card
+        '<rect x="352" y="56" width="332" height="130" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="518" y="74" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🔐 CA TRỰC ĐÊM NAY — CÓ NGƯỜI GÁC</text>' +
+        '<text x="518" y="95" text-anchor="middle" fill="#aebfd6" font-size="8.5">T1 lock-X(ví) → GRANT · đọc 500 · ghi 600</text>' +
+        '<text x="518" y="111" text-anchor="middle" fill="#fcd34d" font-size="8.5">T2 xin lock-X → ⏳ XẾP HÀNG (X vênh X)</text>' +
+        '<text x="518" y="127" text-anchor="middle" fill="#aebfd6" font-size="8.5">T1 unlock → T2 grant → đọc 600 → ghi 550</text>' +
+        '<text x="518" y="152" text-anchor="middle" fill="#34d399" font-weight="800" font-size="13">550 gem — đúng từng gem ✓</text>' +
+        '<text x="518" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">T2 vẫn chạy đồng thời — chỉ chờ đúng đoạn đụng ví</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">khóa chặn đúng chỗ đụng nhau — nhưng NHẢ QUÁ SỚM vẫn sai ($250 hồ sơ sách): hồi sau, 2PL</text>' +
       '</svg>'
   };
 
@@ -2317,6 +2385,98 @@
     });
   }
 
+  /* ── Txn Visual (M8 Trading Floor — schedule stepper 2 chế độ, sim thứ 5) ──
+   * PART_7 Bài 1: "schedule animation: hai transaction đọc/ghi account".
+   * Data: step_1.txn_visual = { eyebrow, caption, wallet_label, start, unit,
+   *   t1_label, t2_label, modes: [{ id, short, btn, ok, verdict,
+   *     steps: [{ who: 't1'|'t2'|'sys', text, wallet?, cls?, note? }] }] }.
+   * Hoàn toàn data-driven — nc_11 (xen kẽ vs tuần tự) và nc_12 (không khóa vs
+   * khóa X) dùng chung; module sau (2PL/deadlock) tái dùng bằng cfg mới.
+   * User chốt 2026-07-06: stepper 2 chế độ kiểu flow sim, so kèo cuối. */
+  function renderTxnVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, results: {} };
+
+    mount.innerHTML =
+      '<section class="sort-visual txn-visual" aria-label="Mô phỏng hai transaction chạy đồng thời trên một ví gem">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'SCHEDULE — HAI GIAO DỊCH MỘT VÍ') + '</span></div>' +
+        '<div class="tx-grid">' +
+          '<div class="tx-col"><div class="tx-col-name">' + escapeHtml(cfg.t1_label || 'T1') + '</div><div class="tx-lines" id="tx-t1"></div></div>' +
+          '<div class="tx-wallet"><div class="tx-col-name">' + escapeHtml(cfg.wallet_label || '💰 VÍ') + '</div>' +
+            '<div class="tx-wallet-val" id="tx-wallet">' + escapeHtml(String(cfg.start)) + '</div>' +
+            '<div class="tx-wallet-unit">' + escapeHtml(cfg.unit || 'gem') + '</div><div class="tx-sys" id="tx-sys"></div></div>' +
+          '<div class="tx-col"><div class="tx-col-name">' + escapeHtml(cfg.t2_label || 'T2') + '</div><div class="tx-lines" id="tx-t2"></div></div>' +
+        '</div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="tx-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="tx-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="tx-status">Cùng hai giao dịch — chọn CHẾ ĐỘ chạy rồi bấm từng nhịp mà soi ví.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('tx-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('tx-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function setWallet(v, cls) {
+      var el = $('tx-wallet');
+      el.textContent = String(v);
+      el.classList.remove('tx-flash-ok', 'tx-flash-bad');
+      if (cls === 'ok') el.classList.add('tx-flash-ok');
+      if (cls === 'bad') el.classList.add('tx-flash-bad');
+    }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.final)) : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0;
+      $('tx-t1').innerHTML = ''; $('tx-t2').innerHTML = ''; $('tx-sys').innerHTML = '';
+      setWallet(cfg.start);
+      cfg.modes.forEach(function (mm) {
+        $('tx-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id);
+      });
+      setBtn('Nhịp 1 / ' + m.steps.length, false);
+      setStatus('Chế độ <strong>' + escapeHtml(m.short || m.id) + '</strong> — ví đang ' + escapeHtml(String(cfg.start)) + ' ' + escapeHtml(cfg.unit || 'gem') + '. Bấm từng nhịp.');
+    }
+    cfg.modes.forEach(function (m) {
+      $('tx-mode-' + m.id).addEventListener('click', function () { pickMode(m); });
+    });
+
+    $('tx-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderTxnVisual(mount, cfg); return; }
+      var m = st.mode, step = m.steps[st.i];
+      if (!step) return;
+      var line = '<div class="tx-line' + (step.cls ? ' tx-line--' + step.cls : '') + '">' + escapeHtml(step.text) + '</div>';
+      if (step.who === 'sys') { $('tx-sys').innerHTML += line; }
+      else { $((step.who === 't2') ? 'tx-t2' : 'tx-t1').innerHTML += line; }
+      if (step.wallet !== undefined && step.wallet !== null) {
+        setWallet(step.wallet, step.cls === 'bad' ? 'bad' : (step.cls === 'ok' ? 'ok' : null));
+      }
+      st.i++;
+      if (st.i < m.steps.length) {
+        setBtn('Nhịp ' + (st.i + 1) + ' / ' + m.steps.length, false);
+        if (step.note) setStatus(step.note);
+      } else {
+        var lastWallet = cfg.start;
+        m.steps.forEach(function (s) { if (s.wallet !== undefined && s.wallet !== null) lastWallet = s.wallet; });
+        st.results[m.id] = { final: lastWallet, ok: !!m.ok };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) {
+          setBtn('↺ Chạy lại từ đầu', false);
+          st.mode = 'reset';
+          setStatus((m.verdict || '') + '<br>' + soKeo());
+        } else {
+          setBtn('✓ ' + (m.short || m.id) + ' xong', true);
+          setStatus((m.verdict || '') + ' Giờ chạy chế độ còn lại mà so.');
+        }
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -2539,6 +2699,9 @@
         pvMount.hidden = false;
       } else if (s1.hist_visual) {
         renderHistVisual(pvMount, s1.hist_visual);
+        pvMount.hidden = false;
+      } else if (s1.txn_visual) {
+        renderTxnVisual(pvMount, s1.txn_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
