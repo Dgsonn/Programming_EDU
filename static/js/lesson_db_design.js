@@ -1459,6 +1459,57 @@
         '<path d="M338 124 L 382 124" stroke="rgba(52,211,153,.7)" stroke-width="1.6" fill="none"/>' +
       '</g>' +
       '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">giữ Ô, bỏ đơn — AVG = SUM÷COUNT lúc đổ sổ · Ô KHÔNG vừa RAM? chia xô ra đĩa như bài 6</text>' +
+      '</svg>',
+
+    /* nc_08 — Materialization vs Pipelining (Ticket #49) */
+    nc_08: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cùng cây toán tử: materialize ghi temp từng tầng, màn hình trắng tới cuối; pipeline tuple chảy sống, dòng đầu hiện ngay">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Cùng một cây toán tử — hai cách NỐI</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">scan → σ → π · sao kê toàn sàn: tổng hóa đơn na ná, TRẢI NGHIỆM khác hẳn</text>' +
+        // Materialize
+        '<rect x="60" y="60" width="270" height="128" rx="10" fill="#0e1726" stroke="rgba(251,191,36,.5)" stroke-width="1.3"/>' +
+        '<text x="195" y="82" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="10.5">💾 MATERIALIZE — ghi tạm</text>' +
+        '<text x="195" y="101" text-anchor="middle" fill="#aebfd6" font-size="9">mỗi tầng chạy XONG, đổ temp ra đĩa</text>' +
+        '<text x="195" y="115" text-anchor="middle" fill="#aebfd6" font-size="9">tầng trên đọc lại temp mới chạy tiếp</text>' +
+        '<text x="195" y="144" text-anchor="middle" fill="#fbbf24" font-weight="800" font-size="15">+ 2 lượt I/O mỗi temp</text>' +
+        '<text x="195" y="166" text-anchor="middle" fill="#fcd34d" font-size="8.5">màn hình user: TRẮNG cho tới cuối</text>' +
+        // Pipeline — chosen
+        '<rect x="390" y="54" width="270" height="140" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.8"/>' +
+        '<text x="525" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10.5">⚡ PIPELINE — chảy sống</text>' +
+        '<text x="525" y="95" text-anchor="middle" fill="#aebfd6" font-size="9">tuple đậu σ được chuyền NGAY lên π</text>' +
+        '<text x="525" y="109" text-anchor="middle" fill="#aebfd6" font-size="9">không bảng tạm — 0 I/O phụ</text>' +
+        '<text x="525" y="140" text-anchor="middle" fill="#34d399" font-weight="800" font-size="15">dòng đầu: NGAY</text>' +
+        '<text x="525" y="162" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">🏆 kết quả sớm + hóa đơn nhẹ hơn</text>' +
+        '<text x="525" y="182" text-anchor="middle" fill="#7f93ad" font-size="8">root nối pipeline với input là user thấy liền</text>' +
+        '<path d="M338 124 L 382 124" stroke="rgba(52,211,153,.7)" stroke-width="1.6" fill="none"/>' +
+      '</g>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">blocking (sort, hash-build) chặn GIỮA 2 pha — chứ không giết pipeline của cả cây</text>' +
+      '</svg>',
+
+    /* nc_09 — Optimizer: Pushdown & Join Reorder (Ticket #50) */
+    nc_09: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Optimizer viết lại query: cây vụng lọc trên đỉnh 200.000 dòng trung gian 580ms; sau pushdown và reorder chỉ 1 rồi 20 rồi 50 dòng, 159ms">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Optimizer viết lại query — cùng kết quả, khác hóa đơn</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">đơn các món của seller DragonForge · sellers 2.000 ⋈ listings 40.000 ⋈ orders 100.000</text>' +
+        // Cây vụng
+        '<rect x="60" y="60" width="270" height="128" rx="10" fill="#0e1726" stroke="rgba(248,113,113,.5)" stroke-width="1.3"/>' +
+        '<text x="195" y="82" text-anchor="middle" fill="#f87171" font-weight="700" font-size="10.5">🐌 CÂY VỤNG — lọc trên đỉnh</text>' +
+        '<text x="195" y="101" text-anchor="middle" fill="#aebfd6" font-size="9">join hết 3 bảng rồi mới σ seller</text>' +
+        '<text x="195" y="115" text-anchor="middle" fill="#aebfd6" font-size="9">trung gian ~200.000 dòng ghép</text>' +
+        '<text x="195" y="144" text-anchor="middle" fill="#f87171" font-weight="800" font-size="15">~580 ms</text>' +
+        '<text x="195" y="166" text-anchor="middle" fill="#fca5a5" font-size="8.5">quên điều kiện nối? 80 TRIỆU dòng</text>' +
+        // Sau biến đổi — chosen
+        '<rect x="390" y="54" width="270" height="140" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.8"/>' +
+        '<text x="525" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10.5">⚡ SAU PUSHDOWN + REORDER</text>' +
+        '<text x="525" y="95" text-anchor="middle" fill="#aebfd6" font-size="9">σ sellers TRƯỚC: 1 → ⋈ 20 món → 50 đơn</text>' +
+        '<text x="525" y="109" text-anchor="middle" fill="#aebfd6" font-size="9">trung gian 71 dòng — meter xẹp lép</text>' +
+        '<text x="525" y="140" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">~159 ms</text>' +
+        '<text x="525" y="162" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">🏆 luật tương đương: kết quả Y HỆT</text>' +
+        '<text x="525" y="182" text-anchor="middle" fill="#7f93ad" font-size="8">không đổi một chữ SQL nào của dev</text>' +
+        '<path d="M338 124 L 382 124" stroke="rgba(52,211,153,.7)" stroke-width="1.6" fill="none" marker-end="url(#nc9arrow)"/>' +
+      '</g>' +
+      '<defs><marker id="nc9arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(52,211,153,.7)"/></marker></defs>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">σ đẩy xuống sớm · π cắt cột sớm · join từ bảng-sau-lọc nhỏ nhất · né tích Descartes</text>' +
       '</svg>'
   };
 
@@ -2065,6 +2116,126 @@
     });
   }
 
+  /* ── Flow Visual (nc_08 — Materialization vs Pipelining, sim bấm-từng-bước) ──
+   * PART_6 Bài 8 Interaction chính: "mode materialize: mỗi operator ghi temp table;
+   * mode pipeline: tuples chảy live; UI so sánh temp writes và first-result latency".
+   * Data: step_1.flow_visual = { eyebrow, caption, filter_label, threshold,
+   *   items: [{label, v}] } — đậu σ khi v < threshold.
+   * User chốt 2026-07-06: cây 3 toán tử scan → σ → π, 2 chế độ bấm so sánh. */
+  function renderFlowVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.items)) return;
+    var TH = cfg.threshold || 100;
+    var PER = 2; // món mỗi nhịp
+    var passes = cfg.items.filter(function (it) { return Number(it.v) < TH; });
+    var nScan = Math.ceil(cfg.items.length / PER);
+    var nRead = Math.ceil(passes.length / PER);
+    var st = { mode: null, i: 0, r: 0, step: 0, firstOut: null, summary: {} };
+
+    function chipHtml(it, cls) {
+      return '<span class="sv-chip' + (cls ? ' ' + cls : '') + '">' + escapeHtml(String(it.label)) + ' <b>' + escapeHtml(String(it.v)) + '</b></span>';
+    }
+    mount.innerHTML =
+      '<section class="sort-visual flow-visual" aria-label="Mô phỏng materialize vs pipeline trên cây scan, lọc, chọn cột">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'MATERIALIZE VS PIPELINE') + '</span></div>' +
+        '<div class="sv-row"><span class="sv-label">📦 SCAN listings</span><div class="sv-strip" id="fv-src">' +
+          cfg.items.map(function (it, i) { return '<span class="sv-chip" data-fv-i="' + i + '">' + escapeHtml(String(it.label)) + ' <b>' + escapeHtml(String(it.v)) + '</b></span>'; }).join('') +
+        '</div></div>' +
+        '<div class="sv-row"><span class="sv-label">🔍 ' + escapeHtml(cfg.filter_label || ('σ price < ' + TH)) + '</span><div class="sv-strip" id="fv-sigma"><span class="sv-empty">chờ dòng tới</span></div></div>' +
+        '<div class="sv-row"><span class="sv-label">💾 TEMP trên đĩa</span><div class="sv-strip" id="fv-temp"><span class="sv-empty" id="fv-temp-note">chưa dùng</span></div></div>' +
+        '<div class="sv-row"><span class="sv-label">✅ OUTPUT π (màn hình user)</span><div class="sv-strip sv-outstrip" id="fv-out"></div></div>' +
+        '<div class="sv-ctl">' +
+          '<button type="button" class="sv-btn fv-mode" id="fv-mode-mat">▶ Chạy kiểu GHI TẠM</button>' +
+          '<button type="button" class="sv-btn fv-mode" id="fv-mode-pipe">▶ Chạy kiểu PIPELINE</button>' +
+          '<button type="button" class="sv-btn" id="fv-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="fv-status">Cùng một cây scan → σ → π — chọn CÁCH NỐI các toán tử rồi bấm từng nhịp.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('fv-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('fv-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function summaryLine() {
+      var m = st.summary.mat, p = st.summary.pipe;
+      var parts = [];
+      if (m) parts.push('GHI TẠM: <strong>' + m.temp + ' lượt temp I/O · dòng đầu ở nhịp ' + m.first + '/' + m.total + '</strong>');
+      if (p) parts.push('PIPELINE: <strong>' + p.temp + ' temp · dòng đầu ở nhịp ' + p.first + '/' + p.total + '</strong>');
+      return parts.join(' — ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0; st.r = 0; st.step = 0; st.firstOut = null;
+      mount.querySelectorAll('[data-fv-i]').forEach(function (el) { el.classList.remove('sv-chip--taken'); });
+      $('fv-sigma').innerHTML = '<span class="sv-empty">chờ dòng tới</span>';
+      $('fv-temp').innerHTML = m === 'mat' ? '' : '<span class="sv-empty">pipeline: KHÔNG dùng bảng tạm</span>';
+      $('fv-out').innerHTML = '';
+      $('fv-mode-mat').classList.toggle('fv-mode--active', m === 'mat');
+      $('fv-mode-pipe').classList.toggle('fv-mode--active', m === 'pipe');
+      setBtn(m === 'mat' ? 'Nhịp 1 — σ chạy cho XONG đã' : 'Nhịp 1 — dòng nào đậu bay lên LIỀN', false);
+      setStatus(m === 'mat'
+        ? 'GHI TẠM: σ phải chạy TRỌN tầng, đổ kết quả ra đĩa — π ngồi chờ. Màn hình user: <strong>trắng</strong>.'
+        : 'PIPELINE: mỗi dòng đậu σ được chuyền NGAY lên π — không ghi gì ra đĩa.');
+    }
+    $('fv-mode-mat').addEventListener('click', function () { pickMode('mat'); });
+    $('fv-mode-pipe').addEventListener('click', function () { pickMode('pipe'); });
+
+    $('fv-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderFlowVisual(mount, cfg); return; }
+      st.step++;
+      if (st.i < cfg.items.length) {
+        var batch = cfg.items.slice(st.i, st.i + PER);
+        batch.forEach(function (it, k) {
+          var el = mount.querySelector('[data-fv-i="' + (st.i + k) + '"]');
+          if (el) el.classList.add('sv-chip--taken');
+        });
+        $('fv-sigma').innerHTML = batch.map(function (it) {
+          var pass = Number(it.v) < TH;
+          return chipHtml(it, pass ? 'sv-chip--buf' : 'hv-chip--miss') + '<span class="fv-verdict">' + (pass ? '✓ đậu' : '✗ rớt') + '</span>';
+        }).join('');
+        batch.forEach(function (it) {
+          if (Number(it.v) >= TH) return;
+          if (st.mode === 'mat') {
+            $('fv-temp').innerHTML += chipHtml(it, 'sv-chip--buf');
+          } else {
+            $('fv-out').innerHTML += chipHtml(it, 'sv-chip--out');
+            if (st.firstOut === null) st.firstOut = st.step;
+          }
+        });
+        st.i += PER;
+        if (st.i < cfg.items.length) {
+          setStatus(st.mode === 'mat'
+            ? 'σ đang chạy trọn tầng — dòng đậu GHI ra temp (chưa ai thấy gì). Kho còn ' + (cfg.items.length - st.i) + ' món.'
+            : 'Dòng đậu hiện NGAY trên màn hình — kho còn ' + (cfg.items.length - st.i) + ' món mà user đã có kết quả đọc.');
+        } else if (st.mode === 'mat') {
+          setBtn('π đọc lại temp từ đĩa');
+          setStatus('σ xong: <strong>' + passes.length + ' dòng nằm trên ĐĨA</strong> (' + passes.length + ' lượt ghi). Giờ π phải bỏ tiền ĐỌC lại — user vẫn chưa thấy gì.');
+        } else {
+          st.summary.pipe = { temp: 0, first: st.firstOut, total: st.step };
+          setBtn('✓ Pipeline xong', true);
+          setStatus('PIPELINE xong sau ' + st.step + ' nhịp: <strong>0 temp I/O, dòng đầu ở nhịp ' + st.firstOut + '</strong>. ' + (st.summary.mat ? 'SO KÈO — ' + summaryLine() : 'Giờ chạy thử kiểu GHI TẠM mà so.'));
+        }
+      } else if (st.mode === 'mat' && st.r < passes.length) {
+        var rb = passes.slice(st.r, st.r + PER);
+        rb.forEach(function (it) {
+          $('fv-out').innerHTML += chipHtml(it, 'sv-chip--out');
+          if (st.firstOut === null) st.firstOut = st.step;
+        });
+        st.r += PER;
+        if (st.r < passes.length) {
+          setStatus('π đọc temp từng block — MỖI dòng này đã bị trả tiền I/O hai lần (ghi + đọc).');
+        } else {
+          st.summary.mat = { temp: passes.length * 2, first: st.firstOut, total: st.step };
+          setBtn('✓ Ghi tạm xong', true);
+          setStatus('GHI TẠM xong sau ' + st.step + ' nhịp: <strong>' + (passes.length * 2) + ' lượt temp I/O, dòng đầu mãi nhịp ' + st.firstOut + '</strong>. ' + (st.summary.pipe ? 'SO KÈO — ' + summaryLine() : 'Giờ chạy thử kiểu PIPELINE mà so.'));
+        }
+      }
+      if (st.summary.mat && st.summary.pipe) {
+        setBtn('↺ Chạy lại từ đầu', false);
+        st.mode = 'reset';
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -2281,6 +2452,9 @@
         pvMount.hidden = false;
       } else if (s1.hash_visual) {
         renderHashVisual(pvMount, s1.hash_visual);
+        pvMount.hidden = false;
+      } else if (s1.flow_visual) {
+        renderFlowVisual(pvMount, s1.flow_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

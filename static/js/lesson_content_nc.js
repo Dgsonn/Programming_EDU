@@ -1624,6 +1624,454 @@ window.LESSON_CONTENT['db_design_nc'] = {
         success_message: 'TICKET #48 ĐÓNG — Bảng vàng seller lên sóng, giá đúng một lần quét kho! 🏆 Engine Room đã đi 7/10. Nhìn lại mà xem: sort (bài 4) nuôi merge join VÀ sort-agg; hash (bài 6) nuôi hash join VÀ hash-agg — hai ngón nghề, nửa cái engine. Bài sau đổi góc máy: các toán tử NỐI VỚI NHAU thế nào — ghi tạm ra đĩa hay truyền tay từng dòng? Materialization vs Pipelining, kèm hai hồ sơ Iterator & Blocking.',
         xp_reward: 120
       }
+    },
+
+    /* ── nc_08 — Ticket #49 · Materialization vs Pipelining ──
+     * PART_6 Bài 8 (Ch 15.7): operator tree; materialized evaluation ghi temp
+     * từng tầng; pipelined evaluation truyền tuple sống; 2 lợi ích (bỏ temp I/O
+     * + first-result sớm); blocking edge ở mức trực quan (sort 2 pha — chặn GIỮA).
+     * KHÔNG dạy sâu: double buffering, double-pipelined join, iterator pseudocode
+     * (Card F/G lo demand/producer + blocking chi tiết).
+     * Sim renderFlowVisual (user chốt 2026-07-06): 6 món, 2 mode bấm so sánh —
+     * mat: temp 6 lượt I/O, dòng đầu nhịp 4/5; pipe: 0 temp, dòng đầu nhịp 1/3. */
+    {
+      id: 'nc_08', index: 8,
+      title: 'Materialization vs Pipelining — nối toán tử kiểu gì?',
+      subtitle: 'Ghi bảng tạm từng tầng, hay để tuple chảy sống — cùng cây, khác cả hóa đơn lẫn trải nghiệm',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'listings (cây sao kê: scan → σ price<100 → π — mẫu 4)',
+          columns: ['listing_id', 'item_name', 'price'],
+          dataRows: [
+            ['3001', 'Kiếm gỗ Newbie', '45'],
+            ['3002', 'Giáp rồng Huyền thoại', '12500'],
+            ['3005', 'Khiên gỗ sồi', '80'],
+            ['3008', 'Mũ vải thô', '35']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #49',
+        hook: 'Trang "Món dưới 100 gem" chạy ĐÚNG — nhưng khách bấm là màn hình <strong>trắng</strong> một nhịp dài rồi mới hiện cả trang. Bên sàn đối thủ, dòng đầu tiên nhảy ra <em>tức thì</em> rồi danh sách dài dần. Cùng dữ liệu, hóa đơn tổng na ná — khác nhau ở thứ chưa bài nào đụng tới: các toán tử trong cây <strong>NỐI với nhau kiểu gì</strong>. Ticket #49: chạy xong tầng dưới rồi mới đưa cả bảng cho tầng trên (ghi tạm), hay rửa xong cái bát nào chuyền tay ngay cái đó (pipeline)?'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Cây toán tử chạy được theo 2 cách nối: MATERIALIZE — mỗi tầng chạy XONG, ghi bảng tạm ra đĩa cho tầng trên đọc lại; PIPELINE — tuple từ tầng dưới truyền THẲNG lên tầng trên, không bảng tạm nào',
+            'Pipeline ăn hai đường (sách 15.7.2): bỏ hẳn tiền GHI + ĐỌC temp, và khi root nối pipeline với input thì DÒNG ĐẦU trả về ngay lúc kho còn chưa đọc xong',
+            'Không phải toán tử nào cũng chảy được: sort (bài 4) hay pha build của hash (bài 6) là BLOCKING — chưa nuốt hết input chưa nhả nổi dòng nào; nhưng chặn chỉ nằm GIỮA 2 pha của nó, không giết pipeline cả cây'
+          ],
+          intro: 'Ba người rửa bát: rửa — tráng — úp. Cách 1: người rửa rửa <strong>HẾT chồng</strong> bát, chất đống ra bàn (= ghi tạm ra đĩa), người tráng mới bê cả đống về tráng tiếp. Cách 2: dây chuyền — rửa xong cái nào <strong>chuyền tay</strong> ngay cái đó, khách có bát sạch đầu tiên sau vài giây dù chồng bát còn cao. Engine cũng đứng trước đúng lựa chọn đó với mỗi cạnh của cây toán tử.',
+          example: 'Cây sao kê <code>scan → σ price&lt;100 → π</code>: materialize phải ghi 1.204 dòng đậu (~12 block) ra temp rồi π đọc lại — <strong>24 block trả tiền 2 lần</strong>, và user chờ trọn 104ms mới thấy chữ đầu tiên. Pipeline: 0 temp, dòng đầu hiện sau ~4,1ms — ngay khi block đầu của kho được đọc lên.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-arrow-down-wide-short',
+            title: 'Hai lợi ích của pipeline — theo đúng sách',
+            body: '<strong>①</strong> Xóa khoản đọc + ghi quan hệ tạm: công thức cost các bài trước vốn tính cả tiền đọc input từ đĩa — input được PIPE từ toán tử dưới thì khoản đó gạch bỏ. <strong>②</strong> Kết quả trả SỚM: root nối pipeline với input thì dòng đầu hiện ngay khi được sinh ra — quý vô cùng khi kết quả đang đổ về màn hình người dùng.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2 — Pipelining: two benefits'
+          },
+          {
+            icon: 'fa-road-barrier',
+            title: 'Cạnh chảy được — cạnh bị chặn',
+            body: 'Mỗi CẠNH của cây được dán nhãn: <strong>pipelined edge</strong> (hai đầu chạy đồng thời, tuple sinh ra là bị tiêu thụ ngay) hoặc <strong>blocking/materialized edge</strong>. Cây chia thành các <em>pipeline stage</em> ngăn bởi cạnh chặn — engine chạy từng stage một. Sort là kẻ chặn bẩm sinh: dòng bé nhất có thể nằm CUỐI kho, chưa nhìn hết thì nhả gì cũng liều.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Vì sao <code>LIMIT 10</code> trên trang chợ hiện tức thì? Pipeline + root chỉ đòi 10 dòng — kho 400 block mới đọc được vài block đã đủ trả khách, phần còn lại KHỎI đọc. Nhưng thêm <code>ORDER BY price</code> là sort chặn ngang — muốn 10 dòng rẻ nhất vẫn phải nhìn đủ 40.000 món. Trừ khi… có chiêu Top-K — hồ sơ chờ ở bài 10.'
+          }
+        ],
+        flow_visual: {
+          eyebrow: 'MATERIALIZE VS PIPELINE — CÂY scan → σ price<100 → π · 6 MÓN MẪU',
+          caption: 'Chạy CẢ HAI chế độ mà so: ghi tạm = 6 lượt temp I/O + dòng đầu mãi nhịp 4; pipeline = 0 temp + dòng đầu ngay nhịp 1 — đúng hai lợi ích sách nêu, nhìn bằng mắt.',
+          threshold: 100,
+          filter_label: 'σ price < 100',
+          items: [
+            { label: 'Kiếm', v: 45 }, { label: 'Giáp', v: 12500 }, { label: 'Mũ', v: 35 },
+            { label: 'Skin', v: 790 }, { label: 'Khiên', v: 80 }, { label: 'Nhẫn', v: 510 }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'Cây toán tử sao kê — đọc từ ĐÁY lên',
+            columns: [
+              { name: 'π item_name, price', type: 'tầng ĐỈNH — trả về user', key: '3' },
+              { name: 'σ price < 100', type: 'tầng giữa — lọc từng dòng', key: '2' },
+              { name: 'Seq Scan listings', type: 'tầng ĐÁY — kho 400 block', key: '1' }
+            ]
+          },
+          data_preview: [
+            ['cạnh scan → σ', 'pipeline', 'tuple đọc lên là xét liền', '0 temp'],
+            ['cạnh σ → π', 'pipeline', 'đậu là chuyền tay ngay', '0 temp'],
+            ['(nếu ghi tạm)', 'materialized', 'σ xong hết → đổ đĩa → π đọc lại', '+24 block']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Pipeline vừa RẺ hơn vừa cho dòng đầu SỚM hơn materialize — hai khoản lời đó đến từ đâu?',
+            options: [
+              { id: 'a', text: 'Rẻ: khoản ghi + đọc bảng tạm bị xóa sổ. Sớm: root nhận tuple từ dưới lên NGAY khi nó được sinh ra, không phải chờ tầng dưới chạy xong', correct: true, explanation: 'Đúng cả hai vế — và để ý: tiền đọc KHO thì y nguyên (vẫn 400 block); thứ biến mất là tiền temp và thời gian NGỒI CHỜ.' },
+              { id: 'b', text: 'Pipeline nén tuple lại nên truyền nhanh hơn', correct: false, explanation: 'Sai — không nén gì cả; tuple vẫn nguyên, chỉ là nó được CHUYỀN TAY thay vì ghi xuống đĩa rồi đọc lên.' },
+              { id: 'c', text: 'Pipeline được bỏ qua bước lọc σ nên ít việc hơn', correct: false, explanation: 'Sai — σ vẫn xét đủ từng dòng; pipeline đổi cách NỐI các toán tử, không bỏ toán tử nào.' },
+              { id: 'd', text: 'Pipeline đọc kho ít block hơn nhờ chỉ lấy dòng đậu', correct: false, explanation: 'Sai — muốn biết đậu hay rớt vẫn phải đọc lên đủ; số block đọc KHO của hai cách bằng nhau, khác nhau ở khoản TEMP.' }
+            ]
+          },
+          {
+            question: 'Toán tử nào sau đây là BLOCKING — không thể nhả dòng nào khi chưa nuốt hết input?',
+            options: [
+              { id: 'a', text: 'SORT — dòng bé nhất có thể nằm ở CUỐI kho: chưa nhìn hết mà dám nhả là sai thứ tự', correct: true, explanation: 'Đúng — sort là kẻ chặn bẩm sinh (sách 15.7.2.2). σ, π hay scan đều xử được từng dòng một; sort thì phải thấy đủ mới dám mở miệng.' },
+              { id: 'b', text: 'σ — phải gom đủ bảng mới lọc chính xác được', correct: false, explanation: 'Sai — σ xét TỪNG DÒNG độc lập: đậu hay rớt của dòng này chẳng dính gì dòng khác.' },
+              { id: 'c', text: 'π — phải thấy mọi dòng mới biết cột nào cần cắt', correct: false, explanation: 'Sai — danh sách cột nằm sẵn trong query; π cắt được ngay trên từng dòng chảy qua.' },
+              { id: 'd', text: 'Seq Scan — phải đọc trọn kho rồi mới nhả được', correct: false, explanation: 'Sai — scan nhả từng dòng ngay khi đọc tới; nó chính là đầu nguồn của mọi dòng chảy.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Chảy được — hay bị chặn?',
+          instruction: 'Xếp mỗi toán tử về đúng bên của dòng chảy.',
+          xp: 20,
+          chips: [
+            { id: 'p1', label: 'σ lọc — xét từng dòng, đậu là nhả liền' },
+            { id: 'p2', label: 'π chọn cột — nhận dòng nào cắt dòng đó' },
+            { id: 'b1', label: 'Sort — dòng bé nhất có thể nằm CUỐI kho' },
+            { id: 'b2', label: 'Hash join pha BUILD — chưa nạp hết bảng nhỏ chưa probe được' }
+          ],
+          bins: [
+            { id: 'p', label: 'PIPELINE ⚡' },
+            { id: 'b', label: 'BLOCKING 🚧' }
+          ],
+          solution: { p1: 'p', p2: 'p', b1: 'b', b2: 'b' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp dây chuyền pipeline kéo-từ-đỉnh cho câu sao kê — có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'σ xét NGAY tuple vừa nhận: rớt thì hỏi xin tuple kế, đậu thì chuyền lên trên', slot: 'fl-filter' },
+          { type: 'op', token: 'Scan không tự chạy — được HỎI (next) mới đọc và nhả tuple kế, tự nhớ mình đang đứng ở đâu', slot: 'fl-scan' },
+          { type: 'op', token: 'Mỗi toán tử chạy XONG toàn bộ phần mình, ghi bảng tạm ra đĩa cho tầng trên đọc lại', slot: 'fl-x' },
+          { type: 'op', token: 'π cắt cột ngay trên dòng chảy — không chờ gom đủ bảng', slot: 'fl-project' },
+          { type: 'op', token: 'Root trả dòng ĐẦU cho user khi cả kho còn chưa đọc xong — không tốn một block temp nào', slot: 'fl-out' }
+        ],
+        drop_zones: [
+          { id: 'fl-scan', placeholder: 'Tầng đáy — nguồn của mọi dòng chảy hoạt động sao?', accepts: ['op'], multi: false,
+            station: { icon: '📥', label: 'Scan lười', sub: 'Tầng 1', hint: 'Trong dây chuyền kéo-từ-đỉnh, không ai tự làm việc — kể cả kẻ giữ kho.' } },
+          { id: 'fl-filter', placeholder: 'Tầng giữa — σ đứng trên dòng chảy làm gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔍', label: 'σ trên dòng chảy', sub: 'Tầng 2', hint: 'Từng dòng một: rớt thì làm gì tiếp, đậu thì làm gì tiếp?' } },
+          { id: 'fl-project', placeholder: 'Tầng kế — π có cần chờ đủ bảng không?', accepts: ['op'], multi: false,
+            station: { icon: '✂️', label: 'π cắt cột sống', sub: 'Tầng 3', hint: 'Danh sách cột nằm sẵn trong query — vậy π cần thấy bao nhiêu dòng để bắt đầu?' } },
+          { id: 'fl-out', placeholder: 'Đỉnh cây — user thấy gì, từ lúc nào?', accepts: ['op'], multi: false,
+            station: { icon: '🖥️', label: 'Root trả sớm', sub: 'Đỉnh', hint: 'Lợi ích thứ hai của pipeline — thứ làm trang đối thủ "hiện chữ tức thì".' } }
+        ],
+        expected_sql: 'Scan không tự chạy — được HỎI (next) mới đọc và nhả tuple kế, tự nhớ mình đang đứng ở đâu σ xét NGAY tuple vừa nhận: rớt thì hỏi xin tuple kế, đậu thì chuyền lên trên π cắt cột ngay trên dòng chảy — không chờ gom đủ bảng Root trả dòng ĐẦU cho user khi cả kho còn chưa đọc xong — không tốn một block temp nào',
+        expected_zones: {
+          'fl-scan': 'Scan không tự chạy — được HỎI (next) mới đọc và nhả tuple kế, tự nhớ mình đang đứng ở đâu',
+          'fl-filter': 'σ xét NGAY tuple vừa nhận: rớt thì hỏi xin tuple kế, đậu thì chuyền lên trên',
+          'fl-project': 'π cắt cột ngay trên dòng chảy — không chờ gom đủ bảng',
+          'fl-out': 'Root trả dòng ĐẦU cho user khi cả kho còn chưa đọc xong — không tốn một block temp nào'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA NỐI xong dây chuyền pipeline: scan lười → σ trên dòng chảy → π cắt sống → root trả sớm. Khối "chạy xong, ghi bảng tạm" KHÔNG bịa về khái niệm — nó chính là MATERIALIZE — nhưng lắp vào dây chuyền này là phá sạch cả hai khoản lời. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'fl-scan': 'Tầng 1 — dây chuyền này KÉO từ đỉnh: mọi toán tử chỉ làm việc khi bị hỏi. Vậy kẻ giữ kho ở đáy hành xử thế nào?',
+          'fl-filter': 'Tầng 1 chốt: scan nhả từng tuple khi được hỏi. Tuple đầu tiên (Kiếm 45) vừa lên tới σ — nó xử ngay hay đợi gom đủ?',
+          'fl-project': 'Tầng 2 chốt: σ xét liền từng dòng, đậu thì chuyền. Tới lượt π — danh sách cột có sẵn trong query, nó cần chờ gì không?',
+          'fl-out': 'Tầng 3 chốt: π cắt cột ngay trên dòng chảy. Trên cùng là user đang nhìn màn hình — pipeline hứa với họ điều gì mà materialize không hứa nổi?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #49 — đọc cây mà đoán trải nghiệm:</strong> khách xem "món dưới 100 gem, RẺ NHẤT xếp trước". Plan: <code>1. Seq Scan listings → 2. Filter price&lt;100 → 3. SORT BY price → 4. Output</code>. Dòng chảy trong cây này thực sự trông ra sao?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: 'Scan → Filter chảy thẳng vào pha TẠO-RUN của sort; chặn nằm giữa tạo-run và merge; pha merge lại chảy tiếp lên Output — nhưng dòng đầu chỉ hiện SAU khi đọc hết kho',
+            correct: true
+          },
+          {
+            text: 'Cả cây chảy tuốt từ đáy lên đỉnh — có sort hay không thì dòng đầu vẫn hiện ngay tức thì',
+            correct: false,
+            explain: 'Sai — món rẻ nhất có thể nằm ở block CUỐI kho: sort mà nhả dòng khi chưa nhìn hết input là trả sai thứ tự. Sort là blocking bẩm sinh.'
+          },
+          {
+            text: 'Có sort trong cây là mọi cạnh phải materialize: σ cũng ghi temp, π cũng ghi temp, từng tầng một',
+            correct: false,
+            explain: 'Sai — chặn của sort là chuyện CỤC BỘ giữa 2 pha của nó; σ vẫn pipe thẳng vào pha tạo-run, merge vẫn pipe lên Output. Blocking không lây cả cây.'
+          },
+          {
+            text: 'Tăng work_mem đủ lớn thì sort hết blocking — dòng đầu lại hiện ngay như thường',
+            correct: false,
+            explain: 'Sai — RAM to giúp ÍT pass hơn (bài 4), nhưng bản chất không đổi: chưa nhìn hết input thì không ai biết dòng bé nhất là dòng nào.'
+          }
+        ],
+        schema: {
+          table_name: 'plan — Món <100 gem, rẻ nhất xếp trước',
+          columns: [
+            { name: 'Output item_name, price', type: 'đỉnh', key: '4' },
+            { name: 'SORT BY price', type: '2 pha: tạo-run ‖ merge', key: '3' },
+            { name: 'Filter price < 100', type: 'trên dòng chảy', key: '2' },
+            { name: 'Seq Scan listings', type: 'kho 400 block', key: '1' }
+          ],
+          data: [
+            ['cạnh 1→2', 'pipeline', 'đọc tới đâu xét tới đó'],
+            ['cạnh 2→3', 'pipeline (vào pha tạo-run)', 'dòng đậu chảy vào run'],
+            ['TRONG sort', '🚧 BLOCKING', 'tạo-run xong hết mới merge'],
+            ['cạnh 3→4', 'pipeline (từ pha merge)', 'nhả dần theo thứ tự']
+          ]
+        },
+        context: {
+          scenario: 'Đây chính là cây của sim Step 1 cộng thêm một tầng SORT. Câu hỏi ăn tiền: chặn nằm Ở ĐÂU — cả cây, hay chỉ một khớp nối? Vẽ được ranh giới đó là bạn đọc plan như DBA.',
+          real_world: 'Vì lẽ này mà dashboard có ORDER BY luôn "khựng rồi hiện cả cụm", còn feed cuộn vô tận (không sort toàn cục) hiện dòng đầu tức thì. Người thiết kế API phân trang chọn keyset pagination cũng là đang né kẻ chặn này.',
+          steps: [
+            'σ và π có blocking không? — Không, chúng xử từng dòng.',
+            'Sort có nhả sớm được không? — Không: dòng bé nhất có thể nằm cuối kho.',
+            'Chặn của sort nằm ở đâu? — GIỮA 2 pha: tạo-run (nhận dòng chảy vào) ‖ merge (nhả dòng chảy ra).',
+            'work_mem có đổi bản chất blocking không? — Không, chỉ đổi số pass.'
+          ],
+          hint_explore: 'Xem lại sim bài 4: nút "Nạp & sort" (tạo run) phải bấm ĐỦ 4 lần rồi nút merge mới xuất hiện — ranh giới 2 pha nằm đúng chỗ đó.',
+          expected: 'Chọn phương án "chặn nằm giữa tạo-run và merge, hai đầu vẫn chảy".'
+        },
+        hints: [
+          { level: 1, text: 'Xét từng CẠNH của cây: scan→filter, filter→sort, sort→output — cạnh nào hai đầu chạy đồng thời được?' },
+          { level: 2, text: 'Sort có 2 pha (bài 4): tạo-run và merge. Pha nào nhận được dòng chảy VÀO? Pha nào nhả được dòng chảy RA?' },
+          { level: 3, text: 'Blocking của sort không lây: nó chỉ là một RANH GIỚI giữa 2 pipeline stage. Còn "tăng RAM hết blocking" — bài 4 nói RAM to đổi cái gì?' },
+          { level: 4, text: 'Đáp án: dòng chảy sống ở cả hai đầu, chặn nằm GIỮA 2 pha của sort — vì thế dòng đầu chỉ hiện sau khi kho được đọc trọn.' }
+        ],
+        success_message: 'TICKET #49 ĐÓNG — giờ bạn nhìn cây plan là thấy cả DÒNG CHẢY lẫn chỗ NGHẼN! ⚡ Hai hồ sơ kỹ thuật đang chờ bên dưới: Iterator (bộ ba open/next/close vận hành cú "kéo từ đỉnh") và Blocking Operator (vì sao kẻ chặn không giết cả cây). Rồi bài sau lên tầng cao nhất của module: OPTIMIZER tự viết lại query của dev — cùng kết quả, hóa đơn rẻ gấp mấy lần.',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_iterator', 'nc_card_blocking']
+    },
+
+    /* ── nc_09 — Ticket #50 · Optimizer: Pushdown, Join Reorder & né Cartesian ──
+     * PART_6 Bài 9 (Ch 16.1-16.2): equivalence rules → optimizer VIẾT LẠI biểu
+     * thức (map ví dụ Music sang GameHub); mục tiêu = intermediate result;
+     * σ/π pushdown; join giao hoán/kết hợp; né tích Descartes. KHÔNG dạy sâu:
+     * đủ 16 luật, outer-join rules, null-rejecting. Số canonical: 2.000 seller,
+     * 20 món/seller, 2,5 đơn/món → σ 1 → ⋈ 20 → ⋈ 50 (vs vụng ~200.000 trung
+     * gian; cartesian 80 triệu). step-4 fill_blank 1/20/50. */
+    {
+      id: 'nc_09', index: 9,
+      title: 'Optimizer viết lại query — pushdown, đảo join, né Descartes',
+      subtitle: 'Luật tương đương cho optimizer quyền đảo cây: cùng kết quả, trung gian teo từ 200.000 xuống 71 dòng',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'sellers (2.000 shop ≈ 20 block — bảng bé nhất, mẫu 3)',
+          columns: ['seller_id', 'seller_name', 'joined'],
+          dataRows: [
+            ['2001', 'DragonForge', '2024'],
+            ['3300', 'MysticVault', '2025'],
+            ['4102', 'ShadowTrader (banned)', '2023']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #50',
+        hook: 'Trang "gian hàng DragonForge" chậm ì ạch. Dev viết query kiểu thấy sao nối vậy: <code>orders ⋈ listings ⋈ sellers</code> rồi MỚI lọc <code>seller_name = \'DragonForge\'</code> ở cuối. DBA được gọi tới… không sửa một chữ SQL nào — chỉ mở EXPLAIN: engine đã <strong>tự viết lại</strong> biểu thức từ đời nào, lọc được đẩy xuống tận đáy. Ticket #50: học bộ luật cho phép optimizer đảo cây mà dám CAM KẾT kết quả y hệt — và con số nó săn lùng từng dòng: <strong>intermediate result</strong>.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Đại số quan hệ có LUẬT TƯƠNG ĐƯƠNG: hai biểu thức khác hình nhưng cam kết cùng tập kết quả — optimizer dựa vào đó để viết lại query, dev không cần xin phép',
+            'Mục tiêu săn lùng là INTERMEDIATE RESULT: σ đẩy xuống sát bảng nguồn (điều kiện đụng bảng nào lọc ngay bảng đó), π cắt cột thừa sớm — tầng trên chỉ khiêng thứ cần khiêng',
+            'Join giao hoán + kết hợp → được ĐẢO thứ tự: xuất phát từ bảng-sau-lọc NHỎ nhất; và tuyệt đối né tích Descartes — ghép 2 bảng không có điều kiện nối là nhân bùng số dòng'
+          ],
+          intro: 'Tìm "mọi đơn hàng của shop DragonForge" trong chợ 100.000 đơn. Cách vụng: ghép TẤT CẢ đơn với TẤT CẢ món với TẤT CẢ shop thành một núi giấy, rồi mới soi tên shop — núi trung gian ~200.000 dòng để giữ lại 50. Cách của optimizer: tìm shop TRƯỚC (1 dòng), lần ra 20 món của shop, rồi mới kéo 50 đơn — chưa tầng nào phải khiêng quá trăm dòng. Cùng kết quả, khác nhau là thứ nằm GIỮA các phép toán.',
+          example: 'Mật độ chợ: 40.000 món ÷ 2.000 shop = <strong>20 món/shop</strong> · 100.000 đơn ÷ 40.000 món = <strong>2,5 đơn/món</strong>. Cây sau biến đổi: σ sellers → <strong>1</strong> → ⋈ listings → <strong>20</strong> → ⋈ orders → <strong>50</strong>. Còn lỡ QUÊN điều kiện nối sellers–listings? Tích Descartes 2.000 × 40.000 = <strong>80 TRIỆU</strong> dòng trung gian.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-scale-balanced',
+            title: 'Luật tương đương — giấy phép của optimizer',
+            body: 'Điều kiện lọc chỉ đụng MỘT bảng thì σ được đẩy xuyên qua join xuống sát bảng đó; π được đẩy theo để cắt cột thừa; join đổi chỗ, đổi nhóm thoải mái. Mỗi luật là một phép biến hình <strong>bảo toàn kết quả</strong> — ví dụ trong sách: lọc khoa Music đẩy xuống trước khi ⋈ teaches, y đúc bài toán DragonForge của ta.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 16.2.1-16.2.2 — Equivalence Rules & Examples of Transformations'
+          },
+          {
+            icon: 'fa-arrow-down-1-9',
+            title: 'Join order & cú né Descartes',
+            body: 'Cùng 3 bảng có nhiều cách xếp lịch ghép — optimizer chọn lịch cho trung gian NHỎ nhất: xuất phát từ bảng-sau-lọc bé nhất (sellers còn 1 dòng) rồi mới lan ra. Và luật sắt: hai bảng KHÔNG có điều kiện nối thì đừng ghép trực tiếp — sellers × listings trần trụi = 80 triệu dòng, chưa kịp lọc đã sập.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Đọc EXPLAIN thấy Filter nằm SÂU dưới đáy dù bạn viết WHERE ở cuối câu — đừng hoảng, đó là pushdown đang làm việc. Nhưng optimizer không phải thánh: nhét điều kiện vào hàm (<code>WHERE UPPER(name)=…</code>) hay OR chằng chịt là nó bó tay không đẩy nổi. Còn câu hỏi treo lơ lửng: nó lấy đâu ra "1 dòng, 20 món" khi CHƯA chạy? Bài 10 mở sổ thống kê.'
+          }
+        ],
+        plan_visual: {
+          query: "SELECT l.item_name, o.total\nFROM sellers s JOIN listings l ON s.seller_id = l.seller_id\n              JOIN orders o ON l.listing_id = o.listing_id\nWHERE s.seller_name = 'DragonForge';",
+          caption: 'Cùng một query — optimizer viết lại cây bên phải: σ tụt xuống đáy, join đảo lại xuất phát từ 1 dòng. Nhìn con số trên các mũi tên: đó chính là intermediate result mà nó săn lùng. (Hóa đơn ms là ước lượng minh họa, gồm cả bảng tạm.)',
+          price: {
+            seek_ms: 4, block_ms: 0.1,
+            note: 'sellers 2.000 ≈ 20 block · listings 40.000 ≈ 400 · orders 100.000 ≈ 1.000 · mật độ 20 món/shop, 2,5 đơn/món.'
+          },
+          trees: [
+            {
+              name: 'Cây VỤNG — như dev viết',
+              chosen: false,
+              note: 'Join hết 3 bảng rồi mới lọc — hai tầng trung gian ~200.000 dòng',
+              io: { access: 'seq', seeks: 10, blocks: 5400 },
+              nodes: [
+                { op: 'orders ⋈ listings', kind: 'join', detail: 'ghép TOÀN SÀN trước', rows: '100.000 dòng ghép' },
+                { op: '⋈ sellers', kind: 'join', detail: 'đèo thêm tên shop cho cả sàn', rows: '100.000 dòng' },
+                { op: "σ seller_name = 'DragonForge'", kind: 'filter', detail: 'lọc CUỐI CÙNG mới làm', rows: '50 đơn' },
+                { op: 'π item_name, total', kind: 'project', rows: '50 dòng' }
+              ]
+            },
+            {
+              name: 'Sau PUSHDOWN + REORDER',
+              chosen: true,
+              note: '✓ Cây EXPLAIN thật — trung gian cả thảy 71 dòng',
+              io: { access: 'seq', seeks: 4, blocks: 1430 },
+              nodes: [
+                { op: "σ seller_name (sellers)", kind: 'filter', detail: 'lọc TRƯỚC TIÊN — 2.000 shop còn 1', rows: '1 dòng' },
+                { op: '⋈ listings', kind: 'join', detail: 'chỉ món của shop này', rows: '20 món' },
+                { op: '⋈ orders', kind: 'join', detail: 'chỉ đơn của 20 món đó', rows: '50 đơn' },
+                { op: 'π item_name, total', kind: 'project', rows: '50 dòng' }
+              ]
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'Ba bảng của trận này',
+            columns: [
+              { name: 'sellers', type: '2.000 shop ≈ 20 block', key: 'σ đậu 1' },
+              { name: 'listings', type: '40.000 món ≈ 400 block', key: '20 món/shop' },
+              { name: 'orders', type: '100.000 đơn ≈ 1.000 block', key: '2,5 đơn/món' }
+            ]
+          },
+          data_preview: [
+            ['cây vụng', '⋈⋈ rồi σ', 'trung gian ~200.000 dòng', '~580 ms'],
+            ['sau biến đổi', 'σ rồi ⋈⋈', 'trung gian 1 + 20 + 50 = 71 dòng', '~159 ms'],
+            ['quên điều kiện nối', 'sellers × listings', '80.000.000 dòng', '💀']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Optimizer lấy QUYỀN gì mà dám đảo tung cây phép toán do dev viết — không hỏi lấy một câu?',
+            options: [
+              { id: 'a', text: 'Luật tương đương của đại số quan hệ: mỗi phép biến đổi đều được chứng minh bảo toàn tập kết quả — cây khác hình, kết quả CAM KẾT y hệt', correct: true, explanation: 'Đúng — SQL là ngôn ngữ KHAI BÁO: dev tả thứ mình muốn, còn "làm thế nào" thuộc toàn quyền engine, miễn kết quả đúng.' },
+              { id: 'b', text: 'Nó chạy thử cả hai cây trên dữ liệu thật rồi giữ cây nhanh hơn', correct: false, explanation: 'Sai — bài học từ Ticket #42 vẫn nguyên: optimizer cân bằng THỐNG KÊ, không chạy thử; chạy thử cây vụng một lần là đã trả trọn giá đắt rồi.' },
+              { id: 'c', text: 'Nó chỉ dám đảo khi hai cây cho kết quả gần giống nhau', correct: false, explanation: 'Sai — "gần giống" không tồn tại trong từ điển này: luật tương đương đòi Y HỆT tuyệt đối, khác một dòng cũng không được dùng.' },
+              { id: 'd', text: 'Quyền do dev cấp qua hint trong câu SQL', correct: false, explanation: 'Sai — hint (ở vài hệ) chỉ là lời khuyên thêm; quyền viết lại có sẵn từ bản chất khai báo của SQL, không cần ai cấp.' }
+            ]
+          },
+          {
+            question: 'Dev sửa query, lỡ tay XÓA điều kiện nối giữa sellers và listings. Chuyện gì xảy ra ở tầng ghép đó?',
+            options: [
+              { id: 'a', text: 'Tích Descartes: MỖI shop ghép với MỌI món — 2.000 × 40.000 = 80 triệu dòng trung gian, chưa kịp lọc đã ngộp', correct: true, explanation: 'Đúng — thiếu điều kiện nối thì join thành phép NHÂN. Optimizer luôn xếp lịch để né Descartes, còn dev thì đừng tự tạo ra nó.' },
+              { id: 'b', text: 'Engine báo lỗi cú pháp ngay, không chạy', correct: false, explanation: 'Sai — về cú pháp nó HỢP LỆ một cách nguy hiểm: engine sẽ ngoan ngoãn ghép chéo đủ 80 triệu tổ hợp.' },
+              { id: 'c', text: 'Optimizer tự đoán điều kiện nối đúng rồi thêm vào', correct: false, explanation: 'Sai — optimizer chỉ BIẾN ĐỔI tương đương thứ bạn viết; tự bịa thêm điều kiện là đổi kết quả, vượt quyền của nó.' },
+              { id: 'd', text: 'Không sao — số dòng vẫn thế, chỉ chậm hơn chút', correct: false, explanation: 'Sai — join có điều kiện giữ ~1 cặp đúng cho mỗi dòng; bỏ điều kiện là NHÂN số dòng: 80 triệu so với 40.000.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'order',
+          title: 'Tay nghề optimizer: biến cây vụng thành cây khôn',
+          instruction: 'Kéo 5 nước biến đổi vào đúng thứ tự.',
+          xp: 20,
+          items: [
+            { id: 'r4', label: 'Join tiếp 20 món với orders — trung gian chỉ 50 đơn' },
+            { id: 'r1', label: 'Nhận cây nguyên bản của dev: σ seller_name nằm tít trên đỉnh' },
+            { id: 'r3', label: 'Đảo join order: sellers-đã-lọc (1 dòng) ⋈ listings trước tiên' },
+            { id: 'r5', label: 'π đẩy xuống: chỉ khiêng item_name, total lên các tầng trên' },
+            { id: 'r2', label: 'Đẩy σ seller_name xuyên qua các join, xuống sát bảng sellers' }
+          ],
+          solution: { r1: 1, r2: 2, r3: 3, r4: 4, r5: 5 }
+        }
+      },
+      step_3: {
+        mission: 'Ra 4 nước biến đổi của optimizer cho trận DragonForge — có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Chọn điểm xuất phát join: bảng-sau-lọc NHỎ nhất (1 dòng) cầm đầu — trung gian teo theo nó', slot: 'op-order' },
+          { type: 'op', token: 'Đẩy σ seller_name xuyên xuống sát sellers — điều kiện chỉ đụng 1 bảng thì lọc ngay tại bảng đó', slot: 'op-push' },
+          { type: 'op', token: 'Muốn đảo thứ tự join phải xin phép dev — đảo bừa là đổi kết quả trả về', slot: 'op-x' },
+          { type: 'op', token: 'π đẩy xuống: cắt cột thừa ngay từ tầng thấp — tầng trên khỏi khiêng cột không ai cần', slot: 'op-proj' },
+          { type: 'op', token: 'Chỉ ghép cặp bảng CÓ điều kiện nối — thiếu nó là tích Descartes 80 triệu dòng', slot: 'op-cart' }
+        ],
+        drop_zones: [
+          { id: 'op-push', placeholder: 'Nước đi 1 — σ đang ngồi trên đỉnh cây, xử sao?', accepts: ['op'], multi: false,
+            station: { icon: '⬇️', label: 'Đẩy σ xuống', sub: 'Nước đi 1', hint: 'Điều kiện seller_name chỉ dính dáng tới đúng MỘT bảng — vậy chỗ đứng hợp lý của nó ở đâu?' } },
+          { id: 'op-order', placeholder: 'Nước đi 2 — ba bảng, ghép từ đâu trước?', accepts: ['op'], multi: false,
+            station: { icon: '🎬', label: 'Chọn join order', sub: 'Nước đi 2', hint: 'Bài 5 dạy outer nhỏ cầm trịch — giờ có một "bảng" chỉ còn đúng 1 dòng.' } },
+          { id: 'op-proj', placeholder: 'Nước đi 3 — còn cắt gọt được gì nữa?', accepts: ['op'], multi: false,
+            station: { icon: '✂️', label: 'π cắt cột sớm', sub: 'Nước đi 3', hint: 'σ cắt DÒNG thừa — còn ai chuyên cắt CỘT thừa?' } },
+          { id: 'op-cart', placeholder: 'Nước đi 4 — luật sắt khi xếp lịch ghép?', accepts: ['op'], multi: false,
+            station: { icon: '🚧', label: 'Né Descartes', sub: 'Nước đi 4', hint: 'Hai bảng không có sợi dây nối nào mà ghép trực tiếp thì ra bao nhiêu tổ hợp?' } }
+        ],
+        expected_sql: 'Đẩy σ seller_name xuyên xuống sát sellers — điều kiện chỉ đụng 1 bảng thì lọc ngay tại bảng đó Chọn điểm xuất phát join: bảng-sau-lọc NHỎ nhất (1 dòng) cầm đầu — trung gian teo theo nó π đẩy xuống: cắt cột thừa ngay từ tầng thấp — tầng trên khỏi khiêng cột không ai cần Chỉ ghép cặp bảng CÓ điều kiện nối — thiếu nó là tích Descartes 80 triệu dòng',
+        expected_zones: {
+          'op-push': 'Đẩy σ seller_name xuyên xuống sát sellers — điều kiện chỉ đụng 1 bảng thì lọc ngay tại bảng đó',
+          'op-order': 'Chọn điểm xuất phát join: bảng-sau-lọc NHỎ nhất (1 dòng) cầm đầu — trung gian teo theo nó',
+          'op-proj': 'π đẩy xuống: cắt cột thừa ngay từ tầng thấp — tầng trên khỏi khiêng cột không ai cần',
+          'op-cart': 'Chỉ ghép cặp bảng CÓ điều kiện nối — thiếu nó là tích Descartes 80 triệu dòng'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA RA trọn 4 nước của optimizer: σ tụt đáy → 1 dòng cầm đầu join → π cắt cột sớm → tuyệt không Descartes. Khối "xin phép dev" là bịa — luật tương đương CHÍNH LÀ giấy phép: cây đổi hình, kết quả cam kết y hệt, dev thậm chí không hay biết. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'op-push': 'Nước đi 1 — cây vụng đang khiêng 100.000 dòng lên tận đỉnh chỉ để vứt gần hết. Điều kiện seller_name vốn chỉ đụng MỘT bảng: nước đi hiển nhiên là gì?',
+          'op-order': 'Nước đi 1 chốt: σ nằm sát sellers, 2.000 shop còn đúng 1 dòng. Ba bảng chờ ghép — kẻ nào xứng đáng cầm đầu lịch join?',
+          'op-proj': 'Nước đi 2 chốt: 1 dòng cầm trịch, trung gian 20 rồi 50. σ đã cắt DÒNG thừa — còn chiều ngang của bảng thì ai cắt?',
+          'op-cart': 'Nước đi 3 chốt: chỉ khiêng 2 cột cần thiết. Nước cuối — treo luật sắt của việc xếp lịch ghép: cặp bảng nào KHÔNG BAO GIỜ được ghép trực tiếp?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #50 — tự làm optimizer:</strong> điền 3 con số intermediate result của cây SAU biến đổi. (Số viết liền, ví dụ <code>20</code>.)',
+        challenge_type: 'fill_blank',
+        template: "-- QUERY: don cua cac mon thuoc seller 'DragonForge'\n-- MAT DO CHO: 40.000 mon / 2.000 shop = 20 mon/shop\n--             100.000 don / 40.000 mon = 2,5 don/mon\n\n-- CAY SAU PUSHDOWN + REORDER:\nσ seller_name = 'DragonForge' (sellers 2.000 shop)   ->  ____ dong\n⋈ listings   (moi shop trung binh 20 mon)            ->  ____ mon\n⋈ orders     (moi mon trung binh 2,5 don)            ->  ____ don",
+        blanks: [
+          { id: 'b1', hint: '? dòng', expected: '1' },
+          { id: 'b2', hint: '? món', expected: '20' },
+          { id: 'b3', hint: '? đơn', expected: '50' }
+        ],
+        schema: {
+          table_name: 'chợ GameHub — 3 bảng',
+          columns: [
+            { name: 'sellers', type: '2.000 shop', key: 'σ tên shop' },
+            { name: 'listings', type: '40.000 món', key: '20 món/shop' },
+            { name: 'orders', type: '100.000 đơn', key: '2,5 đơn/món' }
+          ],
+          data: [
+            ['cây vụng', 'trung gian ~200.000 dòng', '~580 ms'],
+            ['cây sau biến đổi', 'trung gian 71 dòng', '~159 ms'],
+            ['quên điều kiện nối', '80.000.000 dòng', '💀']
+          ]
+        },
+        context: {
+          scenario: 'Đây là bản nháp optimizer ước lượng cây sau biến đổi — meter trung gian xẹp từ ~200.000 xuống 71 dòng mà kết quả y hệt. Để ý: cả ba con số đều tính ra từ MẬT ĐỘ, chưa hề chạy query.',
+          real_world: 'Postgres làm màn này với mọi query bạn gửi — EXPLAIN sẽ thấy Filter nằm sâu dưới đáy plan dù WHERE viết ở cuối câu. Giới data gọi chung là predicate pushdown: Spark, Parquet, Elasticsearch đều học lại bài này của RDBMS.',
+          steps: [
+            'σ tên shop trên 2.000 shop, tên là duy nhất → còn mấy dòng?',
+            'Mỗi shop trung bình 20 món → 1 shop kéo ra bao nhiêu món?',
+            'Mỗi món trung bình 2,5 đơn → 20 món kéo ra bao nhiêu đơn?'
+          ],
+          hint_explore: 'Nhân dây chuyền: 1 → ×20 → ×2,5. Meter trung gian của cây vụng để so: 100.000 + 100.000.',
+          expected: 'σ = 1 · ⋈ listings = 20 · ⋈ orders = 50.'
+        },
+        hints: [
+          { level: 1, text: 'seller_name là định danh shop — lọc trên 2.000 shop còn lại bao nhiêu?' },
+          { level: 2, text: 'Mật độ 20 món/shop: 1 shop × 20.' },
+          { level: 3, text: 'Mật độ 2,5 đơn/món: 20 món × 2,5.' },
+          { level: 4, text: 'σ = <code>1</code> · ⋈ listings = <code>20</code> · ⋈ orders = <code>50</code>.' }
+        ],
+        success_message: 'TICKET #50 ĐÓNG — bạn vừa đảo cây y như optimizer, trung gian teo 2.800 lần! ⚡ Nhưng còn một bí mật chưa khui: nó lấy đâu ra "20 món/shop, 2,5 đơn/món" khi CHƯA chạy query? Bài cuối module mở cuốn sổ quyền lực nhất engine: STATISTICS & HISTOGRAMS — nơi cost-based optimizer đọc tương lai, và lệnh EXPLAIN cho bạn đọc ké. Kèm hai hồ sơ: Histogram & ANALYZE, Top-K.',
+        xp_reward: 120
+      }
     }
 
   ],
@@ -1741,6 +2189,70 @@ window.LESSON_CONTENT['db_design_nc'] = {
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.5.3 — Handling of Overflows: skew, fudge factor, overflow resolution/avoidance · PART_6 Card E',
       cta: { label: 'Vào Bài 7 — GROUP BY giá bằng một lần quét', href: '/lesson/db_design_nc?lesson=7' }
+    },
+
+    /* Card F — PART_6 đặt sau Bài 8 (1/2); user chốt chuỗi đọc F → G → bài 9 */
+    {
+      id: 'nc_card_iterator',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 8 (1/2)',
+      title: 'Iterator Model — open(), next(), close()',
+      accent: '#818CF8',
+      back_href: '/courses/db_design_nc',
+      intro: 'Dây chuyền pipeline ở Bài 8 vận hành bằng một giao ước 3 hàm mà MỌI toán tử phải tuân: <code>open()</code> · <code>next()</code> · <code>close()</code>. Nhờ nói chung một ngôn ngữ, scan, σ, sort hay join đều cắm nối vào nhau tùy ý — như ống nước cùng chuẩn ren.',
+      sections: [
+        {
+          icon: 'fa-plug',
+          heading: 'Ba hàm, một giao ước',
+          body: '<code>open()</code> — dọn chỗ: mở cuộc quét file, hoặc (với merge join) sort luôn input nếu chưa có trật tự. <code>next()</code> — "cho tôi dòng KẾ": toán tử tự nhớ mình đang đứng đâu giữa hai lần gọi, cần nguyên liệu thì tự gọi next() xuống input của nó. <code>close()</code> — hết cần rồi, dọn dẹp. Executor của PostgreSQL chạy đúng mô hình này (giới nghề gọi là kiểu Volcano).'
+        },
+        {
+          icon: 'fa-arrows-up-down',
+          heading: 'Kéo hay Đẩy?',
+          body: 'Chuỗi next() là <strong>demand-driven</strong> — dữ liệu bị KÉO từ đỉnh: root bị đòi kết quả mới hỏi xuống, tuple được tính một cách lười biếng, đúng lúc cần. Chiều ngược là <strong>producer-driven</strong>: các toán tử háo hức ĐẨY tuple lên qua buffer giữa các tầng — hệ song song và các engine compile-ra-machine-code chuộng kiểu đẩy vì ít lần gọi hàm hơn.'
+        }
+      ],
+      quiz: {
+        question: 'Trong demand-driven pipeline, ai KHỞI XƯỚNG mọi việc tính toán?',
+        options: [
+          { label: 'Toán tử ĐỈNH — root bị đòi kết quả thì gọi next() xuống dưới, dữ liệu bị KÉO lên từng dòng', correct: true, feedback: '✓ Chuẩn — không ai nhúc nhích cho đến khi bị hỏi; cú next() lan từ đỉnh xuống tận scan rồi tuple ngược dòng đi lên.' },
+          { label: 'Scan ở đáy — đọc được dòng nào tự đẩy lên dòng đó', correct: false, feedback: '✗ Đó là producer-driven (kiểu ĐẨY) — demand-driven thì scan cũng lười như mọi người: bị hỏi mới đọc.' },
+          { label: 'Optimizer — nó điều phối từng nhịp chạy của các toán tử', correct: false, feedback: '✗ Optimizer chọn xong plan là NGHỈ — lúc chạy là việc của executor với chuỗi next().' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2.1 — Implementation of Pipelining: iterator, demand-driven vs producer-driven · PART_6 Card F',
+      cta: { label: 'Đọc tiếp hồ sơ 2/2 — Blocking Operator', href: '/card/nc_card_blocking' }
+    },
+
+    /* Card G — PART_6 đặt sau Bài 8 (2/2) */
+    {
+      id: 'nc_card_blocking',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 8 (2/2)',
+      title: 'Blocking Operator — kẻ chặn giữa dòng chảy',
+      accent: '#818CF8',
+      back_href: '/courses/db_design_nc',
+      intro: 'Có những toán tử KHÔNG THỂ nhả dòng nào khi chưa nhìn hết input — sort là điển hình: dòng bé nhất có thể nằm ở cuối kho. Bạn đã chạm mặt kẻ chặn này hai lần: external sort (Bài 4) và pha build của hash join (Bài 6).',
+      sections: [
+        {
+          icon: 'fa-road-barrier',
+          heading: 'Chặn — nhưng chặn ở ĐÂU?',
+          body: 'Blocking KHÔNG có nghĩa "materialize cả cây". Sort-merge gồm 2 pha: pha TẠO-RUN vẫn nhận dòng chảy VÀO (pipeline với input), pha MERGE vẫn nhả dòng chảy RA (pipeline với output) — cú chặn chỉ nằm ở RANH GIỚI giữa hai pha. Plan vì thế chia thành các <em>pipeline stage</em>, engine chạy lần lượt từng stage.'
+        },
+        {
+          icon: 'fa-list-check',
+          heading: 'Điểm danh kẻ chặn',
+          body: '<strong>Sort</strong>: blocking bẩm sinh. <strong>Hash join</strong>: pha build chặn (phải nạp trọn bảng nhỏ), pha probe chảy ngon. <strong>Indexed NLJ</strong>: chảy theo outer, nhưng chặn phía index (index phải dựng xong đã). <strong>σ, π, scan</strong>: không bao giờ chặn — xử từng dòng một.'
+        }
+      ],
+      quiz: {
+        question: 'Cây plan có SORT nằm chính giữa — pipeline của CẢ CÂY có chết theo không?',
+        options: [
+          { label: 'Không — chặn chỉ nằm giữa 2 pha của sort: input vẫn chảy vào pha tạo-run, pha merge vẫn chảy tiếp lên trên', correct: true, feedback: '✓ Chuẩn — blocking là ranh giới cục bộ chia cây thành các stage, không phải án tử cho pipeline toàn cây.' },
+          { label: 'Có — từ đáy tới đỉnh mọi tầng đều phải quay về ghi temp table', correct: false, feedback: '✗ Quá tay — các cạnh quanh sort vẫn pipeline bình thường; chỉ ranh giới tạo-run ‖ merge là phải chờ.' },
+          { label: 'Không, vì sort chẳng bao giờ blocking — cứ nhả dòng tới đâu hay tới đó', correct: false, feedback: '✗ Nhả sớm là SAI kết quả: dòng bé nhất có thể nằm cuối kho — chưa nhìn hết input thì sort không dám hứa gì.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2.2 — Evaluation Algorithms for Pipelining: blocking/pipelined edges, pipeline stages · PART_6 Card G',
+      cta: { label: 'Vào Bài 9 — Optimizer viết lại query', href: '/lesson/db_design_nc?lesson=9' }
     }
   ]
 };

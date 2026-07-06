@@ -107,3 +107,24 @@ User chốt 4/4 recommended: cụm nc_06+nc_07 · sim hash build/probe BẤM-T�
 
 ## Engine guard mới (probe_groupby g5 — silent wrong)
 `SELECT DISTINCT` trả cột "DISTINCT col" với mọi dòng RỖNG, không khử trùng → thêm reCheck chặn pending-neutral (cùng lớp UPPER/ORDER-BY-alias). Không expected_sql nào ở Basic/TC/NC dùng DISTINCT (đã grep).
+
+---
+
+# ADDENDUM ĐỢT 5 (2026-07-06): nc_08 + nc_09 + Card F/G
+
+User chốt 4/4 recommended: cụm nc_08+nc_09 · sim CHẢY-TUPLE bấm-từng-bước cho nc_08 (cây 3 toán tử scan → σ → π, 2 chế độ materialize vs pipeline) · nc_08 mcq_code + nc_09 fill_blank · chuỗi card F (Iterator) → G (Blocking) → bài 9 (cả 2 card đặt sau bài 8, overlay hiện 2 link).
+
+## nc_08 — Ticket #49 "Materialization vs Pipelining" (Ch 15.7)
+- Hook: sao kê Ticket #47 đúng hóa đơn nhưng màn hình TRẮNG rồi mới hiện — đối thủ hiện dòng đầu ngay. 2 lợi ích pipeline theo sách 15.7.2: (1) bỏ tiền ghi+đọc temp; (2) dòng đầu trả sớm khi root nối pipeline với input.
+- `renderFlowVisual` (mount chung, `step_1.flow_visual`): mini-world 6 món (3 đậu σ price<100: Kiếm 45/Mũ 35/Khiên 80), PER=2 món/nhịp. Mode GHI TẠM: 3 nhịp scan+σ đổ TEMP (đĩa) → 2 nhịp "π đọc temp" → output (dòng đầu NHỊP 4, temp 3 ghi + 3 đọc); mode PIPELINE: 3 nhịp, món đậu bay thẳng lên π-OUTPUT (dòng đầu NHỊP 1, temp 0). Chạy đủ 2 mode → status so sánh.
+- Step 3 = dây chuyền demand-driven 4 trạm (scan nhả khi được HỎI / σ xét ngay trên dòng chảy / π cắt cột không chờ đủ bảng / root trả dòng đầu khi kho CHƯA đọc xong) + khối bịa "mỗi toán tử chạy XONG rồi ghi bảng tạm" (= materialize — đúng khái niệm, sai dây chuyền).
+- Step 4 mcq_code: cây `π ← SORT ← σ ← SeqScan` (ORDER BY price món <100) — chọn đúng mô tả: σ/π pipeline được nhưng SORT chặn giữa 2 pha (15.7.2.2: tạo-run nhận dòng chảy vào, merge nhả dòng chảy ra, chặn nằm GIỮA); bẫy: "tăng work_mem thì sort hết blocking" (sai — blocking là bản chất logic, không phải thiếu RAM).
+- Card F nc_card_iterator: open()/next()/close(), demand-driven = KÉO từ đỉnh (Volcano — executor Postgres); producer-driven = ĐẨY từ đáy (hệ compile machine-code chuộng). Quiz: ai khởi xướng? = root gọi next() xuống. CTA → /card/nc_card_blocking.
+- Card G nc_card_blocking: sort = blocking điển hình (dòng bé nhất có thể nằm CUỐI) nhưng chặn chỉ nằm GIỮA 2 pha (run-gen pipeline với input, merge pipeline với output); hash join: build blocking / probe chảy. Quiz: sort giữa cây có giết pipeline cả cây không? = Không. CTA → bài 9.
+
+## nc_09 — Ticket #50 "Optimizer: Pushdown, Join Reorder & né Cartesian" (Ch 16.1-16.2)
+- Hook: dev viết query vụng (join hết rồi lọc), DBA không sửa chữ nào — optimizer tự VIẾT LẠI nhờ luật tương đương (16.2.1). Map ví dụ Music của sách sang GameHub: "đơn hàng các món của seller DragonForge".
+- **Số canonical mới**: sellers = 2.000 seller ≈ 20 block (khớp nc_07); mật độ: 40.000 listings / 2.000 seller = 20 món/seller · 100.000 orders / 40.000 món = 2,5 đơn/món. Cây VỤNG: (listings ⋈ orders) = 100.000 dòng ghép → ⋈ sellers → 100.000 → σ → 50: hai tầng trung gian ~200.000 dòng. Cây SAU pushdown+reorder: σ(sellers) = **1** → ⋈ listings = **20** → ⋈ orders = **50** — meter 200.000 vs 71. Quên điều kiện nối (cartesian) sellers × listings = **80 TRIỆU** dòng trung gian.
+- Step 1 = plan_visual 2 cây (VỤNG vs SAU BIẾN ĐỔI, rows badge trên mũi tên là nhân vật chính; io minh họa ≈580ms vs ≈159ms ghi chú ước lượng). Step 3 = 4 nước biến đổi (đẩy σ xuống / xuất phát từ bảng-sau-lọc nhỏ nhất / π pushdown cắt cột sớm / né cartesian) + bịa "đảo join phải xin phép dev — sợ đổi kết quả" (luật tương đương đảm bảo CÙNG kết quả). Step 2 mini-game order 5 bước biến đổi.
+- Step 4 fill_blank pseudo-code (không SELECT → neutral): điền 1 / 20 / 50.
+- Success tease nc_10: làm sao optimizer BIẾT 1 dòng/20 món mà không chạy thử? → statistics/histograms/EXPLAIN (bài 10, Cards H/I).

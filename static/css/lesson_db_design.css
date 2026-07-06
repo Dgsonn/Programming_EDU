@@ -10618,3 +10618,19 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .hv-chip--miss { border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .08); color: #fca5a5; }
 @media (max-width: 720px) { .hv-buckets { grid-template-columns: repeat(2, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .hv-bucket { transition: none; } }
+
+/* ── Flow visual — materialize vs pipeline (nc_08) ── */
+.fv-mode {
+  background: rgba(129, 140, 248, .14); color: #c7d2fe;
+  border: 1px solid rgba(129, 140, 248, .45);
+}
+.fv-mode--active {
+  background: var(--module-accent, #818CF8); color: #0B1121;
+  border-color: transparent;
+}
+.fv-verdict {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 700; margin-right: 10px;
+  color: #8ba0bb; align-self: center;
+}
+.flow-visual #fv-temp { border: 1px dashed rgba(251, 191, 36, .4); border-radius: 9px; padding: 5px 8px; }
