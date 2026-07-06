@@ -3226,6 +3226,469 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 120
       },
       concept_cards_after: ['nc_card_waitdie_woundwait']
+    },
+
+    /* ── nc_15 — Ticket #56 · Multiple Granularity & Intention Locks (Ch.18.3) ──
+     * PART_7 Bài 5: khóa từng tuple tốn overhead, khóa cả bảng giết concurrency
+     * → cây granularity + intention lock (IS/IX/SIX, ma trận Fig 18.16, 5 luật:
+     * root trước, cha IX|SIX mới con X/SIX/IX, cha IS|IX mới con S/IS, 2-phase,
+     * nhả bottom-up). IX+IX sống chung! Sim thứ 8: lock_tree_visual. */
+    {
+      id: 'nc_15', index: 15,
+      title: 'Multiple Granularity — khóa cả bảng, hay từng dòng?',
+      subtitle: 'Cây khóa SÀN → bảng → dòng + biển báo intention: đụng nhau là biết ngay từ tầng trên, khỏi soi 40.000 lá',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'ma trận tương thích 5 mode (Fig 18.16)',
+          columns: ['đang giữ →', 'IS', 'IX', 'S', 'SIX', 'X'],
+          dataRows: [
+            ['xin IS', '✓', '✓', '✓', '✓', '⏳'],
+            ['xin IX', '✓', '✓', '⏳', '⏳', '⏳'],
+            ['xin S', '✓', '⏳', '✓', '⏳', '⏳'],
+            ['xin SIX', '✓', '⏳', '⏳', '⏳', '⏳'],
+            ['xin X', '⏳', '⏳', '⏳', '⏳', '⏳']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #56',
+        hook: 'Nửa đêm, bot backup xin đọc <strong>TRỌN bảng listings</strong> đúng lúc 500 giao dịch đang sửa từng dòng lẻ. Khóa kiểu bài 12 là toang cả hai đường: bắt bot xin <strong>40.000 khóa dòng</strong> thì lock table phình nổ; cho nó khóa <strong>nguyên bảng</strong> thì 500 giao dịch kia đứng nghỉ. Mà kiểm tra vênh kiểu gì — chẳng lẽ so bot với từng dòng một? Ticket #56: dựng <strong>CÂY KHÓA</strong> nhiều tầng, và phát minh ăn tiền nhất chương: <strong>tấm biển báo intention</strong> cắm dọc đường.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Data item có NHIỀU CỠ: cả sàn → bảng → dòng, lồng nhau thành cây — khóa node nào là khóa NGẦM trọn subtree dưới nó: bot backup chỉ cần 1 khóa S ở node bảng thay vì 40.000 khóa dòng (sách 18.3)',
+            'INTENTION LOCK = biển báo cắm từ root xuống: IS "bên dưới có người sắp ĐỌC", IX "bên dưới có người sắp GHI" — ai xin khóa to ở tầng trên chỉ việc nhìn biển tại node đó, KHỎI quét từng lá; và IX+IX sống chung vô tư (xung đột thật nếu có sẽ lộ ở dưới lá)',
+            '5 luật đi cây: khóa ROOT trước · muốn S/IS phải có cha IS|IX · muốn X/SIX/IX phải có cha IX|SIX · vẫn phải 2-phase (bài 13) · nhả NGƯỢC chiều lá→gốc — cắm biển đi xuống, nhổ biển đi lên'
+          ],
+          intro: 'Khách sạn nghìn phòng: muốn sửa ống nước phòng 304, thợ không khóa cả khách sạn — anh ta treo biển "đang thi công tầng 3" ở sảnh (IX), treo tiếp ở cầu thang tầng 3 (IX), rồi khóa đúng phòng 304 (X). Đoàn khách muốn thuê NGUYÊN tầng 3 chỉ cần liếc tấm biển ở cầu thang là biết phải chờ — không phải gõ cửa thử 100 phòng. Biển báo rẻ, cắm nhanh, mà cứu cả hệ thống khỏi đi soi từng cánh cửa.',
+          example: 'T1 sửa giá dòng <code>#3001</code>: cắm <strong>IX(SÀN) → IX(listings) → X(#3001)</strong>. Bot T2 xin đọc trọn bảng: <strong>IS(SÀN) → S(listings)</strong> — tới node bảng đụng biển IX của T1: <strong>vênh, xếp hàng</strong>, tổng cộng nhìn đúng 1 node. T3 đọc dòng <code>#3002</code>: IS → IS → S(#3002) — IS với IX <strong>sống chung</strong>, chẳng ai chờ ai.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-sitemap',
+            title: 'Intention lock — theo đúng sách',
+            body: 'Node khóa ở <strong>intention mode</strong> nghĩa là việc khóa tường minh đang diễn ra ở TẦNG THẤP HƠN của subtree. Muốn khóa node Q, giao dịch phải đi từ ROOT xuống Q, cắm intention lock lên từng node dọc đường. <strong>IS</strong> — bên dưới sẽ có khóa đọc; <strong>IX</strong> — bên dưới sẽ có khóa ghi; <strong>SIX</strong> — đọc trọn subtree này (S) VÀ sẽ ghi lác đác vài chỗ dưới (IX). Nhờ biển báo, hệ thống khỏi search toàn bộ cây khi xét vênh.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.3 — Multiple Granularity, Fig 18.15-18.16'
+          },
+          {
+            icon: 'fa-handshake',
+            title: 'Vì sao IX + IX sống chung?',
+            body: 'Hai biển "đang thi công đâu đó bên dưới" không cãi nhau — T1 sửa dòng #3001, T5 sửa dòng #3007: cả hai cắm IX lên cùng node bảng, và <strong>ma trận nói ✓</strong>. Nếu họ đụng CÙNG một dòng thì xung đột lộ ra ở tầng lá (X vs X) — đúng nơi nó thuộc về. Biển báo chỉ cảnh giới với khóa THẬT cỡ to: S cả bảng nhìn thấy IX là phải chờ, vì "đọc trọn bảng" đụng mọi thứ bên dưới.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Postgres: <code>UPDATE listings SET price=99 WHERE listing_id=3001</code> lấy <strong>RowExclusiveLock trên bảng</strong> (họ hàng của IX) + khóa X trên đúng tuple; còn <code>pg_dump</code> lấy AccessShareLock cấp bảng. Soi <code>pg_locks</code> sẽ thấy cả cây biển báo này nằm sờ sờ — giờ bạn đọc được nó là ai đang định làm gì ở tầng nào.'
+          }
+        ],
+        lock_tree_visual: {
+          eyebrow: 'CÂY KHÓA GAMEHUB — T1 SỬA DÒNG · T2 BACKUP CẢ BẢNG · T3 ĐỌC DÒNG KHÁC',
+          caption: 'Bấm từng nhịp: T1 cắm biển IX xuống tận dòng; T2 xin S cả bảng — đụng biển ngay node listings, khỏi soi 40.000 lá; T3 cắm IS đọc dòng khác — sống chung vui vẻ.',
+          nodes: [
+            { id: 'root', label: '🏛️ SÀN GAMEHUB', x: 320, y: 34, sub: 'root — khóa đầu tiên' },
+            { id: 'listings', label: '📦 listings', x: 180, y: 108, parent: 'root', sub: '40.000 dòng' },
+            { id: 'orders', label: '🧾 orders', x: 480, y: 108, parent: 'root', sub: '100.000 dòng' },
+            { id: 'r3001', label: '#3001', x: 90, y: 186, parent: 'listings', sub: 'Kiếm gỗ · 45' },
+            { id: 'r3002', label: '#3002', x: 270, y: 186, parent: 'listings', sub: 'Giáp rồng · 12.500' }
+          ],
+          steps: [
+            { node: 'root', txn: 'T1', mode: 'IX', result: 'grant', note: 'T1 muốn sửa giá dòng #3001 — luật 1: khóa ROOT trước. Cắm biển IX: "bên dưới sắp có người ghi".' },
+            { node: 'listings', txn: 'T1', mode: 'IX', result: 'grant', note: 'Xuống một tầng, cắm tiếp IX lên bảng listings — dọc đường đi đâu cắm biển đó.' },
+            { node: 'r3001', txn: 'T1', mode: 'X', result: 'grant', note: 'Tới đích: khóa X THẬT lên đúng dòng #3001. Cả cây giờ biết: có người ghi ở nhánh này.' },
+            { node: 'root', txn: 'T2', mode: 'IS', result: 'grant', note: 'Bot backup vào — xin đọc TRỌN bảng listings. Cắm IS lên root: IS với IX của T1 sống chung ✓.' },
+            { node: 'listings', txn: 'T2', mode: 'S', result: 'wait', note: '⏳ T2 xin S NGUYÊN BẢNG — nhưng node này có biển IX của T1: S vênh IX → XẾP HÀNG. Để ý: hệ thống nhìn đúng MỘT node, không soi dòng nào cả.' },
+            { node: 'root', txn: 'T3', mode: 'IS', result: 'grant', note: 'T3 chỉ đọc MỘT dòng #3002 — cắm IS lên root, vẫn êm.' },
+            { node: 'listings', txn: 'T3', mode: 'IS', result: 'grant', note: 'IS lên bảng: IS + IX (T1) sống chung ✓ — biển báo không cãi biển báo.' },
+            { node: 'r3002', txn: 'T3', mode: 'S', result: 'grant', note: 'S lên đúng dòng #3002 — khác dòng của T1: chẳng ai đợi ai. Khóa đúng CỠ là concurrency sống.' }
+          ],
+          verdict: '✓ Toàn cảnh: T1 ghi 1 dòng, T3 đọc 1 dòng — chạy song song; chỉ T2 (đòi TRỌN bảng) phải chờ, và nó biết điều đó sau đúng MỘT cú nhìn biển. Khi T1 xong: nhả NGƯỢC lá→gốc (X(#3001) → IX(listings) → IX(SÀN)) — T2 được đánh thức.'
+        },
+        visual: {
+          schema: {
+            table_name: '5 mode — ai vênh ai (Fig 18.16)',
+            columns: [
+              { name: 'IS — dưới có người đọc', type: 'sống chung IS/IX/S/SIX', key: '🪧' },
+              { name: 'IX — dưới có người ghi', type: 'sống chung IS/IX', key: '🪧' },
+              { name: 'SIX = S + IX', type: 'đọc trọn + ghi lác đác', key: '🔀' }
+            ]
+          },
+          data_preview: [
+            ['IX + IX', 'cùng node bảng', 'sống chung — đụng thật thì lộ ở lá', '✓'],
+            ['S + IX', 'bot backup vs người sửa dòng', 'vênh — đọc trọn đụng mọi thứ dưới', '⏳'],
+            ['sửa 1 dòng', 'IX(SÀN) → IX(bảng) → X(dòng)', 'bộ khóa chuẩn giáo khoa', '⭐'],
+            ['nhả khóa', 'NGƯỢC chiều: lá → gốc', 'con sạch mới được nhả cha', '↩️']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Bot T2 xin S nguyên bảng listings (40.000 dòng). Nhờ đâu hệ thống biết NGAY nó phải chờ — mà không soi một dòng nào?',
+            options: [
+              { id: 'a', text: 'Nhờ biển IX mà T1 đã cắm TẠI node bảng trên đường đi xuống — S vênh IX ngay tại đó: một cú nhìn, một kết luận', correct: true, explanation: 'Đúng — đó là toàn bộ lý do intention lock tồn tại: dồn thông tin "bên dưới đang có gì" lên các node tổ tiên, để khóa cỡ to xét vênh trong O(1) thay vì quét subtree.' },
+              { id: 'b', text: 'Nhờ hệ thống quét nhanh 40.000 dòng bằng index nên tưởng như tức thì', correct: false, explanation: 'Sai — không quét gì cả; nếu phải quét thì lock table đã nổ trước khi kịp "nhanh". Biển báo sinh ra để KHỎI quét.' },
+              { id: 'c', text: 'Nhờ T1 đăng ký trước lịch sửa dòng vào một bảng lịch chung', correct: false, explanation: 'Sai — không có "bảng lịch" nào; chính chuỗi biển IS/IX cắm dọc đường LÀ bản đăng ký, nằm ngay trên cây khóa.' },
+              { id: 'd', text: 'Vì S cả bảng luôn phải chờ mọi giao dịch khác xong hết', correct: false, explanation: 'Sai — nếu bên dưới chỉ toàn người ĐỌC (biển IS), S cả bảng được grant ngay: S sống chung IS. Nó chỉ chờ khi có biển IX/SIX/X.' }
+            ]
+          },
+          {
+            question: 'T1 đang giữ IX(SÀN) → IX(listings) → X(#3001). Nó xong việc — theo luật cây, nhả khóa theo chiều nào, và vì sao không được nhả IX(listings) trước?',
+            options: [
+              { id: 'a', text: 'Nhả NGƯỢC lá→gốc: X(#3001) trước, rồi IX(listings), rồi IX(SÀN) — nhổ biển ở tầng trên khi lá còn khóa là biển nói dối: kẻ khác tưởng nhánh sạch mà xông vào', correct: true, explanation: 'Đúng — luật "chỉ được nhả node khi không còn giữ con nào của nó": biển báo phải sống lâu hơn thứ nó đang báo.' },
+              { id: 'b', text: 'Nhả xuôi gốc→lá cho giải phóng tầng to trước, concurrency hồi nhanh hơn', correct: false, explanation: 'Sai và nguy hiểm — IX(listings) biến mất trong khi X(#3001) còn đó: bot xin S cả bảng thấy node bảng "sạch biển", được grant, và đọc xuyên qua dòng đang bị ghi dở.' },
+              { id: 'c', text: 'Nhả theo thứ tự nào cũng được, miễn tuân 2PL', correct: false, explanation: 'Sai — 2PL quản CHUYỆN KHI NÀO (hết gom mới nhả), còn luật cây quản THỨ TỰ giữa các tầng: cả hai cùng lúc.' },
+              { id: 'd', text: 'Không cần nhả — commit là mọi khóa tự bốc hơi cùng lúc', correct: false, explanation: 'Nửa đúng nửa lười: strict/rigorous giữ ĐẾN commit thật, nhưng lúc tháo, hệ thống vẫn tháo theo trật tự lá→gốc — trật tự đó là của luật cây, không phải của commit.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Cùng một node bảng — sống chung hay chờ?',
+          instruction: 'Tra ma trận Fig 18.16 cho từng cặp (đang giữ + xin mới) trên node listings.',
+          xp: 20,
+          chips: [
+            { id: 'p1', label: 'Đang IS (sắp đọc vài dòng) — xin IX' },
+            { id: 'p2', label: 'Đang IX (sắp ghi vài dòng) — xin IX' },
+            { id: 'p3', label: 'Đang IX — xin S nguyên bảng' },
+            { id: 'p4', label: 'Đang SIX — xin IX' }
+          ],
+          bins: [
+            { id: 'g', label: 'SỐNG CHUNG ✓' },
+            { id: 'w', label: 'XẾP HÀNG ⏳' }
+          ],
+          solution: { p1: 'g', p2: 'g', p3: 'w', p4: 'w' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp 4 luật đi cây của multiple granularity — có MỘT khối bịa (nghe cực kỳ "cho nhanh").',
+        blocks: [
+          { type: 'op', token: 'Cắm biển INTENTION (IS/IX) lên từng node dọc đường từ gốc xuống — báo trước cho tầng trên', slot: 'gr-intent' },
+          { type: 'op', token: 'Khóa ROOT của cây trước tiên — chưa qua cổng sàn thì chưa được xuống bất kỳ tầng nào', slot: 'gr-root' },
+          { type: 'op', token: 'Xin thẳng khóa X tại đúng dòng cần sửa — khỏi phiền các tầng trên cho nhanh', slot: 'gr-x' },
+          { type: 'op', token: 'Nhả khóa NGƯỢC chiều lá→gốc — con còn khóa thì cha chưa được nhổ biển', slot: 'gr-unlock' },
+          { type: 'op', token: 'Tới node đích mới hạ khóa THẬT (S để đọc / X để ghi) — đúng cỡ việc định làm', slot: 'gr-leaf' }
+        ],
+        drop_zones: [
+          { id: 'gr-root', placeholder: 'Luật 1 — hành trình bắt đầu ở đâu?', accepts: ['op'], multi: false,
+            station: { icon: '🏛️', label: 'Cổng sàn', sub: 'Luật 1', hint: 'Cây có đúng một lối vào — sách cho khóa root ở mode nào cũng được.' } },
+          { id: 'gr-intent', placeholder: 'Luật 2 — dọc đường xuống làm gì?', accepts: ['op'], multi: false,
+            station: { icon: '🪧', label: 'Cắm biển', sub: 'Luật 2', hint: 'Muốn con X/IX phải có cha IX|SIX; muốn con S/IS phải có cha IS|IX — tức là dọc đường phải để lại gì đó.' } },
+          { id: 'gr-leaf', placeholder: 'Luật 3 — tới đích thì sao?', accepts: ['op'], multi: false,
+            station: { icon: '🎯', label: 'Khóa thật', sub: 'Luật 3', hint: 'Biển báo chỉ là báo — việc đọc/ghi cần thứ khóa "xịn" đúng cỡ.' } },
+          { id: 'gr-unlock', placeholder: 'Luật 4 — rút quân chiều nào?', accepts: ['op'], multi: false,
+            station: { icon: '↩️', label: 'Nhổ biển', sub: 'Luật 4', hint: 'Biển phải sống lâu hơn thứ nó đang báo — suy ra chiều tháo.' } }
+        ],
+        expected_sql: 'Khóa ROOT của cây trước tiên — chưa qua cổng sàn thì chưa được xuống bất kỳ tầng nào Cắm biển INTENTION (IS/IX) lên từng node dọc đường từ gốc xuống — báo trước cho tầng trên Tới node đích mới hạ khóa THẬT (S để đọc / X để ghi) — đúng cỡ việc định làm Nhả khóa NGƯỢC chiều lá→gốc — con còn khóa thì cha chưa được nhổ biển',
+        expected_zones: {
+          'gr-root': 'Khóa ROOT của cây trước tiên — chưa qua cổng sàn thì chưa được xuống bất kỳ tầng nào',
+          'gr-intent': 'Cắm biển INTENTION (IS/IX) lên từng node dọc đường từ gốc xuống — báo trước cho tầng trên',
+          'gr-leaf': 'Tới node đích mới hạ khóa THẬT (S để đọc / X để ghi) — đúng cỡ việc định làm',
+          'gr-unlock': 'Nhả khóa NGƯỢC chiều lá→gốc — con còn khóa thì cha chưa được nhổ biển'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BỐN LUẬT ĐÃ VÀO CÂY: qua cổng root → cắm biển dọc đường → khóa thật tại đích → rút quân lá-về-gốc. Khối "xin thẳng X tại dòng, khỏi phiền tầng trên" là BỊA — thiếu biển IX dọc đường thì bot xin S cả bảng sẽ thấy node listings SẠCH, được grant, và đọc xuyên dòng bạn đang ghi dở: chính cái thảm họa mà biển báo sinh ra để chặn. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'gr-root': 'Luật 1 — cây có một lối vào duy nhất. Node nào phải khóa TRƯỚC TIÊN, bất kể bạn định xuống đâu?',
+          'gr-intent': 'Qua cổng rồi — giờ đi xuống. Luật cha-con (cha IX|SIX mới được con X…) ép bạn làm gì ở TỪNG node dọc đường?',
+          'gr-leaf': 'Biển cắm đủ rồi — tới node đích. Biển là "sắp làm"; còn LÀM thật thì hạ khóa gì?',
+          'gr-unlock': 'Xong việc. Nhớ: biển ở tầng trên đang BÁO cho khóa ở tầng dưới — vậy được nhổ thứ nào trước?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #56 — vé đi cây:</strong> T1 cần <em>sửa giá đúng MỘT dòng #3001</em> trong listings. Bốn bộ khóa được đề xuất — bộ nào ĐÚNG LUẬT cây mà vẫn giữ concurrency cao nhất?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: 'IX(SÀN) → IX(listings) → X(#3001)',
+            correct: true
+          },
+          {
+            text: 'IS(SÀN) → IS(listings) → X(#3001)',
+            correct: false,
+            explain: 'Gãy luật cha-con — muốn X ở dòng thì cha phải IX hoặc SIX; IS chỉ báo "sắp ĐỌC bên dưới", cắm IS rồi xuống GHI là biển nói dối: bot xin S cả bảng sẽ tưởng nhánh này chỉ có người đọc.'
+          },
+          {
+            text: 'X(SÀN) — một khóa duy nhất, chắc cú tuyệt đối',
+            correct: false,
+            explain: 'Đúng luật (root khóa mode nào cũng được) nhưng trật mục tiêu thảm hại: X ở root khóa NGẦM toàn bộ sàn — 500 giao dịch khác đứng nghỉ vì một dòng giá. Multiple granularity sinh ra để tránh đúng cảnh này.'
+          },
+          {
+            text: 'IX(listings) → X(#3001) — khỏi đụng tới SÀN cho gọn',
+            correct: false,
+            explain: 'Thiếu cổng — luật 1 bắt khóa ROOT trước tiên. Bỏ qua root thì giao dịch khác khóa X(SÀN) sẽ không hề biết bên dưới có bạn: hai người cùng tưởng mình độc quyền.'
+          }
+        ],
+        schema: {
+          table_name: 'cây khóa — đường đi của T1',
+          columns: [
+            { name: 'tầng', type: 'node trên cây', key: '🌲' },
+            { name: 'khóa cần', type: 'theo luật cha-con', key: '🔒' },
+            { name: 'vì sao', type: '', key: '' }
+          ],
+          data: [
+            ['SÀN (root)', '❓', 'luật 1: qua cổng trước'],
+            ['bảng listings', '❓', 'cha của dòng phải IX|SIX'],
+            ['dòng #3001', '❓', 'việc thật: GHI giá mới'],
+            ['(nhả)', 'lá → gốc', 'biển sống lâu hơn thứ nó báo']
+          ]
+        },
+        context: {
+          scenario: 'Đây chính là ví dụ T22 trong sách (sửa 1 record trong file Fa) đổi tên GameHub: bộ ba IX-IX-X là "chữ ký" kinh điển của mọi cú UPDATE một dòng trong DBMS thật.',
+          real_world: 'Chạy UPDATE 1 dòng trong Postgres rồi soi pg_locks: bạn sẽ thấy RowExclusiveLock (vai IX) trên bảng + khóa tuple — đúng bộ này. Còn ai đó lỡ tay LOCK TABLE ... IN ACCESS EXCLUSIVE MODE (vai X cả bảng) giờ cao điểm thì Slack của team sẽ đỏ rực.',
+          steps: [
+            'Việc thật là GHI 1 dòng → tại dòng cần X.',
+            'Cha của X phải là IX hoặc SIX → bảng listings: IX.',
+            'Luật 1: root khóa trước → SÀN: IX (cũng vì cha của IX phải IX|SIX).',
+            'So 4 bộ: chỉ bộ 1 vừa đúng luật vừa để 500 giao dịch kia sống.'
+          ],
+          hint_explore: 'Chạy lại sim Step 1 ba nhịp đầu — đường T1 cắm xuống #3001 chính là đáp án nằm sẵn.',
+          expected: 'Chọn bộ IX(SÀN) → IX(listings) → X(#3001).'
+        },
+        hints: [
+          { level: 1, text: 'Đi ngược từ ĐÍCH: sửa giá = GHI một dòng → dòng #3001 cần khóa gì?' },
+          { level: 2, text: 'Luật cha-con: muốn con X, cha phải IX hoặc SIX. Vậy bảng listings cắm gì?' },
+          { level: 3, text: 'Bộ X(SÀN) không sai luật — nó sai ở CHỖ KHÁC. Câu hỏi đòi thêm điều gì ngoài "đúng luật"?' },
+          { level: 4, text: 'Đáp án: IX(SÀN) → IX(listings) → X(#3001) — chữ ký chuẩn của UPDATE một dòng.' }
+        ],
+        success_message: 'TICKET #56 ĐÓNG — cây khóa dựng xong, biển báo cắm đủ, bot backup hết phá đêm! 🌲 Hồ sơ đọc thêm bên dưới: LOCK ESCALATION — khi lock table phình nổ vì vạn khóa dòng, engine đổi cả nắm lấy MỘT khóa bảng. Nhưng đừng tưởng khóa dòng + khóa bảng là đã kín: bài sau có CON MA — giao dịch đếm hai lần ra hai số khác nhau mà không dòng nào bị đụng. PHANTOM. 👻',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_lock_escalation']
+    },
+
+    /* ── nc_16 — Ticket #57 · Phantom & Index Locking (Ch.18.4) ──
+     * PART_7 Bài 6: predicate read (count(*) WHERE) vs insert/update — xung đột
+     * trên tuple CHƯA TỒN TẠI (map count Physics + insert Feynman → đếm <100 +
+     * chèn Kiếm gỗ 45); tuple-lock mù với ma; index-locking protocol: lookup
+     * S-lock lá, insert/delete/update X-lock lá bị ảnh hưởng → ma thành xung
+     * đột thật. Sim TÁI DÙNG txn_visual (bộ đếm thay ví — đúng thiết kế
+     * data-driven đợt 7). Step-4 full_ide COUNT(*) — probe c1-c4 sạch. */
+    {
+      id: 'nc_16', index: 16,
+      title: 'Phantom — con ma lọt lưới khóa dòng',
+      subtitle: 'Đếm hai lần ra hai số mà không dòng nào bị đụng: xung đột nằm trên tuple CHƯA TỒN TẠI',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'listings — kho món đang bán (mẫu 6)',
+          columns: ['listing_id', 'item_name', 'price'],
+          dataRows: [
+            ['3001', 'Kiếm gỗ Newbie', '45'],
+            ['3002', 'Giáp rồng Huyền thoại', '12500'],
+            ['3005', 'Khiên gỗ sồi', '80'],
+            ['3008', 'Mũ vải thô', '35'],
+            ['3011', 'Skin Hỏa Long', '790'],
+            ['3013', 'Nhẫn dây thừng', '510']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #57',
+        hook: 'Bot kiểm kê chạy MỘT giao dịch: đếm "món dưới 100 gem" đầu phiên ra <strong>3</strong>, cuối phiên đếm lại ra <strong>4</strong>. Soi log muốn lòi mắt: cả 3 dòng bot khóa S còn nguyên si, chẳng ai đụng vào. Thủ phạm không nằm trong 3 dòng đó — nó là dòng <strong>CHƯA TỒN TẠI</strong> lúc bot giăng khóa: seller vừa đăng "Kiếm gỗ 45 gem" ngay giữa hai lần đếm. Ticket #57: con ma xuyên qua mọi khóa dòng — vì <em>không thể khóa thứ chưa sinh ra</em>. 👻'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'PREDICATE READ = đọc theo ĐIỀU KIỆN (WHERE price < 100): thứ bạn đụng không chỉ là các dòng tìm thấy, mà cả THÔNG TIN "bảng đang có những dòng nào thỏa điều kiện" (sách 18.4.3)',
+            'PHANTOM: T2 chèn (hoặc SỬA giá món khác lọt vào vùng <100) — tuple mới không tồn tại lúc T1 giăng khóa nên tuple-lock MÙ: hai giao dịch không chạm dòng chung nào mà vẫn xung đột — xung đột trên con ma',
+            'Thuốc chữa INDEX-LOCKING: lookup phải khóa S các LÁ index nó đọc; insert/delete/update phải khóa X các lá bị ảnh hưởng — chèn món 45 gem đụng đúng lá [0..100) mà bot đang giữ S → ma bị bắt TRƯỚC khi thành hình'
+          ],
+          intro: 'Kiểm lâm đêm đếm thú trong chuồng: khóa từng chuồng CÓ thú, đếm được 3 con. Nửa đêm ai đó thả thêm một con vào <em>chuồng trống</em> — chuồng ấy có bị khóa đâu, lúc đếm nó đâu có thú! Sáng đếm lại: 4. Không ổ khóa nào bị phá — kẽ hở nằm ở chỗ kiểm lâm khóa CHUỒNG CÓ THÚ, trong khi thứ cần khóa là <strong>tấm sổ ghi "khu này đang có những chuồng nào có thú"</strong>.',
+          example: 'T1: <code>SELECT COUNT(*) FROM listings WHERE price &lt; 100</code> → 3, khóa S cả 3 dòng. T2: <code>INSERT Kiếm gỗ 45 gem</code> — dòng mới, X cấp ngay, chẳng vênh ai. T1 đếm lại: <strong>4</strong>. Với index-locking: T1 giữ S trên <strong>lá index [0..100)</strong>; T2 muốn chèn 45 phải X đúng lá đó → <strong>xếp hàng</strong> — hai lần đếm cùng ra 3.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-ghost',
+            title: 'Xung đột trên con ma — theo đúng sách',
+            body: 'T30 đếm <code>count(*)</code> các instructor khoa Physics; T31 chèn Feynman vào Physics. Nếu T30 đếm CÓ Feynman → T31 phải đứng trước trong thứ tự serial; đếm KHÔNG có → T30 đứng trước. Hai giao dịch <strong>không truy cập tuple chung nào mà vẫn xung đột</strong> — trên một <em>phantom tuple</em>. Kiểm soát ở mức tuple sẽ ĐỂ LỌT xung đột này, và schedule không-serializable trót lọt qua mặt hệ thống.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 — Predicate Reads and the Phantom Phenomenon'
+          },
+          {
+            icon: 'fa-leaf',
+            title: 'Index-locking — bẫy ma đặt trên lá',
+            body: 'Mọi bảng phải có ít nhất một index; mọi lookup đi qua index và <strong>khóa S các lá nó đọc</strong>; mọi insert/delete/update phải <strong>khóa X các lá bị ảnh hưởng</strong> (lá chứa search-key trước/sau thao tác). Con ma hết đường: muốn thành hình, nó phải ghi vào đúng cái lá mà predicate read đang giữ — <em>xung đột trên ma biến thành xung đột thật trên lá index</em>. Cái giá: khóa lá thô hơn cần thiết — hai insert vào cùng lá vẫn phải xếp hàng dù chẳng liên quan.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Đặt vé máy bay: bạn search "còn ghế trống hàng 12" thấy 2 ghế, chọn 12A — đúng lúc đó hãng NHẢ thêm ghế 12C từ quota đối tác. Search của bạn là predicate read, ghế 12C là con ma. Các DBMS thật xử bằng họ hàng của index-locking (Card D + next-key locking) hoặc bằng snapshot — hồ sơ lớn của bài 18. Gặp bug "đếm lệch dù chẳng ai sửa dòng cũ", giờ bạn biết gọi tên nó.'
+          }
+        ],
+        txn_visual: {
+          eyebrow: 'CON MA KIỂM KÊ — COUNT(price<100) · T1 BOT ĐẾM 2 LẦN · T2 SELLER ĐĂNG MÓN 45 GEM',
+          caption: 'Chạy CẢ HAI chế độ: tuple-lock kín từng dòng mà ma vẫn chui (3 → 4); index-locking khóa cái LÁ [0..100) — T2 xếp hàng, hai lần đếm cùng ra 3.',
+          wallet_label: '🔢 COUNT(price < 100)',
+          start: 3, unit: 'món',
+          t1_label: '🤖 T1 — bot kiểm kê (1 giao dịch, đếm 2 lần)',
+          t2_label: '🛒 T2 — seller đăng món mới',
+          modes: [
+            {
+              id: 'tuple', short: 'TUPLE-LOCK', ok: false,
+              btn: '▶ Chạy kiểu KHÓA TỪNG DÒNG',
+              steps: [
+                { who: 't1', text: 'đếm <100 → 3 món · khóa S cả 3 dòng tìm thấy', note: 'Bài 12 dạy gì làm nấy: dòng nào đọc là khóa dòng đó — nghe kín kẽ tuyệt đối.' },
+                { who: 't2', text: 'INSERT Kiếm gỗ · 45 gem → X(dòng MỚI) — GRANT NGAY', cls: 'warn', note: 'Dòng này CHƯA TỒN TẠI lúc T1 giăng lưới — chẳng khóa nào của T1 với tới nó. Con ma vừa chui qua đúng khe đó.' },
+                { who: 't2', text: 'commit — món 45 gem lên sàn', note: 'T2 xong xuôi êm đẹp, không chờ một giây nào.' },
+                { who: 't1', text: 'đếm LẠI trong cùng giao dịch → 4 ?!', wallet: 4, cls: 'bad', note: '' }
+              ],
+              verdict: '❌ Cùng một giao dịch, hai lần đếm: 3 rồi 4 — mà cả 3 dòng T1 khóa còn NGUYÊN. Xung đột nằm trên dòng chưa-tồn-tại: PHANTOM. Khóa dòng nhiều cỡ nào cũng mù với ma.'
+            },
+            {
+              id: 'index', short: 'INDEX-LOCKING', ok: true,
+              btn: '▶ Chạy kiểu KHÓA LÁ INDEX',
+              steps: [
+                { who: 't1', text: 'đếm <100 → 3 món · khóa S LÁ INDEX [0..100)', note: 'Khác biệt duy nhất: T1 khóa luôn tấm sổ "món dưới 100 nằm đây" — cái LÁ index nó vừa đọc.' },
+                { who: 't2', text: '⏳ INSERT 45 gem → phải X(lá [0..100)) → XẾP HÀNG', cls: 'wait', note: 'Muốn chèn món 45, T2 buộc phải sửa ĐÚNG cái lá T1 đang giữ S — vênh → chờ. Ma bị bắt trước khi thành hình.' },
+                { who: 't1', text: 'đếm lại → vẫn 3 ✓', wallet: 3, cls: 'ok', note: 'Hai lần đếm một con số — serializable thở lại được.' },
+                { who: 't1', text: 'commit → T2 được grant, món 45 lên sàn SAU', note: '' }
+              ],
+              verdict: '✓ Index-locking biến xung-đột-trên-ma thành xung đột THẬT trên lá index — T2 chỉ chậm một nhịp, còn sổ kiểm kê thì đúng tuyệt đối.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'Lá index price — bẫy ma nằm đây',
+            columns: [
+              { name: 'lá [0..100)', type: '45 · 35 · 80 — T1 giữ S', key: '🍃' },
+              { name: 'lá [100..1000)', type: '510 · 790', key: '🍃' },
+              { name: 'lá [1000..∞)', type: '12.500', key: '🍃' }
+            ]
+          },
+          data_preview: [
+            ['T1 lookup <100', 'S(lá [0..100))', 'đọc + giữ tấm sổ', '🔒'],
+            ['T2 chèn 45 gem', 'cần X(lá [0..100))', 'vênh S → xếp hàng', '⏳'],
+            ['T2 chèn 510 gem', 'cần X(lá [100..1000))', 'lá khác — grant ngay', '✓'],
+            ['T5 sửa 5.000→80', 'cần X(lá [0..100))', 'update cũng là ma — cũng bị bẫy', '⏳']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'T1 đã khóa S đủ CẢ 3 dòng nó đếm được — vì sao vẫn không chặn nổi T2 chèn món 45 gem?',
+            options: [
+              { id: 'a', text: 'Vì dòng của T2 CHƯA TỒN TẠI lúc T1 giăng khóa — không thể khóa thứ chưa sinh ra; thứ T1 cần khóa là THÔNG TIN "bảng có những dòng nào thỏa <100", không phải từng dòng lẻ', correct: true, explanation: 'Đúng — sách gọi thẳng: khóa các tuple truy cập là CHƯA ĐỦ, phải khóa cả thông tin dùng để TÌM ra chúng. Đó là cánh cửa dẫn tới index-locking.' },
+              { id: 'b', text: 'Vì khóa S quá yếu — T1 mà xin X cả 3 dòng thì T2 hết cửa', correct: false, explanation: 'Sai — X cả 3 dòng cũng vô ích y hệt: dòng thứ 4 của T2 vẫn là dòng MỚI, chẳng nằm trong 3 dòng nào để mà vênh.' },
+              { id: 'c', text: 'Vì T2 chạy trước khi lock manager kịp ghi sổ khóa của T1', correct: false, explanation: 'Sai — không có race nào ở quầy cả: khóa của T1 ghi sổ đầy đủ, chỉ là INSERT của T2 không đụng bất kỳ item nào trong sổ.' },
+              { id: 'd', text: 'Vì COUNT(*) là hàm tổng hợp nên không được cấp khóa', correct: false, explanation: 'Sai — COUNT vẫn đọc từng dòng và khóa bình thường; vấn đề không nằm ở hàm, nằm ở chỗ tập-dòng-thỏa-điều-kiện có thể PHÌNH sau lưng nó.' }
+            ]
+          },
+          {
+            question: 'Index-locking bắt ma bằng cách nào — và cái giá phải trả là gì?',
+            options: [
+              { id: 'a', text: 'Lookup khóa S các LÁ index nó đọc; insert/update/delete phải X đúng lá bị ảnh hưởng → ma buộc phải đụng lá đang bị giữ. Giá: lá thô hơn dòng — hai insert chẳng liên quan mà chung lá vẫn phải xếp hàng', correct: true, explanation: 'Đúng cả hai vế — biến xung đột ảo thành xung đột thật trên một data item CÓ THẬT (cái lá), đổi bằng một ít concurrency thừa.' },
+              { id: 'b', text: 'Khóa X toàn bộ index từ gốc tới lá trong lúc đếm', correct: false, explanation: 'Sai — khóa cả index là bản "relation data-item lock" mà sách chê low concurrency; index-locking sinh ra chính là để KHÔNG phải làm thế.' },
+              { id: 'c', text: 'Cấm INSERT trong giờ chạy báo cáo kiểm kê', correct: false, explanation: 'Sai — đó là "giải pháp" vận hành thủ công, không phải protocol; và update lọt vùng predicate vẫn tạo ma như thường.' },
+              { id: 'd', text: 'So sánh hai lần đếm, lệch thì tự động đếm lần ba', correct: false, explanation: 'Sai — đếm lại không CHẶN được gì, chỉ chứng kiến ma lần nữa; và hai số tình cờ khớp cũng không chứng minh vô ma (ma chèn rồi ma khác xóa).' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Có ma — hay không ma?',
+          instruction: 'T1 đang đếm "món < 100 gem". Tình huống nào sinh phantom với nó?',
+          xp: 20,
+          chips: [
+            { id: 'm1', label: 'T2 CHÈN món mới giá 45' },
+            { id: 'm2', label: 'T2 SỬA giá món 5.000 → 80' },
+            { id: 'm3', label: 'T2 XÓA món giá 12.500' },
+            { id: 'm4', label: 'T1 đọc đúng dòng #3001; T2 sửa #3001' }
+          ],
+          bins: [
+            { id: 'ma', label: 'CÓ MA 👻' },
+            { id: 'ko', label: 'KHÔNG MA ✓' }
+          ],
+          solution: { m1: 'ma', m2: 'ma', m3: 'ko', m4: 'ko' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp quy trình bẫy ma 4 bước của index-locking — có MỘT khối bịa (nghe rất chi là "cẩn thận").',
+        blocks: [
+          { type: 'op', token: 'Nhận diện PREDICATE READ: đọc theo điều kiện là đụng cả thông-tin-bảng-có-gì, không chỉ các dòng tìm thấy', slot: 'pt-pred' },
+          { type: 'op', token: 'Đếm xong đếm lại lần nữa để double-check — hai số khớp nhau là chắc chắn không ma', slot: 'pt-x' },
+          { type: 'op', token: 'Gọi tên con ma: dòng MỚI/dòng bị sửa lọt vào vùng điều kiện — tuple-lock không với tới thứ chưa tồn tại', slot: 'pt-ghost' },
+          { type: 'op', token: 'Đặt bẫy trên LÁ: lookup khóa S lá index nó đọc · insert/update/delete phải X lá bị ảnh hưởng', slot: 'pt-leaf' },
+          { type: 'op', token: 'Ma thành xung đột THẬT: kẻ định chèn phải chờ đúng cái lá đang bị giữ — serializable trở lại', slot: 'pt-turn' }
+        ],
+        drop_zones: [
+          { id: 'pt-pred', placeholder: 'Bước 1 — nhận diện kiểu đọc gì dễ bị ma ám?', accepts: ['op'], multi: false,
+            station: { icon: '🔍', label: 'Predicate read', sub: 'Bước 1', hint: 'WHERE price < 100 đụng nhiều hơn là "3 dòng tìm thấy" — nó đụng cả câu hỏi "bảng CÓ những gì".' } },
+          { id: 'pt-ghost', placeholder: 'Bước 2 — thủ phạm là ai, chui qua khe nào?', accepts: ['op'], multi: false,
+            station: { icon: '👻', label: 'Gọi tên ma', sub: 'Bước 2', hint: 'Cả 3 dòng bị khóa còn nguyên — vậy thứ làm lệch số đếm nằm Ở ĐÂU lúc T1 giăng khóa?' } },
+          { id: 'pt-leaf', placeholder: 'Bước 3 — bẫy đặt lên thứ gì?', accepts: ['op'], multi: false,
+            station: { icon: '🍃', label: 'Bẫy trên lá', sub: 'Bước 3', hint: 'Muốn khóa "thông tin tìm dòng" thì cần một VẬT THẬT đại diện cho nó — B+-tree cho sẵn vật đó.' } },
+          { id: 'pt-turn', placeholder: 'Bước 4 — bẫy sập thì chuyện gì xảy ra?', accepts: ['op'], multi: false,
+            station: { icon: '🪤', label: 'Ma hiện hình', sub: 'Bước 4', hint: 'Xung đột "ảo" giữa hai kẻ không chạm dòng chung — sau bẫy, nó thành xung đột kiểu gì, trên cái gì?' } }
+        ],
+        expected_sql: 'Nhận diện PREDICATE READ: đọc theo điều kiện là đụng cả thông-tin-bảng-có-gì, không chỉ các dòng tìm thấy Gọi tên con ma: dòng MỚI/dòng bị sửa lọt vào vùng điều kiện — tuple-lock không với tới thứ chưa tồn tại Đặt bẫy trên LÁ: lookup khóa S lá index nó đọc · insert/update/delete phải X lá bị ảnh hưởng Ma thành xung đột THẬT: kẻ định chèn phải chờ đúng cái lá đang bị giữ — serializable trở lại',
+        expected_zones: {
+          'pt-pred': 'Nhận diện PREDICATE READ: đọc theo điều kiện là đụng cả thông-tin-bảng-có-gì, không chỉ các dòng tìm thấy',
+          'pt-ghost': 'Gọi tên con ma: dòng MỚI/dòng bị sửa lọt vào vùng điều kiện — tuple-lock không với tới thứ chưa tồn tại',
+          'pt-leaf': 'Đặt bẫy trên LÁ: lookup khóa S lá index nó đọc · insert/update/delete phải X lá bị ảnh hưởng',
+          'pt-turn': 'Ma thành xung đột THẬT: kẻ định chèn phải chờ đúng cái lá đang bị giữ — serializable trở lại'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẪY MA GIĂNG XONG: nhận diện predicate read → gọi tên ma → khóa lá index → ma hiện hình thành xung đột thật. Khối "đếm lại double-check" là BỊA — chính vụ 3 rồi 4 cho thấy đếm lại chỉ CHỨNG KIẾN ma chứ không chặn; mà hai số khớp cũng chẳng chứng minh vô ma. Còn giải pháp khóa-đúng-VỊ-NGỮ tuyệt đối chính xác? Có thật, mà đắt vô đối — hồ sơ Predicate Locking chờ sau bài. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'pt-pred': 'Bước 1 — câu đếm của bot khác gì câu "đọc dòng #3001"? Nó đụng vào thứ gì RỘNG hơn các dòng tìm thấy?',
+          'pt-ghost': 'Bước 1 chốt: predicate read đụng cả "bảng có gì". Vậy kẻ làm lệch số đếm TỒN TẠI chưa, lúc T1 giăng khóa?',
+          'pt-leaf': 'Ma không khóa được — nhưng đường nó PHẢI ĐI QUA thì khóa được. Trong B+-tree, món 45 gem buộc phải ghi vào đâu?',
+          'pt-turn': 'Bẫy đặt xong. Giờ T2 muốn chèn thì đụng thứ gì của T1 — và xung đột này còn là "ảo" nữa không?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #57 — tự tay giăng predicate read:</strong> gõ đúng câu kiểm kê của bot — đếm số món giá <strong>dưới 100 gem</strong> trong bảng <code>listings</code>. (Đây chính là câu SELECT COUNT mà mọi vụ phantom trong sách xoay quanh.)',
+        challenge_type: 'full_ide',
+        expected_sql: 'SELECT COUNT(*) FROM listings WHERE price < 100;',
+        schema: {
+          table_name: 'listings',
+          columns: [
+            { name: 'listing_id', type: 'INT', key: 'PK' },
+            { name: 'item_name', type: 'VARCHAR', key: '' },
+            { name: 'price', type: 'INT (gem)', key: '🔑 idx_price' }
+          ],
+          data: [
+            ['3001', 'Kiếm gỗ Newbie', '45'],
+            ['3002', 'Giáp rồng Huyền thoại', '12500'],
+            ['3005', 'Khiên gỗ sồi', '80'],
+            ['3008', 'Mũ vải thô', '35'],
+            ['3011', 'Skin Hỏa Long', '790'],
+            ['3013', 'Nhẫn dây thừng', '510']
+          ]
+        },
+        context: {
+          scenario: 'Bạn vừa học cả bài về việc câu đếm này NGUY HIỂM thế nào khi chạy đồng thời — giờ tự tay viết nó. COUNT(*) gom mọi dòng đậu WHERE về một con số; predicate <code>price < 100</code> chính là "vùng săn ma" mà index-locking sẽ khóa lá.',
+          real_world: 'Câu này chạy hằng đêm trong mọi hệ kiểm kê thật. Ở isolation mặc định (read committed), hai lần chạy trong một giao dịch VẪN có thể lệch số — đúng con ma bài này; muốn kín phải lên serializable hoặc tựa vào snapshot (bài 18).',
+          steps: [
+            'Đếm số dòng → SELECT COUNT(*).',
+            'Nguồn: FROM listings.',
+            'Vùng điều kiện: WHERE price < 100.',
+            'Chạy thử — kho mẫu 6 món, đúng 3 món dưới 100.'
+          ],
+          hint_explore: 'Panel schema bên trái: cột price có 🔑 idx_price — chính cái index mà bài này đặt bẫy lá lên.',
+          expected: 'SELECT COUNT(*) FROM listings WHERE price < 100;'
+        },
+        hints: [
+          { level: 1, text: 'Cần MỘT CON SỐ, không phải danh sách dòng — hàm gom nào đếm số dòng?' },
+          { level: 2, text: 'COUNT(*) đứng ở vị trí cột trong SELECT; nguồn là bảng listings.' },
+          { level: 3, text: 'Vùng săn ma: giá dưới 100 — mệnh đề WHERE viết sao?' },
+          { level: 4, text: 'Đáp án: SELECT COUNT(*) FROM listings WHERE price < 100;' }
+        ],
+        success_message: 'TICKET #57 ĐÓNG — 3 món, đếm chuẩn từng con ma! 👻 Hồ sơ đọc thêm bên dưới: PREDICATE LOCKING — khóa thẳng vào VỊ NGỮ, chính xác tuyệt đối mà đắt vô đối. Và từ bài sau, Trading Floor đổi hẳn trường phái: thay vì khóa-rồi-chờ, để giao dịch chạy TỰ DO rồi soát lúc nộp bài — OPTIMISTIC CONCURRENCY: read → validate → write. Dân read-heavy mê nó như điếu đổ. 🏁',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_predicate_locking']
     }
 
   ],
@@ -3568,7 +4031,75 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.2.1 — Deadlock Prevention: wait-die, wound-wait, lock timeouts · PART_7 Card B',
-      cta: { label: 'Về Trading Floor — hẹn bài 15: Multiple Granularity & Intention Locks', href: '/courses/db_design_nc' }
+      cta: { label: 'Vào bài 15 — Multiple Granularity & Intention Locks', href: '/lesson/db_design_nc?lesson=15' }
+    },
+
+    /* ═══ MODULE 8 — Card C (PART_7: sau Bài 5 / nc_15) ═══ */
+    {
+      id: 'nc_card_lock_escalation',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 15',
+      title: 'Lock Escalation — vạn khóa dòng đổi một khóa bảng',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: 'Cây khóa cho phép khóa đúng cỡ — nhưng một giao dịch tham ăn vẫn có thể gom <em>hàng vạn khóa dòng</em>, và lock table (bảng ghi sổ của lock manager) thì sống trong RAM. Sổ phình quá là engine ra tay: <strong>đổi cả nắm khóa nhỏ lấy MỘT khóa to</strong>.',
+      sections: [
+        {
+          icon: 'fa-arrow-up-wide-short',
+          heading: 'Ước lượng trước, leo thang sau',
+          body: 'Sách chỉ cách engine đoán trước số khóa từ kiểu scan: <strong>relation scan</strong> — khóa luôn CẤP BẢNG từ đầu (đằng nào cũng đụng mọi dòng); <strong>index scan ít dòng</strong> — intention lock cấp bảng + khóa thật từng tuple. Còn khi một giao dịch cứ gom mãi tuple lock tới mức lock table quá tải, lock manager thực hiện <strong>lock escalation</strong>: thay nhiều khóa cấp thấp bằng một khóa cấp cao hơn — một relation lock thế chỗ cả vạn tuple lock.',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.3 — lock escalation'
+        },
+        {
+          icon: 'fa-scale-unbalanced',
+          heading: 'Cái giá của cú đổi',
+          body: 'Escalation cứu RAM nhưng <strong>bán rẻ concurrency</strong>: khóa bảng vừa thế chỗ sẽ chặn mọi kẻ muốn ghi bất kỳ dòng nào — kể cả dòng giao dịch kia chưa hề đụng. Đời thực: SQL Server escalate quanh ngưỡng ~5.000 khóa/câu lệnh và là thủ phạm kinh điển của các vụ "UPDATE nửa bảng xong cả app đơ"; dân DBA né bằng cách <em>chia batch nhỏ</em> — mỗi batch dưới ngưỡng, sổ khóa không bao giờ phình tới mức engine phải ra tay.'
+        }
+      ],
+      quiz: {
+        question: 'Giao dịch T cập nhật dần 50.000 dòng listings và lock manager vừa escalate lên khóa X cấp bảng. Hệ quả tức thì là gì?',
+        options: [
+          { label: 'Lock table nhẹ hẳn — nhưng MỌI giao dịch muốn ghi bất kỳ dòng nào của listings giờ phải chờ T, kể cả dòng T chưa hề đụng', correct: true, feedback: '✓ Chuẩn — đổi vạn khóa lấy một là đổi RAM lấy concurrency: X cấp bảng khóa ngầm trọn subtree.' },
+          { label: 'T bị rollback vì gom quá nhiều khóa — escalation là một hình phạt', correct: false, feedback: '✗ Không ai phạt T — escalation là cứu trợ cho LOCK TABLE, T vẫn chạy tiếp bình thường với một khóa to hơn.' },
+          { label: 'Các khóa dòng cũ vẫn giữ nguyên, chỉ thêm một khóa bảng đè lên', correct: false, feedback: '✗ Điểm mấu chốt là THAY THẾ: vạn khóa dòng được nhả để sổ nhẹ đi — giữ cả hai thì escalate làm gì.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.3 · PART_7 Card C — Lock Escalation',
+      cta: { label: 'Vào bài 16 — Phantom: con ma lọt lưới khóa dòng', href: '/lesson/db_design_nc?lesson=16' }
+    },
+
+    /* ═══ MODULE 8 — Card D (PART_7: sau Bài 6 / nc_16) ═══ */
+    {
+      id: 'nc_card_predicate_locking',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 16',
+      title: 'Predicate Locking — chính xác tuyệt đối, đắt vô đối',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: 'Index-locking bắt ma bằng cách khóa CÁI LÁ — xấp xỉ hơi thô (hai insert chung lá vẫn chặn nhau oan). Có một giải pháp chính xác đến hoàn hảo trên lý thuyết: khóa thẳng vào <strong>VỊ NGỮ</strong>. Và sách dành cho nó đúng một câu lạnh lùng: đắt, nên thực tế không dùng.',
+      sections: [
+        {
+          icon: 'fa-crosshairs',
+          heading: 'Khóa cả những dòng chưa sinh ra',
+          body: 'Predicate lock trên <code>price &lt; 100</code> phủ MỌI tuple thỏa vị ngữ — kể cả tuple <em>chưa tồn tại</em>: chèn món 45 gem là đụng khóa ngay, dù chẳng có lá index nào chung. Không bắt oan ai (chèn món 510 gem đi qua tự do), không lọt con ma nào — độ chính xác mà index-locking chỉ biết mơ.'
+        },
+        {
+          icon: 'fa-coins',
+          heading: 'Vì sao thực tế lắc đầu',
+          body: 'Muốn xét vênh, lock manager phải trả lời câu "<em>hai vị ngữ này có GIAO nhau không?</em>" — <code>price &lt; 100</code> vs <code>price BETWEEN 40 AND 60</code>? — tức là giải bài toán logic cho TỪNG CẶP yêu cầu, thay vì tra một ô ma trận. Sách chốt: predicate locking <strong>chi phí cài đặt cao, thực tế không được dùng</strong>; các DBMS chọn xấp xỉ rẻ — index-locking, next-key locking — hoặc rẽ hẳn sang thế giới snapshot (bài 18 sẽ tới).',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 — predicate locking'
+        }
+      ],
+      quiz: {
+        question: 'T1 giữ predicate lock trên "price < 100". T2 muốn chèn Skin 790 gem, T3 muốn chèn Kiếm 45 gem. Ai qua, ai chờ?',
+        options: [
+          { label: 'T2 qua tự do (790 không thỏa vị ngữ) — T3 chờ (45 lọt vùng khóa, dù dòng đó chưa tồn tại)', correct: true, feedback: '✓ Chuẩn — khóa theo VỊ NGỮ xét bằng logic, không cần dòng hay lá nào có thật: chính xác tuyệt đối, và đắt cũng vì thế.' },
+          { label: 'Cả hai chờ — predicate lock chặn mọi INSERT vào bảng cho chắc', correct: false, feedback: '✗ Thế thì nó là khóa bảng chứ báu gì — điểm ăn tiền của predicate lock là CHỈ chặn kẻ giao với vị ngữ.' },
+          { label: 'Cả hai qua — khóa chỉ phủ các dòng đang tồn tại lúc xin khóa', correct: false, feedback: '✗ Đó là tuple-lock, đúng cái lỗ hổng phantom của bài 16. Predicate lock phủ cả tương lai của vị ngữ.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 · PART_7 Card D — Predicate Locking',
+      cta: { label: 'Về Trading Floor — hẹn bài 17: Optimistic Concurrency', href: '/courses/db_design_nc' }
     }
   ]
 };

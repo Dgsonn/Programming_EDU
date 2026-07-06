@@ -1672,6 +1672,79 @@
         '<text x="577" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">victim retry — không ai chết mãi</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">phòng bằng tuổi (wait-die / wound-wait — hồ sơ B) · chữa bằng soi graph + tế đúng một mạng</text>' +
+      '</svg>',
+
+    /* nc_15 — cây khóa 3 tầng + biển báo intention, T2 chờ ngay node bảng (Ticket #56) */
+    nc_15: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cây khóa sàn, bảng, dòng: T1 cắm IX xuống X tại dòng; bot T2 xin S cả bảng đụng biển IX tại node bảng phải chờ sau một cú nhìn; T3 cắm IS đọc dòng khác sống chung">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Cây khóa + biển báo — một cú nhìn thay 40.000 lá</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">IS "dưới có người đọc" · IX "dưới có người ghi" · khóa node = khóa ngầm cả subtree</text>' +
+        // Cây trái
+        '<line x1="230" y1="80" x2="140" y2="126" stroke="rgba(148,163,184,.45)" stroke-width="1.4"/>' +
+        '<line x1="230" y1="80" x2="330" y2="126" stroke="rgba(148,163,184,.45)" stroke-width="1.4"/>' +
+        '<line x1="140" y1="158" x2="95" y2="196" stroke="rgba(148,163,184,.45)" stroke-width="1.4"/>' +
+        '<line x1="140" y1="158" x2="205" y2="196" stroke="rgba(148,163,184,.45)" stroke-width="1.4"/>' +
+        '<rect x="168" y="52" width="124" height="28" rx="7" fill="#0e1726" stroke="rgba(251,113,133,.55)" stroke-width="1.3"/>' +
+        '<text x="230" y="70" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="9.5">🏛️ SÀN GAMEHUB</text>' +
+        '<rect x="196" y="84" width="46" height="14" rx="7" fill="rgba(129,140,248,.15)" stroke="rgba(129,140,248,.5)"/>' +
+        '<text x="219" y="94" text-anchor="middle" fill="#a5b4fc" font-size="8">T1:IX</text>' +
+        '<rect x="82" y="130" width="116" height="28" rx="7" fill="#0e1726" stroke="rgba(251,113,133,.55)" stroke-width="1.3"/>' +
+        '<text x="140" y="148" text-anchor="middle" fill="#e8edf5" font-weight="700" font-size="9.5">📦 listings</text>' +
+        '<rect x="86" y="162" width="46" height="14" rx="7" fill="rgba(129,140,248,.15)" stroke="rgba(129,140,248,.5)"/>' +
+        '<text x="109" y="172" text-anchor="middle" fill="#a5b4fc" font-size="8">T1:IX</text>' +
+        '<rect x="138" y="162" width="54" height="14" rx="7" fill="rgba(251,191,36,.12)" stroke="rgba(251,191,36,.55)"/>' +
+        '<text x="165" y="172" text-anchor="middle" fill="#fcd34d" font-size="8">⏳T2:S</text>' +
+        '<rect x="272" y="130" width="116" height="28" rx="7" fill="#0e1726" stroke="rgba(148,163,184,.45)" stroke-width="1.2"/>' +
+        '<text x="330" y="148" text-anchor="middle" fill="#aebfd6" font-weight="700" font-size="9.5">🧾 orders</text>' +
+        '<rect x="52" y="200" width="86" height="26" rx="7" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.4"/>' +
+        '<text x="95" y="212" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="8.5">#3001</text>' +
+        '<text x="95" y="222" text-anchor="middle" fill="#34d399" font-size="7.5">T1:X — đang ghi</text>' +
+        '<rect x="162" y="200" width="86" height="26" rx="7" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.2"/>' +
+        '<text x="205" y="212" text-anchor="middle" fill="#aebfd6" font-weight="700" font-size="8.5">#3002</text>' +
+        '<text x="205" y="222" text-anchor="middle" fill="#7f93ad" font-size="7.5">T3:S — đọc chung</text>' +
+        // Card phải
+        '<rect x="440" y="56" width="244" height="140" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="562" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🪧 MỘT CÚ NHÌN — MỘT KẾT LUẬN</text>' +
+        '<text x="562" y="97" text-anchor="middle" fill="#aebfd6" font-size="8.5">T2 xin S NGUYÊN bảng listings</text>' +
+        '<text x="562" y="112" text-anchor="middle" fill="#fcd34d" font-size="8.5">node bảng có biển IX → vênh → chờ</text>' +
+        '<text x="562" y="127" text-anchor="middle" fill="#aebfd6" font-size="8.5">số dòng phải soi: 0 / 40.000</text>' +
+        '<text x="562" y="150" text-anchor="middle" fill="#34d399" font-weight="800" font-size="11">T1 ghi · T3 đọc — song song ✓</text>' +
+        '<text x="562" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">IX + IX sống chung — đụng thật mới lộ ở lá</text>' +
+        '<text x="562" y="185" text-anchor="middle" fill="#7f93ad" font-size="8">nhả NGƯỢC chiều: lá → gốc</text>' +
+      '</g>' +
+      '<text x="360" y="234" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">khóa đúng CỠ việc — biển báo intention gánh phần kiểm tra vênh cho cả cây</text>' +
+      '</svg>',
+
+    /* nc_16 — phantom: 2 lần đếm 3→4, con ma chèn giữa; thuốc = khóa lá index (Ticket #57) */
+    nc_16: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bot đếm món dưới 100 gem hai lần ra 3 rồi 4 vì một dòng mới chèn vào giữa; index-locking khóa lá 0 đến 100 khiến insert phải xếp hàng, hai lần đếm cùng ra 3">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Phantom — đếm 3 rồi đếm 4, mà không dòng nào bị đụng</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">COUNT(*) WHERE price&lt;100 · con ma = dòng CHƯA TỒN TẠI lúc giăng khóa</text>' +
+        // Card trái — vụ án
+        '<rect x="36" y="56" width="310" height="132" rx="9" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="191" y="76" text-anchor="middle" fill="#fca5a5" font-weight="700" font-size="10">👻 TUPLE-LOCK — MA CHUI LỌT</text>' +
+        '<text x="191" y="98" text-anchor="middle" fill="#aebfd6" font-size="8.5">đếm lần 1: 45 · 35 · 80 → 3 món (khóa S đủ 3)</text>' +
+        '<text x="191" y="116" text-anchor="middle" fill="#fbbf24" font-size="8.5">T2 chèn Kiếm gỗ 45 — dòng MỚI, không ai chặn</text>' +
+        '<text x="191" y="140" text-anchor="middle" fill="#f87171" font-weight="800" font-size="14">đếm lần 2: 4 ?!</text>' +
+        '<text x="191" y="162" text-anchor="middle" fill="#fca5a5" font-size="8.5">3 dòng bị khóa còn NGUYÊN — xung đột trên MA</text>' +
+        '<text x="191" y="177" text-anchor="middle" fill="#7f93ad" font-size="8">không thể khóa thứ chưa sinh ra</text>' +
+        // Card phải — thuốc
+        '<rect x="372" y="56" width="312" height="132" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="528" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🍃 INDEX-LOCKING — BẪY TRÊN LÁ</text>' +
+        '<rect x="392" y="88" width="88" height="30" rx="6" fill="rgba(52,211,153,.12)" stroke="rgba(52,211,153,.6)" stroke-width="1.3"/>' +
+        '<text x="436" y="100" text-anchor="middle" fill="#6ee7b7" font-size="8">lá [0..100)</text>' +
+        '<text x="436" y="112" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="8">🔒 T1:S</text>' +
+        '<rect x="490" y="88" width="88" height="30" rx="6" fill="rgba(148,163,184,.07)" stroke="rgba(148,163,184,.4)" stroke-width="1.1"/>' +
+        '<text x="534" y="100" text-anchor="middle" fill="#aebfd6" font-size="8">lá [100..1k)</text>' +
+        '<text x="534" y="112" text-anchor="middle" fill="#7f93ad" font-size="8">510 · 790</text>' +
+        '<rect x="588" y="88" width="76" height="30" rx="6" fill="rgba(148,163,184,.07)" stroke="rgba(148,163,184,.4)" stroke-width="1.1"/>' +
+        '<text x="626" y="100" text-anchor="middle" fill="#aebfd6" font-size="8">lá [1k..∞)</text>' +
+        '<text x="626" y="112" text-anchor="middle" fill="#7f93ad" font-size="8">12.500</text>' +
+        '<text x="528" y="138" text-anchor="middle" fill="#fcd34d" font-size="8.5">T2 chèn 45 → cần X(lá [0..100)) → ⏳ XẾP HÀNG</text>' +
+        '<text x="528" y="160" text-anchor="middle" fill="#34d399" font-weight="800" font-size="12">đếm lần 2: vẫn 3 ✓</text>' +
+        '<text x="528" y="178" text-anchor="middle" fill="#7f93ad" font-size="8">xung đột trên ma → xung đột THẬT trên lá</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không khóa được thứ chưa sinh ra — thì khóa CON ĐƯỜNG nó buộc phải đi qua: cái lá index</text>' +
       '</svg>'
   };
 
@@ -2723,6 +2796,74 @@
     });
   }
 
+  /* ── Lock Tree Visual (nc_15 — cây granularity + intention lock, sim thứ 8) ──
+   * PART_7 Bài 5: "lock tree database → relation → tuple". Data:
+   * step_1.lock_tree_visual = { eyebrow, caption, verdict,
+   *   nodes: [{id,label,x,y,parent,sub}], steps: [{node,txn,mode,result,note}] }.
+   * Mỗi nhịp cắm 1 badge khóa lên node (IS/IX = biển xám xanh, S/X = khóa đậm,
+   * wait = pill vàng ⏳ + node nét đứt). User chốt 2026-07-07 (đợt 9). */
+  function renderLockTreeVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.nodes) || !Array.isArray(cfg.steps)) return;
+    var st = { i: 0, counts: {} };
+    var NW = 118, NH = 34;
+
+    function nodeById(id) { for (var i = 0; i < cfg.nodes.length; i++) if (cfg.nodes[i].id === id) return cfg.nodes[i]; return null; }
+    var edges = cfg.nodes.filter(function (n) { return n.parent; }).map(function (n) {
+      var p = nodeById(n.parent);
+      return '<line class="lt-edge" x1="' + p.x + '" y1="' + (p.y + NH / 2) + '" x2="' + n.x + '" y2="' + (n.y - NH / 2) + '"/>';
+    }).join('');
+    var nodesSvg = cfg.nodes.map(function (n) {
+      return '<g class="lt-node" data-lt-node="' + n.id + '">' +
+        '<rect x="' + (n.x - NW / 2) + '" y="' + (n.y - NH / 2) + '" width="' + NW + '" height="' + NH + '" rx="8"/>' +
+        '<text class="lt-label" x="' + n.x + '" y="' + (n.y - 2) + '" text-anchor="middle">' + escapeHtml(n.label) + '</text>' +
+        (n.sub ? '<text class="lt-sub" x="' + n.x + '" y="' + (n.y + 11) + '" text-anchor="middle">' + escapeHtml(n.sub) + '</text>' : '') +
+        '<g class="lt-badges" data-lt-badges="' + n.id + '"></g>' +
+        '</g>';
+    }).join('');
+
+    mount.innerHTML =
+      '<section class="sort-visual lt-visual" aria-label="Cây khóa nhiều tầng: bấm từng nhịp xem các giao dịch cắm intention lock từ gốc xuống lá">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'CÂY KHÓA — MULTIPLE GRANULARITY') + '</span></div>' +
+        '<svg class="lt-svg" viewBox="0 0 640 232" xmlns="http://www.w3.org/2000/svg">' + edges + nodesSvg + '</svg>' +
+        '<div class="sv-ctl">' +
+          '<button type="button" class="sv-btn" id="lt-btn">Nhịp 1 / ' + cfg.steps.length + '</button>' +
+          '<span class="sv-status" id="lt-status">Ba giao dịch sắp đi cây — bấm từng nhịp, để mắt vào các tấm biển.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('lt-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('lt-btn'); b.textContent = label; b.disabled = !!disabled; }
+
+    $('lt-btn').addEventListener('click', function () {
+      if (st.i >= cfg.steps.length) { renderLockTreeVisual(mount, cfg); return; }
+      var s = cfg.steps[st.i], n = nodeById(s.node);
+      var k = st.counts[s.node] || 0;
+      st.counts[s.node] = k + 1;
+      var wait = s.result === 'wait';
+      var strong = s.mode === 'X' || s.mode === 'S';
+      var bw = wait ? 58 : 48;
+      var bx = n.x - 82 + k * 56;
+      var by = n.y + NH / 2 + 4;
+      var badge = '<g class="lt-badge' + (wait ? ' lt-badge--wait' : strong ? ' lt-badge--strong' : '') + '">' +
+        '<rect x="' + bx + '" y="' + by + '" width="' + bw + '" height="15" rx="7"/>' +
+        '<text x="' + (bx + bw / 2) + '" y="' + (by + 11) + '" text-anchor="middle">' + (wait ? '⏳' : '') + escapeHtml(s.txn + ':' + s.mode) + '</text>' +
+        '</g>';
+      mount.querySelector('[data-lt-badges="' + s.node + '"]').innerHTML += badge;
+      var g = mount.querySelector('.lt-node[data-lt-node="' + s.node + '"]');
+      if (wait && g) g.classList.add('lt-node--wait');
+      st.i++;
+      if (st.i < cfg.steps.length) {
+        setBtn('Nhịp ' + (st.i + 1) + ' / ' + cfg.steps.length, false);
+        setStatus(s.note || '');
+      } else {
+        setBtn('↺ Chạy lại từ đầu', false);
+        setStatus((s.note ? s.note + '<br>' : '') + (cfg.verdict || ''));
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -2954,6 +3095,9 @@
         pvMount.hidden = false;
       } else if (s1.wfg_visual) {
         renderWfgVisual(pvMount, s1.wfg_visual);
+        pvMount.hidden = false;
+      } else if (s1.lock_tree_visual) {
+        renderLockTreeVisual(pvMount, s1.lock_tree_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
