@@ -10712,3 +10712,46 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 @media (prefers-reduced-motion: reduce) {
   .txn-visual .tx-wallet-val { transition: none; }
 }
+
+/* ═══ Phase Visual (nc_13 — 2PL phase-meter, sim thứ 6) ═══ */
+.phase-visual .ph-ops { display: flex; flex-direction: column; gap: 6px; margin: 14px 0 4px; }
+.phase-visual .ph-op {
+  display: grid; grid-template-columns: 96px 1fr; gap: 10px; align-items: center;
+  background: rgba(148, 163, 184, .06); border-left: 2px solid rgba(52, 211, 153, .6);
+  border-radius: 6px; padding: 6px 10px;
+}
+.phase-visual .ph-op--warn { border-left-color: #FBBF24; }
+.phase-visual .ph-op--bad { border-left-color: #F87171; background: rgba(248, 113, 113, .07); }
+.phase-visual .ph-meter { display: flex; gap: 2px; font-size: 13px; min-height: 18px; }
+.phase-visual .ph-lock--none { color: #64748b; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.phase-visual .ph-text { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.45; color: #cbd5e1; }
+.phase-visual .ph-op--bad .ph-text { color: #fecaca; }
+.phase-visual .ph-badge {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .06em;
+  padding: 1px 7px; border-radius: 99px; margin-left: 6px; white-space: nowrap;
+}
+.phase-visual .ph-badge--point { background: rgba(52, 211, 153, .15); color: #34D399; border: 1px solid rgba(52, 211, 153, .5); }
+.phase-visual .ph-badge--bad { background: rgba(248, 113, 113, .15); color: #F87171; border: 1px solid rgba(248, 113, 113, .55); }
+
+/* ═══ WFG Visual (nc_14 — wait-for graph builder, sim thứ 7) ═══ */
+.wfg-visual .wfg-svg { width: 100%; height: auto; display: block; margin: 10px 0 2px; }
+.wfg-visual .wfg-node circle { fill: #0e1726; stroke: rgba(148, 163, 184, .6); stroke-width: 1.6; cursor: pointer; transition: stroke .2s ease; }
+.wfg-visual .wfg-node:hover circle, .wfg-visual .wfg-node:focus-visible circle { stroke: #06B6D4; }
+.wfg-visual .wfg-node:focus-visible { outline: none; }
+.wfg-visual .wfg-name { fill: #e8edf5; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; pointer-events: none; }
+.wfg-visual .wfg-sub { fill: #7f93ad; font-family: 'JetBrains Mono', monospace; font-size: 8.5px; pointer-events: none; }
+.wfg-visual .wfg-edge line { stroke: rgba(148, 163, 184, .55); stroke-width: 1.8; }
+.wfg-visual .wfg-edge line { marker-end: url(#wfgArrow); }
+.wfg-visual marker path { fill: rgba(148, 163, 184, .7); }
+.wfg-visual .wfg-edge--cycle line { stroke: #F87171; stroke-width: 2.4; animation: wfgPulse 1.1s ease-in-out infinite alternate; }
+.wfg-visual .wfg-node--cycle circle { stroke: #F87171; stroke-width: 2.4; }
+.wfg-visual .wfg-node--victim circle { stroke: #FBBF24; stroke-dasharray: 5 3; }
+.wfg-visual .wfg-node--victim .wfg-name { fill: #FBBF24; }
+.wfg-visual .wfg-node--shake { animation: wfgShake .5s ease; }
+@keyframes wfgPulse { from { opacity: .55; } to { opacity: 1; } }
+@keyframes wfgShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .wfg-visual .wfg-edge--cycle line { animation: none; }
+  .wfg-visual .wfg-node--shake { animation: none; }
+  .wfg-visual .wfg-node circle { transition: none; }
+}

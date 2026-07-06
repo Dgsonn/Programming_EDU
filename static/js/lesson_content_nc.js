@@ -2760,6 +2760,472 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ,
         xp_reward: 120
       }
+    },
+
+    /* ── nc_13 — Ticket #54 · Two-Phase Locking (Ch.18.1.3) ──
+     * PART_7 Bài 3: growing/shrinking phase, lock point, 2PL đảm bảo conflict
+     * serializability (xếp theo lock point), 2PL KHÔNG miễn deadlock (Fig 18.7
+     * T3/T4 — cliffhanger bài 14). Kịch bản: chuyển 50 gem két CHÍNH (200) →
+     * két QC (100), tổng thật 300; nhả sớm → audit đọc 250 (T1 sách); bản 2PL
+     * = T3 sách. Sim thứ 6: phase_visual — thanh khóa dâng/hạ + LOCK POINT. */
+    {
+      id: 'nc_13', index: 13,
+      title: 'Two-Phase Locking — gom cho hết, rồi mới buông',
+      subtitle: 'Pha GOM chỉ xin khóa, pha NHẢ chỉ trả khóa — một luật đơn giản mua được cả serializability',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'wallets — DragonForge có 2 két (mẫu 2)',
+          columns: ['két', 'mục đích', 'balance_gem'],
+          dataRows: [
+            ['A — két QUẢNG CÁO', 'trả phí banner sàn', '100'],
+            ['B — két CHÍNH', 'nhận tiền bán hàng', '200']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #54',
+        hook: 'Khóa S/X chạy ngon được đúng ba hôm thì bot audit réo: DragonForge chuyển <strong>50 gem</strong> từ két CHÍNH sang két QUẢNG CÁO — chuyển xong tổng vẫn phải là <strong>300</strong>, vậy mà audit chộp được khoảnh khắc tổng chỉ còn <strong>250</strong>. Soi log: giao dịch xin khóa ĐÚNG KIỂU từng két một… nhưng <em>nhả két này rồi mới gom két kia</em>. Ticket #54: khóa thôi chưa đủ — phải luật hóa cả chuyện <strong>GIỮ ĐẾN BAO GIỜ</strong>.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'TWO-PHASE LOCKING (2PL): mỗi giao dịch có đúng 2 pha — GROWING chỉ được XIN khóa, SHRINKING chỉ được NHẢ khóa; đã nhả một cái là vĩnh viễn không được xin thêm (sách 18.1.3)',
+            'LOCK POINT = khoảnh khắc gom được khóa CUỐI CÙNG — xếp các giao dịch theo lock point là ra đúng một thứ tự serial tương đương: 2PL mua được conflict serializability bằng một luật cực ngắn',
+            '2PL KHÔNG miễn deadlock: hai giao dịch cùng tuân luật vẫn có thể gom chéo két của nhau rồi đứng hình chờ nhau vĩnh viễn (Fig 18.7) — vị khách không mời đó là chuyện của bài sau'
+          ],
+          intro: 'Người dọn tiệc khôn ngoan: gom <strong>ĐỦ</strong> chìa của mọi phòng cần dọn rồi mới bắt đầu trả dần từng chìa. Kẻ vụng: trả chìa phòng 1 xong mới xin chìa phòng 2 — đúng khe đó khách quản lý bước vào phòng 1 thấy bàn ghế dọn nửa chừng. Luật 2PL chính là "đường một chiều" của việc cầm chìa: chỉ có dâng lên rồi hạ xuống, tuyệt đối không hạ rồi dâng lại.',
+          example: 'Chuyển 50 gem két CHÍNH (200) → két QC (100). Bản NHẢ SỚM: khóa CHÍNH, trừ 50, <em>unlock</em>, rồi mới khóa QC — audit chen đúng khe: đọc 150 + 100 = <strong>250 SAI</strong>. Bản 2PL: gom X(CHÍNH), gom X(QC) — <strong>📍 lock point</strong> — làm việc, nhả cả hai: audit chen nhịp nào cũng bị chặn tới khi tiền về đủ chỗ, tổng luôn <strong>300</strong>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-chart-line',
+            title: 'Hai pha và lock point — theo đúng sách',
+            body: 'Giao dịch bắt đầu trong <strong>growing phase</strong>, xin khóa khi cần; vừa nhả khóa đầu tiên là rơi vào <strong>shrinking phase</strong> và không được xin thêm bất kỳ khóa nào. Điểm gom được khóa cuối cùng gọi là <strong>lock point</strong> — xếp các giao dịch theo lock point chính là một thứ tự serializability của chúng.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.3 — The Two-Phase Locking Protocol'
+          },
+          {
+            icon: 'fa-skull-crossbones',
+            title: '2PL không phải bùa hộ mệnh toàn năng',
+            body: 'Sách chỉ mặt hai khe hở còn lại: <strong>①</strong> hai giao dịch cùng tuân 2PL vẫn có thể DEADLOCK — T3 gom két B xin két A, T4 gom két A xin két B, cả hai đứng hình (Fig 18.7); <strong>②</strong> nhả khóa X trước khi commit thì kẻ khác đọc được dữ liệu CHƯA CHẮC sống — T5 sập là T6, T7 đọc theo phải sập dây chuyền (cascading rollback, Fig 18.8). Khe ② có thuốc ngay: hồ sơ Strict vs Rigorous chờ sau bài.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Vì sao mọi DBMS thương mại (Postgres, MySQL/InnoDB, SQL Server…) mặc định giữ khóa ghi <strong>đến tận COMMIT</strong> thay vì nhả ngay khi xong câu lệnh? Vì đó là strict 2PL — phiên bản 2PL vá luôn khe hở ②. Code app của bạn không phải đếm pha: cứ gói việc trong một transaction, engine tự giữ đúng luật.'
+          }
+        ],
+        phase_visual: {
+          eyebrow: 'PHASE-METER 2PL — CHUYỂN 50 GEM: KÉT CHÍNH 200 → KÉT QC 100 · TỔNG THẬT 300',
+          caption: 'Chạy CẢ HAI bản mà nhìn đường khóa: bản 2PL chỉ dâng rồi hạ (một đỉnh, một lock point) — bản nhả sớm hạ rồi DÂNG LẠI: gãy luật, và audit chen đúng khe đọc 250.',
+          modes: [
+            {
+              id: 'good', short: '2PL CHUẨN', ok: true,
+              btn: '▶ Chạy bản 2PL (gom hết mới buông)',
+              ops: [
+                { text: 'lock-X(két CHÍNH) → GRANT', delta: 1, note: 'Pha GOM mở màn — 1 khóa trong tay.' },
+                { text: 'đọc CHÍNH 200 → trừ 50 → ghi 150', delta: 0, note: 'Làm việc trong lúc vẫn GIỮ khóa — audit xin đọc lúc này là xếp hàng.' },
+                { text: 'lock-X(két QC) → GRANT', delta: 1, lockpoint: true, note: '📍 LOCK POINT — khóa cuối cùng đã gom. Từ mốc này giao dịch chỉ còn đường đi xuống.' },
+                { text: 'đọc QC 100 → cộng 50 → ghi 150', delta: 0, note: 'Tiền về đủ chỗ: CHÍNH 150 + QC 150 = 300.' },
+                { text: 'unlock(két CHÍNH)', delta: -1, note: 'Vào pha NHẢ — trả dần, tuyệt đối không xin thêm.' },
+                { text: 'unlock(két QC)', delta: -1, note: '' }
+              ],
+              verdict: '✓ Đường khóa MỘT ĐỈNH: dâng 1→2 rồi hạ 2→1→0. Audit chen bất kỳ nhịp nào cũng chỉ đọc được trạng thái tổng 300 — 2PL đổi một luật ngắn lấy cả serializability.'
+            },
+            {
+              id: 'bad', short: 'NHẢ SỚM', ok: false,
+              btn: '▶ Chạy bản NHẢ SỚM (đêm bị audit réo)',
+              ops: [
+                { text: 'lock-X(két CHÍNH) → GRANT', delta: 1, note: 'Mở màn giống hệt bản chuẩn…' },
+                { text: 'đọc CHÍNH 200 → trừ 50 → ghi 150', delta: 0, note: '50 gem đã RỜI két CHÍNH — đang "bay" giữa hai két.' },
+                { text: 'unlock(két CHÍNH) — nhả sớm cho thoáng', delta: -1, cls: 'warn', note: 'Khóa về 0 giữa chừng — cánh cửa mở toang đúng lúc tiền đang bay.' },
+                { text: '⚡ AUDIT chen: đọc CHÍNH 150 + QC 100 → tổng 250', delta: 0, cls: 'bad', note: 'Audit xin khóa S — được GRANT NGAY vì chẳng ai giữ gì. Nó đọc đúng trạng thái dở dang.' },
+                { text: 'lock-X(két QC) — xin khóa SAU KHI đã nhả', delta: 1, cls: 'bad', note: '' },
+                { text: 'cộng 50 → ghi QC 150 → unlock(két QC)', delta: -1, note: 'Tiền về đủ — nhưng bản chụp 250 của audit đã kịp thành báo cáo sai.' }
+              ],
+              verdict: '❌ Audit đọc tổng 250 — 50 gem tàng hình đúng khe hở. Đường khóa GÃY: hạ 1→0 rồi dâng lại 0→1 = vi phạm 2PL, và đó chính là toàn bộ vụ án.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'Luật 2PL — đường một chiều của khóa',
+            columns: [
+              { name: 'GROWING — chỉ XIN khóa', type: 'dâng: 0 → 1 → 2 …', key: '📈' },
+              { name: '📍 LOCK POINT', type: 'khóa cuối cùng gom được', key: '' },
+              { name: 'SHRINKING — chỉ NHẢ khóa', type: 'hạ: … 2 → 1 → 0', key: '📉' }
+            ]
+          },
+          data_preview: [
+            ['gom B → gom A → nhả B → nhả A', 'dâng rồi hạ', '2PL hợp lệ', '✓'],
+            ['gom B → NHẢ B → gom A', 'hạ rồi dâng lại', 'vi phạm', '❌'],
+            ['gom hết → làm hết → nhả hết lúc commit', 'rigorous — vẫn là 2PL', 'hợp lệ', '✓'],
+            ['xếp giao dịch theo lock point', '= một thứ tự serial tương đương', 'định lý 2PL', '⭐']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'LOCK POINT của một giao dịch là gì — và vì sao nó quý đến mức thành định lý?',
+            options: [
+              { id: 'a', text: 'Là khoảnh khắc gom được khóa CUỐI CÙNG — xếp các giao dịch theo lock point là ra một thứ tự serial tương đương: 2PL nhờ đó đảm bảo conflict serializability', correct: true, explanation: 'Đúng — mỗi giao dịch 2PL có một đỉnh duy nhất; cả sàn chạy xen kẽ loạn xạ mà vẫn tương đương với chạy tuần tự theo thứ tự các đỉnh đó.' },
+              { id: 'b', text: 'Là lúc giao dịch commit — mọi khóa được nhả tại đó', correct: false, explanation: 'Sai — lock point là đỉnh của pha GOM, có thể đến rất lâu trước commit. (Giữ khóa đến commit là chuyện của strict/rigorous — hồ sơ sau bài.)' },
+              { id: 'c', text: 'Là lúc xin khóa ĐẦU TIÊN — giao dịch chính thức bước vào cuộc chơi', correct: false, explanation: 'Sai — khóa đầu tiên chỉ mở pha growing; thứ tự serial xếp theo khóa CUỐI, không phải khóa đầu.' },
+              { id: 'd', text: 'Là điểm giao dịch bị deadlock nếu xin thêm khóa', correct: false, explanation: 'Sai — deadlock không dính gì tới lock point; sau lock point giao dịch không xin thêm khóa nào nữa nên càng không thể kẹt vì xin.' }
+            ]
+          },
+          {
+            question: 'T3 gom két B rồi xin két A; cùng lúc T4 gom két A rồi xin két B. Cả hai đều tuân 2PL chuẩn chỉ. Chuyện gì xảy ra?',
+            options: [
+              { id: 'a', text: 'Cả hai đứng hình chờ nhau vĩnh viễn — 2PL đảm bảo serializability nhưng KHÔNG đảm bảo thoát deadlock', correct: true, explanation: 'Đúng — Fig 18.7 trong sách chụp đúng cảnh này. Luật "gom hết mới buông" khiến ai cũng ôm khư khư thứ kẻ kia cần. Bài sau xử vụ này.' },
+              { id: 'b', text: 'Lock manager phát hiện vênh và từ chối yêu cầu của T4 ngay từ đầu', correct: false, explanation: 'Sai — từng yêu cầu lẻ đều hợp lệ tại thời điểm xin; cái chết nằm ở TỔ HỢP hai hàng chờ, thứ lock manager thường không nhìn khi grant.' },
+              { id: 'c', text: 'Không sao — 2PL bắt buộc gom khóa theo cùng một thứ tự nên không kẹt được', correct: false, explanation: 'Sai — 2PL KHÔNG quy định thứ tự gom; gom theo thứ tự thống nhất là một chiêu PHÒNG deadlock riêng (ordered locking), không nằm trong luật 2 pha.' },
+              { id: 'd', text: 'Giao dịch đến sau tự động thắng vì khóa của nó "mới" hơn', correct: false, explanation: 'Sai — không có luật "mới hơn thắng"; cả hai cứ thế chờ. Các scheme phân xử theo tuổi (wait-die/wound-wait) là hồ sơ của bài sau.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: '2PL hợp lệ — hay gãy luật?',
+          instruction: 'Soi đường khóa của từng kịch bản: chỉ dâng-rồi-hạ là hợp lệ.',
+          xp: 20,
+          chips: [
+            { id: 'k1', label: 'gom X(B) → gom X(A) → nhả B → nhả A' },
+            { id: 'k2', label: 'gom X(B) → NHẢ B → gom X(A)' },
+            { id: 'k3', label: 'gom X(B) → gom X(A) → nhả A → xin S(C)' },
+            { id: 'k4', label: 'gom đủ hết → làm việc → nhả sạch lúc commit' }
+          ],
+          bins: [
+            { id: 'ok', label: '2PL HỢP LỆ ✓' },
+            { id: 'no', label: 'GÃY LUẬT ❌' }
+          ],
+          solution: { k1: 'ok', k2: 'no', k3: 'no', k4: 'ok' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp 4 chốt của luật 2PL cho giao dịch chuyển gem — có MỘT khối bịa (nghe cực kỳ hợp lý).',
+        blocks: [
+          { type: 'op', token: 'Pha GOM: xin dần từng khóa cần dùng — tuyệt đối chưa nhả cái nào', slot: 'ph-grow' },
+          { type: 'op', token: 'Xong việc với két nào nhả NGAY két đó rồi gom tiếp két sau — đỡ giữ khóa lâu', slot: 'ph-x' },
+          { type: 'op', token: 'LOCK POINT: khóa cuối cùng vào tay — mốc xếp thứ tự serial của cả sàn', slot: 'ph-point' },
+          { type: 'op', token: 'Pha NHẢ: trả dần khóa — từ giây này không được xin thêm bất kỳ khóa nào', slot: 'ph-shrink' },
+          { type: 'op', token: 'STRICT: riêng khóa X găm đến tận commit — không ai đọc được dữ liệu chưa chắc sống', slot: 'ph-strict' }
+        ],
+        drop_zones: [
+          { id: 'ph-grow', placeholder: 'Nửa đầu đời giao dịch — được làm gì với khóa?', accepts: ['op'], multi: false,
+            station: { icon: '📈', label: 'Pha GOM', sub: 'Growing', hint: 'Đường khóa chỉ có một chiều ở nửa này — chiều nào?' } },
+          { id: 'ph-point', placeholder: 'Đỉnh của đường khóa là mốc gì?', accepts: ['op'], multi: false,
+            station: { icon: '📍', label: 'Lock point', sub: 'Đỉnh', hint: 'Chính cái mốc làm nên định lý: xếp cả sàn theo nó là ra thứ tự serial.' } },
+          { id: 'ph-shrink', placeholder: 'Nửa sau — luật cấm điều gì?', accepts: ['op'], multi: false,
+            station: { icon: '📉', label: 'Pha NHẢ', sub: 'Shrinking', hint: 'Vừa nhả cái đầu tiên là cánh cửa xin-thêm đóng sập vĩnh viễn.' } },
+          { id: 'ph-strict', placeholder: 'Chốt gia cố cho khóa X — giữ đến bao giờ?', accepts: ['op'], multi: false,
+            station: { icon: '🔩', label: 'Strict 2PL', sub: 'Gia cố', hint: 'T5 sập mà T6, T7 đã đọc dữ liệu nó ghi thì sập cả dây chuyền — chốt này chặn đúng cảnh đó.' } }
+        ],
+        expected_sql: 'Pha GOM: xin dần từng khóa cần dùng — tuyệt đối chưa nhả cái nào LOCK POINT: khóa cuối cùng vào tay — mốc xếp thứ tự serial của cả sàn Pha NHẢ: trả dần khóa — từ giây này không được xin thêm bất kỳ khóa nào STRICT: riêng khóa X găm đến tận commit — không ai đọc được dữ liệu chưa chắc sống',
+        expected_zones: {
+          'ph-grow': 'Pha GOM: xin dần từng khóa cần dùng — tuyệt đối chưa nhả cái nào',
+          'ph-point': 'LOCK POINT: khóa cuối cùng vào tay — mốc xếp thứ tự serial của cả sàn',
+          'ph-shrink': 'Pha NHẢ: trả dần khóa — từ giây này không được xin thêm bất kỳ khóa nào',
+          'ph-strict': 'STRICT: riêng khóa X găm đến tận commit — không ai đọc được dữ liệu chưa chắc sống'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 LUẬT ĐÃ THÀNH HÌNH: gom → 📍 đỉnh → nhả → riêng X găm tới commit. Khối "xong két nào nhả ngay két đó" nghe tiết kiệm mà là BỊA — nó chính là bản NHẢ SỚM làm audit đọc 250: hạ rồi dâng lại là gãy 2PL. Nhưng nhớ lời sách: hai kẻ cùng tuân luật vẫn có thể ôm chéo két của nhau mà đứng hình — bài sau xử vụ đó. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'ph-grow': 'Chốt 1 — nửa đầu đời giao dịch, đường khóa chỉ được phép đi LÊN. Khối nào tả đúng luật nửa này?',
+          'ph-point': 'Chốt 1 xong: đang gom. Đỉnh của đường — khoảnh khắc gom được khóa CUỐI — sách đặt tên là gì và nó quý vì sao?',
+          'ph-shrink': 'Qua đỉnh rồi — nửa sau chỉ còn một chiều đi xuống. Luật cấm tuyệt đối điều gì ở nửa này?',
+          'ph-strict': 'Khung 2PL đủ rồi — còn một chốt GIA CỐ riêng cho khóa X: giữ đến bao giờ để kẻ khác khỏi đọc ké dữ liệu chưa commit?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #54 — soi 4 bản nháp:</strong> bốn dev nộp bốn kịch bản khóa cho giao dịch "chuyển 50 gem két CHÍNH → két QC". Chỉ MỘT bản tuân 2PL trọn vẹn — bản nào?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: 'lock-X(CHÍNH) → trừ 50 → lock-X(QC) → cộng 50 → unlock(CHÍNH) → unlock(QC)',
+            correct: true
+          },
+          {
+            text: 'lock-X(CHÍNH) → trừ 50 → unlock(CHÍNH) → lock-X(QC) → cộng 50 → unlock(QC)',
+            correct: false,
+            explain: 'Gãy luật — unlock(CHÍNH) rồi mới lock-X(QC): hạ rồi dâng lại. Đây chính là bản NHẢ SỚM làm audit đọc 250; khe giữa unlock và lock là cửa cho kẻ khác chen.'
+          },
+          {
+            text: 'lock-X(CHÍNH) → trừ 50 → unlock(CHÍNH) → cộng 50 vào QC (khỏi khóa — có ai đụng QC đâu)',
+            correct: false,
+            explain: 'Gãy kép — vừa nhả-rồi-làm-tiếp, vừa GHI vào két không giữ khóa. "Có ai đụng đâu" là lời nói dối nổi tiếng nhất Trading Floor: lost update bài 11 sinh ra đúng từ câu đó.'
+          },
+          {
+            text: 'lock-X(CHÍNH) → lock-X(QC) → trừ 50 → unlock(CHÍNH) → cộng 50 vào QC → unlock(QC) → nhưng lỡ quên, lock-X(CHÍNH) lần nữa để check lại số dư',
+            correct: false,
+            explain: 'Suýt thì hợp lệ — cho tới cú "lock lại để check": đã vào pha nhả (unlock CHÍNH từ giữa chừng) mà còn xin thêm khóa là vi phạm. Muốn check lại thì phải gom đủ TRƯỚC khi nhả bất kỳ cái nào.'
+          }
+        ],
+        schema: {
+          table_name: 'đường khóa của 4 bản nháp',
+          columns: [
+            { name: 'bản', type: 'kịch bản lock/unlock', key: '#' },
+            { name: 'đường khóa', type: 'số khóa giữ theo thời gian', key: '📈' },
+            { name: '2PL?', type: 'một đỉnh duy nhất?', key: '❓' }
+          ],
+          data: [
+            ['1', '1 → 2 → 1 → 0', '❓'],
+            ['2', '1 → 0 → 1 → 0', '❓'],
+            ['3', '1 → 0 (ghi không khóa)', '❓'],
+            ['4', '1 → 2 → 1 → 0 → 1', '❓']
+          ]
+        },
+        context: {
+          scenario: 'Bài kiểm tra 2PL nhanh nhất không phải đọc từng lệnh — là VẼ đường khóa: đếm số khóa đang giữ sau mỗi lệnh. Đường hợp lệ có đúng MỘT đỉnh; cứ thấy hạ-rồi-dâng-lại là gãy, khỏi đọc tiếp.',
+          real_world: 'Trong Postgres/InnoDB bạn không tự viết lock-X từng dòng — engine làm hộ theo strict 2PL: khóa ghi găm đến COMMIT. Bug "nhả sớm" đời thực thường mặc bộ đồ khác: tách một việc thành 2 transaction riêng để "nhanh hơn", chính là tự tay unlock giữa chừng.',
+          steps: [
+            'Vẽ đường khóa từng bản: cộng 1 khi lock, trừ 1 khi unlock.',
+            'Bản 2: 1 → 0 → 1 — hạ rồi dâng: gãy.',
+            'Bản 3: ghi vào két khi đang giữ 0 khóa — gãy kiểu khác.',
+            'Bản 4: về 0 xong dâng lại 1 — cú "check lại" giết cả bản nháp.',
+            'Bản 1: 1 → 2 (đỉnh) → 1 → 0 — một đỉnh duy nhất: hợp lệ.'
+          ],
+          hint_explore: 'Chạy lại sim Step 1: bản 2PL chuẩn vẽ đường một đỉnh, bản nhả sớm vẽ đường gãy — 4 bản nháp này chỉ là 4 biến thể của hai đường đó.',
+          expected: 'Chọn bản 1 — gom đủ 2 két rồi mới bắt đầu nhả.'
+        },
+        hints: [
+          { level: 1, text: 'Đừng đọc ngữ nghĩa vội — vẽ ĐƯỜNG KHÓA: lock = +1, unlock = −1. Đường 2PL hợp lệ trông thế nào?' },
+          { level: 2, text: 'Một đỉnh duy nhất: dâng hết cỡ rồi chỉ đi xuống. Bản nào có đoạn HẠ rồi DÂNG lại?' },
+          { level: 3, text: 'Bản 3 không dâng lại — nhưng nó GHI vào két lúc đang giữ 0 khóa. Locking protocol cho phép không?' },
+          { level: 4, text: 'Đáp án: bản 1 — lock CHÍNH, lock QC (📍), làm việc, nhả dần. Chính là T3 trong sách.' }
+        ],
+        success_message: 'TICKET #54 ĐÓNG — luật 2 pha đã treo trên quầy lock manager! 📈📉 Một hồ sơ kỹ thuật đang chờ bên dưới: STRICT vs RIGOROUS — giữ khóa đến commit thì mua thêm được gì (gợi ý: chặn sập dây chuyền). Nhưng đọc xong nhớ quay lại chuyện sách bỏ lửng: T3 ôm két B xin két A, T4 ôm két A xin két B — cả hai ĐỨNG HÌNH. Bài sau: DEADLOCK, và tấm bản đồ wait-for graph soi ra kẻ phải chết. ⛓️',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_strict_rigorous']
+    },
+
+    /* ── nc_14 — Ticket #55 · Deadlock & Wait-for Graph (Ch.18.2) ──
+     * PART_7 Bài 4: định nghĩa deadlock (tập giao dịch chờ vòng tròn), wait-for
+     * graph (cạnh Ti→Tj = Ti chờ Tj; CYCLE ⟺ deadlock — Fig 18.13/18.14 map
+     * T17..T20 → T1..T4), phòng (ordered locking, wait-die/wound-wait — Card B)
+     * vs chữa (detect & rollback), victim selection 4 tiêu chí cost + chống
+     * starvation. Sim thứ 7: wfg_visual — graph builder bấm thêm cạnh. */
+    {
+      id: 'nc_14', index: 14,
+      title: 'Deadlock — vòng tròn chờ nhau đến vĩnh viễn',
+      subtitle: 'Wait-for graph: cạnh là "đang chờ", vòng là deadlock — và ai đó phải làm victim',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'lock table lúc 03:14 — ai giữ gì, ai xin gì',
+          columns: ['transaction', 'đang GIỮ', 'đang XIN', 'chờ ai'],
+          dataRows: [
+            ['T1 · báo cáo tuần', '—', 'S(ví DF), S(kho listing)', 'T2, T3'],
+            ['T2 · thanh toán', 'X(ví DF)', 'X(đơn #9012)', 'T4'],
+            ['T3 · nhập kho', 'X(kho listing)', 'X(ví DF)', 'T2'],
+            ['T4 · đổi trả', 'X(đơn #9012)', 'X(kho listing)', 'T3']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #55',
+        hook: '03:14 sáng — bốn giao dịch của DragonForge <strong>đứng hình</strong>. Không lỗi, không chậm, CPU ngồi chơi: thanh toán ôm ví chờ đơn, đổi trả ôm đơn chờ kho, nhập kho ôm kho chờ ví… Đúng cảnh sách cảnh báo ở bài 2PL: ai cũng tuân luật, và <em>chính vì thế</em> ai cũng ôm khư khư thứ kẻ khác cần. Ticket #55: vẽ tấm bản đồ <strong>WAIT-FOR GRAPH</strong> soi ra vòng tròn tử thần — rồi lạnh lùng chọn một kẻ phải chết cho cả hàng thông.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'DEADLOCK = tồn tại một TẬP giao dịch chờ vòng tròn: T0 chờ thứ T1 giữ, T1 chờ T2… và Tn chờ lại T0 — không ai nhúc nhích được, và KHÔNG tự tan: hệ thống phải can thiệp bằng rollback (sách 18.2)',
+            'WAIT-FOR GRAPH: node = giao dịch, cạnh Ti→Tj = "Ti đang chờ Tj nhả đồ" — định lý gọn lỏn: có CYCLE ⟺ có deadlock; chờ dài cỡ nào mà không khép vòng thì vẫn chỉ là… chờ',
+            'Hai trường phái: PHÒNG (gom khóa theo thứ tự thống nhất, hoặc phân xử theo tuổi — hồ sơ wait-die/wound-wait sau bài) vs CHỮA (định kỳ soi graph, thấy vòng thì chọn VICTIM rẻ nhất mà rollback — kèm luật chống tế mãi một mạng)'
+          ],
+          intro: 'Ngã tư kẹt cứng: xe A chờ xe B tiến, B chờ C, C chờ D, còn D… chờ đúng xe A. Không xe nào sai luật — nhưng cả ngã tư chết đứng, và sẽ chết đứng ĐẾN MAI nếu không ai chịu lùi. Cảnh sát giao thông của DBMS làm hai việc: vẽ sơ đồ "ai chờ ai" để tìm vòng, và chỉ mặt một xe bắt LÙI — chọn xe nào cho rẻ nhất là cả một cuốn sổ cost.',
+          example: 'Lock table 03:14 (panel dữ liệu): T2 giữ ví chờ đơn, T4 giữ đơn chờ kho, T3 giữ kho chờ… ví của T2. Vẽ cạnh: <code>T2→T4→T3→T2</code> — <strong>vòng khép: deadlock</strong>. Còn T1 chờ cả T2 lẫn T3 nhưng KHÔNG ai chờ T1 — nó chỉ xếp hàng VÀO vòng chứ không nằm TRONG vòng: rollback T1 là tế oan mạng vô tội mà vòng vẫn nguyên.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-diagram-project',
+            title: 'Wait-for graph — theo đúng sách',
+            body: 'Đồ thị có hướng G = (V, E): V là toàn bộ giao dịch, cạnh <strong>Ti → Tj</strong> nghĩa là Ti đang chờ Tj nhả một data item nó cần; cạnh được thêm khi Ti xin thứ Tj giữ, và chỉ được gỡ khi Tj hết giữ thứ Ti cần. <strong>Hệ thống deadlock KHI VÀ CHỈ KHI graph chứa cycle</strong> — mọi giao dịch trong cycle đều bị kẹt. Muốn phát hiện, hệ thống định kỳ chạy thuật toán tìm vòng trên graph này.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.2.2.1 — Deadlock Detection, Fig 18.13-18.14'
+          },
+          {
+            icon: 'fa-scale-balanced',
+            title: 'Chọn victim — cuốn sổ cost của đao phủ',
+            body: 'Thấy vòng rồi thì rollback ai? Sách kê 4 khoản để chọn kẻ RẺ NHẤT: đã tính toán bao lâu & còn bao lâu nữa xong · đã dùng bao nhiêu data item · còn cần thêm bao nhiêu · kéo theo bao nhiêu giao dịch khác phải rollback cùng. Kèm điều khoản nhân đạo: cộng SỐ LẦN ĐÃ BỊ TẾ vào cost — kẻo một giao dịch đen đủ đường bị chọn làm victim mãi mãi (starvation).'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Dòng <code>ERROR: deadlock detected</code> trong log Postgres chính là bạn vừa chứng kiến một cú tế victim: engine soi graph định kỳ, thấy vòng, chọn một transaction ném lỗi cho app — các giao dịch còn lại chạy tiếp như chưa có gì. Vì thế mọi cẩm nang backend đều dặn: bọc transaction trong <strong>retry</strong> — victim chết đi sống lại là chuyện thường ngày ở Trading Floor.'
+          }
+        ],
+        wfg_visual: {
+          eyebrow: 'WAIT-FOR GRAPH BUILDER — LOCK TABLE 03:14, THÊM TỪNG CẠNH MÀ SOI VÒNG',
+          caption: 'Bốn cạnh đầu chờ chằng chịt mà CHƯA chết — cạnh thứ 5 khép vòng T2→T4→T3→T2 mới là deadlock. Chọn victim: bấm thẳng vào một giao dịch (sổ cost khuyên kẻ rẻ nhất).',
+          nodes: [
+            { id: 'T1', x: 92, y: 118, sub: 'báo cáo tuần · chỉ đọc' },
+            { id: 'T2', x: 318, y: 52, sub: 'thanh toán · giữ X(ví)' },
+            { id: 'T3', x: 318, y: 184, sub: 'nhập kho · giữ X(kho)' },
+            { id: 'T4', x: 548, y: 118, sub: 'đổi trả · giữ X(đơn)' }
+          ],
+          edges: [
+            { from: 'T1', to: 'T2', label: 'T1 xin S(ví DF) — T2 đang giữ X', note: 'T1 muốn ĐỌC ví cho báo cáo — ví đang bị T2 khóa X: thêm cạnh T1→T2. Mới là chờ thường.' },
+            { from: 'T1', to: 'T3', label: 'T1 xin S(kho listing) — T3 giữ X', note: 'Báo cáo cần cả kho — T3 đang giữ: thêm T1→T3. T1 chờ 2 người mà vẫn chưa ai chết.' },
+            { from: 'T3', to: 'T2', label: 'T3 xin X(ví DF) — T2 đang giữ', note: 'Nhập kho xong phải trừ tiền ví — ví trong tay T2: thêm T3→T2. Graph rối dần… vẫn KHÔNG có vòng.' },
+            { from: 'T2', to: 'T4', label: 'T2 xin X(đơn #9012) — T4 đang giữ', note: 'Thanh toán đụng đơn đổi trả — T4 giữ: thêm T2→T4. Bốn cạnh, chờ dài — nhưng thử lần theo mũi tên: chưa quay về được điểm xuất phát.' },
+            { from: 'T4', to: 'T3', label: 'T4 xin X(kho listing) — T3 đang giữ', closes: true, note: '' }
+          ],
+          cycle: ['T2', 'T4', 'T3'],
+          deadlock_note: '🔴 CẠNH THỨ 5 KHÉP VÒNG: T2 → T4 → T3 → T2 — ba giao dịch kẹt vĩnh viễn, CPU ngồi chơi. T1 chờ VÀO vòng nhưng không nằm TRONG vòng. Giờ mở sổ cost: bấm vào giao dịch bạn muốn tế.',
+          victims: {
+            T1: { outside: true, note: '⚠️ T1 không nằm TRONG vòng — nó chỉ xếp hàng chờ vào. Tế T1 là oan mạng vô tội mà vòng T2→T4→T3 vẫn nguyên si. Chọn lại trong vòng đỏ.' },
+            T2: { ok: false, note: 'Vòng TAN — nhưng sổ cost nhăn mặt: T2 đã chạy 40 phút thanh toán, giữ ví, kéo theo hoàn tiền dở dang. Phá được, mà là bản án ĐẮT NHẤT. Sách khuyên: chọn kẻ rẻ nhất.' },
+            T3: { ok: false, note: 'Vòng TAN — nhưng T3 đang nhập nửa kho hàng, giữ nhiều item nhất hội: hoàn tác cả núi việc. Phá được vòng, trả giá không rẻ. Có mạng nào non việc hơn không?' },
+            T4: { ok: true, note: '✓ CHUẨN SỔ COST: T4 mới chạy 2 giây, giữ đúng 1 khóa, chưa ghi gì mấy — rollback rẻ nhất hội. Khóa X(đơn #9012) được thả → T2 chạy tiếp → T3 → cả T1 thông theo. Victim sẽ tự retry, mất vài giây.' }
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'Đọc wait-for graph trong 3 giây',
+            columns: [
+              { name: 'cạnh Ti → Tj', type: 'Ti đang CHỜ Tj nhả đồ', key: '→' },
+              { name: 'có cycle', type: '= deadlock, không tự tan', key: '🔴' },
+              { name: 'không cycle', type: '= chỉ là chờ thường', key: '🟡' }
+            ]
+          },
+          data_preview: [
+            ['T2→T4→T3→T2', 'vòng khép', 'DEADLOCK — phải tế 1 mạng', '🔴'],
+            ['T1→T2, T1→T3', 'không ai chờ T1', 'chờ thường — sẽ thông', '🟡'],
+            ['victim chuẩn', 'rẻ nhất: non việc, ít khóa', 'T4 (2 giây, 1 khóa)', '🗡️'],
+            ['tế T1?', 'ngoài vòng', 'oan mạng — vòng vẫn nguyên', '⚠️']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Graph lúc 03:13 (TRƯỚC cạnh cuối): T1→T2, T1→T3, T3→T2, T2→T4 — bốn cạnh chờ chằng chịt. Hệ thống đã deadlock chưa?',
+            options: [
+              { id: 'a', text: 'CHƯA — chờ nhiều cỡ nào mà không khép VÒNG thì vẫn chỉ là chờ: T4 còn chạy, xong sẽ nhả đơn, cả chuỗi thông dần', correct: true, explanation: 'Đúng — định lý sách: deadlock ⟺ graph có cycle. Bốn cạnh này lần theo mũi tên không quay về được điểm nào — Fig 18.13 của sách chính là cảnh "rối mà chưa chết" này.' },
+              { id: 'b', text: 'Rồi — 4 giao dịch cùng chờ là quá ngưỡng deadlock', correct: false, explanation: 'Sai — không có "ngưỡng số lượng" nào cả; một trăm cạnh không vòng vẫn là chờ thường, hai cạnh khép vòng (T5→T6→T5) đã là deadlock.' },
+              { id: 'c', text: 'Rồi — T1 chờ tận 2 giao dịch nghĩa là nó đã kẹt cứng', correct: false, explanation: 'Sai — T1 kẹt hay không phụ thuộc T2/T3 có THOÁT được không, tức là phụ thuộc chuyện có vòng hay không; bản thân "chờ 2 người" chưa nói lên điều gì.' },
+              { id: 'd', text: 'Chưa — vì deadlock chỉ xảy ra khi có ít nhất một khóa S dính vào', correct: false, explanation: 'Sai — S hay X không quan trọng, quan trọng là quan hệ CHỜ khép vòng; toàn khóa X vẫn deadlock như thường (chính vụ 03:14).' }
+            ]
+          },
+          {
+            question: 'Vòng T2→T4→T3→T2 đã hiện. Vì sao sổ cost trỏ vào T4 (2 giây, 1 khóa, chưa ghi) thay vì T2 (40 phút thanh toán) — và vì sao còn phải ĐẾM số lần một giao dịch bị tế?',
+            options: [
+              { id: 'a', text: 'Rollback T4 hoàn tác ít việc nhất, kéo theo ít nạn nhân nhất; còn đếm-số-lần-bị-tế để cộng vào cost — kẻo một giao dịch bị chọn làm victim mãi, không bao giờ xong việc', correct: true, explanation: 'Đúng cả hai vế — 4 tiêu chí cost + điều khoản chống starvation, đủ nguyên văn mục 18.2.2.2. Đao phủ của DBMS lạnh lùng nhưng có sổ sách.' },
+              { id: 'b', text: 'Vì T4 vào hệ thống sau cùng — luật là ai đến sau chết trước', correct: false, explanation: 'Sai — "đến sau chết trước" không phải luật của detection & recovery; trẻ già chỉ là MỘT tín hiệu gián tiếp của "ít việc phải hoàn". (Phân xử thuần theo tuổi là chuyện wait-die/wound-wait — hồ sơ sau bài.)' },
+              { id: 'c', text: 'Vì T4 giữ khóa X — victim bắt buộc phải là kẻ giữ X', correct: false, explanation: 'Sai — cả T2 lẫn T3 cũng giữ X; kiểu khóa không phải tiêu chí. Tiêu chí là CHI PHÍ hoàn tác.' },
+              { id: 'd', text: 'Không cần chọn — rollback cả 3 cho chắc, sạch vòng tuyệt đối', correct: false, explanation: 'Sai — tế 1 mạng rẻ nhất là đủ phá vòng; giết cả 3 là đốt 40 phút của T2 + nửa kho của T3 vô nghĩa. Đao phủ giỏi chém đúng một nhát.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Deadlock — hay chỉ là chờ?',
+          instruction: 'Lần theo mũi tên: khép được vòng mới là án tử.',
+          xp: 20,
+          chips: [
+            { id: 'g1', label: 'T2→T4 · T4→T3 · T3→T2' },
+            { id: 'g2', label: 'T1→T2 · T1→T3 (không ai chờ T1)' },
+            { id: 'g3', label: 'T5→T6 · T6→T5' },
+            { id: 'g4', label: '10 giao dịch cùng chờ 1 giao dịch đang chạy nốt' }
+          ],
+          bins: [
+            { id: 'dl', label: 'DEADLOCK 🔴' },
+            { id: 'wt', label: 'CHỈ LÀ CHỜ 🟡' }
+          ],
+          solution: { g1: 'dl', g2: 'wt', g3: 'dl', g4: 'wt' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp quy trình 4 bước của đội xử deadlock ca đêm — có MỘT khối bịa (nghe rất chi là "để yên rồi đâu vào đấy").',
+        blocks: [
+          { type: 'op', token: 'Soi VÒNG trên graph: có cycle ⟺ có deadlock — chờ chằng chịt mấy cũng chưa phải án', slot: 'wf-cycle' },
+          { type: 'op', token: 'Vẽ wait-for graph từ lock table: mỗi yêu cầu đang treo = một cạnh "ai chờ ai"', slot: 'wf-draw' },
+          { type: 'op', token: 'Deadlock để lâu sẽ tự tan — các giao dịch chờ đủ lâu rồi cũng lần lượt tự bỏ cuộc', slot: 'wf-x' },
+          { type: 'op', token: 'Rollback victim: khóa nó giữ được thả → vòng đứt → cả hàng thông, victim retry lại từ đầu', slot: 'wf-roll' },
+          { type: 'op', token: 'Mở sổ cost chọn VICTIM rẻ nhất trong vòng — cộng cả số lần đã bị tế để không ai chết mãi', slot: 'wf-victim' }
+        ],
+        drop_zones: [
+          { id: 'wf-draw', placeholder: 'Bước 1 — lấy đâu ra tấm bản đồ?', accepts: ['op'], multi: false,
+            station: { icon: '🗺️', label: 'Vẽ graph', sub: 'Bước 1', hint: 'Nguyên liệu nằm sẵn trong lock table: ai GIỮ gì, ai đang XIN gì.' } },
+          { id: 'wf-cycle', placeholder: 'Bước 2 — nhìn gì trên bản đồ để kết án?', accepts: ['op'], multi: false,
+            station: { icon: '🔴', label: 'Soi vòng', sub: 'Bước 2', hint: 'Định lý một dòng của sách: deadlock khi và chỉ khi… gì?' } },
+          { id: 'wf-victim', placeholder: 'Bước 3 — án tử trao cho ai?', accepts: ['op'], multi: false,
+            station: { icon: '🗡️', label: 'Chọn victim', sub: 'Bước 3', hint: 'Đao phủ có sổ: 4 khoản chi phí + một điều khoản nhân đạo.' } },
+          { id: 'wf-roll', placeholder: 'Bước 4 — chém xong thì chuyện gì xảy ra?', accepts: ['op'], multi: false,
+            station: { icon: '♻️', label: 'Rollback & thông', sub: 'Bước 4', hint: 'Khóa của victim đi đâu, hàng chờ được gì, và victim có chết hẳn không?' } }
+        ],
+        expected_sql: 'Vẽ wait-for graph từ lock table: mỗi yêu cầu đang treo = một cạnh "ai chờ ai" Soi VÒNG trên graph: có cycle ⟺ có deadlock — chờ chằng chịt mấy cũng chưa phải án Mở sổ cost chọn VICTIM rẻ nhất trong vòng — cộng cả số lần đã bị tế để không ai chết mãi Rollback victim: khóa nó giữ được thả → vòng đứt → cả hàng thông, victim retry lại từ đầu',
+        expected_zones: {
+          'wf-draw': 'Vẽ wait-for graph từ lock table: mỗi yêu cầu đang treo = một cạnh "ai chờ ai"',
+          'wf-cycle': 'Soi VÒNG trên graph: có cycle ⟺ có deadlock — chờ chằng chịt mấy cũng chưa phải án',
+          'wf-victim': 'Mở sổ cost chọn VICTIM rẻ nhất trong vòng — cộng cả số lần đã bị tế để không ai chết mãi',
+          'wf-roll': 'Rollback victim: khóa nó giữ được thả → vòng đứt → cả hàng thông, victim retry lại từ đầu'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 ĐỘI XỬ ĐÊM ĐÃ VÀO CA: vẽ graph → soi vòng → mở sổ chọn victim → chém & thông hàng. Khối "để lâu tự tan" là BỊA trắng trợn — deadlock KHÔNG tự tan: không ai trong vòng nhúc nhích được để mà "bỏ cuộc". (Có scheme timeout thật, nhưng phải CÀI đặt hạn chờ, và sách chê: ngắn thì chém oan, dài thì kẹt lâu — hồ sơ sau bài nhắc tiếp.) Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'wf-draw': 'Bước 1 — muốn xử án phải có bản đồ. Dữ liệu "ai giữ gì, ai xin gì" nằm sẵn ở đâu, và biến nó thành graph kiểu gì?',
+          'wf-cycle': 'Bản đồ vẽ xong: cạnh chờ chằng chịt. Định lý một dòng nào tách "rối mà sống" khỏi "án tử"?',
+          'wf-victim': 'Vòng đã hiện — ai đó phải chết cho cả hàng thông. Đao phủ chọn bằng cảm tính hay bằng sổ? Sổ ghi những khoản nào?',
+          'wf-roll': 'Án đã tuyên. Cú rollback làm gì với đống khóa của victim — và số phận victim sau đó ra sao?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #55 — biên bản 03:14:</strong> điền nốt hồ sơ vụ deadlock từ wait-for graph (lock table nằm ở panel trái).',
+        challenge_type: 'fill_blank',
+        template: "-- WAIT-FOR GRAPH luc 03:14 (canh = dang cho):\n--   T1 -> T2   ·   T1 -> T3   ·   T3 -> T2\n--   T2 -> T4   ·   T4 -> T3\n-- Lan theo mui ten: T2 -> T4 -> T3 -> quay ve T2\n\n-- So giao dich nam TRONG vong deadlock: ____\n\n-- So cost (tuoi viec / so khoa / da ghi bao nhieu):\n--   T2: 40 phut · T3: nua kho · T4: 2 giay, 1 khoa\n--   Victim re nhat: ____\n\n-- T1 cho vao vong nhung co nam TRONG vong khong (CO/KHONG): ____",
+        blanks: [
+          { id: 'b1', hint: '? giao dịch', expected: '3' },
+          { id: 'b2', hint: 'T?', expected: 'T4' },
+          { id: 'b3', hint: 'CO / KHONG', expected: 'KHONG' }
+        ],
+        schema: {
+          table_name: 'lock table 03:14 — tang vật',
+          columns: [
+            { name: 'transaction', type: 'ai', key: '' },
+            { name: 'đang GIỮ', type: 'khóa trong tay', key: '🔒' },
+            { name: 'đang XIN', type: 'thứ đang chờ', key: '⏳' },
+            { name: 'chờ ai', type: 'cạnh trên graph', key: '→' }
+          ],
+          data: [
+            ['T1 · báo cáo', '—', 'S(ví), S(kho)', 'T2, T3'],
+            ['T2 · thanh toán', 'X(ví DF)', 'X(đơn #9012)', 'T4'],
+            ['T3 · nhập kho', 'X(kho listing)', 'X(ví DF)', 'T2'],
+            ['T4 · đổi trả', 'X(đơn #9012)', 'X(kho listing)', 'T3']
+          ]
+        },
+        context: {
+          scenario: 'Đây là đúng tờ biên bản mà thuật toán detection điền mỗi lần chạy: đếm mạng trong vòng, mở sổ cost, khoanh victim. Điền được 3 ô này là bạn đọc wait-for graph nhanh hơn khối DBA thâm niên.',
+          real_world: 'Postgres chạy detection sau mỗi deadlock_timeout (mặc định 1 giây treo); victim nhận "ERROR: deadlock detected" kèm chi tiết ai giữ gì — nội dung y hệt lock table tang vật bên trái. App tử tế bọc retry là người dùng không bao giờ biết đã có một vụ hành quyết.',
+          steps: [
+            'Lần mũi tên từ T2: T2→T4→T3→ quay về T2 — vòng gồm đúng 3 mạng.',
+            'T1 có 2 cạnh đi RA nhưng không cạnh nào đi VÀO nó — ngoài vòng.',
+            'Sổ cost: T2 40 phút, T3 nửa kho, T4 mới 2 giây 1 khóa — rẻ nhất lộ mặt.',
+            'Ba ô: 3 · T4 · KHONG.'
+          ],
+          hint_explore: 'Chạy lại sim Step 1 tới cạnh thứ 5 — vòng đỏ nhấp nháy khoanh đúng 3 node, còn T1 đứng ngoài tái mặt.',
+          expected: '3 · T4 · KHONG'
+        },
+        hints: [
+          { level: 1, text: 'Ô 1: xuất phát từ T2, lần theo mũi tên tới khi quay về T2 — đi qua mấy giao dịch (kể cả T2)?' },
+          { level: 2, text: 'Ô 2: trong 3 mạng của vòng, sổ cost so tuổi việc + số khóa + lượng đã ghi — ai non việc nhất?' },
+          { level: 3, text: 'Ô 3: muốn "trong vòng" phải có đường quay VỀ mình. Có mũi tên nào trỏ vào T1 không?' },
+          { level: 4, text: 'Đáp án: 3 · T4 · KHONG — tế đúng kẻ rẻ nhất, tha đúng kẻ ngoài vòng.' }
+        ],
+        success_message: 'TICKET #55 ĐÓNG — vòng tử thần bị chém đúng một nhát, cả hàng thông lúc 03:15! 🗡️ Hồ sơ đọc thêm bên dưới: WAIT-DIE vs WOUND-WAIT — trường phái PHÒNG bệnh phân xử bằng tuổi, khỏi cần soi graph. Bài sau leo lên tầng nhìn mới: khóa cả BẢNG hay khóa từng DÒNG? MULTIPLE GRANULARITY & INTENTION LOCKS — vì sao lock manager không điên khi một giao dịch đòi quét cả kho. 🌲',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_waitdie_woundwait']
     }
 
   ],
@@ -3037,6 +3503,72 @@ window.LESSON_CONTENT['db_design_nc'] = {
       },
       source: 'PART_6 Card J — join minimization & shared scan (Ch 16 Advanced Topics in Query Optimization)',
       cta: { label: 'Hết Module 7 — Engine Room ✓ · Hẹn Module 8: Giao dịch & Concurrency', href: '/courses/db_design_nc' }
+    },
+
+    /* ═══ MODULE 8 — Card A (PART_7: sau Bài 3 / nc_13) ═══ */
+    {
+      id: 'nc_card_strict_rigorous',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 13',
+      title: 'Strict vs Rigorous 2PL — giữ đến commit thì mua được gì?',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: '2PL cơ bản còn một khe hở chết người: nhả khóa X <em>trước khi commit</em> là kẻ khác đọc được dữ liệu CHƯA CHẮC SỐNG. Sách vá bằng hai phiên bản khắc nghiệt hơn — và chính chúng, chứ không phải bản cơ bản, mới là thứ chạy trong DBMS thương mại.',
+      sections: [
+        {
+          icon: 'fa-house-crack',
+          heading: 'Vụ sập dây chuyền (Fig 18.8)',
+          body: 'T5 ghi vào A rồi nhả khóa X — đúng luật 2PL vì nó không xin thêm gì nữa. T6 chen vào đọc A, ghi tiếp, nhả; T7 lại đọc theo. Rồi T5… <strong>SẬP</strong> trước khi commit. Dữ liệu T5 ghi phải hủy — nhưng T6 đã tính toán trên con số ma đó, T7 tính trên số của T6: <strong>cascading rollback</strong>, sập cả dây chuyền ba mạng vì một khe nhả sớm.'
+        },
+        {
+          icon: 'fa-shield-heart',
+          heading: 'Strict và Rigorous — hai mức găm khóa',
+          body: '<strong>STRICT 2PL</strong>: mọi khóa <em>X</em> phải găm đến tận commit/abort — không ai đọc được dữ liệu chưa commit, cascading rollback chết từ trứng. <strong>RIGOROUS 2PL</strong>: găm <em>TẤT CẢ</em> khóa (cả S) đến commit — phần thưởng thêm: các giao dịch serialize đúng theo <strong>thứ tự commit</strong>, suy luận dễ như đọc log. Sách chốt: hai bản này "được dùng rộng rãi trong các hệ thương mại".',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.3 — strict & rigorous two-phase locking'
+        }
+      ],
+      quiz: {
+        question: 'Vì sao STRICT 2PL (găm khóa X đến commit) giết được cascading rollback từ trong trứng?',
+        options: [
+          { label: 'Vì không ai ĐỌC được dữ liệu do giao dịch chưa commit ghi ra — T5 có sập cũng chẳng ai kịp tính toán trên con số ma của nó', correct: true, feedback: '✓ Chuẩn — khóa X còn găm nghĩa là bản ghi còn "trong phòng kín"; thế giới chỉ thấy dữ liệu đã chắc chắn sống.' },
+          { label: 'Vì strict 2PL cấm luôn chuyện abort — giao dịch nào cũng phải commit', correct: false, feedback: '✗ Không ai cấm được abort (mất điện, lỗi logic…) — strict chỉ đảm bảo lúc abort, chưa ai kịp ĐỌC thứ sắp bị hủy.' },
+          { label: 'Vì nó bắt các giao dịch chạy tuần tự tuyệt đối, hết đường chen', correct: false, feedback: '✗ Vẫn đồng thời như thường — chỉ dữ liệu ĐANG BỊ GHI dở là bị che; các item khác ai muốn đụng cứ đụng.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.3 · PART_7 Card A — Strict vs Rigorous 2PL',
+      cta: { label: 'Vào bài 14 — Deadlock: vòng tròn chờ nhau đến vĩnh viễn', href: '/lesson/db_design_nc?lesson=14' }
+    },
+
+    /* ═══ MODULE 8 — Card B (PART_7: sau Bài 4 / nc_14) ═══ */
+    {
+      id: 'nc_card_waitdie_woundwait',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 14',
+      title: 'Wait-Die vs Wound-Wait — phân xử bằng tuổi, khỏi soi graph',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: 'Bài 14 CHỮA deadlock bằng soi graph + tế victim. Trường phái PHÒNG làm khác: cấp cho mỗi giao dịch một <strong>timestamp</strong> lúc chào đời, và mọi cú "xin đồ kẻ khác đang giữ" được phân xử ngay tại quầy bằng tuổi — vòng chờ không bao giờ kịp khép.',
+      sections: [
+        {
+          icon: 'fa-hourglass-half',
+          heading: 'Hai luật, cùng một nguyên tắc',
+          body: 'Lấy T14(ts=5) GIÀ, T15(ts=10), T16(ts=15) TRẺ. <strong>WAIT-DIE</strong> (không cướp): xin đồ của kẻ TRẺ hơn thì GIÀ được chờ — T14 xin của T15: chờ; TRẺ xin của già thì CHẾT — T16 xin của T15: rollback. <strong>WOUND-WAIT</strong> (có cướp): GIÀ xin của trẻ thì ĐÂM — T14 xin của T15: T15 bị rollback nhường đồ; trẻ xin của già thì ngoan ngoãn CHỜ — T16 xin của T15: chờ. Cả hai đều chặn mọi vòng chờ già-trẻ lẫn lộn — deadlock hết cửa khép vòng.'
+        },
+        {
+          icon: 'fa-rotate-left',
+          heading: 'Điều khoản chống chết mãi — và cái giá',
+          body: 'Giao dịch bị rollback <strong>GIỮ NGUYÊN timestamp cũ</strong> khi chạy lại — nghĩa là mỗi lần tái sinh nó một "già" hơn tương đối, sớm muộn cũng đủ tuổi để thắng: không ai starvation. Cái giá của cả hai scheme: <strong>rollback oan</strong> — nhiều mạng bị tế dù vòng chờ thật ra chẳng bao giờ khép. Còn chiêu dân dã lock timeout (chờ quá hạn thì tự chết)? Sách lắc đầu: hạn ngắn thì chém oan, hạn dài thì kẹt lâu — "khả dụng hạn chế".'
+        }
+      ],
+      quiz: {
+        question: 'Dưới WOUND-WAIT: T16 (trẻ, ts=15) đang giữ khóa ví; T14 (già, ts=5) xin đúng khóa đó. Chuyện gì xảy ra?',
+        options: [
+          { label: 'T16 bị ĐÂM — rollback nhường khóa cho T14; lúc chạy lại T16 giữ nguyên ts=15 nên không bị bắt nạt mãi', correct: true, feedback: '✓ Chuẩn — wound-wait là luật CÓ CƯỚP: già xin của trẻ là trẻ đổ máu; và timestamp giữ nguyên là bảo hiểm chống starvation.' },
+          { label: 'T14 xếp hàng chờ T16 xong việc — già thì càng phải nhẫn nại', correct: false, feedback: '✗ Đó là wait-die (già CHỜ trẻ). Wound-wait ngược tính: già không chờ ai — nó đâm.' },
+          { label: 'T14 bị rollback vì dám đụng khóa đang có chủ', correct: false, feedback: '✗ Ở cả hai scheme, kẻ GIÀ không bao giờ là bên bị tế khi đối đầu trẻ — nó hoặc chờ (wait-die) hoặc đâm (wound-wait).' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.2.1 — Deadlock Prevention: wait-die, wound-wait, lock timeouts · PART_7 Card B',
+      cta: { label: 'Về Trading Floor — hẹn bài 15: Multiple Granularity & Intention Locks', href: '/courses/db_design_nc' }
     }
   ]
 };

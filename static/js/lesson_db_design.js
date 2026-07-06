@@ -1606,6 +1606,72 @@
         '<text x="518" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">T2 vẫn chạy đồng thời — chỉ chờ đúng đoạn đụng ví</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">khóa chặn đúng chỗ đụng nhau — nhưng NHẢ QUÁ SỚM vẫn sai ($250 hồ sơ sách): hồi sau, 2PL</text>' +
+      '</svg>',
+
+    /* nc_13 — hai đường khóa: 2PL một đỉnh vs nhả sớm gãy luật (Ticket #54) */
+    nc_13: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Đường khóa 2PL dâng một đỉnh có lock point rồi hạ, audit luôn đọc 300; bản nhả sớm hạ rồi dâng lại là vi phạm, audit chen đọc 250">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Two-Phase Locking — đường khóa chỉ được MỘT đỉnh</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">chuyển 50 gem két CHÍNH → két QC · tổng thật 300 · growing chỉ XIN — shrinking chỉ NHẢ</text>' +
+        // Bản 2PL chuẩn
+        '<rect x="36" y="56" width="310" height="130" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="191" y="74" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">📈 BẢN 2PL — MỘT ĐỈNH</text>' +
+        '<path d="M60 148 L60 128 L142 128 L142 108 L210 108 L210 128 L248 128 L248 148 L316 148" fill="none" stroke="#34d399" stroke-width="2"/>' +
+        '<circle cx="142" cy="108" r="4" fill="#34d399"/>' +
+        '<text x="168" y="100" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="8">📍 LOCK POINT</text>' +
+        '<text x="191" y="163" text-anchor="middle" fill="#aebfd6" font-size="8">gom CHÍNH → gom QC 📍 → làm việc → nhả dần</text>' +
+        '<text x="191" y="178" text-anchor="middle" fill="#34d399" font-weight="800" font-size="9.5">✓ audit chen nhịp nào cũng đọc 300</text>' +
+        // Bản nhả sớm
+        '<rect x="372" y="56" width="312" height="130" rx="9" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="528" y="74" text-anchor="middle" fill="#fca5a5" font-weight="700" font-size="10">⛔ BẢN NHẢ SỚM — ĐƯỜNG GÃY</text>' +
+        '<path d="M396 148 L396 128 L458 128 L458 148 L520 148" fill="none" stroke="#f87171" stroke-width="2"/>' +
+        '<path d="M520 148 L520 128 L582 128 L582 148 L652 148" fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="4,3"/>' +
+        '<text x="489" y="143" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="8">⚡ audit: 250</text>' +
+        '<text x="536" y="120" text-anchor="middle" fill="#f87171" font-weight="700" font-size="8">⛔ dâng lại = gãy</text>' +
+        '<text x="528" y="163" text-anchor="middle" fill="#aebfd6" font-size="8">gom CHÍNH → NHẢ sớm → audit chen → gom QC</text>' +
+        '<text x="528" y="178" text-anchor="middle" fill="#f87171" font-weight="800" font-size="9.5">❌ hạ rồi dâng lại — vi phạm 2PL</text>' +
+      '</g>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">xếp cả sàn theo LOCK POINT = một thứ tự serial — nhưng 2PL không miễn DEADLOCK: hồi sau sẽ rõ</text>' +
+      '</svg>',
+
+    /* nc_14 — wait-for graph: vòng T2→T4→T3→T2 đỏ, T1 ngoài vòng, victim T4 (Ticket #55) */
+    nc_14: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wait-for graph: vòng đỏ T2 chờ T4 chờ T3 chờ T2 là deadlock, T1 chờ vào vòng nhưng đứng ngoài, victim rẻ nhất T4 bị rollback cho hàng thông">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Deadlock — vòng tròn chờ nhau, và một nhát chém</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">cạnh = đang chờ · CYCLE = deadlock (không tự tan) · victim = kẻ rẻ nhất trong vòng</text>' +
+        // Graph trái
+        '<g stroke="rgba(148,163,184,.5)" stroke-width="1.5" fill="none">' +
+          '<path d="M120 112 L 226 79"/><path d="M120 128 L 226 161"/>' +
+        '</g>' +
+        '<g stroke="#f87171" stroke-width="2" fill="none">' +
+          '<path d="M272 78 L 378 112"/><path d="M378 128 L 272 162"/><path d="M250 148 L 250 92"/>' +
+        '</g>' +
+        '<g fill="#0e1726" stroke-width="1.6">' +
+          '<circle cx="100" cy="120" r="20" stroke="rgba(148,163,184,.6)"/>' +
+          '<circle cx="250" cy="72" r="20" stroke="#f87171"/>' +
+          '<circle cx="250" cy="168" r="20" stroke="#f87171"/>' +
+          '<circle cx="398" cy="120" r="20" stroke="#f87171" stroke-dasharray="5,3"/>' +
+        '</g>' +
+        '<g fill="#e8edf5" font-weight="700" font-size="10" text-anchor="middle">' +
+          '<text x="100" y="124">T1</text><text x="250" y="76">T2</text><text x="250" y="172">T3</text><text x="398" y="124">T4</text>' +
+        '</g>' +
+        '<g fill="#7f93ad" font-size="7.5" text-anchor="middle">' +
+          '<text x="100" y="153">chỉ đọc — ngoài vòng</text><text x="250" y="45">giữ X(ví)</text><text x="250" y="201">giữ X(kho)</text>' +
+        '</g>' +
+        '<text x="398" y="153" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="8">🗡️ victim: 2s · 1 khóa</text>' +
+        '<text x="324" y="94" text-anchor="middle" fill="#f87171" font-size="7.5">chờ đơn</text>' +
+        '<text x="324" y="152" text-anchor="middle" fill="#f87171" font-size="7.5">chờ kho</text>' +
+        '<text x="234" y="123" text-anchor="middle" fill="#f87171" font-size="7.5">chờ ví</text>' +
+        // Biên bản phải
+        '<rect x="470" y="56" width="214" height="132" rx="9" fill="#0e1726" stroke="rgba(251,113,133,.55)" stroke-width="1.4"/>' +
+        '<text x="577" y="74" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">🗡️ BIÊN BẢN 03:14</text>' +
+        '<text x="577" y="95" text-anchor="middle" fill="#f87171" font-size="8.5">vòng: T2 → T4 → T3 → T2</text>' +
+        '<text x="577" y="111" text-anchor="middle" fill="#aebfd6" font-size="8.5">T1 chờ vào — NGOÀI vòng</text>' +
+        '<text x="577" y="127" text-anchor="middle" fill="#aebfd6" font-size="8.5">victim rẻ nhất: T4 (2s, 1 khóa)</text>' +
+        '<text x="577" y="150" text-anchor="middle" fill="#34d399" font-weight="800" font-size="9.5">chém 1 nhát → 03:15 thông</text>' +
+        '<text x="577" y="172" text-anchor="middle" fill="#7f93ad" font-size="8">victim retry — không ai chết mãi</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">phòng bằng tuổi (wait-die / wound-wait — hồ sơ B) · chữa bằng soi graph + tế đúng một mạng</text>' +
       '</svg>'
   };
 
@@ -2477,6 +2543,186 @@
     });
   }
 
+  /* ── Phase Visual (nc_13 — 2PL phase-meter, sim thứ 6) ──
+   * PART_7 Bài 3: "kéo lock/unlock vào timeline, check 2PL". Data:
+   * step_1.phase_visual = { eyebrow, caption, modes: [{ id, short, btn, ok,
+   *   verdict, ops: [{ text, delta, lockpoint?, cls?, note? }] }] }.
+   * Thanh "số khóa giữ" dâng/hạ theo từng lệnh; renderer TỰ phát hiện vi phạm
+   * 2PL (delta > 0 sau khi đã từng nhả) — badge VI PHẠM không cần content khai.
+   * User chốt 2026-07-06 (đợt 8): phase-meter bấm-từng-lệnh, 2 bản so kèo. */
+  function renderPhaseVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, cur: 0, released: false, results: {} };
+
+    mount.innerHTML =
+      '<section class="sort-visual phase-visual" aria-label="Phase-meter 2PL: thanh số khóa đang giữ dâng lên rồi hạ xuống theo từng lệnh">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || '2PL PHASE-METER') + '</span></div>' +
+        '<div class="ph-ops" id="ph-ops"><div class="sv-empty">chọn bản chạy rồi bấm từng lệnh — cột trái là SỐ KHÓA đang giữ</div></div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="ph-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="ph-btn" disabled>Lệnh kế</button>' +
+          '<span class="sv-status" id="ph-status">Cùng một giao dịch chuyển gem — hai kịch bản giữ khóa, hai số phận.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('ph-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('ph-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? (r.violated ? 'GÃY LUẬT' : 'một đỉnh chuẩn') : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0; st.cur = 0; st.released = false;
+      $('ph-ops').innerHTML = '';
+      cfg.modes.forEach(function (mm) {
+        $('ph-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id);
+      });
+      setBtn('Lệnh 1 / ' + m.ops.length, false);
+      setStatus('Bản <strong>' + escapeHtml(m.short || m.id) + '</strong> — 0 khóa trong tay. Bấm từng lệnh, để mắt vào cột khóa.');
+    }
+    cfg.modes.forEach(function (m) {
+      $('ph-mode-' + m.id).addEventListener('click', function () { pickMode(m); });
+    });
+
+    $('ph-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderPhaseVisual(mount, cfg); return; }
+      var m = st.mode, op = m.ops[st.i];
+      if (!op) return;
+      var violated = op.delta > 0 && st.released; // xin khóa sau khi đã từng nhả = gãy 2PL
+      st.cur += op.delta;
+      if (op.delta < 0) st.released = true;
+      var bars = '';
+      for (var bi = 0; bi < st.cur; bi++) bars += '<span class="ph-lock">🔒</span>';
+      var row = '<div class="ph-op' + (op.cls ? ' ph-op--' + op.cls : '') + (violated ? ' ph-op--bad' : '') + '">' +
+        '<span class="ph-meter" aria-label="' + st.cur + ' khóa đang giữ">' + (bars || '<span class="ph-lock ph-lock--none">0</span>') + '</span>' +
+        '<span class="ph-text">' + escapeHtml(op.text) +
+          (op.lockpoint ? ' <b class="ph-badge ph-badge--point">📍 LOCK POINT</b>' : '') +
+          (violated ? ' <b class="ph-badge ph-badge--bad">⛔ VI PHẠM 2PL</b>' : '') +
+        '</span></div>';
+      $('ph-ops').innerHTML += row;
+      st.i++;
+      var vioNow = violated ? 'Xin khóa SAU KHI đã nhả — đường khóa hạ rồi dâng lại: chính thức gãy luật 2 pha. ' : '';
+      if (st.i < m.ops.length) {
+        setBtn('Lệnh ' + (st.i + 1) + ' / ' + m.ops.length, false);
+        setStatus(vioNow + (op.note || ''));
+      } else {
+        var hadViolation = !!mount.querySelector('.ph-badge--bad');
+        st.results[m.id] = { violated: hadViolation };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) {
+          setBtn('↺ Chạy lại từ đầu', false);
+          st.mode = 'reset';
+          setStatus((m.verdict || '') + '<br>' + soKeo());
+        } else {
+          setBtn('✓ ' + (m.short || m.id) + ' xong', true);
+          setStatus((m.verdict || '') + ' Giờ chạy bản còn lại mà so đường khóa.');
+        }
+      }
+    });
+  }
+
+  /* ── WFG Visual (nc_14 — wait-for graph builder, sim thứ 7) ──
+   * PART_7 Bài 4: "build wait-for graph, detect cycle". Data: step_1.wfg_visual
+   * = { eyebrow, caption, nodes: [{id,x,y,sub}], edges: [{from,to,label,note,
+   *   closes?}], cycle: [ids], deadlock_note, victims: {id: {ok?/outside?, note}} }.
+   * 2 pha: BUILD (bấm thêm từng cạnh; cạnh closes → vòng tô đỏ) → VICTIM (bấm
+   * thẳng node: ngoài vòng = cảnh báo, trong vòng = phá vòng + feedback cost).
+   * User chốt 2026-07-06 (đợt 8): graph builder là visual chính bài deadlock. */
+  function renderWfgVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.nodes) || !Array.isArray(cfg.edges)) return;
+    var st = { i: 0, phase: 'build', victimDone: false };
+    var R = 27; // bán kính node
+
+    function nodeById(id) { for (var i = 0; i < cfg.nodes.length; i++) if (cfg.nodes[i].id === id) return cfg.nodes[i]; return null; }
+    function edgeSvg(e, idx) {
+      var a = nodeById(e.from), b = nodeById(e.to);
+      var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy);
+      var x1 = a.x + dx / len * (R + 3), y1 = a.y + dy / len * (R + 3);
+      var x2 = b.x - dx / len * (R + 9), y2 = b.y - dy / len * (R + 9);
+      return '<g class="wfg-edge" data-wfg-edge="' + idx + '" data-from="' + e.from + '" data-to="' + e.to + '">' +
+        '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" marker-end="url(#wfgArrow)"/>' +
+        '</g>';
+    }
+    var nodesSvg = cfg.nodes.map(function (n) {
+      return '<g class="wfg-node" data-wfg-node="' + n.id + '" role="button" tabindex="0" aria-label="Giao dịch ' + n.id + (n.sub ? ' — ' + escapeHtml(n.sub) : '') + '">' +
+        '<circle cx="' + n.x + '" cy="' + n.y + '" r="' + R + '"/>' +
+        '<text class="wfg-name" x="' + n.x + '" y="' + (n.y + 4) + '" text-anchor="middle">' + escapeHtml(n.id) + '</text>' +
+        (n.sub ? '<text class="wfg-sub" x="' + n.x + '" y="' + (n.y + R + 15) + '" text-anchor="middle">' + escapeHtml(n.sub) + '</text>' : '') +
+        '</g>';
+    }).join('');
+
+    mount.innerHTML =
+      '<section class="sort-visual wfg-visual" aria-label="Wait-for graph: thêm từng cạnh chờ, vòng khép là deadlock, bấm node chọn victim">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'WAIT-FOR GRAPH') + '</span></div>' +
+        '<svg class="wfg-svg" viewBox="0 0 640 232" xmlns="http://www.w3.org/2000/svg">' +
+          '<defs><marker id="wfgArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z"/></marker></defs>' +
+          '<g id="wfg-edges"></g>' + nodesSvg +
+        '</svg>' +
+        '<div class="sv-ctl">' +
+          '<button type="button" class="sv-btn" id="wfg-btn">Thêm yêu cầu kế (cạnh 1/' + cfg.edges.length + ')</button>' +
+          '<span class="sv-status" id="wfg-status">Lock table 03:14 nằm ở panel trái — mỗi yêu cầu đang treo sẽ thành MỘT cạnh "ai chờ ai".</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('wfg-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('wfg-btn'); b.textContent = label; b.disabled = !!disabled; }
+
+    $('wfg-btn').addEventListener('click', function () {
+      if (st.phase === 'reset') { renderWfgVisual(mount, cfg); return; }
+      if (st.phase !== 'build') return;
+      var e = cfg.edges[st.i];
+      if (!e) return;
+      $('wfg-edges').innerHTML += edgeSvg(e, st.i);
+      st.i++;
+      if (e.closes) {
+        st.phase = 'victim';
+        // tô vòng: mọi cạnh nối 2 node cùng nằm trong cfg.cycle
+        mount.querySelectorAll('.wfg-edge').forEach(function (g) {
+          if (cfg.cycle.indexOf(g.getAttribute('data-from')) !== -1 && cfg.cycle.indexOf(g.getAttribute('data-to')) !== -1) g.classList.add('wfg-edge--cycle');
+        });
+        cfg.cycle.forEach(function (id) {
+          var n = mount.querySelector('.wfg-node[data-wfg-node="' + id + '"]');
+          if (n) n.classList.add('wfg-node--cycle');
+        });
+        setBtn('🗡️ Chọn victim — bấm thẳng vào một giao dịch', true);
+        setStatus(cfg.deadlock_note || 'DEADLOCK — graph có cycle. Bấm một node để chọn victim.');
+      } else {
+        setBtn('Thêm yêu cầu kế (cạnh ' + (st.i + 1) + '/' + cfg.edges.length + ')', false);
+        setStatus('<strong>' + escapeHtml(e.label) + '</strong><br>' + (e.note || ''));
+      }
+    });
+
+    mount.querySelectorAll('.wfg-node').forEach(function (g) {
+      function pick() {
+        if (st.phase !== 'victim' || st.victimDone) return;
+        var id = g.getAttribute('data-wfg-node');
+        var v = (cfg.victims || {})[id];
+        if (!v) return;
+        if (v.outside) { setStatus(v.note || 'Node này ngoài vòng — chọn lại.'); g.classList.add('wfg-node--shake'); setTimeout(function () { g.classList.remove('wfg-node--shake'); }, 700); return; }
+        // victim trong vòng: gỡ mọi cạnh chạm nó, vòng tan
+        st.victimDone = true;
+        g.classList.add('wfg-node--victim');
+        mount.querySelectorAll('.wfg-edge').forEach(function (ed) {
+          if (ed.getAttribute('data-from') === id || ed.getAttribute('data-to') === id) ed.remove();
+          else ed.classList.remove('wfg-edge--cycle');
+        });
+        mount.querySelectorAll('.wfg-node--cycle').forEach(function (n) { n.classList.remove('wfg-node--cycle'); });
+        st.phase = 'reset';
+        setBtn('↺ Chạy lại từ đầu', false);
+        setStatus(v.note || ('Rollback ' + id + ' — vòng tan, hàng thông.'));
+      }
+      g.addEventListener('click', pick);
+      g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pick(); } });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -2702,6 +2948,12 @@
         pvMount.hidden = false;
       } else if (s1.txn_visual) {
         renderTxnVisual(pvMount, s1.txn_visual);
+        pvMount.hidden = false;
+      } else if (s1.phase_visual) {
+        renderPhaseVisual(pvMount, s1.phase_visual);
+        pvMount.hidden = false;
+      } else if (s1.wfg_visual) {
+        renderWfgVisual(pvMount, s1.wfg_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
