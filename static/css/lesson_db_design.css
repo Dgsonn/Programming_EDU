@@ -10594,3 +10594,27 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 /* Plan visual — 3 cây (nc_05 join modes) */
 .pv-trees--wide { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 920px) { .pv-trees--wide { grid-template-columns: 1fr; } }
+
+/* ── Hash visual — xô build/probe (nc_06 hash join) ── */
+.hv-buckets {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1;
+}
+.hv-bucket {
+  border: 1px dashed rgba(129, 140, 248, .45); border-radius: 10px;
+  padding: 7px 8px; min-height: 62px;
+  background: rgba(129, 140, 248, .05);
+  transition: border-color .3s ease, background .3s ease;
+}
+.hv-bucket--hot {
+  border-color: rgba(52, 211, 153, .9); border-style: solid;
+  background: rgba(52, 211, 153, .12);
+}
+.hv-bucket-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .08em; color: #8ba0bb;
+  text-transform: uppercase; margin-bottom: 5px;
+}
+.hv-bucket-body { display: flex; flex-wrap: wrap; gap: 4px; }
+.hv-chip--miss { border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .08); color: #fca5a5; }
+@media (max-width: 720px) { .hv-buckets { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .hv-bucket { transition: none; } }

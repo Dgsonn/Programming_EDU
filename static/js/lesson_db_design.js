@@ -1403,6 +1403,62 @@
         '<text x="587" y="162" text-anchor="middle" fill="#fcd34d" font-size="8.5">phình kho lên 1 triệu món → lật cờ</text>' +
       '</g>' +
       '<text x="360" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">cùng 12 triệu phép so (đời 1-2) — hóa đơn chênh 90 lần: JOIN là THUẬT TOÁN, không phải syntax</text>' +
+      '</svg>',
+
+    /* nc_06 — Join II: Merge Join & Hash Join (Ticket #47) */
+    nc_06: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hai võ sĩ join mới: Merge Join 148ms khi input đã sort, Hash Join 148ms khi build vừa RAM, BNLJ đương kim 472ms">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">JOIN II — hai võ sĩ mới lên đài: Merge &amp; Hash</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">orders 1.000 block ⋈ listings 400 block — toàn sàn, không WHERE · RAM M = 100</text>' +
+        // Merge join
+        '<rect x="30" y="58" width="210" height="130" rx="10" fill="#0e1726" stroke="rgba(56,189,248,.55)" stroke-width="1.3"/>' +
+        '<text x="135" y="78" text-anchor="middle" fill="#7dd3fc" font-weight="700" font-size="10.5">🔀 MERGE JOIN</text>' +
+        '<text x="135" y="97" text-anchor="middle" fill="#aebfd6" font-size="9">ĐÃ sort: 2 con trỏ song song</text>' +
+        '<text x="135" y="111" text-anchor="middle" fill="#aebfd6" font-size="9">mỗi bảng đọc đúng 1 lượt</text>' +
+        '<text x="135" y="140" text-anchor="middle" fill="#38bdf8" font-weight="800" font-size="15">148 ms</text>' +
+        '<text x="135" y="162" text-anchor="middle" fill="#7dd3fc" font-size="8.5">chưa sort? cộng tiền sort ≈820 ms</text>' +
+        // Hash join — chosen
+        '<rect x="256" y="52" width="210" height="142" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.8"/>' +
+        '<text x="361" y="72" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10.5">🪣 HASH JOIN</text>' +
+        '<text x="361" y="91" text-anchor="middle" fill="#aebfd6" font-size="9">chia cặp xô — build bảng NHỎ</text>' +
+        '<text x="361" y="105" text-anchor="middle" fill="#aebfd6" font-size="9">build vừa RAM: 1 lượt, khỏi sort</text>' +
+        '<text x="361" y="134" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">148 ms</text>' +
+        '<text x="361" y="156" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">🏆 cùng giá — không cần trật tự</text>' +
+        '<text x="361" y="180" text-anchor="middle" fill="#7f93ad" font-size="8">khác xô = khỏi so — hết so chéo</text>' +
+        // BNLJ đương kim
+        '<rect x="482" y="58" width="210" height="130" rx="10" fill="#0e1726" stroke="rgba(251,191,36,.5)" stroke-width="1.3"/>' +
+        '<text x="587" y="78" text-anchor="middle" fill="#fbbf24" font-weight="700" font-size="10.5">🚚 BNLJ — ĐƯƠNG KIM</text>' +
+        '<text x="587" y="97" text-anchor="middle" fill="#aebfd6" font-size="9">4 mẻ outer × quét 1.000 block</text>' +
+        '<text x="587" y="111" text-anchor="middle" fill="#aebfd6" font-size="9">4.400 block + 8 nhảy</text>' +
+        '<text x="587" y="140" text-anchor="middle" fill="#fbbf24" font-weight="800" font-size="15">472 ms</text>' +
+        '<text x="587" y="162" text-anchor="middle" fill="#fcd34d" font-size="8.5">phình kho ×10 → hash knock-out</text>' +
+      '</g>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không có vua tuyệt đối: ĐÃ SORT → merge · BUILD NHỎ → hash · cả hai to → grace hash 3(br+bs)</text>' +
+      '</svg>',
+
+    /* nc_07 — Aggregation bằng Sort/Hash (Ticket #48) */
+    nc_07: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GROUP BY 100.000 đơn: Sort-Aggregate 348ms xếp rồi gom, Hash-Aggregate on-the-fly 104ms — đúng giá một lần seq scan">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">GROUP BY cả sàn — giá đúng bằng MỘT lần quét kho</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">100.000 đơn → doanh thu 2.000 seller · bảng Ô ≈ 20 block VỪA RAM 100</text>' +
+        // Sort-aggregate
+        '<rect x="60" y="60" width="270" height="128" rx="10" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.3"/>' +
+        '<text x="195" y="82" text-anchor="middle" fill="#c7d4e8" font-weight="700" font-size="10.5">📚 SORT-AGGREGATE</text>' +
+        '<text x="195" y="101" text-anchor="middle" fill="#aebfd6" font-size="9">xếp cả kho theo seller_id (bài 4)</text>' +
+        '<text x="195" y="115" text-anchor="middle" fill="#aebfd6" font-size="9">rồi gom nhóm nằm liền kề</text>' +
+        '<text x="195" y="144" text-anchor="middle" fill="#c7d4e8" font-weight="800" font-size="15">348 ms</text>' +
+        '<text x="195" y="166" text-anchor="middle" fill="#8ba0bb" font-size="8.5">bonus: kết quả ra ĐÃ có thứ tự</text>' +
+        // Hash-aggregate — chosen
+        '<rect x="390" y="54" width="270" height="140" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.8"/>' +
+        '<text x="525" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10.5">🪣 HASH-AGGREGATE on-the-fly</text>' +
+        '<text x="525" y="95" text-anchor="middle" fill="#aebfd6" font-size="9">đọc 1 lượt: hash(seller) → Ô của nó</text>' +
+        '<text x="525" y="109" text-anchor="middle" fill="#aebfd6" font-size="9">SUM[Ô] += total — bỏ đơn, giữ Ô</text>' +
+        '<text x="525" y="140" text-anchor="middle" fill="#34d399" font-weight="800" font-size="16">104 ms</text>' +
+        '<text x="525" y="162" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9">🏆 đúng giá một lần seq scan</text>' +
+        '<text x="525" y="182" text-anchor="middle" fill="#7f93ad" font-size="8">1.000 block + 1 cú nhảy — thế thôi</text>' +
+        '<path d="M338 124 L 382 124" stroke="rgba(52,211,153,.7)" stroke-width="1.6" fill="none"/>' +
+      '</g>' +
+      '<text x="360" y="222" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">giữ Ô, bỏ đơn — AVG = SUM÷COUNT lúc đổ sổ · Ô KHÔNG vừa RAM? chia xô ra đĩa như bài 6</text>' +
       '</svg>'
   };
 
@@ -1911,6 +1967,104 @@
     });
   }
 
+  /* ── Hash Visual (nc_06 — Hash Join build/probe, sim bấm-từng-bước) ──
+   * PART_6 Bài 6 Interaction chính: "learner hash records vào buckets, sau đó build/probe".
+   * Data: step_1.hash_visual = { eyebrow, caption, buckets, build: [{label, v}],
+   *   probe: [{label, v}] } — v = khóa ghép (listing_id); xô = v % buckets.
+   * User chốt 2026-07-06 (cùng ngôn ngữ lệnh với sort sim): build 2 món/nhịp →
+   * probe 2 đơn/nhịp (mở ĐÚNG xô, so thật — cùng xô chưa chắc khớp) → done/reset. */
+  function renderHashVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.build) || !Array.isArray(cfg.probe)) return;
+    var NB = cfg.buckets || 4;
+    var PER = 2; // món/đơn mỗi nhịp bấm
+    var st = { phase: 'build', b: 0, p: 0, busy: false, buckets: [] };
+    for (var bi = 0; bi < NB; bi++) st.buckets.push([]);
+    var bktOf = function (v) { return Number(v) % NB; };
+
+    function chipHtml(it, cls) {
+      return '<span class="sv-chip' + (cls ? ' ' + cls : '') + '">' + escapeHtml(String(it.label)) + '</span>';
+    }
+    mount.innerHTML =
+      '<section class="sort-visual hash-visual" aria-label="Mô phỏng hash join build/probe với ' + NB + ' xô">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'HASH JOIN — BUILD/PROBE') + '</span></div>' +
+        '<div class="sv-row"><span class="sv-label">📦 listings — BUILD (bảng nhỏ)</span><div class="sv-strip" id="hv-src">' +
+          cfg.build.map(function (it, i) { return '<span class="sv-chip" data-hv-b="' + i + '">' + escapeHtml(String(it.label)) + '</span>'; }).join('') +
+        '</div></div>' +
+        '<div class="sv-row"><span class="sv-label">🪣 ' + NB + ' XÔ — hash = id % ' + NB + '</span><div class="hv-buckets" id="hv-buckets">' +
+          st.buckets.map(function (_, i) { return '<div class="hv-bucket" data-hv-k="' + i + '"><div class="hv-bucket-name">xô ' + i + '</div><div class="hv-bucket-body"></div></div>'; }).join('') +
+        '</div></div>' +
+        '<div class="sv-row"><span class="sv-label">🧾 orders — PROBE</span><div class="sv-strip" id="hv-probe">' +
+          cfg.probe.map(function (it, i) { return '<span class="sv-chip" data-hv-p="' + i + '">' + escapeHtml(String(it.label)) + '</span>'; }).join('') +
+        '</div></div>' +
+        '<div class="sv-row"><span class="sv-label">✅ GHÉP ĐƯỢC</span><div class="sv-strip sv-outstrip" id="hv-out"></div></div>' +
+        '<div class="sv-ctl">' +
+          '<button type="button" class="sv-btn" id="hv-btn">Đổ ' + PER + ' món vào xô</button>' +
+          '<span class="sv-status" id="hv-status">Chưa sort gì cả — chia XÔ trước: món nào khớp đơn nào thì bắt buộc CÙNG xô.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function bucketBody(k) { return mount.querySelector('.hv-bucket[data-hv-k="' + k + '"] .hv-bucket-body'); }
+    function flashBucket(k) {
+      var el = mount.querySelector('.hv-bucket[data-hv-k="' + k + '"]');
+      if (!el) return;
+      el.classList.add('hv-bucket--hot');
+      setTimeout(function () { el.classList.remove('hv-bucket--hot'); }, 900);
+    }
+    function setBtn(label, disabled) { var b = $('hv-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function setStatus(t) { $('hv-status').innerHTML = t; }
+
+    $('hv-btn').addEventListener('click', function () {
+      if (st.busy) return;
+      if (st.phase === 'build') {
+        var batch = cfg.build.slice(st.b * PER, (st.b + 1) * PER);
+        batch.forEach(function (it, k) {
+          var el = mount.querySelector('[data-hv-b="' + (st.b * PER + k) + '"]');
+          if (el) el.classList.add('sv-chip--taken');
+          var kb = bktOf(it.v);
+          st.buckets[kb].push(it);
+          bucketBody(kb).innerHTML += chipHtml(it, 'sv-chip--buf');
+          flashBucket(kb);
+        });
+        st.b++;
+        var nBuildSteps = Math.ceil(cfg.build.length / PER);
+        if (st.b < nBuildSteps) {
+          setStatus('Hash(id) quyết định xô — món rơi đúng ngăn, KHÔNG cần trật tự. Còn ' + (cfg.build.length - st.b * PER) + ' món.');
+        } else {
+          st.phase = 'probe';
+          var maxLen = Math.max.apply(null, st.buckets.map(function (x) { return x.length; }));
+          setBtn('Probe ' + PER + ' đơn');
+          setStatus('Build xong — bảng tra nằm trong RAM theo xô. Để ý <strong>xô ' + st.buckets.map(function (x) { return x.length; }).indexOf(maxLen) + ' ôm ' + maxLen + ' món</strong> (lệch nhẹ — phình QUÁ RAM thì sao? Hồ sơ Skew chờ sau bài). Giờ từng ĐƠN chỉ cần mở ĐÚNG MỘT xô.');
+        }
+      } else if (st.phase === 'probe') {
+        var pb = cfg.probe.slice(st.p * PER, (st.p + 1) * PER);
+        pb.forEach(function (it, k) {
+          var el = mount.querySelector('[data-hv-p="' + (st.p * PER + k) + '"]');
+          if (el) el.classList.add('sv-chip--taken');
+          var kb = bktOf(it.v);
+          flashBucket(kb);
+          var hit = null;
+          st.buckets[kb].forEach(function (m) { if (Number(m.v) === Number(it.v)) hit = m; });
+          $('hv-out').innerHTML += hit
+            ? '<span class="sv-chip sv-chip--out">' + escapeHtml(String(it.label)) + ' ⋈ ' + escapeHtml(String(hit.label)) + '</span>'
+            : '<span class="sv-chip hv-chip--miss">' + escapeHtml(String(it.label)) + ' ✗ cùng xô ' + kb + ' mà không khớp</span>';
+        });
+        st.p++;
+        var nProbeSteps = Math.ceil(cfg.probe.length / PER);
+        if (st.p < nProbeSteps) {
+          setStatus('Mỗi đơn 1 cú tra: hash(id) → mở đúng xô → so THẬT trong xô. Còn ' + (cfg.probe.length - st.p * PER) + ' đơn.');
+        } else {
+          st.phase = 'done';
+          setBtn('↺ Chạy lại từ đầu');
+          setStatus('<strong>' + cfg.build.length + ' món · ' + cfg.probe.length + ' đơn — mỗi bên đọc đúng MỘT lượt, không sort.</strong> Cùng xô chưa chắc khớp (phải so thật) — nhưng KHÁC xô thì chắc chắn khỏi so: đó là 12 triệu phép so chéo được xóa sổ.');
+        }
+      } else if (st.phase === 'done') {
+        renderHashVisual(mount, cfg);
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -2115,8 +2269,8 @@
     }
     // If neither, the panel will be hidden by the decomp-game block below
 
-    // Plan/Sort Visual (NC M7) — chỉ hiện khi bài khai step_1.plan_visual hoặc
-    // step_1.sort_visual (nc_04); Basic/TC = no-op
+    // Plan/Sort/Hash Visual (NC M7) — chỉ hiện khi bài khai step_1.plan_visual,
+    // step_1.sort_visual (nc_04) hoặc step_1.hash_visual (nc_06); Basic/TC = no-op
     const pvMount = document.getElementById('plan-visual-mount');
     if (pvMount) {
       if (s1.plan_visual) {
@@ -2124,6 +2278,9 @@
         pvMount.hidden = false;
       } else if (s1.sort_visual) {
         renderSortVisual(pvMount, s1.sort_visual);
+        pvMount.hidden = false;
+      } else if (s1.hash_visual) {
+        renderHashVisual(pvMount, s1.hash_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -3829,6 +3986,10 @@
       // IM LẶNG (trả nguyên thứ tự gốc) → cùng lớp silent-wrong với UPPER/ROLLUP, chặn pending.
       // Không expected_sql nào yêu cầu gõ dạng này (tc_08 equiv chạy ngoài scan — không ảnh hưởng).
       { re: /\border\s+by\s+[a-z_]\w*\s*\.\s*\w/i, label: 'ORDER BY bảng.cột (alias)' },
+      /* NC đợt 4 2026-07-06: probe_groupby g5 — SELECT DISTINCT trả cột "DISTINCT col" với
+       * mọi dòng RỖNG, không khử trùng (silent-wrong) → chặn pending. GROUP BY/SUM/COUNT/
+       * HAVING/ORDER BY SUM() probe OK nên KHÔNG chặn. */
+      { re: /\bselect\s+distinct\b/, label: 'SELECT DISTINCT' },
       { re: /\bdb\.\w+\.(find|aggregate|insert\w*|update\w*|count)\s*\(/, label: 'MongoDB query' }
     ];
     for (var ri = 0; ri < reChecks.length; ri++) {
@@ -5725,6 +5886,12 @@
       errors.push('Thiếu mệnh đề WHERE — cần lọc điều kiện để lấy đúng 1 record.');
     } else if (eClauses.where && uClauses.where && uClauses.where !== eClauses.where) {
       errors.push(`WHERE không khớp: bạn viết "${uClauses.where}" nhưng đáp án cần "${eClauses.where}".`);
+    } else if (!eClauses.where && uClauses.where) {
+      /* NC đợt 4 2026-07-06 (lộ ra khi probe nc_07): check trước đây chỉ so khi ĐÁP ÁN
+       * có WHERE — user THÊM WHERE thừa (đổi hẳn tập dòng kết quả) vẫn được Accept.
+       * ORDER BY thừa thì tha (chỉ đổi thứ tự dòng — tiền lệ nc_05); WHERE/GROUP BY/
+       * HAVING thừa đổi KẾT QUẢ → phải chặn. */
+      errors.push(`Đáp án KHÔNG lọc WHERE — mệnh đề "${uClauses.where}" bạn thêm vào sẽ làm sai kết quả.`);
     }
 
     // M5-FIX 2026-07-04: so nốt GROUP BY / HAVING / ORDER BY — trước đây bỏ ngỏ nên
@@ -5733,11 +5900,15 @@
       errors.push('Thiếu mệnh đề GROUP BY.');
     } else if (eClauses.groupBy && uClauses.groupBy && uClauses.groupBy !== eClauses.groupBy) {
       errors.push(`GROUP BY không khớp: bạn viết "${uClauses.groupBy}" nhưng đáp án cần "${eClauses.groupBy}".`);
+    } else if (!eClauses.groupBy && uClauses.groupBy) {
+      errors.push(`Đáp án KHÔNG gom nhóm — GROUP BY "${uClauses.groupBy}" bạn thêm vào sẽ đổi hẳn dạng kết quả.`);
     }
     if (eClauses.having && !uClauses.having) {
       errors.push('Thiếu mệnh đề HAVING — lọc trên kết quả nhóm.');
     } else if (eClauses.having && uClauses.having && uClauses.having !== eClauses.having) {
       errors.push(`HAVING không khớp: bạn viết "${uClauses.having}" nhưng đáp án cần "${eClauses.having}".`);
+    } else if (!eClauses.having && uClauses.having) {
+      errors.push(`Đáp án KHÔNG có HAVING — điều kiện "${uClauses.having}" bạn thêm vào sẽ cắt mất nhóm khỏi kết quả.`);
     }
     if (eClauses.orderBy && !uClauses.orderBy) {
       errors.push('Thiếu mệnh đề ORDER BY.');

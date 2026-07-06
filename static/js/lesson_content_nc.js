@@ -1187,6 +1187,443 @@ window.LESSON_CONTENT['db_design_nc'] = {
         success_message: 'TICKET #46 ĐÓNG — "Lịch sử mua" hiện tên vật phẩm, schema vẫn sạch chuẩn hóa! ⋈ Engine Room đã đi 5/10. Nhưng nested loop mới là nửa đầu câu chuyện join: bài sau, hai võ sĩ hạng nặng bước lên đài — <strong>Merge Join</strong> (đứng trên vai external sort của Ticket #45) và <strong>Hash Join</strong> (chia giỏ rồi mới đấu). Kèm một hồ sơ về cú lừa mang tên skew.',
         xp_reward: 120
       }
+    },
+
+    /* ── nc_06 — Ticket #47 · Join II: Merge Join & Hash Join ──
+     * PART_6 Bài 6 (Ch 15.5.4-5): merge khi input sorted; hash chia cặp xô,
+     * build = bảng nhỏ, probe bảng kia; KHÔNG dạy hybrid/recursive/fudge (Card E
+     * lo skew). Sim hash build/probe bấm-từng-bước (user chốt 2026-07-06).
+     * Số liệu toàn sàn: orders 1.000 ⋈ listings 400, M=100 — BNLJ 4.400 block/472ms
+     * · grace hash 3(br+bs)=4.200/492ms · merge ĐÃ sort 1.400+2 nhảy=148ms
+     * · hash build-vừa-RAM (lọc <100 gem ≈ 12 block) = 148ms. */
+    {
+      id: 'nc_06', index: 6,
+      title: 'Join II — Merge Join & Hash Join: hai võ sĩ hạng nặng',
+      subtitle: 'Không có vua tuyệt đối: ĐÃ SORT thì merge, BUILD NHỎ thì hash — điều kiện quyết định đai',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 22, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'listings (40.000 món ≈ 400 block — phía BUILD, mẫu 4)',
+          columns: ['listing_id', 'item_name', 'price'],
+          dataRows: [
+            ['3001', 'Kiếm gỗ Newbie', '45'],
+            ['3002', 'Giáp rồng Huyền thoại', '12500'],
+            ['3004', 'Skin súng Neon', '790'],
+            ['3005', 'Khiên gỗ sồi', '80']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #47',
+        hook: 'Cuối tháng, sếp muốn <em>"sao kê TOÀN SÀN: 100.000 đơn, đơn nào cũng kèm tên món"</em> — vẫn là phép ⋈ của Ticket #46, nhưng outer không còn là 3 đơn của khách #88 nữa: outer giờ là CẢ KHO. Block NLJ gồng được 472ms… trong khi đội vận hành thì thào: sàn sắp mở rộng gấp 10. Ticket #47: hai võ sĩ hạng nặng bước lên đài — <strong>Merge Join</strong> đứng trên vai external sort của Ticket #45, và <strong>Hash Join</strong> với chiêu CHIA XÔ. Cả hai cùng ra giá 148ms — nhưng mỗi người kèm một ĐIỀU KIỆN.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'Merge Join: 2 bảng ĐÃ sort theo khóa ghép → 2 con trỏ chạy song song, mỗi bảng đọc đúng 1 lượt (br + bs); CHƯA sort thì phải cộng tiền sort (bài 4) vào hóa đơn',
+            'Hash Join: hash(khóa ghép) chia CẢ HAI bảng thành các cặp xô — khớp nhau thì bắt buộc CÙNG xô, nên chỉ so trong từng cặp; BUILD bảng tra từ xô nhỏ, PROBE bằng xô kia',
+            'Luật chọn: build = bảng NHỎ hơn; build vừa RAM → 1 lượt (br + bs) không cần chia xô; cả hai bảng đều to → grace hash 3(br + bs) — vẫn rẻ khi kho phình'
+          ],
+          intro: 'Ghép 100.000 hóa đơn với 40.000 nhãn giá. Cách 1: nếu CẢ HAI chồng giấy đã xếp theo mã món, hai thủ kho dò song song từ trên xuống — mỗi tờ cầm đúng một lần (<strong>merge</strong>). Cách 2: chẳng cần xếp gì — kẻ 4 cái XÔ, ném giấy vào xô theo đuôi mã số; hóa đơn ở xô 2 chỉ có thể khớp nhãn ở xô 2, khỏi so chéo (<strong>hash</strong>). Cả hai đều né được cảnh "mỗi tờ dò cả chồng" của nested loop.',
+          example: 'Toàn sàn orders 1.000 block ⋈ listings 400 block: BNLJ = 4.400 block ≈ <strong>472ms</strong>. Hai file ĐÃ sort theo listing_id? Merge = 1.400 block + 2 nhảy = <strong>148ms</strong>. Báo cáo chỉ cần món &lt;100 gem — build sau lọc ~12 block VỪA RAM? Hash 1 lượt = cũng <strong>148ms</strong>, mà không cần sort gì hết.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-code-merge',
+            title: 'Merge Join — trả công một lần đọc',
+            body: 'Input đã sort thì mỗi tuple chỉ cần đọc MỘT lần: 2 con trỏ nhích song song, gặp khóa bằng nhau thì ghép — tổng chuyển block = <strong>br + bs</strong>. Cái giá thật nằm ở chữ "đã sort": chưa có trật tự thì phải external sort trước (Ticket #45), hóa đơn toàn sàn đội lên ≈820ms — lúc đó thà BNLJ.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.4 — Merge Join: br + bs block transfers khi 2 quan hệ đã sort theo khóa ghép'
+          },
+          {
+            icon: 'fa-fill-drip',
+            title: 'Hash Join — build nhỏ, probe lớn',
+            body: 'Chia 2 bảng bằng CÙNG hàm hash thành nh cặp xô (nh = ⌈b_build/M⌉ để mỗi xô build VỪA RAM). Với từng cặp: nạp xô <strong>build</strong> (bảng nhỏ) vào RAM dựng bảng tra, rồi <strong>probe</strong> — duyệt xô kia, tra từng dòng. Chia xô tốn đọc + ghi cả 2 bảng, build/probe đọc lại lần nữa: tổng ≈ <strong>3(br + bs)</strong>. Còn build vốn đã vừa RAM? Khỏi chia xô: br + bs, một lượt.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Sàn phình listings ×10 (4.000 block): BNLJ leo lên 41.000 block ≈ <strong>4.180ms</strong>, grace hash chỉ 3×5.000 = 15.000 ≈ <strong>1.668ms</strong> — hash knock-out khi CẢ HAI bảng đều to. Vẫn triết lý cũ: cost sống theo dữ liệu. Còn một cú lừa mang tên <strong>skew</strong> — xô phình vì món hit — hồ sơ chờ ngay sau bài này.'
+          }
+        ],
+        hash_visual: {
+          eyebrow: 'HASH JOIN — MÔ HÌNH THU NHỎ: 8 MÓN BUILD · 6 ĐƠN PROBE · 4 XÔ',
+          caption: 'Fig 15.9-15.10 sách thu nhỏ: hash(id % 4) chia món vào xô — rồi từng đơn chỉ mở ĐÚNG xô của nó. Để ý đơn #9005: cùng xô 3 mà vẫn trượt — cùng xô chưa chắc khớp, phải so thật; nhưng KHÁC xô thì chắc chắn khỏi so.',
+          buckets: 4,
+          build: [
+            { label: 'Kiếm 3001', v: 3001 }, { label: 'Giáp 3002', v: 3002 },
+            { label: 'Skin 3004', v: 3004 }, { label: 'Khiên 3005', v: 3005 },
+            { label: 'Cung 3006', v: 3006 }, { label: 'Mũ 3008', v: 3008 },
+            { label: 'Nhẫn 3011', v: 3011 }, { label: 'Đai 3013', v: 3013 }
+          ],
+          probe: [
+            { label: '#9001→3005', v: 3005 }, { label: '#9002→3002', v: 3002 },
+            { label: '#9003→3011', v: 3011 }, { label: '#9004→3004', v: 3004 },
+            { label: '#9005→3007', v: 3007 }, { label: '#9006→3001', v: 3001 }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'orders ⋈ listings — trận TOÀN SÀN (không WHERE)',
+            columns: [
+              { name: 'orders', type: '100.000 đơn ≈ 1.000 block', key: 'PROBE' },
+              { name: 'listings', type: '40.000 món ≈ 400 block', key: 'BUILD (nhỏ hơn)' },
+              { name: 'khóa ghép', type: 'listing_id', key: '⋈' },
+              { name: 'RAM buffer', type: 'M = 100 block', key: '' }
+            ]
+          },
+          data_preview: [
+            ['BNLJ (bài 5)', '4 mẻ × 1.000', '4.400 block + 8 nhảy', '472 ms'],
+            ['Sort-Merge (chưa sort)', 'sort 2 bảng rồi dò', '≈7.000 block', '≈820 ms'],
+            ['Merge (ĐÃ sort)', '2 con trỏ song song', '1.400 block + 2 nhảy', '148 ms'],
+            ['Grace Hash', '4 cặp xô', '3×1.400 = 4.200 block', '492 ms'],
+            ['Hash build-vừa-RAM', 'lọc còn 12 block', '1.400 block + 2 nhảy', '148 ms']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Hash join KHÔNG sort gì cả — vậy nhờ đâu nó né được 12 triệu phép so chéo của nested loop?',
+            options: [
+              { id: 'a', text: 'Nhờ chia CẢ HAI bảng bằng cùng một hàm hash: hai dòng khớp nhau thì hash bằng nhau → bắt buộc CÙNG xô — nên chỉ cần so trong từng cặp xô', correct: true, explanation: 'Đúng — khác xô là chắc chắn khỏi so. Đó là toàn bộ phép màu: không cần trật tự, chỉ cần "cùng khóa thì cùng xô".' },
+              { id: 'b', text: 'Nhờ hash tự xếp thứ tự các dòng bên trong mỗi xô', correct: false, explanation: 'Sai — trong xô vẫn lộn xộn nguyên; hash chỉ CHIA NGĂN, không xếp. So trong xô là việc của bảng tra khi build/probe.' },
+              { id: 'c', text: 'Nhờ bỏ qua các dòng không khớp ngay từ trên đĩa', correct: false, explanation: 'Sai — muốn biết khớp hay không vẫn phải đọc lên; hash chỉ đảm bảo bạn không phí công so hai dòng KHÁC xô.' },
+              { id: 'd', text: 'Nhờ CPU so mã hash nhanh hơn so số thường', correct: false, explanation: 'Sai — tiết kiệm nằm ở SỐ CẶP phải so (chỉ trong xô), không phải tốc độ một phép so.' }
+            ]
+          },
+          {
+            question: 'Vì sao build phải là bảng NHỎ hơn (listings 400 block chứ không phải orders 1.000)?',
+            options: [
+              { id: 'a', text: 'Vì bảng tra dựng từ xô build phải nằm TRỌN trong RAM khi probe — build càng nhỏ càng ít xô phải chia, thậm chí khỏi chia; còn xô probe to bao nhiêu cũng được, duyệt tuần tự mà', correct: true, explanation: 'Đúng — sách nói thẳng: partition của PROBE không cần vừa bộ nhớ. Ràng buộc RAM chỉ đè lên vai build, nên đưa người nhẹ cân nhất lên.' },
+              { id: 'b', text: 'Vì bảng to làm hash tính chậm hơn', correct: false, explanation: 'Sai — hàm hash tính trên từng dòng, bảng nào cũng phải hash đủ số dòng của nó; vấn đề là RAM, không phải tốc độ hash.' },
+              { id: 'c', text: 'Vì bảng nhỏ luôn có index sẵn', correct: false, explanation: 'Sai — hash join không dùng index có sẵn nào; bảng tra được dựng TẠI CHỖ trong RAM lúc build.' },
+              { id: 'd', text: 'Không quan trọng — hash join đối xứng hai bên', correct: false, explanation: 'Sai — đối xứng lúc CHIA XÔ thôi; đến lúc build thì một bên phải chui vào RAM, và đó nên là bên nhỏ.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'order',
+          title: 'Chạy đúng dây chuyền grace hash join',
+          instruction: 'Kéo 5 bước vào đúng thứ tự chạy.',
+          xp: 20,
+          items: [
+            { id: 'r3', label: 'Probe: duyệt xô orders #0, tra từng đơn vào bảng — khớp thì ghép' },
+            { id: 'r1', label: 'Hash(listing_id): chia CẢ HAI bảng thành 4 cặp xô, ghi ra đĩa' },
+            { id: 'r5', label: 'Nối kết quả 4 cặp — không cặp nào phải so chéo nhau' },
+            { id: 'r2', label: 'Nạp xô listings #0 (bé) vào RAM, dựng bảng tra' },
+            { id: 'r4', label: 'Đổ RAM, lặp build + probe với cặp xô #1, #2, #3' }
+          ],
+          solution: { r1: 1, r2: 2, r3: 3, r4: 4, r5: 5 }
+        }
+      },
+      step_3: {
+        mission: 'Dàn trận hash join toàn sàn + chốt luật chọn đai — có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Nạp xô listings (bé hơn) vào RAM dựng bảng tra — ràng buộc "vừa bộ nhớ" chỉ đè lên vai build', slot: 'hj-build' },
+          { type: 'op', token: 'Hash(listing_id) chia CẢ orders lẫn listings thành 4 cặp xô — khớp thì bắt buộc CÙNG xô, hết so chéo', slot: 'hj-hash' },
+          { type: 'op', token: 'Sort cả hai bảng theo listing_id TRƯỚC rồi mới chia xô — hash cần input có trật tự mới chia đều', slot: 'hj-x' },
+          { type: 'op', token: 'Duyệt xô orders cùng số hiệu, tra từng đơn vào bảng trong RAM — xong cặp thì đổ RAM, sang cặp kế', slot: 'hj-probe' },
+          { type: 'op', token: 'ĐÃ sort → merge 148ms · build vừa RAM → hash 1 lượt 148ms · cả hai to → grace hash 3(br+bs)', slot: 'hj-rule' }
+        ],
+        drop_zones: [
+          { id: 'hj-hash', placeholder: 'Nước đi 1 — chưa ai sort, kho nào cũng to: mở trận sao?', accepts: ['op'], multi: false,
+            station: { icon: '🪣', label: 'Chia cặp xô', sub: 'Nước đi 1', hint: 'Hai dòng khớp nhau thì hash giống nhau — chia cả 2 bảng theo CÙNG một hàm.' } },
+          { id: 'hj-build', placeholder: 'Nước đi 2 — cặp xô #0 mở ra, ai được vào RAM?', accepts: ['op'], multi: false,
+            station: { icon: '🏗️', label: 'Build bảng tra', sub: 'Nước đi 2', hint: 'Bảng tra phải VỪA bộ nhớ — đưa người nhẹ cân lên trước.' } },
+          { id: 'hj-probe', placeholder: 'Nước đi 3 — bảng tra sẵn sàng, xô còn lại làm gì?', accepts: ['op'], multi: false,
+            station: { icon: '🎯', label: 'Probe từng đơn', sub: 'Nước đi 3', hint: 'Xô orders cùng số hiệu — từng đơn một cú tra vào bảng trong RAM.' } },
+          { id: 'hj-rule', placeholder: 'Nước đi 4 — chốt luật: khi nào chọn ai?', accepts: ['op'], multi: false,
+            station: { icon: '⚖️', label: 'Luật chọn đai', sub: 'Nước đi 4', hint: 'Hai võ sĩ cùng ra giá 148ms — nhưng mỗi người kèm một ĐIỀU KIỆN.' } }
+        ],
+        expected_sql: 'Hash(listing_id) chia CẢ orders lẫn listings thành 4 cặp xô — khớp thì bắt buộc CÙNG xô, hết so chéo Nạp xô listings (bé hơn) vào RAM dựng bảng tra — ràng buộc "vừa bộ nhớ" chỉ đè lên vai build Duyệt xô orders cùng số hiệu, tra từng đơn vào bảng trong RAM — xong cặp thì đổ RAM, sang cặp kế ĐÃ sort → merge 148ms · build vừa RAM → hash 1 lượt 148ms · cả hai to → grace hash 3(br+bs)',
+        expected_zones: {
+          'hj-hash': 'Hash(listing_id) chia CẢ orders lẫn listings thành 4 cặp xô — khớp thì bắt buộc CÙNG xô, hết so chéo',
+          'hj-build': 'Nạp xô listings (bé hơn) vào RAM dựng bảng tra — ràng buộc "vừa bộ nhớ" chỉ đè lên vai build',
+          'hj-probe': 'Duyệt xô orders cùng số hiệu, tra từng đơn vào bảng trong RAM — xong cặp thì đổ RAM, sang cặp kế',
+          'hj-rule': 'ĐÃ sort → merge 148ms · build vừa RAM → hash 1 lượt 148ms · cả hai to → grace hash 3(br+bs)'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA DÀN xong grace hash: chia cặp xô → build bảng nhỏ → probe → luật chọn đai theo điều kiện. Khối "sort trước rồi chia xô" là bịa — KHÔNG CẦN SORT chính là điểm bán hàng của hash join: hàm hash chia ngăn được cả đống giấy lộn xộn (sim Step 1 là bằng chứng sống). Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'hj-hash': 'Nước đi 1 — nested loop chết vì so chéo mọi cặp. Muốn "khớp nhau thì tự tìm về cùng chỗ" mà không tốn công sort, dùng phép gì lên khóa ghép?',
+          'hj-build': 'Nước đi 1 chốt: 4 cặp xô trên đĩa, so chéo bị xóa sổ. Mở cặp #0: RAM chỉ chứa nổi MỘT xô để dựng bảng tra — xô của bảng nào được vào?',
+          'hj-probe': 'Nước đi 2 chốt: bảng tra listings nằm gọn trong RAM. Xô orders #0 vẫn nằm trên đĩa — từng đơn trong đó làm gì với bảng tra?',
+          'hj-rule': 'Nước đi 3 chốt: probe xong 4 cặp là hết trận. Còn nước cuối — treo LUẬT lên tường: khi nào merge, khi nào hash 1 lượt, khi nào grace?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #47 — tự lập hóa đơn hash:</strong> trận toàn sàn orders 1.000 block ⋈ listings 400 block, RAM M = 100. Điền 3 con số. (Số viết liền, ví dụ <code>4200</code>.)',
+        challenge_type: 'fill_blank',
+        template: "-- TRAN TOAN SAN: orders 1.000 block ⋈ listings 400 block · RAM M = 100\n\n-- GRACE HASH · Buoc 1: chia xo sao cho moi xo BUILD vua RAM\nso_cap_xo = ⌈400 / 100⌉  =  ____ cap\n\n-- Buoc 2: chia xo = doc + ghi CA HAI bang · Buoc 3: build/probe = doc lai ca hai\ntong_block_grace = 3 × (1.000 + 400)  =  ____ block\n\n-- VE DAC BIET: bao cao chi can mon < 100 gem → build sau loc ~12 block, VUA RAM\n-- → khoi chia xo: doc listings 400 (build) + doc orders 1.000 (probe)\ntong_block_1_luot = ____ block",
+        blanks: [
+          { id: 'b1', hint: '? cặp xô', expected: '4' },
+          { id: 'b2', hint: '? block', expected: '4200' },
+          { id: 'b3', hint: '? block', expected: '1400' }
+        ],
+        schema: {
+          table_name: 'orders ⋈ listings',
+          columns: [
+            { name: 'orders', type: '1.000 block', key: 'PROBE' },
+            { name: 'listings', type: '400 block', key: 'BUILD' },
+            { name: 'RAM', type: 'M = 100 block', key: '' }
+          ],
+          data: [
+            ['grace hash', '3 × (br + bs)', '4 cặp xô'],
+            ['build vừa RAM', 'br + bs', 'không chia xô'],
+            ['merge (đã sort)', 'br + bs', '2 con trỏ']
+          ]
+        },
+        context: {
+          scenario: 'Đây là bản nháp optimizer cân grace hash cho trận toàn sàn. Chú ý tại kho NÀY grace hash (4.200 block ≈ 492ms) vẫn chưa hạ được BNLJ (4.400 block ≈ 472ms) — nhưng phình kho ×10 là hash knock-out (15.000 vs 41.000 block). Và vé đặc biệt: build lọc còn vừa RAM thì hash rẻ ngang merge-đã-sort mà chẳng cần trật tự nào.',
+          real_world: 'Postgres chọn Hash Join làm mặc định cho equi-join giữa hai bảng lớn — EXPLAIN sẽ hiện "Hash Cond: (o.listing_id = l.listing_id)". Và lại là work_mem: build vừa work_mem thì 1 lượt, tràn thì Postgres tự chia batch — đúng grace hash bạn vừa tính.',
+          steps: [
+            'Số cặp xô: mỗi xô build phải ≤ M block → ⌈400 / 100⌉.',
+            'Grace = 3 lượt đi qua cả hai bảng: chia xô (đọc + ghi) rồi build/probe (đọc lại).',
+            'Vé 1 lượt: khỏi chia xô — mỗi bảng đọc đúng một lần: 1.000 + 400.'
+          ],
+          hint_explore: 'Bí thì bấm lại sim Step 1: 8 món + 6 đơn, mỗi bên đúng MỘT lượt — nhân số đó lên 1.400 block là ra vé đặc biệt.',
+          expected: 'so_cap_xo = 4 · tong_block_grace = 4200 · tong_block_1_luot = 1400.'
+        },
+        hints: [
+          { level: 1, text: 'Mỗi xô build phải vừa RAM 100 block — kho build 400 block thì cần mấy xô?' },
+          { level: 2, text: 'Grace hash đi qua mỗi bảng 3 lần (chia xô: đọc + ghi; build/probe: đọc) — nhân 3 với tổng block hai bảng.' },
+          { level: 3, text: 'Build vừa RAM thì mỗi bảng chỉ đọc MỘT lần: cộng thẳng 1.000 + 400.' },
+          { level: 4, text: 'so_cap_xo = <code>4</code> · tong_block_grace = <code>4200</code> · tong_block_1_luot = <code>1400</code>.' }
+        ],
+        success_message: 'TICKET #47 ĐÓNG — sao kê toàn sàn có thuật toán dự phòng cho ngày kho phình gấp 10! 🪣 Nhưng khoan đóng sổ: hash join có một cú lừa mang tên SKEW — món hit chiếm 30.000 đơn làm một xô phình nổ. Hồ sơ kỹ thuật ngay bên dưới. Rồi bài sau: một phép tưởng nặng nhất sàn — GROUP BY 100.000 đơn — hóa ra giá đúng bằng MỘT lần quét kho.',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_hash_skew']
+    },
+
+    /* ── nc_07 — Ticket #48 · Aggregation & DISTINCT bằng Sort/Hash ──
+     * PART_6 Bài 7 (Ch 15.6.1 + 15.6.5): GROUP BY sort-based vs hash-based;
+     * on-the-fly cho sum/count/min/max/avg (avg = sum÷count lúc đổ sổ);
+     * DISTINCT = cùng máy, SQL mặc định GIỮ trùng. Twist: bảng Ô 2.000 seller
+     * ≈ 20 block VỪA RAM → hash-agg = br + 1 seek = 104ms — đúng giá seq scan
+     * nc_02. step-4 full_ide GROUP BY thật (probe_groupby g1-g8 OK; DISTINCT
+     * bị guard — engine trả rỗng im lặng). */
+    {
+      id: 'nc_07', index: 7,
+      title: 'Aggregation — GROUP BY cả sàn giá bằng một lần quét',
+      subtitle: 'Sort-agg xếp rồi gom · Hash-agg cộng dồn từng Ô — và DISTINCT chỉ là GROUP BY không cột tính',
+      module: 7, module_title: 'Engine Room — Query Processing',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      drag_map: {
+        table: {
+          name: 'orders (100.000 đơn ≈ 1.000 block — mẫu 5, seller lộn xộn)',
+          columns: ['order_id', 'seller_id', 'total'],
+          dataRows: [
+            ['9001', '4102', '80'],
+            ['9002', '2001', '12500'],
+            ['9003', '4102', '790'],
+            ['9004', '2001', '45'],
+            ['9005', '3300', '150']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #48',
+        hook: 'Sàn ra mắt <em>"Bảng vàng seller"</em> — trang vinh danh doanh thu từng người bán. Nghĩa là gom <strong>100.000 đơn</strong> về <strong>2.000 seller</strong> và cộng tiền từng nhóm. Dev mới nhìn mà rùng mình: "gom nhóm cả sàn chắc đắt gấp mấy lần JOIN". Rồi EXPLAIN in ra hóa đơn: <strong>104ms</strong> — đúng bằng giá MỘT lần seq scan ở Ticket #43, không hơn một xu. Ticket #48: mở nắp máy xem engine gom nhóm kiểu gì mà rẻ vậy — và khi nào phép màu này HẾT hiệu lực.'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'GROUP BY có 2 lối: SORT-AGG — xếp cả bảng theo khóa nhóm (bài 4) rồi gom các dòng nằm liền kề; HASH-AGG — mỗi dòng hash thẳng vào Ô của nhóm mình',
+            'On-the-fly: sum/count/min/max cộng dồn NGAY khi đọc từng dòng — mỗi nhóm chỉ giữ MỘT Ô, đơn đọc xong là bỏ; avg = giữ sum + count, chia nhau lúc đổ sổ',
+            'Điều kiện phép màu: bảng Ô vừa RAM → đọc bảng đúng 1 lượt = br block + 1 cú nhảy; Ô KHÔNG vừa RAM → phải chia xô ra đĩa như hash join (≈3·br). DISTINCT? Cùng cỗ máy — GROUP BY không có cột tính'
+          ],
+          intro: 'Đếm phiếu bầu cho 2.000 ứng viên từ thùng 100.000 phiếu. Cách 1: đổ hết ra, XẾP phiếu theo tên, rồi đếm từng cụm nằm cạnh nhau. Cách 2: kẻ bảng 2.000 Ô — bốc từng phiếu, nhìn tên, <strong>cộng một vạch vào đúng Ô</strong> rồi bỏ phiếu đi. Cách 2 không giữ lại phiếu nào: thứ nằm trên bàn chỉ là BẢNG Ô — và 2.000 ô thì bàn nào chả để vừa.',
+          example: 'Bảng vàng seller: hash-agg đọc orders 1.000 block một lượt, mỗi đơn cộng dồn SUM[seller] += total vào bảng Ô ~20 block trong RAM → <strong>1.000 block + 1 nhảy = 104ms</strong>. Sort-agg phải external sort trước: ≈3.000 block ≈ <strong>348ms</strong> — nhưng đổi lại kết quả ra ĐÃ xếp thứ tự.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-calculator',
+            title: 'On-the-fly — giữ Ô, bỏ đơn',
+            body: 'Gặp 2 dòng cùng nhóm, engine KHÔNG giữ cả hai — nó thay bằng MỘT dòng mang sum/min/max/count đang cộng dồn. Nhờ thế mỗi nhóm chỉ tốn một Ô, và khi mọi Ô vừa RAM: cả phép GROUP BY = đọc bảng 1 lượt, <strong>br block + 1 cú nhảy</strong> — thay vì ≈3·br nếu phải ghi tạm ra đĩa.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.6.5 — Aggregation: on-the-fly sum/count/min/max/avg, br transfers + 1 seek khi kết quả vừa bộ nhớ'
+          },
+          {
+            icon: 'fa-clone',
+            title: 'DISTINCT — người anh em ruột',
+            body: 'Khử trùng lặp (duplicate elimination) chạy CÙNG cỗ máy: sort thì bản sao nằm cạnh nhau — xóa; hash thì bản sao rơi vào cùng Ô — giữ một. <code>SELECT DISTINCT seller_id</code> về bản chất là GROUP BY seller_id không có cột tính. Nhớ luật SQL: mặc định GIỮ trùng lặp — muốn khử phải tự gõ DISTINCT, vì khử là có giá.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Đổi khóa nhóm là đổi số phận: GROUP BY <strong>buyer_id × ngày</strong> → hơn triệu Ô ≈ 12.000 block — KHÔNG vừa RAM → engine phải chia xô ra đĩa như bài 6, hóa đơn ≈3·br. Còn sort-agg vẫn có đất diễn: cần <code>ORDER BY seller_id</code> kèm theo? Sort một công đôi việc — optimizer sẽ tự cân.'
+          }
+        ],
+        plan_visual: {
+          query: "SELECT seller_id, SUM(total)\nFROM orders\nGROUP BY seller_id;  -- 100.000 đơn → 2.000 seller",
+          caption: 'Cùng một GROUP BY — hai cỗ máy. Optimizer chọn hash-agg vì bảng Ô ~20 block vừa RAM: giá 104ms, đúng bằng MỘT lần seq scan Ticket #43. Đổi khóa nhóm cho Ô phình quá RAM là phép màu tắt.',
+          price: {
+            seek_ms: 4, block_ms: 0.1,
+            note: 'orders 1.000 block · 2.000 seller → bảng Ô ≈ 20 block, RAM M = 100 · bảng giá HDD như cũ.'
+          },
+          trees: [
+            {
+              name: 'Sort-Aggregate',
+              chosen: false,
+              note: 'External sort (bài 4) rồi gom nhóm liền kề — bonus: kết quả ra ĐÃ xếp',
+              io: { access: 'seq', seeks: 12, blocks: 3000 },
+              nodes: [
+                { op: 'orders (1.000 block)', kind: 'table', detail: 'kho chưa có trật tự', rows: '100.000 dòng' },
+                { op: 'External Sort theo seller_id', kind: 'scan', detail: '10 run + 1 pass merge', rows: '100.000 dòng đã xếp' },
+                { op: 'γ Gom nhóm liền kề + SUM', kind: 'project', detail: 'cùng seller nằm cạnh nhau — cắt cụm', rows: '2.000 nhóm' }
+              ]
+            },
+            {
+              name: 'Hash-Aggregate on-the-fly',
+              chosen: true,
+              note: '✓ Optimizer chọn — đọc 1 lượt, mỗi đơn cộng dồn vào Ô của nhóm',
+              io: { access: 'seq', seeks: 1, blocks: 1000 },
+              nodes: [
+                { op: 'orders (1.000 block)', kind: 'table', detail: 'kho chưa có trật tự', rows: '100.000 dòng' },
+                { op: 'Seq Scan — một lượt duy nhất', kind: 'scan', detail: 'từng đơn một, không sort', rows: '100.000 dòng' },
+                { op: 'γ Hash(seller_id) → SUM[Ô] += total', kind: 'project', detail: 'chỉ giữ 2.000 Ô ≈ 20 block trong RAM', rows: '2.000 nhóm' }
+              ]
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'orders — nguyên liệu Bảng vàng seller',
+            columns: [
+              { name: 'order_id', type: 'INT', key: 'PK' },
+              { name: 'seller_id', type: 'INT', key: '🪣 khóa nhóm' },
+              { name: 'total', type: 'INT (gem)', key: 'Σ cột tính' }
+            ]
+          },
+          data_preview: [
+            ['9001', '4102', '80'],
+            ['9002', '2001', '12500 ← seller trùng nhau', ''],
+            ['9003', '4102', '790 ← nằm RẢI RÁC, không liền kề', ''],
+            ['9004', '2001', '45', ''],
+            ['9005', '3300', '150', '']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Hash-agg gom 100.000 đơn mà RAM chỉ cần chứa ~20 block — nó giấu 100.000 đơn đi đâu?',
+            options: [
+              { id: 'a', text: 'Không giấu đâu cả — nó KHÔNG GIỮ đơn: mỗi đơn đọc lên, cộng dồn vào Ô của seller rồi bỏ luôn; trong RAM chỉ sống bảng Ô (mỗi nhóm đúng một dòng tổng)', correct: true, explanation: 'Đúng — on-the-fly nghĩa là "tính ngay trên dòng chảy". Thứ phải vừa RAM là BẢNG Ô, không phải dữ liệu — vì thế 100.000 đơn hay 10 triệu đơn cũng chỉ cần 20 block ô.' },
+              { id: 'b', text: 'Nén 100.000 đơn lại còn 20 block', correct: false, explanation: 'Sai — không nén gì cả; đơn được ĐỌC rồi BỎ, chỉ con số cộng dồn ở lại.' },
+              { id: 'c', text: 'Ghi tạm các đơn ra đĩa rồi đọc lại sau', correct: false, explanation: 'Sai — đó là kịch bản khi Ô KHÔNG vừa RAM (chia xô ≈3·br); ở đây Ô vừa RAM nên không có lượt ghi tạm nào.' },
+              { id: 'd', text: 'Dựa vào index có sẵn trên seller_id', correct: false, explanation: 'Sai — hash-agg không cần index nào; bảng Ô dựng tại chỗ trong RAM lúc quét.' }
+            ]
+          },
+          {
+            question: 'AVG(total) tính on-the-fly — mỗi Ô phải giữ gì?',
+            options: [
+              { id: 'a', text: 'SUM và COUNT đang cộng dồn — đến lúc đổ sổ mới lấy SUM ÷ COUNT', correct: true, explanation: 'Đúng — sách tả đúng cách này: avg không cộng dồn trực tiếp được, nhưng sum và count thì được, và thương của chúng là avg.' },
+              { id: 'b', text: 'Toàn bộ danh sách total của nhóm', correct: false, explanation: 'Sai — thế thì hết on-the-fly: nhóm to là RAM ngập; chỉ cần 2 con số cộng dồn là đủ.' },
+              { id: 'c', text: 'Chỉ giá trị AVG hiện tại — mỗi đơn mới thì lấy trung bình của (AVG cũ, total mới)', correct: false, explanation: 'Sai — trung bình của trung bình cho kết quả LỆCH (nhóm 3 đơn: avg(avg(a,b), c) ≠ avg(a,b,c)); phải giữ sum + count.' },
+              { id: 'd', text: 'MIN và MAX của nhóm', correct: false, explanation: 'Sai — min/max là hai hàm khác; avg cần sum và count.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'SORT-AGG hay HASH-AGG?',
+          instruction: 'Mỗi lá bài mô tả một cỗ máy — xếp về đúng bên.',
+          xp: 20,
+          chips: [
+            { id: 's1', label: 'Gom nhóm nằm LIỀN KỀ nhau sau khi xếp cả bảng' },
+            { id: 's2', label: 'Kết quả phụ: bảng ra đã CÓ THỨ TỰ theo khóa nhóm' },
+            { id: 'h1', label: 'Mỗi dòng nhảy thẳng vào Ô của nhóm, cộng dồn ngay' },
+            { id: 'h2', label: 'Bảng Ô vừa RAM là một lượt xong — không sort gì cả' }
+          ],
+          bins: [
+            { id: 's', label: 'SORT-AGG 📚' },
+            { id: 'h', label: 'HASH-AGG 🪣' }
+          ],
+          solution: { s1: 's', s2: 's', h1: 'h', h2: 'h' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp 4 trạm của hash-aggregate on-the-fly — có MỘT khối bịa.',
+        blocks: [
+          { type: 'op', token: 'Hash(seller_id) trỏ thẳng tới Ô của seller trong bảng RAM — seller lạ mặt thì mở Ô mới', slot: 'ag-hash' },
+          { type: 'op', token: 'Seq Scan: đọc orders đúng MỘT lượt, từng đơn một — không sort, không index', slot: 'ag-scan' },
+          { type: 'op', token: 'Gom HẾT đơn của từng seller vào RAM, đủ bộ rồi mới bắt đầu cộng', slot: 'ag-x' },
+          { type: 'op', token: 'Cộng dồn tại chỗ: SUM[Ô] += total, COUNT[Ô] += 1 — rồi BỎ đơn, không giữ lại', slot: 'ag-update' },
+          { type: 'op', token: 'Hết kho thì đổ 2.000 Ô ra kết quả — AVG lúc này mới chia SUM ÷ COUNT', slot: 'ag-out' }
+        ],
+        drop_zones: [
+          { id: 'ag-scan', placeholder: 'Trạm 1 — kho 1.000 block chưa trật tự: đọc kiểu gì?', accepts: ['op'], multi: false,
+            station: { icon: '📥', label: 'Quét 1 lượt', sub: 'Trạm 1', hint: 'Hash-agg không cần trật tự — đọc kiểu rẻ nhất mà Ticket #43 đã niêm yết.' } },
+          { id: 'ag-hash', placeholder: 'Trạm 2 — đơn này thuộc về ai?', accepts: ['op'], multi: false,
+            station: { icon: '🪣', label: 'Tìm Ô nhóm', sub: 'Trạm 2', hint: 'Cùng seller thì phải về cùng một chỗ — mà không được sort. Nghe quen chứ (bài 6)?' } },
+          { id: 'ag-update', placeholder: 'Trạm 3 — vào tới Ô rồi làm gì với đơn?', accepts: ['op'], multi: false,
+            station: { icon: '🧮', label: 'Cộng dồn on-the-fly', sub: 'Trạm 3', hint: 'Giữ Ô, bỏ đơn — bí quyết khiến RAM chỉ cần 20 block.' } },
+          { id: 'ag-out', placeholder: 'Trạm 4 — đọc hết 100.000 đơn rồi, kết thúc sao?', accepts: ['op'], multi: false,
+            station: { icon: '📤', label: 'Đổ sổ', sub: 'Trạm 4', hint: 'Bảng Ô thành bảng kết quả — và AVG đến giờ mới được tính.' } }
+        ],
+        expected_sql: 'Seq Scan: đọc orders đúng MỘT lượt, từng đơn một — không sort, không index Hash(seller_id) trỏ thẳng tới Ô của seller trong bảng RAM — seller lạ mặt thì mở Ô mới Cộng dồn tại chỗ: SUM[Ô] += total, COUNT[Ô] += 1 — rồi BỎ đơn, không giữ lại Hết kho thì đổ 2.000 Ô ra kết quả — AVG lúc này mới chia SUM ÷ COUNT',
+        expected_zones: {
+          'ag-scan': 'Seq Scan: đọc orders đúng MỘT lượt, từng đơn một — không sort, không index',
+          'ag-hash': 'Hash(seller_id) trỏ thẳng tới Ô của seller trong bảng RAM — seller lạ mặt thì mở Ô mới',
+          'ag-update': 'Cộng dồn tại chỗ: SUM[Ô] += total, COUNT[Ô] += 1 — rồi BỎ đơn, không giữ lại',
+          'ag-out': 'Hết kho thì đổ 2.000 Ô ra kết quả — AVG lúc này mới chia SUM ÷ COUNT'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẠN VỪA LẮP xong hash-aggregate on-the-fly: quét 1 lượt → hash tìm Ô → cộng dồn, bỏ đơn → đổ sổ. Khối "gom hết đơn rồi mới cộng" là bịa — giữ hết đơn thì RAM cần cả 1.000 block, phép màu 104ms tắt ngóm; on-the-fly chỉ giữ MỘT Ô mỗi nhóm. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'ag-scan': 'Trạm 1 mở máy: hash-agg không đòi trật tự, không đòi index — kho 1.000 block thì kiểu đọc nào rẻ nhất bảng giá?',
+          'ag-hash': 'Trạm 1 chốt: seq scan 1 lượt, 104ms trọn gói. Đơn đầu tiên lên băng chuyền — thuộc seller 4102: làm sao biết NGĂN nào của nó mà không sort?',
+          'ag-update': 'Trạm 2 chốt: hash trỏ thẳng Ô — Ô mới mở nếu seller lạ. Đơn đã đứng trước Ô của mình: xử nó thế nào để RAM không phình?',
+          'ag-out': 'Trạm 3 chốt: cộng dồn rồi bỏ đơn — bảng Ô 20 block gánh cả kho. Đơn cuối cùng đã qua: còn việc gì trước khi trả kết quả?'
+        }
+      },
+      step_4: {
+        prompt: 'Đóng Ticket #48: viết query <strong>Bảng vàng seller</strong> — doanh thu từng người bán: lấy <code>seller_id</code> và <code>SUM(total)</code> từ <code>orders</code>, gom theo <code>seller_id</code>.',
+        schema: {
+          table_name: 'orders',
+          columns: [
+            { name: 'order_id', type: 'INT', key: 'PK' },
+            { name: 'seller_id', type: 'INT', key: '🪣 khóa nhóm' },
+            { name: 'total', type: 'INT (gem)', key: 'Σ cột tính' }
+          ],
+          data: [
+            ['9001', '4102', '80'],
+            ['9002', '2001', '12500'],
+            ['9003', '4102', '790'],
+            ['9004', '2001', '45'],
+            ['9005', '3300', '150'],
+            ['9006', '4102', '320']
+          ]
+        },
+        context: {
+          scenario: 'Plan mô phỏng: <code>HashAggregate — Seq Scan orders → hash(seller_id) → 2.000 Ô cộng dồn</code>. Bảng demo 6 đơn, 3 seller — trong đó 4102 là seller bị soi ở Ticket #44, doanh thu lịch sử vẫn phải đối soát đủ (tính cả đơn refund).',
+          real_world: 'Chạy EXPLAIN trên Postgres sẽ thấy đúng hai cỗ máy của bài này: "HashAggregate" khi Ô vừa work_mem, "GroupAggregate" (sort trước) khi cần thứ tự hoặc Ô quá to. Bảng vàng, dashboard doanh thu, analytics — tất cả đứng trên GROUP BY này.',
+          steps: [
+            'Hai cột ra bảng: <code>seller_id, SUM(total)</code>.',
+            'Nguồn: <code>FROM orders</code>.',
+            'Gom nhóm: <code>GROUP BY seller_id</code>.'
+          ],
+          hint_explore: 'Chạy thử <code>SELECT * FROM orders</code> — thấy đơn của 4102 nằm RẢI RÁC (9001, 9003, 9006, không liền kề): đó chính là lý do phải gom, và là thứ hash-agg xử mà chẳng cần sort.',
+          expected: 'Bảng 3 nhóm: 4102 → 1190 · 2001 → 12545 · 3300 → 150.'
+        },
+        hints: [
+          { level: 1, text: 'Khung: <code>SELECT …, SUM(…) FROM orders GROUP BY …;</code>' },
+          { level: 2, text: 'Cột gom và cột tính: <code>seller_id</code> và <code>SUM(total)</code>.' },
+          { level: 3, text: 'Mọi cột KHÔNG nằm trong hàm tính phải có mặt trong GROUP BY — ở đây là <code>seller_id</code>.' },
+          { level: 4, text: '<code class="code">SELECT seller_id, SUM(total) FROM orders GROUP BY seller_id;</code>' }
+        ],
+        expected_sql: 'SELECT seller_id, SUM(total) FROM orders GROUP BY seller_id;',
+        success_message: 'TICKET #48 ĐÓNG — Bảng vàng seller lên sóng, giá đúng một lần quét kho! 🏆 Engine Room đã đi 7/10. Nhìn lại mà xem: sort (bài 4) nuôi merge join VÀ sort-agg; hash (bài 6) nuôi hash join VÀ hash-agg — hai ngón nghề, nửa cái engine. Bài sau đổi góc máy: các toán tử NỐI VỚI NHAU thế nào — ghi tạm ra đĩa hay truyền tay từng dòng? Materialization vs Pipelining, kèm hai hồ sơ Iterator & Blocking.',
+        xp_reward: 120
+      }
     }
 
   ],
@@ -1272,6 +1709,38 @@ window.LESSON_CONTENT['db_design_nc'] = {
       },
       source: 'PART_6 Card C — bitmap index scan (Ch 15.3 note: cách PostgreSQL né random I/O khi match nhiều)',
       cta: { label: 'Vào Bài 4 — Sắp xếp thứ to hơn RAM', href: '/lesson/db_design_nc?lesson=4' }
+    },
+
+    /* Card E — PART_6 đặt sau Bài 6 (Card D đã BỎ theo chốt đợt 3) */
+    {
+      id: 'nc_card_hash_skew',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 6',
+      title: 'Hash Join & Skew — khi một xô phình nổ',
+      accent: '#818CF8',
+      back_href: '/courses/db_design_nc',
+      intro: 'Hàm hash chia ĐỀU các giá trị — nhưng DỮ LIỆU không hứa chia đều chính nó. Món hit <strong>Skin súng Neon</strong> chiếm 30.000/100.000 đơn: xô chứa listing_id 3004 ôm ~300 block, RAM chỉ 100. Bảng tra không vừa bộ nhớ = luật chơi hash join vỡ — sách gọi cảnh này là <strong>skew</strong>.',
+      sections: [
+        {
+          icon: 'fa-scale-unbalanced',
+          heading: 'Ba đòn trị skew của sách',
+          body: '<strong>①</strong> Chia dư xô từ đầu: tăng số xô thêm ~20% (<em>fudge factor</em>) cho mỗi xô nhỏ hơn RAM một khoảng an toàn. <strong>②</strong> <em>Overflow resolution</em>: build tới đâu thấy xô phình thì băm LẠI xô đó bằng một hàm hash KHÁC (cả bên orders lẫn listings). <strong>③</strong> <em>Overflow avoidance</em>: chia thật nhỏ từ đầu rồi gộp các xô bé lại sao cho vừa RAM.'
+        },
+        {
+          icon: 'fa-hand-fist',
+          heading: 'Đòn cuối — khi băm lại cũng vô ích',
+          body: 'Xô phình vì 30.000 bản sao CÙNG MỘT giá trị 3004? Băm lại bằng hàm nào cũng thế: cùng giá trị → cùng hash → cùng xô. Cả ba đòn đều bó tay. Engine lúc này đổi chiến thuật cho RIÊNG xô đó: bỏ bảng tra, chơi <strong>block nested-loop</strong> — võ cũ của bài 5 quay lại cứu võ mới. Không thuật toán nào bị vứt đi cả.'
+        }
+      ],
+      quiz: {
+        question: 'Xô #2 phình 300 block vì 30.000 đơn cùng trỏ listing_id 3004 (món hit). Băm lại xô bằng hàm hash khác có cứu được không?',
+        options: [
+          { label: 'Không — cùng GIÁ TRỊ thì hash nào cũng ném về chung một xô; phải fallback BNLJ cho riêng xô đó', correct: true, feedback: '✓ Chuẩn — resolution/avoidance chỉ cứu skew do NHIỀU giá trị chen chúc; một giá trị khổng lồ thì đổi thuật toán cho xô đó là đòn cuối của sách.' },
+          { label: 'Có — hàm hash mới sẽ rải đều 30.000 đơn ra các xô con', correct: false, feedback: '✗ 30.000 đơn này mang CÙNG một khóa 3004 — hàm mới tính trên cùng đầu vào thì ra cùng đầu ra: cả khối lại dồn về một xô con.' },
+          { label: 'Có — miễn là tăng số xô lên gấp đôi từ đầu', correct: false, feedback: '✗ Tăng số xô (kể cả kèm fudge factor) chỉ cứu skew NHẸ do nhiều khóa chen nhau; khối 300 block cùng một khóa thì chia mấy cũng không tách được nó.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.5.3 — Handling of Overflows: skew, fudge factor, overflow resolution/avoidance · PART_6 Card E',
+      cta: { label: 'Vào Bài 7 — GROUP BY giá bằng một lần quét', href: '/lesson/db_design_nc?lesson=7' }
     }
   ]
 };

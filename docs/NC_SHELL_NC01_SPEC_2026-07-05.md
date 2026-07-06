@@ -78,3 +78,32 @@ User chốt 4/4 recommended: cụm nc_04+nc_05 (giữa 2 bài không có card �
 
 ## Engine guard mới (probe_join j3 — silent wrong)
 `ORDER BY alias.cột` (vd `ORDER BY o.total`) bị engine NUỐT IM LẶNG → thêm reCheck scanUnsupportedTokens chặn pending-neutral (cùng lớp UPPER/ROLLUP). Không expected_sql nào dùng dạng này; tc_08 equiv_sql chạy ngoài scan — không ảnh hưởng (row-order equiv tc_08 vốn cosmetic).
+
+---
+
+# ADDENDUM ĐỢT 4 (2026-07-06): nc_06 + nc_07 + Card E
+
+User chốt 4/4 recommended: cụm nc_06+nc_07 · sim hash build/probe BẤM-TỪNG-BƯỚC (component mới, cùng ngôn ngữ lệnh với sort sim) · nc_06 fill_blank tính hóa đơn + nc_07 full_ide GROUP BY thật · Card E "Hash Join & Skew" sau bài 6, CTA → bài 7.
+
+## Số liệu canonical đợt 4 (giữ nhất quán NC world: orders 1.000 block · listings 400 block · M=100 · tS=4ms · tT=0,1ms; convention nhà: 1 lượt đọc liền mạch = 1 cú nhảy)
+- Bài toán nc_06: báo cáo TOÀN SÀN mỗi đơn kèm tên món (orders ⋈ listings, không WHERE) — outer 3 block của Ticket #46 không còn.
+- **BNLJ** (outer = listings 400 → 4 mẻ 100): 400 + 4×1.000 = 4.400 block + 8 nhảy = **472ms** (đương kim từ bài 5).
+- **Sort-Merge chưa sort**: sort orders 3.000 (công thức br(2p+1), p=1 — nối bài 4) + ghi 1.000 + sort listings 1.200 + ghi 400 + merge đọc 1.400 = 7.000 block ≈ **≈820ms** → thua. NHƯNG 2 file ĐÃ sort theo listing_id: 1.400 block + 2 nhảy = **148ms**.
+- **Grace Hash** (M=100): nh = 400/100 = **4 cặp xô**; 3(br+bs) = **4.200 block** + 18 nhảy = **492ms** — sát BNLJ, chưa knock-out.
+- **Hash build-vừa-RAM** (báo cáo chỉ món <100 gem → build 1.204 dòng ≈ 12 block, số nc_01): br+bs = **1.400 block** + 2 nhảy = **148ms** — không cần sort.
+- Twist kép: 2 nhà vô địch CÙNG GIÁ 148ms, khác ĐIỀU KIỆN (đã-sort → merge; build nhỏ → hash). Phình kho listings ×10 (4.000 block): BNLJ (outer orders 10 mẻ) 41.000 block ≈ 4.180ms vs grace hash 3×5.000 = 15.000 ≈ 1.668ms → hash knock-out khi CẢ HAI bảng đều to (đúng 15.5.5.4).
+- nc_07: GROUP BY seller_id trên orders — **2.000 seller ≈ 20 block ô kết quả VỪA RAM** → hash-agg on-the-fly: đọc 1 lượt + cộng dồn ô = **1.000 block + 1 nhảy = 104ms** (sách 15.6.5: br transfers + 1 seek; ĐÚNG GIÁ seq scan nc_02 — "GROUP BY cả sàn giá bằng 1 lần quét"). Sort-agg: 3.000 block + 12 nhảy ≈ **348ms**, bonus kết quả RA ĐÃ XẾP. Nhóm KHÔNG vừa RAM (khách × ngày ≈ 1,2 triệu ô): phải chia xô ra đĩa như bài 6 → ≈3br.
+
+## nc_06 — Ticket #47 "Join II: Merge Join & Hash Join" (Ch 15.5.4-5)
+- `renderHashVisual` (mount chung #plan-visual-mount, nhánh `step_1.hash_visual`): mini-world 8 món listings → hash(id%4) 4 xô (xô 1 nhận 3 món — lệch nhẹ, chú thích dẫn Card E) + 6 đơn orders probe từng nhịp: mở ĐÚNG xô, so thật trong xô (đơn #9005→3007 cùng xô 3 với 3011 nhưng KHÔNG khớp — dạy "cùng xô chưa chắc khớp"). Click-driven như sort sim: 4 nhịp build (2 món/nhịp) → 3 nhịp probe (2 đơn/nhịp) → done/reset.
+- Step 3 zones hj-hash/hj-build/hj-probe/hj-rule + bịa "Sort cả 2 bảng trước khi chia xô cho chắc" (hash KHÔNG cần sort — điểm bán hàng). Mini-game order 5 bước grace hash.
+- Step 4 fill_blank tự tính: nh=**4** · grace 3(br+bs)=**4200** · build-vừa-RAM=**1400** (template pseudo-code → neutral path).
+- Card E nc_card_hash_skew: xô lệch (Skin súng Neon 3004 chiếm 30.000 đơn → xô ~300 block > RAM); sách trị: tăng nh + fudge ~20% / overflow resolution (băm lại xô bằng hash khác) / avoidance; 1 GIÁ TRỊ chiếm trọn xô → băm lại VÔ ÍCH (mọi bản sao cùng hash) → fallback BNLJ riêng xô đó. Quiz đúng = "băm lại không cứu được cùng-giá-trị". CTA → bài 7.
+
+## nc_07 — Ticket #48 "Aggregation & DISTINCT bằng Sort/Hash" (Ch 15.6.1 + 15.6.5)
+- Plan visual v2 tái dùng: 2 cây Sort-Agg (3.000 block · 12 nhảy · 348ms) vs Hash-Agg on-the-fly (1.000 + 1 nhảy · 104ms ✓ CHỌN), KHÔNG slider. Story "Bảng vàng seller" leaderboard.
+- Step 3 zones ag-scan/ag-hash/ag-update/ag-out + bịa "Gom HẾT đơn từng seller vào RAM rồi mới cộng" (on-the-fly chỉ giữ 1 Ô/nhóm — sum/count/min/max/avg; avg = sum÷count lúc đổ sổ). Mini-game classify SORT-AGG vs HASH-AGG (bonus sort: kết quả ra đã xếp).
+- Step 4 full_ide: `SELECT seller_id, SUM(total) FROM orders GROUP BY seller_id;` — probe_groupby g1-g8: GROUP BY/SUM/COUNT(*)/WHERE/HAVING/ORDER BY SUM()/AVG đều ĐÚNG. DISTINCT dạy ở step 1/3 (cùng máy GROUP BY, SQL mặc định giữ trùng) nhưng KHÔNG cho gõ (guard).
+
+## Engine guard mới (probe_groupby g5 — silent wrong)
+`SELECT DISTINCT` trả cột "DISTINCT col" với mọi dòng RỖNG, không khử trùng → thêm reCheck chặn pending-neutral (cùng lớp UPPER/ORDER-BY-alias). Không expected_sql nào ở Basic/TC/NC dùng DISTINCT (đã grep).
