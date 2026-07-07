@@ -1925,6 +1925,55 @@
         '<text x="528" y="185" text-anchor="middle" fill="#7f93ad" font-size="8">"làm dở thì như chưa từng" — atomicity</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">có start mà thiếu commit → UNDO · có commit → REDO: cái log gánh cả atomicity lẫn durability</text>' +
+      '</svg>',
+
+    /* nc_23 — WAL: log record phải xuống stable TRƯỚC block data, không thì crash mất đường undo (Ticket #64) */
+    nc_23: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Luật write-ahead logging: log record của một block phải ra stable storage trước khi block đó xuống đĩa; theo luật thì crash vẫn undo được, phá luật thì database kẹt trạng thái sai không cứu nổi">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">WAL — cuốn log phải xuống trước cái data</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">block data chưa được xuống đĩa nếu log record của nó chưa ra stable — nền của steal policy</text>' +
+        // Card trái — theo WAL
+        '<rect x="36" y="56" width="310" height="132" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="191" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">✓ THEO WAL — LOG XUỐNG TRƯỚC</text>' +
+        '<text x="191" y="97" text-anchor="middle" fill="#aebfd6" font-size="8.5">1. flush log &lt;T0,A,1000,950&gt; ra stable</text>' +
+        '<text x="191" y="113" text-anchor="middle" fill="#aebfd6" font-size="8.5">2. rồi mới đẩy block A=950 xuống đĩa</text>' +
+        '<text x="191" y="137" text-anchor="middle" fill="#34d399" font-weight="800" font-size="12">💥 crash → undo A về 1000 ✓</text>' +
+        '<text x="191" y="159" text-anchor="middle" fill="#7f93ad" font-size="8">log còn giá CŨ 1000 → hoàn tác được giao dịch dở</text>' +
+        '<text x="191" y="177" text-anchor="middle" fill="#7f93ad" font-size="8">steal policy sống nhờ đúng thứ tự này</text>' +
+        // Card phải — phá WAL
+        '<rect x="372" y="56" width="312" height="132" rx="9" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="528" y="76" text-anchor="middle" fill="#fca5a5" font-weight="700" font-size="10">✗ PHÁ WAL — DATA XUỐNG TRƯỚC</text>' +
+        '<text x="528" y="97" text-anchor="middle" fill="#aebfd6" font-size="8.5">block A=950 xuống đĩa · log record CÒN kẹt RAM</text>' +
+        '<text x="528" y="113" text-anchor="middle" fill="#fbbf24" font-size="8.5">💥 crash → RAM bay, log record mất theo</text>' +
+        '<text x="528" y="137" text-anchor="middle" fill="#f87171" font-weight="800" font-size="12">A kẹt 950 · 950/2000/700 SAI</text>' +
+        '<text x="528" y="159" text-anchor="middle" fill="#fca5a5" font-size="8.5">không có giá cũ trong log → không tài nào undo</text>' +
+        '<text x="528" y="177" text-anchor="middle" fill="#7f93ad" font-size="8">database kẹt trạng thái dở dang, không cứu nổi</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">checkpoint bó hẹp phạm vi quét · nhưng thứ tự log-trước-data mới là thứ giữ cho phục hồi khả thi</text>' +
+      '</svg>',
+
+    /* nc_24 — ARIES: LSN + PageLSN cho phép bỏ qua redo thừa; 3 pass analysis-redo-undo (Ticket #65) */
+    nc_24: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ARIES phục hồi ba pass analysis redo undo; mỗi trang nhớ PageLSN nên redo bỏ qua các log record đã phản ánh trên đĩa, giảm thời gian phục hồi">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">ARIES — phục hồi 3 pass, và mẹo BỎ QUA redo thừa</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">mỗi trang nhớ PageLSN: log record có LSN ≤ PageLSN nghĩa là đã có trên đĩa → skip</text>' +
+        // 3 pass ngang
+        '<rect x="40" y="58" width="200" height="30" rx="7" fill="rgba(129,140,248,.1)" stroke="rgba(129,140,248,.5)"/>' +
+        '<text x="140" y="77" text-anchor="middle" fill="#a5b4fc" font-weight="700" font-size="9.5">① ANALYSIS →</text>' +
+        '<rect x="260" y="58" width="200" height="30" rx="7" fill="rgba(52,211,153,.1)" stroke="rgba(52,211,153,.55)"/>' +
+        '<text x="360" y="77" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9.5">② REDO (xuôi) →</text>' +
+        '<rect x="480" y="58" width="200" height="30" rx="7" fill="rgba(251,191,36,.1)" stroke="rgba(251,191,36,.5)"/>' +
+        '<text x="580" y="77" text-anchor="middle" fill="#fcd34d" font-weight="700" font-size="9.5">③ UNDO (ngược)</text>' +
+        '<text x="140" y="104" text-anchor="middle" fill="#7f93ad" font-size="8">tìm RedoLSN + undo-list</text>' +
+        '<text x="360" y="104" text-anchor="middle" fill="#7f93ad" font-size="8">lặp lại lịch sử, skip cái đã có</text>' +
+        '<text x="580" y="104" text-anchor="middle" fill="#7f93ad" font-size="8">roll back txn chưa commit</text>' +
+        // Bảng skip minh họa
+        '<rect x="120" y="122" width="480" height="70" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.5)" stroke-width="1.3"/>' +
+        '<text x="360" y="141" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9.5">REDO SO LSN vs PageLSN</text>' +
+        '<text x="360" y="160" text-anchor="middle" fill="#34d399" font-size="8.5">LSN20 sửa A · PageLSN đĩa A = 20 → 20 ≤ 20 → ĐÃ CÓ → ⏭ SKIP</text>' +
+        '<text x="360" y="176" text-anchor="middle" fill="#c7d2fe" font-size="8.5">LSN60 sửa A · 60 &gt; 20 → CHƯA CÓ → ↻ REDO đặt A về giá mới</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không mù quáng redo từ đầu log — PageLSN + DirtyPageTable cho ARIES chỉ làm phần việc còn thiếu</text>' +
       '</svg>'
   };
 
@@ -3553,6 +3602,167 @@
     });
   }
 
+  /* ── WAL Visual (nc_23 — cổng write-ahead logging, sim thứ 14) ──
+   * PART_7 Bài 13: "enforce WAL" (Ch.19.5). Data:
+   * step_1.wal_visual = { eyebrow, caption, disk: [{id,label,val}], modes: [{ id,
+   *   short, btn, ok, verdict, steps: [{ text, log?, diskItem?, diskVal?, gate?,
+   *   crash?, recovery?, cls?, note? }] }] }.
+   * 2 tầng LOG(stable) + ĐĨA; cổng kiểm "log của block đã ra stable chưa?". Mode
+   * THEO WAL flush log trước data → crash phục hồi được; mode PHÁ WAL data trước
+   * log → crash mất record → inconsistent. User chốt 2026-07-07 (đợt 13). */
+  function renderWalVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.disk) || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, results: {} };
+
+    function diskHtml() {
+      return cfg.disk.map(function (d) {
+        return '<div class="wl-disk-row"><span class="wl-disk-name">' + escapeHtml(d.label) + '</span><span class="wl-disk-val" id="wl-disk-' + d.id + '">' + escapeHtml(String(d.val)) + '</span></div>';
+      }).join('');
+    }
+
+    mount.innerHTML =
+      '<section class="sort-visual wal-visual" aria-label="Cổng write-ahead logging: log record phải xuống stable storage trước khi block dữ liệu xuống đĩa">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'CỔNG WAL — LOG PHẢI XUỐNG TRƯỚC DATA') + '</span></div>' +
+        '<div class="wl-gate" id="wl-gate">🚧 CỔNG WAL — chọn kịch bản rồi bấm từng nhịp</div>' +
+        '<div class="wl-cols">' +
+          '<div class="wl-col"><div class="rc-col-name">📜 LOG (stable storage)</div><div class="wl-log" id="wl-log"><div class="sv-empty">— trống —</div></div></div>' +
+          '<div class="wl-col"><div class="rc-col-name">💽 ĐĨA (database)</div><div class="wl-disk" id="wl-disk">' + diskHtml() + '</div></div>' +
+        '</div>' +
+        '<div class="wl-recovery" id="wl-recovery">&nbsp;</div>' +
+        '<div class="tx-lines wl-steplog" id="wl-steplog"></div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="wl-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="wl-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="wl-status">Buffer đầy, một block phải xuống đĩa — cổng WAL canh thứ tự. Chọn KỊCH BẢN.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('wl-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('wl-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.label)) : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0;
+      $('wl-log').innerHTML = '<div class="sv-empty">— trống —</div>';
+      cfg.disk.forEach(function (d) { var el = $('wl-disk-' + d.id); el.textContent = String(d.val); el.className = 'wl-disk-val'; });
+      $('wl-gate').textContent = '🚧 CỔNG WAL — sẵn sàng'; $('wl-gate').className = 'wl-gate';
+      $('wl-recovery').innerHTML = '&nbsp;'; $('wl-steplog').innerHTML = '';
+      cfg.modes.forEach(function (mm) { $('wl-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id); });
+      setBtn('Nhịp 1 / ' + m.steps.length, false);
+      setStatus('Kịch bản <strong>' + escapeHtml(m.short || m.id) + '</strong> — bấm từng nhịp, để mắt vào thứ tự LOG ↔ ĐĨA.');
+    }
+    cfg.modes.forEach(function (m) { $('wl-mode-' + m.id).addEventListener('click', function () { pickMode(m); }); });
+
+    $('wl-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderWalVisual(mount, cfg); return; }
+      var m = st.mode, step = m.steps[st.i];
+      if (!step) return;
+      $('wl-steplog').innerHTML += '<div class="tx-line' + (step.cls ? ' tx-line--' + step.cls : '') + '">' + escapeHtml(step.text) + '</div>';
+      if (step.log) {
+        var lg = $('wl-log'); if (lg.querySelector('.sv-empty')) lg.innerHTML = '';
+        lg.innerHTML += '<div class="wl-rec">' + escapeHtml(step.log) + '</div>';
+      }
+      if (step.diskItem) { var dv = $('wl-disk-' + step.diskItem); if (dv) { dv.textContent = String(step.diskVal); dv.className = 'wl-disk-val ' + (step.cls === 'bad' || step.cls === 'warn' ? 'wl-disk-val--dirty' : 'wl-disk-val--ok'); } }
+      if (step.gate) { $('wl-gate').innerHTML = step.gate; $('wl-gate').className = 'wl-gate' + (step.cls === 'ok' ? ' wl-gate--ok' : (step.cls === 'warn' || step.cls === 'bad' ? ' wl-gate--bad' : '')); }
+      if (step.crash) { $('wl-gate').innerHTML = '💥 CRASH'; $('wl-gate').className = 'wl-gate wl-gate--bad'; }
+      if (step.recovery) $('wl-recovery').innerHTML = step.recovery;
+      st.i++;
+      if (st.i < m.steps.length) { setBtn('Nhịp ' + (st.i + 1) + ' / ' + m.steps.length, false); if (step.note) setStatus(step.note); }
+      else {
+        st.results[m.id] = { label: m.result || (m.ok ? 'cứu được' : 'mất data') };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) { setBtn('↺ Chạy lại từ đầu', false); st.mode = 'reset'; setStatus((m.verdict || '') + '<br>' + soKeo()); }
+        else { setBtn('✓ ' + (m.short || m.id) + ' xong', true); setStatus((m.verdict || '') + ' Giờ chạy kịch bản còn lại mà so.'); }
+      }
+    });
+  }
+
+  /* ── ARIES Visual (nc_24 — bảng điều khiển 3-pass, sim thứ 15) ──
+   * PART_7 Bài 14: "Recovery dashboard với log, PageLSN, DirtyPageTable" (Ch.19.9).
+   * Data: step_1.aries_visual = { eyebrow, caption, pages: [{id,label,disk,pagelsn}],
+   *   log: [{lsn, txn, type:'start'|'commit'|'write'|'checkpoint', page?, old?, new?}],
+   *   steps: [{ phase:'analysis'|'redo'|'undo', text, lsn?, action?:'skip'|'redo'|'undo',
+   *   page?, val?, setPageLsn?, note? }], verdict }.
+   * Single-flow scripted (không mode) — bấm #ar-btn tuần tự 3 pass; REDO khâu SKIP
+   * (LSN ≤ PageLSN) tô xanh nhạt. User chốt 2026-07-07 (đợt 13). */
+  function renderAriesVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.pages) || !Array.isArray(cfg.log) || !Array.isArray(cfg.steps)) return;
+    var st = { i: 0 };
+    var PHASES = { analysis: '① ANALYSIS', redo: '② REDO', undo: '③ UNDO' };
+
+    function logHtml() {
+      return cfg.log.map(function (r) {
+        var body = r.type === 'checkpoint' ? 'checkpoint' :
+          r.type === 'start' ? '&lt;' + r.txn + ' start&gt;' :
+          r.type === 'commit' ? '&lt;' + r.txn + ' commit&gt;' :
+          '&lt;' + r.txn + ', ' + escapeHtml(r.page) + ', ' + escapeHtml(String(r.old)) + ', ' + escapeHtml(String(r.new)) + '&gt;';
+        return '<div class="ar-rec" data-ar-lsn="' + r.lsn + '"><span class="ar-lsn">' + r.lsn + '</span>' + body + '</div>';
+      }).join('');
+    }
+    function pagesHtml() {
+      return cfg.pages.map(function (p) {
+        return '<div class="ar-page"><span class="ar-page-name">' + escapeHtml(p.label) + '</span>' +
+          '<span class="ar-page-val" id="ar-val-' + p.id + '">' + escapeHtml(String(p.disk)) + '</span>' +
+          '<span class="ar-page-lsn" id="ar-lsn-' + p.id + '">PageLSN ' + p.pagelsn + '</span></div>';
+      }).join('');
+    }
+
+    mount.innerHTML =
+      '<section class="sort-visual aries-visual" aria-label="Bảng điều khiển ARIES: ba pass analysis redo undo, dùng PageLSN để bỏ qua redo thừa">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'ARIES — BẢNG ĐIỀU KHIỂN 3 PASS') + '</span></div>' +
+        '<div class="ar-phasebar" id="ar-phasebar">' +
+          Object.keys(PHASES).map(function (k) { return '<span class="ar-phase" data-ar-phase="' + k + '">' + PHASES[k] + '</span>'; }).join('<span class="vd-phase-arrow">→</span>') +
+        '</div>' +
+        '<div class="ar-grid">' +
+          '<div class="ar-logcol"><div class="rc-col-name">📜 LOG (LSN)</div><div class="ar-log" id="ar-log">' + logHtml() + '</div></div>' +
+          '<div class="ar-sidecol">' +
+            '<div class="rc-col-name">💽 TRANG trên đĩa (PageLSN)</div><div class="ar-pages" id="ar-pages">' + pagesHtml() + '</div>' +
+            '<div class="ar-meta" id="ar-meta"><span>RedoLSN: <b id="ar-redolsn">?</b></span><span>undo-list: <b id="ar-undolist">?</b></span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sv-ctl">' +
+          '<button type="button" class="sv-btn" id="ar-btn">▶ Bắt đầu ANALYSIS</button>' +
+          '<span class="sv-status" id="ar-status">Máy vừa khởi động sau crash. Ba pass sẽ lần lượt chạy — bấm để bắt đầu.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('ar-status').innerHTML = t; }
+    function setBtn(label) { $('ar-btn').textContent = label; }
+    function litPhase(ph) { mount.querySelectorAll('.ar-phase').forEach(function (el) { el.classList.toggle('ar-phase--on', el.getAttribute('data-ar-phase') === ph); }); }
+    function litRec(lsn, kind) {
+      mount.querySelectorAll('.ar-rec').forEach(function (el) { el.classList.remove('ar-rec--active'); });
+      if (lsn === undefined) return;
+      var el = mount.querySelector('.ar-rec[data-ar-lsn="' + lsn + '"]');
+      if (el) { el.classList.add('ar-rec--active'); if (kind) el.classList.add('ar-rec--' + kind); }
+    }
+
+    $('ar-btn').addEventListener('click', function () {
+      if (st.i >= cfg.steps.length) { renderAriesVisual(mount, cfg); return; }
+      var s = cfg.steps[st.i];
+      litPhase(s.phase);
+      litRec(s.lsn, s.action);
+      if (s.page && s.val !== undefined) { var pv = $('ar-val-' + s.page); if (pv) { pv.textContent = String(s.val); pv.className = 'ar-page-val ' + (s.action === 'undo' ? 'rc-flash-warn' : 'rc-flash-ok'); } }
+      if (s.page && s.setPageLsn !== undefined) { var pl = $('ar-lsn-' + s.page); if (pl) pl.textContent = 'PageLSN ' + s.setPageLsn; }
+      if (s.setRedoLSN !== undefined) $('ar-redolsn').textContent = s.setRedoLSN;
+      if (s.setUndo !== undefined) $('ar-undolist').textContent = s.setUndo.length ? s.setUndo.join(', ') : '∅';
+      setStatus('<b>' + PHASES[s.phase] + '</b> — ' + (s.text || ''));
+      st.i++;
+      if (st.i < cfg.steps.length) {
+        var nx = cfg.steps[st.i];
+        setBtn(nx.phase !== s.phase ? ('▶ Sang ' + PHASES[nx.phase].replace(/^.\s/, '')) : 'Nhịp kế →');
+      } else { setBtn('↺ Chạy lại từ đầu'); litRec(undefined); setStatus((cfg.verdict || '') ); }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -3802,6 +4012,12 @@
         pvMount.hidden = false;
       } else if (s1.recovery_visual) {
         renderRecoveryVisual(pvMount, s1.recovery_visual);
+        pvMount.hidden = false;
+      } else if (s1.wal_visual) {
+        renderWalVisual(pvMount, s1.wal_visual);
+        pvMount.hidden = false;
+      } else if (s1.aries_visual) {
+        renderAriesVisual(pvMount, s1.aries_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

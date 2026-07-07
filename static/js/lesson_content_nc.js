@@ -5106,6 +5106,481 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 120
       },
       concept_cards_after: ['nc_card_shadow_paging']
+    },
+
+    /* ── nc_23 — Ticket #64 · WAL, Checkpoint & Crash Recovery (Ch.19.3.6-19.5) ──
+     * PART_7 Bài 13: enforce WAL + redo/undo từ checkpoint. Luật WAL: block data
+     * KHÔNG xuống đĩa trước khi log record của nó ra stable (nền steal policy).
+     * force/no-force + steal/no-steal; checkpoint bó hẹp quét. Sim thứ 14
+     * wal_visual (user chốt 2026-07-07 đợt 13). Card H+I sau. Step-4 mcq_code. */
+    {
+      id: 'nc_23', index: 23,
+      title: 'WAL — cuốn log phải xuống trước cái data',
+      subtitle: 'Write-ahead logging + checkpoint: thứ tự log-trước-data là thứ giữ cho phục hồi khả thi',
+      module: 9, module_title: 'Hộp Đen — Sự cố & Phục hồi',
+      estimated_minutes: 22, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'buffer ↔ đĩa — ai xuống trước? (T0 sửa A: 1000→950)',
+          columns: ['thành phần', 'trạng thái', 'ở đâu'],
+          dataRows: [
+            ['log record <T0,A,1000,950>', 'chờ flush', 'log buffer (RAM)'],
+            ['block A = 950', 'dirty, chờ ghi', 'data buffer (RAM)'],
+            ['A = 1000 (giá cũ)', 'bản trên đĩa', 'đĩa'],
+            ['B = 2000 · C = 700', 'chưa đụng', 'đĩa']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #64',
+        hook: 'Bài trước, cái Hộp Đen (log) cứu cả atomicity lẫn durability — nhưng ta lén giả định một điều: <em>"log luôn kịp ra stable storage"</em>. Đời không hiền vậy. Log cũng nằm trong buffer RAM chờ ghi; block data cũng chờ ghi. Nếu buffer đầy và engine đẩy block A xuống đĩa <strong>trước</strong> khi log record của A ra stable, rồi crash — ta có đĩa mang giá mới mà log không có giá cũ để undo. Database kẹt trạng thái dở dang, không cứu nổi. Ticket #64: một luật thứ-tự duy nhất chặn thảm họa đó — <strong>Write-Ahead Logging</strong>. ⚡'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'LUẬT WAL (Write-Ahead Logging): TRƯỚC khi một block data xuống đĩa, MỌI log record liên quan block đó phải đã ra stable storage; và trước <Ti commit>, mọi log record của Ti phải ra stable. Nói gọn: LOG luôn đi trước DATA',
+            'Đây là nền của STEAL policy — cho phép đẩy block của giao dịch CHƯA commit xuống đĩa (giải phóng buffer); an toàn vì log đã giữ giá CŨ để undo nếu giao dịch đó chết. Cặp policy chuẩn công nghiệp: NO-FORCE (khỏi ép block committed xuống đĩa ngay → cần REDO) + STEAL (→ cần UNDO)',
+            'CHECKPOINT bó hẹp phạm vi phục hồi: ghi <checkpoint L> (L = giao dịch đang chạy) → sau crash chỉ cần quét log TỪ checkpoint gần nhất; mọi giao dịch xong trước đó đã an toàn trên đĩa, khỏi redo'
+          ],
+          intro: 'Kế toán có một luật bất di bất dịch: <strong>ghi vào SỔ NHẬT KÝ trước, rồi mới được động vào két</strong>. Vì sao? Nếu lỡ tay bỏ tiền vào két trước mà chưa kịp ghi sổ, rồi mất điện quên mất — sáng ra nhìn két thấy tiền lạ, không sổ nào giải thích nổi nó từ đâu ra hay có phải hoàn lại không. Database y hệt: đẩy block xuống đĩa (bỏ tiền vào két) mà log record (ghi sổ) chưa ra stable là tự bịt đường phục hồi. Log trước, data sau — luôn luôn.',
+          example: 'T0 sửa A 1000→950, buffer đầy nên block A phải xuống đĩa (steal). <strong>Theo WAL</strong>: flush log <code>&lt;T0,A,1000,950&gt;</code> ra stable TRƯỚC → rồi ghi block A=950 → crash → recovery đọc log, thấy T0 chưa commit, undo A về 1000 ✓. <strong>Phá WAL</strong>: ghi block A=950 xuống đĩa khi log record còn kẹt RAM → crash → log mất record → đĩa kẹt 950, không biết giá cũ, database <strong>950/2000/700 SAI</strong>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-forward',
+            title: 'Luật WAL — theo đúng sách',
+            body: 'Ba điều kiện, gói trong một tinh thần "log đi trước": (1) Ti chỉ vào trạng thái committed sau khi <code>&lt;Ti commit&gt;</code> ra stable; (2) trước <code>&lt;Ti commit&gt;</code>, MỌI log record của Ti phải ra stable; (3) <strong>trước khi một block data xuống non-volatile storage, mọi log record liên quan dữ liệu trong block đó phải đã ra stable</strong>. Sách nói thẳng: nhờ điều (3), dù engine áp dụng <em>steal policy</em> (đẩy block chưa-commit xuống đĩa), recovery vẫn luôn có log record với giá cũ để đưa database về trạng thái nhất quán.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.5.1 — Write-Ahead Logging'
+          },
+          {
+            icon: 'fa-table-cells',
+            title: 'Force/Steal — và vì sao chuẩn là no-force + steal',
+            body: 'Hai trục chính sách buffer: <strong>FORCE</strong> (ép mọi block đã sửa xuống đĩa lúc commit) vs <strong>NO-FORCE</strong> (khỏi ép — commit nhanh, nhưng block committed có thể chưa trên đĩa → cần <em>REDO</em> lúc phục hồi). <strong>NO-STEAL</strong> (không cho block chưa-commit xuống đĩa) vs <strong>STEAL</strong> (cho — giải phóng buffer, nhưng block chưa-commit có thể đã trên đĩa → cần <em>UNDO</em>). Đa số DB chọn <strong>no-force + steal</strong>: nhanh và không kẹt buffer — đổi lại phải có cả redo lẫn undo, và cả hai chỉ an toàn khi tuân WAL.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Postgres có tham số <code>fsync</code>, <code>wal_level</code>, <code>synchronous_commit</code> — tất cả xoay quanh "log ra đĩa lúc nào". Tắt <code>fsync</code> để nhập liệu nhanh là bạn đang <em>tự phá WAL</em>, đổi tốc độ lấy rủi ro mất dữ liệu khi crash. Còn <code>CHECKPOINT</code> (Postgres chạy định kỳ) chính là cái bó hẹp thời gian phục hồi — sau crash chỉ replay WAL từ checkpoint gần nhất, không phải từ đầu thời gian.'
+          }
+        ],
+        wal_visual: {
+          eyebrow: 'CỔNG WAL — T0 SỬA A 1000→950, BUFFER ĐẦY, BLOCK A PHẢI XUỐNG ĐĨA',
+          caption: 'Chạy CẢ HAI kịch bản: theo WAL thì log giữ giá cũ nên crash vẫn undo được; phá WAL thì log record bay theo RAM, database kẹt trạng thái sai.',
+          disk: [
+            { id: 'A', label: '💰 A · Quỹ Sàn', val: 1000 },
+            { id: 'B', label: '💰 B · DragonForge', val: 2000 },
+            { id: 'C', label: '💰 C · NightRaven', val: 700 }
+          ],
+          modes: [
+            {
+              id: 'wal', short: 'THEO WAL', ok: true, result: 'undo được A→1000',
+              btn: '▶ Kịch bản THEO WAL',
+              steps: [
+                { text: 'T0 sửa A: 1000→950 trong buffer · log record của A đang ở LOG BUFFER (RAM)', gate: '🚧 CỔNG WAL — block A muốn xuống đĩa', note: 'Buffer đầy, phải đẩy block A xuống đĩa (steal). Cổng WAL chặn lại hỏi trước.' },
+                { text: 'CỔNG hỏi: log record của A đã ra stable chưa? → CHƯA', gate: '❓ log của A đã an toàn trên stable?', note: 'Đây là bài kiểm tra sống còn: data chỉ được qua cổng khi log của nó đã an toàn.' },
+                { text: 'flush LOG trước: <T0, A, 1000, 950> ra stable storage', log: '<T0, A, 1000, 950>', gate: '✓ log đã an toàn — giờ mới mở cổng cho data', cls: 'ok', note: 'Log record mang giá CŨ 1000 và giá MỚI 950 — đã nằm chắc trên stable.' },
+                { text: 'giờ đẩy block A=950 xuống đĩa (steal hợp lệ)', diskItem: 'A', diskVal: 950, cls: 'warn', note: 'Đĩa giờ mang 950 của một giao dịch CHƯA commit — nhưng không sao, log đã thủ sẵn giá cũ.' },
+                { text: '💥 CRASH — T0 chưa kịp commit', crash: true, recovery: '↻ recovery đọc log: thấy <T0,A,1000,950>, T0 KHÔNG commit → UNDO A về <b>1000</b> ✓', cls: 'ok', note: '' }
+              ],
+              verdict: '✓ Log xuống trước nên luôn có giá cũ để hoàn tác — crash lúc nào cũng đưa được database về nhất quán. Steal policy sống khỏe chính nhờ luật thứ-tự này.'
+            },
+            {
+              id: 'break', short: 'PHÁ WAL', ok: false, result: 'A kẹt 950 SAI',
+              btn: '▶ Kịch bản PHÁ WAL',
+              steps: [
+                { text: 'T0 sửa A: 1000→950 trong buffer · log record CÒN kẹt trong log buffer (RAM)', gate: '⚠️ block A muốn xuống đĩa — bỏ qua cổng cho nhanh', cls: 'warn', note: 'Ai đó "tối ưu": đẩy data xuống đĩa luôn, log để lát flush sau. Nghe nhanh gọn — và chí mạng.' },
+                { text: 'CỔNG BỊ VƯỢT: ghi block A=950 xuống đĩa TRƯỚC khi log record ra stable', diskItem: 'A', diskVal: 950, gate: '⛔ CỔNG BỊ VƯỢT — data đi trước log', cls: 'bad', note: 'Đĩa đã mang 950, nhưng log record giá-cũ-1000 vẫn chỉ nằm trong RAM.' },
+                { text: '💥 CRASH — RAM bay, log record của A mất theo', crash: true, recovery: '↻ recovery đọc log: THIẾU record của A → không biết giá CŨ → A kẹt <b>950</b>, database <b>950/2000/700 SAI</b> ❌', cls: 'bad', note: '' }
+              ],
+              verdict: '❌ Data xuống trước log: crash làm mất record, recovery không có giá cũ để undo → giao dịch dở dang đông cứng trên đĩa. Đây đúng là thảm họa mà WAL sinh ra để chặn.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'ma trận policy — cần undo/redo gì?',
+            columns: [
+              { name: 'policy', type: 'buffer làm gì', key: '⚙️' },
+              { name: 'hệ quả lúc crash', type: 'thiếu gì trên đĩa', key: '💥' },
+              { name: 'phải có', type: '', key: '🛠️' }
+            ]
+          },
+          data_preview: [
+            ['NO-FORCE', 'block committed CHƯA xuống đĩa', 'cần REDO (áp lại giá mới)'],
+            ['STEAL', 'block chưa-commit ĐÃ xuống đĩa', 'cần UNDO (khôi phục giá cũ)'],
+            ['no-force + steal (chuẩn)', 'nhanh, không kẹt buffer', 'cần CẢ redo lẫn undo → WAL'],
+            ['(WAL đảm bảo)', 'log luôn có mặt để undo/redo', '✓']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Steal policy cho phép đẩy block của giao dịch CHƯA commit xuống đĩa. Điều gì khiến việc đó AN TOÀN thay vì là quả bom hẹn giờ?',
+            options: [
+              { id: 'a', text: 'Luật WAL: trước khi block đó xuống đĩa, log record của nó (mang giá CŨ) đã phải ra stable — nên nếu giao dịch chết, recovery luôn có giá cũ để UNDO block về trạng thái trước', correct: true, explanation: 'Đúng — steal và WAL là cặp bài trùng: steal giải phóng buffer, WAL đảm bảo luôn có đường lùi. Thiếu WAL thì steal đúng là bom hẹn giờ.' },
+              { id: 'b', text: 'Vì block chưa-commit được đánh dấu "tạm" nên recovery tự bỏ qua', correct: false, explanation: 'Sai — trên đĩa không có nhãn "tạm" tự động; recovery biết undo được là nhờ LOG RECORD giá cũ, không phải nhờ cái nhãn nào trên block.' },
+              { id: 'c', text: 'Vì steal chỉ đẩy block của giao dịch sắp commit tới nơi', correct: false, explanation: 'Sai — steal đẩy bất kỳ block dirty nào khi buffer cần chỗ, kể cả của giao dịch còn lâu mới commit (hoặc sẽ abort); đó chính là lý do phải có undo.' },
+              { id: 'd', text: 'Vì đĩa có bản sao stable nên ghi sai cũng khôi phục được', correct: false, explanation: 'Sai — stable storage chống mất-đĩa, không chống ghi-đè-giá-mới; cái cứu ở đây là log record giá cũ, không phải bản sao block.' }
+            ]
+          },
+          {
+            question: 'Vì sao đa số database chọn NO-FORCE thay vì FORCE (ép mọi block xuống đĩa lúc commit)?',
+            options: [
+              { id: 'a', text: 'No-force cho commit nhanh (khỏi chờ ghi đĩa) và cho nhiều cập nhật dồn trên một block trước khi ghi, giảm mạnh số lần I/O — đổi lại phải có REDO để áp lại block committed chưa kịp xuống đĩa sau crash', correct: true, explanation: 'Đúng cả hai vế — no-force là đánh đổi kinh điển: nhanh + ít I/O, trả bằng khả năng redo (mà log đã sẵn có).' },
+              { id: 'b', text: 'Force policy làm mất dữ liệu nên bị cấm', correct: false, explanation: 'Sai — force KHÔNG mất dữ liệu (nó ghi hết xuống đĩa, còn "an toàn" hơn ở khoản durability tức thì); nó chỉ CHẬM và tốn I/O, nên bị chê về hiệu năng chứ không phải đúng-sai.' },
+              { id: 'c', text: 'No-force không cần log gì cả', correct: false, explanation: 'Sai ngược — no-force CẦN log (để redo); chính vì block committed có thể chưa xuống đĩa mà log phải giữ giá mới để áp lại sau crash.' },
+              { id: 'd', text: 'Vì no-force tự động ghi block xuống đĩa ngầm sau lưng', correct: false, explanation: 'Sai — no-force nghĩa là KHÔNG ép ghi lúc commit; block xuống đĩa lúc buffer cần chỗ hoặc tiến trình nền dọn, không phải "ngầm ghi ngay".' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Thứ tự này ổn hay toang?',
+          instruction: 'Với luật WAL, tình huống ghi xuống stable/đĩa nào là HỢP LỆ, tình huống nào PHÁ luật?',
+          xp: 20,
+          chips: [
+            { id: 'w1', label: 'Flush log <T0,A,..> ra stable → rồi ghi block A xuống đĩa' },
+            { id: 'w2', label: 'Ghi block A xuống đĩa → rồi mới flush log của A' },
+            { id: 'w3', label: 'Flush hết log của T0 ra stable → rồi ghi <T0 commit>' },
+            { id: 'w4', label: 'Ghi <T0 commit> ra stable khi log các cú write của T0 còn ở RAM' }
+          ],
+          bins: [
+            { id: 'ok', label: 'HỢP LỆ ✓' },
+            { id: 'bad', label: 'PHÁ WAL ✗' }
+          ],
+          solution: { w1: 'ok', w2: 'bad', w3: 'ok', w4: 'bad' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp luật WAL + checkpoint 4 bước — có MỘT khối bịa (nghe rất chi là "cho nhanh").',
+        blocks: [
+          { type: 'op', token: 'LUẬT WAL: trước khi một block data xuống đĩa, MỌI log record của block đó phải đã ra stable storage — log luôn đi trước data', slot: 'wl-rule' },
+          { type: 'op', token: 'Cứ đẩy block xuống đĩa lúc nào tiện cho nhẹ buffer, log flush theo sau cũng kịp', slot: 'wl-x' },
+          { type: 'op', token: 'NHỜ WAL: steal policy an toàn — block chưa-commit xuống đĩa vẫn undo được vì log đã giữ giá CŨ', slot: 'wl-steal' },
+          { type: 'op', token: 'CHECKPOINT: ghi <checkpoint L> định kỳ → sau crash chỉ quét log TỪ checkpoint gần nhất, txn xong trước đó khỏi redo', slot: 'wl-ckpt' },
+          { type: 'op', token: 'PHỤC HỒI: redo xuôi từ checkpoint (dựng undo-list) rồi undo ngược — nhanh vì phạm vi đã bó hẹp', slot: 'wl-recover' }
+        ],
+        drop_zones: [
+          { id: 'wl-rule', placeholder: 'Bước 1 — luật thứ tự cốt lõi?', accepts: ['op'], multi: false,
+            station: { icon: '⚡', label: 'Luật WAL', sub: 'Bước 1', hint: 'Hai thứ cùng chờ ghi: log và data. Cái nào BẮT BUỘC xuống trước?' } },
+          { id: 'wl-steal', placeholder: 'Bước 2 — nhờ luật đó, steal an toàn ra sao?', accepts: ['op'], multi: false,
+            station: { icon: '🤝', label: 'Steal an toàn', sub: 'Bước 2', hint: 'Block chưa-commit đã lỡ xuống đĩa — điều gì trong log cứu được nếu giao dịch đó chết?' } },
+          { id: 'wl-ckpt', placeholder: 'Bước 3 — làm sao khỏi quét cả log?', accepts: ['op'], multi: false,
+            station: { icon: '📍', label: 'Checkpoint', sub: 'Bước 3', hint: 'Đặt một cái mốc định kỳ; sau crash chỉ cần quét từ mốc đó về sau. Mốc ấy tên gì?' } },
+          { id: 'wl-recover', placeholder: 'Bước 4 — phục hồi chạy sao cho nhanh?', accepts: ['op'], multi: false,
+            station: { icon: '🔧', label: 'Redo rồi undo', sub: 'Bước 4', hint: 'Hai pha: một pha lặp lại lịch sử xuôi, một pha hoàn tác ngược — bắt đầu từ đâu để nhanh?' } }
+        ],
+        expected_sql: 'LUẬT WAL: trước khi một block data xuống đĩa, MỌI log record của block đó phải đã ra stable storage — log luôn đi trước data NHỜ WAL: steal policy an toàn — block chưa-commit xuống đĩa vẫn undo được vì log đã giữ giá CŨ CHECKPOINT: ghi <checkpoint L> định kỳ → sau crash chỉ quét log TỪ checkpoint gần nhất, txn xong trước đó khỏi redo PHỤC HỒI: redo xuôi từ checkpoint (dựng undo-list) rồi undo ngược — nhanh vì phạm vi đã bó hẹp',
+        expected_zones: {
+          'wl-rule': 'LUẬT WAL: trước khi một block data xuống đĩa, MỌI log record của block đó phải đã ra stable storage — log luôn đi trước data',
+          'wl-steal': 'NHỜ WAL: steal policy an toàn — block chưa-commit xuống đĩa vẫn undo được vì log đã giữ giá CŨ',
+          'wl-ckpt': 'CHECKPOINT: ghi <checkpoint L> định kỳ → sau crash chỉ quét log TỪ checkpoint gần nhất, txn xong trước đó khỏi redo',
+          'wl-recover': 'PHỤC HỒI: redo xuôi từ checkpoint (dựng undo-list) rồi undo ngược — nhanh vì phạm vi đã bó hẹp'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 LUẬT WAL KHÉP: log-trước-data → steal an toàn → checkpoint bó hẹp → redo-rồi-undo. Khối "đẩy block xuống đĩa lúc nào tiện, log theo sau" là BỊA — và là chính cái phá WAL: data xuống trước log thì crash làm mất giá cũ, database kẹt trạng thái dở. Thứ tự log-trước-data không phải chuyện phong cách, nó là điều kiện SỐNG CÒN của phục hồi. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'wl-rule': 'Bước 1 — hai thứ chờ ghi, một luật thứ tự. Đọc lại tên bài: Write-Ahead nghĩa là gì đi trước?',
+          'wl-steal': 'Bước 2 — steal đẩy block chưa-commit xuống đĩa. Nếu giao dịch đó chết, lấy gì trong log để lùi?',
+          'wl-ckpt': 'Bước 3 — không ai muốn quét cả cuốn log từ đầu vũ trụ. Cái mốc định kỳ giúp bắt đầu gần hơn tên là gì?',
+          'wl-recover': 'Bước 4 — nhớ bài 22: redo cái đã commit, undo cái dở. Ở đây bắt đầu từ checkpoint cho nhanh.'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #64 — chẩn đoán cú phá luật:</strong> engine chạy steal policy nhưng ai đó tắt đồng bộ log. Block A=950 (của T0, <strong>chưa commit</strong>) đã xuống đĩa, nhưng log record <code>&lt;T0,A,1000,950&gt;</code> CHƯA ra stable thì server sập. Sau khởi động, ví A ra sao?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: 'A kẹt ở 950 — SAI. Log thiếu record nên recovery không biết giá cũ 1000 để undo; giao dịch dở dang đông cứng trên đĩa. Đây đúng là thảm họa mà luật WAL sinh ra để chặn',
+            correct: true
+          },
+          {
+            text: 'A = 1000 — recovery luôn undo được giao dịch chưa commit về giá cũ',
+            correct: false,
+            explain: 'Chỉ đúng KHI có WAL. Ở đây WAL bị phá: log record giá-cũ-1000 bay theo RAM lúc crash, recovery không có gì để undo. Chính vì thế WAL là bắt buộc.'
+          },
+          {
+            text: 'A = 950 và ĐÚNG — block đã xuống đĩa nghĩa là dữ liệu đã bền vững',
+            correct: false,
+            explain: 'Bền vững nhưng SAI: 950 là kết quả của một giao dịch CHƯA commit (có thể sẽ abort). "Đã trên đĩa" không có nghĩa là "đúng" — atomicity đòi giao dịch dở phải bị xóa sạch.'
+          },
+          {
+            text: 'Recovery bỏ qua A vì block không có commit record',
+            correct: false,
+            explain: 'Không có cơ chế "tự bỏ qua": recovery chỉ biết hành động qua LOG. Không có log record của A thì recovery còn chẳng biết A vừa bị đụng — nó cứ để nguyên 950 sai.'
+          }
+        ],
+        schema: {
+          table_name: 'hiện trường phá WAL — lúc crash',
+          columns: [
+            { name: 'thành phần', type: '', key: '📍' },
+            { name: 'trạng thái', type: 'lúc server sập', key: '💥' },
+            { name: 'hệ quả', type: '', key: '→' }
+          ],
+          data: [
+            ['block A trên đĩa', '= 950 (T0 chưa commit)', 'đã bền, nhưng SAI'],
+            ['log record của A', 'còn trong RAM → bay', 'mất giá cũ 1000'],
+            ['recovery cần', 'giá cũ để undo', '✗ không có'],
+            ['→ ví A chốt', '❓', 'kẹt 950']
+          ]
+        },
+        context: {
+          scenario: 'Đây là mặt trái của cú "tối ưu" tắt đồng bộ log: steal policy vẫn đẩy block chưa-commit xuống đĩa (bình thường), nhưng luật WAL bị vi phạm nên mất luôn đường undo. Cùng một hành động (block xuống đĩa) — có WAL thì cứu được, không WAL thì thành thảm họa.',
+          real_world: 'Chính vì rủi ro này mà không ai khuyên tắt fsync/synchronous_commit trên database sản xuất. Vụ mất dữ liệu "database corrupt sau khi mất điện" nổi tiếng thường quy về đúng đây: cấu hình cho phép data xuống đĩa mà không đảm bảo log đã bền trước.',
+          steps: [
+            'Block A=950 của T0 (chưa commit) đã trên đĩa — bền vững nhưng chưa chính thức.',
+            'Log record giá-cũ của A còn kẹt RAM → crash làm mất.',
+            'Recovery không có giá cũ 1000 → không thể undo.',
+            'A kẹt 950 — trạng thái dở dang, sai, không cứu được.'
+          ],
+          hint_explore: 'Panel schema bên trái dựng sẵn hiện trường — dòng "recovery cần: ✗ không có" là mấu chốt.',
+          expected: 'Chọn "A kẹt 950 — SAI, thiếu log để undo".'
+        },
+        hints: [
+          { level: 1, text: 'Recovery undo bằng gì? Bằng LOG RECORD giá cũ. Ở đây log record còn ở đâu lúc crash?' },
+          { level: 2, text: 'Log record kẹt RAM → crash làm bay. Không có giá cũ 1000 thì recovery làm gì được?' },
+          { level: 3, text: 'Block A=950 đã trên đĩa (bền) nhưng của giao dịch CHƯA commit — không undo được thì nó kẹt.' },
+          { level: 4, text: 'Đáp án: A kẹt 950 — SAI, đúng thảm họa WAL sinh ra để chặn.' }
+        ],
+        success_message: 'TICKET #64 ĐÓNG — bạn đã thấy vì sao log PHẢI đi trước data! ⚡ Hai hồ sơ đọc thêm bên dưới: FORCE/STEAL (ma trận policy buffer) và DATABASE DUMP + REMOTE BACKUP (khi mất cả cái đĩa thì sao). Còn bài cuối cùng của phần dạy Recovery: tất cả kỹ thuật ta học là bản GIẢN LƯỢC của một hệ thống thật ngoài đời — ARIES, với LSN, PageLSN, DirtyPageTable và 3 pass phục hồi khôn ngoan đến mức bỏ qua được cả đống việc thừa. 🎛️',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_force_steal', 'nc_card_dump_backup']
+    },
+
+    /* ── nc_24 — Ticket #65 · ARIES Overview (Ch.19.9) ── BÀI DẠY CUỐI M9.
+     * PART_7 Bài 14: recovery dashboard với log/PageLSN/DirtyPageTable. 4 khác
+     * biệt: LSN + PageLSN (skip redo), physiological redo, DirtyPageTable, fuzzy
+     * checkpoint. 3 pass analysis→redo→undo. Sim thứ 15 aries_visual (user chốt
+     * 2026-07-07 đợt 13). Card J sau. Step-4 fill_blank (RedoLSN/skip/undo-list). */
+    {
+      id: 'nc_24', index: 24,
+      title: 'ARIES — phục hồi 3 pass, và mẹo bỏ qua việc thừa',
+      subtitle: 'LSN + PageLSN + DirtyPageTable: hệ phục hồi thật ngoài đời, khôn tới mức không redo lại thứ đã có trên đĩa',
+      module: 9, module_title: 'Hộp Đen — Sự cố & Phục hồi',
+      estimated_minutes: 24, xp_reward: 130,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'log ARIES có LSN + trang có PageLSN (crash sau LSN 90)',
+          columns: ['LSN', 'log record', 'ghi chú'],
+          dataRows: [
+            ['20', '<T1, A, 1000, 900>', 'A update 1'],
+            ['50', 'checkpoint {A,B · active T1}', 'mốc'],
+            ['60', '<T1, A, 900, 850>', 'A update 2'],
+            ['80', '<T3, C, 700, 600>', 'C update'],
+            ['90', '<T3 commit>', 'T3 chốt']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #65',
+        hook: 'Mọi thứ ta học suốt phần Recovery — log, undo/redo, WAL, checkpoint — đều là bản <em>giản lược cho dễ hiểu</em> của một hệ thống thật đang chạy trong hàng nghìn database ngoài đời: <strong>ARIES</strong>. Nó khôn hơn thuật toán mộc mạc của ta ở một chỗ tinh quái: sau crash, thay vì redo lại mọi cú ghi từ đầu (chậm mà vô ích), nó hỏi từng trang <em>"cú này mày đã có trên đĩa chưa?"</em> — có rồi thì BỎ QUA. Ticket #65, bài dạy cuối của Hộp Đen: mở bảng điều khiển ARIES và xem 3 pass phục hồi vận hành. 🎛️'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'LSN (Log Sequence Number): mỗi log record một số định danh tăng dần; mỗi TRANG nhớ PageLSN = LSN của cú sửa cuối đã áp lên nó. Mẹo vàng: khi redo, nếu LSN của record ≤ PageLSN của trang → cú sửa ĐÃ có trên đĩa → BỎ QUA (không redo lại)',
+            'DIRTYPAGETABLE: bảng các trang "bẩn" (đã sửa trong buffer, đĩa chưa cập nhật) + RecLSN mỗi trang; giúp redo chỉ động vào trang cần, và fuzzy checkpoint chỉ cần ghi bảng này chứ KHÔNG phải flush hết trang xuống đĩa',
+            '3 PASS phục hồi: ANALYSIS (từ checkpoint gần nhất → tính RedoLSN = min RecLSN, dựng undo-list) → REDO (xuôi từ RedoLSN, lặp lại lịch sử nhưng bỏ qua cái đã có nhờ PageLSN) → UNDO (ngược, roll back mọi giao dịch trong undo-list, ghi CLR)'
+          ],
+          intro: 'Đội cứu hộ tới hiện trường không dọn lại từng phòng một cách mù quáng. Họ mở sổ nhật ký toà nhà, đối chiếu "phòng nào đã được xử lý, phòng nào chưa" — rồi chỉ làm phần CÒN THIẾU. ARIES phục hồi y vậy: mỗi trang đeo một cái tem (PageLSN) ghi "tôi đã cập nhật tới đâu"; recovery so tem với log, cái nào trang đã có thì bỏ qua, chỉ áp phần trang còn thiếu. Nhờ thế database khổng lồ vẫn khởi động lại trong phút thay vì giờ.',
+          example: 'Trang A trên đĩa có PageLSN=20 (chỉ cú sửa LSN 20 đã xuống đĩa). Redo gặp record LSN 20 → <code>20 ≤ 20</code> → đã có → <strong>SKIP</strong>. Gặp record LSN 60 (cũng sửa A) → <code>60 &gt; 20</code> → chưa có → <strong>REDO</strong>, và cập nhật PageLSN của A thành 60. Cứ thế, ARIES chỉ làm đúng phần việc còn thiếu.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-fingerprint',
+            title: 'LSN & PageLSN — theo đúng sách',
+            body: 'Mỗi log record ARIES có một <strong>LSN</strong> định danh, giá trị lớn hơn cho record xuất hiện muộn hơn. Mỗi trang giữ một <strong>PageLSN</strong>: mỗi khi một thao tác cập nhật trang, LSN của log record đó được lưu vào PageLSN. "Trong pha redo, bất kỳ log record nào có LSN <strong>nhỏ hơn hoặc bằng</strong> PageLSN của trang thì KHÔNG được thực thi lại, vì tác động của nó đã phản ánh trên trang." Đây là chìa khóa để ARIES bỏ qua — thậm chí không cần đọc — nhiều trang mà thao tác đã nằm sẵn trên đĩa, cắt giảm mạnh thời gian phục hồi.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.9.1 — ARIES Data Structures'
+          },
+          {
+            icon: 'fa-list-check',
+            title: 'Ba pass — analysis, redo, undo',
+            body: '<strong>① Analysis</strong>: tìm checkpoint hoàn chỉnh gần nhất, đọc DirtyPageTable từ đó, đặt RedoLSN = min các RecLSN (điểm bắt đầu redo); dựng undo-list (quét xuôi: gặp record của txn mới → thêm, gặp txn end → bớt). <strong>② Redo</strong>: quét xuôi từ RedoLSN, "lặp lại lịch sử" — nhưng mỗi record so LSN với PageLSN/RecLSN, đã có thì bỏ qua. <strong>③ Undo</strong>: quét ngược, roll back mọi txn còn trong undo-list, mỗi cú undo ghi một <em>CLR (compensation log record)</em> — redo-only, để nếu crash lần nữa giữa lúc undo thì không undo trùng.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'ARIES (IBM, đầu thập niên 90) là khuôn mẫu cho hầu hết recovery hiện đại: SQL Server, DB2, và tinh thần của nó trong Postgres/Oracle. "Analysis → Redo → Undo" chính là 3 dòng bạn thấy khi một database lớn khởi động sau crash. <strong>Fuzzy checkpoint</strong> của ARIES (chỉ ghi DirtyPageTable, không ép flush trang) là lý do checkpoint không làm treo cả hệ thống. Hiểu PageLSN là hiểu vì sao "database 2TB vẫn recovery trong 3 phút" chứ không phải 3 tiếng.'
+          }
+        ],
+        aries_visual: {
+          eyebrow: 'BẢNG ĐIỀU KHIỂN ARIES — CRASH SAU LSN 90 · 3 PASS ANALYSIS→REDO→UNDO',
+          caption: 'Bấm chạy tuần tự 3 pass. Để mắt vào pha REDO: record nào LSN ≤ PageLSN trang thì được BỎ QUA — đó là mẹo khôn ngoan giúp ARIES phục hồi nhanh.',
+          pages: [
+            { id: 'A', label: '💰 A (page 4894)', disk: 900, pagelsn: 20 },
+            { id: 'B', label: '💰 B (page 7200)', disk: 2050, pagelsn: 30 },
+            { id: 'C', label: '💰 C (page 2390)', disk: 700, pagelsn: 0 }
+          ],
+          log: [
+            { lsn: 10, txn: 'T1', type: 'start' },
+            { lsn: 20, txn: 'T1', type: 'write', page: 'A', old: 1000, new: 900 },
+            { lsn: 30, txn: 'T2', type: 'write', page: 'B', old: 2000, new: 2050 },
+            { lsn: 40, txn: 'T2', type: 'commit' },
+            { lsn: 50, txn: '', type: 'checkpoint' },
+            { lsn: 60, txn: 'T1', type: 'write', page: 'A', old: 900, new: 850 },
+            { lsn: 70, txn: 'T3', type: 'start' },
+            { lsn: 80, txn: 'T3', type: 'write', page: 'C', old: 700, new: 600 },
+            { lsn: 90, txn: 'T3', type: 'commit' }
+          ],
+          verdict: '✓ 3 PASS XONG. ARIES bỏ qua 2 cú redo thừa (LSN 20, 30 — đã có trên đĩa nhờ PageLSN) và chỉ redo phần còn thiếu (60, 80); rồi undo T1 (chưa commit) đưa A về 1000. Chốt sổ: A=1000 · B=2050 · C=600. Đó là lý do database khổng lồ vẫn khởi động lại trong vài phút.',
+          steps: [
+            { phase: 'analysis', text: 'tìm checkpoint gần nhất (LSN 50) → đọc DirtyPageTable: A (RecLSN 20), B (RecLSN 30). Trang bẩn = đã sửa trong buffer, đĩa chưa chắc kịp.', note: 'Analysis không sửa gì — nó chỉ ĐỌC để lập kế hoạch cho 2 pass sau.' },
+            { phase: 'analysis', text: 'RedoLSN = min các RecLSN = min(20, 30) = 20 → pha REDO sẽ bắt đầu quét từ LSN 20 (mọi thứ trước đó chắc chắn đã trên đĩa).', setRedoLSN: 20, note: 'RedoLSN là điểm xuất phát — trước nó khỏi cần ngó tới.' },
+            { phase: 'analysis', text: 'quét xuôi từ checkpoint dựng undo-list: T3 start (thêm T3) → T3 commit (bớt T3). Còn lại undo-list = {T1} (T1 chưa commit).', setUndo: ['T1'], note: 'Cuối analysis: biết bắt đầu redo từ đâu (20) và phải undo ai (T1).' },
+            { phase: 'redo', lsn: 20, action: 'skip', text: 'LSN 20 sửa A. So: LSN(20) ≤ PageLSN đĩa của A (20) → cú này ĐÃ có trên đĩa → ⏭ BỎ QUA.', note: 'Mẹo vàng đầu tiên: khỏi redo cái trang đã có sẵn. Thậm chí không cần đọc trang từ đĩa.' },
+            { phase: 'redo', lsn: 30, action: 'skip', text: 'LSN 30 sửa B. So: LSN(30) ≤ PageLSN của B (30) → đã có → ⏭ BỎ QUA.', note: 'Cú redo thừa thứ hai được cắt. ARIES đang tiết kiệm từng phần việc.' },
+            { phase: 'redo', lsn: 60, action: 'redo', page: 'A', val: 850, setPageLsn: 60, text: 'LSN 60 sửa A. So: LSN(60) > PageLSN(20) → CHƯA có trên đĩa → ↻ REDO: A = 850, cập nhật PageLSN của A thành 60.', note: 'Đây mới là việc THẬT cần làm — áp lại cú sửa mà đĩa còn thiếu.' },
+            { phase: 'redo', lsn: 80, action: 'redo', page: 'C', val: 600, setPageLsn: 80, text: 'LSN 80 sửa C. PageLSN của C là 0 < 80 → chưa có → ↻ REDO: C = 600.', note: 'Hết pha redo: database đã được đưa về đúng trạng thái ngay-trước-crash (repeating history).' },
+            { phase: 'undo', lsn: 60, action: 'undo', page: 'A', val: 900, text: 'undo-list = {T1}. Quét ngược: LSN 60 của T1 → UNDO: A 850 → 900 (giá cũ), ghi một CLR.', note: 'T1 chưa commit nên mọi dấu vết của nó phải bị xóa — bắt đầu từ cú sửa mới nhất.' },
+            { phase: 'undo', lsn: 20, action: 'undo', page: 'A', val: 1000, text: 'tiếp: LSN 20 của T1 → UNDO: A 900 → 1000 (giá cũ gốc), ghi CLR.', note: 'Lùi dần theo PrevLSN của T1 về tận cú sửa đầu tiên.' },
+            { phase: 'undo', text: 'gặp <T1 start> (LSN 10) → ghi <T1 abort>, undo-list rỗng → PHỤC HỒI XONG. Chốt: A=1000, B=2050, C=600.', note: '' }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'ba pass ARIES — mỗi pass một nhiệm vụ',
+            columns: [
+              { name: 'pass', type: 'hướng quét', key: '🧭' },
+              { name: 'làm gì', type: '', key: '🛠️' },
+              { name: 'kết quả', type: '', key: '🎯' }
+            ]
+          },
+          data_preview: [
+            ['① Analysis', 'từ checkpoint, đọc DPT', 'RedoLSN + undo-list'],
+            ['② Redo (xuôi)', 'lặp lịch sử, skip cái đã có', 'DB về trạng thái trước crash'],
+            ['③ Undo (ngược)', 'roll back undo-list, ghi CLR', 'xóa dấu txn dở'],
+            ['mẹo skip', 'LSN ≤ PageLSN → bỏ qua', 'phục hồi nhanh']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Trong pha REDO, ARIES gặp log record LSN 20 sửa trang A, mà PageLSN của A trên đĩa cũng đang là 20. Nó làm gì và vì sao?',
+            options: [
+              { id: 'a', text: 'BỎ QUA (skip) — vì LSN(20) ≤ PageLSN(20) nghĩa là cú sửa này ĐÃ phản ánh trên trang đĩa rồi; redo lại là thừa (và với physiological redo còn có thể gây sai)', correct: true, explanation: 'Đúng — đây là mẹo cốt lõi của ARIES. PageLSN là cái tem "trang này đã cập nhật tới LSN mấy"; ≤ thì khỏi làm lại.' },
+              { id: 'b', text: 'REDO lại cho chắc — thà làm thừa còn hơn bỏ sót', correct: false, explanation: 'Sai — "làm thừa cho chắc" chính là cái ARIES tránh: nó chậm, và với physiological redo (không idempotent) còn có thể làm HỎNG trang. PageLSN tồn tại để KHÔNG làm lại.' },
+              { id: 'c', text: 'UNDO trang A vì LSN trùng PageLSN', correct: false, explanation: 'Sai — pha redo không undo gì cả; và LSN trùng PageLSN nghĩa là "đã có rồi", không phải tín hiệu hoàn tác.' },
+              { id: 'd', text: 'Báo lỗi vì hai số bằng nhau là bất thường', correct: false, explanation: 'Sai — bằng nhau là chuyện hoàn toàn bình thường (cú sửa cuối áp lên trang chính là cú có LSN đó); nó chỉ có nghĩa "trang đã tới đúng cú này".' }
+            ]
+          },
+          {
+            question: 'Vì sao ARIES tách phục hồi thành 3 pass riêng (analysis → redo → undo) thay vì làm một lượt như thuật toán giản lược bài 22?',
+            options: [
+              { id: 'a', text: 'Analysis đi trước để BIẾT bắt đầu redo từ đâu (RedoLSN) và phải undo ai (undo-list) — nhờ đó redo/undo chạy có mục tiêu, tận dụng PageLSN/DirtyPageTable để bỏ qua việc thừa, cắt mạnh thời gian phục hồi', correct: true, explanation: 'Đúng — chia pass để mỗi pass tối ưu được: analysis lập kế hoạch, redo dùng PageLSN skip, undo chỉ động undo-list. Đó là cái giá "phức tạp hơn" đổi lấy "nhanh hơn nhiều".' },
+              { id: 'b', text: 'Vì 3 pass an toàn hơn, 1 pass có thể làm hỏng dữ liệu', correct: false, explanation: 'Sai — thuật toán 1-lượt của bài 22 cũng ĐÚNG (không hỏng dữ liệu); ARIES tách pass để NHANH và ít việc thừa, không phải vì 1-lượt sai.' },
+              { id: 'c', text: 'Vì luật quy định recovery phải có đúng 3 bước', correct: false, explanation: 'Sai — không có "luật 3 bước"; số pass là lựa chọn thiết kế của ARIES để tối ưu, không phải quy định.' },
+              { id: 'd', text: 'Vì mỗi pass chạy trên một CPU khác nhau', correct: false, explanation: 'Sai — 3 pass là 3 GIAI ĐOẠN logic (chủ yếu tuần tự vì phụ thuộc nhau), không phải phân chia theo CPU; song song hóa là chuyện tối ưu khác.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Pass nào làm việc này?',
+          instruction: 'Mỗi nhiệm vụ dưới đây thuộc về pass nào của ARIES?',
+          xp: 20,
+          chips: [
+            { id: 'a1', label: 'Tính RedoLSN + dựng undo-list từ checkpoint' },
+            { id: 'a2', label: 'So LSN với PageLSN, bỏ qua cú đã có trên đĩa' },
+            { id: 'a3', label: 'Roll back txn chưa commit, ghi CLR' },
+            { id: 'a4', label: 'Lặp lại lịch sử, đưa DB về trạng thái trước crash' }
+          ],
+          bins: [
+            { id: 'analysis', label: '① ANALYSIS' },
+            { id: 'redo', label: '② REDO' },
+            { id: 'undo', label: '③ UNDO' }
+          ],
+          solution: { a1: 'analysis', a2: 'redo', a3: 'undo', a4: 'redo' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp quy trình ARIES 4 bước — có MỘT khối bịa (nghe rất chi là "cho chắc").',
+        blocks: [
+          { type: 'op', token: 'MỖI TRANG đeo PageLSN (LSN cú sửa cuối đã áp lên nó); mỗi log record có LSN định danh tăng dần', slot: 'ar-lsn' },
+          { type: 'op', token: 'ANALYSIS: từ checkpoint gần nhất, đọc DirtyPageTable → tính RedoLSN (min RecLSN) và dựng undo-list', slot: 'ar-analysis' },
+          { type: 'op', token: 'REDO: quét xuôi từ RedoLSN, lặp lịch sử — nhưng LSN record ≤ PageLSN trang thì BỎ QUA (đã có trên đĩa)', slot: 'ar-redo' },
+          { type: 'op', token: 'Redo lại TẤT CẢ record từ đầu log cho chắc ăn — bỏ qua PageLSN để khỏi sót cú nào', slot: 'ar-x' },
+          { type: 'op', token: 'UNDO: quét ngược, roll back mọi txn trong undo-list, mỗi cú undo ghi một CLR (redo-only) chống undo trùng', slot: 'ar-undo' }
+        ],
+        drop_zones: [
+          { id: 'ar-lsn', placeholder: 'Bước 1 — mỗi trang & mỗi record mang gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔖', label: 'LSN & PageLSN', sub: 'Bước 1', hint: 'Cái tem cho phép so "trang đã cập nhật tới đâu" với "record này ở LSN mấy".' } },
+          { id: 'ar-analysis', placeholder: 'Bước 2 — pass đầu tiên làm gì?', accepts: ['op'], multi: false,
+            station: { icon: '🧭', label: 'Analysis', sub: 'Bước 2', hint: 'Chưa sửa gì — chỉ lập kế hoạch: bắt đầu redo từ đâu, phải undo ai?' } },
+          { id: 'ar-redo', placeholder: 'Bước 3 — redo chạy sao cho khôn?', accepts: ['op'], multi: false,
+            station: { icon: '↻', label: 'Redo có skip', sub: 'Bước 3', hint: 'Lặp lịch sử xuôi, nhưng đừng làm lại cái trang đã có. So gì với gì để biết?' } },
+          { id: 'ar-undo', placeholder: 'Bước 4 — dọn nốt txn dở?', accepts: ['op'], multi: false,
+            station: { icon: '↺', label: 'Undo + CLR', sub: 'Bước 4', hint: 'Quét ngược, hoàn tác undo-list; mỗi cú undo ghi lại gì để crash-giữa-undo không undo trùng?' } }
+        ],
+        expected_sql: 'MỖI TRANG đeo PageLSN (LSN cú sửa cuối đã áp lên nó); mỗi log record có LSN định danh tăng dần ANALYSIS: từ checkpoint gần nhất, đọc DirtyPageTable → tính RedoLSN (min RecLSN) và dựng undo-list REDO: quét xuôi từ RedoLSN, lặp lịch sử — nhưng LSN record ≤ PageLSN trang thì BỎ QUA (đã có trên đĩa) UNDO: quét ngược, roll back mọi txn trong undo-list, mỗi cú undo ghi một CLR (redo-only) chống undo trùng',
+        expected_zones: {
+          'ar-lsn': 'MỖI TRANG đeo PageLSN (LSN cú sửa cuối đã áp lên nó); mỗi log record có LSN định danh tăng dần',
+          'ar-analysis': 'ANALYSIS: từ checkpoint gần nhất, đọc DirtyPageTable → tính RedoLSN (min RecLSN) và dựng undo-list',
+          'ar-redo': 'REDO: quét xuôi từ RedoLSN, lặp lịch sử — nhưng LSN record ≤ PageLSN trang thì BỎ QUA (đã có trên đĩa)',
+          'ar-undo': 'UNDO: quét ngược, roll back mọi txn trong undo-list, mỗi cú undo ghi một CLR (redo-only) chống undo trùng'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 QUY TRÌNH ARIES KHÉP: LSN/PageLSN → analysis → redo-có-skip → undo-ghi-CLR. Khối "redo lại TẤT CẢ từ đầu log cho chắc" là BỊA — và bịa đúng cái mà ARIES sinh ra để tránh: redo mù quáng từ đầu vừa chậm khủng khiếp (database lớn recovery hàng giờ) vừa có thể làm sai với physiological redo. Cả PageLSN lẫn checkpoint đều để redo BỎ QUA việc đã xong, chỉ làm phần còn thiếu. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'ar-lsn': 'Bước 1 — nền móng: hai cái tem để so "trang tới đâu" với "record ở đâu".',
+          'ar-analysis': 'Bước 2 — pass đầu không sửa gì, chỉ trả lời "bắt đầu redo từ LSN nào, undo những txn nào".',
+          'ar-redo': 'Bước 3 — lặp lịch sử, nhưng khôn: record có LSN ≤ PageLSN thì trang đã có rồi, bỏ qua.',
+          'ar-undo': 'Bước 4 — hoàn tác undo-list; ghi CLR để nếu crash lần nữa giữa undo thì không làm lại từ đầu.'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #65 — đọc bảng điều khiển ARIES:</strong> checkpoint ở LSN 50 với DirtyPageTable = A(RecLSN 20), B(RecLSN 30); crash sau LSN 90. Trên đĩa: PageLSN của A=20, B=30, C=0. Điền 3 con số của cuộc phục hồi.',
+        challenge_type: 'fill_blank',
+        template: "-- BANG DIEU KHIEN ARIES — crash sau LSN 90\n-- Checkpoint LSN 50 · DirtyPageTable: A(RecLSN 20), B(RecLSN 30)\n-- PageLSN tren dia: A=20 · B=30 · C=0\n-- Log: 20<T1,A> 30<T2,B> 40<T2 commit> 50 ckpt\n--      60<T1,A> 70<T3 start> 80<T3,C> 90<T3 commit>\n\n-- ANALYSIS: RedoLSN = min cac RecLSN trong DPT =\n--   RedoLSN = ____\n\n-- REDO (tu RedoLSN): record nao co LSN <= PageLSN trang thi SKIP.\n--   LSN20 (A, PageLSN 20): skip · LSN30 (B, PageLSN 30): skip\n--   -> so record REDO bi BO QUA (skip) =\n--   so_skip = ____\n\n-- Sau analysis, txn nao chua commit -> phai undo?\n--   undo-list = ____",
+        blanks: [
+          { id: 'b1', hint: '? LSN', expected: '20' },
+          { id: 'b2', hint: '? record', expected: '2' },
+          { id: 'b3', hint: 'T?', expected: 'T1' }
+        ],
+        schema: {
+          table_name: 'bảng điều khiển ARIES — chờ điền',
+          columns: [
+            { name: 'đại lượng', type: '', key: '📊' },
+            { name: 'cách tính', type: '', key: '🧮' },
+            { name: 'giá trị', type: '', key: '❓' }
+          ],
+          data: [
+            ['RedoLSN', 'min(RecLSN) = min(20, 30)', '❓'],
+            ['số skip', 'LSN20 + LSN30 đều ≤ PageLSN', '❓'],
+            ['undo-list', 'txn có start, thiếu commit', '❓'],
+            ['(T2, T3 đã commit)', 'không undo', '—']
+          ]
+        },
+        context: {
+          scenario: 'Đây là ba con số cốt lõi của một cuộc phục hồi ARIES: điểm bắt đầu redo (RedoLSN), số việc thừa được bỏ qua (skip nhờ PageLSN), và danh sách phải hoàn tác (undo-list). Đọc được ba số này là đọc được bất kỳ log khởi động-sau-crash nào.',
+          real_world: 'Khi SQL Server/DB2 in "Recovery: analysis pass complete, redo starting at LSN ..., N transactions to undo" — đó chính xác là ba con số này. RedoLSN nhỏ = ít việc; số skip lớn = PageLSN đang phát huy; undo-list ngắn = ít giao dịch dở lúc sập.',
+          steps: [
+            'RedoLSN = min các RecLSN trong DirtyPageTable = min(20, 30) = 20.',
+            'Redo skip: LSN20 ≤ PageLSN A (20) và LSN30 ≤ PageLSN B (30) → 2 record bỏ qua.',
+            'undo-list: T2 commit (40), T3 commit (90) → loại; chỉ T1 có start (10) mà thiếu commit.',
+            'Điền 20 / 2 / T1.'
+          ],
+          hint_explore: 'Panel schema bên trái đã bày sẵn cách tính từng đại lượng — cột "cách tính" là gợi ý.',
+          expected: '20 · 2 · T1'
+        },
+        hints: [
+          { level: 1, text: 'RedoLSN lấy GIÁ TRỊ NHỎ NHẤT trong các RecLSN của DirtyPageTable. DPT có A(20), B(30) — nhỏ nhất là?' },
+          { level: 2, text: 'Redo skip khi LSN record ≤ PageLSN trang. LSN20 vs PageLSN A(20)? LSN30 vs PageLSN B(30)? Đếm số cái skip.' },
+          { level: 3, text: 'undo-list = txn có <start> mà THIẾU <commit>. T2 commit, T3 commit — còn ai?' },
+          { level: 4, text: 'Đáp án: 20 · 2 · T1.' }
+        ],
+        success_message: 'TICKET #65 ĐÓNG — và đó là mảnh ghép CUỐI CÙNG của phần dạy Recovery! 🎛️ Bạn đã đi trọn Hộp Đen: phân loại sự cố, ba tầng lưu trữ, log undo/redo, luật WAL, checkpoint, và giờ là ARIES thứ thiệt với LSN/PageLSN/3-pass. Hồ sơ chót: PHYSICAL vs LOGICAL UNDO. Còn phía trước chỉ còn MỘT cửa ải: BOSS BATTLE — "Engine Under Fire". Query chậm, nghìn người tranh một món, VÀ server sập giữa thanh toán — tất cả những gì Marketplace dạy bạn, dồn vào một trận. 🔥',
+        xp_reward: 130
+      },
+      concept_cards_after: ['nc_card_physical_logical_undo']
     }
 
   ],
@@ -5677,7 +6152,127 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3 Note 19.1 · PART_7 Card G — Shadow Copying / Shadow Paging',
-      cta: { label: 'Về Hộp Đen — hẹn bài 23: WAL, Checkpoint & Crash Recovery', href: '/courses/db_design_nc' }
+      cta: { label: 'Bài 23 — WAL, Checkpoint & Crash Recovery', href: '/lesson/db_design_nc?lesson=23' }
+    },
+
+    /* Card H (PART_7, sau bài 23) — Force/No-force & Steal/No-steal (Ch.19.5.2):
+     * ma trận 2×2 policy buffer, no-force→redo, steal→undo, chuẩn = no-force+steal. */
+    {
+      id: 'nc_card_force_steal',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 23',
+      title: 'Force/Steal — hai cái nút quyết định database cần undo hay redo',
+      accent: '#34D399',
+      back_href: '/courses/db_design_nc',
+      intro: 'Bài 23 nói database chuẩn dùng "no-force + steal". Nghe như biệt ngữ, nhưng đây là hai cái nút đơn giản quyết định buffer cư xử thế nào lúc ghi đĩa — và mỗi lựa chọn ép recovery phải biết undo, redo, hay cả hai.',
+      sections: [
+        {
+          icon: 'fa-download',
+          heading: 'Force vs No-force — về REDO',
+          body: '<strong>FORCE</strong>: lúc commit, ép MỌI block đã sửa của giao dịch xuống đĩa. Ưu: sau commit chắc chắn đã bền, khỏi cần redo. Nhược: commit CHẬM (phải chờ ghi đĩa) và tốn I/O. <strong>NO-FORCE</strong>: commit khỏi ép — block committed có thể còn trong buffer. Ưu: commit nhanh, nhiều cập nhật dồn trên một block trước khi ghi (giảm I/O). Nhược: sau crash, block committed chưa kịp xuống đĩa → <strong>cần REDO</strong> (áp lại giá mới từ log). Đa số DB chọn no-force.'
+        },
+        {
+          icon: 'fa-upload',
+          heading: 'Steal vs No-steal — về UNDO',
+          body: '<strong>NO-STEAL</strong>: không cho block của giao dịch CHƯA commit xuống đĩa. Ưu: sau crash, đĩa không dính giá chưa-commit → khỏi undo. Nhược: buffer dễ <em>kẹt cứng</em> — giao dịch sửa nhiều mà không được ghi ra thì hết chỗ, treo luôn. <strong>STEAL</strong>: cho phép đẩy block chưa-commit xuống đĩa để giải phóng buffer. Nhược: block chưa-commit lỡ lên đĩa → sau crash <strong>cần UNDO</strong> (khôi phục giá cũ từ log). Đa số DB chọn steal — và chính vì thế WAL bắt buộc (log giá cũ phải ra stable trước).',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.5.2 — Database Buffering'
+        },
+        {
+          icon: 'fa-table-cells-large',
+          heading: 'Ô "no-force + steal" — nhanh nhất, cần cả hai',
+          body: 'Ghép hai trục thành ma trận 2×2. Ô chuẩn công nghiệp là <strong>no-force + steal</strong>: commit nhanh, buffer không kẹt — cái giá là phải có CẢ redo (cho no-force) LẪN undo (cho steal), và cả hai chỉ chạy đúng khi tuân WAL. Ô đối lập <em>force + no-steal</em> thì recovery gần như chẳng cần làm gì sau crash — nhưng chậm và kẹt buffer tới mức không ai dùng cho hệ thật. Cổ điển: đổi một chút "phức tạp lúc phục hồi" lấy "nhanh lúc chạy".'
+        }
+      ],
+      quiz: {
+        question: 'Một database chạy "no-force + steal". Sau crash, recovery của nó phải có khả năng gì?',
+        options: [
+          { label: 'CẢ redo LẪN undo — no-force nghĩa block committed có thể chưa xuống đĩa (cần redo), steal nghĩa block chưa-commit có thể đã xuống đĩa (cần undo)', correct: true, feedback: '✓ Chuẩn — đây là ô nhanh nhất nhưng "nặng" nhất về recovery, và là lý do WAL bắt buộc để cả hai an toàn.' },
+          { label: 'Chỉ redo — vì steal đã lo phần undo tự động', correct: false, feedback: '✗ Ngược: steal là cái TẠO RA nhu cầu undo (block chưa-commit lên đĩa), không phải cái lo giùm. No-force tạo nhu cầu redo. Cần cả hai.' },
+          { label: 'Không cần gì — no-force + steal là ô an toàn nhất', correct: false, feedback: '✗ Ô "không cần gì" là force + no-steal (chậm, kẹt buffer). No-force + steal nhanh nhất nhưng cần đủ cả redo lẫn undo.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.5.2 · PART_7 Card H — Force/No-force & Steal/No-steal',
+      cta: { label: 'Bài 24 — ARIES: LSN, DirtyPageTable & 3 pass', href: '/lesson/db_design_nc?lesson=24' }
+    },
+
+    /* Card I (PART_7, sau bài 23) — Database Dump & Remote Backup (Ch.19.6-19.7):
+     * mất non-volatile → dump + redo log; remote backup cho high availability. */
+    {
+      id: 'nc_card_dump_backup',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 23',
+      title: 'Dump & Remote Backup — khi mất cả cái đĩa thì sao?',
+      accent: '#34D399',
+      back_href: '/courses/db_design_nc',
+      intro: 'Log cứu ta khỏi crash phần mềm (RAM bay, đĩa còn). Nhưng nếu chính cái ĐĨA chết — head crash, cháy phòng máy — thì log trên đĩa đó cũng đi luôn. Lúc này cần một tầng phòng thủ khác: bản sao lưu ngoài, và một site dự phòng.',
+      sections: [
+        {
+          icon: 'fa-box-archive',
+          heading: 'Database dump — ảnh chụp toàn bộ ra nơi khác',
+          body: 'Định kỳ, hệ thống <strong>dump</strong> toàn bộ nội dung database ra một media khác (băng từ, đĩa ở site khác). Nếu mất non-volatile storage, phục hồi bằng: nạp lại từ <strong>dump gần nhất</strong>, rồi <strong>redo log</strong> các thay đổi kể từ thời điểm dump. Giống hệt tinh thần checkpoint, nhưng ở tầm "mất cả đĩa": dump là điểm mốc, log lấp phần sau. SQL dump (DDL + INSERT) cũng là một dạng — bạn dùng nó mỗi lần <code>pg_dump</code>/<code>mysqldump</code> để sao lưu hoặc di chuyển database.',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.6 — Failure with Loss of Non-Volatile Storage'
+        },
+        {
+          icon: 'fa-server',
+          heading: 'Remote backup — sống sót qua cả thảm họa site',
+          body: 'Muốn <strong>high availability</strong> (không chỉ recover mà còn phải luôn dùng được), ta chạy một <strong>remote backup</strong> (secondary site) nhận liên tục log records từ <strong>primary site</strong>. Primary chết → phát hiện lỗi → chuyển quyền (transfer of control) sang secondary → hệ thống chạy tiếp. Cấu hình <em>hot-spare</em> cho phép tiếp quản trong giây lát. Ngân hàng, booking, payment cần điều này: không chỉ "phục hồi được" mà "gần như không bao giờ ngừng".'
+        },
+        {
+          icon: 'fa-scale-balanced',
+          heading: 'One-safe, two-safe — đánh đổi durability vs độ trễ',
+          body: 'Commit trên primary có cần chờ secondary xác nhận không? <strong>One-safe</strong>: commit ngay khi log ghi ở primary (nhanh, nhưng nếu primary chết trước khi kịp gửi, mất giao dịch vừa commit). <strong>Two-very-safe</strong>: chờ CẢ hai site ghi (an toàn tuyệt đối, nhưng chậm và primary phải dừng nếu secondary chết). <strong>Two-safe</strong>: chờ cả hai nếu cả hai sống, không thì chỉ cần primary — dung hòa. Cùng một bài toán đánh đổi durability ↔ độ trễ ↔ tính sẵn sàng, không có lời giải "đúng cho mọi nhà".'
+        }
+      ],
+      quiz: {
+        question: 'Mất toàn bộ đĩa chứa database (và log) do cháy phòng máy. Có database dump từ 02:00 và một bản sao log records được gửi liên tục sang site B. Phục hồi thế nào?',
+        options: [
+          { label: 'Nạp lại từ dump 02:00, rồi redo các log records (đã gửi sang site B) kể từ 02:00 tới lúc cháy — dump là mốc, log lấp phần sau', correct: true, feedback: '✓ Chuẩn — đúng nghi thức mất-non-volatile: dump gần nhất + redo log từ thời điểm dump. Site B giữ log nên phần sau 02:00 không mất.' },
+          { label: 'Không cứu được — mất đĩa là mất hết, dump cũng vô dụng', correct: false, feedback: '✗ Đó chính là lý do dump PHẢI để ở nơi khác (site B/băng từ ngoài): mất đĩa chính không mất dump. Dump + log từ dump = phục hồi được.' },
+          { label: 'Chỉ cần dump 02:00 là đủ, khỏi cần log', correct: false, feedback: '✗ Dump 02:00 bỏ sót mọi giao dịch từ 02:00 tới lúc cháy — phần đó nằm trong log. Thiếu log là mất trắng nửa ngày giao dịch.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.6-19.7 · PART_7 Card I — Database Dump & Remote Backup',
+      cta: { label: 'Về Hộp Đen — hẹn bài 24: ARIES Overview', href: '/lesson/db_design_nc?lesson=24' }
+    },
+
+    /* Card J (PART_7, sau bài 24) — Physical vs Logical Undo (Ch.19.8):
+     * physical undo = giá cũ từng byte; logical undo = thao tác ngược, nhả khóa sớm; ARIES CLR. */
+    {
+      id: 'nc_card_physical_logical_undo',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 24 — KHÉP PHẦN DẠY M9',
+      title: 'Physical vs Logical Undo — hoàn tác bằng giá cũ, hay bằng thao tác ngược?',
+      accent: '#34D399',
+      back_href: '/courses/db_design_nc',
+      intro: 'Suốt phần Recovery, undo của ta luôn là "ghi lại giá CŨ" — đơn giản, chắc chắn. Nhưng các hệ tốc độ cao như ARIES đôi khi cần một kiểu undo tinh vi hơn để nhả khóa sớm, tăng concurrency. Hồ sơ chót phân biệt hai kiểu.',
+      sections: [
+        {
+          icon: 'fa-rotate-left',
+          heading: 'Physical undo — chép lại giá cũ',
+          body: '<strong>Physical undo</strong> là cái ta đã học: log record giữ giá CŨ (V1), undo = ghi V1 trở lại đúng vị trí đó. Đơn giản, luôn đúng, không phụ thuộc trạng thái hiện tại của dữ liệu. Nhược điểm: để undo an toàn, phải giữ khóa trên item tới tận cuối giao dịch (strict 2PL) — vì nếu nhả sớm, kẻ khác sửa item rồi mình undo về V1 sẽ đè mất thay đổi của họ. Khóa lâu = concurrency thấp.'
+        },
+        {
+          icon: 'fa-rotate',
+          heading: 'Logical undo — làm thao tác ngược lại',
+          body: 'Thay vì "đặt lại giá cũ", <strong>logical undo</strong> ghi THAO TÁC và undo bằng thao tác NGƯỢC: cộng 100 ↔ undo bằng trừ 100; chèn record ↔ undo bằng xóa. Lợi ích lớn: cho phép <strong>nhả khóa SỚM</strong> (early lock release) — vừa cộng xong 100 là nhả khóa ngay, kẻ khác cộng tiếp 50 thoải mái; lúc undo chỉ cần trừ 100, kết quả vẫn đúng bất kể ai đã cộng gì vào giữa. Đây là chìa khóa để index (B+-tree) đạt concurrency cao mà vẫn phục hồi được.',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.8 — Early Lock Release and Logical Undo'
+        },
+        {
+          icon: 'fa-file-shield',
+          heading: 'CLR — chỗ ARIES ghép hai thứ lại',
+          body: 'Nhớ <strong>CLR (compensation log record)</strong> ở bài ARIES? Mỗi cú undo (dù physical hay logical) ghi một CLR — bản redo-only ghi lại "đã hoàn tác gì". Nhờ CLR, nếu crash lần nữa GIỮA lúc đang undo, lần phục hồi sau không undo trùng — nó thấy CLR và biết cú đó đã hoàn tác rồi, nhảy tiếp (qua UndoNextLSN). CLR là thứ khiến undo của ARIES vừa nhanh vừa chịu được crash-chồng-crash — đúng tinh thần "phục hồi phải sống sót được cả khi đang phục hồi".'
+        }
+      ],
+      quiz: {
+        question: 'Một hệ dùng logical undo để nhả khóa sớm trên biến đếm. T1 cộng 100 (rồi nhả khóa), T2 cộng 50. Giờ T1 phải rollback. Undo thế nào cho đúng?',
+        options: [
+          { label: 'Trừ 100 (thao tác ngược) — không phải "đặt lại giá cũ". Nhờ vậy phần cộng 50 của T2 được giữ nguyên, kết quả đúng dù T1, T2 đan xen', correct: true, feedback: '✓ Chuẩn — đó chính là sức mạnh của logical undo: undo bằng thao tác ngược cho phép nhả khóa sớm mà vẫn đúng khi có xen kẽ.' },
+          { label: 'Đặt lại giá CŨ trước khi T1 cộng — physical undo cho chắc', correct: false, feedback: '✗ Physical undo ở đây SAI: đặt lại giá cũ sẽ đè mất cú cộng 50 của T2 (vì T1 đã nhả khóa, T2 chen vào giữa). Đó là lý do nhả-khóa-sớm cần logical undo.' },
+          { label: 'Không undo được — đã nhả khóa thì không rollback được nữa', correct: false, feedback: '✗ Nhả khóa sớm KHÔNG chặn rollback — logical undo (trừ 100) xử lý được đúng tình huống này; đó là cả điểm của kỹ thuật.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.8 · PART_7 Card J — Physical vs Logical Undo',
+      cta: { label: 'Về Hộp Đen — phía trước: BOSS BATTLE 🔥', href: '/courses/db_design_nc' }
     }
   ]
 };

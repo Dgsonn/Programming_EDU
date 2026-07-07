@@ -10894,3 +10894,52 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .recovery-visual .rc-badge--undo { color: #FBBF24; background: rgba(251, 191, 36, .12); border: 1px solid rgba(251, 191, 36, .5); }
 @media (max-width: 620px) { .recovery-visual .rc-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .storage-visual .sg-cell, .recovery-visual .rc-acct-val { transition: none; } }
+
+/* ═══ WAL Visual (nc_23 — cổng write-ahead logging, sim thứ 14) ═══ */
+.wal-visual .wl-gate {
+  text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+  font-weight: 700; color: #cbd5e1; margin: 12px 0 8px; padding: 6px 12px;
+  border-radius: 8px; border: 1px dashed rgba(148, 163, 184, .4); background: rgba(148, 163, 184, .05);
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+.wal-visual .wl-gate--ok { color: #34D399; border-color: rgba(52, 211, 153, .55); border-style: solid; background: rgba(52, 211, 153, .08); }
+.wal-visual .wl-gate--bad { color: #F87171; border-color: rgba(248, 113, 113, .55); border-style: solid; background: rgba(248, 113, 113, .08); }
+.wal-visual .wl-cols { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; margin-bottom: 6px; }
+.wal-visual .wl-log { display: flex; flex-direction: column; gap: 3px; min-height: 40px; }
+.wal-visual .wl-rec { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6ee7b7; padding: 3px 8px; border-radius: 5px; background: rgba(52, 211, 153, .08); border-left: 2px solid rgba(52, 211, 153, .5); }
+.wal-visual .wl-disk { display: flex; flex-direction: column; gap: 6px; }
+.wal-visual .wl-disk-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(129, 140, 248, .35); background: rgba(129, 140, 248, .05); }
+.wal-visual .wl-disk-name { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #aebfd6; }
+.wal-visual .wl-disk-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 800; color: #e8edf5; transition: color .2s ease; }
+.wal-visual .wl-disk-val--ok { color: #34D399; }
+.wal-visual .wl-disk-val--dirty { color: #FBBF24; }
+.wal-visual .wl-recovery { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fca5a5; min-height: 18px; margin-bottom: 6px; }
+.wal-visual .wl-steplog { margin-bottom: 4px; }
+@media (max-width: 620px) { .wal-visual .wl-cols { grid-template-columns: 1fr; } }
+
+/* ═══ ARIES Visual (nc_24 — bảng điều khiển 3-pass, sim thứ 15) ═══ */
+.aries-visual .ar-phasebar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 8px; }
+.aries-visual .ar-phase { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: .03em; color: #7f93ad; padding: 3px 11px; border-radius: 99px; border: 1px solid rgba(148, 163, 184, .35); background: rgba(148, 163, 184, .05); transition: color .2s ease, border-color .2s ease, background .2s ease; }
+.aries-visual .ar-phase--on { color: #6ee7b7; border-color: rgba(52, 211, 153, .6); background: rgba(52, 211, 153, .12); }
+.aries-visual .ar-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; margin-bottom: 6px; }
+.aries-visual .ar-log { display: flex; flex-direction: column; gap: 3px; }
+.aries-visual .ar-rec { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #c7d2fe; padding: 3px 6px 3px 4px; border-radius: 5px; background: rgba(129, 140, 248, .05); border-left: 2px solid transparent; display: flex; gap: 6px; align-items: baseline; transition: background .18s ease; }
+.aries-visual .ar-lsn { font-size: 8.5px; font-weight: 800; color: #64748b; min-width: 22px; }
+.aries-visual .ar-rec--active { background: rgba(148, 163, 184, .16); border-left-color: #94a3b8; }
+.aries-visual .ar-rec--skip { background: rgba(52, 211, 153, .1); border-left-color: #34D399; }
+.aries-visual .ar-rec--skip::after { content: ' ⏭ skip'; font-size: 8px; color: #34D399; font-weight: 800; }
+.aries-visual .ar-rec--redo { background: rgba(52, 211, 153, .16); border-left-color: #34D399; }
+.aries-visual .ar-rec--redo::after { content: ' ↻ redo'; font-size: 8px; color: #6ee7b7; font-weight: 800; }
+.aries-visual .ar-rec--undo { background: rgba(251, 191, 36, .14); border-left-color: #FBBF24; }
+.aries-visual .ar-rec--undo::after { content: ' ↺ undo'; font-size: 8px; color: #FBBF24; font-weight: 800; }
+.aries-visual .ar-pages { display: flex; flex-direction: column; gap: 6px; }
+.aries-visual .ar-page { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 8px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(148, 163, 184, .3); background: rgba(148, 163, 184, .04); }
+.aries-visual .ar-page-name { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #aebfd6; }
+.aries-visual .ar-page-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 800; color: #e8edf5; grid-row: span 2; align-self: center; transition: color .2s ease; }
+.aries-visual .ar-page-lsn { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #7f93ad; }
+.aries-visual .ar-meta { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #aebfd6; }
+.aries-visual .ar-meta b { color: #6ee7b7; }
+@media (max-width: 620px) { .aries-visual .ar-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .wal-visual .wl-gate, .wal-visual .wl-disk-val, .aries-visual .ar-phase, .aries-visual .ar-rec, .aries-visual .ar-page-val { transition: none; }
+}
