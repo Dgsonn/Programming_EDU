@@ -1745,6 +1745,67 @@
         '<text x="528" y="178" text-anchor="middle" fill="#7f93ad" font-size="8">xung đột trên ma → xung đột THẬT trên lá</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không khóa được thứ chưa sinh ra — thì khóa CON ĐƯỜNG nó buộc phải đi qua: cái lá index</text>' +
+      '</svg>',
+
+    /* nc_17 — optimistic: chạy nháp 3 pha, nộp bài mới soát; rớt soát xé nháp (Ticket #58) */
+    nc_17: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Transaction lạc quan chạy ba pha: đọc vào nháp, soát va chạm, mới ghi vào sổ; nếu transaction khác commit đè món đã đọc thì rớt soát, xé nháp làm lại mà sổ không hề bẩn">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Optimistic — cứ chạy trên NHÁP, nộp bài mới soát</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">chợ 95% người chỉ XEM — bắt cả chợ xếp hàng vì va chạm hiếm là lỗ nặng</text>' +
+        // Card trái — 3 pha trơn tru
+        '<rect x="36" y="56" width="310" height="132" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.4"/>' +
+        '<text x="191" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🧾 3 PHA — KHÔNG MỘT KHÓA NÀO</text>' +
+        '<rect x="56" y="86" width="82" height="20" rx="6" fill="rgba(129,140,248,.14)" stroke="rgba(129,140,248,.5)"/>' +
+        '<text x="97" y="99" text-anchor="middle" fill="#a5b4fc" font-size="8">1 · ĐỌC nháp</text>' +
+        '<rect x="150" y="86" width="82" height="20" rx="6" fill="rgba(251,191,36,.1)" stroke="rgba(251,191,36,.5)"/>' +
+        '<text x="191" y="99" text-anchor="middle" fill="#fcd34d" font-size="8">2 · SOÁT</text>' +
+        '<rect x="244" y="86" width="82" height="20" rx="6" fill="rgba(52,211,153,.12)" stroke="rgba(52,211,153,.55)"/>' +
+        '<text x="285" y="99" text-anchor="middle" fill="#6ee7b7" font-size="8">3 · GHI sổ</text>' +
+        '<text x="191" y="124" text-anchor="middle" fill="#aebfd6" font-size="8.5">đọc 400 → nháp 450 — sổ thật chưa suy suyển</text>' +
+        '<text x="191" y="141" text-anchor="middle" fill="#fcd34d" font-size="8.5">soát: ai commit lúc mình chạy, có GHI món mình ĐỌC?</text>' +
+        '<text x="191" y="164" text-anchor="middle" fill="#34d399" font-weight="800" font-size="12">sạch ✓ → chép nháp vào sổ: 450</text>' +
+        '<text x="191" y="180" text-anchor="middle" fill="#7f93ad" font-size="8">read-only thì khỏi cả pha ghi — nộp là xong</text>' +
+        // Card phải — rớt soát
+        '<rect x="372" y="56" width="312" height="132" rx="9" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.5"/>' +
+        '<text x="528" y="76" text-anchor="middle" fill="#fca5a5" font-weight="700" font-size="10">⛔ RỚT SOÁT — XÉ NHÁP LÀM LẠI</text>' +
+        '<text x="528" y="98" text-anchor="middle" fill="#aebfd6" font-size="8.5">T2 flash-sale commit 400 → 380 giữa chừng</text>' +
+        '<text x="528" y="115" text-anchor="middle" fill="#fbbf24" font-size="8.5">380 đè đúng món mình ĐÃ ĐỌC → nháp 450 hết hạn</text>' +
+        '<text x="528" y="140" text-anchor="middle" fill="#f87171" font-weight="800" font-size="14">ABORT — xé nháp</text>' +
+        '<text x="528" y="162" text-anchor="middle" fill="#fca5a5" font-size="8.5">sổ KHÔNG bẩn: nháp chưa từng chạm sổ</text>' +
+        '<text x="528" y="177" text-anchor="middle" fill="#7f93ad" font-size="8">chạy lại từ giá mới 380 — rẻ hơn bắt cả chợ chờ</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">lạc quan mà không liều: sổ thật chỉ nhận bài ĐÃ chấm đậu</text>' +
+      '</svg>',
+
+    /* nc_18 — MVCC: sổ không tẩy xóa, ghi = dán version mới; reader đọc ảnh chụp (Ticket #59) */
+    nc_18: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chuỗi version một món hàng: 500 tem 10, 480 tem 25, 520 tem 40; reader bắt đầu lúc tem 30 thấy 480 là bản có tem lớn nhất không vượt 30, không chờ writer; hai updater cùng sửa thì đứa dán trước thắng">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">MVCC — sổ không tẩy xóa: mỗi lần ghi là DÁN BẢN MỚI</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">reader cầm ẢNH CHỤP sổ lúc mình bắt đầu — không chờ ai, không bị ai chặn</text>' +
+        // Chuỗi version
+        '<rect x="60" y="62" width="140" height="44" rx="8" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.2"/>' +
+        '<text x="130" y="81" text-anchor="middle" fill="#aebfd6" font-weight="700" font-size="11">v1 · 500 gem</text>' +
+        '<text x="130" y="97" text-anchor="middle" fill="#7f93ad" font-size="8.5">tem commit 10</text>' +
+        '<text x="222" y="88" text-anchor="middle" fill="#7f93ad" font-size="12">→</text>' +
+        '<rect x="244" y="62" width="140" height="44" rx="8" fill="#0e1726" stroke="rgba(52,211,153,.65)" stroke-width="1.6"/>' +
+        '<text x="314" y="81" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="11">v2 · 480 gem</text>' +
+        '<text x="314" y="97" text-anchor="middle" fill="#34d399" font-size="8.5">tem commit 25</text>' +
+        '<text x="406" y="88" text-anchor="middle" fill="#7f93ad" font-size="12">→</text>' +
+        '<rect x="428" y="62" width="140" height="44" rx="8" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.2"/>' +
+        '<text x="498" y="81" text-anchor="middle" fill="#aebfd6" font-weight="700" font-size="11">v3 · 520 gem</text>' +
+        '<text x="498" y="97" text-anchor="middle" fill="#7f93ad" font-size="8.5">tem commit 40</text>' +
+        '<rect x="590" y="62" width="94" height="44" rx="8" fill="rgba(251,113,133,.08)" stroke="rgba(251,113,133,.5)" stroke-dasharray="5 3" stroke-width="1.2"/>' +
+        '<text x="637" y="81" text-anchor="middle" fill="#fda4af" font-size="8.5">writer đang</text>' +
+        '<text x="637" y="95" text-anchor="middle" fill="#fda4af" font-size="8.5">dán v4…</text>' +
+        // Reader
+        '<path d="M 314 148 L 314 112" stroke="rgba(52,211,153,.7)" stroke-width="1.6" fill="none"/>' +
+        '<rect x="196" y="150" width="236" height="30" rx="8" fill="rgba(52,211,153,.1)" stroke="rgba(52,211,153,.6)" stroke-width="1.4"/>' +
+        '<text x="314" y="163" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9.5">👓 reader StartTS = 30 → thấy 480</text>' +
+        '<text x="314" y="175" text-anchor="middle" fill="#34d399" font-size="8">tem lớn nhất ≤ 30 — kệ writer, không chờ</text>' +
+        // First committer wins
+        '<text x="360" y="203" text-anchor="middle" fill="#fcd34d" font-size="9">2 updater cùng sửa một món → đứa DÁN TRƯỚC thắng, đứa validate sau ABORT — hết cửa lost update</text>' +
+      '</g>' +
+      '<text x="360" y="228" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">writer dán bản mới — reader ngắm bản cũ: hai đường không cắt nhau</text>' +
       '</svg>'
   };
 
@@ -2864,6 +2925,207 @@
     });
   }
 
+  /* ── Valid Visual (nc_17 — bàn nháp 3 pha optimistic, sim thứ 9) ──
+   * PART_7 Bài 7: "transaction chạy nháp rồi validate conflict" (Ch.18.6). Data:
+   * step_1.valid_visual = { eyebrow, caption, db_label, db_sub, start, t1_label,
+   *   t2_label, modes: [{ id, short, btn, ok, verdict, steps: [{ who:'t1'|'t2'|'sys',
+   *     text, phase?:'read'|'validate'|'write'|'abort', draft?, db?, cls?, note? }] }] }.
+   * Thanh 3 pha ĐỌC→SOÁT→GHI sáng theo step.phase ('abort' = pill SOÁT đỏ ⛔);
+   * NHÁP là hộp riêng của T1 — draft: null nghĩa là XÉ NHÁP; SỔ chỉ đổi khi có
+   * step.db (write chỉ chạm DB sau validation — đúng luật 18.6, không cascading).
+   * User chốt 2026-07-07 (đợt 10): bàn nháp 3 pha, 2 mode PASS/ABORT so kèo. */
+  function renderValidVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, results: {} };
+    var PHASES = [['read', '1 · ĐỌC (nháp)'], ['validate', '2 · SOÁT'], ['write', '3 · GHI sổ']];
+
+    mount.innerHTML =
+      '<section class="sort-visual txn-visual vd-visual" aria-label="Bàn nháp ba pha: transaction lạc quan đọc vào nháp, soát va chạm rồi mới ghi vào sổ">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'BÀN NHÁP 3 PHA — OPTIMISTIC') + '</span></div>' +
+        '<div class="vd-phasebar" id="vd-phasebar">' +
+          PHASES.map(function (p) { return '<span class="vd-phase" data-vd-phase="' + p[0] + '">' + escapeHtml(p[1]) + '</span>'; }).join('<span class="vd-phase-arrow">→</span>') +
+        '</div>' +
+        '<div class="tx-grid">' +
+          '<div class="tx-col"><div class="tx-col-name">' + escapeHtml(cfg.t1_label || 'T1') + '</div>' +
+            '<div class="vd-draft"><span class="vd-draft-tag">📝 NHÁP RIÊNG</span><span class="vd-draft-val" id="vd-draft">—</span></div>' +
+            '<div class="tx-lines" id="vd-t1"></div></div>' +
+          '<div class="tx-wallet"><div class="tx-col-name">' + escapeHtml(cfg.db_label || '📒 SỔ GIÁ') + '</div>' +
+            '<div class="tx-wallet-val" id="vd-db">' + escapeHtml(String(cfg.start)) + '</div>' +
+            '<div class="tx-wallet-unit">' + escapeHtml(cfg.db_sub || 'gem') + '</div><div class="tx-sys" id="vd-sys"></div></div>' +
+          '<div class="tx-col"><div class="tx-col-name">' + escapeHtml(cfg.t2_label || 'T2') + '</div><div class="tx-lines" id="vd-t2"></div></div>' +
+        '</div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="vd-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="vd-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="vd-status">Không một khóa nào được phát — chọn KỊCH BẢN rồi bấm từng nhịp mà soi nháp với sổ.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('vd-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('vd-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function setPhase(phase) {
+      mount.querySelectorAll('.vd-phase').forEach(function (el) {
+        var mine = el.getAttribute('data-vd-phase');
+        el.classList.toggle('vd-phase--on', mine === phase);
+        if (phase === 'abort' && mine === 'validate') { el.classList.add('vd-phase--bad'); el.classList.add('vd-phase--on'); }
+      });
+    }
+    function setDraft(v) {
+      var el = $('vd-draft');
+      el.classList.toggle('vd-draft-val--torn', v === null);
+      el.textContent = (v === null || v === undefined) ? '—' : String(v);
+    }
+    function setDb(v, cls) {
+      var el = $('vd-db');
+      el.textContent = String(v);
+      el.classList.remove('tx-flash-ok', 'tx-flash-bad');
+      if (cls === 'ok') el.classList.add('tx-flash-ok');
+      if (cls === 'bad') el.classList.add('tx-flash-bad');
+    }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.label)) : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0;
+      $('vd-t1').innerHTML = ''; $('vd-t2').innerHTML = ''; $('vd-sys').innerHTML = '';
+      mount.querySelectorAll('.vd-phase').forEach(function (el) { el.classList.remove('vd-phase--on', 'vd-phase--bad'); });
+      setDraft(undefined); setDb(cfg.start);
+      cfg.modes.forEach(function (mm) {
+        $('vd-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id);
+      });
+      setBtn('Nhịp 1 / ' + m.steps.length, false);
+      setStatus('Kịch bản <strong>' + escapeHtml(m.short || m.id) + '</strong> — sổ đang ' + escapeHtml(String(cfg.start)) + '. Bấm từng nhịp.');
+    }
+    cfg.modes.forEach(function (m) {
+      $('vd-mode-' + m.id).addEventListener('click', function () { pickMode(m); });
+    });
+
+    $('vd-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderValidVisual(mount, cfg); return; }
+      var m = st.mode, step = m.steps[st.i];
+      if (!step) return;
+      var line = '<div class="tx-line' + (step.cls ? ' tx-line--' + step.cls : '') + '">' + escapeHtml(step.text) + '</div>';
+      if (step.who === 'sys') { $('vd-sys').innerHTML += line; }
+      else { $((step.who === 't2') ? 'vd-t2' : 'vd-t1').innerHTML += line; }
+      if (step.phase) setPhase(step.phase);
+      if ('draft' in step) setDraft(step.draft);
+      if (step.db !== undefined && step.db !== null) setDb(step.db, step.cls === 'bad' ? 'bad' : (step.cls === 'ok' ? 'ok' : null));
+      st.i++;
+      if (st.i < m.steps.length) {
+        setBtn('Nhịp ' + (st.i + 1) + ' / ' + m.steps.length, false);
+        if (step.note) setStatus(step.note);
+      } else {
+        var lastDb = cfg.start;
+        m.steps.forEach(function (s) { if (s.db !== undefined && s.db !== null) lastDb = s.db; });
+        st.results[m.id] = { label: 'sổ chốt ' + lastDb };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) {
+          setBtn('↺ Chạy lại từ đầu', false);
+          st.mode = 'reset';
+          setStatus((m.verdict || '') + '<br>' + soKeo());
+        } else {
+          setBtn('✓ ' + (m.short || m.id) + ' xong', true);
+          setStatus((m.verdict || '') + ' Giờ chạy kịch bản còn lại mà so.');
+        }
+      }
+    });
+  }
+
+  /* ── MVCC Visual (nc_18 — version timeline + snapshot, sim thứ 10) ──
+   * PART_7 Bài 8: "version timeline, transaction đọc snapshot" (Ch.18.7-18.8). Data:
+   * step_1.mvcc_visual = { eyebrow, caption, item_label, versions: [{id, val, ts}],
+   *   modes: [{ id, short, btn, ok, verdict, steps: [{ text, add?: {id,val,ts},
+   *     pick?: 'v2', cls?, note? }] }] }.
+   * Chuỗi version là dãy thẻ tem CommitTS nối mũi tên; 'add' DÁN thẻ mới vào đuôi
+   * (ghi không bao giờ đè), 'pick' tô thẻ mà reader thấy (tem lớn nhất ≤ StartTS).
+   * Mỗi lần chọn mode chuỗi reset về cfg.versions gốc. User chốt 2026-07-07
+   * (đợt 10): 2 mode READER-không-chờ / FIRST-COMMITTER-WINS so kèo. */
+  function renderMvccVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.versions) || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, results: {} };
+
+    function verHtml(v, fresh) {
+      return '<span class="mv-ver' + (fresh ? ' mv-ver--new' : '') + '" data-mv-ver="' + escapeHtml(v.id) + '">' +
+        '<b class="mv-val">' + escapeHtml(String(v.val)) + '</b><i class="mv-ts">tem ' + escapeHtml(String(v.ts)) + '</i></span>';
+    }
+    function chainHtml(vers) {
+      return vers.map(function (v) { return verHtml(v, false); }).join('<span class="mv-arrow">→</span>');
+    }
+
+    mount.innerHTML =
+      '<section class="sort-visual txn-visual mv-visual" aria-label="Chuỗi phiên bản một món hàng: mỗi lần ghi dán thêm thẻ mới có tem commit, reader đọc thẻ có tem lớn nhất không vượt quá thời điểm mình bắt đầu">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'VERSION TIMELINE — MVCC') + '</span></div>' +
+        '<div class="mv-item">' + escapeHtml(cfg.item_label || '') + '</div>' +
+        '<div class="mv-chain" id="mv-chain">' + chainHtml(cfg.versions) + '</div>' +
+        '<div class="tx-lines mv-log" id="mv-log"></div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="mv-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="mv-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="mv-status">Một món hàng — cả xấp phiên bản. Chọn KỊCH BẢN rồi bấm từng nhịp.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('mv-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('mv-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.label)) : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0;
+      $('mv-chain').innerHTML = chainHtml(cfg.versions);
+      $('mv-log').innerHTML = '';
+      cfg.modes.forEach(function (mm) {
+        $('mv-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id);
+      });
+      setBtn('Nhịp 1 / ' + m.steps.length, false);
+      setStatus('Kịch bản <strong>' + escapeHtml(m.short || m.id) + '</strong> — chuỗi đang ' + cfg.versions.length + ' phiên bản. Bấm từng nhịp.');
+    }
+    cfg.modes.forEach(function (m) {
+      $('mv-mode-' + m.id).addEventListener('click', function () { pickMode(m); });
+    });
+
+    $('mv-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderMvccVisual(mount, cfg); return; }
+      var m = st.mode, step = m.steps[st.i];
+      if (!step) return;
+      $('mv-log').innerHTML += '<div class="tx-line' + (step.cls ? ' tx-line--' + step.cls : '') + '">' + escapeHtml(step.text) + '</div>';
+      if (step.add) $('mv-chain').innerHTML += '<span class="mv-arrow">→</span>' + verHtml(step.add, true);
+      if (step.pick !== undefined) {
+        mount.querySelectorAll('.mv-ver').forEach(function (el) { el.classList.remove('mv-ver--pick'); });
+        var t = mount.querySelector('.mv-ver[data-mv-ver="' + step.pick + '"]');
+        if (t) t.classList.add('mv-ver--pick');
+      }
+      st.i++;
+      if (st.i < m.steps.length) {
+        setBtn('Nhịp ' + (st.i + 1) + ' / ' + m.steps.length, false);
+        if (step.note) setStatus(step.note);
+      } else {
+        st.results[m.id] = { label: m.result || 'xong' };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) {
+          setBtn('↺ Chạy lại từ đầu', false);
+          st.mode = 'reset';
+          setStatus((m.verdict || '') + '<br>' + soKeo());
+        } else {
+          setBtn('✓ ' + (m.short || m.id) + ' xong', true);
+          setStatus((m.verdict || '') + ' Giờ chạy kịch bản còn lại mà so.');
+        }
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -3098,6 +3360,12 @@
         pvMount.hidden = false;
       } else if (s1.lock_tree_visual) {
         renderLockTreeVisual(pvMount, s1.lock_tree_visual);
+        pvMount.hidden = false;
+      } else if (s1.valid_visual) {
+        renderValidVisual(pvMount, s1.valid_visual);
+        pvMount.hidden = false;
+      } else if (s1.mvcc_visual) {
+        renderMvccVisual(pvMount, s1.mvcc_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

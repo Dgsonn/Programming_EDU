@@ -3689,6 +3689,495 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 120
       },
       concept_cards_after: ['nc_card_predicate_locking']
+    },
+
+    /* ── nc_17 — Ticket #58 · Optimistic Concurrency (Ch.18.6) ──
+     * PART_7 Bài 7: "transaction chạy nháp rồi validate conflict" — 3 pha
+     * read (ghi vào nháp cục bộ) → validation (soát Tk chồng lấn: có ghi món
+     * mình đã đọc?) → write (chép nháp vào DB); rớt soát = abort xé nháp,
+     * không cascading vì DB chưa từng thấy nháp. 3 tem Start/Validation/Finish.
+     * Sim thứ 9 valid_visual — bàn nháp 3 pha, mode PASS/ABORT (user chốt
+     * 2026-07-07 đợt 10). Step-4 fill_blank 3 ca phán quyết PASS/ABORT/PASS. */
+    {
+      id: 'nc_17', index: 17,
+      title: 'Optimistic — cứ chạy trên nháp, nộp bài mới soát',
+      subtitle: 'Read → Validate → Write: không một khóa nào suốt cả quá trình — sổ thật chỉ nhận bài đã chấm đậu',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'listings — góc chợ đêm (mẫu 5)',
+          columns: ['listing_id', 'item_name', 'price'],
+          dataRows: [
+            ['7042', 'Khiên Hắc Long', '400'],
+            ['3001', 'Kiếm gỗ Newbie', '45'],
+            ['3005', 'Khiên gỗ sồi', '80'],
+            ['3011', 'Skin Hỏa Long', '790'],
+            ['3002', 'Giáp rồng Huyền thoại', '12500']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #58',
+        hook: 'Chợ đêm GameHub: <strong>95% giao dịch chỉ XEM hàng</strong>, cả tiếng mới có một cú sửa giá đụng nhau. Vậy mà từ ngày phủ khóa kiểu bài 12, monitoring đỏ lòm: hàng nghìn lượt xem xếp hàng sau vài cái khóa — trả tiền vé chống va chạm cho <em>từng người</em>, trong khi va chạm hiếm như sao băng. Ticket #58: dẹp quầy phát khóa. Giao dịch cứ chạy TỰ DO trên nháp riêng, lúc NỘP BÀI mới soát — rớt soát thì xé nháp làm lại. Lạc quan, mà không liều. 🧾'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'OPTIMISTIC (validation-based, sách 18.6): giao dịch sống qua 3 pha — READ (đọc vào biến cục bộ, mọi phép ghi đổ vào NHÁP riêng) → VALIDATION (soát va chạm) → WRITE (chép nháp vào DB thật); read-only khỏi luôn pha cuối',
+            'Bài SOÁT với mỗi Tk xếp trước mình: hoặc Tk XONG HẲN trước khi mình bắt đầu (FinishTS(Tk) < StartTS(Ti)) — khỏi soát; hoặc đồ Tk GHI không dính món mình ĐÃ ĐỌC và nó ghi xong trước khi mình vào soát — đậu; dính → ABORT',
+            'Rớt soát chỉ tốn XÉ NHÁP: DB chưa từng thấy dữ liệu nháp nên không ai kịp đọc ké — không bao giờ cascading rollback; cái giá thật là giao dịch DÀI dễ bị đám ngắn tông rớt hoài (starvation)'
+          ],
+          intro: 'Phòng thi nghiêm ngặt kiểu khóa: mỗi thí sinh vào phải khóa cửa, người sau đứng chờ ngoài hành lang. Phòng thi lạc quan: ai nấy làm bài trên <strong>giấy nháp riêng</strong>, thoải mái cùng lúc; giám khảo chỉ chấm LÚC NỘP — nếu dữ kiện bạn dùng đã bị đề đính chính giữa chừng thì bài nháp vô hiệu, làm lại. Bảng điểm (sổ thật) không bao giờ dính một bài chưa chấm.',
+          example: 'T1 đọc giá Khiên Hắc Long 400 → tính trên nháp: 450. Nếu chẳng ai đụng #7042 trong lúc đó → soát ✓, chép 450 vào sổ. Nếu T2 kịp commit hạ giá 400 → 380 giữa chừng → T2 đã GHI vào món T1 <strong>ĐÃ ĐỌC</strong> → T1 rớt soát, xé nháp, chạy lại từ 380. Sổ chưa từng thấy con 450 nào.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-file-pen',
+            title: 'Ba pha — theo đúng sách',
+            body: 'Pha ĐỌC: hệ thống chạy Ti, đọc các data item vào biến cục bộ và thực hiện <strong>mọi phép ghi trên biến tạm cục bộ, không hề cập nhật database thật</strong>. Pha SOÁT (validation): áp bài test — rớt là abort. Pha GHI: soát đậu mới chép các biến tạm vào database; <em>read-only transaction bỏ qua pha này</em>. Ba pha phải đi đúng thứ tự, nhưng pha của các giao dịch KHÁC NHAU được đan xen thoải mái.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.6 — Validation-Based Protocols'
+          },
+          {
+            icon: 'fa-stamp',
+            title: 'Ba con tem + một câu hỏi soát',
+            body: 'Mỗi giao dịch mang 3 tem: <strong>StartTS</strong> (bắt đầu chạy) · <strong>ValidationTS</strong> (nộp bài — chính tem này quyết THỨ TỰ serial) · <strong>FinishTS</strong> (chép xong). Bài soát của Ti quy về một câu: <em>"trong đám xếp trước mình mà CHƯA xong hẳn trước khi mình bắt đầu — có đứa nào GHI vào món mình ĐÃ ĐỌC không?"</em> Có → nháp của mình dựng trên dữ liệu ôi thiu → abort. Không → thứ tự serial vẫn lành lặn → chép nháp.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Bạn xài trường phái này hằng ngày: <strong>Git</strong>. Không ai khóa repo để code — mỗi người một branch (nháp riêng), lúc merge mới soát conflict; dính conflict thì sửa lại rồi merge tiếp, còn main không bao giờ chứa nửa-bài-làm-dở. Team 5 người ít khi đụng file nhau → mượt; 50 người cùng sửa một file → merge hell. Đúng y điều kiện sách đặt cho optimistic: <em>đa số read-only, conflict thấp</em>.'
+          }
+        ],
+        valid_visual: {
+          eyebrow: 'BÀN NHÁP 3 PHA — T1 CHỈNH GIÁ KHIÊN HẮC LONG #7042 · KHÔNG MỘT KHÓA NÀO',
+          caption: 'Chạy CẢ HAI kịch bản: đường trơn tru soát đậu chép nháp; đường va chạm rớt soát xé nháp — mà sổ thật không dính một vết bẩn nào.',
+          db_label: '📒 SỔ GIÁ #7042',
+          db_sub: 'gem — Khiên Hắc Long',
+          start: 400,
+          t1_label: '🤖 T1 — bot chỉnh giá (+50)',
+          t2_label: '🧑 T2 — vai diễn theo kịch bản',
+          modes: [
+            {
+              id: 'pass', short: 'SOÁT ĐẬU', ok: true,
+              btn: '▶ Kịch bản KHÔNG VA CHẠM',
+              steps: [
+                { who: 'sys', text: 'StartTS(T1) = 20 — vào PHA ĐỌC. Quầy khóa: đóng cửa vĩnh viễn.', phase: 'read', note: 'Không xin khóa, không xếp hàng — T1 cứ thế chạy.' },
+                { who: 't1', text: 'đọc giá #7042 = 400 → chép vào nháp', draft: '400' },
+                { who: 't2', text: 'T2 (khách) XEM giá 400 — read-only, không ghi gì', note: 'Hàng nghìn người xem như T2 chạy song song, chẳng vướng ai.' },
+                { who: 't1', text: 'tính trên NHÁP: 400 + 50 = 450', draft: '450', note: 'Nhìn sổ mà xem — vẫn 400 nguyên si. Mọi phép ghi đang đổ vào nháp.' },
+                { who: 't2', text: 'T2 xong — read-only nên khỏi cả pha ghi, nộp là xong', cls: 'ok' },
+                { who: 'sys', text: 'ValidationTS(T1) = 35 — PHA SOÁT: ai commit trong lúc mình chạy mà GHI món mình ĐÃ ĐỌC?', phase: 'validate' },
+                { who: 'sys', text: 'không một ai → validation ✓', cls: 'ok' },
+                { who: 't1', text: 'PHA GHI: chép nháp 450 vào sổ · FinishTS(T1) = 36', phase: 'write', db: 450, cls: 'ok' }
+              ],
+              verdict: '✓ Trọn đường không một khóa nào được phát — mà sổ vẫn chuẩn. Khi va chạm hiếm, tiền soát-lúc-nộp rẻ hơn hẳn tiền khóa-từng-người: đó là món hời của optimistic.'
+            },
+            {
+              id: 'abort', short: 'RỚT SOÁT', ok: true,
+              btn: '▶ Kịch bản VA CHẠM',
+              steps: [
+                { who: 'sys', text: 'StartTS(T1) = 20 — PHA ĐỌC, như cũ.', phase: 'read' },
+                { who: 't1', text: 'đọc giá #7042 = 400 → chép vào nháp', draft: '400' },
+                { who: 't2', text: 'T2 flash-sale: đọc 400, tính nháp riêng của nó: 380', cls: 'warn' },
+                { who: 't2', text: 'T2 nộp trước → soát ✓ → GHI 380 vào sổ — commit', db: 380, cls: 'warn', note: 'T2 đậu bài trước — sổ giờ là 380. Còn T1 vẫn cắm cúi trên nháp dựng từ con 400 cũ…' },
+                { who: 't1', text: 'vẫn tính trên nháp cũ: 400 + 50 = 450', draft: '450' },
+                { who: 'sys', text: 'ValidationTS(T1) = 35 — SOÁT: T2 commit lúc mình đang chạy, GHI đúng món mình ĐÃ ĐỌC', phase: 'validate', cls: 'bad' },
+                { who: 'sys', text: '⛔ RỚT SOÁT → ABORT: xé nháp. Sổ không cần dọn gì — nháp chưa từng chạm sổ.', phase: 'abort', draft: null, cls: 'bad', note: 'Đây là lý do không bao giờ có cascading rollback: DB chưa hề thấy con 450, nên chẳng ai kịp đọc ké nó.' },
+                { who: 't1', text: 'chạy lại từ đầu: đọc giá MỚI 380 → nháp 430 → soát ✓ → ghi 430', phase: 'write', draft: '430', db: 430, cls: 'ok' }
+              ],
+              verdict: '✓ Giá của lạc quan: thua ván nào xé nháp đánh lại ván đó — rẻ, khi hiếm khi thua. Còn nếu sàn bạn va chạm liên hồi… đứng dậy quay về quầy khóa, hoặc chờ bài 18. 😏'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'ba con tem của một giao dịch',
+            columns: [
+              { name: 'StartTS', type: 'bắt đầu chạy', key: '🕐' },
+              { name: 'ValidationTS', type: 'nộp bài — quyết thứ tự serial', key: '⚖️' },
+              { name: 'FinishTS', type: 'chép nháp xong', key: '🏁' }
+            ]
+          },
+          data_preview: [
+            ['Tk xong HẲN trước khi Ti start', 'FinishTS(Tk) < StartTS(Ti)', 'khỏi soát', '✓'],
+            ['Tk commit giữa chừng, ghi món Ti ĐÃ ĐỌC', 'writeset ∩ readset ≠ ∅', 'nháp ôi thiu', '⛔ abort'],
+            ['Tk commit giữa chừng, món KHÔNG liên quan', 'writeset ∩ readset = ∅', 'đậu', '✓'],
+            ['Ti read-only', 'khỏi pha ghi', 'nộp là xong', '✓']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'T1 rớt validation. Vì sao chỉ cần "xé nháp" là xong — DB không phải dọn, và không ai bị rollback dây chuyền theo?',
+            options: [
+              { id: 'a', text: 'Vì mọi phép ghi của T1 nằm trên nháp cục bộ, CHỈ chép vào DB sau khi soát đậu — DB chưa từng thấy dữ liệu nháp nên không giao dịch nào kịp đọc thứ chưa-chắc-chắn', correct: true, explanation: 'Đúng — sách nói thẳng: validation scheme tự động miễn nhiễm cascading rollback, vì write thật chỉ xảy ra sau khi giao dịch coi như đã commit.' },
+              { id: 'b', text: 'Vì hệ thống tự chụp backup toàn DB trước mỗi giao dịch, rớt thì restore', correct: false, explanation: 'Sai — chẳng có backup nào ở đây; bí quyết rẻ hơn nhiều: đồ chưa chấm đậu thì KHÔNG BAO GIỜ vào DB, nên chẳng có gì để restore.' },
+              { id: 'c', text: 'Vì pha validation cấp khóa X trên mọi món T1 đọc nên không ai đọc ké được', correct: false, explanation: 'Sai — cả bài này KHÔNG có khóa; validation là bài kiểm tra tem + tập đọc/ghi, không phải quầy phát khóa trá hình.' },
+              { id: 'd', text: 'Vì optimistic chỉ nhận giao dịch read-only nên chẳng có gì để dọn', correct: false, explanation: 'Sai — update transaction vẫn chơi được (T1 chính là một đứa); read-only chỉ được ưu ái bỏ pha ghi thôi.' }
+            ]
+          },
+          {
+            question: 'Sàn nào nên theo optimistic — sàn nào nên ở lại quầy khóa?',
+            options: [
+              { id: 'a', text: 'Read-heavy / va chạm hiếm → optimistic: tiền soát rẻ hơn tiền khóa. Va chạm dày → khóa: abort-làm-lại liên tục đắt hơn xếp hàng, và giao dịch DÀI dễ bị đám ngắn tông rớt hoài (starvation)', correct: true, explanation: 'Chuẩn cả hai vế — sách mở đầu 18.6 bằng đúng điều kiện "đa số read-only, conflict thấp", và đóng bằng cảnh báo starvation cho giao dịch dài.' },
+              { id: 'b', text: 'Optimistic luôn thắng — không khóa là không chờ, không chờ là nhanh hơn', correct: false, explanation: 'Sai — không chờ nhưng có THUA: mỗi cú rớt soát là vứt toàn bộ công sức chạy lại từ đầu; va chạm dày thì "chạy lại" thành nghề chính.' },
+              { id: 'c', text: 'Khóa luôn thắng — chắc chắn là trên hết, chậm một chút không sao', correct: false, explanation: 'Sai — optimistic cũng CHẮC CHẮN y hệt (serializability giữ nguyên qua bài soát); khác nhau chỉ ở chỗ trả giá bằng chờ hay bằng làm lại.' },
+              { id: 'd', text: 'Cứ dưới 1.000 giao dịch/giây thì optimistic, trên thì khóa', correct: false, explanation: 'Sai — thước đo không phải TỔNG lưu lượng mà là TỈ LỆ VA CHẠM: một sàn 10.000 lượt xem/giây vẫn hợp optimistic nếu update lác đác.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Giám khảo soát bài',
+          instruction: 'T-audit: StartTS = 20, ValidationTS = 35. Với từng hồ sơ Tk, T-audit đậu hay rớt soát?',
+          xp: 20,
+          chips: [
+            { id: 'v1', label: 'Tk commit=28, GHI món T-audit đã đọc' },
+            { id: 'v2', label: 'Tk commit=30, ghi món T-audit KHÔNG đọc' },
+            { id: 'v3', label: 'Tk FinishTS=12 — xong trước khi T-audit chạy' },
+            { id: 'v4', label: 'Tk chỉ ĐỌC cùng món với T-audit' }
+          ],
+          bins: [
+            { id: 'dau', label: 'ĐẬU SOÁT ✓' },
+            { id: 'rot', label: 'RỚT SOÁT ⛔' }
+          ],
+          solution: { v1: 'rot', v2: 'dau', v3: 'dau', v4: 'dau' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp dây chuyền 4 pha của một giao dịch lạc quan — có MỘT khối bịa (nghe rất chi là "tiết kiệm").',
+        blocks: [
+          { type: 'op', token: 'PHA ĐỌC: đọc dữ liệu vào biến cục bộ — mọi phép GHI đổ hết vào nháp riêng, DB thật chưa suy suyển', slot: 'vo-read' },
+          { type: 'op', token: 'Ghi thẳng vào DB cho nhanh — lỡ rớt soát thì DB tự lau giùm, đỡ tốn giấy nháp', slot: 'vo-x' },
+          { type: 'op', token: 'PHA SOÁT: điểm danh các giao dịch chồng lấn — có ai commit trong lúc mình chạy mà GHI món mình ĐÃ ĐỌC?', slot: 'vo-check' },
+          { type: 'op', token: 'PHÁN QUYẾT: sạch → được phép chép; dính → abort xé nháp làm lại — DB không cần dọn vì nháp chưa từng chạm DB', slot: 'vo-verdict' },
+          { type: 'op', token: 'PHA GHI: chép nháp vào DB thật — read-only thì khỏi luôn pha này, nộp là xong', slot: 'vo-write' }
+        ],
+        drop_zones: [
+          { id: 'vo-read', placeholder: 'Pha 1 — giao dịch chạy ở đâu, ghi vào đâu?', accepts: ['op'], multi: false,
+            station: { icon: '📝', label: 'Bàn nháp', sub: 'Pha 1', hint: 'Cả pha này không một khóa nào — vậy phép GHI phải đổ vào chỗ nào để không ai thấy?' } },
+          { id: 'vo-check', placeholder: 'Pha 2 — nộp bài thì giám khảo hỏi câu gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔍', label: 'Bàn soát', sub: 'Pha 2', hint: 'Nháp của mình dựng trên những gì mình ĐÃ ĐỌC — vậy phải soát xem ai đã đụng vào thứ gì?' } },
+          { id: 'vo-verdict', placeholder: 'Pha 3 — hai ngả rẽ sau bài soát?', accepts: ['op'], multi: false,
+            station: { icon: '⚖️', label: 'Phán quyết', sub: 'Pha 3', hint: 'Rớt thì mất gì — và vì sao DB không phải dọn dẹp một byte nào?' } },
+          { id: 'vo-write', placeholder: 'Pha 4 — bài đậu thì đi đâu?', accepts: ['op'], multi: false,
+            station: { icon: '🏁', label: 'Vào sổ', sub: 'Pha 4', hint: 'Giờ mới là lúc DB thật được đụng tới — và có một kiểu giao dịch được miễn hẳn pha này.' } }
+        ],
+        expected_sql: 'PHA ĐỌC: đọc dữ liệu vào biến cục bộ — mọi phép GHI đổ hết vào nháp riêng, DB thật chưa suy suyển PHA SOÁT: điểm danh các giao dịch chồng lấn — có ai commit trong lúc mình chạy mà GHI món mình ĐÃ ĐỌC? PHÁN QUYẾT: sạch → được phép chép; dính → abort xé nháp làm lại — DB không cần dọn vì nháp chưa từng chạm DB PHA GHI: chép nháp vào DB thật — read-only thì khỏi luôn pha này, nộp là xong',
+        expected_zones: {
+          'vo-read': 'PHA ĐỌC: đọc dữ liệu vào biến cục bộ — mọi phép GHI đổ hết vào nháp riêng, DB thật chưa suy suyển',
+          'vo-check': 'PHA SOÁT: điểm danh các giao dịch chồng lấn — có ai commit trong lúc mình chạy mà GHI món mình ĐÃ ĐỌC?',
+          'vo-verdict': 'PHÁN QUYẾT: sạch → được phép chép; dính → abort xé nháp làm lại — DB không cần dọn vì nháp chưa từng chạm DB',
+          'vo-write': 'PHA GHI: chép nháp vào DB thật — read-only thì khỏi luôn pha này, nộp là xong'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 DÂY CHUYỀN LẠC QUAN CHẠY: nháp riêng → soát chồng lấn → phán quyết → mới vào sổ. Khối "ghi thẳng vào DB cho nhanh" là BỊA — và bịa đúng chỗ chí mạng: ghi thẳng nghĩa là kẻ khác ĐỌC ĐƯỢC đồ nháp của bạn, rớt soát một cái là cả đám đọc ké phải rollback dây chuyền. Chính vì write nằm SAU validation mà optimistic miễn nhiễm cascading rollback. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'vo-read': 'Pha 1 — quầy khóa đóng cửa rồi, vậy phép ghi phải trốn vào đâu để DB "chưa suy suyển"?',
+          'vo-check': 'Pha 2 — nháp dựng trên dữ liệu ĐÃ ĐỌC. Ai làm dữ liệu đó ôi thiu được? Soát đúng câu đó.',
+          'vo-verdict': 'Pha 3 — một ngả chép, một ngả xé. Để ý vế sau: vì sao DB khỏi dọn?',
+          'vo-write': 'Pha 4 — giờ nháp mới thành sự thật. Kiểu giao dịch nào được miễn pha này?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #58 — ngồi ghế giám khảo:</strong> T-audit nộp bài (StartTS = 20, ValidationTS = 35). Phán quyết 3 hồ sơ Tk — điền <code>PASS</code> hoặc <code>ABORT</code>.',
+        challenge_type: 'fill_blank',
+        template: "-- BAN SOAT — T-audit: StartTS = 20 · ValidationTS = 35\n-- luat: soat cac Tk chong lan (commit trong luc minh chay):\n--       Tk co GHI vao mon minh DA DOC khong?\n\n-- Ca 1: Tk co FinishTS = 12 — xong han TRUOC khi minh start\n--   phan quyet: ____\n\n-- Ca 2: Tk commit = 28, GHI vao #7042 — mon minh DA DOC\n--   phan quyet: ____\n\n-- Ca 3: Tk commit = 30, ghi vao #9099 — mon minh KHONG doc\n--   phan quyet: ____",
+        blanks: [
+          { id: 'b1', hint: 'PASS / ABORT', expected: 'PASS' },
+          { id: 'b2', hint: 'PASS / ABORT', expected: 'ABORT' },
+          { id: 'b3', hint: 'PASS / ABORT', expected: 'PASS' }
+        ],
+        schema: {
+          table_name: 'bàn soát — 3 hồ sơ chờ phán quyết',
+          columns: [
+            { name: 'hồ sơ', type: 'Tk chồng lấn?', key: '📋' },
+            { name: 'đụng gì', type: 'so với readset T-audit', key: '🎯' },
+            { name: 'phán quyết', type: 'PASS / ABORT', key: '⚖️' }
+          ],
+          data: [
+            ['Ca 1 · Finish=12', 'xong trước khi mình start', '❓'],
+            ['Ca 2 · commit=28', 'GHI món mình đã đọc', '❓'],
+            ['Ca 3 · commit=30', 'ghi món mình không đọc', '❓'],
+            ['(mình read-only?)', 'thì khỏi cả pha ghi', '—']
+          ]
+        },
+        context: {
+          scenario: 'Đây chính là validation test của sách 18.6 rút thành một câu hỏi giám khảo: Tk có chồng lấn không — và có ghi vào vùng mình đã đọc không? Ca 1 rơi vào điều kiện 1 (xong trước khi mình start), ca 3 rơi vào điều kiện 2 (writeset không giao readset).',
+          real_world: 'Các hệ optimistic thật (từ engine DB đến chốt version trong ORM như Hibernate) đều quy về đúng bài soát này — chỉ khác cách ghi sổ readset/writeset. Hiểu 3 ca này là đọc được log "serialization failure, retry transaction" không toát mồ hôi.',
+          steps: [
+            'Ca 1: FinishTS(Tk)=12 < StartTS(mình)=20 → hai đứa không chồng lấn.',
+            'Ca 2: Tk commit giữa 20 và 35 → chồng lấn; nó GHI món mình ĐÃ ĐỌC → nháp ôi thiu.',
+            'Ca 3: cũng chồng lấn, nhưng writeset của nó không giao readset của mình.',
+            'Điền PASS / ABORT / PASS theo đúng thứ tự đó.'
+          ],
+          hint_explore: 'Panel trái là 3 hồ sơ tóm tắt — cột "đụng gì" chính là chìa khóa của từng phán quyết.',
+          expected: 'PASS · ABORT · PASS'
+        },
+        hints: [
+          { level: 1, text: 'Câu hỏi vàng: Tk có CHỒNG LẤN với mình không (commit trong lúc mình chạy)? Không chồng lấn thì khỏi soát.' },
+          { level: 2, text: 'Ca 1: Finish=12, mình start=20 — nó xong từ trước khi mình sinh ra. Chồng lấn không?' },
+          { level: 3, text: 'Ca 2 vs Ca 3 khác nhau đúng một chỗ: món nó ghi có nằm trong đống mình ĐÃ ĐỌC không.' },
+          { level: 4, text: 'Đáp án: PASS · ABORT · PASS.' }
+        ],
+        success_message: 'TICKET #58 ĐÓNG — quầy khóa dẹp tiệm, chợ đêm chạy full tốc mà sổ vẫn sạch! 🧾 Hồ sơ đọc thêm bên dưới: THOMAS\' WRITE RULE — trường phái tem thời gian còn một chiêu lì hơn cả xé nháp: bản ghi cũ rích không ai sẽ đọc thì… LỜ ĐI, khỏi rollback. Và bài sau, trùm cuối của cả trường phái lạc quan: sổ KHÔNG TẨY XÓA — mỗi lần ghi là dán một PHIÊN BẢN mới. MVCC. 📚',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_thomas_write']
+    },
+
+    /* ── nc_18 — Ticket #59 · MVCC + Snapshot Isolation (Ch.18.7-18.8) ──
+     * PART_7 Bài 8: "version timeline, transaction đọc snapshot" — mỗi write
+     * DÁN version mới (tem CommitTS); reader đọc bản tem lớn nhất ≤ StartTS →
+     * không chờ, không abort (sách: read never fails/waits); update phải soát
+     * trước commit: first committer wins chặn lost update. Write skew +
+     * FOR UPDATE ĐỂ DÀNH bài 19 (cliffhanger cuối bài). Sim thứ 10 mvcc_visual
+     * (user chốt 2026-07-07 đợt 10). Step-4 mcq_code "reader StartTS=30 thấy
+     * giá nào" — bẫy mới-nhất / bản-đầu / chờ-writer. */
+    {
+      id: 'nc_18', index: 18,
+      title: 'MVCC — sổ không tẩy xóa, mỗi lần ghi là dán bản mới',
+      subtitle: 'Multiversion + Snapshot Isolation: reader cầm ảnh chụp lúc mình bắt đầu — không chờ ai, không bị ai chặn',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 22, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'versions của Kiếm Rồng #3001 — sổ không tẩy xóa',
+          columns: ['version', 'giá (gem)', 'tem commit'],
+          dataRows: [
+            ['v1', '500', '10'],
+            ['v2', '480', '25'],
+            ['v3', '520', '40'],
+            ['(v4 nháp)', '— chưa commit', 'chưa có tem']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #59',
+        hook: 'Báo cáo doanh thu cuối quý đọc <strong>toàn bộ sàn suốt 2 tiếng</strong>. Dưới chế độ khóa, 2 tiếng đó là 2 tiếng seller bị chặn ghi — sếp gọi đó là "bảo trì", seller gọi đó là mất tiền. Còn xé-nháp-làm-lại kiểu bài 17? Báo cáo chạy 2 tiếng mà rớt soát ở phút 119 thì khóc bằng tiếng Mán. Ticket #59 đòi một điều nghe như phép thuật: <em>người đọc không chờ ai, người ghi không chặn ai — cùng lúc</em>. Câu trả lời của mọi DBMS lớn: đừng tẩy xóa sổ nữa. Mỗi lần ghi, DÁN MỘT BẢN MỚI. 📚'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'MVCC (multiversion, sách 18.7): mỗi write(Q) tạo một VERSION mới của Q kèm tem — không đè bản cũ; read(Q) được trao đúng bản phù hợp; kết quả vàng: <strong>đọc không bao giờ fail, không bao giờ phải chờ</strong>',
+            'SNAPSHOT ISOLATION (18.8): giao dịch nhận ẢNH CHỤP database tại StartTS — chỉ gồm dữ liệu ĐÃ COMMIT; đọc = lấy bản có tem commit LỚN NHẤT còn ≤ StartTS; read-only chạy tới đâu cũng không chờ, không abort',
+            'Người GHI vẫn phải qua cửa soát trước commit: hai updater chồng lấn cùng sửa MỘT món → đứa validate sau thấy bản lạ dán trong khoảng chạy của mình → ABORT (first committer wins) — lost update bài 11 hết cửa'
+          ],
+          intro: 'Sổ kế toán thật KHÔNG BAO GIỜ tẩy xóa — sai thì ghi bút toán mới đè lên dòng mới, dòng cũ còn nguyên. Kiểm toán viên soát quý I cứ đọc các trang tính đến hết quý I, kệ phòng kế toán đang viết quý II ở trang sau: hai bên không ai chờ ai, mà con số quý I không bao giờ nhảy múa dưới mắt kiểm toán.',
+          example: 'Kiếm Rồng #3001 có 3 bản: 500 (tem 10) → 480 (tem 25) → 520 (tem 40). Reader StartTS = 30 đọc → bản tem lớn nhất ≤ 30 là tem 25 → thấy <strong>480</strong>. Writer dán bản 520 lúc nào kệ writer — reader không chờ một giây, và đọc lại lần nữa vẫn 480: ảnh chụp không suy suyển.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-camera',
+            title: 'Ảnh chụp — theo đúng sách',
+            body: 'Snapshot isolation trao cho giao dịch một "snapshot" của database <strong>tại thời điểm nó bắt đầu</strong>; nó làm việc trên ảnh chụp đó, cách ly hoàn toàn khỏi các giao dịch chạy song song. Ảnh chỉ gồm giá trị do các giao dịch <strong>ĐÃ COMMIT</strong> ghi. Cách ly kiểu này là lý tưởng cho read-only: <em>không bao giờ chờ, không bao giờ bị abort</em>. Còn update thì phải được soát (validate) trước khi cho commit — nháp giữ trong workspace riêng tới lúc đó.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.8 — Snapshot Isolation'
+          },
+          {
+            icon: 'fa-layer-group',
+            title: 'Hai con tem + một luật chọn bản',
+            body: 'Mỗi giao dịch mang <strong>StartTS</strong> (lúc bắt đầu) và <strong>CommitTS</strong> (lúc xin nộp — tem này dán lên mọi version nó tạo). Luật đọc gói trong một dòng: <em>trả về bản có tem ghi LỚN NHẤT còn ≤ StartTS(Ti)</em>. Luật soát của updater cũng một dòng: <em>trong khoảng (StartTS..CommitTS] mà món mình định ghi đã có bản lạ dán vào → abort</em>. Hai giao dịch gọi là CHỒNG LẤN khi khoảng sống của chúng giao nhau — chỉ đám đó mới cần soát lẫn nhau.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Oracle, PostgreSQL, SQL Server — cả ba đều chạy snapshot (sách nêu đích danh). Bạn từng gặp nó rồi: bảng Postgres <strong>phình to dù bạn DELETE ầm ầm</strong> — vì DELETE trong MVCC chỉ dán "bản đánh dấu đã xóa", xác bản cũ nằm chờ <code>VACUUM</code> tới dọn (đúng luật dọn version của sách: bản cũ hơn 2 bản mà mọi giao dịch sống đều không cần nữa thì được xóa). Thấy autovacuum chạy đêm — đó là cái giá thuê kho chứa lịch sử.'
+          }
+        ],
+        mvcc_visual: {
+          eyebrow: 'SỔ KHÔNG TẨY XÓA — KIẾM RỒNG #3001 · MỖI THẺ LÀ MỘT PHIÊN BẢN, TEM = CommitTS',
+          caption: 'Chạy CẢ HAI kịch bản: người đọc lướt qua writer không một giây chờ; hai người sửa cùng món thì luật first-committer-wins ra tay.',
+          item_label: '⚔️ Kiếm Rồng #3001 — giá (gem)',
+          versions: [
+            { id: 'v1', val: 500, ts: 10 },
+            { id: 'v2', val: 480, ts: 25 }
+          ],
+          modes: [
+            {
+              id: 'reader', short: 'READER KHÔNG CHỜ', ok: true, result: 'không ai chờ ai',
+              btn: '▶ Kịch bản NGƯỜI ĐỌC',
+              steps: [
+                { text: 'R1 (StartTS=15) đọc → tem lớn nhất ≤ 15 là tem 10 → thấy 500', pick: 'v1', cls: 'ok', note: 'Ảnh chụp của R1 là thời điểm 15 — bản 480 (tem 25) với nó là chuyện tương lai.' },
+                { text: 'R2 (StartTS=30) đọc → tem lớn nhất ≤ 30 là tem 25 → thấy 480', pick: 'v2', cls: 'ok' },
+                { text: 'Writer commit — KHÔNG đè: DÁN bản mới v3 = 520, tem 40', add: { id: 'v3', val: 520, ts: 40 }, cls: 'warn', note: 'Không ổ khóa nào được phát: writer dán thẻ mới vào đuôi, các thẻ cũ còn nguyên cho những ảnh chụp cũ.' },
+                { text: 'R2 đọc LẠI → vẫn 480: ảnh chụp lúc 30, bản tem 40 nằm ngoài rìa', pick: 'v2', cls: 'ok', note: 'Cùng giao dịch, hai lần đọc một con số — cả con ma bài 16 cũng hết cửa: dòng chèn sau StartTS mang tem sau StartTS, không lọt nổi vào ảnh chụp.' },
+                { text: 'R3 (StartTS=45) đọc → 520: bản mới nhất giờ đã nằm trong quá khứ của nó', pick: 'v3', cls: 'ok' }
+              ],
+              verdict: '✓ "Read request never fails and is never made to wait" (sách 18.7) — reader với writer chạy hai đường không cắt nhau. Báo cáo 2 tiếng lướt êm giữa giờ cao điểm là nhờ đúng dòng này.'
+            },
+            {
+              id: 'fcw', short: 'FIRST COMMITTER WINS', ok: true, result: 'T5 abort — lost update hết cửa',
+              btn: '▶ Kịch bản 2 NGƯỜI SỬA',
+              steps: [
+                { text: 'T5 (StartTS=50) đọc snapshot → 480 · muốn hạ 30: nháp 450', pick: 'v2' },
+                { text: 'T6 (StartTS=52) cũng đọc 480 · muốn hạ 60: nháp 420', pick: 'v2', cls: 'warn', note: 'Hai giao dịch chồng lấn cùng nhắm một món — mỗi đứa một ảnh chụp, không đứa nào thấy nháp đứa nào. Nghe quen không? Đúng thế trận lost update bài 11.' },
+                { text: 'T6 nộp trước (CommitTS=60) → soát (52..60]: không bản lạ nào → ✓ DÁN v3 = 420', add: { id: 'v3', val: 420, ts: 60 }, cls: 'ok' },
+                { text: 'T5 nộp (CommitTS=65) → soát (50..65]: CÓ bản tem 60 dán vào đúng món mình định ghi', cls: 'bad', note: 'Nếu nhắm mắt cho T5 dán nốt: bản 420 của T6 bị đè bay màu không dấu vết — chính xác là LOST UPDATE.' },
+                { text: '⛔ T5 ABORT — first committer wins: ai dán trước người đó thắng, kẻ sau xé nháp làm lại', cls: 'bad' }
+              ],
+              verdict: '✓ Snapshot không thả rông người ghi: update phải qua cửa soát — lost update hết cửa. Nhưng khoan vỗ tay: hai giao dịch KHÔNG đụng cùng món thì cái máy soát này… mù tịt. Chuyện đó để bài sau. 😈'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'một version = content + tem + khoảng sống',
+            columns: [
+              { name: 'content', type: 'giá trị của bản', key: '📦' },
+              { name: 'tem commit', type: 'CommitTS của người dán', key: '🏷️' },
+              { name: 'khoảng sống', type: '[tem mình .. tem bản kế)', key: '⏳' }
+            ]
+          },
+          data_preview: [
+            ['v1 · 500 gem', 'tem 10', 'sống [10..25)', ''],
+            ['v2 · 480 gem', 'tem 25', 'sống [25..40)', ''],
+            ['v3 · 520 gem', 'tem 40', 'sống [40..∞)', ''],
+            ['reader StartTS=30', '→ chọn v2', '30 rơi vào [25..40)', '✓ không chờ']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Reader StartTS = 30 đọc Kiếm Rồng HAI lần: trước và sau khi writer dán bản 520 (tem 40). Nó thấy gì?',
+            options: [
+              { id: 'a', text: 'Cả hai lần đều 480 — luật là "tem lớn nhất ≤ 30", bản tem 40 vĩnh viễn nằm ngoài ảnh chụp của nó; không chờ, không abort', correct: true, explanation: 'Đúng — snapshot cố định tại StartTS: thế giới có dán thêm bao nhiêu bản, ảnh chụp lúc 30 vẫn y nguyên. Repeatable read miễn phí kèm theo.' },
+              { id: 'b', text: 'Lần 1: 480, lần 2: 520 — dữ liệu committed mới nhất luôn thắng', correct: false, explanation: 'Sai — "mới nhất luôn thắng" là thế giới KHÔNG version của bài 11 (và chính nó sinh ra đủ thứ quái). Snapshot chọn theo StartTS của reader, không theo đồng hồ lúc đọc.' },
+              { id: 'c', text: 'Lần 2 phải chờ writer nhả rồi mới đọc được 520', correct: false, explanation: 'Sai — không có gì để "nhả": writer không cầm khóa chặn reader, nó chỉ dán thẻ mới. Reader không bao giờ xếp hàng trong MVCC.' },
+              { id: 'd', text: 'Reader bị abort vì dữ liệu đổi giữa chừng', correct: false, explanation: 'Sai — abort là án dành cho UPDATER thua ván soát; read-only theo sách "never waits and is never aborted". Dữ liệu "đổi" ở đâu thì đổi, ảnh chụp không đổi.' }
+            ]
+          },
+          {
+            question: 'Đọc ảnh chụp riêng thì đâu ai đụng ai — vậy vì sao updater vẫn phải qua cửa SOÁT trước khi commit?',
+            options: [
+              { id: 'a', text: 'Vì hai updater chồng lấn cùng sửa MỘT món sẽ không thấy nháp của nhau — cho commit cả hai thì bản dán trước bị bản sau đè bay màu: lost update; nên đứa nộp sau phải abort (first committer wins)', correct: true, explanation: 'Chuẩn — ảnh chụp cách ly phần ĐỌC, nhưng phần GHI mà thả rông là hai bản đè nhau. Cửa soát chính là chốt chặn lost update của snapshot.' },
+              { id: 'b', text: 'Vì phải kiểm tra cú pháp SQL lần cuối trước khi ghi đĩa', correct: false, explanation: 'Sai — cú pháp sai thì chết từ lúc parse rồi; cửa soát ở đây xử VA CHẠM giữa các giao dịch, không xử chính tả.' },
+              { id: 'c', text: 'Vì mọi update phải xếp hàng lấy khóa X như bài 12', correct: false, explanation: 'Sai — biến thể first-committer-wins trong sách soát bằng TEM (có bản lạ trong khoảng chạy không), không phát khóa X chặn từ đầu. (Biến thể first-updater-wins có dùng write lock — nhưng cũng không phải "như bài 12".)' },
+              { id: 'd', text: 'Không cần soát thật — các DBMS làm cho có lệ để log đẹp', correct: false, explanation: 'Sai — thiếu cửa soát này thì snapshot thua cả read committed ở khoản lost update; "first committer wins / first updater wins" là luật sống còn, sách dành nguyên mục 18.8.2.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Ai thấy 480?',
+          instruction: 'Chuỗi version: 500 (tem 10) → 480 (tem 25) → 520 (tem 40). Reader nào THẤY GIÁ 480?',
+          xp: 20,
+          chips: [
+            { id: 's1', label: 'reader StartTS = 30' },
+            { id: 's2', label: 'reader StartTS = 25 (đúng biên)' },
+            { id: 's3', label: 'reader StartTS = 15' },
+            { id: 's4', label: 'reader StartTS = 41' }
+          ],
+          bins: [
+            { id: 'thay', label: 'THẤY 480 ✓' },
+            { id: 'khac', label: 'THẤY GIÁ KHÁC' }
+          ],
+          solution: { s1: 'thay', s2: 'thay', s3: 'khac', s4: 'khac' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp bộ luật 4 điều của thế giới nhiều-phiên-bản — có MỘT khối bịa (nghe rất chi là "tươi mới").',
+        blocks: [
+          { type: 'op', token: 'KHAI SINH: giao dịch nhận StartTS — ảnh chụp của nó là sổ TÍNH ĐẾN thời điểm đó, chỉ gồm dữ liệu ĐÃ commit', slot: 'mv-snap' },
+          { type: 'op', token: 'ĐỌC: lấy bản có tem commit LỚN NHẤT còn ≤ StartTS — kệ mọi bản dán sau, kệ mọi nháp chưa commit', slot: 'mv-read' },
+          { type: 'op', token: 'Writer ghi ĐÈ thẳng chỗ cũ — reader nào đang đọc thì chờ một nhịp, đổi lại luôn được dữ liệu tươi mới nhất', slot: 'mv-x' },
+          { type: 'op', token: 'GHI: KHÔNG đè — dán version mới mang tem CommitTS; các bản cũ còn nguyên cho những ảnh chụp cũ', slot: 'mv-write' },
+          { type: 'op', token: 'NỘP BÀI (update): soát khoảng Start→Commit trên món mình ghi — có bản lạ dán vào là abort: first committer wins', slot: 'mv-commit' }
+        ],
+        drop_zones: [
+          { id: 'mv-snap', placeholder: 'Điều 1 — giao dịch mở mắt thấy gì?', accepts: ['op'], multi: false,
+            station: { icon: '📸', label: 'Ảnh chụp', sub: 'Điều 1', hint: 'Thứ trao cho giao dịch lúc StartTS — và vì sao đồ CHƯA commit không bao giờ có mặt trong đó?' } },
+          { id: 'mv-read', placeholder: 'Điều 2 — giữa cả xấp bản, đọc chọn bản nào?', accepts: ['op'], multi: false,
+            station: { icon: '👓', label: 'Luật đọc', sub: 'Điều 2', hint: 'Một phép so tem duy nhất — StartTS = 30 mà chuỗi tem là 10 · 25 · 40 thì chọn ai?' } },
+          { id: 'mv-write', placeholder: 'Điều 3 — ghi thì làm gì với bản cũ?', accepts: ['op'], multi: false,
+            station: { icon: '🏷️', label: 'Luật ghi', sub: 'Điều 3', hint: 'Chính điều này làm reader khỏi chờ: bản cũ phải CÒN đó cho ai? Bản mới mang tem gì?' } },
+          { id: 'mv-commit', placeholder: 'Điều 4 — updater muốn nộp thì qua cửa nào?', accepts: ['op'], multi: false,
+            station: { icon: '⚖️', label: 'Cửa soát', sub: 'Điều 4', hint: 'Không có cửa này thì hai bản nháp cùng món đè nhau — bài 11 gọi tên thảm họa đó là gì?' } }
+        ],
+        expected_sql: 'KHAI SINH: giao dịch nhận StartTS — ảnh chụp của nó là sổ TÍNH ĐẾN thời điểm đó, chỉ gồm dữ liệu ĐÃ commit ĐỌC: lấy bản có tem commit LỚN NHẤT còn ≤ StartTS — kệ mọi bản dán sau, kệ mọi nháp chưa commit GHI: KHÔNG đè — dán version mới mang tem CommitTS; các bản cũ còn nguyên cho những ảnh chụp cũ NỘP BÀI (update): soát khoảng Start→Commit trên món mình ghi — có bản lạ dán vào là abort: first committer wins',
+        expected_zones: {
+          'mv-snap': 'KHAI SINH: giao dịch nhận StartTS — ảnh chụp của nó là sổ TÍNH ĐẾN thời điểm đó, chỉ gồm dữ liệu ĐÃ commit',
+          'mv-read': 'ĐỌC: lấy bản có tem commit LỚN NHẤT còn ≤ StartTS — kệ mọi bản dán sau, kệ mọi nháp chưa commit',
+          'mv-write': 'GHI: KHÔNG đè — dán version mới mang tem CommitTS; các bản cũ còn nguyên cho những ảnh chụp cũ',
+          'mv-commit': 'NỘP BÀI (update): soát khoảng Start→Commit trên món mình ghi — có bản lạ dán vào là abort: first committer wins'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BỘ LUẬT 4 ĐIỀU KHẮC XONG: ảnh chụp → luật đọc theo tem → ghi là dán không đè → cửa soát first-committer-wins. Khối "ghi đè + reader chờ cho tươi" là BỊA — nó chính là thế giới CŨ mà cả bài này đập đi: một khi ghi đè, bản cũ chết, reader buộc phải chờ hoặc đọc bậy; "tươi mới nhất" nghe hay mà chính là thứ làm hai lần đọc ra hai số. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'mv-snap': 'Điều 1 — khoảnh khắc StartTS, giao dịch được trao thứ gì? Đồ chưa commit có được vào không?',
+          'mv-read': 'Điều 2 — cả xấp thẻ, một phép so: tem thế nào so với StartTS thì được chọn?',
+          'mv-write': 'Điều 3 — vì sao reader khỏi chờ writer? Vì bản cũ KHÔNG chết. Vậy ghi phải làm gì thay vì đè?',
+          'mv-commit': 'Điều 4 — hai nháp cùng món không thấy nhau; thiếu cửa nào thì thành lost update?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #59 — đọc sổ version:</strong> Kiếm Rồng #3001 có chuỗi bản: <code>500 (tem 10) → 480 (tem 25) → 520 (tem 40)</code>, và một writer đang cầm nháp v4 CHƯA commit. Reader <strong>StartTS = 30</strong> chạy <code>SELECT price</code>. Engine trả về gì?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: '480 — bản có tem commit LỚN NHẤT còn ≤ 30; bản 520 (tem 40) lẫn nháp v4 đều ngoài ảnh chụp',
+            correct: true
+          },
+          {
+            text: '520 — bản committed MỚI NHẤT tại thời điểm đọc, dữ liệu tươi là trên hết',
+            correct: false,
+            explain: '"Mới nhất tại lúc đọc" là luật của thế giới không-version — chính nó làm hai lần đọc ra hai số. Snapshot neo theo StartTS CỦA READER: tem 40 > 30 → bản đó thuộc tương lai của nó.'
+          },
+          {
+            text: '500 — bản đầu tiên, an toàn nhất vì chắc chắn đã commit từ lâu',
+            correct: false,
+            explain: 'An toàn kiểu viện bảo tàng — luật chọn là tem LỚN NHẤT còn ≤ StartTS, không phải tem nhỏ nhất: bản 480 (tem 25) commit xong xuôi trước mốc 30, không có lý gì trả đồ cổ hơn.'
+          },
+          {
+            text: 'Chờ writer commit v4 xong rồi trả bản mới nhất cho chắc ăn',
+            correct: false,
+            explain: 'Cả bài này sinh ra để KHỎI có câu đó: reader không bao giờ đợi writer. Và nháp chưa commit thì không bao giờ lọt vào snapshot của bất kỳ ai — kể cả khi nó commit xong, tem của nó vẫn > 30.'
+          }
+        ],
+        schema: {
+          table_name: 'sổ version #3001 — reader StartTS=30 soi vào',
+          columns: [
+            { name: 'version', type: 'thẻ trong chuỗi', key: '🏷️' },
+            { name: 'giá', type: 'gem', key: '💰' },
+            { name: 'tem ≤ 30?', type: 'so với StartTS', key: '⚖️' }
+          ],
+          data: [
+            ['v1 · tem 10', '500', '✓ (nhưng chưa lớn nhất)'],
+            ['v2 · tem 25', '480', '✓ lớn nhất ≤ 30'],
+            ['v3 · tem 40', '520', '✗ tương lai'],
+            ['v4 · nháp', '?', '✗ chưa commit — vô hình']
+          ]
+        },
+        context: {
+          scenario: 'Một phép so tem duy nhất gánh cả bài: lọc các bản có tem ≤ StartTS rồi lấy bản LỚN NHẤT trong đám đó. Hai cái bẫy của đề nằm ở hai chữ "mới nhất" (theo đồng hồ nào?) và "chờ" (MVCC không có khái niệm reader chờ).',
+          real_world: 'Đây chính là câu bạn chạy mỗi lần SELECT trong PostgreSQL/Oracle mặc định: engine lặng lẽ so tem (xmin/xmax trong Postgres) và trao đúng bản thuộc snapshot của bạn — cùng một dòng SELECT, hai session thấy hai giá khác nhau là chuyện bình thường như cân đường.',
+          steps: [
+            'Liệt kê tem các bản đã commit: 10 · 25 · 40.',
+            'Giữ các tem ≤ StartTS(30): còn 10 và 25.',
+            'Lấy tem lớn nhất trong đám: 25 → bản 480.',
+            'Nháp chưa commit: vô hình với mọi snapshot — khỏi xét.'
+          ],
+          hint_explore: 'Panel schema bên trái đã chấm sẵn cột "tem ≤ 30?" cho từng bản — đáp án lộ nguyên hình ở đó.',
+          expected: 'Chọn 480 — tem lớn nhất ≤ StartTS.'
+        },
+        hints: [
+          { level: 1, text: 'Reader không quan tâm "bây giờ là mấy giờ" — nó chỉ quan tâm MỘT con số của chính nó. Số nào?' },
+          { level: 2, text: 'Lọc trước: bản nào có tem ≤ 30? (Nháp chưa commit thì khỏi bàn — vô hình.)' },
+          { level: 3, text: 'Trong đám lọt lưới, lấy bản tem LỚN NHẤT — không phải bản cổ nhất cho "an toàn".' },
+          { level: 4, text: 'Đáp án: 480 — tem 25 là tem lớn nhất còn ≤ 30.' }
+        ],
+        success_message: 'TICKET #59 ĐÓNG — báo cáo 2 tiếng lướt êm giữa giờ cao điểm, seller ghi ầm ầm không ai chặn ai! 📚 Hồ sơ đọc thêm bên dưới: LOCK vs MVCC — trận chung kết hai trường phái của cả module. Nhưng nhớ cái nheo mắt ở sim: máy soát chỉ bắt hai kẻ đụng CÙNG món… hai giao dịch mỗi đứa sửa một món mà vẫn phá nát invariant thì sao? WRITE SKEW — con quái snapshot không tự bắt được, hẹn bài sau, kèm bùa FOR UPDATE. 😈',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_lock_vs_mvcc']
     }
 
   ],
@@ -4099,7 +4588,86 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 · PART_7 Card D — Predicate Locking',
-      cta: { label: 'Về Trading Floor — hẹn bài 17: Optimistic Concurrency', href: '/courses/db_design_nc' }
+      cta: { label: 'Bài 17 — Optimistic Concurrency: chạy nháp rồi soát', href: '/lesson/db_design_nc?lesson=17' }
+    },
+
+    /* Card E (PART_7, sau bài 17) — Thomas' Write Rule (Ch.18.5.3): obsolete
+     * write LỜ đi thay vì rollback; nền timestamp-ordering dạy mức mental model
+     * già/trẻ (PART_7 dặn không bắt nhớ full rule); mở view serializability. */
+    {
+      id: 'nc_card_thomas_write',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 17',
+      title: 'Thomas\' Write Rule — bản ghi cũ rích thì lờ đi',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: 'Optimistic soát MỘT LẦN lúc nộp bài. Người anh em của nó — <strong>timestamp ordering</strong> (Ch.18.5) — khó tính hơn: phát mỗi giao dịch một con tem rồi xử NGAY từng cú đọc/ghi lệch thứ tự. Và trong trường phái đó có một chiêu lì lợm mang tên riêng một con người: thay vì rollback, <em>lờ đi</em>.',
+      sections: [
+        {
+          icon: 'fa-clock',
+          heading: 'Trường phái tem: già/trẻ, không ai chờ ai',
+          body: 'Tem nhỏ = giao dịch GIÀ. Luật chơi gói trong một câu: mọi cú đọc/ghi vênh nhau phải diễn ra <strong>theo thứ tự tem</strong> — đọc thứ đã bị "tương lai" đè, hay ghi đè thứ "tương lai" đã đọc → rollback ngay tại quầy, nhận tem MỚI, chạy lại. Không ai chờ ai bao giờ nên <strong>không bao giờ deadlock</strong>; đổi lại, giao dịch dài dễ bị đám trẻ tông rớt hoài — vẫn bài starvation quen mặt.'
+        },
+        {
+          icon: 'fa-hand',
+          heading: 'Cú ghi không ai sẽ đọc — theo đúng sách',
+          body: 'T27 (già) đọc Q; T28 (trẻ) ghi Q; rồi T27 mới lò dò tới <strong>ghi Q</strong>. Protocol gốc: rollback T27 — ghi quá muộn. Nhưng khoan: bản T27 định ghi <em>không một ai sẽ đọc</em> — kẻ già hơn T28 mà đọc Q là tự rớt, kẻ trẻ hơn thì phải đọc bản của T28. Thomas\' write rule: cú ghi lỗi thời (obsolete) ấy <strong>được LỜ ĐI</strong>, T27 sống tiếp. Kết quả y hệt như thể T27 đã ghi trước T28 thật.',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.5.3 — Thomas\' Write Rule'
+        },
+        {
+          icon: 'fa-door-open',
+          heading: 'Cánh cửa view serializability',
+          body: 'Lịch chạy sau khi "lờ" không còn conflict-serializable — mà vẫn ĐÚNG. Sách gọi tầng đúng-đắn rộng hơn này là <strong>view serializable</strong>: ai đọc gì của ai và bản ghi CHỐT là của ai đều khớp với một lịch tuần tự. Nhân vật đặc trưng của tầng này: <em>blind write</em> — ghi mà chẳng thèm đọc trước. Cả 2PL, tree protocol lẫn timestamp gốc đều không với tới những lịch này; Thomas thì cứ thế bước qua.'
+        }
+      ],
+      quiz: {
+        question: 'TS(T27) < TS(T28). T28 đã ghi Q xong. Giờ T27 mới tới GHI Q (nó không hề đọc Q trước đó). Protocol gốc và Thomas\' write rule mỗi bên xử sao?',
+        options: [
+          { label: 'Gốc: rollback T27 (ghi quá muộn). Thomas: LỜ cú ghi — giá trị đó không ai sẽ đọc; kết quả tương đương T27 ghi trước T28 thật', correct: true, feedback: '✓ Chuẩn — cùng một tình huống, một bên đập đi làm lại, một bên nhún vai cho qua; và cho qua mà vẫn đúng, nhờ đứng trên nền view serializability.' },
+          { label: 'Cả hai đều rollback T27 — ghi đè lịch sử là trọng tội, không có ngoại lệ', correct: false, feedback: '✗ Protocol gốc thì đúng vậy, nhưng toàn bộ lý do Thomas tồn tại là ngoại lệ này: bản ghi KHÔNG AI SẼ ĐỌC thì rollback chỉ tốn công vô ích.' },
+          { label: 'Thomas cho T27 ghi ĐÈ lên bản của T28 — ai tới sau người đó thắng', correct: false, feedback: '✗ Ngược đời — đè bản của T28 là để kẻ TRẺ đọc phải đồ của kẻ GIÀ, gãy luôn thứ tự tem. Thomas lờ cú ghi đi, không phải cho nó thắng.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.5.3 + Note 18.1 · PART_7 Card E — Thomas\' Write Rule',
+      cta: { label: 'Bài 18 — MVCC & Snapshot: sổ không tẩy xóa', href: '/lesson/db_design_nc?lesson=18' }
+    },
+
+    /* Card Lock vs MVCC (NGOÀI PART_7 — trả nợ audit cũ, user chốt đợt 10 đặt
+     * sau bài 18): tổng kết hai trường phái M8 — chờ vs làm-lại, thực tế trộn. */
+    {
+      id: 'nc_card_lock_vs_mvcc',
+      eyebrow: 'HỒ SƠ TỔNG HỢP · SAU BÀI 18',
+      title: 'Lock vs MVCC — hai trường phái giữ trật tự một cái chợ',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: 'Tám bài Trading Floor vừa đi qua HAI thế giới: nửa đầu là <strong>khóa</strong> — bi quan, chặn từ cửa; nửa sau là <strong>soát-và-version</strong> — lạc quan, chạy trước soát sau. Không phe nào "thắng": mỗi phe trả một loại giá, và DBMS thật thì… chơi cả hai.',
+      sections: [
+        {
+          icon: 'fa-scale-balanced',
+          heading: 'Hai loại giá',
+          body: 'Phe khóa trả bằng <strong>CHỜ</strong>: xếp hàng, deadlock phải phá, reader kẹt sau writer (nỗi khổ của báo cáo 2 tiếng). Phe lạc quan/MVCC trả bằng <strong>LÀM LẠI</strong>: rớt soát là xé nháp chạy lại, cộng tiền thuê kho version + công dọn. Quy tắc chọn: va chạm DÀY → chờ rẻ hơn làm lại (khóa thắng); va chạm THƯA / read-heavy → làm lại hiếm khi xảy ra (lạc quan thắng đậm).'
+        },
+        {
+          icon: 'fa-blender',
+          heading: 'Thực tế: cả làng chơi snapshot — nhưng trộn khóa',
+          body: 'Oracle, PostgreSQL, SQL Server đều nhận snapshot isolation (sách 18.8 nêu đích danh). Nhưng soi vào ruột: biến thể <em>first updater wins</em> dùng <strong>write lock</strong> cho update; multiversion 2PL cho update chạy rigorous 2PL hẳn hoi — chỉ read-only là hưởng trọn "không chờ không abort". Tức là: <strong>reader đi đường MVCC, writer vẫn xài đồ nghề của phe khóa</strong>. Hai trường phái trộn vào nhau, không thay thế nhau.'
+        },
+        {
+          icon: 'fa-broom',
+          heading: 'Cái giá ẩn: kho version phải có người quét',
+          body: 'Không đè nghĩa là không tự mất: mỗi UPDATE/DELETE để lại một xác bản cũ. Luật dọn của sách: bản đủ già, mọi giao dịch còn sống đều không cần nữa → xóa được. Postgres giao việc này cho <code>VACUUM</code> — bảng "phình dù DELETE ầm ầm" hay autovacuum cắn CPU lúc nửa đêm chính là hóa đơn thuê kho lịch sử được gửi tới tay bạn.'
+        }
+      ],
+      quiz: {
+        question: 'Sàn X: 98% giao dịch chỉ XEM hàng, update lác đác. Sàn Y: 500 bot suốt ngày tranh sửa giá đúng 10 món hot. Kê đơn trường phái cho từng sàn?',
+        options: [
+          { label: 'X → MVCC/optimistic: reader không chờ, cửa soát hiếm khi rớt. Y → khóa: va chạm dày, xé-nháp-làm-lại liên tục còn đắt hơn xếp hàng tử tế', correct: true, feedback: '✓ Chuẩn đơn — thước đo là TỈ LỆ VA CHẠM, không phải tổng lưu lượng: chờ rẻ khi đằng nào cũng phải nhường nhau, làm-lại rẻ khi gần như chẳng bao giờ thua.' },
+          { label: 'Cả hai → MVCC: công nghệ mới hơn thì tốt hơn, khóa là đồ cổ', correct: false, feedback: '✗ MVCC không "mới hơn" mà là ĐÁNH ĐỔI khác: sàn Y với 500 bot đâm nhau trên 10 món sẽ abort xối xả — mỗi cú abort là toàn bộ công sức vứt đi, tệ hơn cả xếp hàng.' },
+          { label: 'Cả hai → khóa: chắc chắn là trên hết, chậm còn hơn sai', correct: false, feedback: '✗ MVCC không hề "sai" hơn — read-only trên snapshot đọc nhất quán tuyệt đối. Bắt sàn X (98% xem hàng) xếp hàng sau vài cái khóa là đốt tiền vô ích, đúng cảnh Ticket #58.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1 + 18.6-18.8 — tổng kết Module 8 nửa đầu',
+      cta: { label: 'Về Trading Floor — hẹn bài 19: Write Skew & FOR UPDATE', href: '/courses/db_design_nc' }
     }
   ]
 };
