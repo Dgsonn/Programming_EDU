@@ -4178,6 +4178,470 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 120
       },
       concept_cards_after: ['nc_card_lock_vs_mvcc']
+    },
+
+    /* ── nc_19 — Ticket #60 · Lost Update, Write Skew & FOR UPDATE (Ch.18.8.3) ──
+     * PART_7 Bài 9: write skew = đọc CHÉO, ghi KHÁC món — writeset không giao
+     * nên first-committer-wins mù (map T36/T37 sách: két 100/200, hai đầu cùng
+     * rút 200, mỗi bên soát "tổng ≥ 0" trên snapshot riêng đều 100 ✓ → tổng
+     * chốt −100). Hóa đơn max+1 trùng số (IIT Bombay). Thuốc: FOR UPDATE (coi
+     * món ĐỌC như ĐÃ GHI → va chạm nhân tạo) + SSI Postgres 9.1. Sim TÁI DÙNG
+     * txn_visual lần 3 — đồng hồ TỔNG 2 KÉT. Step-4 bug_fix vá câu SELECT
+     * thiếu FOR UPDATE (grader đã gia cố clause forUpdate riêng đợt này). */
+    {
+      id: 'nc_19', index: 19,
+      title: 'Write Skew — hai bài soát đều đậu, cái két vẫn thủng',
+      subtitle: 'Đọc chéo, ghi khác món: con quái mà cửa soát snapshot không tự bắt — và bùa FOR UPDATE',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 22, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'bug_fix',
+      drag_map: {
+        table: {
+          name: 'vaults — két gem theo seller (mẫu 5)',
+          columns: ['vault_id', 'seller_id', 'vault_name', 'balance'],
+          dataRows: [
+            ['V-01', '4102', 'KÉT QUẢNG CÁO (A)', '100'],
+            ['V-02', '4102', 'KÉT CHÍNH (B)', '200'],
+            ['V-03', '9', 'KÉT CHÍNH', '12500'],
+            ['V-04', '15', 'KÉT CHÍNH', '790'],
+            ['V-05', '12', 'KÉT QUẢNG CÁO', '320']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #60',
+        hook: 'Sáng nay đối soát phát hiện chuyện không thể tin: tổng 2 két của DragonForge = <strong>−100 gem</strong>, trong khi luật sàn khắc rõ "tổng 2 két không được âm". Soi log: hai lệnh rút chạy đêm qua, <em>lệnh nào cũng soát luật trước khi rút</em>, cửa soát snapshot bài 18 hoạt động hoàn hảo, không một cú abort. Hai bài soát đều ĐẬU — mà két vẫn THỦNG. Ticket #60: con quái này đọc CHÉO nhau nhưng ghi hai món KHÁC nhau, nên máy soát "cùng món mới vênh" nhìn xuyên qua nó như nhìn không khí. 😈'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'WRITE SKEW: hai giao dịch chồng lấn ĐỌC chéo dữ liệu của nhau rồi mỗi đứa GHI một món KHÁC nhau — writeset {A} ∩ {B} = ∅ nên first-committer-wins (bài 18) không thấy gì để chặn, nhưng đồ thị precedence có VÒNG: kết quả không khớp bất kỳ lịch tuần tự nào',
+            'Kịch bản sách: két A=100, két B=200, luật "TỔNG ≥ 0"; T1 rút 200 từ A, T2 rút 200 từ B — mỗi đứa soát luật trên snapshot RIÊNG đều ra 100 ✓ → cùng commit → tổng −100; anh em cùng nhà: hai lệnh cùng lấy max(số hóa đơn)+1 → hai hóa đơn TRÙNG SỐ',
+            'Thuốc: FOR UPDATE — món ĐỌC bị hệ thống coi như ĐÃ GHI cho mục đích soát va chạm → hai giao dịch thành "cùng ghi" cả A lẫn B → chỉ một đứa qua; hoặc SSI (Postgres 9.1+) tự theo dõi rw-conflict; hoặc để PRIMARY KEY đỡ giùm (vụ hóa đơn)'
+          ],
+          intro: 'Hai bảo vệ trực hai cổng, luật công ty: "lúc nào cũng phải còn ÍT NHẤT một người trong ca". Nửa đêm cùng lúc, mỗi anh nhìn bảng phân công (bản in lúc 23:59 của riêng mình), thấy "còn 2 người trực — mình về thì vẫn còn 1" và cùng ký giấy về. Sáng ra: kho không người gác. Không anh nào nói dối — mỗi bản in đều đúng tại thời điểm in; cái sai nằm ở chỗ <strong>hai quyết định dựa vào nhau mà không hề nhìn thấy nhau</strong>.',
+          example: 'T1: đọc A=100, B=200 → soát 300−200=100 ✓ → ghi A=−100. T2 (chồng lấn): đọc A=100, B=200 → soát 100 ✓ → ghi B=0. Cửa soát bài 18 hỏi mỗi câu "có ai dán bản mới vào món TÔI GHI không?" — A của T1 không ai đụng, B của T2 không ai đụng → cả hai qua. Tổng chốt: −100 + 0 = <strong>−100</strong>.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-scale-unbalanced',
+            title: 'Vụ hai két — theo đúng sách',
+            body: 'Ngân hàng ràng buộc: tổng số dư checking + savings của một khách <strong>không được âm</strong> (100 + 200). T36 rút 200 từ checking <em>sau khi soát ràng buộc bằng cách đọc cả hai số dư</em>; T37 đồng thời rút 200 từ savings, cũng soát y như thế. Mỗi giao dịch soát trên snapshot CỦA MÌNH nên đều tin tổng còn 100. Chúng ghi hai món khác nhau — <strong>không có update conflict</strong> — và dưới snapshot isolation, cả hai được commit. Tổng sau đó: <strong>−100</strong> — điều không lịch tuần tự nào tạo ra nổi.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.8.3 — Serializability Issues'
+          },
+          {
+            icon: 'fa-file-invoice',
+            title: 'Anh em cùng nhà: hóa đơn trùng số',
+            body: 'App tài chính đánh số hóa đơn bằng <code>max(số hiện có) + 1</code>. Hai giao dịch chạy song song cùng thấy max = 1041 trong snapshot → cùng phát hành hóa đơn <strong>#1042</strong>. Không ai sửa dòng của ai — cửa soát lại nhìn xuyên qua. Sách kể chuyện thật: vụ này <em>nổ nhiều lần ở I.I.T. Bombay</em> vì số hóa đơn không được khai primary key; kiểm toán viên là người phát hiện. Khai PK là DB tự chặn ngoài-snapshot — một lý do vì sao write skew hiếm nổ trong thực tế.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Trong code thật bạn có ba nút bấm: <code>SELECT … FOR UPDATE</code> (Django: <code>select_for_update()</code>, Rails: <code>lock</code>) cho các cú đọc-để-quyết-định; mức cô lập <strong>SERIALIZABLE</strong> trên Postgres 9.1+ (SSI tự bắt, đổi lại thi thoảng ăn "serialization failure — retry"); hoặc ràng buộc DB (PK/CHECK) làm lưới đỡ cuối. Câu hỏi vàng khi review code: <em>"quyết định GHI này dựa trên cú ĐỌC nào — và ai có thể đổi thứ vừa đọc?"</em>'
+          }
+        ],
+        txn_visual: {
+          eyebrow: 'ĐỒNG HỒ TỔNG 2 KÉT — LUẬT SÀN: TỔNG ≥ 0 · T1 RÚT 200 TỪ A · T2 RÚT 200 TỪ B',
+          caption: 'Chạy CẢ HAI chế độ: đường snapshot hai bài soát cùng đậu mà tổng âm; đường FOR UPDATE ép va chạm — chỉ một lệnh rút sống sót.',
+          wallet_label: '⚖️ TỔNG 2 KÉT',
+          start: 300, unit: 'gem — luật: ≥ 0',
+          t1_label: '🤖 T1 — rút 200 từ két A (100)',
+          t2_label: '🤖 T2 — rút 200 từ két B (200)',
+          modes: [
+            {
+              id: 'skew', short: 'SNAPSHOT TRẦN', ok: false,
+              btn: '▶ Chạy kiểu BÀI 18 (soát trần)',
+              steps: [
+                { who: 't1', text: 'đọc ảnh chụp: A=100, B=200 → soát luật: 300 − 200 = 100 ≥ 0 ✓', note: 'Soát cẩn thận trên snapshot của mình — đúng bài bản 18 dạy. Kẽ hở cũng nằm ngay đó.' },
+                { who: 't2', text: 'đọc ảnh chụp: A=100, B=200 → soát luật: 300 − 200 = 100 ≥ 0 ✓', cls: 'warn', note: 'Hai bài soát trên hai ảnh chụp — không đứa nào nhìn thấy ý đồ đứa kia.' },
+                { who: 't1', text: 'commit: ghi A = −100 · cửa soát hỏi "ai đụng KÉT A?" — không ai → qua', wallet: 100 },
+                { who: 't2', text: 'commit: ghi B = 0 · cửa soát hỏi "ai đụng KÉT B?" — không ai → qua', cls: 'bad', wallet: -100 },
+                { who: 'sys', text: 'luật "tổng ≥ 0" vỡ toang — log sạch bong, không một cú abort', cls: 'bad' }
+              ],
+              verdict: '❌ WRITE SKEW: writeset {A} ∩ {B} = ∅ nên máy soát first-committer-wins mù tịt. Mỗi bản án đều đúng trên ảnh chụp của nó — và cả hai cùng sai trên sổ thật.'
+            },
+            {
+              id: 'fu', short: 'FOR UPDATE', ok: true,
+              btn: '▶ Chạy kiểu FOR UPDATE',
+              steps: [
+                { who: 't1', text: 'SELECT A, B … FOR UPDATE → cả 2 két bị coi như T1 ĐÃ GHI', note: 'FOR UPDATE = tự khai "mấy món tôi vừa đọc, tính là tôi đụng" — kể cả chỉ để soát luật.' },
+                { who: 't2', text: '⏳ SELECT A, B … FOR UPDATE → đụng đúng 2 món T1 đang giữ → xếp hàng', cls: 'wait', note: 'Va chạm NHÂN TẠO thành hình: giờ hai giao dịch "cùng ghi" cả A lẫn B — hết tàng hình.' },
+                { who: 't1', text: 'soát 300 − 200 = 100 ✓ → ghi A = −100 → commit', wallet: 100 },
+                { who: 't2', text: 'tới lượt: đọc SỰ THẬT A=−100, B=200 → soát: 100 − 200 = −100 < 0', cls: 'warn' },
+                { who: 't2', text: 'lệnh rút bị LUẬT SÀN từ chối — két B còn nguyên 200', cls: 'ok' }
+              ],
+              verdict: '✓ Ép hai giao dịch nhìn thấy nhau: chỉ một đứa qua, đứa sau soát trên sự thật thay vì ảnh chụp cũ. Tổng chốt 100 — luật sàn sống. (Postgres SERIALIZABLE có SSI tự làm việc này; không có thì tự khai bằng FOR UPDATE.)'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'ba con quái nhà snapshot — đứa nào tự bị bắt?',
+            columns: [
+              { name: 'con quái', type: 'kiểu va chạm', key: '😈' },
+              { name: 'cửa soát FCW', type: 'bắt được?', key: '⚖️' },
+              { name: 'thuốc', type: '', key: '💊' }
+            ]
+          },
+          data_preview: [
+            ['Lost update', 'hai đứa GHI CÙNG món', '✓ tự bắt (bài 18)', ''],
+            ['Write skew', 'đọc chéo, ghi KHÁC món', '❌ lọt', 'FOR UPDATE / SSI'],
+            ['Hóa đơn trùng max+1', 'cùng đọc max, cùng chèn', '❌ lọt', 'PRIMARY KEY đỡ'],
+            ['Reader thuần', 'chỉ đọc snapshot', 'miễn tố tụng', 'không cần gì']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Cửa soát first-committer-wins vừa chặn đẹp lost update ở bài 18 — vì sao với write skew nó lại mù hoàn toàn?',
+            options: [
+              { id: 'a', text: 'Vì nó chỉ soát "có bản lạ dán vào món TÔI GHI không" — write skew ghi hai món KHÁC nhau nên writeset không giao; trong khi cái sai nằm ở chỗ mỗi đứa ĐỌC thứ đứa kia sắp đổi (rw-conflict chéo tạo vòng precedence)', correct: true, explanation: 'Đúng — sách chỉ mặt: snapshot isolation không theo dõi read-write conflict. Đó chính là kẽ hở SSI sinh ra để vá.' },
+              { id: 'b', text: 'Vì write skew chạy quá nhanh, cửa soát chưa kịp ghi sổ', correct: false, explanation: 'Sai — không có chuyện đua tốc độ: cửa soát chạy atomic lúc commit; nó nhìn thấy đầy đủ mọi version, chỉ là câu hỏi nó đặt ra không chạm tới kiểu va chạm này.' },
+              { id: 'c', text: 'Vì hai giao dịch chạy ở hai mức isolation khác nhau', correct: false, explanation: 'Sai — cả hai cùng snapshot isolation chuẩn chỉnh; write skew là lỗ hổng CỦA CHÍNH mức này, không phải do trộn mức.' },
+              { id: 'd', text: 'Vì luật "tổng ≥ 0" là ràng buộc ứng dụng, DB không hề biết — nên không gì cứu nổi', correct: false, explanation: 'Vế đầu đúng (DB không biết luật tổng) nhưng vế sau sai: FOR UPDATE, SSI, hay đưa luật vào CHECK/trigger đều cứu được — bài này tồn tại vì có thuốc.' }
+            ]
+          },
+          {
+            question: 'Chính xác thì FOR UPDATE làm gì để vá write skew?',
+            options: [
+              { id: 'a', text: 'Nó bảo hệ thống coi các dòng vừa ĐỌC như thể mình ĐÃ GHI — hai giao dịch cùng FOR UPDATE lên A và B thành "cùng ghi cả hai món", va chạm nhân tạo hiện hình và chỉ một đứa được commit', correct: true, explanation: 'Nguyên văn tinh thần sách: "treat data that are read as if they had been updated for purposes of concurrency control". Từ tàng hình thành hữu hình.' },
+              { id: 'b', text: 'Nó khóa X toàn bộ bảng vaults cho chắc', correct: false, explanation: 'Sai — FOR UPDATE chỉ đụng các dòng câu SELECT trả về (theo WHERE); khóa cả bảng là dùng dao mổ trâu, két seller khác vẫn phải được rút song song.' },
+              { id: 'c', text: 'Nó chỉ là hint tài liệu cho dev đọc, không đổi hành vi engine', correct: false, explanation: 'Sai — nó đổi hẳn hành vi concurrency control; chính vì thế mà thêm bừa vào câu đọc thuần sẽ CHẶN OAN người khác (grader bài này cũng sẽ mắng y như vậy).' },
+              { id: 'd', text: 'Nó nâng cả phiên làm việc lên mức SERIALIZABLE', correct: false, explanation: 'Sai — nó là con dao phẫu thuật cho ĐÚNG MỘT câu đọc, không đổi isolation level của phiên; SSI mới là giải pháp cấp-cả-phiên.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Cửa soát bắt được không?',
+          instruction: 'Dưới snapshot isolation chuẩn (first-committer-wins), va chạm nào TỰ bị bắt — va chạm nào lọt lưới?',
+          xp: 20,
+          chips: [
+            { id: 'w1', label: 'T5/T6 cùng sửa GIÁ Kiếm Rồng (bài 18)' },
+            { id: 'w2', label: 'Rút 2 két KHÁC nhau, luật nằm trên TỔNG' },
+            { id: 'w3', label: 'Hai lệnh cùng lấy max(số hóa đơn)+1' },
+            { id: 'w4', label: 'Hai bảo vệ cùng rời ca, luật "còn ≥1 người trực"' }
+          ],
+          bins: [
+            { id: 'bat', label: 'TỰ BẮT ✓' },
+            { id: 'lot', label: 'LỌT LƯỚI 😈' }
+          ],
+          solution: { w1: 'bat', w2: 'lot', w3: 'lot', w4: 'lot' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp hồ sơ bắt quái 4 bước cho write skew — có MỘT khối bịa (nghe rất chi là "yên tâm").',
+        blocks: [
+          { type: 'op', token: 'NHẬN DIỆN: hai giao dịch đọc CHÉO dữ liệu của nhau rồi mỗi đứa ghi MỘT MÓN KHÁC — quyết định dựa trên thứ kẻ kia sắp đổi', slot: 'ws-spot' },
+          { type: 'op', token: 'Hai giao dịch không đụng cùng dòng nào thì chắc chắn an toàn — khỏi soát gì nhau cho mất công', slot: 'ws-x' },
+          { type: 'op', token: 'VÌ SAO LỌT: cửa soát chỉ hỏi "ai dán bản mới vào món TÔI GHI?" — writeset không giao thì im re, dù đồ thị precedence đã có vòng', slot: 'ws-why' },
+          { type: 'op', token: 'BÙA FOR UPDATE: khai các món ĐỌC-để-quyết-định như thể đã GHI — va chạm nhân tạo hiện hình, chỉ một đứa qua', slot: 'ws-fix' },
+          { type: 'op', token: 'LƯỚI CUỐI: SSI theo dõi rw-conflict vào+ra rồi tự tế một đứa · ràng buộc PK/CHECK cho DB tự chặn ngoài snapshot', slot: 'ws-net' }
+        ],
+        drop_zones: [
+          { id: 'ws-spot', placeholder: 'Bước 1 — nhận mặt con quái?', accepts: ['op'], multi: false,
+            station: { icon: '😈', label: 'Nhận diện', sub: 'Bước 1', hint: 'Hai lệnh rút đêm qua: chúng ĐỌC gì của nhau, và GHI có chạm nhau không?' } },
+          { id: 'ws-why', placeholder: 'Bước 2 — vì sao cửa soát bài 18 im re?', accepts: ['op'], multi: false,
+            station: { icon: '🕳️', label: 'Kẽ hở', sub: 'Bước 2', hint: 'Nhớ lại câu hỏi DUY NHẤT mà first-committer-wins đặt ra lúc commit — nó hỏi về tập nào?' } },
+          { id: 'ws-fix', placeholder: 'Bước 3 — bùa nào ép quái hiện hình?', accepts: ['op'], multi: false,
+            station: { icon: '🔐', label: 'Bùa chú', sub: 'Bước 3', hint: 'Không đổi được câu hỏi của cửa soát — vậy đổi thứ gì để câu hỏi cũ bắt được quái mới?' } },
+          { id: 'ws-net', placeholder: 'Bước 4 — hết bùa thủ công thì ai đỡ?', accepts: ['op'], multi: false,
+            station: { icon: '🥅', label: 'Lưới cuối', sub: 'Bước 4', hint: 'Một giải pháp cấp-cả-phiên (Postgres 9.1+) và một lưới đỡ khai ngay trong schema.' } }
+        ],
+        expected_sql: 'NHẬN DIỆN: hai giao dịch đọc CHÉO dữ liệu của nhau rồi mỗi đứa ghi MỘT MÓN KHÁC — quyết định dựa trên thứ kẻ kia sắp đổi VÌ SAO LỌT: cửa soát chỉ hỏi "ai dán bản mới vào món TÔI GHI?" — writeset không giao thì im re, dù đồ thị precedence đã có vòng BÙA FOR UPDATE: khai các món ĐỌC-để-quyết-định như thể đã GHI — va chạm nhân tạo hiện hình, chỉ một đứa qua LƯỚI CUỐI: SSI theo dõi rw-conflict vào+ra rồi tự tế một đứa · ràng buộc PK/CHECK cho DB tự chặn ngoài snapshot',
+        expected_zones: {
+          'ws-spot': 'NHẬN DIỆN: hai giao dịch đọc CHÉO dữ liệu của nhau rồi mỗi đứa ghi MỘT MÓN KHÁC — quyết định dựa trên thứ kẻ kia sắp đổi',
+          'ws-why': 'VÌ SAO LỌT: cửa soát chỉ hỏi "ai dán bản mới vào món TÔI GHI?" — writeset không giao thì im re, dù đồ thị precedence đã có vòng',
+          'ws-fix': 'BÙA FOR UPDATE: khai các món ĐỌC-để-quyết-định như thể đã GHI — va chạm nhân tạo hiện hình, chỉ một đứa qua',
+          'ws-net': 'LƯỚI CUỐI: SSI theo dõi rw-conflict vào+ra rồi tự tế một đứa · ràng buộc PK/CHECK cho DB tự chặn ngoài snapshot'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 HỒ SƠ BẮT QUÁI KHÉP: nhận diện đọc-chéo-ghi-khác-món → kẽ hở writeset-không-giao → bùa FOR UPDATE → lưới SSI/PK. Khối "không đụng cùng dòng là an toàn" chính là BỊA — cả bài này tồn tại để chôn câu đó: hai lệnh rút không chạm nhau một dòng nào mà két thủng −100. An toàn hay không nằm ở chỗ bạn ĐỌC gì để quyết định, không phải bạn GHI vào đâu. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'ws-spot': 'Bước 1 — soi lại vụ án: T1 đọc những két nào, ghi két nào? T2 thì sao? Chỗ nào "chéo"?',
+          'ws-why': 'Bước 2 — cửa soát bài 18 chỉ đặt MỘT câu hỏi lúc commit. Câu đó nhắc tới readset hay writeset?',
+          'ws-fix': 'Bước 3 — nếu các món ĐỌC được "tính là ghi", thì writeset hai đứa còn rời nhau không?',
+          'ws-net': 'Bước 4 — một đằng engine tự theo dõi rw-conflict, một đằng schema tự chặn. Tên chúng là gì?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #60 — vá đúng một dòng:</strong> đây là câu đọc-để-soát-luật trong job rút gem — chính nó để write skew lọt qua đêm qua. Sửa cho các két vừa đọc được <strong>giữ chỗ</strong> tới hết giao dịch.',
+        challenge_type: 'bug_fix',
+        buggy: "SELECT vault_name, balance\nFROM vaults\nWHERE seller_id = 4102;",
+        buggy_line: 2,
+        expected_sql: 'SELECT vault_name, balance FROM vaults WHERE seller_id = 4102 FOR UPDATE;',
+        schema: {
+          table_name: 'vaults',
+          columns: [
+            { name: 'vault_id', type: 'VARCHAR', key: 'PK' },
+            { name: 'seller_id', type: 'INT', key: '🔑 idx_seller' },
+            { name: 'vault_name', type: 'VARCHAR', key: '' },
+            { name: 'balance', type: 'INT (gem)', key: '⚖️ luật: tổng ≥ 0' }
+          ],
+          data: [
+            ['V-01', '4102', 'KÉT QUẢNG CÁO (A)', '100'],
+            ['V-02', '4102', 'KÉT CHÍNH (B)', '200'],
+            ['V-03', '9', 'KÉT CHÍNH', '12500'],
+            ['V-04', '15', 'KÉT CHÍNH', '790'],
+            ['V-05', '12', 'KÉT QUẢNG CÁO', '320']
+          ]
+        },
+        context: {
+          scenario: 'Câu SELECT tự nó không sai một ly — nó trả về đúng 2 két của DragonForge. Cái sai là NGHỀ của nó: đây là cú đọc-để-quyết-định (đọc xong là rút tiền dựa trên con số vừa thấy), mà lại đọc TRẦN — không giữ chỗ, không khai báo. FOR UPDATE gắn vào cuối câu là lời khai đó.',
+          real_world: 'Django viết <code>Vault.objects.select_for_update().filter(seller_id=4102)</code>, Rails viết <code>lock</code>, JPA có <code>PESSIMISTIC_WRITE</code> — tất cả đẻ ra đúng câu SQL này. Luật bỏ túi: đọc chỉ để HIỂN THỊ thì đọc trần; đọc để QUYẾT ĐỊNH GHI thì giữ chỗ.',
+          steps: [
+            'Dòng tô đỏ: WHERE lọc đúng — nhưng câu lệnh kết thúc mà không giữ chỗ.',
+            'Gắn FOR UPDATE vào cuối câu (trước dấu chấm phẩy).',
+            'SELECT / FROM / WHERE không có tội — giữ nguyên.',
+            'Chạy thử: kết quả vẫn 2 két y hệt — thứ đổi là hành vi CONCURRENCY, không phải kết quả.'
+          ],
+          hint_explore: 'Chạy TRƯỚC khi sửa mà xem: 2 dòng két hiện ra ngon lành — bug này không nằm trong kết quả, nó nằm trong thứ mắt thường không thấy.',
+          expected: 'SELECT vault_name, balance FROM vaults WHERE seller_id = 4102 FOR UPDATE;'
+        },
+        hints: [
+          { level: 1, text: 'Kết quả query ĐÚNG mà vẫn là bug — vậy thứ thiếu không phải cột hay điều kiện. Câu đọc này còn thiếu lời khai gì?' },
+          { level: 2, text: 'Muốn các dòng vừa đọc được "tính như đã ghi" thì SQL có mệnh đề chuyên dụng — 2 từ, đứng cuối câu.' },
+          { level: 3, text: 'Gắn FOR UPDATE vào cuối: … WHERE seller_id = 4102 FOR UPDATE;' },
+          { level: 4, text: 'Đáp án: SELECT vault_name, balance FROM vaults WHERE seller_id = 4102 FOR UPDATE;' }
+        ],
+        success_message: 'TICKET #60 ĐÓNG — hai két giữ chỗ xong, write skew hết cửa tàng hình! 🔐 Nhưng khoan: FOR UPDATE giữ khóa tới hết giao dịch… vậy cái giao dịch có CON NGƯỜI ngồi giữa — mở sơ đồ ghế, ngắm nghía 5 phút rồi mới chốt — thì giữ kiểu gì? Giữ khóa 5 phút là treo cả sàn. Bài cuối Module 8: không giữ gì hết — để CÁI GHẾ tự nhớ nó đã đổi chủ mấy lần. VERSION NUMBER. 🎫',
+        xp_reward: 120
+      }
+    },
+
+    /* ── nc_20 — Ticket #61 · User Interaction & Version Numbers (Ch.18.9.3) ──
+     * PART_7 Bài 10: "seat booking / checkout version check" — giao dịch có
+     * con người bên trong: KHÔNG khóa nào sống qua thời-gian-suy-nghĩ (2PL giữ
+     * S cả khoang = "a very bad idea" nguyên văn); tách giao dịch + version
+     * number: đọc nhớ version, chốt = 1 giao dịch atomic so version (khớp →
+     * update + tăng 1; lệch → abort báo user) = first-committer-wins thủ công,
+     * Hibernate gọi conversations. Sim thứ 11 seat_visual (user chốt 2026-07-07
+     * đợt 11). Step-4 fill_blank 8/0/ABORT. KHÉP M8 — trophy 2 + ship v2.0. */
+    {
+      id: 'nc_20', index: 20,
+      title: 'Version Number — cái ghế nhớ nó đã đổi chủ mấy lần',
+      subtitle: 'Giao dịch có con người bên trong: không khóa nào sống qua thời-gian-suy-nghĩ — tách giao dịch, so version lúc chốt',
+      module: 8, module_title: 'Trading Floor — Giao dịch & Concurrency',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'seats — sơ đồ ghế chung kết (mẫu 4, hàng C)',
+          columns: ['seat_id', 'status', 'version'],
+          dataRows: [
+            ['C3', 'đã bán', '2'],
+            ['C4', 'trống', '7'],
+            ['C5', 'trống', '3'],
+            ['C6', 'đã bán', '5']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Arena · Ticket #61',
+        hook: 'Đêm chung kết Esports mở bán: 50.000 người cùng săn ghế, và mỗi người… <strong>suy nghĩ</strong>. Rủ bạn bè, so giá, đổi ý — tính bằng PHÚT, trong khi mọi cơ chế từ đầu module tính khóa bằng mili-giây. Giữ khóa kiểu bài 12 qua 5 phút suy nghĩ? Cả khoang ghế đóng băng vì một người mải nhắn tin. Ticket #61 — bài cuối của Trading Floor: <em>đừng giữ gì hết trong lúc người ta nghĩ</em>. Tách giao dịch làm đôi, và để mỗi cái ghế tự đeo một con số: nó đã đổi chủ mấy lần. 🎫'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'GIAO DỊCH CÓ USER Ở GIỮA: người nghĩ bằng phút — 2PL giữ S cả khoang ghế suốt lúc đó là "a very bad idea" (nguyên văn sách); timestamp/validation thì abort OAN cả khi người kia chọn ghế KHÁC → luật vàng: TÁCH giao dịch, không transaction nào ôm trọn một cú suy nghĩ',
+            'VERSION NUMBER: mỗi dòng đeo thêm cột version (khởi tạo 0); ĐỌC là giao dịch riêng — nhả khóa ngay, chỉ NHỚ version; CHỐT là một giao dịch atomic: so version hiện tại với version đã nhớ — khớp → update + version tăng 1; lệch → abort toàn bộ, báo user',
+            'Đây là first-committer-wins THỦ CÔNG ("optimistic concurrency control without read validation") — chạy được trên MỌI database, sống khỏe qua giao dịch dài cả giờ; Hibernate/ORM gọi là conversations và tự so version giùm lúc commit; giá phải trả: không đảm bảo serializability đầy đủ'
+          ],
+          intro: 'Phòng gửi xe không phát chìa khóa giữ chỗ — thay vào đó mỗi ô đeo một <strong>công-tơ đổi chủ</strong>. Bạn ngắm ô C4 thấy công-tơ chỉ 7 rồi đi cân nhắc thoải mái; lúc quay lại đưa xe vào, nhân viên chỉ hỏi một câu: "công-tơ còn 7 không?" Còn → xe vào, công-tơ nhảy 8. Đã nhảy → ai đó lấy ô này trong lúc bạn đi — mời chọn ô khác. Không ai từng giữ chỗ giùm bạn, và cũng không ai lấy được đè lên xe người khác.',
+          example: '12:00 — bạn đọc ghế C4: trống, <code>version = 7</code> (giao dịch đọc xong là nhả sạch khóa). 12:04 — MythicSlayer88 chốt C4 trước: version 7 → 8. 12:04:30 — bạn bấm chốt: <code>UPDATE … WHERE seat=\'C4\' AND version=7</code> → trúng <strong>0 dòng</strong> → giao dịch của bạn abort, app mời chọn ghế khác. Số 7 của bạn đã tuyệt chủng — và chính nó cứu bạn khỏi đè lên vé người khác.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-chair',
+            title: 'Vụ chọn ghế máy bay — theo đúng sách',
+            body: 'Nếu gom cả quy trình — từ lúc hiện sơ đồ ghế đến lúc user xác nhận — vào MỘT giao dịch 2PL, thì <strong>toàn bộ ghế của chuyến bay bị khóa S</strong> cho tới khi user chọn xong; user có thể nghĩ rất lâu, <em>thậm chí bỏ đi mà không hủy</em>. Sách phán một câu hiếm khi gay gắt đến thế: "such locking would be <strong>a very bad idea</strong>". Timestamp hay validation thì khỏi khóa nhưng lại abort user A cả khi B chọn ghế KHÁC — oan. Lối ra: tách giao dịch tại mỗi điểm user tương tác.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.3 — Concurrency Control Across User Interactions'
+          },
+          {
+            icon: 'fa-stopwatch-20',
+            title: 'Nghi thức chốt — hai bước, một khối atomic',
+            body: 'Lúc chốt, TẤT CẢ chạy trong một giao dịch DB duy nhất: với TỪNG dòng định sửa — (1) version hiện tại <strong>còn khớp</strong> version đã nhớ lúc đọc? → update + version <strong>tăng 1</strong>; (2) lệch dù chỉ một dòng → <strong>abort toàn bộ</strong>, rollback mọi update của cú chốt. Sách chỉ rõ: phép so version này chính là luật <em>first-committer-wins</em> của snapshot isolation — nhưng chạy thủ công nên dùng được cả khi giao dịch "sống" hàng giờ, điều snapshot thứ thiệt rất ngán (phải nhớ update của mọi transaction chồng lấn). Dùng timestamp thay số đếm cũng được, không đổi bản chất.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Bạn gặp pattern này mỗi ngày mà không biết tên: Hibernate/JPA có <code>@Version</code> — ORM tự so-và-tăng lúc commit (giao dịch có user ở giữa được gọi hẳn là <em>conversations</em>); HTTP có <strong>ETag + If-Match</strong> — sửa tài liệu qua API mà ETag lệch là ăn 412 Precondition Failed: đúng nghi thức version check, đổi tên miền. Lần tới thấy lỗi "phiên bản đã thay đổi, tải lại trang" — đó không phải bug, đó là 18.9.3 đang cứu dữ liệu của bạn.'
+          }
+        ],
+        seat_visual: {
+          eyebrow: 'SƠ ĐỒ GHẾ CHUNG KẾT — BẠN NHẮM C4 · VERSION CHECK vs KHÓA-SUỐT-5-PHÚT',
+          caption: 'Chạy CẢ HAI kịch bản: version check mất một cú click mà cả khoang sống; khóa kiểu cũ đóng băng tất cả vì một người mải nghĩ.',
+          stage: '🏟️ SÂN KHẤU CHUNG KẾT — GAMEHUB ARENA',
+          rows: ['A', 'B', 'C'],
+          cols: 8,
+          taken: ['A2', 'A6', 'B3', 'B7', 'C3', 'C6'],
+          modes: [
+            {
+              id: 'ver', short: 'VERSION CHECK', ok: true, result: 'mất 1 cú click — cả khoang sống',
+              btn: '▶ Kịch bản VERSION CHECK',
+              steps: [
+                { text: 'Bạn mở sơ đồ: ghế C4 trống · version = 7. Đọc là GIAO DỊCH RIÊNG — khóa nhả ngay tức khắc.', mine: 'C4', version: '👓 bạn đang ngắm C4 · version = 7', note: 'Con số 7 là "ảnh chụp" của bạn về cái ghế — nhớ kỹ, lát nữa nó là bằng chứng.' },
+                { text: 'Bạn suy nghĩ, rủ bạn bè… 4 phút. Khán giả khác đặt ầm ầm: A4, B5 có chủ.', take: ['A4', 'B5'], cls: 'warn', note: 'Không ai phải chờ bạn lấy một giây — vì bạn chẳng giữ khóa nào.' },
+                { text: 'MythicSlayer88 CHỐT đúng C4 → version C4: 7 → 8', steal: 'C4', version: '⚠️ C4 · version = 8 — con số 7 của bạn đã tuyệt chủng', cls: 'bad' },
+                { text: 'Bạn bấm CHỐT: UPDATE … WHERE seat=\'C4\' AND version=7 → trúng 0 dòng → ABORT', cls: 'bad', note: 'Lệnh của bạn tự trượt — không đè lên vé của ai. Đó chính là first-committer-wins, phiên bản thủ công.' },
+                { text: 'App: "C4 vừa có chủ — mời chọn ghế khác" → bạn chốt C5: version 3 khớp → ghi + tăng lên 4 ✓', mine: 'C5', version: '🎫 C5 là của bạn · version = 4', cls: 'ok' }
+              ],
+              verdict: '✓ Bạn mất một cú click — sàn không đóng băng một giây nào, và không vé nào bị đè. So-version-lúc-chốt chạy được trên MỌI database, sống khỏe cả khi user nghĩ nửa tiếng.'
+            },
+            {
+              id: 'lock', short: 'KHÓA 5 PHÚT', ok: false, result: 'cả khoang đóng băng',
+              btn: '▶ Kịch bản KHÓA KIỂU CŨ',
+              steps: [
+                { text: '2PL cổ điển: mở sơ đồ = khóa S CẢ KHOANG ghế — "đọc nhất quán" mà.', lock_all: true, cls: 'warn', note: 'Từng cái ghế trống giờ đeo một ổ khóa — của BẠN, người còn chưa biết mình muốn ngồi đâu.' },
+                { text: 'Bạn suy nghĩ 4 phút. MythicSlayer88 muốn C4? XẾP HÀNG. 200 khán giả khác? XẾP HÀNG.', cls: 'bad' },
+                { text: 'Bạn… bỏ đi ăn phở, quên luôn tab đặt vé. Khóa vẫn treo — chờ timeout.', cls: 'bad', note: 'Sách tả đúng cảnh này: user "may even just abandon the transaction without explicitly cancelling it".' },
+                { text: 'Cả khoang đóng băng 5 phút vì MỘT người mải nghĩ — sách phán: a very bad idea.', cls: 'bad' }
+              ],
+              verdict: '❌ Khóa được thiết kế để sống MILI-GIÂY — bắt nó sống qua thời-gian-suy-nghĩ của con người là án tử cho concurrency. Không giữ khóa, không ôm snapshot dài: TÁCH giao dịch + version number.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'seats — mỗi ghế đeo một công-tơ đổi chủ',
+            columns: [
+              { name: 'seat_id', type: 'VARCHAR', key: 'PK' },
+              { name: 'status', type: 'trống / đã bán', key: '' },
+              { name: 'version', type: 'INT — khởi tạo 0, mỗi lần ghi +1', key: '🔢' }
+            ]
+          },
+          data_preview: [
+            ['12:00 bạn đọc C4', 'trống · version 7', 'nhớ số 7, nhả khóa ngay', '👓'],
+            ['12:04 Mythic chốt C4', 'version 7 → 8', 'không chờ ai — bạn có giữ gì đâu', '✍️'],
+            ['12:04:30 bạn chốt', 'WHERE version=7 → 0 dòng', 'abort — không đè lên vé ai', '⛔'],
+            ['12:05 bạn chốt C5', 'version 3 khớp → ghi, lên 4', 'commit ✓', '🎫']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao KHÔNG cơ chế nào từ đầu module — 2PL, timestamp, validation — được phép ôm trọn một giao dịch có user suy nghĩ ở giữa?',
+            options: [
+              { id: 'a', text: '2PL sẽ giữ khóa suốt thời gian nghĩ (khoang ghế đóng băng, user có khi bỏ đi không hủy); timestamp/validation khỏi khóa nhưng abort OAN — B đặt ghế KHÁC cũng đủ giết giao dịch của A. Người nghĩ bằng phút, cơ chế tính bằng mili-giây', correct: true, explanation: 'Đúng trọn — sách điểm mặt từng cơ chế một trước khi đưa ra lối thoát: tách giao dịch tại mỗi điểm user tương tác.' },
+              { id: 'b', text: 'Vì trình duyệt không giữ được kết nối DB lâu đến thế', correct: false, explanation: 'Sai tầng — kết nối là chuyện app server, giữ 5 phút vẫn được về kỹ thuật; cái không chịu nổi là các GIAO DỊCH KHÁC bị chặn/abort trong 5 phút đó.' },
+              { id: 'c', text: 'Vì user có thể đổi ý, mà giao dịch DB không cho sửa lệnh giữa chừng', correct: false, explanation: 'Sai — trong giao dịch vẫn đọc/ghi thêm thoải mái tới lúc commit; vấn đề không phải "đổi ý được không" mà là cái giá cả sàn phải trả trong lúc chờ bạn đổi ý.' },
+              { id: 'd', text: 'Được chứ — miễn đặt timeout 5 phút cho khóa là xong', correct: false, explanation: 'Timeout chỉ là phao cứu sinh khỏi treo VĨNH VIỄN — 5 phút đóng băng vẫn nguyên 5 phút; và timeout xong giao dịch của chính bạn cũng chết. Không ai "vận hành" bằng phao.' }
+            ]
+          },
+          {
+            question: 'Lệnh chốt UPDATE … WHERE seat=\'C4\' AND version=7 trúng 0 dòng. Chuyện gì vừa xảy ra — và vì sao cả nghi thức phải gói trong MỘT giao dịch DB?',
+            options: [
+              { id: 'a', text: 'Version hiện tại đã ≠ 7 — ai đó ghi C4 sau lúc mình đọc → abort, báo user. Phải atomic vì giữa "so version" và "update" mà hở một khe thì kẻ khác chen vào đúng khe đó — lại lost update như thường', correct: true, explanation: 'Chuẩn — 0 dòng chính là tín hiệu "ảnh của bạn đã cũ"; và bài test-rồi-ghi nào cũng phải atomic, không thì cái test thành vô nghĩa.' },
+              { id: 'b', text: 'Ghế C4 đã bị XÓA khỏi bảng nên UPDATE không tìm thấy', correct: false, explanation: 'Sai — ghế còn nguyên, chỉ là version đã nhảy sang 8; WHERE version=7 lọc trượt CHÍNH XÁC như thiết kế. (Ghế bị xóa cũng ra 0 dòng thật, nhưng đó không phải chuyện của vụ này.)' },
+              { id: 'c', text: 'Lỗi mạng — cứ bấm chốt lại lần nữa với version=7 là được', correct: false, explanation: 'Nguy hiểm — retry với version CŨ thì đời nào trúng; muốn thử lại phải ĐỌC LẠI để lấy version mới (và thấy luôn ghế đã có chủ). Đó là lý do app bắt bạn quay về sơ đồ.' },
+              { id: 'd', text: 'DB tự động đổi sang ghế trống gần nhất cho mình', correct: false, explanation: 'Sai — DB không tự quyết giùm ai; nó chỉ trả "0 dòng" lạnh lùng, còn "mời chọn ghế khác" là tầng app tử tế với bạn.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Số phận cú chốt',
+          instruction: 'Nghi thức: chốt = UPDATE … WHERE version = <số đã đọc>. Cú chốt nào COMMIT, cú nào ABORT?',
+          xp: 20,
+          chips: [
+            { id: 'v1', label: 'Đọc C4 v=7 · lúc chốt C4 vẫn v=7' },
+            { id: 'v2', label: 'Đọc C4 v=7 · lúc chốt C4 đã v=8' },
+            { id: 'v3', label: 'Đọc C4 v=7 · C4 bị hủy-đặt rồi đặt lại, giờ v=9' },
+            { id: 'v4', label: 'Đọc C5 v=3 · lúc chốt C5 vẫn v=3' }
+          ],
+          bins: [
+            { id: 'ok', label: 'COMMIT ✓' },
+            { id: 'ab', label: 'ABORT 🔁' }
+          ],
+          solution: { v1: 'ok', v2: 'ab', v3: 'ab', v4: 'ok' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp nghi thức đặt ghế 4 bước của 18.9.3 — có MỘT khối bịa (nghe rất chi là "chắc chắn").',
+        blocks: [
+          { type: 'op', token: 'TÁCH: đọc sơ đồ là GIAO DỊCH RIÊNG — nhả khóa ngay tức khắc, user cứ từ từ suy nghĩ', slot: 'vn-split' },
+          { type: 'op', token: 'NHỚ: ghi lại version của từng dòng mình định sửa — con số đó là ảnh chụp của mình về cái ghế', slot: 'vn-mem' },
+          { type: 'op', token: 'Giữ nguyên khóa S trên ghế suốt lúc suy nghĩ — 5 phút có là bao, chắc chắn là trên hết', slot: 'vn-x' },
+          { type: 'op', token: 'CHỐT ATOMIC: một giao dịch duy nhất — so version hiện tại với số đã nhớ, khớp thì update + version tăng 1', slot: 'vn-check' },
+          { type: 'op', token: 'LỆCH: abort toàn bộ cú chốt, báo user tình hình mới — không bao giờ đè lên vé người khác', slot: 'vn-abort' }
+        ],
+        drop_zones: [
+          { id: 'vn-split', placeholder: 'Bước 1 — xử sao với thời gian user suy nghĩ?', accepts: ['op'], multi: false,
+            station: { icon: '✂️', label: 'Tách giao dịch', sub: 'Bước 1', hint: 'Không transaction nào được ôm trọn một cú suy nghĩ — vậy cú ĐỌC sơ đồ phải sống kiểu gì?' } },
+          { id: 'vn-mem', placeholder: 'Bước 2 — nhả hết khóa rồi thì mang theo gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔢', label: 'Nhớ version', sub: 'Bước 2', hint: 'Không giữ khóa, không giữ snapshot — thứ duy nhất bạn cần bỏ túi là MỘT CON SỐ mỗi dòng.' } },
+          { id: 'vn-check', placeholder: 'Bước 3 — lúc chốt, nghi thức là gì?', accepts: ['op'], multi: false,
+            station: { icon: '⚖️', label: 'So & tăng', sub: 'Bước 3', hint: 'So cái gì với cái gì — và vì sao cả bài so-rồi-ghi phải nằm trong MỘT giao dịch?' } },
+          { id: 'vn-abort', placeholder: 'Bước 4 — số không khớp thì sao?', accepts: ['op'], multi: false,
+            station: { icon: '🔁', label: 'Trượt thì sao', sub: 'Bước 4', hint: 'Trúng 0 dòng không phải lỗi mạng — nó là thông điệp. Đọc thông điệp đó thành hành động gì?' } }
+        ],
+        expected_sql: 'TÁCH: đọc sơ đồ là GIAO DỊCH RIÊNG — nhả khóa ngay tức khắc, user cứ từ từ suy nghĩ NHỚ: ghi lại version của từng dòng mình định sửa — con số đó là ảnh chụp của mình về cái ghế CHỐT ATOMIC: một giao dịch duy nhất — so version hiện tại với số đã nhớ, khớp thì update + version tăng 1 LỆCH: abort toàn bộ cú chốt, báo user tình hình mới — không bao giờ đè lên vé người khác',
+        expected_zones: {
+          'vn-split': 'TÁCH: đọc sơ đồ là GIAO DỊCH RIÊNG — nhả khóa ngay tức khắc, user cứ từ từ suy nghĩ',
+          'vn-mem': 'NHỚ: ghi lại version của từng dòng mình định sửa — con số đó là ảnh chụp của mình về cái ghế',
+          'vn-check': 'CHỐT ATOMIC: một giao dịch duy nhất — so version hiện tại với số đã nhớ, khớp thì update + version tăng 1',
+          'vn-abort': 'LỆCH: abort toàn bộ cú chốt, báo user tình hình mới — không bao giờ đè lên vé người khác'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 NGHI THỨC 4 BƯỚC KHẮC XONG: tách giao dịch → nhớ version → so-và-tăng atomic → trượt thì báo lại. Khối "giữ khóa S suốt lúc nghĩ" là BỊA — và là câu sách mắng thẳng nhất cả chương: a very bad idea. 5 phút "có là bao" nhân với 50.000 khán giả là cả đêm mở bán sập tiệm; chưa kể người giữ khóa có khi đã bỏ đi ăn phở. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'vn-split': 'Bước 1 — sách cấm transaction nào "span a user interaction". Vậy cú đọc đứng chung hay đứng riêng?',
+          'vn-mem': 'Bước 2 — buông hết khóa rồi, lấy gì lát nữa làm bằng chứng "ghế chưa đổi chủ"?',
+          'vn-check': 'Bước 3 — nghi thức hai-bước-một-khối: so gì, rồi tăng gì? Vì sao không được hở khe ở giữa?',
+          'vn-abort': 'Bước 4 — WHERE version=7 trúng 0 dòng. Hủy một phần hay hủy toàn bộ? Rồi nói gì với user?'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #61 — điền nốt biên bản đặt ghế:</strong> hồ sơ cú chốt hụt của bạn đêm chung kết — 3 ô trống chờ con số và phán quyết.',
+        challenge_type: 'fill_blank',
+        template: "-- HO SO DAT GHE — GameHub Arena, chung ket Esports\n-- luat 18.9.3: doc = giao dich rieng (nha khoa ngay)\n--              chot = UPDATE ... WHERE version = <so da doc> (atomic)\n\n-- 12:00:00  ban doc ghe C4: trong · version = 7\n-- 12:04:00  MythicSlayer88 chot C4 truoc (ghi + tang version)\n--   version cua C4 gio la: ____\n\n-- 12:04:30  ban bam CHOT: UPDATE ... WHERE seat='C4' AND version=7\n--   so dong trung: ____\n\n-- phan quyet cho cu chot cua ban (COMMIT/ABORT): ____",
+        blanks: [
+          { id: 'b1', hint: '? version', expected: '8' },
+          { id: 'b2', hint: '? dòng', expected: '0' },
+          { id: 'b3', hint: 'COMMIT / ABORT', expected: 'ABORT' }
+        ],
+        schema: {
+          table_name: 'seats — hàng C lúc 12:04:30',
+          columns: [
+            { name: 'seat_id', type: 'VARCHAR', key: 'PK' },
+            { name: 'status', type: '', key: '' },
+            { name: 'version', type: 'công-tơ đổi chủ', key: '🔢' }
+          ],
+          data: [
+            ['C3', 'đã bán', '2'],
+            ['C4', 'ĐÃ BÁN (Mythic, 12:04)', '❓ (7 + 1)'],
+            ['C5', 'trống', '3'],
+            ['C6', 'đã bán', '5']
+          ]
+        },
+        context: {
+          scenario: 'Đúng cú chốt hụt bạn vừa xem trong sim — giờ tự tay điền biên bản: version sau cú ghi của Mythic, số dòng lệnh UPDATE của bạn trúng, và phán quyết. Ba con số này là toàn bộ linh hồn của 18.9.3.',
+          real_world: 'Biên bản này chính là log bạn sẽ đọc khi Hibernate ném OptimisticLockException hay API trả 412 Precondition Failed: version kỳ vọng, version thực tế, 0 rows affected → abort + mời làm lại. Đọc được nó là debug được mọi hệ đặt chỗ.',
+          steps: [
+            'Mỗi cú ghi thành công làm version TĂNG 1 — Mythic ghi lên ghế đang v=7.',
+            'UPDATE của bạn lọc WHERE version=7 — bảng còn dòng nào thỏa không?',
+            'Luật bước 4: trúng 0 dòng → hủy toàn bộ cú chốt.',
+            'Điền 8 / 0 / ABORT.'
+          ],
+          hint_explore: 'Panel trái là hàng C lúc 12:04:30 — ô ❓ của C4 đã gợi sẵn phép tính.',
+          expected: '8 · 0 · ABORT'
+        },
+        hints: [
+          { level: 1, text: 'Nghi thức ghi: update + version TĂNG 1. Mythic ghi lên ghế version 7 — công-tơ nhảy tới đâu?' },
+          { level: 2, text: 'Lệnh của bạn đòi version=7 — trong bảng còn dòng C4 nào mang số 7 nữa không? Đếm đi.' },
+          { level: 3, text: 'Trúng 0 dòng = ảnh chụp của bạn đã cũ. Luật bước 4 phán gì?' },
+          { level: 4, text: 'Đáp án: 8 · 0 · ABORT.' }
+        ],
+        success_message: 'TICKET #61 ĐÓNG — và đó là mảnh ghép CUỐI CÙNG của Trading Floor! 🏆 MARKETPLACE v2.0 xuất xưởng: khóa S/X, 2PL, wait-for graph, cây intention, bẫy lá index, bàn nháp optimistic, sổ version MVCC, bùa FOR UPDATE, và cái ghế tự nhớ đời mình — mười bài, một sàn giao dịch sống sót được 50.000 người cùng bấm. Hồ sơ chót bên dưới: DEGREE-TWO & CURSOR STABILITY — thế giới thật đôi khi cố tình nới luật. Nghỉ tay một ván — Module 9 mở màn bằng tiếng RẦM: máy chủ sập giữa đêm flash-sale. RECOVERY. 💥',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_degree_two']
     }
 
   ],
@@ -4667,7 +5131,48 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1 + 18.6-18.8 — tổng kết Module 8 nửa đầu',
-      cta: { label: 'Về Trading Floor — hẹn bài 19: Write Skew & FOR UPDATE', href: '/courses/db_design_nc' }
+      cta: { label: 'Bài 19 — Write Skew & FOR UPDATE: con quái lọt lưới soát', href: '/lesson/db_design_nc?lesson=19' }
+    },
+
+    /* Card F (PART_7, sau bài 20 — khép M8) — Degree-Two Consistency & Cursor
+     * Stability (Ch.18.9.1-18.9.2): cố tình nới luật đổi tốc độ; = read
+     * committed; quote đắt: index scan thấy 2 bản hoặc KHÔNG bản nào. */
+    {
+      id: 'nc_card_degree_two',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 20 — KHÉP MODULE 8',
+      title: 'Degree-Two & Cursor Stability — cố tình nới luật để thở',
+      accent: '#FB7185',
+      back_href: '/courses/db_design_nc',
+      intro: 'Cả module bạn học cách GIỮ serializability. Hồ sơ chót này về điều ngược lại: thế giới thật đôi khi <strong>cố tình buông nó</strong> — nới luật khóa để đổi lấy tốc độ, và chấp nhận đọc trùng đọc lệch như một cái giá có tính toán.',
+      sections: [
+        {
+          icon: 'fa-unlock',
+          heading: 'Degree-two: nhả S tùy thích, giữ X tới cùng',
+          body: 'Vẫn hai khóa S/X quen mặt, nhưng <strong>bỏ luật hai pha</strong>: khóa S nhả lúc nào cũng được, xin lúc nào cũng được — chỉ khóa X là phải giữ tới commit/abort. Giữ X tới cùng nghĩa là không ai đọc được đồ chưa commit → <strong>không cascading abort</strong>, và đây chính là một cách hiện thực mức <em>read committed</em>. Cái giá: đọc cùng một dòng hai lần có thể ra HAI giá trị (T32 đọc Q trước và sau khi T33 ghi — Fig 18.21). Serializability? Không hứa hẹn gì.'
+        },
+        {
+          icon: 'fa-eye-slash',
+          heading: 'Cú quét index ma quái — theo đúng sách',
+          body: 'Dưới degree-two, một cú scan theo index có thể nhìn thấy <strong>HAI phiên bản của cùng một dòng</strong> — hoặc kỳ dị hơn: <strong>KHÔNG thấy phiên bản nào</strong>, dù dòng đó luôn tồn tại. Dòng bị update đổi khóa index từ v1 sang v2: scan ghé node v1 <em>sau khi</em> bản cũ bị xóa, rồi ghé node v2 <em>trước khi</em> bản mới được chèn → dòng bốc hơi khỏi kết quả. Chạy 2PL tử tế thì chuyện này không bao giờ xảy ra — đây là cái giá thật của việc nới luật, không phải chuyện lý thuyết dọa nhau.',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.1 — Degree-Two Consistency'
+        },
+        {
+          icon: 'fa-computer-mouse',
+          heading: 'Cursor stability — và lời khuyên chốt của sách',
+          body: 'Chương trình lướt từng dòng bằng con trỏ (cursor) thì khỏi khóa cả bảng: chỉ <strong>S trên đúng dòng đang xử</strong> (xử xong nhả liền), dòng nào SỬA thì X giữ tới commit. Dùng cho bảng nóng bị truy cập dày đặc — đổi máu lấy tốc độ, và app phải TỰ gánh phần đúng đắn. Nhưng sách chốt một câu đáng đóng khung: khi database có snapshot isolation, đó là <strong>lựa chọn tốt hơn cả degree-two lẫn cursor stability</strong> — concurrency ngang ngửa mà rủi ro thấp hơn hẳn.'
+        }
+      ],
+      quiz: {
+        question: 'Job báo cáo chạy degree-two consistency đọc ví DragonForge HAI lần trong cùng giao dịch: lần 1 ra 500, lần 2 ra 550. Có bug không?',
+        options: [
+          { label: 'Không bug — S nhả ngay sau mỗi cú đọc nên giữa hai lần đọc, giao dịch khác chen vào ghi 550 và commit là hợp lệ; nonrepeatable read là cái giá ĐÃ ĐƯỢC báo trước của mức này (read committed)', correct: true, feedback: '✓ Chuẩn — degree-two chỉ hứa "không đọc đồ chưa commit", không hứa hai lần đọc giống nhau. Muốn giống nhau: lên repeatable read/snapshot, hoặc quay về 2PL.' },
+          { label: 'Bug của engine — khóa S lẽ ra phải chặn mọi cú ghi cho tới khi báo cáo xong', correct: false, feedback: '✗ Đó là mô tả của 2PL — degree-two SINH RA để không phải làm thế: S nhả tức thì sau cú đọc, writer chen vào là tính năng, không phải lỗi.' },
+          { label: 'Bug của báo cáo — 550 là dữ liệu chưa commit, đọc phải ra 500', correct: false, feedback: '✗ Ngược rồi — X giữ tới commit nên 550 mà đọc được thì CHẮC CHẮN đã commit; đọc-bẩn chính là thứ duy nhất degree-two thề không phạm.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.1-18.9.2 · PART_7 Card F — Degree-Two / Cursor Stability',
+      cta: { label: 'Về Trading Floor — Module 9 sắp mở: RECOVERY 💥', href: '/courses/db_design_nc' }
     }
   ]
 };

@@ -1806,6 +1806,67 @@
         '<text x="360" y="203" text-anchor="middle" fill="#fcd34d" font-size="9">2 updater cùng sửa một món → đứa DÁN TRƯỚC thắng, đứa validate sau ABORT — hết cửa lost update</text>' +
       '</g>' +
       '<text x="360" y="228" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">writer dán bản mới — reader ngắm bản cũ: hai đường không cắt nhau</text>' +
+      '</svg>',
+
+    /* nc_19 — write skew: hai bài soát đều đậu mà tổng két âm; FOR UPDATE ép va chạm (Ticket #60) */
+    nc_19: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hai giao dịch rút tiền hai két khác nhau, mỗi bên soát luật tổng không âm trên ảnh chụp riêng đều thấy ổn, cùng commit thì tổng thành âm 100; FOR UPDATE coi món đã đọc như đã ghi nên chỉ một giao dịch qua">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Write skew — HAI bài soát đều đậu, cái két vẫn thủng</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">luật sàn: TỔNG 2 két ≥ 0 · két A = 100 · két B = 200 · hai đầu cùng rút 200</text>' +
+        // Card trái — vụ án
+        '<rect x="36" y="56" width="310" height="132" rx="9" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="191" y="76" text-anchor="middle" fill="#fca5a5" font-weight="700" font-size="10">😈 SNAPSHOT — CỬA SOÁT MÙ</text>' +
+        '<text x="191" y="98" text-anchor="middle" fill="#aebfd6" font-size="8.5">T1 soát ảnh chụp: 300 − 200 = 100 ✓ → ghi két A</text>' +
+        '<text x="191" y="115" text-anchor="middle" fill="#aebfd6" font-size="8.5">T2 soát ảnh chụp: 300 − 200 = 100 ✓ → ghi két B</text>' +
+        '<text x="191" y="132" text-anchor="middle" fill="#fbbf24" font-size="8.5">writeset {A} ∩ {B} = ∅ → chẳng ai bị abort</text>' +
+        '<text x="191" y="157" text-anchor="middle" fill="#f87171" font-weight="800" font-size="14">TỔNG CHỐT: −100 ?!</text>' +
+        '<text x="191" y="177" text-anchor="middle" fill="#7f93ad" font-size="8">đọc CHÉO nhau, ghi KHÁC món — máy soát không thấy gì</text>' +
+        // Card phải — thuốc
+        '<rect x="372" y="56" width="312" height="132" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="528" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🔐 FOR UPDATE — VA CHẠM NHÂN TẠO</text>' +
+        '<rect x="404" y="88" width="248" height="24" rx="6" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.45)"/>' +
+        '<text x="528" y="103" text-anchor="middle" fill="#6ee7b7" font-size="8.5">SELECT … WHERE seller=4102 FOR UPDATE</text>' +
+        '<text x="528" y="128" text-anchor="middle" fill="#aebfd6" font-size="8.5">món ĐỌC bị coi như ĐÃ GHI → hai bên "cùng ghi" A lẫn B</text>' +
+        '<text x="528" y="145" text-anchor="middle" fill="#fcd34d" font-size="8.5">→ chỉ MỘT đứa qua · T2 làm lại, thấy tổng 100 → bị từ chối</text>' +
+        '<text x="528" y="168" text-anchor="middle" fill="#34d399" font-weight="800" font-size="12">TỔNG CHỐT: 100 ✓</text>' +
+        '<text x="528" y="182" text-anchor="middle" fill="#7f93ad" font-size="8">SSI (Postgres 9.1+) tự bắt — hoặc tự khai FOR UPDATE</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">cửa soát chỉ nhìn "CÙNG MÓN" — FOR UPDATE ép nó nhìn cả những món bạn đã đọc</text>' +
+      '</svg>',
+
+    /* nc_20 — version number: ghế nhớ mình đổi chủ mấy lần; không khóa nào sống qua lúc user nghĩ (Ticket #61) */
+    nc_20: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sơ đồ ghế đêm chung kết: bạn đọc ghế C4 version 7 rồi suy nghĩ, người khác chốt trước làm version thành 8; lệnh chốt của bạn so version 7 trúng 0 dòng nên bị hủy, app mời chọn ghế khác — không khóa nào bị giữ trong lúc bạn nghĩ">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Version number — cái ghế nhớ nó đã đổi chủ mấy lần</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">chung kết GameHub Arena · người thật suy nghĩ bằng PHÚT — khóa thì tính bằng ms</text>' +
+        // Card trái — sơ đồ ghế mini
+        '<rect x="36" y="56" width="290" height="132" rx="9" fill="#0e1726" stroke="rgba(148,163,184,.5)" stroke-width="1.3"/>' +
+        '<text x="181" y="74" text-anchor="middle" fill="#aebfd6" font-weight="700" font-size="9.5">🏟️ 12:00 — BẠN NGẮM GHẾ C4 (version 7)</text>' +
+        // hàng ghế: 5 ô, C4 highlight
+        '<rect x="66" y="86" width="38" height="26" rx="5" fill="rgba(148,163,184,.08)" stroke="rgba(148,163,184,.4)"/>' +
+        '<text x="85" y="103" text-anchor="middle" fill="#7f93ad" font-size="8.5">C2</text>' +
+        '<rect x="112" y="86" width="38" height="26" rx="5" fill="rgba(248,113,113,.12)" stroke="rgba(248,113,113,.5)"/>' +
+        '<text x="131" y="103" text-anchor="middle" fill="#fca5a5" font-size="8.5">C3</text>' +
+        '<rect x="158" y="86" width="38" height="26" rx="5" fill="rgba(52,211,153,.14)" stroke="rgba(52,211,153,.7)" stroke-width="1.6"/>' +
+        '<text x="177" y="103" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="8.5">C4</text>' +
+        '<rect x="204" y="86" width="38" height="26" rx="5" fill="rgba(148,163,184,.08)" stroke="rgba(148,163,184,.4)"/>' +
+        '<text x="223" y="103" text-anchor="middle" fill="#7f93ad" font-size="8.5">C5</text>' +
+        '<rect x="250" y="86" width="38" height="26" rx="5" fill="rgba(248,113,113,.12)" stroke="rgba(248,113,113,.5)"/>' +
+        '<text x="269" y="103" text-anchor="middle" fill="#fca5a5" font-size="8.5">C6</text>' +
+        '<text x="181" y="132" text-anchor="middle" fill="#fcd34d" font-size="8.5">12:04 — bạn còn đang rủ bạn bè…</text>' +
+        '<text x="181" y="148" text-anchor="middle" fill="#f87171" font-size="8.5">MythicSlayer88 CHỐT C4 → version 7 → 8</text>' +
+        '<text x="181" y="171" text-anchor="middle" fill="#7f93ad" font-size="8">suốt 4 phút đó: KHÔNG một khóa nào của bạn còn sống</text>' +
+        // Card phải — hồ sơ version check
+        '<rect x="352" y="56" width="332" height="132" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="518" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">🎫 12:04:30 — BẠN BẤM CHỐT</text>' +
+        '<rect x="380" y="86" width="276" height="24" rx="6" fill="rgba(129,140,248,.08)" stroke="rgba(129,140,248,.45)"/>' +
+        '<text x="518" y="101" text-anchor="middle" fill="#a5b4fc" font-size="8.5">UPDATE … WHERE seat=\'C4\' AND version=7</text>' +
+        '<text x="518" y="128" text-anchor="middle" fill="#f87171" font-weight="800" font-size="13">trúng 0 dòng → ABORT</text>' +
+        '<text x="518" y="148" text-anchor="middle" fill="#aebfd6" font-size="8.5">version khớp mới được ghi (+1) — first committer wins thủ công</text>' +
+        '<text x="518" y="165" text-anchor="middle" fill="#34d399" font-size="8.5">app: "C4 vừa có chủ — mời chọn ghế khác" → bạn chốt C5 ✓</text>' +
+        '<text x="518" y="180" text-anchor="middle" fill="#7f93ad" font-size="8">Hibernate gọi đây là conversations — optimistic không soát read</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không khóa nào được sống qua thời-gian-suy-nghĩ của con người — cái ghế tự nhớ giùm</text>' +
       '</svg>'
   };
 
@@ -3126,6 +3187,107 @@
     });
   }
 
+  /* ── Seat Visual (nc_20 — seat map version check, sim thứ 11) ──
+   * PART_7 Bài 10: "seat booking / checkout version check" (Ch.18.9.3). Data:
+   * step_1.seat_visual = { eyebrow, caption, stage, rows: ['A','B','C'], cols: 8,
+   *   taken: ['A5','B3'], modes: [{ id, short, btn, ok, verdict, steps: [{ text,
+   *     mine?, take?: [ids], steal?, lock_all?, version?, cls?, note? }] }] }.
+   * Ghế: trống (xám) · có chủ (đỏ) · CỦA BẠN (xanh) · bị cướp (steal — đỏ nháy)
+   * · lock_all = 2PL đóng băng cả khoang (🔒 mờ). Mỗi mode reset lưới về taken
+   * gốc. User chốt 2026-07-07 (đợt 11): 2 mode VERSION-CHECK / KHÓA-5-PHÚT. */
+  function renderSeatVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.rows) || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, results: {} };
+
+    function gridHtml() {
+      var h = '';
+      cfg.rows.forEach(function (r) {
+        for (var c = 1; c <= cfg.cols; c++) {
+          var id = r + c;
+          var taken = (cfg.taken || []).indexOf(id) !== -1;
+          h += '<div class="st-seat' + (taken ? ' st-seat--taken' : '') + '" data-st-seat="' + id + '">' + id + '</div>';
+        }
+      });
+      return h;
+    }
+
+    mount.innerHTML =
+      '<section class="sort-visual txn-visual st-visual" aria-label="Sơ đồ ghế: đặt chỗ bằng version number — không khóa nào sống qua thời gian người dùng suy nghĩ">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'SƠ ĐỒ GHẾ — VERSION CHECK') + '</span></div>' +
+        '<div class="st-stage">' + escapeHtml(cfg.stage || '🏟️ SÂN KHẤU') + '</div>' +
+        '<div class="st-grid" id="st-grid" style="grid-template-columns:repeat(' + cfg.cols + ',1fr)">' + gridHtml() + '</div>' +
+        '<div class="st-version" id="st-version">&nbsp;</div>' +
+        '<div class="tx-lines st-log" id="st-log"></div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="st-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="st-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="st-status">Chung kết sắp mở bán — chọn KỊCH BẢN đặt ghế rồi bấm từng nhịp.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function seat(id) { return mount.querySelector('.st-seat[data-st-seat="' + id + '"]'); }
+    function setStatus(t) { $('st-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('st-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.label)) : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0;
+      $('st-grid').innerHTML = gridHtml();
+      $('st-grid').classList.remove('st-grid--frozen');
+      $('st-log').innerHTML = '';
+      $('st-version').innerHTML = '&nbsp;';
+      cfg.modes.forEach(function (mm) {
+        $('st-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id);
+      });
+      setBtn('Nhịp 1 / ' + m.steps.length, false);
+      setStatus('Kịch bản <strong>' + escapeHtml(m.short || m.id) + '</strong> — sơ đồ vừa mở. Bấm từng nhịp.');
+    }
+    cfg.modes.forEach(function (m) {
+      $('st-mode-' + m.id).addEventListener('click', function () { pickMode(m); });
+    });
+
+    $('st-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderSeatVisual(mount, cfg); return; }
+      var m = st.mode, step = m.steps[st.i];
+      if (!step) return;
+      $('st-log').innerHTML += '<div class="tx-line' + (step.cls ? ' tx-line--' + step.cls : '') + '">' + escapeHtml(step.text) + '</div>';
+      (step.take || []).forEach(function (id) { var s = seat(id); if (s) s.classList.add('st-seat--taken'); });
+      if (step.steal) {
+        var sv = seat(step.steal);
+        if (sv) { sv.classList.remove('st-seat--mine'); sv.classList.add('st-seat--taken', 'st-seat--stolen'); }
+      }
+      if (step.mine) {
+        mount.querySelectorAll('.st-seat--mine').forEach(function (el) { el.classList.remove('st-seat--mine'); });
+        var mv = seat(step.mine); if (mv) mv.classList.add('st-seat--mine');
+      }
+      if (step.lock_all) $('st-grid').classList.add('st-grid--frozen');
+      if (step.version) $('st-version').innerHTML = step.version;
+      st.i++;
+      if (st.i < m.steps.length) {
+        setBtn('Nhịp ' + (st.i + 1) + ' / ' + m.steps.length, false);
+        if (step.note) setStatus(step.note);
+      } else {
+        st.results[m.id] = { label: m.result || 'xong' };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) {
+          setBtn('↺ Chạy lại từ đầu', false);
+          st.mode = 'reset';
+          setStatus((m.verdict || '') + '<br>' + soKeo());
+        } else {
+          setBtn('✓ ' + (m.short || m.id) + ' xong', true);
+          setStatus((m.verdict || '') + ' Giờ chạy kịch bản còn lại mà so.');
+        }
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -3366,6 +3528,9 @@
         pvMount.hidden = false;
       } else if (s1.mvcc_visual) {
         renderMvccVisual(pvMount, s1.mvcc_visual);
+        pvMount.hidden = false;
+      } else if (s1.seat_visual) {
+        renderSeatVisual(pvMount, s1.seat_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -7006,6 +7171,15 @@
       errors.push(`ORDER BY không khớp: bạn viết "${uClauses.orderBy}" nhưng đáp án cần "${eClauses.orderBy}".`);
     }
 
+    /* NC đợt 11 2026-07-07 (nc_19 dạy FOR UPDATE): trước đây regex WHERE nuốt
+     * "FOR UPDATE" vào đuôi WHERE → user thiếu FOR UPDATE nhận "WHERE không khớp"
+     * vừa lộ nguyên đáp án vừa gọi sai tên vấn đề. Giờ FOR UPDATE là clause riêng. */
+    if (eClauses.forUpdate && !uClauses.forUpdate) {
+      errors.push('Thiếu FOR UPDATE — câu đọc không giữ chỗ: hai giao dịch chồng lấn sẽ lại lách qua cửa soát y như cũ (write skew).');
+    } else if (!eClauses.forUpdate && uClauses.forUpdate) {
+      errors.push('Đáp án KHÔNG có FOR UPDATE — gắn khóa ghi vào câu đọc thuần sẽ chặn oan các giao dịch khác.');
+    }
+
     if (errors.length === 0) {
       // Clauses match but exact string differs (e.g. extra spaces, optional semicolons)
       return { correct: true, feedback: 'Câu query hợp lệ về mặt logic.' };
@@ -7035,7 +7209,7 @@
   }
 
   function extractClauses(sql) {
-    const result = { select: null, from: null, where: null, groupBy: null, having: null, orderBy: null };
+    const result = { select: null, from: null, where: null, groupBy: null, having: null, orderBy: null, forUpdate: false };
     const upper = sql.toUpperCase();
 
     // SELECT ... FROM
@@ -7046,9 +7220,11 @@
     const fromMatch = upper.match(/FROM\s+(\w+)/i);
     if (fromMatch) result.from = fromMatch[1].trim().toUpperCase();
 
-    // WHERE
-    const whereMatch = upper.match(/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|;|$)/i);
+    // WHERE — FOR UPDATE là stop-token (NC đợt 11: tách clause riêng, đừng nuốt vào WHERE)
+    const whereMatch = upper.match(/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|\s+FOR\s+UPDATE|;|$)/i);
     if (whereMatch) result.where = whereMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
+
+    result.forUpdate = /\bFOR\s+UPDATE\b/.test(upper);
 
     // M5-FIX 2026-07-04 (probe tc_06 tóm được): clause-analysis trước đây KHÔNG so
     // GROUP BY/HAVING/ORDER BY → nộp ROLLUP cho đề CUBE vẫn "hợp lệ về mặt logic".
@@ -7058,7 +7234,7 @@
     const havingMatch = upper.match(/HAVING\s+(.+?)(?:\s+ORDER|\s+LIMIT|;|$)/i);
     if (havingMatch) result.having = havingMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
 
-    const orderMatch = upper.match(/ORDER\s+BY\s+(.+?)(?:\s+LIMIT|;|$)/i);
+    const orderMatch = upper.match(/ORDER\s+BY\s+(.+?)(?:\s+LIMIT|\s+FOR\s+UPDATE|;|$)/i);
     if (orderMatch) result.orderBy = orderMatch[1].trim().replace(/\s+/g, ' ').toUpperCase();
 
     return result;
