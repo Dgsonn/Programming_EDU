@@ -2255,8 +2255,12 @@
     if (params.has('lesson_idx')) {
       idx = parseInt(params.get('lesson_idx'), 10);
     } else {
-      idx = parseInt(params.get('lesson') || '1', 10) - 1;
+      idx = parseInt(params.get('lesson'), 10) - 1;
     }
+    // AUDIT-FIX 2026-07-07: URL rác (?lesson=abc → parseInt NaN → idx NaN → lessons[NaN]
+    // undefined → throw 'reading module' ở dưới). Clamp NaN → Bài 1 tại GỐC nên
+    // currentLesson LUÔN hợp lệ cho mọi truy cập phía sau (2285…), không chỉ vá 1 chỗ.
+    if (!Number.isFinite(idx)) idx = 0;
     state.currentLessonIdx = Math.max(0, Math.min(idx, data.lessons.length - 1));
     state.currentLesson = data.lessons[state.currentLessonIdx];
 
@@ -4434,6 +4438,13 @@
         if (mg && !isMiniGameSolved()) {
           // Mini-game still unsolved → keep button hidden but unlock "Try mini-game"
           showMCQExplain('Câu hỏi xong rồi! 🎉 Thử mini-game bên dưới để ghi điểm thêm nhé.');
+          // AUDIT-FIX 2026-07-07: ở viewport thấp (1520×700) mini-game nằm dưới fold — sau khi
+          // xong MCQ, kéo mini-game vào tầm nhìn để "đập vào mắt" (tôn trọng reduced-motion).
+          const mgEl = document.getElementById('mini-game');
+          if (mgEl) {
+            const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            setTimeout(() => mgEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }), 350);
+          }
         } else {
           revealStep3Cta();
           if (mg && isMiniGameSolved()) addXP(10);
@@ -8718,8 +8729,13 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
       });
     });
 
+    // AUDIT-FIX 2026-07-07: pairs đã mang sẵn leftId+rightId → suy solution từ chính pairs
+    // khi bài QUÊN khai mg.solution (db_20 dính: thiếu solution → sol[leftId]===undefined
+    // → nối ĐÚNG vẫn "0/N cặp", cả N tô đỏ, 0 XP). Có mg.solution thì vẫn ưu tiên nó.
+    const solFromPairs = {};
+    pairs.forEach(pr => { solFromPairs[pr.leftId || pr.left] = pr.rightId || (pr.right && (pr.right.id || pr.right)); });
+    const expectedRight = leftId => { const s = mg.solution || {}; return s[leftId] != null ? s[leftId] : solFromPairs[leftId]; };
     container.querySelector('#mg-match-check').onclick = () => {
-      const sol = mg.solution || {};
       const allMatched = pairs.length === Object.keys(matches).length;
       if (!allMatched) {
         showMiniFeedback(container, 'mg-match-feedback', false, `Hãy nối đủ ${pairs.length} cặp trước khi kiểm tra.`);
@@ -8729,7 +8745,7 @@ target.addEventListener('dragover', e => { e.preventDefault(); target.classList.
       let correctCount = 0;
       Object.keys(matches).forEach(leftId => {
         const rightId = matches[leftId];
-        const ok = sol[leftId] === rightId;
+        const ok = expectedRight(leftId) === rightId;
         if (ok) correctCount++;
         const leftEl = container.querySelector(`#mg-match-left .mg-match-item[data-left-id="${leftId}"]`);
         const rightEl = container.querySelector(`#mg-match-right .mg-match-item[data-right-id="${rightId}"]`);

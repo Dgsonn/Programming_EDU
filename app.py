@@ -27,6 +27,12 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 limiter.init_app(app)
 
+# AUDIT-FIX 2026-07-07: miễn rate-limit (50/hour/IP) cho tài nguyên tĩnh — nếu không,
+# một lớp học sau 1 NAT-IP (hoặc F5 nhiều) làm cạn budget → file JS/CSS bị 429 →
+# LESSON_CONTENT không load → bài học trắng. Chỉ giới hạn các route động.
+if "static" in app.view_functions:
+    limiter.exempt(app.view_functions["static"])
+
 # ── Logging & request-id ───────────────────────────────────────────────────
 # setup_logging(app)
 # init_request_id(app)

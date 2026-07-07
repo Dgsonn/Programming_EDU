@@ -4804,7 +4804,8 @@ concept_cards: [
             { "left": "&minPrice=50",   "leftId": "u2", "rightId": "s2", "right": { "id": "s2", "label": "AND price >= 50" } },
             { "left": "&sort=desc",     "leftId": "u3", "rightId": "s3", "right": { "id": "s3", "label": "ORDER BY price DESC" } },
             { "left": "&limit=10",      "leftId": "u4", "rightId": "s4", "right": { "id": "s4", "label": "LIMIT 10" } }
-          ]
+          ],
+          "solution": { "u1": "s1", "u2": "s2", "u3": "s3", "u4": "s4" }
         }
       },
 
