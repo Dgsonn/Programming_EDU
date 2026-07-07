@@ -5581,6 +5581,231 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 130
       },
       concept_cards_after: ['nc_card_physical_logical_undo']
+    },
+
+    /* ═══ BOSS nc_25 "Engine Under Fire" — tốt nghiệp NC, ship MARKETPLACE v3.0 ═══
+     * Vỏ war-room SEV-1 (l.boss → applyBossSkin đổi step 1-4 thành Mặt trận 1-4).
+     * 3 mặt trận M7/M8/M9 + 1 tổng hợp. Tái dùng plan_visual/match/prose-station/full_ide.
+     * Cổng cứng + biên bản sự cố + rank SRE dựng ở lesson_db_design.js (chỉ chạy khi l.boss). */
+    {
+      id: 'nc_25', index: 25,
+      title: 'BOSS — Engine Under Fire',
+      subtitle: 'Ngày ra mắt v3.0: query treo, nghìn người tranh một Mythic, server sập giữa charge — dập cả ba rồi ship.',
+      module: 9, module_title: 'Hộp Đen — Sự cố & Phục hồi',
+      estimated_minutes: 30, xp_reward: 200,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      boss: {
+        code: 'SEV-1 · ENGINE UNDER FIRE',
+        nav: ['Mặt trận 1', 'Mặt trận 2', 'Mặt trận 3', 'Ship v3.0'],
+        cases: [
+          {
+            tag: '🔥 P0 · LATENCY',
+            title: 'Trang "Săn hàng giá hời" treo 8 giây',
+            suspect: 'Optimizer chọn Seq Scan 80.000 block thay vì Index',
+            brief: 'Ngày ra mắt v3.0, đối tác bulk-load 2 triệu listing mới. Trang flash-sale <code>price &lt; 30</code> — chỉ 20 món giá hời thật — bỗng treo 8 giây, khách bỏ giỏ hàng loạt. Mở bảng kế hoạch, tìm xem động cơ đang chạy nhầm plan nào.',
+            clue: 'Trang nhanh trở lại sau ANALYZE. Nhưng lượt xem tăng vọt → 1.000 người CÙNG bấm mua đúng 1 Mythic…'
+          },
+          {
+            tag: '🔥 P0 · DATA',
+            title: '1.000 người tranh 1 Mythic — bán trùng',
+            suspect: 'Đọc-rồi-ghi không nguyên tử (lost update)',
+            brief: 'Kiếm Rồng #3001 (Mythic, chỉ 1 chiếc) lên sàn. 1.000 request mua ập vào cùng lúc; hai người cùng đọc "còn hàng" rồi cùng ghi "đã bán" → một món bán cho hai người. Chọn đúng cơ chế chặn.',
+            clue: 'Chốt được đúng 1 người mua. Nhưng ĐÚNG LÚC trừ tiền trong ví thì SERVER SẬP.'
+          },
+          {
+            tag: '🔥 P0 · CRASH',
+            title: 'Server sập giữa lúc charge tiền',
+            suspect: 'Buffer chưa xuống đĩa — phục hồi ra số dư sai',
+            brief: 'Ví Quỹ Sàn đang trừ 500 gem mua Mythic (1000 → 500) thì server sập. Bật lại: ví phải về đúng số dư nào? Lắp lại đúng RUNBOOK phục hồi WAL + ARIES — sai thứ tự là mất tiền thật.',
+            clue: '3 đám cháy đã dập. Giờ gói tất cả thành MỘT lệnh mua an toàn rồi ship v3.0.'
+          },
+          {
+            tag: '✅ DEPLOY',
+            title: 'Gói bản vá — Ship MARKETPLACE v3.0',
+            suspect: '',
+            brief: 'Viết câu lệnh mua Mythic AN TOÀN hội đủ 3 bài học: tra theo khóa có index (nhanh), <code>FOR UPDATE</code> giữ chỗ (hết bán trùng), và động cơ WAL/ARIES phía dưới đảm bảo an toàn khi sập. Submit đúng = ship v3.0.',
+            clue: ''
+          }
+        ],
+        incident: [
+          { front: 'M7 · Latency', symptom: 'Trang flash-sale treo 8s', cause: 'Thống kê cũ sau bulk-load 2 triệu dòng → optimizer ước lượng sai → Seq Scan 80.000 block', fix: 'ANALYZE cho thống kê tươi → optimizer thấy chỉ 20 dòng match → Index Scan. 8000ms → 82ms.' },
+          { front: 'M8 · Concurrency', symptom: '1 Mythic bán cho 2 người', cause: 'Hai giao dịch cùng đọc "còn hàng" rồi cùng ghi — lost update (đọc-ghi không nguyên tử)', fix: 'SELECT … FOR UPDATE giữ chỗ dòng: người thứ hai phải chờ, đọc lại thấy "đã bán".' },
+          { front: 'M9 · Recovery', symptom: 'Sập giữa charge, ví treo số sai', cause: 'Buffer (RAM) chưa kịp xuống đĩa lúc sập', fix: 'WAL (log ra stable TRƯỚC data) + ARIES 3-pass (analysis → redo → undo) → ví phục hồi về đúng số dư.' }
+        ]
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #66 · 🚨 SEV-1',
+        hook: 'Chuông báo động rú lên lúc 20:00 — đúng giờ ra mắt <strong>MARKETPLACE v3.0</strong>. Đối tác đổ về, lượt truy cập gấp 50 lần dự tính, và <em>ba báo động đỏ P0 nổ cùng lúc</em>: trang săn hàng treo 8 giây, một Mythic bị bán trùng cho nghìn người, và một node server sập ngay giữa lúc trừ tiền. Bạn là kỹ sư on-call. Không có ai đỡ. Tất cả những gì Marketplace dạy — tối ưu query, khóa & version, WAL & ARIES — dồn vào 60 phút này. Dập ba đám cháy, gói bản vá, và ship. 🔥'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'MẶT TRẬN 1 (M7 · Query Processing): động cơ CHỌN plan bằng ước lượng chi phí từ THỐNG KÊ. Thống kê cũ (sau bulk-load chưa ANALYZE) → ước lượng sai → chọn nhầm Seq Scan đắt thay vì Index. Đây chính là bài Ticket #51 (histogram & ANALYZE).',
+            'MẶT TRẬN 2 (M8 · Concurrency): 1.000 giao dịch đồng thời trên 1 dòng → lost update / bán trùng. Vũ khí: khóa X qua SELECT … FOR UPDATE (giữ chỗ), hoặc version-check optimistic (Ticket #52-61).',
+            'MẶT TRẬN 3 (M9 · Recovery): crash giữa giao dịch → WAL đảm bảo log-trước-data, ARIES 3-pass (analysis→redo→undo) phục hồi số dư đúng (Ticket #62-65).'
+          ],
+          intro: 'Đây không phải bài học mới — đây là bài KIỂM TRA. Ba mặt trận, ba lỗ hổng động cơ mà bạn đã học cách bịt. War-room chỉ khác lớp học một điểm: ở đây sai là mất khách, mất tiền, mất dữ liệu thật. Vào Mặt trận 1 trước — mở bảng kế hoạch xem vì sao trang săn hàng treo.',
+          example: 'Trang <code>SELECT item_name, price FROM listings WHERE price &lt; 30</code> chỉ khớp 20 món giá hời. Với thống kê TƯƠI, optimizer thấy "ít dòng" → Index Scan 82ms. Nhưng sau bulk-load 2 triệu dòng mà CHƯA <code>ANALYZE</code>, nó tưởng match rất nhiều → Seq Scan cả 80.000 block = <strong>8000ms</strong>. Cùng query, cùng index — chỉ khác cuốn SỔ THỐNG KÊ cũ hay mới.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-gauge-high',
+            title: 'Mặt trận 1 — vũ khí M7',
+            body: 'Query treo KHÔNG phải vì thiếu index — index <code>idx_price</code> vẫn ở đó. Nó treo vì <strong>optimizer chọn nhầm plan</strong>: thống kê cũ khiến nó ước lượng sai số dòng match. Vũ khí: <code>ANALYZE</code> làm tươi sổ thống kê (histogram), và tránh bọc biểu thức lên cột lọc (nó làm ước lượng mù). Đây là Ticket #51 quay lại dưới lửa.',
+            variant: 'quote',
+            source: 'PART_6 · Ch 16.3-16.5 — Statistics & Cost-Based Optimization'
+          },
+          {
+            icon: 'fa-lock',
+            title: 'Mặt trận 2 — vũ khí M8',
+            body: '1.000 người, 1 món. Nếu mỗi giao dịch <em>đọc "còn hàng" rồi mới ghi "đã bán"</em> mà không giữ chỗ, hai người cùng lọt qua khe → bán trùng (lost update). Vũ khí đã học: <strong>SELECT … FOR UPDATE</strong> đặt khóa X ngay lúc đọc (người sau chờ), hoặc <strong>version-check</strong> optimistic (UPDATE … WHERE version=N trúng 0 dòng thì ABORT). Ticket #52-61.'
+          },
+          {
+            icon: 'fa-shield-halved',
+            title: 'Mặt trận 3 — vũ khí M9',
+            body: 'Charge tiền là ghi dữ liệu; server có thể sập bất cứ nhịp nào. Vũ khí: <strong>WAL</strong> — log record phải ra bộ nhớ bền TRƯỚC khi data page xuống đĩa (nếu không, sập là mất dấu để undo). Rồi <strong>ARIES 3-pass</strong>: analysis dựng kế hoạch, redo lặp lại lịch sử (bỏ qua cái đã có nhờ PageLSN), undo hoàn tác giao dịch dở. Ticket #62-65.'
+          }
+        ],
+        plan_visual: {
+          query: "SELECT item_name, price FROM listings WHERE price < 30;  -- flash-sale, 20 món giá hời thật",
+          caption: 'Cùng query, cùng index idx_price. Chỉ khác: THỐNG KÊ cũ (sau bulk-load 2 triệu dòng) khiến optimizer tưởng match nhiều → Seq Scan 8000ms. Chạy ANALYZE → nó thấy 20 dòng → Index 82ms. Đây là mặt trận M7.',
+          price: {
+            seek_ms: 4, block_ms: 0.1,
+            note: 'Bảng giá HDD minh họa: seek 4ms · block 0,1ms.'
+          },
+          trees: [
+            {
+              name: 'Plan đang chạy — Seq Scan (thống kê CŨ)',
+              chosen: true,
+              note: '✗ Optimizer chọn NHẦM: sổ cũ tưởng price<30 match rất nhiều → quét cả kho',
+              io: { access: 'seq', seeks: 1, blocks: 80000 },
+              nodes: [
+                { op: 'listings', kind: 'table', detail: '2.000.000 dòng ≈ 80.000 block (vừa bulk-load)', rows: '80.000 block' },
+                { op: 'Seq Scan', kind: 'scan', detail: 'quét liền mạch toàn kho, lọc trong lúc quét', rows: '2.000.000 dòng', cost: '1 seek + 80.000 block' },
+                { op: 'σ price < 30', kind: 'filter', detail: 'giữ 20 món giá hời', rows: '20 dòng' }
+              ]
+            },
+            {
+              name: 'Plan đúng — Index Scan (sau ANALYZE)',
+              chosen: false,
+              note: '✓ Thống kê tươi thấy chỉ 20 dòng match → index là rẻ nhất',
+              io: { access: 'random', seeks: 20, blocks: 20 },
+              nodes: [
+                { op: 'listings', kind: 'table', detail: '20 dòng giá hời rải trong kho', rows: '20 block đọc lẻ' },
+                { op: 'Index Scan idx_price', kind: 'scan', detail: '20 cú nhảy tới đúng 20 dòng price<30', rows: '20 dòng', cost: '20 × 4,1 ms' }
+              ]
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'listings — sàn hàng (2.000.000 dòng sau bulk-load ≈ 80.000 block)',
+            columns: [
+              { name: 'listing_id', type: 'INT', key: 'PK' },
+              { name: 'item_name', type: 'VARCHAR', key: '' },
+              { name: 'price', type: 'INT (gem)', key: '🔑 idx_price' },
+              { name: 'seller_id', type: 'INT', key: 'FK' },
+              { name: 'version', type: 'INT', key: '' }
+            ]
+          },
+          data_preview: [
+            ['3001', 'Kiếm Rồng (Mythic)', '500', '4102', '7'],
+            ['3002', 'Khiên gỗ (flash-sale)', '25', '88', '2'],
+            ['3003', 'Bình máu nhỏ', '12', '88', '1'],
+            ['3004', 'Giáp da sói', '480', '707', '3']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'MẶT TRẬN 2 — 1.000 request cùng mua Kiếm Rồng #3001. Vì sao MỘT món lại bán được cho HAI người?',
+            options: [
+              { id: 'a', text: 'Hai giao dịch cùng ĐỌC "còn hàng" rồi cùng GHI "đã bán" — thao tác đọc-rồi-ghi không nguyên tử, cả hai cùng lọt qua khe (lost update)', correct: true, explanation: 'Đúng — đây chính là lost update của Ticket #52: giữa lúc T1 đọc và ghi, T2 chen vào đọc cùng giá trị cũ. Không giữ chỗ dòng thì cả hai đều tưởng mình mua được.' },
+              { id: 'b', text: 'Server chậm nên xử lý trùng request', correct: false, explanation: 'Sai — chậm hay nhanh không đẻ ra bản sao; vấn đề là hai giao dịch thấy CÙNG một trạng thái cũ rồi cùng ghi đè, không phải tốc độ.' },
+              { id: 'c', text: 'Index idx_price bị hỏng nên trả sai dòng', correct: false, explanation: 'Sai — index trả đúng dòng #3001; lỗi nằm ở chỗ hai giao dịch GHI đè nhau, không ở chỗ đọc.' },
+              { id: 'd', text: 'Vì món Mythic có version = 7, số lẻ gây lỗi', correct: false, explanation: 'Sai — version là công cụ để CHẶN lỗi này (optimistic check), bản thân giá trị 7 chẳng gây ra gì.' }
+            ]
+          },
+          {
+            question: 'Chọn vũ khí chặn bán trùng cho luồng "bấm mua ngay":',
+            options: [
+              { id: 'a', text: 'SELECT … WHERE listing_id = 3001 FOR UPDATE — đặt khóa X ngay lúc đọc, người thứ hai phải CHỜ rồi đọc lại thấy "đã bán"', correct: true, explanation: 'Đúng — FOR UPDATE (Ticket #60) biến đọc thành đọc-giữ-chỗ: chỉ một giao dịch nắm được dòng #3001 tại một thời điểm, hết cửa lost update.' },
+              { id: 'b', text: 'Khóa toàn bộ bảng listings mỗi lần có người mua', correct: false, explanation: 'Sai — đúng thì có đúng, nhưng khóa cả bảng giết concurrency: 999 người kia đơ chờ dù mua món khác. FOR UPDATE chỉ khóa 1 dòng.' },
+              { id: 'c', text: 'Bỏ index đi để hai giao dịch không trỏ cùng dòng', correct: false, explanation: 'Sai — index không liên quan; bỏ nó chỉ làm query chậm lại chứ không chặn ghi đè.' },
+              { id: 'd', text: 'Tăng RAM để server xử lý kịp cả 1.000 request', correct: false, explanation: 'Sai — RAM nhiều cỡ nào cũng không làm đọc-ghi trở nên nguyên tử; đây là bài toán khóa, không phải tài nguyên.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'match',
+          title: 'Nối cơ chế đồng thời ↔ hệ quả',
+          instruction: 'Mỗi vũ khí/lỗi concurrency sinh ra một hệ quả. Nối đúng cặp (ôn Ticket #52-61).',
+          xp: 30,
+          pairs: [
+            { left: 'Đọc-rồi-ghi không giữ chỗ',   leftId: 'm1', rightId: 'r1', right: { id: 'r1', label: 'Lost update — bán trùng' } },
+            { left: 'SELECT … FOR UPDATE',          leftId: 'm2', rightId: 'r2', right: { id: 'r2', label: 'Khóa X 1 dòng — người sau chờ' } },
+            { left: 'UPDATE … WHERE version = 7',    leftId: 'm3', rightId: 'r3', right: { id: 'r3', label: 'Optimistic — trúng 0 dòng thì ABORT' } },
+            { left: 'Khóa cả bảng listings',         leftId: 'm4', rightId: 'r4', right: { id: 'r4', label: 'An toàn nhưng giết concurrency' } }
+          ],
+          solution: { m1: 'r1', m2: 'r2', m3: 'r3', m4: 'r4' }
+        }
+      },
+      step_3: {
+        mission: 'MẶT TRẬN 3 — server sập giữa lúc ví Quỹ Sàn trừ 500 gem. Lắp đúng RUNBOOK phục hồi vào 4 trạm (WAL → ANALYSIS → REDO → UNDO). Có MỘT khối bịa — cái ARIES sinh ra để TRÁNH.',
+        blocks: [
+          { type: 'op', token: 'Ghi LOG record ra bộ nhớ BỀN trước, rồi mới cho data page xuống đĩa', slot: 'z-wal' },
+          { type: 'op', token: 'ANALYSIS: từ checkpoint gần nhất, đặt RedoLSN = min RecLSN và dựng undo-list', slot: 'z-analysis' },
+          { type: 'op', token: 'REDO xuôi từ RedoLSN, bỏ qua record có LSN ≤ PageLSN vì đã có trên đĩa', slot: 'z-redo' },
+          { type: 'op', token: 'UNDO ngược mọi giao dịch trong undo-list, mỗi cú ghi một CLR', slot: 'z-undo' },
+          { type: 'op', token: 'REDO lại TẤT CẢ record từ đầu log cho chắc, khỏi cần tính PageLSN', slot: 'z-bia' }
+        ],
+        drop_zones: [
+          { id: 'z-wal', placeholder: 'Trạm 1 — luật nền: cái gì phải xuống bền TRƯỚC?', accepts: ['op'], multi: false,
+            station: { icon: '🚪', label: 'Cổng WAL', sub: 'Luật nền', hint: 'Write-Ahead Logging: nếu data xuống đĩa trước log, sập là mất dấu để undo → dữ liệu kẹt sai.' } },
+          { id: 'z-analysis', placeholder: 'Trạm 2 — bật máy lên, pass đầu tiên làm gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔍', label: 'Pass ANALYSIS', sub: 'Lập kế hoạch', hint: 'Đọc từ checkpoint: bắt đầu redo từ đâu (RedoLSN) và phải undo ai (undo-list).' } },
+          { id: 'z-redo', placeholder: 'Trạm 3 — lặp lại lịch sử, nhưng khôn ở chỗ nào?', accepts: ['op'], multi: false,
+            station: { icon: '↻', label: 'Pass REDO', sub: 'Lặp có chọn lọc', hint: 'Bỏ qua record đã phản ánh trên đĩa (LSN ≤ PageLSN) — đó là mẹo cắt thời gian phục hồi.' } },
+          { id: 'z-undo', placeholder: 'Trạm 4 — dọn nốt giao dịch dở dang?', accepts: ['op'], multi: false,
+            station: { icon: '⏪', label: 'Pass UNDO', sub: 'Hoàn tác', hint: 'Roll back txn chưa commit; ghi CLR để nếu sập lại giữa lúc undo thì không undo trùng.' } }
+        ],
+        expected_sql: 'Ghi LOG record ra bộ nhớ BỀN trước, rồi mới cho data page xuống đĩa ANALYSIS: từ checkpoint gần nhất, đặt RedoLSN = min RecLSN và dựng undo-list REDO xuôi từ RedoLSN, bỏ qua record có LSN ≤ PageLSN vì đã có trên đĩa UNDO ngược mọi giao dịch trong undo-list, mỗi cú ghi một CLR',
+        expected_zones: {
+          'z-wal': 'Ghi LOG record ra bộ nhớ BỀN trước, rồi mới cho data page xuống đĩa',
+          'z-analysis': 'ANALYSIS: từ checkpoint gần nhất, đặt RedoLSN = min RecLSN và dựng undo-list',
+          'z-redo': 'REDO xuôi từ RedoLSN, bỏ qua record có LSN ≤ PageLSN vì đã có trên đĩa',
+          'z-undo': 'UNDO ngược mọi giao dịch trong undo-list, mỗi cú ghi một CLR'
+        }
+      },
+      step_4: {
+        prompt: 'MẶT TRẬN 4 — GÓI BẢN VÁ & SHIP. Viết câu đọc dòng Kiếm Rồng <code>#3001</code> để mua AN TOÀN: tra theo <strong>khóa chính có index</strong> (nhanh — bài học M7) và <strong>giữ chỗ dòng</strong> để hết bán trùng (M8). Bảng <code>listings</code>, cột <code>price</code>. Gợi ý: <code>SELECT price FROM listings WHERE listing_id = 3001 FOR UPDATE;</code>',
+        challenge_type: 'full_ide',
+        starter_code: '-- Mặt trận 4: câu mua Mythic an toàn. Tra theo PK #3001 + giữ chỗ dòng.\n',
+        expected_sql: 'SELECT price FROM listings WHERE listing_id = 3001 FOR UPDATE;',
+        context: {
+          scenario: 'Bản vá cuối gói cả 3 bài học vào một lệnh đọc: tra theo listing_id (PK có index → không Seq Scan cả kho như Mặt trận 1), và FOR UPDATE giữ chỗ dòng #3001 (hết lost update như Mặt trận 2). Động cơ WAL/ARIES phía dưới (Mặt trận 3) lo phần an toàn khi sập. Submit đúng = ship MARKETPLACE v3.0.',
+          real_world: 'Đây đúng là câu mọi sàn thương mại điện tử chạy khi bạn bấm "Mua ngay": khóa dòng tồn kho theo khóa chính rồi mới trừ. Nhanh nhờ index, đúng nhờ khóa, bền nhờ WAL — ba trụ của một database engine sống sót dưới lửa.',
+          steps: [
+            'Đọc cột price của dòng listings có listing_id = 3001.',
+            'Tra theo listing_id (PK) — đi thẳng qua index, không quét cả kho.',
+            'Thêm FOR UPDATE để giữ chỗ dòng: người mua thứ hai phải chờ.',
+            'Chốt: SELECT price FROM listings WHERE listing_id = 3001 FOR UPDATE;'
+          ],
+          hint_explore: 'FOR UPDATE đặt sau mệnh đề WHERE, biến câu đọc thành đọc-giữ-chỗ (khóa X trên dòng).',
+          expected: 'SELECT price FROM listings WHERE listing_id = 3001 FOR UPDATE;'
+        },
+        hints: [
+          { level: 1, text: 'Bắt đầu bằng SELECT price FROM listings — đọc đúng bảng, đúng cột.' },
+          { level: 2, text: 'Lọc đúng MỘT dòng bằng khóa chính: WHERE listing_id = 3001 (không quét cả kho như Mặt trận 1).' },
+          { level: 3, text: 'Giữ chỗ dòng để hết bán trùng: thêm FOR UPDATE vào cuối, trước dấu chấm phẩy.' },
+          { level: 4, text: 'Đáp án: SELECT price FROM listings WHERE listing_id = 3001 FOR UPDATE;' }
+        ],
+        success_message: 'TICKET #66 ĐÓNG — SHIP MARKETPLACE v3.0! 🔥 Ba đám cháy đã dập: query săn hàng 8000ms→82ms, Mythic hết bán trùng, ví phục hồi đúng số dư sau sập. Bạn vừa đưa một sàn giao dịch sống sót qua đúng ba thứ đã hạ gục vô số hệ thống thật: latency, race condition, và crash. Đọc BIÊN BẢN SỰ CỐ để thấy toàn cảnh những gì bạn vừa làm — và hạng kỹ sư bạn giành được.',
+        xp_reward: 200
+      },
+      concept_cards_after: []
     }
 
   ],
@@ -6272,7 +6497,7 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.8 · PART_7 Card J — Physical vs Logical Undo',
-      cta: { label: 'Về Hộp Đen — phía trước: BOSS BATTLE 🔥', href: '/courses/db_design_nc' }
+      cta: { label: 'Vào BOSS BATTLE — Engine Under Fire 🔥', href: '?lesson=25' }
     }
   ]
 };

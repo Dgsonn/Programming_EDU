@@ -10943,3 +10943,18 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 @media (prefers-reduced-motion: reduce) {
   .wal-visual .wl-gate, .wal-visual .wl-disk-val, .aries-visual .ar-phase, .aries-visual .ar-rec, .aries-visual .ar-page-val { transition: none; }
 }
+
+/* ═══ BOSS nc_25 — BIÊN BẢN SỰ CỐ + HẠNG KỸ SƯ trong overlay graduation (2026-07-08) ═══ */
+.module-complete-overlay.mco-boss .mco-card { max-width: 640px; }
+.mco-incident { margin: 14px 0 4px; text-align: left; }
+.mco-incident-head { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: #fca5a5; text-align: center; margin-bottom: 10px; }
+.mco-incident-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mco-inc-row { display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; background: rgba(52,211,153,.06); border: 1px solid rgba(52,211,153,.28); border-left: 3px solid #fb7185; }
+.mco-inc-front { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; color: #fda4af; }
+.mco-inc-sym { font-size: 12px; font-weight: 700; color: #e8edf5; }
+.mco-inc-cause, .mco-inc-fix { font-size: 11px; color: #aebfd6; line-height: 1.45; }
+.mco-inc-cause b { color: #fca5a5; font-weight: 700; }
+.mco-inc-fix b { color: #6ee7b7; font-weight: 700; }
+.mco-rank { margin-top: 12px; padding: 11px 14px; border-radius: 10px; text-align: center; font-size: 13px; color: #e8edf5; background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(129,140,248,.12)); border: 1px solid rgba(52,211,153,.4); }
+.mco-rank b { color: #6ee7b7; font-weight: 800; font-size: 15px; }
+.mco-rank-count { color: #7f93ad; font-size: 11px; }

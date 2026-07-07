@@ -1974,6 +1974,31 @@
         '<text x="360" y="176" text-anchor="middle" fill="#c7d2fe" font-size="8.5">LSN60 sửa A · 60 &gt; 20 → CHƯA CÓ → ↻ REDO đặt A về giá mới</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không mù quáng redo từ đầu log — PageLSN + DirtyPageTable cho ARIES chỉ làm phần việc còn thiếu</text>' +
+      '</svg>',
+    nc_25: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boss Engine Under Fire: ngày ra mắt v3.0 ba báo động P0 nổ cùng lúc — query treo do M7, bán trùng do M8, server sập do M9 — dập cả ba rồi ship">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="26" text-anchor="middle" font-weight="700" font-size="15" fill="#e8edf5">🔥 BOSS — ENGINE UNDER FIRE</text>' +
+      '<text x="360" y="45" text-anchor="middle" font-size="9.5" fill="#fca5a5">SEV-1 · ngày ra mắt v3.0 — ba báo động P0 nổ cùng lúc</text>' +
+        // 3 mặt trận (rose alert)
+        '<rect x="34" y="62" width="204" height="60" rx="9" fill="rgba(251,113,133,.1)" stroke="rgba(251,113,133,.55)"/>' +
+        '<text x="136" y="82" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">MẶT TRẬN 1 · M7</text>' +
+        '<text x="136" y="99" text-anchor="middle" fill="#7f93ad" font-size="8">query treo 8s</text>' +
+        '<text x="136" y="113" text-anchor="middle" fill="#7f93ad" font-size="8">thống kê cũ → Seq Scan</text>' +
+        '<rect x="258" y="62" width="204" height="60" rx="9" fill="rgba(251,113,133,.1)" stroke="rgba(251,113,133,.55)"/>' +
+        '<text x="360" y="82" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">MẶT TRẬN 2 · M8</text>' +
+        '<text x="360" y="99" text-anchor="middle" fill="#7f93ad" font-size="8">1000 người tranh 1 Mythic</text>' +
+        '<text x="360" y="113" text-anchor="middle" fill="#7f93ad" font-size="8">lost update → bán trùng</text>' +
+        '<rect x="482" y="62" width="204" height="60" rx="9" fill="rgba(251,113,133,.1)" stroke="rgba(251,113,133,.55)"/>' +
+        '<text x="584" y="82" text-anchor="middle" fill="#fda4af" font-weight="700" font-size="10">MẶT TRẬN 3 · M9</text>' +
+        '<text x="584" y="99" text-anchor="middle" fill="#7f93ad" font-size="8">server sập giữa charge</text>' +
+        '<text x="584" y="113" text-anchor="middle" fill="#7f93ad" font-size="8">WAL + ARIES phục hồi</text>' +
+        // mũi tên dồn về ship
+        '<text x="360" y="146" text-anchor="middle" fill="#7f93ad" font-size="10">▼ dập cả ba · gói bản vá ▼</text>' +
+        '<rect x="180" y="158" width="360" height="42" rx="10" fill="#0e1726" stroke="rgba(52,211,153,.6)" stroke-width="1.4"/>' +
+        '<text x="360" y="177" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="11">SELECT price FROM listings</text>' +
+        '<text x="360" y="192" text-anchor="middle" fill="#34d399" font-size="10.5">WHERE listing_id = 3001 FOR UPDATE ;</text>' +
+      '</g>' +
+      '<text x="360" y="224" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#7f93ad">index (nhanh) · FOR UPDATE (hết bán trùng) · WAL/ARIES (bền) → SHIP MARKETPLACE v3.0</text>' +
       '</svg>'
   };
 
@@ -2192,8 +2217,35 @@
       nextAttr = 'data-mco-next="' + (lessonNum + 1) + '"';
     }
 
+    // BOSS 2026-07-08: tốt nghiệp qua boss (l.boss.incident) → thay danh sách bài bằng
+    // BIÊN BẢN SỰ CỐ (3 root-cause + bản vá) + HẠNG KỸ SƯ theo số lần sai (tim đã mất).
+    var bossExtraHTML = '';
+    if (isGraduation && cur.boss && cur.boss.incident) {
+      var wrong = Math.max(0, 3 - (state.hearts == null ? 3 : state.hearts));
+      var rank = wrong === 0
+        ? { name: 'Staff SRE', note: 'dập ba đám cháy không rơi một giọt mồ hôi' }
+        : (wrong <= 2
+          ? { name: 'Senior Engineer', note: 'giữ được sàn qua sự cố, vài lần thử lại' }
+          : { name: 'On-call sống sót', note: 'trầy trật nhưng sàn vẫn đứng — kinh nghiệm xương máu' });
+      var incRows = cur.boss.incident.map(function (it) {
+        return '<li class="mco-inc-row">' +
+          '<span class="mco-inc-front">🔥 ' + escapeHtml(it.front) + '</span>' +
+          '<span class="mco-inc-sym">' + escapeHtml(it.symptom) + '</span>' +
+          '<span class="mco-inc-cause"><b>Nguyên nhân:</b> ' + escapeHtml(it.cause) + '</span>' +
+          '<span class="mco-inc-fix"><b>Bản vá:</b> ' + escapeHtml(it.fix) + '</span>' +
+        '</li>';
+      }).join('');
+      bossExtraHTML =
+        '<div class="mco-incident">' +
+          '<div class="mco-incident-head">📋 BIÊN BẢN SỰ CỐ — SEV-1 · ENGINE UNDER FIRE</div>' +
+          '<ul class="mco-incident-list">' + incRows + '</ul>' +
+          '<div class="mco-rank">Hạng kỹ sư: <b>' + escapeHtml(rank.name) + '</b> — ' + escapeHtml(rank.note) +
+            ' <span class="mco-rank-count">(' + wrong + ' lần sai)</span></div>' +
+        '</div>';
+    }
+
     var ov = document.createElement('div');
-    ov.className = 'module-complete-overlay';
+    ov.className = 'module-complete-overlay' + (bossExtraHTML ? ' mco-boss' : '');
     ov.innerHTML =
       '<div class="mco-backdrop" data-mco-close="1"></div>' +
       '<div class="mco-card" role="dialog" aria-modal="true" aria-label="' + escapeHtml(eyebrow) + '">' +
@@ -2202,7 +2254,7 @@
         '<div class="mco-eyebrow">' + eyebrow + '</div>' +
         '<h2 class="mco-title">' + escapeHtml(headline) + '</h2>' +
         '<p class="mco-sub">' + sub + '</p>' +
-        '<ul class="mco-skills">' + skillsHTML + '</ul>' +
+        (bossExtraHTML || ('<ul class="mco-skills">' + skillsHTML + '</ul>')) +
         '<div class="mco-actions">' +
           '<button class="mco-continue" ' + nextAttr + '>' + nextLabel + '</button>' +
           (isGraduation ? '' : '<button class="mco-later" data-mco-close="1">Ở lại xem lại</button>') +
@@ -6827,6 +6879,8 @@
     const expected = normFull(s3.expected_sql);
     const builtSQL = normFull(buildSQLString());
     const isComplete = builtSQL === expected;
+    // BOSS 2026-07-08: cờ hoàn thành step-3 (cổng cứng boss đọc state.step3Complete — bài thường bỏ qua).
+    state.step3Complete = isComplete;
 
     // v4 FIX: chấm ĐÚNG/SAI nội dung TỪNG mệnh đề (so nội dung THÔ của zone với expected clause).
     // → pipeline chỉ ✓ 1 ga khi mệnh đề đó THỰC SỰ đúng, không phải cứ có block/đúng-loại là ✓.
@@ -7868,9 +7922,33 @@
       st.classList.toggle('stamped', state.currentStep > n);
     });
   }
+  /* BOSS 2026-07-08: cổng cứng — chưa dập xong mặt trận n thì không qua n+1.
+   * MT1 (chẩn đoán/sim) = engage là qua; MT2 = đúng CẢ mcq + mini; MT3 = dựng đúng step-3.
+   * Bài thường (không l.boss) không bao giờ gọi hàm này. */
+  function bossCaseCleared(n) {
+    if (n <= 1) return true;
+    if (n === 2) {
+      const mcq = (state.currentLesson.step_2 && state.currentLesson.step_2.mcq) || [];
+      const answers = state.mcqAnswers || [];
+      const allCorrect = mcq.length > 0 && mcq.every((q, i) => answers[i] && answers[i].correct);
+      return allCorrect && isMiniGameSolved();
+    }
+    if (n === 3) return state.step3Complete === true;
+    return true;
+  }
 
   window.goToStep = function (step) {
     if (step < 1 || step > TOTAL_STEPS) return;
+    // BOSS: chặn nhảy tới trước khi mặt trận hiện tại được dập xong.
+    if (state.currentLesson && state.currentLesson.boss && Number(step) > Number(state.currentStep)) {
+      if (!bossCaseCleared(state.currentStep)) {
+        const msg = state.currentStep === 2
+          ? 'Mặt trận 2 chưa dập xong — trả lời ĐÚNG cả 2 câu và nối đủ 4/4 mini-game đã!'
+          : 'Mặt trận ' + state.currentStep + ' chưa dập xong — dựng đúng runbook rồi mới qua!';
+        if (window.showToast) window.showToast('warn', '⛔ ' + msg, 3400);
+        return;
+      }
+    }
 
     // Gỡ pulse của footer "Tiếp theo" (bật khi hoàn thành step-3) khi đã chuyển bước
     const navNextEl = document.getElementById('nav-next');
