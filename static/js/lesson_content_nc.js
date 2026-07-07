@@ -4642,6 +4642,470 @@ window.LESSON_CONTENT['db_design_nc'] = {
         xp_reward: 120
       },
       concept_cards_after: ['nc_card_degree_two']
+    },
+
+    /* ── nc_21 — Ticket #62 · Failure Classification & Storage (Ch.19.1-19.2) ──
+     * MỞ MODULE 9 "Hộp Đen". PART_7 Bài 11: volatile/non-volatile/stable sim.
+     * Điểm dạy đắt: write(X) mới vào BUFFER RAM, output(B) mới xuống đĩa — crash
+     * giữa hai bước = giá trị mới BAY (động cơ cần log, dẫn nc_22). fail-stop:
+     * crash HALT nhưng không hỏng non-volatile. Sim thứ 12 storage_visual (user
+     * chốt 2026-07-07 đợt 12). Step-4 mcq_code crash-at-X survival. */
+    {
+      id: 'nc_21', index: 21,
+      title: 'Máy sập lúc 23:47 — dữ liệu mới đang nằm ở đâu?',
+      subtitle: 'Volatile / non-volatile / stable: "đã write" chưa phải "đã an toàn" — chỉ stable storage mới chắc chắn',
+      module: 9, module_title: 'Hộp Đen — Sự cố & Phục hồi',
+      estimated_minutes: 18, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'mcq_code',
+      drag_map: {
+        table: {
+          name: 'wallets — ví gem trên đĩa (mẫu 4)',
+          columns: ['wallet_id', 'owner', 'balance'],
+          dataRows: [
+            ['A', 'Quỹ Sàn GameHub', '1000'],
+            ['B', 'DragonForge', '2000'],
+            ['C', 'NightRaven', '700'],
+            ['D', 'MythicSlayer88', '450']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #62',
+        hook: '23:47, đỉnh điểm flash-sale — <strong>RẦM</strong>. Mất điện cả khu data center, server tắt phụt. 90 giây sau máy khởi động lại, và câu hỏi đầu tiên của cả team trực đêm: <em>giao dịch đang chạy dở lúc đó — mất cái gì, còn cái gì?</em> Ví Quỹ Sàn vừa trừ 50 gem: con số mới đã kịp xuống đĩa chưa, hay còn kẹt đâu đó trong RAM và vừa bốc hơi theo dòng điện? Ticket #62 mở Module 9 — <strong>Hộp Đen</strong>: trước khi biết cách phục hồi, phải biết một cú sập cướp đi chính xác những gì. 💥'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'BA TẦNG LƯU TRỮ theo độ bền: VOLATILE (RAM/buffer — mất sạch khi cúp điện/crash) · NON-VOLATILE (đĩa — sống qua crash phần mềm, nhưng chết nếu đầu đọc cào hỏng/đĩa hư) · STABLE (2+ bản sao trên media độc lập — sống cả hỏa hoạn, lụt; chỉ là XẤP XỈ, không tuyệt đối)',
+            'write(X) ≠ output(B): write(X) chỉ đổ giá trị mới vào BUFFER trong RAM; phải có output(B) thì block đó mới thực sự xuống đĩa. Crash SAU write mà TRƯỚC output → giá trị mới nằm trong RAM, bay theo RAM; đĩa vẫn giá cũ',
+            'FAIL-STOP assumption: lỗi phần cứng/phần mềm làm hệ thống DỪNG (halt) chứ không làm HỎNG nội dung non-volatile — nhờ giả định hợp lý này, recovery mới có cái đĩa lành để dựa vào; disk failure (head crash) là loại lỗi RIÊNG, phải cậy stable storage/backup'
+          ],
+          intro: 'Bạn viết dở lá thư trên máy tính: chữ đã gõ hiện trên màn hình (RAM), nhưng chưa bấm Lưu (chưa xuống ổ cứng). Mất điện → mở lại, file trên ổ cứng vẫn là bản cũ, đoạn vừa gõ biến mất không dấu vết. Database y hệt: <strong>write() là "đã gõ", output() mới là "đã bấm Lưu"</strong>. Và như lá thư — nhìn vào file cũ, bạn chẳng thể biết mình vừa gõ thêm những gì. Đó là lý do cần một cuốn nhật ký ghi lại từng nét (bài sau).',
+          example: 'Ví Quỹ Sàn A trên đĩa = 1000. Giao dịch trừ 50: read(A) nạp 1000 lên buffer → tính 950 trong buffer (đĩa vẫn 1000) → write(A) đặt 950 vào buffer block. <strong>Crash ngay đây</strong>: RAM bay → khởi động lại đọc đĩa = <strong>1000</strong>, con số 950 bốc hơi. Chỉ khi output(A) chạy xong, đĩa mới thành 950 và sống được qua crash.'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-triangle-exclamation',
+            title: 'Ba loại sự cố — theo đúng sách',
+            body: 'Sách chia rõ ba kiểu hỏng, mỗi kiểu chữa khác nhau: <strong>Transaction failure</strong> (logical error: input sai/tràn/hết quota · system error: kẹt deadlock — có thể chạy lại sau); <strong>System crash</strong> (phần cứng trục trặc hoặc bug OS/DB làm mất sạch VOLATILE, nhưng non-volatile <em>còn nguyên</em> — đây là <strong>fail-stop assumption</strong>); <strong>Disk failure</strong> (head crash/lỗi lúc truyền — block mất nội dung, phải cậy bản sao đĩa khác hoặc backup băng từ). Recovery algorithm gồm 2 phần: việc làm LÚC bình thường (để có đủ thông tin) + việc làm SAU sự cố (để khôi phục).',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.1 — Failure Classification'
+          },
+          {
+            icon: 'fa-layer-group',
+            title: 'Stable storage — cách gần đúng một "kho bất tử"',
+            body: 'Không tầng nào bất tử tuyệt đối; stable storage là <strong>xấp xỉ</strong> bằng cách nhân bản lên nhiều media <em>độc lập-lỗi</em>: RAID mirror (2 bản trên 2 đĩa) chống hỏng 1 đĩa, remote copy (ghi qua mạng sang site xa) chống cả hỏa hoạn/lụt. Bí quyết chống crash-giữa-lúc-ghi: ghi <strong>tuần tự bản 1 rồi bản 2</strong>, chỉ coi là xong khi bản 2 hoàn tất → hai bản chênh nhau thì phục hồi bằng bản lành (checksum dò lỗi). Kết quả: ghi vào stable storage <em>hoặc trọn vẹn, hoặc coi như chưa ghi</em> — không bao giờ dở dang.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Cái bạn gặp mỗi ngày: <code>fsync()</code> — lệnh ép OS đẩy buffer xuống đĩa THẬT (Postgres gọi ở mỗi commit). Redis mặc định giữ data trong RAM, phải bật AOF/RDB mới bền qua restart. Ổ SSD có "power-loss protection" chính là tụ điện gồng nốt cú ghi buffer khi mất điện. Lần tới thấy cảnh báo "dữ liệu chưa lưu sẽ mất" — đó đúng là ranh giới volatile/non-volatile mà bài này vẽ ra.'
+          }
+        ],
+        storage_visual: {
+          eyebrow: 'BA TẦNG LƯU TRỮ — VÍ QUỸ SÀN (A) TRỪ 50 GEM · CRASH SỚM vs CRASH MUỘN',
+          caption: 'Chạy CẢ HAI kịch bản: crash trước output thì giá trị mới bay theo RAM; crash sau output thì đĩa đã kịp giữ — cùng một giao dịch, hai số phận.',
+          item_label: '💰 Ví Quỹ Sàn (A) — giao dịch: 1000 − 50 = 950',
+          modes: [
+            {
+              id: 'early', short: 'CRASH SỚM', ok: false, result: '950 bay mất',
+              btn: '▶ Kịch bản CRASH TRƯỚC output',
+              steps: [
+                { text: 'read(A): nạp 1000 từ đĩa lên RAM buffer', ram: 1000, disk: 1000, note: 'Giờ giá trị nằm cả ba tầng: 1000.' },
+                { text: 'tính A − 50 = 950 trong buffer (chưa đụng đĩa)', ram: 950, note: 'RAM đã 950 nhưng ĐĨA vẫn trơ trơ 1000 — buffer đi trước một mình.' },
+                { text: 'write(A): đặt 950 vào buffer block — output(B) CHƯA chạy', ram: 950, note: 'Đây là bẫy chí mạng: "đã write" nghe như xong, nhưng đĩa chưa hề biết tới con 950.' },
+                { text: '💥 CRASH — mất điện, RAM trắng xóa', crash: true, cls: 'bad', note: '' }
+              ],
+              verdict: '❌ Giá trị mới 950 sống trong RAM buffer, chết theo RAM. Khởi động lại đọc đĩa = 1000 — giao dịch như chưa từng xảy ra, và tệ hơn: nhìn database không tài nào biết nó ĐÃ chạy dở.'
+            },
+            {
+              id: 'late', short: 'CRASH MUỘN', ok: true, result: '950 sống',
+              btn: '▶ Kịch bản CRASH SAU output',
+              steps: [
+                { text: 'read(A) → tính 950 → write(A) vào buffer', ram: 950, disk: 1000, note: 'Y hệt kịch bản kia cho tới đây.' },
+                { text: 'output(A): buffer 950 được đẩy XUỐNG đĩa', ram: 950, disk: 950, cls: 'ok', note: 'Khoảnh khắc quyết định: giờ đĩa (non-volatile) đã mang 950. Stable cũng theo đó.' },
+                { text: '💥 CRASH — mất điện, RAM trắng xóa', crash: true, note: '' }
+              ],
+              verdict: '✓ RAM vẫn bay như thường, nhưng đĩa đã kịp giữ 950 — khởi động lại đọc đĩa = 950. Cùng một giao dịch, khác nhau đúng một cú output đã-hay-chưa.'
+            }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'ba tầng — thứ gì sống sót qua cái gì?',
+            columns: [
+              { name: 'tầng', type: 'nơi dữ liệu nằm', key: '📍' },
+              { name: 'crash phần mềm', type: 'mất điện / bug OS', key: '💥' },
+              { name: 'thảm họa', type: 'hỏa hoạn / lụt', key: '🔥' }
+            ]
+          },
+          data_preview: [
+            ['RAM buffer (volatile)', '❌ mất sạch', '❌ mất', ''],
+            ['Đĩa (non-volatile)', '✓ sống (fail-stop)', '❌ mất', ''],
+            ['Stable (2 bản mirror)', '✓ sống', '⚠️ mirror mất, remote sống', ''],
+            ['Stable (+ remote copy)', '✓ sống', '✓ sống', '']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Server sập đúng sau khi write(A) đặt 950 vào buffer, nhưng TRƯỚC output(A). Khởi động lại, ví A trên database hiện bao nhiêu?',
+            options: [
+              { id: 'a', text: '1000 — con số 950 mới chỉ nằm trong RAM buffer, chưa kịp output xuống đĩa; RAM bay theo crash nên đĩa còn nguyên giá cũ', correct: true, explanation: 'Đúng — đây là ranh giới write-vào-buffer vs output-xuống-đĩa. Chưa output thì đĩa chưa biết gì; và vì fail-stop, đĩa không hề bị hỏng, chỉ đơn giản là còn giá trị cũ.' },
+              { id: 'b', text: '950 — lệnh write() đã chạy nghĩa là dữ liệu chắc chắn đã ghi xuống đĩa', correct: false, explanation: 'Sai ở đúng cái bẫy trung tâm của bài: write(X) chỉ sửa BUFFER trong RAM. Phải có output(B) riêng thì block mới xuống đĩa — và ở đây output chưa hề chạy.' },
+              { id: 'c', text: '0 — crash làm mất sạch mọi thứ, cả đĩa lẫn RAM', correct: false, explanation: 'Sai — fail-stop assumption: crash phần mềm/mất điện làm mất VOLATILE (RAM) nhưng KHÔNG làm hỏng non-volatile (đĩa). Đĩa vẫn giữ nguyên 1000.' },
+              { id: 'd', text: 'Không xác định — phải hỏi lại người mua xem giao dịch có chạy không', correct: false, explanation: 'Về mặt database thì rất xác định: đĩa = 1000. (Đúng là nhìn database KHÔNG biết giao dịch đã chạy dở — nhưng đó chính là lý do cần LOG ở bài sau, không phải đi hỏi người dùng.)' }
+            ]
+          },
+          {
+            question: 'Vì sao đĩa thường (non-volatile) vẫn CHƯA đủ, phải thêm tầng "stable storage"?',
+            options: [
+              { id: 'a', text: 'Vì non-volatile sống qua crash phần mềm nhưng vẫn CHẾT nếu chính cái đĩa hỏng (head crash, cháy, lụt); stable = nhân bản lên nhiều media độc lập-lỗi (mirror + remote) để một thảm họa không cuốn sạch mọi bản', correct: true, explanation: 'Đúng — mỗi tầng chống một loại sự cố. Đĩa chống mất-điện, stable chống mất-đĩa. Và stable cũng chỉ là XẤP XỈ "bất tử", không tuyệt đối.' },
+              { id: 'b', text: 'Vì đĩa chậm, stable storage nhanh hơn', correct: false, explanation: 'Sai — stable storage (nhân bản, ghi remote qua mạng) thường CHẬM hơn, không nhanh hơn; ta trả giá tốc độ để đổi lấy độ bền.' },
+              { id: 'c', text: 'Vì stable storage không bao giờ hỏng, tuyệt đối bất tử', correct: false, explanation: 'Sai — sách nói rõ stable storage chỉ là "xấp xỉ": xác suất mất cực thấp nhờ nhiều bản, nhưng không phải zero tuyệt đối.' },
+              { id: 'd', text: 'Vì luật quy định database phải có 3 bản sao', correct: false, explanation: 'Sai — không có "luật 3 bản"; số bản là đánh đổi kỹ thuật (2 bản thường là đủ hợp lý theo sách), không phải quy định pháp lý.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Cái gì sống sót?',
+          instruction: 'Một cú MẤT ĐIỆN (crash phần mềm, fail-stop) ập tới. Dữ liệu ở tầng nào SỐNG, tầng nào CHẾT?',
+          xp: 20,
+          chips: [
+            { id: 'c1', label: 'Giá trị mới vừa write() vào RAM buffer' },
+            { id: 'c2', label: 'Block đã output() xuống đĩa' },
+            { id: 'c3', label: 'Biến cục bộ trong private work area của txn' },
+            { id: 'c4', label: 'Bản sao trên stable storage (mirror)' }
+          ],
+          bins: [
+            { id: 'song', label: 'SỐNG ✓' },
+            { id: 'chet', label: 'CHẾT (bay theo RAM) ✗' }
+          ],
+          solution: { c1: 'chet', c2: 'song', c3: 'chet', c4: 'song' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp bản đồ "dữ liệu ở đâu, sống hay chết" 4 bước — có MỘT khối bịa (nghe rất chi là "chắc rồi").',
+        blocks: [
+          { type: 'op', token: 'PHÂN TẦNG: volatile (RAM/buffer — mất khi cúp điện) · non-volatile (đĩa — sống crash phần mềm) · stable (2+ bản, sống cả thảm họa)', slot: 'st-tier' },
+          { type: 'op', token: 'write(X) chỉ đổ giá trị mới vào BUFFER trong RAM — chưa hề chạm đĩa; output(B) mới là cú đẩy block xuống đĩa', slot: 'st-write' },
+          { type: 'op', token: 'write(X) chạy xong là dữ liệu chắc chắn đã nằm an toàn trên đĩa, khỏi lo crash', slot: 'st-x' },
+          { type: 'op', token: 'CRASH giữa write và output: giá trị mới kẹt trong RAM → bay theo RAM; đĩa còn giá cũ (fail-stop: non-volatile không hỏng)', slot: 'st-crash' },
+          { type: 'op', token: 'HỆ QUẢ: nhìn riêng database KHÔNG biết giao dịch đã chạy dở hay chưa — cần một cuốn nhật ký ghi trước mỗi cú sửa', slot: 'st-need' }
+        ],
+        drop_zones: [
+          { id: 'st-tier', placeholder: 'Bước 1 — dữ liệu có thể nằm ở mấy nơi?', accepts: ['op'], multi: false,
+            station: { icon: '📚', label: 'Ba tầng', sub: 'Bước 1', hint: 'Xếp theo độ bền: cái gì mất khi cúp điện, cái gì sống, cái gì sống cả khi cháy nhà?' } },
+          { id: 'st-write', placeholder: 'Bước 2 — write() đưa dữ liệu tới đâu?', accepts: ['op'], multi: false,
+            station: { icon: '✍️', label: 'write ≠ output', sub: 'Bước 2', hint: 'Có HAI động tác khác nhau: một cái sửa RAM, một cái đẩy xuống đĩa. write() là cái nào?' } },
+          { id: 'st-crash', placeholder: 'Bước 3 — crash đúng lúc giữa hai bước thì sao?', accepts: ['op'], multi: false,
+            station: { icon: '💥', label: 'Khoảnh khắc sập', sub: 'Bước 3', hint: 'Giá trị mới đang ở RAM, đĩa còn giá cũ. Mất điện → RAM ra sao, đĩa ra sao?' } },
+          { id: 'st-need', placeholder: 'Bước 4 — vậy ta thiếu cái gì?', accepts: ['op'], multi: false,
+            station: { icon: '📓', label: 'Vì sao cần log', sub: 'Bước 4', hint: 'Nhìn con số trên đĩa, có đoán được giao dịch vừa chạy dở không? Nếu không thì phải ghi lại ở đâu đó chứ?' } }
+        ],
+        expected_sql: 'PHÂN TẦNG: volatile (RAM/buffer — mất khi cúp điện) · non-volatile (đĩa — sống crash phần mềm) · stable (2+ bản, sống cả thảm họa) write(X) chỉ đổ giá trị mới vào BUFFER trong RAM — chưa hề chạm đĩa; output(B) mới là cú đẩy block xuống đĩa CRASH giữa write và output: giá trị mới kẹt trong RAM → bay theo RAM; đĩa còn giá cũ (fail-stop: non-volatile không hỏng) HỆ QUẢ: nhìn riêng database KHÔNG biết giao dịch đã chạy dở hay chưa — cần một cuốn nhật ký ghi trước mỗi cú sửa',
+        expected_zones: {
+          'st-tier': 'PHÂN TẦNG: volatile (RAM/buffer — mất khi cúp điện) · non-volatile (đĩa — sống crash phần mềm) · stable (2+ bản, sống cả thảm họa)',
+          'st-write': 'write(X) chỉ đổ giá trị mới vào BUFFER trong RAM — chưa hề chạm đĩa; output(B) mới là cú đẩy block xuống đĩa',
+          'st-crash': 'CRASH giữa write và output: giá trị mới kẹt trong RAM → bay theo RAM; đĩa còn giá cũ (fail-stop: non-volatile không hỏng)',
+          'st-need': 'HỆ QUẢ: nhìn riêng database KHÔNG biết giao dịch đã chạy dở hay chưa — cần một cuốn nhật ký ghi trước mỗi cú sửa'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 BẢN ĐỒ DỰNG XONG: ba tầng → write chỉ vào buffer → crash làm bay RAM → nên cần log. Khối "write() xong là chắc chắn trên đĩa" là BỊA — và bịa đúng chỗ chí mạng: write(X) chỉ sửa buffer RAM, phải có output(B) riêng mới xuống đĩa; tin nhầm điều này là mất data mà không hiểu vì sao. Đó cũng là lý do bài sau có "Hộp Đen" — cuốn log ghi TRƯỚC mỗi cú sửa. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'st-tier': 'Bước 1 — ba nơi dữ liệu có thể nằm, xếp theo "chịu được cú sốc tới đâu".',
+          'st-write': 'Bước 2 — đừng lẫn write() với output(). Một cái chạm RAM, một cái chạm đĩa.',
+          'st-crash': 'Bước 3 — giá trị mới đang kẹt ở RAM lúc mất điện. RAM là tầng nào trong ba tầng?',
+          'st-need': 'Bước 4 — con số trên đĩa im lặng không kể gì. Muốn biết chuyện đã xảy ra, phải có ai đó GHI LẠI trước.'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #62 — dựng lại hiện trường:</strong> lúc server sập, ví Quỹ Sàn A vừa được <code>write(A)</code> đặt giá trị mới 950 vào buffer, nhưng <code>output(A)</code> CHƯA chạy. Trong 4 chẩn đoán dưới, cái nào ĐÚNG cho trạng thái ví A sau khi khởi động lại?',
+        challenge_type: 'mcq_code',
+        options: [
+          {
+            text: 'A = 1000 — giá trị mới 950 mới chỉ nằm trong RAM buffer; chưa output() xuống đĩa nên bay theo RAM lúc mất điện, đĩa còn nguyên giá cũ',
+            correct: true
+          },
+          {
+            text: 'A = 950 — đã gọi write(A) thì dữ liệu chắc chắn nằm trên đĩa rồi',
+            correct: false,
+            explain: 'Đây là hiểu lầm nguy hiểm nhất của cả bài: write(A) chỉ sửa BUFFER trong RAM. Không có output(A) thì đĩa không hề biết tới con 950 — và output ở đây chưa chạy.'
+          },
+          {
+            text: 'A = 0 — mất điện xóa sạch cả RAM lẫn đĩa',
+            correct: false,
+            explain: 'Fail-stop assumption: crash làm mất VOLATILE (RAM) nhưng KHÔNG làm hỏng non-volatile (đĩa). Đĩa giữ nguyên giá trị cũ 1000, không về 0.'
+          },
+          {
+            text: 'A = 950 trên đĩa nhưng 1000 trong RAM — hai tầng lệch nhau vĩnh viễn',
+            correct: false,
+            explain: 'Ngược hoàn toàn: RAM (nơi có 950) mới là thứ bay mất; đĩa giữ 1000. Sau khởi động RAM trống trơn, chỉ đọc được đĩa = 1000. Không có chuyện "đĩa 950".'
+          }
+        ],
+        schema: {
+          table_name: 'wallets — hiện trường lúc 23:47:03',
+          columns: [
+            { name: 'tầng', type: 'nơi giá trị A nằm', key: '📍' },
+            { name: 'giá trị A', type: 'ngay trước crash', key: '💰' },
+            { name: 'sau crash?', type: 'còn hay mất', key: '💥' }
+          ],
+          data: [
+            ['RAM buffer', '950 (vừa write)', '✗ bay theo RAM'],
+            ['Đĩa (non-volatile)', '1000 (chưa output)', '✓ còn nguyên'],
+            ['→ đọc lại được', '❓', 'chỉ còn đĩa'],
+            ['(fail-stop: đĩa không hỏng)', '', '']
+          ]
+        },
+        context: {
+          scenario: 'Một phép phân biệt duy nhất gánh cả bài: write() sửa buffer RAM, output() mới đẩy xuống đĩa. Crash rơi vào đúng khe giữa hai động tác đó — nên giá trị mới chỉ tồn tại ở tầng bay-hơi.',
+          real_world: 'Đây là lý do mọi database gọi fsync() ở commit (ép buffer xuống đĩa THẬT), vì sao "đã lưu" trên UI khác "đã flush" dưới engine, và vì sao mất điện đúng lúc ghi là ác mộng kinh điển. Bài sau sẽ thấy LOG cứu tình huống này thế nào.',
+          steps: [
+            'Xác định giá trị mới 950 đang ở tầng nào → RAM buffer (vì output chưa chạy).',
+            'Mất điện = crash phần mềm → tầng volatile (RAM) mất sạch.',
+            'Fail-stop: non-volatile (đĩa) không hỏng, giữ giá trị cũ 1000.',
+            'Khởi động lại chỉ đọc được đĩa → A = 1000.'
+          ],
+          hint_explore: 'Panel schema bên trái đã dựng sẵn hiện trường ba tầng — cột "sau crash?" chỉ thẳng đáp án.',
+          expected: 'Chọn A = 1000 — giá trị mới kẹt trong RAM chưa kịp xuống đĩa.'
+        },
+        hints: [
+          { level: 1, text: 'Giá trị mới 950 đang nằm ở tầng nào? write() đẩy nó tới RAM buffer hay xuống đĩa?' },
+          { level: 2, text: 'Mất điện làm mất tầng VOLATILE. RAM là volatile — nên 950 ra sao?' },
+          { level: 3, text: 'Fail-stop: đĩa (non-volatile) không hỏng, giữ nguyên giá trị CŨ. Giá cũ của A là bao nhiêu?' },
+          { level: 4, text: 'Đáp án: A = 1000 — đĩa giữ giá cũ, 950 bay theo RAM.' }
+        ],
+        success_message: 'TICKET #62 ĐÓNG — bạn đã biết một cú sập cướp đi CHÍNH XÁC cái gì! 💥 Nhưng câu hỏi nhức nhối vẫn đó: nhìn con số 1000 trên đĩa, làm sao biết giao dịch trừ-50 đã chạy dở? Không thể — trừ khi có ai đó GHI LẠI trước mỗi cú sửa. Bài sau mở nắp Hộp Đen: cuốn LOG ghi &lt;giao dịch, món, giá-CŨ, giá-MỚI&gt; TRƯỚC khi động vào database — và từ đó, máy tự biết cái gì cần UNDO, cái gì cần REDO. 📜',
+        xp_reward: 120
+      },
+      concept_cards_after: []
+    },
+
+    /* ── nc_22 — Ticket #63 · Log Records, Commit Point, Undo & Redo (Ch.19.3) ──
+     * PART_7 Bài 12: "kéo log record trước data write" + Fig 19.4 ba ca. Log =
+     * <Ti, Xj, V1(cũ), V2(mới)> ghi TRƯỚC database; commit = <Ti commit> ra
+     * stable = điểm commit atomic; redo=giá mới, undo=giá cũ; luật 3 ca. Sim thứ
+     * 13 recovery_visual (renderer TỰ quyết undo/redo). Card G sau bài. Step-4
+     * fill_blank bản án Fig 19.4 ca b (REDO/UNDO/700). User chốt 2026-07-07 đợt 12. */
+    {
+      id: 'nc_22', index: 22,
+      title: 'Hộp Đen — cái log kể lại mọi chuyện sau khi máy sập',
+      subtitle: 'Log ghi TRƯỚC mỗi cú sửa: có start mà thiếu commit → UNDO (giá cũ); có commit → REDO (giá mới)',
+      module: 9, module_title: 'Hộp Đen — Sự cố & Phục hồi',
+      estimated_minutes: 20, xp_reward: 120,
+      drag_type: 'chip',
+      challenge_type: 'fill_blank',
+      drag_map: {
+        table: {
+          name: 'log — nhật ký trên stable storage (T0 chuyển 50 A→B, T1 rút 100 từ C)',
+          columns: ['thứ tự', 'log record', 'nghĩa'],
+          dataRows: [
+            ['1', '<T0 start>', 'T0 bắt đầu'],
+            ['2', '<T0, A, 1000, 950>', 'A: cũ 1000 → mới 950'],
+            ['3', '<T0, B, 2000, 2050>', 'B: cũ 2000 → mới 2050'],
+            ['4', '<T0 commit>', 'T0 chốt sổ'],
+            ['5', '<T1, C, 700, 600>', 'C: cũ 700 → mới 600']
+          ]
+        }
+      },
+      story: {
+        tag: '🎫 GameHub Marketplace · Ticket #63',
+        hook: 'Máy đã khởi động lại sau cú sập đêm qua. Bài trước dạy ta một sự thật phũ: nhìn database KHÔNG biết giao dịch nào chạy dở. Nhưng có một thứ sống sót qua crash vì nó nằm trên stable storage — <strong>cuốn LOG</strong>, cái Hộp Đen ghi lại từng cú sửa TRƯỚC khi động vào database. Giờ recovery mở nó ra, đọc ngược, và với mỗi giao dịch chỉ hỏi đúng một câu: <em>"mày có kịp commit không?"</em> Có commit → REDO cho chắc lời hứa. Chưa commit → UNDO như chưa từng. Ticket #63: xem cái Hộp Đen gánh cả atomicity lẫn durability thế nào. 📜'
+      },
+      step_1: {
+        primer: {
+          goal: [
+            'LOG là chuỗi bản ghi trên STABLE storage; update log record = <strong>&lt;Ti, Xj, V1, V2&gt;</strong> (giao dịch, món, giá-CŨ, giá-MỚI) + các bản đặc biệt &lt;Ti start&gt; / &lt;Ti commit&gt; / &lt;Ti abort&gt;. Luật vàng: log record của một cú ghi phải ra stable storage TRƯỚC khi cú ghi đó chạm database',
+            'ĐIỂM COMMIT: một giao dịch coi như đã commit đúng khoảnh khắc &lt;Ti commit&gt; xuống được stable storage — đó là hành động atomic duy nhất "chốt" giao dịch. Trước mốc đó crash → coi như chưa commit',
+            'HAI THAO TÁC phục hồi: redo(Ti) đặt món về giá-MỚI (giữ lời giao dịch đã commit — durability); undo(Ti) khôi phục giá-CŨ (xóa dấu giao dịch dở — atomicity). Luật quyết định: có &lt;start&gt; mà THIẾU commit/abort → UNDO; có &lt;start&gt; VÀ (commit HOẶC abort) → REDO'
+          ],
+          intro: 'Hộp đen máy bay ghi liên tục mọi thao tác của phi công. Máy bay rơi, thân nát — nhưng hộp đen (đặt ở nơi bền nhất) sống sót, và điều tra viên tua lại băng để biết chính xác chuyện gì đã xảy ra và ở khúc nào. Database y hệt: cuốn log nằm trên stable storage, ghi TRƯỚC mỗi cú sửa. Máy sập, RAM nát — log vẫn còn, và recovery "tua băng" để biết giao dịch nào đã xong (REDO cho chắc), giao dịch nào dở dang (UNDO xóa sạch).',
+          example: 'T0 chuyển 50 gem A→B, log ghi: <code>&lt;T0 start&gt;</code>, <code>&lt;T0,A,1000,950&gt;</code>, <code>&lt;T0,B,2000,2050&gt;</code>, <code>&lt;T0 commit&gt;</code>. Crash xong, recovery thấy T0 có đủ start + commit → <strong>REDO</strong>: đặt A=950, B=2050 (giá mới). Nếu T1 chỉ có <code>&lt;T1 start&gt;</code>, <code>&lt;T1,C,700,600&gt;</code> mà THIẾU commit → <strong>UNDO</strong>: kéo C về 700 (giá cũ).'
+        },
+        concept_cards: [
+          {
+            icon: 'fa-list-ol',
+            title: 'Bản ghi log & điểm commit — theo đúng sách',
+            body: 'Update log record <strong>&lt;Ti, Xj, V1, V2&gt;</strong> mang đủ 4 mảnh: định danh giao dịch, định danh món (vị trí trên đĩa), giá TRƯỚC (V1), giá SAU (V2) — có cả cũ lẫn mới nên đủ để undo LẪN redo. "Bất cứ khi nào một giao dịch ghi, bắt buộc log record cho cú ghi đó phải được tạo và thêm vào log TRƯỚC khi database bị sửa." Một giao dịch <em>đã commit</em> ngay tại thời điểm &lt;Ti commit&gt; của nó ra tới stable storage — <strong>đó là hành động atomic duy nhất</strong> khiến giao dịch trở nên chính thức.',
+            variant: 'quote',
+            source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3.1 & 19.3.4 — Log Records & Transaction Commit'
+          },
+          {
+            icon: 'fa-rotate',
+            title: 'Undo & Redo — hai chiều của cùng cuốn băng',
+            body: 'Sau crash, recovery đọc log và phân loại từng giao dịch: <strong>UNDO</strong> nếu có &lt;start&gt; nhưng KHÔNG có &lt;commit&gt; lẫn &lt;abort&gt; (dở dang — kéo mọi món về giá CŨ V1); <strong>REDO</strong> nếu có &lt;start&gt; VÀ có &lt;commit&gt; hoặc &lt;abort&gt; (đã kết thúc — đặt mọi món về giá MỚI V2). Redo cả khi thấy &lt;abort&gt; nghe lạ, nhưng đúng: lúc undo lần đầu hệ thống đã ghi các <em>redo-only record</em>, nên redo lại chúng ra kết quả cuối vẫn là "đã hoàn tác" — một chút dư thừa đổi lấy thuật toán gọn và phục hồi nhanh.'
+          },
+          {
+            icon: 'fa-arrows-turn-to-dots',
+            title: 'Thử ngay (Apply)',
+            body: 'Cuốn log này chính là WAL (Write-Ahead Log) bạn nghe suốt: <code>pg_wal/</code> của Postgres, binlog của MySQL, redo log của Oracle — tất cả là biến thể của &lt;Ti, Xj, cũ, mới&gt;. Khi Postgres khởi động sau crash và in "database system was not properly shut down; automatic recovery in progress" — nó đang làm ĐÚNG bài này: đọc WAL, redo cái đã commit, undo cái dở. Cả replication cũng dựa vào đây: bản backup chỉ cần tua lại log của primary.'
+          }
+        ],
+        recovery_visual: {
+          eyebrow: 'MÁY QUÉT LOG — CRASH RỒI QUÉT NGƯỢC · UNDO (giá cũ) HAY REDO (giá mới)?',
+          caption: 'Chạy CẢ BA điểm crash: cùng một cuốn log, chỗ dừng khác nhau cho ra bản án undo/redo khác nhau — đúng ba ca kinh điển của sách (Fig 19.4).',
+          accounts: [
+            { id: 'A', label: '💰 A · Quỹ Sàn', start: 1000 },
+            { id: 'B', label: '💰 B · DragonForge', start: 2000 },
+            { id: 'C', label: '💰 C · NightRaven', start: 700 }
+          ],
+          log: [
+            { type: 'start', txn: 'T0' },
+            { type: 'write', txn: 'T0', item: 'A', old: 1000, new: 950 },
+            { type: 'write', txn: 'T0', item: 'B', old: 2000, new: 2050 },
+            { type: 'commit', txn: 'T0' },
+            { type: 'start', txn: 'T1' },
+            { type: 'write', txn: 'T1', item: 'C', old: 700, new: 600 },
+            { type: 'commit', txn: 'T1' }
+          ],
+          modes: [
+            { id: 'a', short: 'CRASH ca (a)', btn: '▶ Crash sau <T0,B,..> (T0 chưa commit)', crashAfter: 2,
+              verdict: '❌→✓ Ca (a): T0 mới ghi tới B, CHƯA có <T0 commit> → UNDO(T0), kéo A,B về 1000/2000. C chưa động tới. Giao dịch dở dang bị xóa sạch — atomicity.' },
+            { id: 'b', short: 'CRASH ca (b)', btn: '▶ Crash sau <T1,C,..> (T0 xong, T1 dở)', crashAfter: 5,
+              verdict: '✓ Ca (b): T0 có commit → REDO (A=950, B=2050); T1 có start mà thiếu commit → UNDO (C về 700). Một cú redo, một cú undo — đúng bản án hỗn hợp.' },
+            { id: 'c', short: 'CRASH ca (c)', btn: '▶ Crash sau <T1 commit> (cả hai xong)', crashAfter: 6,
+              verdict: '✓ Ca (c): cả T0 lẫn T1 đều có commit → REDO cả hai (A=950, B=2050, C=600). Giữ trọn lời hứa của mọi giao dịch đã chốt — durability.' }
+          ]
+        },
+        visual: {
+          schema: {
+            table_name: 'luật phục hồi — chỉ cần nhìn có commit hay không',
+            columns: [
+              { name: 'trong log thấy', type: 'các bản ghi của Ti', key: '📜' },
+              { name: 'bản án', type: 'undo / redo', key: '⚖️' },
+              { name: 'đặt món về', type: '', key: '🎯' }
+            ]
+          },
+          data_preview: [
+            ['<start> + <commit>', 'REDO', 'giá MỚI (V2)'],
+            ['<start> + <abort>', 'REDO', 'giá MỚI của redo-only (= đã hoàn tác)'],
+            ['<start>, KHÔNG commit/abort', 'UNDO', 'giá CŨ (V1)'],
+            ['không có <start>', 'kệ nó', 'không đụng tới']
+          ]
+        }
+      },
+      step_2: {
+        mcq: [
+          {
+            question: 'Vì sao log record của một cú ghi BẮT BUỘC phải ra stable storage TRƯỚC khi cú ghi đó chạm database?',
+            options: [
+              { id: 'a', text: 'Vì nếu database bị sửa trước mà log chưa kịp ghi, rồi crash — ta mất luôn cả thông tin để UNDO cú sửa dở đó (không biết giá cũ là gì); log-trước đảm bảo mọi thay đổi trên đĩa đều có "biên lai" cũ+mới để hoàn tác hoặc làm lại', correct: true, explanation: 'Đúng — đây là hạt giống của Write-Ahead Logging: log đi trước thì recovery luôn có đủ old/new value. Ghi database trước là tự bịt đường phục hồi của mình.' },
+              { id: 'b', text: 'Vì log ghi nhanh hơn database nên làm trước cho đỡ chờ', correct: false, explanation: 'Sai — không phải chuyện tốc độ; kể cả log chậm hơn thì vẫn phải đi trước, vì đó là điều kiện để CÓ THỂ phục hồi, không phải tối ưu hiệu năng.' },
+              { id: 'c', text: 'Vì database chỉ nhận thay đổi khi log đã xác nhận, như một khóa hai lớp', correct: false, explanation: 'Sai — database không "hỏi xin phép" log; thứ tự log-trước là quy tắc của recovery để đảm bảo tính khôi phục, không phải cơ chế khóa.' },
+              { id: 'd', text: 'Vì luật kế toán yêu cầu ghi sổ trước khi chuyển tiền', correct: false, explanation: 'Ẩn dụ sổ sách nghe hợp lý nhưng lý do THẬT là kỹ thuật: có log trước thì mới có old value để undo và new value để redo sau crash.' }
+            ]
+          },
+          {
+            question: 'Crash xong, recovery thấy giao dịch T5 có <T5 start> và các bản ghi write, NHƯNG không có <T5 commit> lẫn <T5 abort>. Xử lý sao?',
+            options: [
+              { id: 'a', text: 'UNDO(T5) — kéo mọi món T5 đã đụng về giá trị CŨ (V1); giao dịch dở dang phải như chưa từng xảy ra để giữ atomicity', correct: true, explanation: 'Chuẩn — thiếu commit nghĩa là T5 chưa chốt, mọi dấu vết nó để lại trên đĩa (nếu có) phải bị xóa bằng cách khôi phục giá cũ.' },
+              { id: 'b', text: 'REDO(T5) — làm lại các cú ghi của T5 cho hoàn tất', correct: false, explanation: 'Sai — redo là dành cho giao dịch ĐÃ commit; ép hoàn tất một giao dịch chưa hề chốt là bịa ra kết quả mà người dùng chưa bao giờ được xác nhận.' },
+              { id: 'c', text: 'Bỏ qua T5 — chưa commit thì coi như không tồn tại, khỏi làm gì', correct: false, explanation: 'Sai — "bỏ qua" chỉ đúng nếu T5 chưa hề chạm đĩa; nhưng dưới immediate modification, giá trị mới của T5 CÓ THỂ đã lỡ xuống đĩa, nên phải chủ động UNDO để chắc chắn xóa dấu.' },
+              { id: 'd', text: 'Chờ T5 chạy tiếp cho xong rồi mới quyết', correct: false, explanation: 'Sai — crash đã giết T5, nó không "chạy tiếp" được; recovery phải quyết dứt khoát ngay, và với giao dịch dở thì luôn là UNDO.' }
+            ]
+          }
+        ],
+        mini_game: {
+          type: 'classify',
+          title: 'Undo hay Redo?',
+          instruction: 'Sau crash, recovery đọc log. Với mỗi giao dịch dưới đây — máy quyết UNDO hay REDO?',
+          xp: 20,
+          chips: [
+            { id: 'r1', label: 'T0: có <start>, có <commit>' },
+            { id: 'r2', label: 'T1: có <start>, KHÔNG có commit/abort' },
+            { id: 'r3', label: 'T2: có <start>, có <abort>' },
+            { id: 'r4', label: 'T3: có <start>, các write, mất điện ngay sau' }
+          ],
+          bins: [
+            { id: 'redo', label: 'REDO (giá mới) ↻' },
+            { id: 'undo', label: 'UNDO (giá cũ) ↺' }
+          ],
+          solution: { r1: 'redo', r2: 'undo', r3: 'redo', r4: 'undo' }
+        }
+      },
+      step_3: {
+        mission: 'Lắp quy trình Hộp Đen 4 bước — có MỘT khối bịa (nghe rất chi là "cho nhanh").',
+        blocks: [
+          { type: 'op', token: 'GHI LOG TRƯỚC: mỗi cú sửa, ghi <Ti, món, giá-CŨ, giá-MỚI> ra stable storage TRƯỚC khi động vào database', slot: 'lg-log' },
+          { type: 'op', token: 'Cứ sửa thẳng database cho nhanh, hỏng thì lát tính — log ghi sau cũng được', slot: 'lg-x' },
+          { type: 'op', token: 'ĐIỂM COMMIT: khi <Ti commit> xuống tới stable storage, giao dịch chính thức chốt — đó là hành động atomic duy nhất', slot: 'lg-commit' },
+          { type: 'op', token: 'SAU CRASH quét log: có <start> mà THIẾU commit → UNDO (kéo về giá CŨ); có <start> VÀ commit/abort → REDO (đặt về giá MỚI)', slot: 'lg-scan' },
+          { type: 'op', token: 'KẾT QUẢ: giao dịch đã chốt được giữ trọn (durability), giao dịch dở bị xóa sạch (atomicity) — database về trạng thái nhất quán', slot: 'lg-done' }
+        ],
+        drop_zones: [
+          { id: 'lg-log', placeholder: 'Bước 1 — làm gì TRƯỚC mỗi cú sửa?', accepts: ['op'], multi: false,
+            station: { icon: '📝', label: 'Log đi trước', sub: 'Bước 1', hint: 'Bài trước kết luận: nhìn database không biết chuyện gì đã xảy ra. Vậy phải ghi lại ở đâu, LÚC nào?' } },
+          { id: 'lg-commit', placeholder: 'Bước 2 — khi nào giao dịch coi như "xong"?', accepts: ['op'], multi: false,
+            station: { icon: '✅', label: 'Điểm commit', sub: 'Bước 2', hint: 'Có một bản ghi đặc biệt, và một nơi nó phải tới được. Khoảnh khắc đó là mốc atomic.' } },
+          { id: 'lg-scan', placeholder: 'Bước 3 — sau crash, quét log quyết gì?', accepts: ['op'], multi: false,
+            station: { icon: '🔍', label: 'Quét & phân loại', sub: 'Bước 3', hint: 'Với mỗi giao dịch chỉ hỏi MỘT câu: có commit không? Có → làm gì, không → làm gì?' } },
+          { id: 'lg-done', placeholder: 'Bước 4 — kết cục cho database?', accepts: ['op'], multi: false,
+            station: { icon: '🎯', label: 'Nhất quán lại', sub: 'Bước 4', hint: 'Hai tính chất được cứu: cái đã hứa thì giữ, cái làm dở thì xóa. Tên chúng là gì?' } }
+        ],
+        expected_sql: 'GHI LOG TRƯỚC: mỗi cú sửa, ghi <Ti, món, giá-CŨ, giá-MỚI> ra stable storage TRƯỚC khi động vào database ĐIỂM COMMIT: khi <Ti commit> xuống tới stable storage, giao dịch chính thức chốt — đó là hành động atomic duy nhất SAU CRASH quét log: có <start> mà THIẾU commit → UNDO (kéo về giá CŨ); có <start> VÀ commit/abort → REDO (đặt về giá MỚI) KẾT QUẢ: giao dịch đã chốt được giữ trọn (durability), giao dịch dở bị xóa sạch (atomicity) — database về trạng thái nhất quán',
+        expected_zones: {
+          'lg-log': 'GHI LOG TRƯỚC: mỗi cú sửa, ghi <Ti, món, giá-CŨ, giá-MỚI> ra stable storage TRƯỚC khi động vào database',
+          'lg-commit': 'ĐIỂM COMMIT: khi <Ti commit> xuống tới stable storage, giao dịch chính thức chốt — đó là hành động atomic duy nhất',
+          'lg-scan': 'SAU CRASH quét log: có <start> mà THIẾU commit → UNDO (kéo về giá CŨ); có <start> VÀ commit/abort → REDO (đặt về giá MỚI)',
+          'lg-done': 'KẾT QUẢ: giao dịch đã chốt được giữ trọn (durability), giao dịch dở bị xóa sạch (atomicity) — database về trạng thái nhất quán'
+        },
+        reveal_strip: true,
+        reveal_complete: '💡 QUY TRÌNH HỘP ĐEN KHÉP: log-đi-trước → điểm commit → quét undo/redo → nhất quán lại. Khối "cứ sửa thẳng database, log ghi sau" là BỊA — và bịa đúng chỗ chết người: sửa database trước rồi crash trước khi log kịp ghi, ta mất luôn giá CŨ để mà undo. Log PHẢI đi trước — đó chính là hạt giống của Write-Ahead Logging, nhân vật chính của bài 23. Bấm <strong>Chạy Query</strong>.',
+        reveal_hints: {
+          'lg-log': 'Bước 1 — thứ tự sống còn: log và database, cái nào ghi trước? Vì sao thứ tự đó không thể đảo?',
+          'lg-commit': 'Bước 2 — <Ti commit> phải tới được đâu thì giao dịch mới thật sự "xong"?',
+          'lg-scan': 'Bước 3 — một câu hỏi cho mỗi giao dịch: có commit hay không. Hai nhánh trả lời là hai thao tác gì?',
+          'lg-done': 'Bước 4 — hai lời hứa của transaction được recovery cứu lại: giữ cái đã chốt, xóa cái dở.'
+        }
+      },
+      step_4: {
+        prompt: '<strong>Ticket #63 — tuyên án phục hồi:</strong> server sập đúng sau bản ghi <code>&lt;T1, C, 700, 600&gt;</code> (T0 đã có commit, T1 thì CHƯA). Điền bản án recovery cho hai giao dịch và giá trị chốt của ví C.',
+        challenge_type: 'fill_blank',
+        template: "-- LOG doc duoc tren stable storage (crash sau dong 5):\n--   1  <T0 start>\n--   2  <T0, A, 1000, 950>\n--   3  <T0, B, 2000, 2050>\n--   4  <T0 commit>\n--   5  <T1, C, 700, 600>   <-- CRASH ngay sau day\n--      (khong co <T1 commit>)\n\n-- T0 co <start> VA <commit> -> hanh dong:\n--   T0 = ____\n\n-- T1 co <start> nhung THIEU <commit> -> hanh dong:\n--   T1 = ____\n\n-- Sau phuc hoi, vi C (T1 dinh sua) chot o gia tri:\n--   C = ____",
+        blanks: [
+          { id: 'b1', hint: 'REDO / UNDO', expected: 'REDO' },
+          { id: 'b2', hint: 'REDO / UNDO', expected: 'UNDO' },
+          { id: 'b3', hint: '? gem', expected: '700' }
+        ],
+        schema: {
+          table_name: 'bản án phục hồi — ca (b) của sách',
+          columns: [
+            { name: 'giao dịch', type: 'thấy gì trong log', key: '📜' },
+            { name: 'hành động', type: 'REDO / UNDO', key: '⚖️' },
+            { name: 'món về giá', type: '', key: '🎯' }
+          ],
+          data: [
+            ['T0 · start + commit', '❓', 'A=950, B=2050 (mới)'],
+            ['T1 · start, thiếu commit', '❓', 'C = ❓ (cũ)'],
+            ['(redo = giá mới V2)', '', ''],
+            ['(undo = giá cũ V1)', '', '']
+          ]
+        },
+        context: {
+          scenario: 'Đây chính là ca (b) trong Fig 19.4 của sách: một giao dịch đã commit (T0 → REDO về giá mới) và một giao dịch dở dang (T1 → UNDO về giá cũ) trong cùng một cú phục hồi. Ví C bị T1 định hạ xuống 600, nhưng T1 chưa commit nên UNDO kéo nó về giá CŨ.',
+          real_world: 'Log của Postgres/MySQL sau crash cho ra đúng bản án này: "redo" các transaction đã commit tới điểm crash, "undo/rollback" các transaction đang dở. Đọc được bảng REDO/UNDO là hiểu được dòng "recovering; redo done at ..." trong log khởi động.',
+          steps: [
+            'T0: có <start> VÀ <commit> → REDO (đặt A=950, B=2050 — giá mới V2).',
+            'T1: có <start> nhưng THIẾU <commit>/<abort> → UNDO (khôi phục giá cũ V1).',
+            'Ví C bị T1 định sửa 700→600; UNDO kéo về giá CŨ.',
+            'Điền REDO / UNDO / 700.'
+          ],
+          hint_explore: 'Panel trái là bản án đang chờ điền — cột "hành động" của T0/T1 chính là 2 ô đầu.',
+          expected: 'REDO · UNDO · 700'
+        },
+        hints: [
+          { level: 1, text: 'Câu hỏi vàng cho mỗi giao dịch: có <commit> trong log không? T0 có, T1 không.' },
+          { level: 2, text: 'Có commit → REDO (giá mới). Thiếu commit → UNDO (giá cũ). Điền hành động cho T0 rồi T1.' },
+          { level: 3, text: 'Ví C: T1 định đổi 700→600, nhưng T1 bị UNDO. UNDO khôi phục giá CŨ — giá cũ của C là bao nhiêu?' },
+          { level: 4, text: 'Đáp án: REDO · UNDO · 700.' }
+        ],
+        success_message: 'TICKET #63 ĐÓNG — cái Hộp Đen vừa cứu cả atomicity lẫn durability chỉ bằng một cuốn nhật ký! 📜 Hồ sơ đọc thêm bên dưới: SHADOW PAGING — cách phục hồi KHÁC hẳn logging (chép nguyên trang, tráo con trỏ), đẹp trên lý thuyết mà DB thật chê. Còn bài sau: ta mới giả định "log luôn kịp ra stable storage" — nhưng nếu chính cái log cũng nằm trong buffer chờ ghi thì sao? Luật WRITE-AHEAD LOGGING + checkpoint sẽ siết chặt khe hở đó. ⚡',
+        xp_reward: 120
+      },
+      concept_cards_after: ['nc_card_shadow_paging']
     }
 
   ],
@@ -5172,7 +5636,48 @@ window.LESSON_CONTENT['db_design_nc'] = {
         ]
       },
       source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.1-18.9.2 · PART_7 Card F — Degree-Two / Cursor Stability',
-      cta: { label: 'Về Trading Floor — Module 9 sắp mở: RECOVERY 💥', href: '/courses/db_design_nc' }
+      cta: { label: 'Bài 21 — Máy sập thì mất gì? Mở Module 9: Recovery 💥', href: '/lesson/db_design_nc?lesson=21' }
+    },
+
+    /* Card G (PART_7, sau bài 22) — Shadow Copying / Shadow Paging (Note 19.1):
+     * cách phục hồi KHÁC logging; chép nguyên page table + page sửa, tráo
+     * db-pointer atomic; không hợp concurrent txn → DB thật không dùng. */
+    {
+      id: 'nc_card_shadow_paging',
+      eyebrow: 'HỒ SƠ KỸ THUẬT · SAU BÀI 22',
+      title: 'Shadow Paging — phục hồi không cần log, và vì sao DB chê',
+      accent: '#34D399',
+      back_href: '/courses/db_design_nc',
+      intro: 'Bài 22 dạy phục hồi bằng LOG — ghi từng cú sửa. Có một trường phái hoàn toàn khác, không log một dòng nào: <strong>chụp ảnh</strong> nguyên bản database, sửa trên bản mới, rồi tráo con trỏ. Đẹp, gọn, đúng đắn — và gần như không DB lớn nào dùng. Vì sao?',
+      sections: [
+        {
+          icon: 'fa-clone',
+          heading: 'Shadow copy: đúng như text editor',
+          body: 'Giao dịch muốn sửa thì <strong>chép nguyên một bản database mới</strong>, mọi thay đổi làm trên bản mới, bản cũ (bản "shadow") giữ nguyên không đụng tới. Commit = tráo <code>db-pointer</code> sang bản mới (một cú ghi ATOMIC, vì đĩa đảm bảo ghi trọn một sector). Abort = xóa bản mới, con trỏ vẫn trỏ bản cũ. Bạn xài trường phái này mỗi ngày: <strong>text editor</strong> — "Save" là commit, "thoát không lưu" là abort, file gốc trên đĩa không đổi cho tới khi bạn Save.',
+          variant: 'quote',
+          source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3 Note 19.1 — Shadow Copies and Shadow Paging'
+        },
+        {
+          icon: 'fa-file-lines',
+          heading: 'Shadow paging: chỉ chép trang bị sửa',
+          body: 'Chép nguyên database thì với DB lớn là <strong>đắt kinh khủng</strong>. Bản cải tiến — <strong>shadow paging</strong> — dùng một <em>page table</em> trỏ tới mọi trang: chỉ những trang BỊ SỬA (và bản thân page table) mới được chép sang chỗ mới; trang không đổi thì page table mới cứ trỏ về trang gốc. Commit = tráo con trỏ page table atomic. Ít copy hơn hẳn shadow copy nguyên khối.'
+        },
+        {
+          icon: 'fa-ban',
+          heading: 'Vì sao database thật chê',
+          body: 'Sách chốt thẳng: shadow paging <strong>không chạy tốt với giao dịch đồng thời</strong> — nhiều transaction cùng tráo page table thì hỗn loạn — và <strong>không được dùng rộng trong database</strong>. Thêm nữa, tráo con trỏ liên tục làm các trang liên quan tản mát khắp đĩa (mất locality), và cần dọn rác trang cũ. Log-based recovery thắng vì: cho phép concurrency cao (chỉ ghi thêm bản ghi log tuần tự), không phải chép trang, và ghép mượt với 2PL/snapshot. Đó là lý do bài 22 dạy log, còn shadow paging chỉ nằm ở đây — một hồ sơ "hay mà không dùng".'
+        }
+      ],
+      quiz: {
+        question: 'Shadow paging commit bằng cách tráo con trỏ page table atomic — nghe rất sạch. Vậy nhược điểm chí mạng khiến database lớn không dùng nó là gì?',
+        options: [
+          { label: 'Không chạy tốt với giao dịch ĐỒNG THỜI (nhiều txn cùng tráo page table thì loạn) — trong khi log chỉ ghi thêm bản ghi tuần tự nên concurrency cao', correct: true, feedback: '✓ Chuẩn — đúng câu chốt của sách. Concurrency là mạch máu của DB thật; shadow paging nghẽn ngay ở đó, còn logging thì không.' },
+          { label: 'Không đảm bảo atomicity — tráo con trỏ có thể ghi dở nửa chừng', correct: false, feedback: '✗ Ngược lại: tráo db-pointer LÀ atomic (đĩa ghi trọn một sector), đó chính là điểm MẠNH của nó. Vấn đề nằm ở concurrency, không phải atomicity.' },
+          { label: 'Không phục hồi được sau crash vì không có log', correct: false, feedback: '✗ Nó phục hồi tốt sau crash (con trỏ cũ vẫn trỏ bản nhất quán) — recovery không phải điểm yếu; concurrency mới là.' }
+        ]
+      },
+      source: 'Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3 Note 19.1 · PART_7 Card G — Shadow Copying / Shadow Paging',
+      cta: { label: 'Về Hộp Đen — hẹn bài 23: WAL, Checkpoint & Crash Recovery', href: '/courses/db_design_nc' }
     }
   ]
 };

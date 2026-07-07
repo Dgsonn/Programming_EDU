@@ -10856,3 +10856,41 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   .st-visual .st-seat { transition: none; }
   .st-visual .st-seat--stolen { animation: none; }
 }
+
+/* ═══ Storage Visual (nc_21 — 3 tầng lưu trữ + crash, sim thứ 12) ═══ */
+.storage-visual .sg-item { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #aebfd6; margin-top: 10px; }
+.storage-visual .sg-tiers { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 6px; }
+.storage-visual .sg-tier {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, .35);
+  background: rgba(148, 163, 184, .05);
+}
+.storage-visual .sg-tier--ram { border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .06); }
+.storage-visual .sg-tier--disk { border-color: rgba(129, 140, 248, .5); background: rgba(129, 140, 248, .06); }
+.storage-visual .sg-tier--stable { border-color: rgba(52, 211, 153, .55); background: rgba(52, 211, 153, .06); }
+.storage-visual .sg-tier-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #cbd5e1; display: flex; flex-direction: column; gap: 1px; }
+.storage-visual .sg-tier-name b { font-weight: 400; font-size: 8px; color: #7f93ad; letter-spacing: .03em; }
+.storage-visual .sg-cell { font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 800; color: #e8edf5; transition: color .2s ease; }
+.storage-visual .sg-flash-ok { color: #34D399; }
+.storage-visual .sg-cell--gone { color: #F87171; font-size: 13px; text-decoration: line-through; }
+.storage-visual .sg-readout { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fca5a5; min-height: 18px; margin-bottom: 6px; }
+.storage-visual .sg-log { margin-bottom: 4px; }
+
+/* ═══ Recovery Visual (nc_22 — máy quét log undo/redo, sim thứ 13) ═══ */
+.recovery-visual .rc-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; margin: 12px 0 6px; }
+.recovery-visual .rc-col-name { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; letter-spacing: .05em; color: #7f93ad; margin-bottom: 6px; }
+.recovery-visual .rc-log { display: flex; flex-direction: column; gap: 3px; }
+.recovery-visual .rc-rec { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #c7d2fe; padding: 3px 8px; border-radius: 5px; background: rgba(129, 140, 248, .06); border-left: 2px solid rgba(129, 140, 248, .4); }
+.recovery-visual .rc-rec--lost { color: #64748b; background: rgba(148, 163, 184, .04); border-left-color: rgba(100, 116, 139, .3); opacity: .55; }
+.recovery-visual .rc-crash { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; color: #F87171; padding: 3px 0; letter-spacing: .02em; }
+.recovery-visual .rc-accts { display: flex; flex-direction: column; gap: 8px; }
+.recovery-visual .rc-acct { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px; padding: 8px 12px; border-radius: 9px; border: 1px solid rgba(148, 163, 184, .35); background: rgba(148, 163, 184, .05); }
+.recovery-visual .rc-acct-name { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #aebfd6; }
+.recovery-visual .rc-acct-val { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 800; color: #e8edf5; transition: color .2s ease; }
+.recovery-visual .rc-flash-ok { color: #34D399; }
+.recovery-visual .rc-flash-warn { color: #FBBF24; }
+.recovery-visual .rc-badge { flex-basis: 100%; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800; padding: 1px 8px; border-radius: 99px; width: fit-content; }
+.recovery-visual .rc-badge--redo { color: #34D399; background: rgba(52, 211, 153, .14); border: 1px solid rgba(52, 211, 153, .5); }
+.recovery-visual .rc-badge--undo { color: #FBBF24; background: rgba(251, 191, 36, .12); border: 1px solid rgba(251, 191, 36, .5); }
+@media (max-width: 620px) { .recovery-visual .rc-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .storage-visual .sg-cell, .recovery-visual .rc-acct-val { transition: none; } }

@@ -1867,6 +1867,64 @@
         '<text x="518" y="180" text-anchor="middle" fill="#7f93ad" font-size="8">Hibernate gọi đây là conversations — optimistic không soát read</text>' +
       '</g>' +
       '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">không khóa nào được sống qua thời-gian-suy-nghĩ của con người — cái ghế tự nhớ giùm</text>' +
+      '</svg>',
+
+    /* nc_21 — failure & storage: 3 tầng, giá trị mới kẹt trong RAM buffer bay theo crash (Ticket #62) */
+    nc_21: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ba tầng lưu trữ: RAM buffer giữ giá trị mới 950 nhưng bay hơi khi crash, đĩa còn giá cũ 1000, stable hai bản sao sống cả thảm họa; write vào buffer chưa phải là đã xuống đĩa">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Máy sập lúc 23:47 — dữ liệu mới đang nằm ở ĐÂU?</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">write(X) mới chỉ vào BUFFER RAM · output(B) mới là xuống đĩa — hai chuyện khác nhau</text>' +
+        // 3 tầng bên trái
+        '<rect x="40" y="60" width="300" height="40" rx="8" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="58" y="78" fill="#fca5a5" font-weight="700" font-size="10">🧠 RAM buffer</text>' +
+        '<text x="58" y="92" fill="#7f93ad" font-size="8">volatile — mất điện là trắng tay</text>' +
+        '<text x="322" y="86" text-anchor="end" fill="#f87171" font-weight="800" font-size="15">950 ⚡</text>' +
+        '<rect x="40" y="108" width="300" height="40" rx="8" fill="rgba(129,140,248,.08)" stroke="rgba(129,140,248,.5)" stroke-width="1.4"/>' +
+        '<text x="58" y="126" fill="#a5b4fc" font-weight="700" font-size="10">💽 ĐĨA</text>' +
+        '<text x="58" y="140" fill="#7f93ad" font-size="8">non-volatile — sống qua crash phần mềm</text>' +
+        '<text x="322" y="134" text-anchor="end" fill="#c7d2fe" font-weight="800" font-size="15">1000</text>' +
+        '<rect x="40" y="156" width="300" height="40" rx="8" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.6)" stroke-width="1.5"/>' +
+        '<text x="58" y="174" fill="#6ee7b7" font-weight="700" font-size="10">🗄️ STABLE</text>' +
+        '<text x="58" y="188" fill="#7f93ad" font-size="8">2 bản sao — sống cả hỏa hoạn/lụt</text>' +
+        '<text x="322" y="182" text-anchor="end" fill="#6ee7b7" font-weight="800" font-size="15">1000</text>' +
+        // Card phải — khoảnh khắc crash
+        '<rect x="372" y="60" width="312" height="136" rx="9" fill="#0e1726" stroke="rgba(248,113,113,.55)" stroke-width="1.4"/>' +
+        '<text x="528" y="80" text-anchor="middle" fill="#fca5a5" font-weight="700" font-size="10">💥 CRASH SAU write, TRƯỚC output</text>' +
+        '<text x="528" y="102" text-anchor="middle" fill="#aebfd6" font-size="8.5">giá trị mới 950 chỉ mới nằm trong RAM buffer</text>' +
+        '<text x="528" y="118" text-anchor="middle" fill="#fbbf24" font-size="8.5">output(B) chưa chạy → đĩa vẫn 1000</text>' +
+        '<text x="528" y="142" text-anchor="middle" fill="#f87171" font-weight="800" font-size="13">↻ khởi động lại: đọc đĩa = 1000</text>' +
+        '<text x="528" y="162" text-anchor="middle" fill="#fca5a5" font-size="8.5">— con số 950 BỐC HƠI, không dấu vết</text>' +
+        '<text x="528" y="184" text-anchor="middle" fill="#7f93ad" font-size="8">và tệ hơn: nhìn database KHÔNG biết có giao dịch nào dở</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">"đã write" chưa phải là "đã an toàn" — chỉ khi xuống stable storage mới chắc chắn</text>' +
+      '</svg>',
+
+    /* nc_22 — log records + undo/redo: log sống trên stable kể lại mọi chuyện, quyết undo/redo (Ticket #63) */
+    nc_22: '<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hộp đen log ghi trước mỗi cú sửa: có start không commit thì undo về giá trị cũ, có commit thì redo về giá trị mới; log nằm trên stable storage nên sống sót qua crash">' +
+      '<g font-family="JetBrains Mono, monospace">' +
+      '<text x="360" y="24" text-anchor="middle" font-weight="700" font-size="14" fill="#e8edf5">Hộp đen — cái log kể lại mọi chuyện sau khi máy sập</text>' +
+      '<text x="360" y="42" text-anchor="middle" font-size="9.5" fill="#7f93ad">mỗi cú sửa ghi log TRƯỚC: &lt;Ti, món, giá-CŨ, giá-MỚI&gt; — undo dùng cũ, redo dùng mới</text>' +
+        // Log bên trái
+        '<rect x="40" y="58" width="300" height="140" rx="9" fill="#0e1726" stroke="rgba(52,211,153,.55)" stroke-width="1.4"/>' +
+        '<text x="190" y="76" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="9.5">📜 LOG (trên stable storage)</text>' +
+        '<text x="58" y="96" fill="#7f93ad" font-size="8.5">&lt;T0 start&gt;</text>' +
+        '<text x="58" y="112" fill="#c7d2fe" font-size="8.5">&lt;T0, A, 1000, 950&gt;</text>' +
+        '<text x="58" y="128" fill="#c7d2fe" font-size="8.5">&lt;T0, B, 2000, 2050&gt;</text>' +
+        '<text x="58" y="144" fill="#6ee7b7" font-size="8.5">&lt;T0 commit&gt;  ← có commit</text>' +
+        '<text x="58" y="164" fill="#7f93ad" font-size="8.5">&lt;T1 start&gt;</text>' +
+        '<text x="58" y="180" fill="#fcd34d" font-size="8.5">&lt;T1, C, 700, 600&gt;  ⚡ crash</text>' +
+        '<text x="58" y="193" fill="#f87171" font-size="7.5">(T1 chưa kịp commit)</text>' +
+        // Bản án bên phải
+        '<rect x="372" y="58" width="312" height="64" rx="9" fill="rgba(52,211,153,.06)" stroke="rgba(52,211,153,.55)" stroke-width="1.3"/>' +
+        '<text x="528" y="78" text-anchor="middle" fill="#6ee7b7" font-weight="700" font-size="10">↻ REDO — T0 (có commit)</text>' +
+        '<text x="528" y="97" text-anchor="middle" fill="#aebfd6" font-size="8.5">áp giá trị MỚI: A=950, B=2050</text>' +
+        '<text x="528" y="113" text-anchor="middle" fill="#7f93ad" font-size="8">"đã hứa xong thì phải giữ lời" — durability</text>' +
+        '<rect x="372" y="130" width="312" height="66" rx="9" fill="rgba(251,191,36,.06)" stroke="rgba(251,191,36,.5)" stroke-width="1.3"/>' +
+        '<text x="528" y="150" text-anchor="middle" fill="#fcd34d" font-weight="700" font-size="10">↺ UNDO — T1 (start, thiếu commit)</text>' +
+        '<text x="528" y="169" text-anchor="middle" fill="#aebfd6" font-size="8.5">khôi phục giá trị CŨ: C=700</text>' +
+        '<text x="528" y="185" text-anchor="middle" fill="#7f93ad" font-size="8">"làm dở thì như chưa từng" — atomicity</text>' +
+      '</g>' +
+      '<text x="360" y="226" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" fill="#7f93ad">có start mà thiếu commit → UNDO · có commit → REDO: cái log gánh cả atomicity lẫn durability</text>' +
       '</svg>'
   };
 
@@ -3288,6 +3346,213 @@
     });
   }
 
+  /* ── Storage Visual (nc_21 — 3 tầng lưu trữ + crash, sim thứ 12) ──
+   * PART_7 Bài 11: "volatile/non-volatile/stable storage simulation" (Ch.19.2). Data:
+   * step_1.storage_visual = { eyebrow, caption, item_label, modes: [{ id, short,
+   *   btn, ok, verdict, steps: [{ text, ram?, disk?, crash?, cls?, note? }] }] }.
+   * 3 tầng: RAM buffer (volatile) · ĐĨA (non-volatile) · STABLE (2 bản sao). Bước
+   * có crash:true → RAM "⚡ bay mất", readout đọc lại ĐĨA. STABLE bám ĐĨA (sống cả
+   * thảm họa). User chốt 2026-07-07 (đợt 12): 2 mode CRASH SỚM/MUỘN so kèo. */
+  function renderStorageVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, i: 0, results: {} };
+
+    mount.innerHTML =
+      '<section class="sort-visual storage-visual" aria-label="Ba tầng lưu trữ: RAM buffer bay hơi, đĩa non-volatile, stable hai bản sao — bấm crash xem gì sống sót">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'BA TẦNG LƯU TRỮ — DỮ LIỆU ĐANG Ở ĐÂU?') + '</span></div>' +
+        '<div class="sg-item">' + escapeHtml(cfg.item_label || '') + '</div>' +
+        '<div class="sg-tiers">' +
+          '<div class="sg-tier sg-tier--ram"><span class="sg-tier-name">🧠 RAM buffer<b>volatile</b></span><span class="sg-cell" id="sg-ram">—</span></div>' +
+          '<div class="sg-tier sg-tier--disk"><span class="sg-tier-name">💽 ĐĨA<b>non-volatile</b></span><span class="sg-cell" id="sg-disk">—</span></div>' +
+          '<div class="sg-tier sg-tier--stable"><span class="sg-tier-name">🗄️ STABLE<b>2 bản sao · sống cả thảm họa</b></span><span class="sg-cell" id="sg-stable">—</span></div>' +
+        '</div>' +
+        '<div class="sg-readout" id="sg-readout">&nbsp;</div>' +
+        '<div class="tx-lines sg-log" id="sg-log"></div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="sg-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="sg-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="sg-status">Một giá trị — ba nơi nó có thể đang nằm. Chọn KỊCH BẢN crash rồi bấm từng nhịp.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('sg-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('sg-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function setCell(id, v, cls) {
+      var el = $(id);
+      el.textContent = (v === undefined || v === null) ? '—' : String(v);
+      el.classList.remove('sg-flash-ok', 'sg-flash-bad', 'sg-cell--gone');
+      if (cls) el.classList.add(cls);
+    }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.label)) : '?') + ' ' + (m.ok ? '✓' : '❌') + '</strong>';
+      }).join(' · ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.i = 0;
+      setCell('sg-ram', '—'); setCell('sg-disk', '—'); setCell('sg-stable', '—');
+      $('sg-readout').innerHTML = '&nbsp;'; $('sg-log').innerHTML = '';
+      cfg.modes.forEach(function (mm) { $('sg-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id); });
+      setBtn('Nhịp 1 / ' + m.steps.length, false);
+      setStatus('Kịch bản <strong>' + escapeHtml(m.short || m.id) + '</strong> — bấm từng nhịp, để mắt vào ba tầng.');
+    }
+    cfg.modes.forEach(function (m) { $('sg-mode-' + m.id).addEventListener('click', function () { pickMode(m); }); });
+
+    $('sg-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderStorageVisual(mount, cfg); return; }
+      var m = st.mode, step = m.steps[st.i];
+      if (!step) return;
+      $('sg-log').innerHTML += '<div class="tx-line' + (step.cls ? ' tx-line--' + step.cls : '') + '">' + escapeHtml(step.text) + '</div>';
+      if (step.ram !== undefined) setCell('sg-ram', step.ram, step.cls === 'ok' ? 'sg-flash-ok' : null);
+      if (step.disk !== undefined) { setCell('sg-disk', step.disk, step.cls === 'ok' ? 'sg-flash-ok' : null); setCell('sg-stable', step.disk); }
+      if (step.crash) {
+        setCell('sg-ram', '⚡ bay mất', 'sg-cell--gone');
+        var diskVal = $('sg-disk').textContent;
+        $('sg-readout').innerHTML = '↻ khởi động lại → chỉ còn ĐĨA đọc được: <b>' + escapeHtml(diskVal) + '</b>';
+      }
+      st.i++;
+      if (st.i < m.steps.length) {
+        setBtn('Nhịp ' + (st.i + 1) + ' / ' + m.steps.length, false);
+        if (step.note) setStatus(step.note);
+      } else {
+        st.results[m.id] = { label: m.result || 'xong' };
+        var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+        if (done) { setBtn('↺ Chạy lại từ đầu', false); st.mode = 'reset'; setStatus((m.verdict || '') + '<br>' + soKeo()); }
+        else { setBtn('✓ ' + (m.short || m.id) + ' xong', true); setStatus((m.verdict || '') + ' Giờ chạy kịch bản còn lại mà so.'); }
+      }
+    });
+  }
+
+  /* ── Recovery Visual (nc_22 — máy quét log undo/redo, sim thứ 13) ──
+   * PART_7 Bài 12: "kéo log record trước data write" + Fig 19.4 ba ca. Data:
+   * step_1.recovery_visual = { eyebrow, caption, accounts: [{id,label,start}],
+   *   log: [{type:'start'|'write'|'commit'|'abort', txn, item?, old?, new?}],
+   *   modes: [{ id, short, btn, crashAfter (index vào log), verdict }] }.
+   * Renderer TỰ quyết undo/redo: txn có <start> mà KHÔNG có commit/abort trong log
+   * (đã cắt tại crash) → UNDO (khôi phục old); có commit/abort → REDO (áp new).
+   * Baseline account = old; redo→new, undo→giữ old. User chốt 2026-07-07 (đợt 12). */
+  function renderRecoveryVisual(mount, cfg) {
+    if (!mount || !cfg || !Array.isArray(cfg.log) || !Array.isArray(cfg.accounts) || !Array.isArray(cfg.modes) || !cfg.modes.length) return;
+    var st = { mode: null, phase: 0, fates: [], results: {} };
+
+    function fmtRec(r) {
+      if (r.type === 'start') return '&lt;' + r.txn + ' start&gt;';
+      if (r.type === 'commit') return '&lt;' + r.txn + ' commit&gt;';
+      if (r.type === 'abort') return '&lt;' + r.txn + ' abort&gt;';
+      return '&lt;' + r.txn + ', ' + escapeHtml(r.item) + ', ' + escapeHtml(String(r.old)) + ', ' + escapeHtml(String(r.new)) + '&gt;';
+    }
+    function acctHtml() {
+      return cfg.accounts.map(function (a) {
+        return '<div class="rc-acct" data-rc-acct="' + a.id + '"><span class="rc-acct-name">' + escapeHtml(a.label) + '</span>' +
+          '<span class="rc-acct-val" id="rc-val-' + a.id + '">' + escapeHtml(String(a.start)) + '</span></div>';
+      }).join('');
+    }
+
+    mount.innerHTML =
+      '<section class="sort-visual recovery-visual" aria-label="Máy quét log phục hồi: crash rồi quét log quyết định undo hay redo mỗi giao dịch">' +
+        '<div class="pv-head"><span class="pv-eyebrow">' + escapeHtml(cfg.eyebrow || 'MÁY QUÉT LOG — UNDO HAY REDO?') + '</span></div>' +
+        '<div class="rc-grid">' +
+          '<div class="rc-logcol"><div class="rc-col-name">📜 LOG (stable storage)</div><div class="rc-log" id="rc-log"></div></div>' +
+          '<div class="rc-dbcol"><div class="rc-col-name">💽 DATABASE (sau phục hồi)</div><div class="rc-accts" id="rc-accts">' + acctHtml() + '</div></div>' +
+        '</div>' +
+        '<div class="sv-ctl">' +
+          cfg.modes.map(function (m) { return '<button type="button" class="sv-btn fv-mode" id="rc-mode-' + escapeHtml(m.id) + '">' + escapeHtml(m.btn) + '</button>'; }).join('') +
+          '<button type="button" class="sv-btn" id="rc-btn" disabled>Nhịp kế</button>' +
+          '<span class="sv-status" id="rc-status">Log nằm trên stable storage — sống sót qua crash. Chọn ĐIỂM CRASH rồi bấm từng nhịp.</span>' +
+        '</div>' +
+        (cfg.caption ? '<p class="pv-caption">' + escapeHtml(cfg.caption) + '</p>' : '') +
+      '</section>';
+
+    var $ = function (id) { return mount.querySelector('#' + id); };
+    function setStatus(t) { $('rc-status').innerHTML = t; }
+    function setBtn(label, disabled) { var b = $('rc-btn'); b.textContent = label; b.disabled = !!disabled; }
+    function soKeo() {
+      return 'SO KÈO — ' + cfg.modes.map(function (m) {
+        var r = st.results[m.id];
+        return '<strong>' + escapeHtml(m.short || m.id) + ': ' + (r ? escapeHtml(String(r.label)) : '?') + '</strong>';
+      }).join(' · ');
+    }
+    function computeFates(crashAfter) {
+      var vis = cfg.log.slice(0, crashAfter + 1);
+      var order = [];
+      vis.forEach(function (r) { if (order.indexOf(r.txn) === -1) order.push(r.txn); });
+      return order.map(function (t) {
+        var hasEnd = vis.some(function (r) { return r.txn === t && (r.type === 'commit' || r.type === 'abort'); });
+        var writes = vis.filter(function (r) { return r.txn === t && r.type === 'write'; });
+        return { txn: t, fate: hasEnd ? 'REDO' : 'UNDO', writes: writes };
+      });
+    }
+    function renderLog(crashAfter) {
+      $('rc-log').innerHTML = cfg.log.map(function (r, idx) {
+        var cls = idx > crashAfter ? ' rc-rec--lost' : '';
+        var crashMark = (idx === crashAfter) ? '<div class="rc-crash">⚡ CRASH — mọi thứ sau đây CHƯA kịp ghi</div>' : '';
+        return '<div class="rc-rec' + cls + '">' + fmtRec(r) + '</div>' + crashMark;
+      }).join('');
+    }
+    function finalLabel() {
+      return cfg.accounts.map(function (a) { return a.id + ($('rc-val-' + a.id).textContent); }).join(' ');
+    }
+    function pickMode(m) {
+      st.mode = m; st.phase = 0;
+      st.fates = computeFates(m.crashAfter);
+      cfg.accounts.forEach(function (a) { var el = $('rc-val-' + a.id); el.textContent = String(a.start); el.className = 'rc-acct-val'; });
+      renderLog(m.crashAfter);
+      $('rc-accts').querySelectorAll('.rc-badge').forEach(function (b) { b.remove(); });
+      cfg.modes.forEach(function (mm) { $('rc-mode-' + mm.id).classList.toggle('fv-mode--active', mm.id === m.id); });
+      setBtn('Quét ngược log →', false);
+      setStatus('Điểm crash: <strong>' + escapeHtml(m.short || m.id) + '</strong>. Log còn nguyên trên stable storage — bấm để máy quét.');
+    }
+    cfg.modes.forEach(function (m) { $('rc-mode-' + m.id).addEventListener('click', function () { pickMode(m); }); });
+
+    $('rc-btn').addEventListener('click', function () {
+      if (!st.mode) return;
+      if (st.mode === 'reset') { renderRecoveryVisual(mount, cfg); return; }
+      // phase 0 = điểm danh fate; phase 1..n = áp từng giao dịch; cuối = verdict
+      if (st.phase === 0) {
+        st.fates.forEach(function (f) {
+          f.writes.forEach(function (w) {
+            var acct = mount.querySelector('.rc-acct[data-rc-acct="' + w.item + '"]');
+            if (acct && !acct.querySelector('.rc-badge')) {
+              var badge = document.createElement('span');
+              badge.className = 'rc-badge rc-badge--' + (f.fate === 'REDO' ? 'redo' : 'undo');
+              badge.textContent = f.txn + ': ' + (f.fate === 'REDO' ? '↻ REDO' : '↺ UNDO');
+              acct.appendChild(badge);
+            }
+          });
+        });
+        var undo = st.fates.filter(function (f) { return f.fate === 'UNDO'; }).map(function (f) { return f.txn; });
+        var redo = st.fates.filter(function (f) { return f.fate === 'REDO'; }).map(function (f) { return f.txn; });
+        setStatus('Quét xong. <b>REDO</b> (' + (redo.join(', ') || '—') + '): có &lt;commit&gt; → áp giá trị MỚI. <b>UNDO</b> (' + (undo.join(', ') || '—') + '): có &lt;start&gt; mà thiếu &lt;commit&gt; → khôi phục giá trị CŨ.');
+        st.phase = 1;
+        setBtn('Áp phục hồi →', false);
+        return;
+      }
+      if (st.phase === 1) {
+        st.fates.forEach(function (f) {
+          f.writes.forEach(function (w) {
+            var el = $('rc-val-' + w.item);
+            if (!el) return;
+            if (f.fate === 'REDO') { el.textContent = String(w.new); el.className = 'rc-acct-val rc-flash-ok'; }
+            else { el.textContent = String(w.old); el.className = 'rc-acct-val rc-flash-warn'; }
+          });
+        });
+        st.phase = 2;
+        setBtn('✓ Xong', false);
+        setStatus('Đã áp: REDO đẩy về giá trị mới, UNDO kéo về giá trị cũ. Database giờ nhất quán — như thể giao dịch dở dang chưa từng xảy ra.');
+        return;
+      }
+      // phase 2 → chốt mode
+      st.results[st.mode.id] = { label: finalLabel() };
+      var done = cfg.modes.every(function (mm) { return st.results[mm.id]; });
+      if (done) { setBtn('↺ Chạy lại từ đầu', false); setStatus((st.mode.verdict || '') + '<br>' + soKeo()); st.mode = 'reset'; }
+      else { setBtn('✓ ' + (st.mode.short || st.mode.id) + ' xong', true); setStatus((st.mode.verdict || '') + ' Giờ thử điểm crash khác mà so.'); }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -3531,6 +3796,12 @@
         pvMount.hidden = false;
       } else if (s1.seat_visual) {
         renderSeatVisual(pvMount, s1.seat_visual);
+        pvMount.hidden = false;
+      } else if (s1.storage_visual) {
+        renderStorageVisual(pvMount, s1.storage_visual);
+        pvMount.hidden = false;
+      } else if (s1.recovery_visual) {
+        renderRecoveryVisual(pvMount, s1.recovery_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
