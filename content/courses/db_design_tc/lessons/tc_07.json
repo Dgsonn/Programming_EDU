@@ -1,0 +1,336 @@
+{
+  "id": "tc_07",
+  "index": 7,
+  "title": "MapReduce — chia để trị trên cụm máy",
+  "subtitle": "Map phát (khóa, 1) → Shuffle gom theo khóa → Reduce cộng dồn",
+  "module": 5,
+  "module_title": "Big Data & Analytics",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "posts (mảnh trên 3 máy)",
+      "columns": [
+        "post_id",
+        "hashtags"
+      ],
+      "dataRows": [
+        [
+          "501",
+          "#eldenring #dlc"
+        ],
+        [
+          "503",
+          "#eldenring"
+        ],
+        [
+          "504",
+          "#hades2"
+        ],
+        [
+          "507",
+          "#guildboard #sập"
+        ],
+        [
+          "508",
+          "#indie #eldenring"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #27",
+    "hook": "Marketing muốn biết <strong>\"hashtag hot nhất mọi thời đại\"</strong> — nghĩa là đếm chữ trên 10 triệu post. Một máy cày hết đêm chưa xong, mà post mới vẫn đổ về từng giây. Ticket #27: chia bài toán cho cả CỤM máy theo <em>MapReduce</em> — mỗi máy <strong>MAP</strong> phát cặp (hashtag, 1), hệ thống <strong>SHUFFLE</strong> gom theo khóa, <strong>REDUCE</strong> cộng dồn. Chia để trị, đúng nghĩa đen."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Bài toán quá lớn cho 1 máy → chia dữ liệu cho N máy xử lý SONG SONG",
+        "Lập trình viên chỉ viết 2 hàm: map (phát cặp khóa-giá trị) và reduce (cộng dồn theo khóa)",
+        "Shuffle là việc của HỆ THỐNG: gom mọi cặp cùng khóa về đúng một máy reduce"
+      ],
+      "intro": "Đếm hashtag trên 10 triệu post không cần thuật toán thiên tài — cần CÁCH CHIA VIỆC. <strong>MapReduce</strong> chia bảng posts thành mảnh, phát cho N máy: mỗi máy chạy <code>map(post)</code> phát ra cặp <code>(hashtag, 1)</code> cho từng tag nó thấy. Hệ thống <strong>shuffle</strong> tự gom mọi cặp cùng hashtag về một chỗ, rồi <code>reduce(tag, [1,1,1…])</code> cộng lại. Bạn không quản lý máy nào làm gì — chỉ định nghĩa map và reduce.",
+      "example": "map: <code>\"#eldenring #dlc\" → (#eldenring,1), (#dlc,1)</code> · shuffle: <code>#eldenring → [1,1,1]</code> · reduce: <code>#eldenring → 3</code>"
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-map",
+        "title": "MAP — phát cặp, không phán xét",
+        "body": "Hàm map nhìn TỪNG bản ghi độc lập và phát cặp <code>(khóa, giá_trị)</code> — với đếm hashtag là <code>(tag, 1)</code>. Không cộng, không nhớ gì giữa các post — nhờ vô trạng thái mà chạy được song song trên nghìn máy."
+      },
+      {
+        "icon": "fa-shuffle",
+        "title": "SHUFFLE — khóa nào về nhà nấy",
+        "body": "Giữa map và reduce, hệ thống gom mọi cặp CÙNG KHÓA từ khắp các máy về một máy reduce: <code>#eldenring → [1, 1, 1]</code>. Đây là bước tốn mạng nhất — và là lý do khóa (key) phải chọn khéo.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 10 — Big Data / MapReduce"
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "SQL quen thuộc <code>SELECT tag, COUNT(*) GROUP BY tag</code> chính là MapReduce trá hình: map = tách tag khỏi post, shuffle = GROUP BY, reduce = COUNT. Hiểu ánh xạ này thì Spark/Hadoop chỉ là cú pháp mới của tư duy cũ."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "posts (mảnh trên 3 máy)",
+        "columns": [
+          {
+            "name": "post_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "hashtags",
+            "type": "TEXT",
+            "key": "",
+            "icon": "#️⃣"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "501",
+          "#eldenring #dlc"
+        ],
+        [
+          "503",
+          "#eldenring"
+        ],
+        [
+          "504",
+          "#hades2"
+        ],
+        [
+          "507",
+          "#guildboard #sập"
+        ],
+        [
+          "508",
+          "#indie #eldenring"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao hàm <code>map</code> chỉ phát <code>(tag, 1)</code> mà KHÔNG tự cộng luôn?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Map nhìn từng post độc lập trên máy riêng — không máy nào thấy đủ toàn cục để cộng; việc gom + cộng thuộc về shuffle + reduce",
+            "correct": true,
+            "explanation": "Đúng — chính sự \"ngây thơ\" vô trạng thái của map cho phép chạy song song vô hạn; cộng sớm là phải nhớ trạng thái, mất khả năng chia."
+          },
+          {
+            "id": "b",
+            "text": "Vì phép cộng quá chậm với map",
+            "correct": false,
+            "explanation": "Sai — cộng rất rẻ; vấn đề là map KHÔNG THẤY các cặp cùng khóa ở máy khác."
+          },
+          {
+            "id": "c",
+            "text": "Để tiết kiệm bộ nhớ của máy map",
+            "correct": false,
+            "explanation": "Sai — phát (tag,1) thực ra tốn hơn; đổi lại là tính song song tuyệt đối."
+          },
+          {
+            "id": "d",
+            "text": "Do ngôn ngữ lập trình không cho phép cộng trong map",
+            "correct": false,
+            "explanation": "Sai — cho phép (combiner là tối ưu có thật), nhưng THIẾT KẾ chuẩn tách phát/gom/cộng làm 3 pha rõ ràng."
+          }
+        ]
+      },
+      {
+        "question": "Bước SHUFFLE đảm bảo điều gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mọi cặp CÙNG KHÓA — dù sinh ra ở máy nào — đều về đúng MỘT máy reduce",
+            "correct": true,
+            "explanation": "Đúng — nhờ vậy reduce(\"#eldenring\", values) cầm ĐỦ mọi số 1 của tag đó, cộng ra kết quả toàn cục."
+          },
+          {
+            "id": "b",
+            "text": "Dữ liệu được xáo trộn ngẫu nhiên cho cân bằng tải",
+            "correct": false,
+            "explanation": "Sai — \"shuffle\" nghe như xáo bài nhưng thực chất là GOM THEO KHÓA, có quy luật tuyệt đối."
+          },
+          {
+            "id": "c",
+            "text": "Kết quả được sắp xếp theo bảng chữ cái",
+            "correct": false,
+            "explanation": "Sai — sắp theo khóa có thể xảy ra như hiệu ứng phụ, nhưng cam kết cốt lõi là gom đủ theo khóa."
+          },
+          {
+            "id": "d",
+            "text": "Mỗi máy reduce nhận số cặp bằng nhau",
+            "correct": false,
+            "explanation": "Sai — khóa nóng (như #eldenring) có thể dồn 1 máy nhiều việc hơn hẳn (data skew — vấn đề có thật)."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Xếp dòng chảy MapReduce",
+      "instruction": "Kéo thả các bước xử lý \"đếm hashtag 10 triệu post\" theo đúng thứ tự.",
+      "xp": 20,
+      "items": [
+        {
+          "id": "m1",
+          "label": "Chia bảng posts thành mảnh, phát cho N máy"
+        },
+        {
+          "id": "m2",
+          "label": "Mỗi máy map(post) → phát (tag, 1) cho từng hashtag"
+        },
+        {
+          "id": "m3",
+          "label": "Shuffle: gom mọi cặp cùng tag về một máy"
+        },
+        {
+          "id": "m4",
+          "label": "reduce(tag, [1,1,…]) → cộng dồn thành tổng"
+        },
+        {
+          "id": "m5",
+          "label": "Ghi bảng kết quả (tag, tổng) — marketing đọc"
+        }
+      ],
+      "solution": {
+        "m1": 1,
+        "m2": 2,
+        "m3": 3,
+        "m4": 4,
+        "m5": 5
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp dây chuyền đếm hashtag: chọn đúng thân <strong>MAP → SHUFFLE → REDUCE</strong>. Trong khay có 2 khối mồi nhử làm sai vai.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "map(post): for tag in post.hashtags → emit(tag, 1)",
+        "slot": "mr-map"
+      },
+      {
+        "type": "op",
+        "token": "map(post): return COUNT(*) toàn bảng",
+        "slot": "mr-map-x"
+      },
+      {
+        "type": "kw",
+        "token": "shuffle: gom mọi cặp CÙNG tag về một máy → tag: [1, 1, …]",
+        "slot": "mr-shuffle"
+      },
+      {
+        "type": "op",
+        "token": "reduce(tag, values): return (tag, sum(values))",
+        "slot": "mr-reduce"
+      },
+      {
+        "type": "op",
+        "token": "reduce(tag, values): return (tag, values[0])",
+        "slot": "mr-reduce-x"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "mr-map",
+        "placeholder": "MAP — mỗi máy làm gì với từng post?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "mr-shuffle",
+        "placeholder": "SHUFFLE — hệ thống gom thế nào?",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      },
+      {
+        "id": "mr-reduce",
+        "placeholder": "REDUCE — máy nhận [1,1,…] làm gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      }
+    ],
+    "expected_sql": "map(post): for tag in post.hashtags → emit(tag, 1) shuffle: gom mọi cặp CÙNG tag về một máy → tag: [1, 1, …] reduce(tag, values): return (tag, sum(values))",
+    "expected_zones": {
+      "mr-map": "map(post): for tag in post.hashtags → emit(tag, 1)",
+      "mr-shuffle": "shuffle: gom mọi cặp CÙNG tag về một máy → tag: [1, 1, …]",
+      "mr-reduce": "reduce(tag, values): return (tag, sum(values))"
+    },
+    "reveal_hints": {
+      "mr-map": "Map KHÔNG đếm tổng — nó chỉ phát <strong>(tag, 1)</strong> cho từng tag nhìn thấy. Khối \"COUNT(*) toàn bảng\" là mồi nhử: map không thấy toàn bảng.",
+      "mr-shuffle": "Việc của hệ thống: mọi cặp cùng khóa về một nhà — <strong>tag: [1, 1, …]</strong>.",
+      "mr-reduce": "Reduce cầm đủ danh sách rồi mới <strong>cộng dồn: sum(values)</strong>. Lấy values[0] là vứt gần hết dữ liệu."
+    }
+  },
+  "step_4": {
+    "prompt": "Điền nốt 3 chỗ trống để dây chuyền chạy được — đúng vai từng pha: map phát gì, shuffle gom theo gì, reduce dùng hàm nào.",
+    "challenge_type": "fill_blank",
+    "template": "def map(post):\n  for tag in post.hashtags:\n    emit(____, 1)\n\n# SHUFFLE (hệ thống tự làm): gom các cặp có cùng ____\n\ndef reduce(tag, values):\n  # values = [1, 1, 1, ...]\n  return (tag, ____(values))",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "phát khóa nào?",
+        "expected": "tag"
+      },
+      {
+        "id": "b2",
+        "hint": "gom theo gì?",
+        "expected": "tag"
+      },
+      {
+        "id": "b3",
+        "hint": "hàm cộng dồn",
+        "expected": "sum"
+      }
+    ],
+    "context": {
+      "scenario": "Đoạn pseudo-code này là TOÀN BỘ những gì dev phải viết — framework (Hadoop/Spark) lo chia mảnh, phát máy, shuffle, gom lỗi. Điền sai một vai là cả cụm máy cho ra số rác.",
+      "real_world": "Google xây MapReduce để đánh index cả Internet; Hadoop/Spark phổ cập nó cho mọi công ty. Ngày nay bạn viết <code>df.groupBy(\"tag\").count()</code> trên Spark — nhưng bên dưới vẫn là map-shuffle-reduce y nguyên.",
+      "steps": [
+        "Map phát cặp (khóa, 1): khóa ở đây là <code>tag</code>.",
+        "Shuffle gom theo đúng KHÓA đã phát — cũng là <code>tag</code>.",
+        "Reduce nhận cả danh sách [1,1,…] → <code>sum(values)</code>.",
+        "Đối chiếu mini-game: thứ tự pha không đổi, chỉ điền đúng vai."
+      ],
+      "hint_explore": "Nhẩm với 5 post ở bảng dữ liệu: #eldenring xuất hiện ở post 501, 503, 508 → reduce phải trả 3.",
+      "expected": "Điền đúng 3/3 ô: emit(tag, 1) · gom theo tag · sum(values). Bài này là pseudo-code — chấm theo ô điền, không chạy SQL."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Nhìn hero: MAP phát cặp gì? SHUFFLE gom theo gì? REDUCE làm phép gì với [1,1,1]?"
+      },
+      {
+        "level": 2,
+        "text": "Ô 1 và ô 2 là CÙNG MỘT thứ — khóa của bài toán đếm hashtag."
+      },
+      {
+        "level": 3,
+        "text": "Ô 3: cộng dồn danh sách số 1 → hàm <code>sum</code>."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: <code>tag</code> · <code>tag</code> · <code>sum</code>."
+      }
+    ],
+    "success_message": "Ticket #27 đóng! 10 triệu post chia cho cả cụm — marketing có \"hashtag hot nhất\" trước giờ ăn trưa. Ticket #28: hồ sơ người dùng bùng nổ kiểu dáng — bảng users mọc cột NULL không kịp thở.",
+    "xp_reward": 120
+  }
+}

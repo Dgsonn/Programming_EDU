@@ -7,7 +7,11 @@
   <title>{% block title %}Programming EDU{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=3" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="{{ url_for('static', filename='js/icons.js') }}?v=2"></script>
   {% block extra_head %}{% endblock %}
@@ -39,7 +43,6 @@
       <button class="nav-btn" data-page="roadmap" onclick="navigate('roadmap')" aria-label="Lộ trình">
         <span class="nav-icon">🗺️</span><span>Lộ trình</span>
       </button>
-
       <button class="nav-btn" data-page="forum" onclick="navigate('forum')" aria-label="Diễn đàn">
         <span class="nav-icon">💬</span><span>Diễn đàn</span>
       </button>

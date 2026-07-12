@@ -1,0 +1,514 @@
+{
+  "id": "nc_22",
+  "index": 22,
+  "title": "Hộp Đen — cái log kể lại mọi chuyện sau khi máy sập",
+  "subtitle": "Log ghi TRƯỚC mỗi cú sửa: có start mà thiếu commit → UNDO (giá cũ); có commit → REDO (giá mới)",
+  "module": 9,
+  "module_title": "Hộp Đen — Sự cố & Phục hồi",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "log — nhật ký trên stable storage (T0 chuyển 50 A→B, T1 rút 100 từ C)",
+      "columns": [
+        "thứ tự",
+        "log record",
+        "nghĩa"
+      ],
+      "dataRows": [
+        [
+          "1",
+          "<T0 start>",
+          "T0 bắt đầu"
+        ],
+        [
+          "2",
+          "<T0, A, 1000, 950>",
+          "A: cũ 1000 → mới 950"
+        ],
+        [
+          "3",
+          "<T0, B, 2000, 2050>",
+          "B: cũ 2000 → mới 2050"
+        ],
+        [
+          "4",
+          "<T0 commit>",
+          "T0 chốt sổ"
+        ],
+        [
+          "5",
+          "<T1, C, 700, 600>",
+          "C: cũ 700 → mới 600"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #63",
+    "hook": "Máy đã khởi động lại sau cú sập đêm qua. Bài trước dạy ta một sự thật phũ: nhìn database KHÔNG biết giao dịch nào chạy dở. Nhưng có một thứ sống sót qua crash vì nó nằm trên stable storage — <strong>cuốn LOG</strong>, cái Hộp Đen ghi lại từng cú sửa TRƯỚC khi động vào database. Giờ recovery mở nó ra, đọc ngược, và với mỗi giao dịch chỉ hỏi đúng một câu: <em>\"mày có kịp commit không?\"</em> Có commit → REDO cho chắc lời hứa. Chưa commit → UNDO như chưa từng. Ticket #63: xem cái Hộp Đen gánh cả atomicity lẫn durability thế nào. 📜"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "LOG là chuỗi bản ghi trên STABLE storage; update log record = <strong>&lt;Ti, Xj, V1, V2&gt;</strong> (giao dịch, món, giá-CŨ, giá-MỚI) + các bản đặc biệt &lt;Ti start&gt; / &lt;Ti commit&gt; / &lt;Ti abort&gt;. Luật vàng: log record của một cú ghi phải ra stable storage TRƯỚC khi cú ghi đó chạm database",
+        "ĐIỂM COMMIT: một giao dịch coi như đã commit đúng khoảnh khắc &lt;Ti commit&gt; xuống được stable storage — đó là hành động atomic duy nhất \"chốt\" giao dịch. Trước mốc đó crash → coi như chưa commit",
+        "HAI THAO TÁC phục hồi: redo(Ti) đặt món về giá-MỚI (giữ lời giao dịch đã commit — durability); undo(Ti) khôi phục giá-CŨ (xóa dấu giao dịch dở — atomicity). Luật quyết định: có &lt;start&gt; mà THIẾU commit/abort → UNDO; có &lt;start&gt; VÀ (commit HOẶC abort) → REDO"
+      ],
+      "intro": "Hộp đen máy bay ghi liên tục mọi thao tác của phi công. Máy bay rơi, thân nát — nhưng hộp đen (đặt ở nơi bền nhất) sống sót, và điều tra viên tua lại băng để biết chính xác chuyện gì đã xảy ra và ở khúc nào. Database y hệt: cuốn log nằm trên stable storage, ghi TRƯỚC mỗi cú sửa. Máy sập, RAM nát — log vẫn còn, và recovery \"tua băng\" để biết giao dịch nào đã xong (REDO cho chắc), giao dịch nào dở dang (UNDO xóa sạch).",
+      "example": "T0 chuyển 50 gem A→B, log ghi: <code>&lt;T0 start&gt;</code>, <code>&lt;T0,A,1000,950&gt;</code>, <code>&lt;T0,B,2000,2050&gt;</code>, <code>&lt;T0 commit&gt;</code>. Crash xong, recovery thấy T0 có đủ start + commit → <strong>REDO</strong>: đặt A=950, B=2050 (giá mới). Nếu T1 chỉ có <code>&lt;T1 start&gt;</code>, <code>&lt;T1,C,700,600&gt;</code> mà THIẾU commit → <strong>UNDO</strong>: kéo C về 700 (giá cũ)."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-list-ol",
+        "title": "Bản ghi log & điểm commit — theo đúng sách",
+        "body": "Update log record <strong>&lt;Ti, Xj, V1, V2&gt;</strong> mang đủ 4 mảnh: định danh giao dịch, định danh món (vị trí trên đĩa), giá TRƯỚC (V1), giá SAU (V2) — có cả cũ lẫn mới nên đủ để undo LẪN redo. \"Bất cứ khi nào một giao dịch ghi, bắt buộc log record cho cú ghi đó phải được tạo và thêm vào log TRƯỚC khi database bị sửa.\" Một giao dịch <em>đã commit</em> ngay tại thời điểm &lt;Ti commit&gt; của nó ra tới stable storage — <strong>đó là hành động atomic duy nhất</strong> khiến giao dịch trở nên chính thức.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3.1 & 19.3.4 — Log Records & Transaction Commit"
+      },
+      {
+        "icon": "fa-rotate",
+        "title": "Undo & Redo — hai chiều của cùng cuốn băng",
+        "body": "Sau crash, recovery đọc log và phân loại từng giao dịch: <strong>UNDO</strong> nếu có &lt;start&gt; nhưng KHÔNG có &lt;commit&gt; lẫn &lt;abort&gt; (dở dang — kéo mọi món về giá CŨ V1); <strong>REDO</strong> nếu có &lt;start&gt; VÀ có &lt;commit&gt; hoặc &lt;abort&gt; (đã kết thúc — đặt mọi món về giá MỚI V2). Redo cả khi thấy &lt;abort&gt; nghe lạ, nhưng đúng: lúc undo lần đầu hệ thống đã ghi các <em>redo-only record</em>, nên redo lại chúng ra kết quả cuối vẫn là \"đã hoàn tác\" — một chút dư thừa đổi lấy thuật toán gọn và phục hồi nhanh."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Cuốn log này chính là WAL (Write-Ahead Log) bạn nghe suốt: <code>pg_wal/</code> của Postgres, binlog của MySQL, redo log của Oracle — tất cả là biến thể của &lt;Ti, Xj, cũ, mới&gt;. Khi Postgres khởi động sau crash và in \"database system was not properly shut down; automatic recovery in progress\" — nó đang làm ĐÚNG bài này: đọc WAL, redo cái đã commit, undo cái dở. Cả replication cũng dựa vào đây: bản backup chỉ cần tua lại log của primary."
+      }
+    ],
+    "recovery_visual": {
+      "eyebrow": "MÁY QUÉT LOG — CRASH RỒI QUÉT NGƯỢC · UNDO (giá cũ) HAY REDO (giá mới)?",
+      "caption": "Chạy CẢ BA điểm crash: cùng một cuốn log, chỗ dừng khác nhau cho ra bản án undo/redo khác nhau — đúng ba ca kinh điển của sách (Fig 19.4).",
+      "accounts": [
+        {
+          "id": "A",
+          "label": "💰 A · Quỹ Sàn",
+          "start": 1000
+        },
+        {
+          "id": "B",
+          "label": "💰 B · DragonForge",
+          "start": 2000
+        },
+        {
+          "id": "C",
+          "label": "💰 C · NightRaven",
+          "start": 700
+        }
+      ],
+      "log": [
+        {
+          "type": "start",
+          "txn": "T0"
+        },
+        {
+          "type": "write",
+          "txn": "T0",
+          "item": "A",
+          "old": 1000,
+          "new": 950
+        },
+        {
+          "type": "write",
+          "txn": "T0",
+          "item": "B",
+          "old": 2000,
+          "new": 2050
+        },
+        {
+          "type": "commit",
+          "txn": "T0"
+        },
+        {
+          "type": "start",
+          "txn": "T1"
+        },
+        {
+          "type": "write",
+          "txn": "T1",
+          "item": "C",
+          "old": 700,
+          "new": 600
+        },
+        {
+          "type": "commit",
+          "txn": "T1"
+        }
+      ],
+      "modes": [
+        {
+          "id": "a",
+          "short": "CRASH ca (a)",
+          "btn": "▶ Crash sau <T0,B,..> (T0 chưa commit)",
+          "crashAfter": 2,
+          "verdict": "❌→✓ Ca (a): T0 mới ghi tới B, CHƯA có <T0 commit> → UNDO(T0), kéo A,B về 1000/2000. C chưa động tới. Giao dịch dở dang bị xóa sạch — atomicity."
+        },
+        {
+          "id": "b",
+          "short": "CRASH ca (b)",
+          "btn": "▶ Crash sau <T1,C,..> (T0 xong, T1 dở)",
+          "crashAfter": 5,
+          "verdict": "✓ Ca (b): T0 có commit → REDO (A=950, B=2050); T1 có start mà thiếu commit → UNDO (C về 700). Một cú redo, một cú undo — đúng bản án hỗn hợp."
+        },
+        {
+          "id": "c",
+          "short": "CRASH ca (c)",
+          "btn": "▶ Crash sau <T1 commit> (cả hai xong)",
+          "crashAfter": 6,
+          "verdict": "✓ Ca (c): cả T0 lẫn T1 đều có commit → REDO cả hai (A=950, B=2050, C=600). Giữ trọn lời hứa của mọi giao dịch đã chốt — durability."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "luật phục hồi — chỉ cần nhìn có commit hay không",
+        "columns": [
+          {
+            "name": "trong log thấy",
+            "type": "các bản ghi của Ti",
+            "key": "📜"
+          },
+          {
+            "name": "bản án",
+            "type": "undo / redo",
+            "key": "⚖️"
+          },
+          {
+            "name": "đặt món về",
+            "type": "",
+            "key": "🎯"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "<start> + <commit>",
+          "REDO",
+          "giá MỚI (V2)"
+        ],
+        [
+          "<start> + <abort>",
+          "REDO",
+          "giá MỚI của redo-only (= đã hoàn tác)"
+        ],
+        [
+          "<start>, KHÔNG commit/abort",
+          "UNDO",
+          "giá CŨ (V1)"
+        ],
+        [
+          "không có <start>",
+          "kệ nó",
+          "không đụng tới"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao log record của một cú ghi BẮT BUỘC phải ra stable storage TRƯỚC khi cú ghi đó chạm database?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì nếu database bị sửa trước mà log chưa kịp ghi, rồi crash — ta mất luôn cả thông tin để UNDO cú sửa dở đó (không biết giá cũ là gì); log-trước đảm bảo mọi thay đổi trên đĩa đều có \"biên lai\" cũ+mới để hoàn tác hoặc làm lại",
+            "correct": true,
+            "explanation": "Đúng — đây là hạt giống của Write-Ahead Logging: log đi trước thì recovery luôn có đủ old/new value. Ghi database trước là tự bịt đường phục hồi của mình."
+          },
+          {
+            "id": "b",
+            "text": "Vì log ghi nhanh hơn database nên làm trước cho đỡ chờ",
+            "correct": false,
+            "explanation": "Sai — không phải chuyện tốc độ; kể cả log chậm hơn thì vẫn phải đi trước, vì đó là điều kiện để CÓ THỂ phục hồi, không phải tối ưu hiệu năng."
+          },
+          {
+            "id": "c",
+            "text": "Vì database chỉ nhận thay đổi khi log đã xác nhận, như một khóa hai lớp",
+            "correct": false,
+            "explanation": "Sai — database không \"hỏi xin phép\" log; thứ tự log-trước là quy tắc của recovery để đảm bảo tính khôi phục, không phải cơ chế khóa."
+          },
+          {
+            "id": "d",
+            "text": "Vì luật kế toán yêu cầu ghi sổ trước khi chuyển tiền",
+            "correct": false,
+            "explanation": "Ẩn dụ sổ sách nghe hợp lý nhưng lý do THẬT là kỹ thuật: có log trước thì mới có old value để undo và new value để redo sau crash."
+          }
+        ]
+      },
+      {
+        "question": "Crash xong, recovery thấy giao dịch T5 có <T5 start> và các bản ghi write, NHƯNG không có <T5 commit> lẫn <T5 abort>. Xử lý sao?",
+        "options": [
+          {
+            "id": "a",
+            "text": "UNDO(T5) — kéo mọi món T5 đã đụng về giá trị CŨ (V1); giao dịch dở dang phải như chưa từng xảy ra để giữ atomicity",
+            "correct": true,
+            "explanation": "Chuẩn — thiếu commit nghĩa là T5 chưa chốt, mọi dấu vết nó để lại trên đĩa (nếu có) phải bị xóa bằng cách khôi phục giá cũ."
+          },
+          {
+            "id": "b",
+            "text": "REDO(T5) — làm lại các cú ghi của T5 cho hoàn tất",
+            "correct": false,
+            "explanation": "Sai — redo là dành cho giao dịch ĐÃ commit; ép hoàn tất một giao dịch chưa hề chốt là bịa ra kết quả mà người dùng chưa bao giờ được xác nhận."
+          },
+          {
+            "id": "c",
+            "text": "Bỏ qua T5 — chưa commit thì coi như không tồn tại, khỏi làm gì",
+            "correct": false,
+            "explanation": "Sai — \"bỏ qua\" chỉ đúng nếu T5 chưa hề chạm đĩa; nhưng dưới immediate modification, giá trị mới của T5 CÓ THỂ đã lỡ xuống đĩa, nên phải chủ động UNDO để chắc chắn xóa dấu."
+          },
+          {
+            "id": "d",
+            "text": "Chờ T5 chạy tiếp cho xong rồi mới quyết",
+            "correct": false,
+            "explanation": "Sai — crash đã giết T5, nó không \"chạy tiếp\" được; recovery phải quyết dứt khoát ngay, và với giao dịch dở thì luôn là UNDO."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Undo hay Redo?",
+      "instruction": "Sau crash, recovery đọc log. Với mỗi giao dịch dưới đây — máy quyết UNDO hay REDO?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "r1",
+          "label": "T0: có <start>, có <commit>"
+        },
+        {
+          "id": "r2",
+          "label": "T1: có <start>, KHÔNG có commit/abort"
+        },
+        {
+          "id": "r3",
+          "label": "T2: có <start>, có <abort>"
+        },
+        {
+          "id": "r4",
+          "label": "T3: có <start>, các write, mất điện ngay sau"
+        }
+      ],
+      "bins": [
+        {
+          "id": "redo",
+          "label": "REDO (giá mới) ↻"
+        },
+        {
+          "id": "undo",
+          "label": "UNDO (giá cũ) ↺"
+        }
+      ],
+      "solution": {
+        "r1": "redo",
+        "r2": "undo",
+        "r3": "redo",
+        "r4": "undo"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp quy trình Hộp Đen 4 bước — có MỘT khối bịa (nghe rất chi là \"cho nhanh\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "GHI LOG TRƯỚC: mỗi cú sửa, ghi <Ti, món, giá-CŨ, giá-MỚI> ra stable storage TRƯỚC khi động vào database",
+        "slot": "lg-log"
+      },
+      {
+        "type": "op",
+        "token": "Cứ sửa thẳng database cho nhanh, hỏng thì lát tính — log ghi sau cũng được",
+        "slot": "lg-x"
+      },
+      {
+        "type": "op",
+        "token": "ĐIỂM COMMIT: khi <Ti commit> xuống tới stable storage, giao dịch chính thức chốt — đó là hành động atomic duy nhất",
+        "slot": "lg-commit"
+      },
+      {
+        "type": "op",
+        "token": "SAU CRASH quét log: có <start> mà THIẾU commit → UNDO (kéo về giá CŨ); có <start> VÀ commit/abort → REDO (đặt về giá MỚI)",
+        "slot": "lg-scan"
+      },
+      {
+        "type": "op",
+        "token": "KẾT QUẢ: giao dịch đã chốt được giữ trọn (durability), giao dịch dở bị xóa sạch (atomicity) — database về trạng thái nhất quán",
+        "slot": "lg-done"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "lg-log",
+        "placeholder": "Bước 1 — làm gì TRƯỚC mỗi cú sửa?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📝",
+          "label": "Log đi trước",
+          "sub": "Bước 1",
+          "hint": "Bài trước kết luận: nhìn database không biết chuyện gì đã xảy ra. Vậy phải ghi lại ở đâu, LÚC nào?"
+        }
+      },
+      {
+        "id": "lg-commit",
+        "placeholder": "Bước 2 — khi nào giao dịch coi như \"xong\"?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "✅",
+          "label": "Điểm commit",
+          "sub": "Bước 2",
+          "hint": "Có một bản ghi đặc biệt, và một nơi nó phải tới được. Khoảnh khắc đó là mốc atomic."
+        }
+      },
+      {
+        "id": "lg-scan",
+        "placeholder": "Bước 3 — sau crash, quét log quyết gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔍",
+          "label": "Quét & phân loại",
+          "sub": "Bước 3",
+          "hint": "Với mỗi giao dịch chỉ hỏi MỘT câu: có commit không? Có → làm gì, không → làm gì?"
+        }
+      },
+      {
+        "id": "lg-done",
+        "placeholder": "Bước 4 — kết cục cho database?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Nhất quán lại",
+          "sub": "Bước 4",
+          "hint": "Hai tính chất được cứu: cái đã hứa thì giữ, cái làm dở thì xóa. Tên chúng là gì?"
+        }
+      }
+    ],
+    "expected_sql": "GHI LOG TRƯỚC: mỗi cú sửa, ghi <Ti, món, giá-CŨ, giá-MỚI> ra stable storage TRƯỚC khi động vào database ĐIỂM COMMIT: khi <Ti commit> xuống tới stable storage, giao dịch chính thức chốt — đó là hành động atomic duy nhất SAU CRASH quét log: có <start> mà THIẾU commit → UNDO (kéo về giá CŨ); có <start> VÀ commit/abort → REDO (đặt về giá MỚI) KẾT QUẢ: giao dịch đã chốt được giữ trọn (durability), giao dịch dở bị xóa sạch (atomicity) — database về trạng thái nhất quán",
+    "expected_zones": {
+      "lg-log": "GHI LOG TRƯỚC: mỗi cú sửa, ghi <Ti, món, giá-CŨ, giá-MỚI> ra stable storage TRƯỚC khi động vào database",
+      "lg-commit": "ĐIỂM COMMIT: khi <Ti commit> xuống tới stable storage, giao dịch chính thức chốt — đó là hành động atomic duy nhất",
+      "lg-scan": "SAU CRASH quét log: có <start> mà THIẾU commit → UNDO (kéo về giá CŨ); có <start> VÀ commit/abort → REDO (đặt về giá MỚI)",
+      "lg-done": "KẾT QUẢ: giao dịch đã chốt được giữ trọn (durability), giao dịch dở bị xóa sạch (atomicity) — database về trạng thái nhất quán"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 QUY TRÌNH HỘP ĐEN KHÉP: log-đi-trước → điểm commit → quét undo/redo → nhất quán lại. Khối \"cứ sửa thẳng database, log ghi sau\" là BỊA — và bịa đúng chỗ chết người: sửa database trước rồi crash trước khi log kịp ghi, ta mất luôn giá CŨ để mà undo. Log PHẢI đi trước — đó chính là hạt giống của Write-Ahead Logging, nhân vật chính của bài 23. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "lg-log": "Bước 1 — thứ tự sống còn: log và database, cái nào ghi trước? Vì sao thứ tự đó không thể đảo?",
+      "lg-commit": "Bước 2 — <Ti commit> phải tới được đâu thì giao dịch mới thật sự \"xong\"?",
+      "lg-scan": "Bước 3 — một câu hỏi cho mỗi giao dịch: có commit hay không. Hai nhánh trả lời là hai thao tác gì?",
+      "lg-done": "Bước 4 — hai lời hứa của transaction được recovery cứu lại: giữ cái đã chốt, xóa cái dở."
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #63 — tuyên án phục hồi:</strong> server sập đúng sau bản ghi <code>&lt;T1, C, 700, 600&gt;</code> (T0 đã có commit, T1 thì CHƯA). Điền bản án recovery cho hai giao dịch và giá trị chốt của ví C.",
+    "challenge_type": "fill_blank",
+    "template": "-- LOG doc duoc tren stable storage (crash sau dong 5):\n--   1  <T0 start>\n--   2  <T0, A, 1000, 950>\n--   3  <T0, B, 2000, 2050>\n--   4  <T0 commit>\n--   5  <T1, C, 700, 600>   <-- CRASH ngay sau day\n--      (khong co <T1 commit>)\n\n-- T0 co <start> VA <commit> -> hanh dong:\n--   T0 = ____\n\n-- T1 co <start> nhung THIEU <commit> -> hanh dong:\n--   T1 = ____\n\n-- Sau phuc hoi, vi C (T1 dinh sua) chot o gia tri:\n--   C = ____",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "REDO / UNDO",
+        "expected": "REDO"
+      },
+      {
+        "id": "b2",
+        "hint": "REDO / UNDO",
+        "expected": "UNDO"
+      },
+      {
+        "id": "b3",
+        "hint": "? gem",
+        "expected": "700"
+      }
+    ],
+    "schema": {
+      "table_name": "bản án phục hồi — ca (b) của sách",
+      "columns": [
+        {
+          "name": "giao dịch",
+          "type": "thấy gì trong log",
+          "key": "📜"
+        },
+        {
+          "name": "hành động",
+          "type": "REDO / UNDO",
+          "key": "⚖️"
+        },
+        {
+          "name": "món về giá",
+          "type": "",
+          "key": "🎯"
+        }
+      ],
+      "data": [
+        [
+          "T0 · start + commit",
+          "❓",
+          "A=950, B=2050 (mới)"
+        ],
+        [
+          "T1 · start, thiếu commit",
+          "❓",
+          "C = ❓ (cũ)"
+        ],
+        [
+          "(redo = giá mới V2)",
+          "",
+          ""
+        ],
+        [
+          "(undo = giá cũ V1)",
+          "",
+          ""
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây chính là ca (b) trong Fig 19.4 của sách: một giao dịch đã commit (T0 → REDO về giá mới) và một giao dịch dở dang (T1 → UNDO về giá cũ) trong cùng một cú phục hồi. Ví C bị T1 định hạ xuống 600, nhưng T1 chưa commit nên UNDO kéo nó về giá CŨ.",
+      "real_world": "Log của Postgres/MySQL sau crash cho ra đúng bản án này: \"redo\" các transaction đã commit tới điểm crash, \"undo/rollback\" các transaction đang dở. Đọc được bảng REDO/UNDO là hiểu được dòng \"recovering; redo done at ...\" trong log khởi động.",
+      "steps": [
+        "T0: có <start> VÀ <commit> → REDO (đặt A=950, B=2050 — giá mới V2).",
+        "T1: có <start> nhưng THIẾU <commit>/<abort> → UNDO (khôi phục giá cũ V1).",
+        "Ví C bị T1 định sửa 700→600; UNDO kéo về giá CŨ.",
+        "Điền REDO / UNDO / 700."
+      ],
+      "hint_explore": "Panel trái là bản án đang chờ điền — cột \"hành động\" của T0/T1 chính là 2 ô đầu.",
+      "expected": "REDO · UNDO · 700"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Câu hỏi vàng cho mỗi giao dịch: có <commit> trong log không? T0 có, T1 không."
+      },
+      {
+        "level": 2,
+        "text": "Có commit → REDO (giá mới). Thiếu commit → UNDO (giá cũ). Điền hành động cho T0 rồi T1."
+      },
+      {
+        "level": 3,
+        "text": "Ví C: T1 định đổi 700→600, nhưng T1 bị UNDO. UNDO khôi phục giá CŨ — giá cũ của C là bao nhiêu?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: REDO · UNDO · 700."
+      }
+    ],
+    "success_message": "TICKET #63 ĐÓNG — cái Hộp Đen vừa cứu cả atomicity lẫn durability chỉ bằng một cuốn nhật ký! 📜 Hồ sơ đọc thêm bên dưới: SHADOW PAGING — cách phục hồi KHÁC hẳn logging (chép nguyên trang, tráo con trỏ), đẹp trên lý thuyết mà DB thật chê. Còn bài sau: ta mới giả định \"log luôn kịp ra stable storage\" — nhưng nếu chính cái log cũng nằm trong buffer chờ ghi thì sao? Luật WRITE-AHEAD LOGGING + checkpoint sẽ siết chặt khe hở đó. ⚡",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_shadow_paging"
+  ]
+}

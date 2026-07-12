@@ -1,0 +1,534 @@
+{
+  "id": "tc_04",
+  "index": 4,
+  "title": "Recursive Queries — WITH RECURSIVE",
+  "subtitle": "Duyệt cây bình luận sâu n tầng trong một truy vấn duy nhất",
+  "module": 4,
+  "module_title": "Advanced SQL",
+  "estimated_minutes": 22,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "comments",
+      "columns": [
+        "comment_id",
+        "post_id",
+        "user_id",
+        "parent_comment_id",
+        "content"
+      ],
+      "dataRows": [
+        [
+          "1",
+          "507",
+          "9",
+          "NULL",
+          "Chuyển hết qua đây là đúng rồi"
+        ],
+        [
+          "2",
+          "507",
+          "7",
+          "1",
+          "Đồng ý, GuildBoard lag quá"
+        ],
+        [
+          "3",
+          "507",
+          "12",
+          "1",
+          "Chê. Feed ở đây trống trơn"
+        ],
+        [
+          "4",
+          "507",
+          "9",
+          "3",
+          "Trống vì ông chưa follow ai kìa"
+        ],
+        [
+          "5",
+          "507",
+          "15",
+          "NULL",
+          "Admin GuildBoard là bạn tôi đấy nhé"
+        ],
+        [
+          "6",
+          "507",
+          "12",
+          "5",
+          "Thế càng phải nâng cấp server đi"
+        ],
+        [
+          "7",
+          "507",
+          "7",
+          "NULL",
+          "Ai cũng qua thì server lại cháy tiếp"
+        ],
+        [
+          "8",
+          "507",
+          "12",
+          "6",
+          "Nâng xong lại sập thì sao =))"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #24",
+    "hook": "Post \"GuildBoard sập\" nổ ra <strong>cuộc khẩu chiến 3 tầng reply</strong> — UI cần vẽ cả cây, nhưng SELECT thường chỉ với tới 1 tầng con; mỗi JOIN viết thêm chỉ +1 tầng, mà drama thì không báo trước sâu bao nhiêu. Ticket #24: <em>WITH RECURSIVE</em> — mồi bằng comment gốc, lặp nối con vào tới khi hết. Đóng ticket này là đủ bộ: <strong>Community v1.0 lên kệ</strong>. 🚀"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Self-FK (parent_comment_id trỏ về chính bảng comments) = cấu trúc CÂY trong 1 bảng",
+        "WITH RECURSIVE = anchor (hàng mồi) + UNION ALL + bước đệ quy tự tham chiếu CTE",
+        "Đệ quy tự DỪNG khi một vòng không sinh thêm dòng mới (fixed point)"
+      ],
+      "intro": "Cây bình luận không có \"số tầng\" cố định — reply của reply của reply, sâu tùy drama. SQL thường bó tay vì mỗi JOIN chỉ đào thêm đúng 1 tầng. <strong>WITH RECURSIVE</strong> giải bằng vòng lặp trong chính truy vấn: <em>anchor</em> chọn hàng khởi đầu (comment gốc, depth 1), rồi bước <em>đệ quy</em> JOIN bảng với CHÍNH kết quả vòng trước để lấy tầng con — lặp tới khi không còn gì mới.",
+      "example": "<code>WITH RECURSIVE thread AS (SELECT …, 1 AS depth … UNION ALL SELECT …, t.depth + 1 … JOIN thread t …) SELECT * FROM thread;</code>"
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-sitemap",
+        "title": "Cây nằm trong 1 bảng",
+        "body": "<code>comments.parent_comment_id</code> là FK trỏ về CHÍNH <code>comments</code> — mỗi dòng biết cha của nó, gốc thì <code>NULL</code>. Một bảng, vô hạn tầng: đây là cách Reddit, Facebook lưu cây bình luận."
+      },
+      {
+        "icon": "fa-rotate",
+        "title": "Giải phẫu WITH RECURSIVE",
+        "body": "Hai nửa nối bằng <code>UNION ALL</code>: nửa <strong>anchor</strong> không tự tham chiếu (chọn hàng mồi); nửa <strong>đệ quy</strong> JOIN với CHÍNH tên CTE để nối tầng con của kết quả vòng trước. Lặp tới khi một vòng trả 0 dòng.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 5.4 — Recursive Queries"
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Đếm tay với cây bên: anchor lấy #1 (depth 1) → vòng 1 nối #2, #3 (depth 2) → vòng 2 nối #4 (depth 3) → vòng 3 không còn con nào mới → DỪNG. Cột <code>depth</code> tự tăng <code>t.depth + 1</code> qua từng vòng — UI thụt lề theo đúng cột này."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "comments",
+        "columns": [
+          {
+            "name": "comment_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "post_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "👤"
+          },
+          {
+            "name": "parent_comment_id",
+            "type": "INT",
+            "key": "FK↩",
+            "icon": "🌳"
+          },
+          {
+            "name": "content",
+            "type": "TEXT",
+            "key": "",
+            "icon": "💬"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "1",
+          "507",
+          "9",
+          "NULL",
+          "Chuyển hết qua đây là đúng rồi"
+        ],
+        [
+          "2",
+          "507",
+          "7",
+          "1",
+          "Đồng ý, GuildBoard lag quá"
+        ],
+        [
+          "3",
+          "507",
+          "12",
+          "1",
+          "Chê. Feed ở đây trống trơn"
+        ],
+        [
+          "4",
+          "507",
+          "9",
+          "3",
+          "Trống vì ông chưa follow ai kìa"
+        ],
+        [
+          "5",
+          "507",
+          "15",
+          "NULL",
+          "Admin GuildBoard là bạn tôi đấy nhé"
+        ],
+        [
+          "6",
+          "507",
+          "12",
+          "5",
+          "Thế càng phải nâng cấp server đi"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao JOIN thường KHÔNG gom nổi cả cây comment?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mỗi self-JOIN viết thêm chỉ đào sâu ĐÚNG 1 tầng — cây không báo trước độ sâu thì không biết cần bao nhiêu JOIN",
+            "correct": true,
+            "explanation": "Đúng — 3 tầng cần 2 JOIN, 10 tầng cần 9 JOIN… mà drama thì không hứa trước sẽ dừng ở tầng mấy. Đệ quy lặp TỚI KHI HẾT — không cần biết trước."
+          },
+          {
+            "id": "b",
+            "text": "SQL cấm JOIN một bảng với chính nó",
+            "correct": false,
+            "explanation": "Sai — self-join hoàn toàn hợp lệ (comments c JOIN comments p ON …); vấn đề là mỗi JOIN chỉ thêm 1 tầng."
+          },
+          {
+            "id": "c",
+            "text": "JOIN chỉ dùng được cho đúng 2 bảng",
+            "correct": false,
+            "explanation": "Sai — JOIN nối bao nhiêu bảng cũng được; giới hạn ở đây là SỐ TẦNG phải biết trước."
+          },
+          {
+            "id": "d",
+            "text": "Bảng comments quá nhiều dòng nên JOIN sẽ sập",
+            "correct": false,
+            "explanation": "Sai — kích thước không phải vấn đề cốt lõi; cấu trúc lặp không-biết-trước-độ-sâu mới là thứ JOIN tĩnh không tả nổi."
+          }
+        ]
+      },
+      {
+        "question": "Trong <code>WITH RECURSIVE</code>, phần ANCHOR là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Truy vấn KHÔNG tự tham chiếu — tạo hàng khởi đầu (comment gốc) làm mồi cho vòng lặp",
+            "correct": true,
+            "explanation": "Đúng — anchor chạy đúng 1 lần, cho đệ quy điểm xuất phát (và depth khởi điểm). Không có mồi thì vòng lặp không có gì để nối."
+          },
+          {
+            "id": "b",
+            "text": "Phần JOIN với chính tên CTE",
+            "correct": false,
+            "explanation": "Sai — đó là RECURSIVE MEMBER (bước lặp). Anchor thì tuyệt đối không được tham chiếu CTE."
+          },
+          {
+            "id": "c",
+            "text": "Lệnh chỉ định khi nào dừng đệ quy",
+            "correct": false,
+            "explanation": "Sai — không có lệnh dừng riêng: đệ quy tự dừng khi một vòng không sinh dòng mới."
+          },
+          {
+            "id": "d",
+            "text": "Chỉ mục (index) tăng tốc cho CTE",
+            "correct": false,
+            "explanation": "Sai — anchor là một nửa TRUY VẤN của CTE, không liên quan index."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Nối mảnh CTE → vai trò",
+      "instruction": "Mỗi mảnh của WITH RECURSIVE đóng vai gì? Click ô trái rồi click ô phải tương ứng.",
+      "xp": 25,
+      "pairs": [
+        {
+          "left": "SELECT …, 1 AS depth WHERE parent_comment_id IS NULL",
+          "leftId": "p1",
+          "rightId": "r1",
+          "right": {
+            "id": "r1",
+            "label": "Anchor — hàng mồi khởi đầu của cây"
+          }
+        },
+        {
+          "left": "UNION ALL",
+          "leftId": "p2",
+          "rightId": "r2",
+          "right": {
+            "id": "r2",
+            "label": "Nối kết quả các vòng lặp, giữ đủ mọi dòng"
+          }
+        },
+        {
+          "left": "JOIN thread t ON c.parent_comment_id = t.comment_id",
+          "leftId": "p3",
+          "rightId": "r3",
+          "right": {
+            "id": "r3",
+            "label": "Bước đệ quy — lấy tầng CON của vòng trước"
+          }
+        },
+        {
+          "left": "SELECT * FROM thread",
+          "leftId": "p4",
+          "rightId": "r4",
+          "right": {
+            "id": "r4",
+            "label": "Đọc kết quả cuối từ CTE"
+          }
+        }
+      ],
+      "solution": {
+        "p1": "r1",
+        "p2": "r2",
+        "p3": "r3",
+        "p4": "r4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Gom cả thread dưới comment gốc <code>#1</code>: mồi anchor → UNION ALL → bước đệ quy → đọc kết quả. Trong khay có khối mồi nhử.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "WITH RECURSIVE thread AS (",
+        "slot": "cte-head"
+      },
+      {
+        "type": "op",
+        "token": "SELECT * FROM comments",
+        "slot": "cte-anchor-x"
+      },
+      {
+        "type": "op",
+        "token": "SELECT comment_id, content, 1 AS depth FROM comments WHERE comment_id = 1",
+        "slot": "cte-anchor"
+      },
+      {
+        "type": "kw",
+        "token": "UNION",
+        "slot": "cte-union-x"
+      },
+      {
+        "type": "kw",
+        "token": "UNION ALL",
+        "slot": "cte-union"
+      },
+      {
+        "type": "op",
+        "token": "SELECT c.comment_id, c.content, t.depth + 1 FROM comments c JOIN thread t ON c.parent_comment_id = t.comment_id",
+        "slot": "cte-step"
+      },
+      {
+        "type": "kw",
+        "token": ") SELECT * FROM thread;",
+        "slot": "cte-final"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "cte-head",
+        "placeholder": "WITH ____",
+        "accepts": [
+          "kw"
+        ],
+        "acceptedKeywords": [
+          "WITH"
+        ],
+        "multi": false
+      },
+      {
+        "id": "cte-anchor",
+        "placeholder": "anchor — hàng mồi (comment gốc, depth 1)",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "cte-union",
+        "placeholder": "nối anchor với các vòng lặp",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      },
+      {
+        "id": "cte-step",
+        "placeholder": "bước đệ quy — JOIN với chính CTE",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "cte-final",
+        "placeholder": ") đọc kết quả từ CTE",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      }
+    ],
+    "expected_sql": "WITH RECURSIVE thread AS ( SELECT comment_id, content, 1 AS depth FROM comments WHERE comment_id = 1 UNION ALL SELECT c.comment_id, c.content, t.depth + 1 FROM comments c JOIN thread t ON c.parent_comment_id = t.comment_id ) SELECT * FROM thread;",
+    "expected_zones": {
+      "cte-head": "WITH RECURSIVE thread AS (",
+      "cte-anchor": "SELECT comment_id, content, 1 AS depth FROM comments WHERE comment_id = 1",
+      "cte-union": "UNION ALL",
+      "cte-step": "SELECT c.comment_id, c.content, t.depth + 1 FROM comments c JOIN thread t ON c.parent_comment_id = t.comment_id",
+      "cte-final": ") SELECT * FROM thread;"
+    },
+    "reveal_hints": {
+      "cte-head": "Mở CTE đệ quy: <strong>WITH RECURSIVE thread AS (</strong>.",
+      "cte-anchor": "Anchor KHÔNG tự tham chiếu — chọn hàng mồi <code>comment_id = 1</code> với <code>1 AS depth</code>. Khối \"SELECT * FROM comments\" lấy TẤT CẢ là mồi nhử.",
+      "cte-union": "Cần giữ ĐỦ mọi dòng qua các vòng: <strong>UNION ALL</strong> — đúng dạng chuẩn của <code>WITH RECURSIVE</code> (Ch 5.4). UNION thường phải KHỬ TRÙNG LẶP nên tốn công so sánh; nó chỉ đáng giá khi đồ thị CÓ CHU TRÌNH (khử trùng chính là phao chống lặp vô hạn) — cây bình luận thì không có chu trình.",
+      "cte-step": "Bước lặp JOIN bảng gốc với CHÍNH <code>thread</code>: con nào có <code>parent_comment_id</code> = comment của vòng trước thì vào, depth +1.",
+      "cte-final": "Đóng ngoặc rồi đọc: <strong>) SELECT * FROM thread;</strong>"
+    }
+  },
+  "step_4": {
+    "prompt": "Mod team cần <strong>bản đồ độ sâu drama</strong>: mỗi TẦNG có bao nhiêu bình luận trên toàn post. Khác Step 3 hai chỗ: anchor lấy <strong>MỌI comment gốc</strong> (<code>parent_comment_id IS NULL</code>), và cuối cùng <strong>GROUP BY depth</strong> để đếm.",
+    "starter": "-- Ban do do sau: moi tang (depth) co bao nhieu binh luan?\n-- anchor: MOI comment goc (parent IS NULL), depth = 1\n-- de quy: con cua vong truoc, depth + 1\n-- cuoi: dem theo depth\nWITH RECURSIVE thread AS (\n  SELECT ____, 1 AS depth FROM comments WHERE ____\n  UNION ALL\n  SELECT ____, t.depth + 1 FROM comments c JOIN thread t ON ____\n)\nSELECT ____, COUNT(*) AS so_binh_luan FROM thread GROUP BY ____ ORDER BY depth;\n",
+    "schema": {
+      "table_name": "comments",
+      "columns": [
+        {
+          "name": "comment_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "post_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "parent_comment_id",
+          "type": "INT",
+          "key": "FK↩"
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "1",
+          "507",
+          "9",
+          "NULL",
+          "Chuyển hết qua đây là đúng rồi"
+        ],
+        [
+          "2",
+          "507",
+          "7",
+          "1",
+          "Đồng ý, GuildBoard lag quá"
+        ],
+        [
+          "3",
+          "507",
+          "12",
+          "1",
+          "Chê. Feed ở đây trống trơn"
+        ],
+        [
+          "4",
+          "507",
+          "9",
+          "3",
+          "Trống vì ông chưa follow ai kìa"
+        ],
+        [
+          "5",
+          "507",
+          "15",
+          "NULL",
+          "Admin GuildBoard là bạn tôi đấy nhé"
+        ],
+        [
+          "6",
+          "507",
+          "12",
+          "5",
+          "Thế càng phải nâng cấp server đi"
+        ],
+        [
+          "7",
+          "507",
+          "7",
+          "NULL",
+          "Ai cũng qua thì server lại cháy tiếp"
+        ],
+        [
+          "8",
+          "507",
+          "12",
+          "6",
+          "Nâng xong lại sập thì sao =))"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Dashboard mod hiển thị \"drama sâu mấy tầng, tầng nào đông nhất\" — một truy vấn đệ quy gắn thêm GROUP BY là xong, không cần vòng lặp nào ở backend.",
+      "real_world": "Cùng bộ xương này, đổi bảng là thành: cây thư mục, sơ đồ tổ chức (nhân viên → sếp), bill of materials trong sản xuất — <strong>WITH RECURSIVE là công cụ chuẩn cho mọi dữ liệu phân cấp</strong>.",
+      "steps": [
+        "Anchor lấy MỌI gốc: <code>WHERE parent_comment_id IS NULL</code>, khởi điểm <code>1 AS depth</code>.",
+        "Bước đệ quy giữ nguyên logic Step 3: <code>ON c.parent_comment_id = t.comment_id</code>, depth + 1.",
+        "SELECT cuối KHÔNG lấy *, mà đếm: <code>SELECT depth, COUNT(*) AS so_binh_luan … GROUP BY depth</code>.",
+        "Nhẩm trước với 8 comment: gốc #1 #5 #7 → depth 1 có 3; #2 #3 #6 → depth 2 có 3; #4 #8 → depth 3 có 2."
+      ],
+      "hint_explore": "Nhìn cây bằng mắt thường trước: <code>SELECT comment_id, parent_comment_id, content FROM comments</code> rồi Run.",
+      "expected": "Kết quả kỳ vọng (engine demo chưa chạy được đệ quy — chấm khi Submit): 3 dòng — depth 1 → 3 · depth 2 → 3 · depth 3 → 2."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bộ xương y hệt Step 3: <code>WITH RECURSIVE thread AS (anchor UNION ALL bước_đệ_quy) SELECT cuối;</code> — chỉ đổi anchor và SELECT cuối."
+      },
+      {
+        "level": 2,
+        "text": "Anchor: <code>SELECT comment_id, 1 AS depth FROM comments WHERE parent_comment_id IS NULL</code> — mọi comment gốc, không phải riêng #1."
+      },
+      {
+        "level": 3,
+        "text": "Bước đệ quy: <code>SELECT c.comment_id, t.depth + 1 FROM comments c JOIN thread t ON c.parent_comment_id = t.comment_id</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">WITH RECURSIVE thread AS (SELECT comment_id, 1 AS depth FROM comments WHERE parent_comment_id IS NULL UNION ALL SELECT c.comment_id, t.depth + 1 FROM comments c JOIN thread t ON c.parent_comment_id = t.comment_id) SELECT depth, COUNT(*) AS so_binh_luan FROM thread GROUP BY depth ORDER BY depth;</code>"
+      }
+    ],
+    "expected_sql": "WITH RECURSIVE thread AS (SELECT comment_id, 1 AS depth FROM comments WHERE parent_comment_id IS NULL UNION ALL SELECT c.comment_id, t.depth + 1 FROM comments c JOIN thread t ON c.parent_comment_id = t.comment_id) SELECT depth, COUNT(*) AS so_binh_luan FROM thread GROUP BY depth ORDER BY depth;",
+    "success_message": "Ticket #24 đóng — Module 4 hoàn tất, GameHub Community v1.0 chính thức lên kệ! 🚀 Module 5: sếp muốn dashboard số liệu toàn mạng — hẹn gặp ở Data Warehouse.",
+    "xp_reward": 120
+  }
+}

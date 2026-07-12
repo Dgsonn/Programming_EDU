@@ -1,6 +1,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 
 /* ── LANDING ── */
 .landing-body {
@@ -154,7 +154,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   border: none;
   border-radius: 13px;
   cursor: pointer;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   font-weight: 700;
   color: #fff;
@@ -245,7 +245,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   padding: 10px 22px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4d9dfa, #5f79ff);
+  background: linear-gradient(135deg, #ff4d6d, #c9184a);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -256,7 +256,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   align-items: center;
   gap: 6px;
 }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(93, 157, 255, 0.35); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(255, 77, 109, 0.45); }
 
 .landing-hero {
   flex: 1;
@@ -840,9 +840,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 
 .neon-btn {
   background: transparent !important;
-  border: 2px solid #00f0ff !important;
-  color: #00f0ff !important;
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4), inset 0 0 10px rgba(0, 240, 255, 0.2) !important;
+  border: 2px solid #ff4d6d !important;
+  color: #ff4d6d !important;
+  box-shadow: 0 0 15px rgba(255, 77, 109, 0.4), inset 0 0 10px rgba(255, 77, 109, 0.2) !important;
   text-transform: uppercase;
   letter-spacing: 1px;
   text-decoration: none !important;
@@ -855,13 +855,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   position: absolute;
   top: 0; left: -100%;
   width: 100%; height: 100%;
-  background: #00f0ff;
+  background: linear-gradient(135deg, #ff4d6d 0%, #c9184a 100%);
   transition: all 0.4s ease;
   z-index: -1;
 }
 .neon-btn:hover {
-  color: #000 !important;
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.8), inset 0 0 20px rgba(0, 240, 255, 0.5) !important;
+  color: #fff !important;
+  box-shadow: 0 0 30px rgba(255, 77, 109, 0.8), inset 0 0 20px rgba(255, 77, 109, 0.5) !important;
   transform: translateY(-2px);
 }
 .neon-btn:hover::before {
@@ -1023,3 +1023,57 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
   margin-right: auto !important;
   text-align: center;
 }
+
+/* ── Global focus-visible ring (a11y) ────────────────────────────
+   Override outline:none patterns; show ring only when keyboard nav */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #06B6D4;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.25);
+  border-radius: inherit;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) { outline: none; }
+
+/* ── Trust cards (replaces fake testimonials) ── */
+.trust-card { display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+.trust-stat { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.trust-stat-val { font-size: 28px; font-weight: 800; line-height: 1; }
+.trust-stat-lbl { font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 500; }
+.trust-quote { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.78); font-style: italic; margin: 0; }
+.trust-note { font-size: 11px; color: rgba(255,255,255,0.40); border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
+.trust-card .trust-quote { margin-bottom: 14px; }
+
+/* ── Course preview cards (landing — fetched from /api/courses) ── */
+.course-preview-card { text-decoration: none; color: inherit; cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; }
+.course-preview-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(6, 182, 212, 0.25); }
+.course-preview-card .course-preview-meta { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 6px; background: rgba(6, 182, 212, 0.15); color: #06B6D4; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+
+/* ── Project grid (landing — "Bạn sẽ xây dựng được gì?") ── */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.project-card {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 0; overflow: hidden;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.project-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(6, 182, 212, 0.22); }
+.project-thumb {
+  height: 110px; position: relative; display: flex; align-items: center; justify-content: center;
+}
+.project-thumb-icon { font-size: 48px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35)); }
+.project-card > strong { padding: 0 16px; font-size: 16px; color: #fff; }
+.project-card > p { padding: 0 16px; margin: 0; color: rgba(229, 231, 235, 0.78); font-size: 13px; line-height: 1.55; }
+.project-tag { margin: 8px 16px 16px; padding: 4px 10px; align-self: flex-start; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: #94A3B8; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }

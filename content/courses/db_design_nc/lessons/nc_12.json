@@ -1,0 +1,527 @@
+{
+  "id": "nc_12",
+  "index": 12,
+  "title": "Khóa S/X — ai đọc chung được, ai phải xếp hàng?",
+  "subtitle": "Lock manager ra quầy: khóa S đọc chung, khóa X độc quyền — ma trận tương thích quyết ai chờ ai",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "lock table — quầy lock manager (snapshot 00:00:01)",
+      "columns": [
+        "item",
+        "transaction",
+        "mode",
+        "trạng thái"
+      ],
+      "dataRows": [
+        [
+          "ví 4102",
+          "T1",
+          "X",
+          "GRANTED"
+        ],
+        [
+          "ví 4102",
+          "T2",
+          "X",
+          "⏳ WAITING"
+        ],
+        [
+          "listing 3001",
+          "T7",
+          "S",
+          "GRANTED"
+        ],
+        [
+          "listing 3001",
+          "T9",
+          "S",
+          "GRANTED"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #53",
+    "hook": "Thủ phạm vụ 100 gem đã lộ mặt: hai giao dịch cùng chép <strong>một bản 500</strong>. Ticket #53 lắp giải pháp đầu tiên trong lịch sử database: trước khi đụng ví phải <strong>xin KHÓA</strong> ở quầy lock manager. Khóa <strong>S</strong> để đọc — cả chục người cầm chung vô tư; khóa <strong>X</strong> để ghi — độc quyền tuyệt đối, đến cả người MUỐN ĐỌC cũng phải xếp hàng. Cùng chạy lại 2 giao dịch đêm qua, lần này có người gác."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Muốn đụng item nào phải XIN KHÓA item đó ở concurrency-control manager: khóa S (shared) — được đọc, không được ghi; khóa X (exclusive) — đọc lẫn ghi (sách 18.1.1)",
+        "MA TRẬN TƯƠNG THÍCH (Fig 18.1): chỉ S+S là sống chung — nhiều người cùng đọc thoải mái; dính X ở bất kỳ phía nào là VÊNH → transaction đến sau phải CHỜ đến khi khóa vênh được nhả",
+        "Khóa chữa đúng vụ 450: T2 xin X khi T1 đang giữ X → xếp hàng → chỉ được đọc SAU khi T1 ghi xong — nháp của T2 luôn là bản mới. Nhưng hồ sơ sách cảnh báo: có khóa mà NHẢ QUÁ SỚM vẫn đọc sai ($250) — chưa hết chuyện"
+      ],
+      "intro": "Phòng gym có tủ đồ: ai <em>xem</em> lịch tập dán trên tủ thì đứng xem chung cả chục người (khóa S). Ai muốn <em>mở tủ xếp lại đồ</em> phải lấy chìa độc quyền (khóa X) — lúc đó cả người chỉ muốn XEM cũng đứng chờ, vì xem giữa lúc người ta đang bới đồ là thấy cảnh dở dang. Lock manager là anh giữ chìa: phát chìa nếu không vênh, bắt xếp hàng nếu vênh.",
+      "example": "Chạy lại 2 giao dịch đêm qua có khóa: T1 <code>lock-X(ví)</code> → GRANT. T2 xin <code>lock-X(ví)</code> → <strong>vênh X, xếp hàng</strong>. T1 đọc 500, ghi 600, <code>unlock</code> → T2 được đánh thức: đọc <strong>600</strong> (bản mới!), ghi 550. Ví chốt <strong>550 ✓</strong> — lost update chết ngay tại quầy."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-lock",
+        "title": "S, X và ma trận tương thích — theo đúng sách",
+        "body": "Transaction giữ khóa <strong>S</strong> trên Q thì đọc được nhưng không ghi được Q; giữ khóa <strong>X</strong> thì đọc lẫn ghi. Nhiều khóa S cùng tồn tại trên một item; yêu cầu X phải <strong>chờ mọi khóa vênh được nhả</strong>. Xin khóa bằng <code>lock-S(Q)</code> / <code>lock-X(Q)</code>, trả bằng <code>unlock(Q)</code> — và transaction phải giữ khóa CHỪNG NÀO còn truy cập item đó.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.1 — Locks, Fig 18.1"
+      },
+      {
+        "icon": "fa-user-shield",
+        "title": "Quầy lock manager — grant hay xếp hàng",
+        "body": "Mọi yêu cầu khóa đổ về <strong>concurrency-control manager</strong>. Nó tra ma trận: yêu cầu mới TƯƠNG THÍCH với mọi khóa đang được giữ → <strong>GRANT</strong> ngay; vênh dù chỉ một khóa → vào <strong>hàng chờ</strong>, transaction đứng im đúng chỗ đó. Bảng lock table thật (xem panel dữ liệu) ghi từng dòng granted/waiting — nghìn giao dịch/giây vẫn trật tự nhờ đúng cái quầy này."
+      },
+      {
+        "icon": "fa-triangle-exclamation",
+        "title": "Hồ sơ cảnh báo: nhả khóa quá sớm",
+        "body": "Sách chơi khăm một cú đau: T1 chuyển 50 từ két B sang A, <em>nhả khóa B ngay sau khi trừ</em>. T2 chen giữa, cộng tổng A + B: ra <strong>$250 thay vì $300</strong> — 50 đô \"tàng hình\" đúng lúc đang bay giữa hai két. Có khóa, khóa xin đúng kiểu, mà vẫn sai — vì nhả QUÁ SỚM. Giữ đến bao giờ mới đủ? Câu trả lời tên là <strong>2PL</strong> — bài sau."
+      }
+    ],
+    "txn_visual": {
+      "eyebrow": "CÙNG 2 GIAO DỊCH ĐÊM QUA — GIỜ CÓ LOCK MANAGER GÁC VÍ",
+      "caption": "Chạy cả hai chế độ: khóa X không cấm chạy đồng thời — nó chỉ bắt T2 CHỜ đúng đoạn đụng ví, và cú chờ đó đổi 450 thành 550.",
+      "wallet_label": "💰 VÍ DragonForge",
+      "start": 500,
+      "unit": "gem",
+      "t1_label": "🧾 T1 — khách trả +100",
+      "t2_label": "🏧 T2 — seller rút −50",
+      "modes": [
+        {
+          "id": "nolock",
+          "short": "KHÔNG KHÓA",
+          "ok": false,
+          "btn": "▶ Ôn tập: KHÔNG KHÓA",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "đọc ví → 500",
+              "note": "Không ai gác — T1 chép 500 về nháp."
+            },
+            {
+              "who": "t2",
+              "text": "đọc ví → cũng 500",
+              "cls": "warn",
+              "note": "T2 cũng chép 500. Hai tờ nháp song sinh — bạn biết chuyện gì sắp xảy ra."
+            },
+            {
+              "who": "t1",
+              "text": "GHI 600",
+              "wallet": 600,
+              "note": "Tiền khách vào két…"
+            },
+            {
+              "who": "t2",
+              "text": "GHI 450 — đè lên 600",
+              "wallet": 450,
+              "cls": "bad",
+              "note": ""
+            }
+          ],
+          "verdict": "❌ 450 — đúng vụ án Ticket #52. Giờ bấm chế độ CÓ KHÓA X mà xem quầy gác làm việc."
+        },
+        {
+          "id": "lock",
+          "short": "KHÓA X",
+          "ok": true,
+          "btn": "▶ Chạy CÓ KHÓA X",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "🔒 lock-X(ví) → GRANT",
+              "note": "T1 xin khóa X — ví đang tự do, lock manager phát chìa ngay."
+            },
+            {
+              "who": "t1",
+              "text": "đọc ví → 500",
+              "note": "T1 cầm chìa độc quyền, ung dung chép 500 về nháp."
+            },
+            {
+              "who": "t2",
+              "text": "🔒 xin lock-X(ví) → ⏳ XẾP HÀNG",
+              "cls": "wait",
+              "note": "X vênh X (ma trận Fig 18.1) — T2 bị treo tại quầy, KHÔNG đọc được một byte nào của ví."
+            },
+            {
+              "who": "t1",
+              "text": "tính 500 + 100 → GHI 600",
+              "wallet": 600,
+              "note": "T1 ghi xong việc của nó — T2 vẫn đứng im trong hàng."
+            },
+            {
+              "who": "t1",
+              "text": "🔓 unlock(ví)",
+              "note": "T1 trả chìa — lock manager lập tức đánh thức T2 ở đầu hàng chờ."
+            },
+            {
+              "who": "t2",
+              "text": "✅ GRANT X → đọc ví: 600",
+              "note": "Chờ xong mới được đọc — nên nháp của T2 là bản MỚI, đã có tiền khách."
+            },
+            {
+              "who": "t2",
+              "text": "tính 600 − 50 → GHI 550",
+              "wallet": 550,
+              "cls": "ok",
+              "note": ""
+            }
+          ],
+          "verdict": "✓ Ví chốt 550 — khóa X ép T2 đọc SAU cú ghi của T1. Lost update chết tại quầy, mà T2 cũng chỉ chờ đúng một đoạn."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "Ma trận tương thích (Fig 18.1)",
+        "columns": [
+          {
+            "name": "xin S khi đang có S",
+            "type": "✓ GRANT — đọc chung",
+            "key": "✓"
+          },
+          {
+            "name": "xin S khi đang có X",
+            "type": "⏳ CHỜ — đang có người ghi",
+            "key": "✗"
+          },
+          {
+            "name": "xin X khi đang có S/X",
+            "type": "⏳ CHỜ — ghi là độc quyền",
+            "key": "✗"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "ví 4102",
+          "T1 giữ X",
+          "T2 xin X",
+          "⏳ T2 xếp hàng"
+        ],
+        [
+          "listing 3001",
+          "T7 giữ S",
+          "T9 xin S",
+          "✓ đọc chung"
+        ],
+        [
+          "listing 3001",
+          "T7, T9 giữ S",
+          "T4 xin X",
+          "⏳ T4 chờ cả hai nhả"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Listing 3001 đang có T7 và T9 cùng giữ khóa S (xem giá). T4 muốn sửa giá — xin lock-X. Chuyện gì xảy ra?",
+        "options": [
+          {
+            "id": "a",
+            "text": "T4 xếp hàng chờ CẢ T7 lẫn T9 nhả S — X vênh với mọi khóa, kể cả khóa \"chỉ đọc\"",
+            "correct": true,
+            "explanation": "Đúng — ma trận Fig 18.1: comp(X, S) = false. Sửa giá giữa lúc người khác đang đọc là họ thấy giá dở dang — nên X phải chờ sạch khóa."
+          },
+          {
+            "id": "b",
+            "text": "T4 được grant ngay — S chỉ là khóa đọc, đâu cản ai ghi",
+            "correct": false,
+            "explanation": "Sai — S \"yếu\" khi so với S khác thôi; với X thì vênh. Người đang đọc có quyền đọc trọn bản nhất quán."
+          },
+          {
+            "id": "c",
+            "text": "T7 và T9 bị đá văng để nhường X — ghi quan trọng hơn đọc",
+            "correct": false,
+            "explanation": "Sai — lock manager không tước khóa đang giữ (chuyện \"đá văng\" là vũ khí deadlock-prevention, hồ sơ bài sau). T4 chờ, không ai bị đá."
+          },
+          {
+            "id": "d",
+            "text": "Cả ba cùng giữ khóa — S+S+X sống chung được vì đa số là đọc",
+            "correct": false,
+            "explanation": "Sai — ma trận không có khái niệm \"biểu quyết đa số\": một khóa vênh là đủ để xếp hàng."
+          }
+        ]
+      },
+      {
+        "question": "Hồ sơ sách: T1 chuyển 50 từ két B sang A nhưng NHẢ khóa B ngay sau khi trừ. T2 chen vào cộng tổng A+B ra $250 (đúng ra $300). Có khóa mà sao vẫn sai?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì T1 nhả khóa QUÁ SỚM — T2 chen đúng khe \"tiền đã rời B, chưa tới A\" và đọc được trạng thái dở dang",
+            "correct": true,
+            "explanation": "Đúng — xin khóa đúng kiểu chưa đủ, còn phải giữ ĐỦ LÂU. \"Giữ đến bao giờ\" chính là câu hỏi 2PL trả lời ở bài sau."
+          },
+          {
+            "id": "b",
+            "text": "Vì T2 quên xin khóa S trước khi đọc",
+            "correct": false,
+            "explanation": "Sai — T2 xin S đàng hoàng và được grant, vì B đã bị T1 NHẢ rồi. Vấn đề nằm ở người nhả, không phải người xin."
+          },
+          {
+            "id": "c",
+            "text": "Vì cộng A+B cần khóa X chứ không phải S",
+            "correct": false,
+            "explanation": "Sai — T2 chỉ đọc, S là đúng kiểu. Đọc mà ra số sai là do trạng thái NÓ ĐỌC dở dang, không phải do kiểu khóa."
+          },
+          {
+            "id": "d",
+            "text": "Vì hai két A và B nằm ở hai bảng khác nhau nên khóa không phủ được",
+            "correct": false,
+            "explanation": "Sai — khóa theo item, phủ được hết; kể cả cùng bảng vẫn dính nếu nhả sớm. Thứ tự GIỮ/NHẢ mới là thủ phạm."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Quầy lock manager — grant hay xếp hàng?",
+      "instruction": "Tra ma trận Fig 18.1: mỗi cặp (đang giữ + xin mới) về đúng bên.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "c1",
+          "label": "Đang giữ S — xin thêm S"
+        },
+        {
+          "id": "c2",
+          "label": "Đang giữ S — xin X"
+        },
+        {
+          "id": "c3",
+          "label": "Đang giữ X — xin S"
+        },
+        {
+          "id": "c4",
+          "label": "Đang giữ X — xin X"
+        }
+      ],
+      "bins": [
+        {
+          "id": "g",
+          "label": "GRANT ✓"
+        },
+        {
+          "id": "w",
+          "label": "XẾP HÀNG ⏳"
+        }
+      ],
+      "solution": {
+        "c1": "g",
+        "c2": "w",
+        "c3": "w",
+        "c4": "w"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp quy trình 4 bước của quầy lock manager — có MỘT khối bịa (nghe rất chi là tử tế).",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Tra MA TRẬN: yêu cầu mới có tương thích với MỌI khóa đang giữ trên item không?",
+        "slot": "lk-check"
+      },
+      {
+        "type": "op",
+        "token": "Giao dịch muốn đụng item nào, XIN khóa item đó: lock-S để đọc, lock-X để ghi",
+        "slot": "lk-req"
+      },
+      {
+        "type": "op",
+        "token": "Đọc/ghi xong nhịp nào thì unlock NGAY nhịp đó cho người sau đỡ chờ",
+        "slot": "lk-x"
+      },
+      {
+        "type": "op",
+        "token": "unlock khi xong việc → lock manager đánh thức những ai trong hàng chờ hết vênh",
+        "slot": "lk-unlock"
+      },
+      {
+        "type": "op",
+        "token": "Tương thích → GRANT phát chìa ngay · vênh dù một khóa → vào HÀNG CHỜ đứng im",
+        "slot": "lk-grant"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "lk-req",
+        "placeholder": "Bước 1 — giao dịch làm gì trước khi đụng ví?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🙋",
+          "label": "Xin khóa",
+          "sub": "Bước 1",
+          "hint": "Đọc xin kiểu gì, ghi xin kiểu gì — hai chế độ, đúng một quầy."
+        }
+      },
+      {
+        "id": "lk-check",
+        "placeholder": "Bước 2 — quầy tra cứu cái gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📋",
+          "label": "Tra ma trận",
+          "sub": "Bước 2",
+          "hint": "Fig 18.1 — bảng 2×2 chỉ có đúng một ô \"true\"."
+        }
+      },
+      {
+        "id": "lk-grant",
+        "placeholder": "Bước 3 — hai kết cục ở quầy",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔑",
+          "label": "Grant / xếp hàng",
+          "sub": "Bước 3",
+          "hint": "Không có kết cục thứ ba — và cũng không ai bị \"đá văng\" khỏi khóa đang giữ."
+        }
+      },
+      {
+        "id": "lk-unlock",
+        "placeholder": "Bước 4 — chìa quay về quầy lúc nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔓",
+          "label": "Unlock & đánh thức",
+          "sub": "Bước 4",
+          "hint": "Nhả chìa thì hàng chờ được xét lại — nhưng NHẢ LÚC NÀO là cả một hồ sơ cảnh báo."
+        }
+      }
+    ],
+    "expected_sql": "Giao dịch muốn đụng item nào, XIN khóa item đó: lock-S để đọc, lock-X để ghi Tra MA TRẬN: yêu cầu mới có tương thích với MỌI khóa đang giữ trên item không? Tương thích → GRANT phát chìa ngay · vênh dù một khóa → vào HÀNG CHỜ đứng im unlock khi xong việc → lock manager đánh thức những ai trong hàng chờ hết vênh",
+    "expected_zones": {
+      "lk-req": "Giao dịch muốn đụng item nào, XIN khóa item đó: lock-S để đọc, lock-X để ghi",
+      "lk-check": "Tra MA TRẬN: yêu cầu mới có tương thích với MỌI khóa đang giữ trên item không?",
+      "lk-grant": "Tương thích → GRANT phát chìa ngay · vênh dù một khóa → vào HÀNG CHỜ đứng im",
+      "lk-unlock": "unlock khi xong việc → lock manager đánh thức những ai trong hàng chờ hết vênh"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 QUẦY ĐÃ CHẠY: xin khóa → tra ma trận → grant/xếp hàng → unlock & đánh thức. Khối \"unlock NGAY từng nhịp cho người sau đỡ chờ\" nghe tử tế mà là BẪY — chính là vụ $250 trong hồ sơ sách: nhả sớm để lộ trạng thái dở dang. Giữ khóa đến bao giờ mới đủ an toàn? Bài sau: 2PL. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "lk-req": "Bước 1 — luật chơi mới của Trading Floor: KHÔNG AI đụng item khi chưa ghé quầy. Ghé để làm gì?",
+      "lk-check": "Bước 1 chốt: yêu cầu nằm trên quầy. Lock manager mở bảng nào ra dò — và dò với NHỮNG khóa nào?",
+      "lk-grant": "Bước 2 chốt: đã biết vênh hay không. Hai kết cục có thể xảy ra là gì — và có ai bị tước khóa giữa chừng không?",
+      "lk-unlock": "Bước 3 chốt: chìa đã phát hoặc người đã vào hàng. Còn chiều ngược lại — chìa quay về quầy thì hàng chờ được gì?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #53 — chốt sổ ca trực:</strong> điền nốt biên bản của quầy lock manager cho 2 giao dịch đêm qua (T1 +100 trước, T2 −50 xin sau).",
+    "challenge_type": "fill_blank",
+    "template": "-- MA TRAN TUONG THICH (Fig 18.1): chi S+S song chung\n--   S + S = doc chung ✓   ·   S + X / X + S / X + X = CHO\n\n-- 2 khach cung XEM gia listing 3001 (chi doc):\n--   moi nguoi xin khoa ____\n\n-- T1 muon GHI vi 4102 (+100):\n--   T1 phai xin khoa ____\n\n-- T2 xin X sau -> XEP HANG; T1 doc 500, ghi 600, unlock\n-- T2 duoc grant -> doc 600 -> tinh 600 - 50\n--   vi chot = ____ gem",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "S / X",
+        "expected": "S"
+      },
+      {
+        "id": "b2",
+        "hint": "S / X",
+        "expected": "X"
+      },
+      {
+        "id": "b3",
+        "hint": "? gem",
+        "expected": "550"
+      }
+    ],
+    "schema": {
+      "table_name": "lock table — ca trực 00:00:01",
+      "columns": [
+        {
+          "name": "item",
+          "type": "thứ bị khóa",
+          "key": ""
+        },
+        {
+          "name": "transaction",
+          "type": "ai xin",
+          "key": ""
+        },
+        {
+          "name": "mode",
+          "type": "S / X",
+          "key": "🔑"
+        },
+        {
+          "name": "trạng thái",
+          "type": "granted / waiting",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "ví 4102",
+          "T1",
+          "X",
+          "GRANTED"
+        ],
+        [
+          "ví 4102",
+          "T2",
+          "X",
+          "⏳ WAITING"
+        ],
+        [
+          "listing 3001",
+          "T7",
+          "S",
+          "GRANTED"
+        ],
+        [
+          "listing 3001",
+          "T9",
+          "S",
+          "GRANTED"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Biên bản này chính là LOCK TABLE — cấu trúc thật trong mọi DBMS: từng dòng ghi ai giữ khóa gì, ai đang xếp hàng. Bạn điền đúng 3 ô là đọc được nó như nhân viên ca trực.",
+      "real_world": "Postgres cho xem quầy này bằng view pg_locks; MySQL là performance_schema.data_locks. DBA soi hàng WAITING ở đó mỗi khi app \"đơ không rõ lý do\" — thường là một giao dịch ôm X quá lâu.",
+      "steps": [
+        "Chỉ đọc → khóa S; nhiều S sống chung một item.",
+        "Có GHI (dù kèm đọc) → phải là X.",
+        "T2 bị ép đọc SAU cú ghi của T1: nháp của nó là 600.",
+        "600 − 50 = 550. Không mất một gem nào."
+      ],
+      "hint_explore": "Nhìn lock table bên trái: ví 4102 có một dòng WAITING — đó chính là cú \"xếp hàng\" đổi 450 thành 550.",
+      "expected": "S · X · 550"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Ô 1: hai khách chỉ XEM giá — kiểu khóa nào cho phép cả hai cầm CÙNG LÚC?"
+      },
+      {
+        "level": 2,
+        "text": "Ô 2: T1 sẽ GHI vào ví — kiểu khóa nào mới cho ghi? (S chỉ cho đọc.)"
+      },
+      {
+        "level": 3,
+        "text": "Ô 3: nhờ xếp hàng, T2 đọc được 600 chứ không phải 500. Lấy 600 trừ 50."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: S · X · 550 — khóa không cấm đồng thời, nó chỉ ép CHỜ đúng chỗ đụng nhau."
+      }
+    ],
+    "success_message": "TICKET #53 ĐÓNG — ví chốt 550, đúng từng gem! 🔒 Lock manager đã cứu được vụ lost update… nhưng đừng vội ăn mừng: hồ sơ sách còn một trang cảnh báo — có khóa, xin đúng kiểu, mà NHẢ QUÁ SỚM vẫn đọc ra $250 sai lè. Giữ khóa đến bao giờ mới đủ? Bài sau: TWO-PHASE LOCKING — luật \"chỉ gom, hết gom mới nhả\" trứ danh, kèm vị khách không mời tên là DEADLOCK. ⛓️",
+    "xp_reward": 120
+  }
+}

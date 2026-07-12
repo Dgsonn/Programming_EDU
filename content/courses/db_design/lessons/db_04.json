@@ -1,0 +1,978 @@
+{
+  "id": "db_04",
+  "index": 4,
+  "title": "Foreign Key & Mối quan hệ 1:N",
+  "subtitle": "Khóa ngoại — cầu nối giữa các entity",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 22,
+  "xp_reward": 55,
+  "project_piece": "🌉 Khởi động \"Cầu nối Liên Bảng\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #04",
+    "hook": "Tính năng được chờ nhất lên sóng: <strong>\"Thư viện của tôi\"</strong>. Nhưng DragonLord sở hữu 2 game, Elden Ring lại có <em>hàng nghìn chủ</em> — nhét danh sách vào 1 cột ở bên nào cũng vỡ. Ticket này chỉ định giải pháp: dựng <strong>bảng nối</strong> <code>player_game_library</code> đứng giữa — mỗi dòng ghi đúng 1 lượt sở hữu, hai bên là hai quan hệ <strong>1:N</strong> gọn gàng. Rồi tập truy vấn <strong>xuyên 3 bảng</strong> qua cây cầu đó."
+  },
+  "drag_type": "connector",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "player",
+      "columns": [
+        "p_id",
+        "username"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "DragonLord"
+        ],
+        [
+          "8",
+          "NoobMaster"
+        ],
+        [
+          "9",
+          "GG_WellPlayed"
+        ],
+        [
+          "10",
+          "ShadowBlade"
+        ],
+        [
+          "11",
+          "PixelQueen"
+        ],
+        [
+          "12",
+          "CriticalHit"
+        ],
+        [
+          "13",
+          "SpeedRunner"
+        ],
+        [
+          "14",
+          "MageLord"
+        ],
+        [
+          "15",
+          "LootGoblin"
+        ],
+        [
+          "16",
+          "FrostByte"
+        ],
+        [
+          "17",
+          "IronWolf"
+        ],
+        [
+          "18",
+          "NightOwl"
+        ],
+        [
+          "19",
+          "BladeDancer"
+        ],
+        [
+          "20",
+          "ArcaneFox"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Kiến trúc 1:N",
+    "desc": "quan hệ một-nhiều bằng FK"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "M:N (Nhiều-Nhiều) = 1 khách mua nhiều game, 1 game có nhiều khách",
+        "Không thể nhét FK vào bên nào → cần Bảng trung gian (Junction Table)",
+        "Junction Table chỉ chứa 2 FK + tạo cặp (player_id, game_id) cho mỗi lượt mua"
+      ],
+      "intro": "Bảng nối <code>player_game_library</code> không có gì bí ẩn: nó là <strong>hai quan hệ 1:N ghép lại</strong> — 1 player có N dòng sở hữu, 1 game cũng có N dòng sở hữu. Mỗi dòng giữ 2 Khóa ngoại (<code>ref_p_id</code>, <code>ref_game_id</code>), mỗi FK trỏ về phía \"1\" của nó. Muốn biết DragonLord sở hữu game gì? <strong>JOIN 2 lần</strong>: player → bảng nối → game.",
+      "example": "Bảng <code>player_game_library</code> ở giữa chỉ chứa <code>ref_p_id</code> + <code>ref_game_id</code>. Khi DragonLord (p_id=7) mua Elden Ring (game_id=101) → 1 dòng (7, 101) trong library. Khi cùng DragonLord mua Hades (game_id=103) → 1 dòng (7, 103). Khi NoobMaster (p_id=8) cũng mua Elden Ring → 1 dòng (8, 101)."
+    },
+    "intro": "Năm ngoái, một intern mới vào team thiết kế schema cho ứng dụng đặt lịch học. Cô ấy vẽ 1 bảng <code>enrollment</code> với 8 cột: student_name, course_name, instructor, room, time... Cuối cùng 1 SV đăng ký 3 môn = 3 dòng, mỗi dòng lặp lại tên SV. Insert sai = sai toàn bộ. Bài này dạy <strong>M:N qua junction table</strong>.",
+    "concept_cards": [
+      {
+        "icon": "fa-arrows-left-right",
+        "title": "Mối quan hệ 1:N — Tình huống Minh học 3 môn",
+        "body": "Sinh viên Minh đăng ký Database (40 SV), OOP (35 SV), Web (50 SV). Nếu lưu \"Minh học\" = 3 dòng riêng → tên Minh lặp 3 lần. Nếu gộp \"môn1, môn2, môn3\" thành 3 cột → giới hạn số môn. Giải pháp: <strong>FK ở bên N</strong>, mỗi dòng enrollment = 1 cặp."
+      },
+      {
+        "icon": "fa-table-list",
+        "title": "Junction Table — Cầu nối M:N",
+        "body": "Bảng <code>enrollment(student_id, course_id)</code> chỉ chứa 2 FK. PK là cặp (student_id, course_id) ghép lại. Đôi khi có thêm cột riêng như <code>enrolled_at</code> hay <code>grade</code>. Đây là <strong>1 bảng trung gian</strong> cho mọi quan hệ M:N."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "1 người chơi nhiều game, 1 game nhiều người — nhét vào đâu? Bảng trung gian <code>player_game_library</code>: mỗi dòng = 1 cặp (người, game). Muốn ra <em>tên</em> game phải JOIN qua 2 chặng FK — thử bỏ 1 chặng xem, ra ngay id vô nghĩa."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "er",
+        "width": 620,
+        "height": 280,
+        "entities": [
+          {
+            "name": "student",
+            "columns": [
+              {
+                "name": "student_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "name",
+                "type": "VARCHAR"
+              }
+            ]
+          },
+          {
+            "name": "course",
+            "columns": [
+              {
+                "name": "course_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "title",
+                "type": "VARCHAR"
+              }
+            ]
+          },
+          {
+            "name": "enrollment",
+            "columns": [
+              {
+                "name": "student_id",
+                "type": "INT",
+                "key": "FK,PK"
+              },
+              {
+                "name": "course_id",
+                "type": "INT",
+                "key": "FK,PK"
+              },
+              {
+                "name": "enrolled_at",
+                "type": "DATE"
+              }
+            ]
+          }
+        ],
+        "connectors": [
+          {
+            "from": "student",
+            "to": "enrollment",
+            "fromCard": "1",
+            "toCard": "N",
+            "label": "enrolls"
+          },
+          {
+            "from": "course",
+            "to": "enrollment",
+            "fromCard": "1",
+            "toCard": "N",
+            "label": "has"
+          }
+        ],
+        "note": "M:N qua bảng trung gian. 2 FK + PK ghép."
+      },
+      "schema": {
+        "table_name": "player",
+        "columns": [
+          {
+            "name": "p_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👤"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "7",
+          "DragonLord"
+        ],
+        [
+          "8",
+          "NoobMaster"
+        ],
+        [
+          "9",
+          "GG_WellPlayed"
+        ],
+        [
+          "10",
+          "ShadowBlade"
+        ],
+        [
+          "11",
+          "PixelQueen"
+        ],
+        [
+          "12",
+          "CriticalHit"
+        ],
+        [
+          "13",
+          "SpeedRunner"
+        ],
+        [
+          "14",
+          "MageLord"
+        ],
+        [
+          "15",
+          "LootGoblin"
+        ],
+        [
+          "16",
+          "FrostByte"
+        ],
+        [
+          "17",
+          "IronWolf"
+        ],
+        [
+          "18",
+          "NightOwl"
+        ],
+        [
+          "19",
+          "BladeDancer"
+        ],
+        [
+          "20",
+          "ArcaneFox"
+        ]
+      ],
+      "related_tables": [
+        {
+          "name": "player_game_library",
+          "columns": [
+            {
+              "name": "ref_p_id",
+              "type": "INT",
+              "key": "FK",
+              "icon": "🔗"
+            },
+            {
+              "name": "ref_game_id",
+              "type": "INT",
+              "key": "FK",
+              "icon": "🔗"
+            }
+          ],
+          "data": [
+            [
+              "7",
+              "101"
+            ],
+            [
+              "7",
+              "103"
+            ],
+            [
+              "8",
+              "101"
+            ],
+            [
+              "8",
+              "105"
+            ],
+            [
+              "9",
+              "102"
+            ],
+            [
+              "9",
+              "107"
+            ],
+            [
+              "10",
+              "101"
+            ],
+            [
+              "10",
+              "109"
+            ],
+            [
+              "11",
+              "104"
+            ],
+            [
+              "11",
+              "111"
+            ],
+            [
+              "12",
+              "103"
+            ],
+            [
+              "12",
+              "108"
+            ],
+            [
+              "13",
+              "110"
+            ],
+            [
+              "13",
+              "102"
+            ],
+            [
+              "14",
+              "106"
+            ],
+            [
+              "14",
+              "112"
+            ],
+            [
+              "15",
+              "101"
+            ],
+            [
+              "15",
+              "105"
+            ],
+            [
+              "16",
+              "107"
+            ],
+            [
+              "17",
+              "103"
+            ],
+            [
+              "18",
+              "109"
+            ],
+            [
+              "19",
+              "102"
+            ],
+            [
+              "20",
+              "108"
+            ],
+            [
+              "16",
+              "110"
+            ]
+          ]
+        },
+        {
+          "name": "game",
+          "columns": [
+            {
+              "name": "game_id",
+              "type": "INT",
+              "key": "PK",
+              "icon": "🔑"
+            },
+            {
+              "name": "title",
+              "type": "VARCHAR",
+              "key": "",
+              "icon": "🎮"
+            }
+          ],
+          "data": [
+            [
+              "101",
+              "Elden Ring"
+            ],
+            [
+              "102",
+              "God of War"
+            ],
+            [
+              "103",
+              "Hades"
+            ],
+            [
+              "104",
+              "Celeste"
+            ],
+            [
+              "105",
+              "Hollow Knight"
+            ],
+            [
+              "106",
+              "Stardew Valley"
+            ],
+            [
+              "107",
+              "The Witcher 3"
+            ],
+            [
+              "108",
+              "Cyberpunk 2077"
+            ],
+            [
+              "109",
+              "Dark Souls III"
+            ],
+            [
+              "110",
+              "Sekiro"
+            ],
+            [
+              "111",
+              "Disco Elysium"
+            ],
+            [
+              "112",
+              "Baldur's Gate 3"
+            ]
+          ]
+        }
+      ]
+    },
+    "mission": "Lấy <code>title</code> của tất cả game mà <code>DragonLord</code> sở hữu — kéo thả SQL, JOIN chuỗi qua 3 bảng."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Tại sao quan hệ M:N KHÔNG thể chỉ dùng 1 FK ở 1 bảng?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì FK chỉ được lưu 1 lần duy nhất trong bảng",
+            "correct": false,
+            "explanation": "Sai — FK có thể xuất hiện nhiều lần trong bảng. Mỗi row có thể có FK riêng. Vấn đề M:N nằm ở chỗ khác."
+          },
+          {
+            "id": "b",
+            "text": "Vì nhét FK vào 1 bên sẽ sinh lặp dữ liệu vô tận (mỗi record cần 1 dòng)",
+            "correct": true,
+            "explanation": "Đúng — nếu Player có 1 cột games (FK), mỗi game mua thêm = thêm 1 dòng player (lặp username). Ngược lại cũng vậy. Lặp vô tận → cần junction table."
+          },
+          {
+            "id": "c",
+            "text": "Vì M:N không được phép trong SQL",
+            "correct": false,
+            "explanation": "Sai — SQL cho phép M:N qua junction table. Không có cấm."
+          },
+          {
+            "id": "d",
+            "text": "Vì FK phải là số nguyên dương",
+            "correct": false,
+            "explanation": "Sai — FK chỉ cần cùng kiểu với PK được tham chiếu. Không có ràng buộc dương."
+          }
+        ]
+      },
+      {
+        "question": "Bảng trung gian (Junction Table) trong quan hệ M:N chứa gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chỉ 1 cột FK trỏ về bảng chính",
+            "correct": false,
+            "explanation": "Sai — chỉ 1 FK tạo quan hệ 1:N, không phải M:N. Cần 2 FK (mỗi bên 1)."
+          },
+          {
+            "id": "b",
+            "text": "2 cột FK — mỗi cột trỏ về 1 bảng ở 2 phía quan hệ",
+            "correct": true,
+            "explanation": "Đúng — junction table chứa 2 FK + (optional) PK ghép. Mỗi dòng = 1 cặp (entityA_id, entityB_id)."
+          },
+          {
+            "id": "c",
+            "text": "Tất cả thuộc tính của cả 2 bảng gộp lại",
+            "correct": false,
+            "explanation": "Sai — gộp hết thuộc tính gây lặp dữ liệu (violates 1NF). Junction chỉ giữ 2 FK + metadata tùy chọn."
+          },
+          {
+            "id": "d",
+            "text": "Không có cột nào, chỉ là bảng \"ảo\"",
+            "correct": false,
+            "explanation": "Sai — junction table là bảng THẬT trong database, chỉ là nó chỉ có 2 FK + PK ghép."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Sắp xếp bước tạo quan hệ M:N",
+      "instruction": "Kéo thả để sắp đúng thứ tự khi thiết kế M:N.",
+      "xp": 20,
+      "items": [
+        {
+          "id": "s1",
+          "label": "Bước 1: Xác định 2 entity set (Player, Game)"
+        },
+        {
+          "id": "s2",
+          "label": "Bước 2: Tạo bảng riêng cho từng entity với PK"
+        },
+        {
+          "id": "s3",
+          "label": "Bước 3: Tạo junction table (player_game_library)"
+        },
+        {
+          "id": "s4",
+          "label": "Bước 4: Thêm 2 FK tham chiếu PK 2 bảng gốc"
+        },
+        {
+          "id": "s5",
+          "label": "Bước 5: PK của junction = composite (player_id, game_id)"
+        }
+      ],
+      "solution": {
+        "s1": 1,
+        "s2": 2,
+        "s3": 3,
+        "s4": 4,
+        "s5": 5
+      }
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "game.title",
+        "slot": "col-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "player",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join"
+      },
+      {
+        "type": "tbl",
+        "token": "player_game_library",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on"
+      },
+      {
+        "type": "col",
+        "token": "player.p_id = player_game_library.ref_p_id",
+        "slot": "col-on"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join2"
+      },
+      {
+        "type": "tbl",
+        "token": "game",
+        "slot": "tbl3"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on2"
+      },
+      {
+        "type": "col",
+        "token": "player_game_library.ref_game_id = game.game_id",
+        "slot": "col-on2"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "player.username",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'DragonLord'",
+        "slot": "val-1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____ ON ____ JOIN ____ ON ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT game.title FROM player JOIN player_game_library ON player.p_id = player_game_library.ref_p_id JOIN game ON player_game_library.ref_game_id = game.game_id WHERE player.username = 'DragonLord';",
+    "reveal_hints": {
+      "select-line": "SELECT 1 cột: <strong>game.title</strong>.",
+      "from-line": "Chuỗi 2 JOIN: <strong>player</strong> → <strong>player_game_library</strong> (nối qua p_id) → <strong>game</strong> (nối qua ref_game_id).",
+      "where-line": "WHERE lọc người: <strong>player.username = 'DragonLord'</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — đi <strong>ngược chiều</strong>: từ 3 bảng, tìm <strong>những người chơi ĐANG SỞ HỮU game \"Elden Ring\"</strong> (thay vì liệt kê game của 1 người).",
+    "starter": "-- Ai đang sở hữu 'Elden Ring'?\n-- Đi NGƯỢC Bước 3: game → bảng trung gian → player\nSELECT \n  FROM game g\n  JOIN \n  JOIN \n WHERE ;\n",
+    "schema": {
+      "table_name": "player",
+      "columns": [
+        {
+          "name": "p_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "7",
+          "DragonLord"
+        ],
+        [
+          "8",
+          "NoobMaster"
+        ],
+        [
+          "9",
+          "GG_WellPlayed"
+        ],
+        [
+          "10",
+          "ShadowBlade"
+        ],
+        [
+          "11",
+          "PixelQueen"
+        ],
+        [
+          "12",
+          "CriticalHit"
+        ],
+        [
+          "13",
+          "SpeedRunner"
+        ],
+        [
+          "14",
+          "MageLord"
+        ],
+        [
+          "15",
+          "LootGoblin"
+        ],
+        [
+          "16",
+          "FrostByte"
+        ],
+        [
+          "17",
+          "IronWolf"
+        ],
+        [
+          "18",
+          "NightOwl"
+        ],
+        [
+          "19",
+          "BladeDancer"
+        ],
+        [
+          "20",
+          "ArcaneFox"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "player_game_library",
+        "columns": [
+          {
+            "name": "ref_p_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "ref_game_id",
+            "type": "INT",
+            "key": "FK"
+          }
+        ],
+        "data": [
+          [
+            "7",
+            "101"
+          ],
+          [
+            "7",
+            "103"
+          ],
+          [
+            "8",
+            "101"
+          ],
+          [
+            "8",
+            "105"
+          ],
+          [
+            "9",
+            "102"
+          ],
+          [
+            "9",
+            "107"
+          ],
+          [
+            "10",
+            "101"
+          ],
+          [
+            "10",
+            "109"
+          ],
+          [
+            "11",
+            "104"
+          ],
+          [
+            "11",
+            "111"
+          ],
+          [
+            "12",
+            "103"
+          ],
+          [
+            "12",
+            "108"
+          ],
+          [
+            "13",
+            "110"
+          ],
+          [
+            "13",
+            "102"
+          ],
+          [
+            "14",
+            "106"
+          ],
+          [
+            "14",
+            "112"
+          ],
+          [
+            "15",
+            "101"
+          ],
+          [
+            "15",
+            "105"
+          ],
+          [
+            "16",
+            "107"
+          ],
+          [
+            "17",
+            "103"
+          ],
+          [
+            "18",
+            "109"
+          ],
+          [
+            "19",
+            "102"
+          ],
+          [
+            "20",
+            "108"
+          ],
+          [
+            "16",
+            "110"
+          ]
+        ]
+      },
+      {
+        "table_name": "game",
+        "columns": [
+          {
+            "name": "game_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "title",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "101",
+            "Elden Ring"
+          ],
+          [
+            "102",
+            "God of War"
+          ],
+          [
+            "103",
+            "Hades"
+          ],
+          [
+            "104",
+            "Celeste"
+          ],
+          [
+            "105",
+            "Hollow Knight"
+          ],
+          [
+            "106",
+            "Stardew Valley"
+          ],
+          [
+            "107",
+            "The Witcher 3"
+          ],
+          [
+            "108",
+            "Cyberpunk 2077"
+          ],
+          [
+            "109",
+            "Dark Souls III"
+          ],
+          [
+            "110",
+            "Sekiro"
+          ],
+          [
+            "111",
+            "Disco Elysium"
+          ],
+          [
+            "112",
+            "Baldur's Gate 3"
+          ]
+        ]
+      }
+    ],
+    "hints": [
+      {
+        "level": 1,
+        "text": "Đi NGƯỢC chiều Bước 3: bắt đầu từ <code>game</code> (lọc theo <code>title</code>), kết thúc ở <code>player</code> (lấy <code>username</code>). Chuỗi FK vẫn y hệt, chỉ đảo hướng đọc."
+      },
+      {
+        "level": 2,
+        "text": "JOIN thứ 1: <code>game g JOIN player_game_library l ON g.game_id = l.ref_game_id</code> — từ game ra các dòng sở hữu."
+      },
+      {
+        "level": 3,
+        "text": "JOIN thứ 2: <code>JOIN player p ON l.ref_p_id = p.p_id</code>, rồi lọc <code>WHERE g.title = 'Elden Ring'</code>. SELECT <code>p.username</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Elden Ring';</code>"
+      }
+    ],
+    "context": {
+      "scenario": "Quan hệ M:N: 1 người chơi sở hữu nhiều game, 1 game thuộc nhiều người. Bảng trung gian <code>player_game_library</code> nối 2 bên. Lần này đi NGƯỢC: từ 1 game, tìm những người đang sở hữu nó.",
+      "real_world": "Chính là tính năng \"<strong>Ai cũng chơi game này</strong>\" trên <strong>Steam</strong>, hay \"<strong>bạn bè đã mua sản phẩm này</strong>\" trên <strong>Shopee</strong>. Đều là JOIN ngược qua bảng trung gian M:N — từ 1 mục ra danh sách người liên quan.",
+      "steps": [
+        "Bắt đầu từ <code>game</code>, lọc đúng game cần tìm: <code>WHERE g.title = 'Elden Ring'</code>.",
+        "JOIN sang bảng trung gian <code>player_game_library</code> qua <code>l.ref_game_id = g.game_id</code>.",
+        "JOIN tiếp sang <code>player</code> qua <code>p.p_id = l.ref_p_id</code> để lấy tên người chơi.",
+        "SELECT <code>p.username</code>. Run → danh sách người đang sở hữu game đó."
+      ],
+      "hint_explore": "Chưa biết bảng trung gian trông thế nào? Gõ <code>SELECT * FROM player_game_library</code> rồi <strong>Run</strong>.",
+      "example": {
+        "question": "Ví dụ tương tự — ai đang sở hữu game <strong>Hades</strong>?",
+        "sql": "SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Hades';",
+        "sample_output": "→ danh sách username sở hữu Hades"
+      },
+      "expected": "Bảng kết quả 1 cột <code>username</code>: những người chơi đang sở hữu \"Elden Ring\". Lần này đi NGƯỢC — lọc theo game → ra người chơi (thay vì lọc theo người → ra game như Bước 3)."
+    },
+    "expected_sql": "SELECT p.username FROM player p JOIN player_game_library l ON p.p_id = l.ref_p_id JOIN game g ON l.ref_game_id = g.game_id WHERE g.title = 'Elden Ring';",
+    "success_message": "Đỉnh! Bạn đã JOIN 3 bảng thành thạo qua FK chain. Bài 5 sẽ học M:N — quan hệ nhiều-nhiều qua bảng trung gian.",
+    "xp_reward": 70
+  }
+}

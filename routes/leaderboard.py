@@ -36,6 +36,40 @@ def _avatar_for(name: str) -> str:
     return AVATAR_BY_INITIAL.get(initial, '🧑')
 
 
+def _looks_like_test_name(name: str) -> bool:
+    """
+    Phát hiện tên người dùng có vẻ là test/dev account — để ẩn danh trên leaderboard.
+    Heuristics: tên quá ngắn, toàn chữ thường không dấu, lặp ký tự, hoặc chứa "test"/"dev"/"user".
+    """
+    if not name:
+        return True
+    n = name.strip()
+    if len(n) < 3:
+        return True
+    low = n.lower()
+    # Repeating character (e.g. "aaaa", "xxxxx")
+    if len(set(low.replace(' ', ''))) <= 2 and len(low) > 3:
+        return True
+    # Contains common test keywords
+    for kw in ('test', 'dev', 'user', 'demo', 'sample', 'aaa', 'xxx'):
+        if kw in low:
+            return True
+    # All lowercase ascii only, no Vietnamese diacritics
+    if low == low and all(c.isascii() and c.islower() or c in ' _.' for c in low) and not any(c in 'ăâđêôơưáàảãạằẳẵặắấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ' for c in low):
+        # Generic ASCII lowercase — could be "nguyen van a" style (acceptable Vietnamese names without diacritics)
+        # Only flag if it's very short or no spaces
+        if ' ' not in low or len(low) < 8:
+            return True
+    return False
+
+
+def _display_name_for(name: str, user_id: int) -> str:
+    """Tên hiển thị công khai trên leaderboard. Test-like names → 'Học viên #ID'."""
+    if _looks_like_test_name(name):
+        return f'Học viên #{user_id}'
+    return name
+
+
 def _attach_medal(entries: list) -> list:
     """Gán medal emoji cho top 3."""
     for e in entries:
@@ -133,7 +167,7 @@ def _fetch_top_by(uid: int, order_col: str, limit: int = 10):
         {
             'rank':   idx + 1,
             'id':     r['id'],
-            'name':   r['name'] or f'User #{r["id"]}',
+            'name':   _display_name_for(r['name'] or '', r['id']),
             'avatar': _avatar_for(r['name'] or ''),
             'value':  r[order_col] or 0,
         }
@@ -146,7 +180,7 @@ def _fetch_top_by(uid: int, order_col: str, limit: int = 10):
         me = {
             'rank':  me_row['my_rank'] or (len(top_list) + 1),
             'id':    me_row['id'],
-            'name':  me_row['name'] or f'User #{me_row["id"]}',
+            'name':  _display_name_for(me_row['name'] or '', me_row['id']),
             'avatar': _avatar_for(me_row['name'] or ''),
             'value': me_row[order_col] or 0,
         }

@@ -6,7 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from config import Config, ALLOWED_ORIGINS
 from extensions import limiter
-from db import init_db, start_keepalive
+from db import init_db, register_teardown, start_keepalive
 from routes import register_blueprints
 from routes.auth import auth_bp
 from routes.oauth import google_bp, facebook_bp, _oauth_callback
@@ -27,6 +27,12 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 limiter.init_app(app)
 
+# AUDIT-FIX 2026-07-07: miễn rate-limit (50/hour/IP) cho tài nguyên tĩnh — nếu không,
+# một lớp học sau 1 NAT-IP (hoặc F5 nhiều) làm cạn budget → file JS/CSS bị 429 →
+# LESSON_CONTENT không load → bài học trắng. Chỉ giới hạn các route động.
+if "static" in app.view_functions:
+    limiter.exempt(app.view_functions["static"])
+
 # ── Logging & request-id ───────────────────────────────────────────────────
 # setup_logging(app)
 # init_request_id(app)
@@ -40,6 +46,9 @@ csrf.exempt(_oauth_callback)
 init_db()
 # Giữ compute Neon luôn "ấm" để tránh cold-start 5-10s ở request đầu sau khi idle.
 start_keepalive()
+# Chống rò connection: route nào quên conn.close() (hoặc exception trước close)
+# thì cuối request teardown tự trả connection về pool.
+register_teardown(app)
 
 # ── Logger dùng trong module này ───────────────────────────────────────────
 logger = logging.getLogger(__name__)
@@ -63,8 +72,8 @@ def set_security_headers(resp):
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
         "https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
-        "https://cdnjs.cloudflare.com; "
-        "font-src 'self' https://fonts.gstatic.com; "
+        "https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
         "img-src 'self' data: blob:; "
         "connect-src 'self' https://generativelanguage.googleapis.com; "
         "frame-ancestors 'self'"

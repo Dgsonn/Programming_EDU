@@ -1,0 +1,802 @@
+{
+  "id": "db_20",
+  "index": 18,
+  "title": "Web Services — REST/AJAX nối App với Database",
+  "subtitle": "App gọi API qua HTTP → server chạy SQL → trả JSON",
+  "module": 3,
+  "module_title": "Application Design",
+  "estimated_minutes": 22,
+  "xp_reward": 70,
+  "project_piece": "🌐 Dựng API cho web shop game",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #18",
+    "hook": "Đối tác khắp nơi muốn dữ liệu GameHub — đến lúc mở <strong>public API</strong>. Mỗi request như <code>/api/games?genre=Action&minPrice=50</code> phải được dịch thành <em>đúng 1 câu SQL</em> trên <code>game_catalog</code> — bảng đầu tiên bạn dựng ở Ticket #01, giờ phục vụ cả thế giới. Ticket: nối App ↔ Database qua <strong>REST</strong>, hiểu vì sao mỗi request phải stateless."
+  },
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "game_catalog",
+      "columns": [
+        "id",
+        "name",
+        "genre",
+        "price"
+      ],
+      "dataRows": [
+        [
+          "101",
+          "Elden Ring",
+          "RPG",
+          "60"
+        ],
+        [
+          "102",
+          "God of War",
+          "Action",
+          "50"
+        ],
+        [
+          "103",
+          "Hades",
+          "RPG",
+          "25"
+        ],
+        [
+          "104",
+          "Celeste",
+          "Platformer",
+          "20"
+        ],
+        [
+          "105",
+          "Baldur's Gate 3",
+          "RPG",
+          "60"
+        ],
+        [
+          "106",
+          "Cyberpunk 2077",
+          "RPG",
+          "45"
+        ],
+        [
+          "107",
+          "The Witcher 3",
+          "RPG",
+          "40"
+        ],
+        [
+          "108",
+          "Disco Elysium",
+          "RPG",
+          "35"
+        ],
+        [
+          "109",
+          "God of War Ragnarok",
+          "Action",
+          "60"
+        ],
+        [
+          "110",
+          "Hollow Knight",
+          "Metroidvania",
+          "15"
+        ],
+        [
+          "111",
+          "Stardew Valley",
+          "Simulation",
+          "18"
+        ],
+        [
+          "112",
+          "Doom Eternal",
+          "Shooter",
+          "40"
+        ],
+        [
+          "113",
+          "Sekiro",
+          "Action",
+          "50"
+        ],
+        [
+          "114",
+          "Slay the Spire",
+          "Card Game",
+          "23"
+        ],
+        [
+          "115",
+          "Persona 5",
+          "RPG",
+          "55"
+        ],
+        [
+          "116",
+          "Final Fantasy XVI",
+          "RPG",
+          "50"
+        ],
+        [
+          "117",
+          "Portal 2",
+          "Puzzle",
+          "10"
+        ],
+        [
+          "118",
+          "Cuphead",
+          "Run & Gun",
+          "20"
+        ],
+        [
+          "119",
+          "Terraria",
+          "Sandbox",
+          "10"
+        ],
+        [
+          "120",
+          "Red Dead 2",
+          "Action",
+          "60"
+        ],
+        [
+          "121",
+          "Dark Souls III",
+          "RPG",
+          "40"
+        ],
+        [
+          "122",
+          "Outer Wilds",
+          "Adventure",
+          "25"
+        ],
+        [
+          "123",
+          "Vampire Survivors",
+          "Roguelite",
+          "5"
+        ],
+        [
+          "124",
+          "Cult of the Lamb",
+          "Roguelike",
+          "25"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Kết nối Web",
+    "desc": "nối App với DB qua REST API"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Web Service = cầu nối App ↔ DB qua HTTP (REST). App KHÔNG nối thẳng DB",
+        "Client gửi request (vd GET /api/games?genre=RPG) → server chạy SQL → trả JSON",
+        "Giao thức stateless: mỗi request độc lập; tham số truyền AN TOÀN (parameterized ?)"
+      ],
+      "intro": "App web/mobile không nối thẳng vào DB — nó gọi <strong>API</strong> qua HTTP (REST/AJAX). Người dùng lọc game RPG → trình duyệt gửi <code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT … WHERE genre = ?</code> → trả về <strong>JSON</strong> cho app hiển thị. <strong>Stateless</strong>: mỗi request độc lập, server không nhớ phiên trước.",
+      "example": "<code>GET /api/games?genre=RPG</code> → server chạy <code>SELECT name, price FROM game_catalog WHERE genre = 'RPG'</code> → trả <code>[{\"name\":\"Elden Ring\",\"price\":60},{\"name\":\"Hades\",\"price\":25}]</code>."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-server",
+        "title": "REST/HTTP — stateless",
+        "body": "Mỗi request là 1 lệnh độc lập (GET/POST). Server nhận → truy DB → trả JSON. Không giữ trạng thái giữa các request."
+      },
+      {
+        "icon": "fa-shield-halved",
+        "title": "Tham số AN TOÀN (parameterized)",
+        "body": "Param từ request (genre, id…) phải truyền qua placeholder <code>?</code>, KHÔNG ghép chuỗi trực tiếp — nếu ghép, hacker chèn SQL độc (xem bài SQL Injection)."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay",
+        "body": "Người dùng bấm \"lọc RPG\" trên web → JS gọi <code>/api/games?genre=RPG</code> → server dịch query-param thành SQL <code>WHERE genre = 'RPG'</code> → trả JSON về. Bạn chính là người viết đúng câu SQL đó."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "game_catalog",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🎮"
+          },
+          {
+            "name": "genre",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🏷️"
+          },
+          {
+            "name": "price",
+            "type": "INT",
+            "key": "",
+            "icon": "💰"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "101",
+          "Elden Ring",
+          "RPG",
+          "60"
+        ],
+        [
+          "102",
+          "God of War",
+          "Action",
+          "50"
+        ],
+        [
+          "103",
+          "Hades",
+          "RPG",
+          "25"
+        ],
+        [
+          "104",
+          "Celeste",
+          "Platformer",
+          "20"
+        ],
+        [
+          "105",
+          "Baldur's Gate 3",
+          "RPG",
+          "60"
+        ],
+        [
+          "106",
+          "Cyberpunk 2077",
+          "RPG",
+          "45"
+        ],
+        [
+          "107",
+          "The Witcher 3",
+          "RPG",
+          "40"
+        ],
+        [
+          "108",
+          "Disco Elysium",
+          "RPG",
+          "35"
+        ],
+        [
+          "109",
+          "God of War Ragnarok",
+          "Action",
+          "60"
+        ],
+        [
+          "110",
+          "Hollow Knight",
+          "Metroidvania",
+          "15"
+        ],
+        [
+          "111",
+          "Stardew Valley",
+          "Simulation",
+          "18"
+        ],
+        [
+          "112",
+          "Doom Eternal",
+          "Shooter",
+          "40"
+        ],
+        [
+          "113",
+          "Sekiro",
+          "Action",
+          "50"
+        ],
+        [
+          "114",
+          "Slay the Spire",
+          "Card Game",
+          "23"
+        ],
+        [
+          "115",
+          "Persona 5",
+          "RPG",
+          "55"
+        ],
+        [
+          "116",
+          "Final Fantasy XVI",
+          "RPG",
+          "50"
+        ],
+        [
+          "117",
+          "Portal 2",
+          "Puzzle",
+          "10"
+        ],
+        [
+          "118",
+          "Cuphead",
+          "Run & Gun",
+          "20"
+        ],
+        [
+          "119",
+          "Terraria",
+          "Sandbox",
+          "10"
+        ],
+        [
+          "120",
+          "Red Dead 2",
+          "Action",
+          "60"
+        ],
+        [
+          "121",
+          "Dark Souls III",
+          "RPG",
+          "40"
+        ],
+        [
+          "122",
+          "Outer Wilds",
+          "Adventure",
+          "25"
+        ],
+        [
+          "123",
+          "Vampire Survivors",
+          "Roguelite",
+          "5"
+        ],
+        [
+          "124",
+          "Cult of the Lamb",
+          "Roguelike",
+          "25"
+        ]
+      ]
+    },
+    "mission": "Server nhận request lọc game RPG — kéo thả câu SQL mà API sẽ chạy để trả kết quả."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "\"Stateless\" trong REST nghĩa là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Server lưu toàn bộ lịch sử người dùng",
+            "correct": false,
+            "explanation": "Sai — ngược lại, stateless là KHÔNG lưu trạng thái giữa request."
+          },
+          {
+            "id": "b",
+            "text": "Mỗi request độc lập, server không nhớ request trước",
+            "correct": true,
+            "explanation": "Đúng — mỗi HTTP request tự chứa đủ thông tin; server xử lý độc lập."
+          },
+          {
+            "id": "c",
+            "text": "Không dùng được database",
+            "correct": false,
+            "explanation": "Sai — vẫn truy DB bình thường mỗi request."
+          },
+          {
+            "id": "d",
+            "text": "Chỉ chạy được GET",
+            "correct": false,
+            "explanation": "Sai — REST có GET/POST/PUT/DELETE."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao tham số request nên dùng placeholder <code>?</code> (parameterized) thay vì ghép chuỗi?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chạy nhanh hơn",
+            "correct": false,
+            "explanation": "Phụ — lý do CHÍNH là an toàn."
+          },
+          {
+            "id": "b",
+            "text": "Tránh SQL Injection — input độc không thành câu lệnh",
+            "correct": true,
+            "explanation": "Đúng — parameterized tách dữ liệu khỏi lệnh, hacker không chèn được SQL."
+          },
+          {
+            "id": "c",
+            "text": "Để code ngắn hơn",
+            "correct": false,
+            "explanation": "Sai — không phải mục đích."
+          },
+          {
+            "id": "d",
+            "text": "Bắt buộc của HTTP",
+            "correct": false,
+            "explanation": "Sai — HTTP không ép; đây là best practice bảo mật."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Dịch tham số URL → mảnh SQL",
+      "instruction": "API là máy dịch query-string → SQL. Nối mỗi tham số URL với mảnh SQL nó sinh ra.",
+      "xp": 20,
+      "pairs": [
+        {
+          "left": "?genre=Action",
+          "leftId": "u1",
+          "rightId": "s1",
+          "right": {
+            "id": "s1",
+            "label": "WHERE genre = 'Action'"
+          }
+        },
+        {
+          "left": "&minPrice=50",
+          "leftId": "u2",
+          "rightId": "s2",
+          "right": {
+            "id": "s2",
+            "label": "AND price >= 50"
+          }
+        },
+        {
+          "left": "&sort=desc",
+          "leftId": "u3",
+          "rightId": "s3",
+          "right": {
+            "id": "s3",
+            "label": "ORDER BY price DESC"
+          }
+        },
+        {
+          "left": "&limit=10",
+          "leftId": "u4",
+          "rightId": "s4",
+          "right": {
+            "id": "s4",
+            "label": "LIMIT 10"
+          }
+        }
+      ],
+      "solution": {
+        "u1": "s1",
+        "u2": "s2",
+        "u3": "s3",
+        "u4": "s4"
+      }
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "name",
+        "slot": "col-1"
+      },
+      {
+        "type": "col",
+        "token": "price",
+        "slot": "col-2"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "game_catalog",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "genre",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'RPG'",
+        "slot": "val-1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT name, price FROM game_catalog WHERE genre = 'RPG';",
+    "reveal_hints": {
+      "select-line": "SELECT 2 cột: <strong>name</strong>, <strong>price</strong>.",
+      "from-line": "FROM <strong>game_catalog</strong>.",
+      "where-line": "WHERE lọc theo genre: <strong>genre = 'RPG'</strong> (lưu ý dấu nháy đơn quanh giá trị chuỗi)."
+    }
+  },
+  "step_4": {
+    "prompt": "Endpoint /api/games?genre=Action&amp;minPrice=50&amp;sort=desc — nâng độ khó: lấy game <strong>Action giá ≥ 50</strong>, <strong>sắp xếp giá giảm dần</strong> (thêm <code>AND price &gt;= 50 ORDER BY price DESC</code>).",
+    "context": {
+      "scenario": "Public API của GameHub nhận request đầu tiên từ đối tác: <code>GET /api/games?genre=Action&minPrice=50&sort=desc</code>. Server phải dịch 3 tham số đó thành <strong>đúng 1 câu SQL</strong> trên <code>game_catalog</code> — bảng bạn dựng từ Ticket #01, giờ phục vụ thế giới.",
+      "real_world": "Mọi REST API đọc dữ liệu (<strong>Steam Web API</strong>, API của Shopee) đều là máy dịch <em>query-string → SQL</em>: mỗi param ứng 1 mảnh WHERE/ORDER BY. Request stateless — server không nhớ gì giữa 2 lần gọi, nên mọi điều kiện phải nằm trọn trong 1 câu lệnh.",
+      "steps": [
+        "Param <code>genre=Action</code> → <code>WHERE genre = 'Action'</code>.",
+        "Param <code>minPrice=50</code> → nối thêm <code>AND price >= 50</code>.",
+        "Param <code>sort=desc</code> → <code>ORDER BY price DESC</code>.",
+        "Chọn cột trả về cho JSON: <code>SELECT name, price</code>. Run → chính là body response."
+      ],
+      "hint_explore": "Xem catalog hiện có gì: <code>SELECT * FROM game_catalog</code> — đủ 4 cột id, name, genre, price.",
+      "expected": "Bảng vài dòng × 2 cột (<code>name, price</code>): game Action giá ≥ 50, giá giảm dần — đúng dữ liệu mà endpoint sẽ đóng gói thành JSON trả đối tác."
+    },
+    "starter": "-- Lấy name + price các game Action\n-- Filter: genre = 'Action'\nSELECT ____, ____\n  FROM ____\n WHERE ____ = ____;",
+    "schema": {
+      "table_name": "game_catalog",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "genre",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "price",
+          "type": "INT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "101",
+          "Elden Ring",
+          "RPG",
+          "60"
+        ],
+        [
+          "102",
+          "God of War",
+          "Action",
+          "50"
+        ],
+        [
+          "103",
+          "Hades",
+          "RPG",
+          "25"
+        ],
+        [
+          "104",
+          "Celeste",
+          "Platformer",
+          "20"
+        ],
+        [
+          "105",
+          "Baldur's Gate 3",
+          "RPG",
+          "60"
+        ],
+        [
+          "106",
+          "Cyberpunk 2077",
+          "RPG",
+          "45"
+        ],
+        [
+          "107",
+          "The Witcher 3",
+          "RPG",
+          "40"
+        ],
+        [
+          "108",
+          "Disco Elysium",
+          "RPG",
+          "35"
+        ],
+        [
+          "109",
+          "God of War Ragnarok",
+          "Action",
+          "60"
+        ],
+        [
+          "110",
+          "Hollow Knight",
+          "Metroidvania",
+          "15"
+        ],
+        [
+          "111",
+          "Stardew Valley",
+          "Simulation",
+          "18"
+        ],
+        [
+          "112",
+          "Doom Eternal",
+          "Shooter",
+          "40"
+        ],
+        [
+          "113",
+          "Sekiro",
+          "Action",
+          "50"
+        ],
+        [
+          "114",
+          "Slay the Spire",
+          "Card Game",
+          "23"
+        ],
+        [
+          "115",
+          "Persona 5",
+          "RPG",
+          "55"
+        ],
+        [
+          "116",
+          "Final Fantasy XVI",
+          "RPG",
+          "50"
+        ],
+        [
+          "117",
+          "Portal 2",
+          "Puzzle",
+          "10"
+        ],
+        [
+          "118",
+          "Cuphead",
+          "Run & Gun",
+          "20"
+        ],
+        [
+          "119",
+          "Terraria",
+          "Sandbox",
+          "10"
+        ],
+        [
+          "120",
+          "Red Dead 2",
+          "Action",
+          "60"
+        ],
+        [
+          "121",
+          "Dark Souls III",
+          "RPG",
+          "40"
+        ],
+        [
+          "122",
+          "Outer Wilds",
+          "Adventure",
+          "25"
+        ],
+        [
+          "123",
+          "Vampire Survivors",
+          "Roguelite",
+          "5"
+        ],
+        [
+          "124",
+          "Cult of the Lamb",
+          "Roguelike",
+          "25"
+        ]
+      ]
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>2 cột</em> (name, price) từ bảng <code>game_catalog</code>, lọc theo genre = 'Action'."
+      },
+      {
+        "level": 2,
+        "text": "<code>SELECT name, price FROM game_catalog WHERE genre = 'Action';</code> — kết quả 4 dòng (God of War 50, Ragnarok 60, Sekiro 50, Red Dead 2 60)."
+      },
+      {
+        "level": 3,
+        "text": "Giá trị chuỗi trong SQL đặt trong dấu nháy đơn: <code>'Action'</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT name, price FROM game_catalog WHERE genre = 'Action' AND price >= 50 ORDER BY price DESC;</code>"
+      }
+    ],
+    "expected_sql": "SELECT name, price FROM game_catalog WHERE genre = 'Action' AND price >= 50 ORDER BY price DESC;",
+    "success_message": "Hoàn thành Web Services (REST/AJAX)! Bài 19 (SQL Injection) tiếp theo — cũng chính là lý do phải dùng parameterized ?.",
+    "xp_reward": 60
+  }
+}

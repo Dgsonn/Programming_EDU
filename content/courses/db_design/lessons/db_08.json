@@ -1,0 +1,734 @@
+{
+  "id": "db_08",
+  "index": 9,
+  "title": "Dạng chuẩn 1 (1NF) — Atomic Domains",
+  "subtitle": "Mỗi ô chỉ chứa 1 giá trị nguyên tử (không multivalued, không composite)",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 22,
+  "xp_reward": 70,
+  "project_piece": "🧪 Thu thập \"Bộ Chia Nguyên tử\"",
+  "story": {
+    "tag": "🎫 GameHub Consulting · Ticket #09",
+    "hook": "Tiếng lành đồn xa — GameHub nhận <strong>hợp đồng tư vấn đầu tiên</strong>: một học viện đào tạo game thủ chuyên nghiệp đang khổ sở với bảng <code>student_raw</code> lưu học viên: cột phones nhét <em>\"0901-111, 0902-222\" chung 1 ô</em>. Muốn tìm ai giữ 1 số điện thoại? Mò từng dòng. Ticket của bạn: đưa dữ liệu về <strong>1NF — mỗi ô đúng 1 giá trị</strong>, tách bảng <code>student_phone</code> chuẩn chỉnh."
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "student_raw",
+      "col": 0,
+      "row": 4,
+      "width": 3,
+      "height": 1,
+      "columns": [
+        "student_id",
+        "name",
+        "phones"
+      ],
+      "dataRows": [
+        [
+          "S01",
+          "Minh",
+          "0901-111-111, 0902-222-222"
+        ],
+        [
+          "S02",
+          "Yuki",
+          "0903-333-333"
+        ],
+        [
+          "S03",
+          "Sara",
+          "0904-444-444, 0905-555-555, 0906-666-666"
+        ],
+        [
+          "S04",
+          "Nam",
+          "0907-777-777"
+        ],
+        [
+          "S05",
+          "Lan",
+          "0908-888-888, 0909-999-999"
+        ],
+        [
+          "S06",
+          "Hùng",
+          "0910-101-010"
+        ],
+        [
+          "S07",
+          "Mai",
+          "0911-111-222, 0912-222-333"
+        ],
+        [
+          "S08",
+          "Tú",
+          "0913-333-444"
+        ],
+        [
+          "S09",
+          "Linh",
+          "0914-444-555, 0915-555-666, 0916-666-777"
+        ],
+        [
+          "S10",
+          "Phúc",
+          "0917-777-888"
+        ],
+        [
+          "S11",
+          "Quân",
+          "0918-888-999, 0919-999-000"
+        ],
+        [
+          "S12",
+          "Hà",
+          "0920-202-020"
+        ],
+        [
+          "S13",
+          "Đạt",
+          "0921-121-212"
+        ],
+        [
+          "S14",
+          "Vy",
+          "0922-232-323, 0923-343-434"
+        ],
+        [
+          "S15",
+          "Khoa",
+          "0924-454-545"
+        ],
+        [
+          "S16",
+          "Trang",
+          "0925-565-656"
+        ],
+        [
+          "S17",
+          "Bảo",
+          "0926-676-767, 0927-787-878"
+        ],
+        [
+          "S18",
+          "Ngọc",
+          "0928-898-989"
+        ],
+        [
+          "S19",
+          "Sơn",
+          "0929-909-090"
+        ],
+        [
+          "S20",
+          "Thảo",
+          "0930-010-101, 0931-121-212"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Nguyên tử hóa",
+    "desc": "1NF — mỗi ô một giá trị"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "1NF yêu cầu mỗi attribute có domain nguyên tử (atomic — không chia nhỏ được)",
+        "Vi phạm 1NF: MULTIVALUED attr (nhiều giá trị trong 1 ô) hoặc COMPOSITE attr (gộp nhiều mảnh)",
+        "Fix: tách multivalued thành bảng riêng; tách composite thành nhiều cột độc lập"
+      ],
+      "intro": "Bảng <code class=\"code\">student_raw</code> dưới đây VI PHẠM 1NF: cột <code class=\"code\">phones</code> chứa <strong>nhiều số điện thoại</strong> trong 1 ô (vd: <code>\"0901-xxx, 0902-yyy\"</code>). Đây là <em>multivalued attribute</em> — không nguyên tử. Theo Silberschatz Ch 7.8: <strong>1NF yêu cầu mỗi attribute phải có domain nguyên tử — không thể chia nhỏ thành nhiều giá trị có ý nghĩa</strong>.",
+      "example": "Nếu muốn tìm TẤT CẢ sinh viên có số \"0901-xxx\" — bạn không thể <code>WHERE phones = '0901-xxx'</code> (vì ô chứa \"0901-xxx, 0902-yyy\" không bằng). Phải dùng <code>LIKE '%0901-xxx%'</code> → chậm và sai (vd: cũng match \"0901-xxx-old\"). Tách <code>phones</code> thành bảng riêng thì query đúng & nhanh: <code>WHERE phone = '0901-xxx'</code>."
+    },
+    "intro": "Điều gì xảy ra khi 1 sinh viên đăng ký có 3 số điện thoại? Bạn lưu vào 1 cột <code>phones = \"0901, 0902, 0903\"</code>? Tưởng đâu vào đó... cho đến khi PM bảo <em>\"Tìm SV có số 0902\"</em>. Query <code>LIKE '%0902%'</code> chạy 10 giây, miss các format <code>\"0901;0902\"</code>. Bài này dạy <strong>1NF</strong> + Atomic Domain.",
+    "concept_cards": [
+      {
+        "icon": "fa-atom",
+        "title": "1NF — Mỗi cell 1 giá trị",
+        "body": "Giống <strong>hộp thư</strong> của bạn: mỗi hộp chỉ chứa 1 lá thư, không nhét cả xấp vào. Cell trong DB cũng vậy — 1 giá trị nguyên tử, không list, không JSON. Muốn lưu nhiều số điện thoại? <em>Tách thành nhiều dòng</em> trong bảng phụ."
+      },
+      {
+        "icon": "fa-list",
+        "title": "Multivalued vs Composite — 2 cái bẫy 1NF",
+        "body": "<strong>Multivalued</strong>: 1 cell chứa N giá trị cùng loại (vd: <code>phones = \"0901,0902\"</code>) → tách thành nhiều dòng. <strong>Composite</strong>: 1 cell chứa nhiều mảnh khác loại (vd: <code>address = \"Q1, HCM\"</code>) → tách thành nhiều cột. Cùng vi phạm 1NF nhưng fix khác nhau."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Nếu muốn tìm TẤT CẢ sinh viên có số \"0901-xxx\" — bạn không thể WHERE phones = \\'0901-xxx\\' (vì ô chứa \"0901-xxx, 0902-yyy\" không bằng)."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — vi phạm 1NF",
+          "columns": [
+            "member_id",
+            "name",
+            "phones"
+          ],
+          "rows": [
+            [
+              "1",
+              "Alice",
+              "0901,0902"
+            ],
+            [
+              "2",
+              "Bob",
+              "0903"
+            ]
+          ],
+          "violations": {
+            "0-2": true,
+            "1-2": true
+          }
+        },
+        "after": {
+          "title": "SAU — đã 1NF (tách dòng)",
+          "columns": [
+            "member_id",
+            "name",
+            "phone"
+          ],
+          "rows": [
+            [
+              "1",
+              "Alice",
+              "0901"
+            ],
+            [
+              "1",
+              "Alice",
+              "0902"
+            ],
+            [
+              "2",
+              "Bob",
+              "0903"
+            ]
+          ],
+          "fixes": {
+            "0-2": true,
+            "1-2": true,
+            "2-2": true
+          }
+        },
+        "note": "1NF yêu cầu atomic: tách \"0901,0902\" thành 2 dòng riêng."
+      },
+      "schema": {
+        "table_name": "student_raw",
+        "columns": [
+          {
+            "name": "student_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👤"
+          },
+          {
+            "name": "phones",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚠️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "S01",
+          "Minh",
+          "0901-111-111, 0902-222-222"
+        ],
+        [
+          "S02",
+          "Yuki",
+          "0903-333-333"
+        ],
+        [
+          "S03",
+          "Sara",
+          "0904-444-444, 0905-555-555, 0906-666-666"
+        ],
+        [
+          "S04",
+          "Nam",
+          "0907-777-777"
+        ],
+        [
+          "S05",
+          "Lan",
+          "0908-888-888, 0909-999-999"
+        ],
+        [
+          "S06",
+          "Hùng",
+          "0910-101-010"
+        ],
+        [
+          "S07",
+          "Mai",
+          "0911-111-222, 0912-222-333"
+        ],
+        [
+          "S08",
+          "Tú",
+          "0913-333-444"
+        ],
+        [
+          "S09",
+          "Linh",
+          "0914-444-555, 0915-555-666, 0916-666-777"
+        ],
+        [
+          "S10",
+          "Phúc",
+          "0917-777-888"
+        ],
+        [
+          "S11",
+          "Quân",
+          "0918-888-999, 0919-999-000"
+        ],
+        [
+          "S12",
+          "Hà",
+          "0920-202-020"
+        ],
+        [
+          "S13",
+          "Đạt",
+          "0921-121-212"
+        ],
+        [
+          "S14",
+          "Vy",
+          "0922-232-323, 0923-343-434"
+        ],
+        [
+          "S15",
+          "Khoa",
+          "0924-454-545"
+        ],
+        [
+          "S16",
+          "Trang",
+          "0925-565-656"
+        ],
+        [
+          "S17",
+          "Bảo",
+          "0926-676-767, 0927-787-878"
+        ],
+        [
+          "S18",
+          "Ngọc",
+          "0928-898-989"
+        ],
+        [
+          "S19",
+          "Sơn",
+          "0929-909-090"
+        ],
+        [
+          "S20",
+          "Thảo",
+          "0930-010-101, 0931-121-212"
+        ]
+      ]
+    },
+    "mission": "Tách cột <code>phones</code> (multivalued) thành bảng riêng <code>student_phone(student_id, phone)</code> để đạt 1NF — mỗi ô chỉ chứa 1 giá trị."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "1NF (Dạng chuẩn 1) yêu cầu điều gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mỗi cell chỉ chứa 1 giá trị nguyên tử (atomic)",
+            "correct": true,
+            "explanation": "Đúng — 1NF yêu cầu mỗi ô = 1 giá trị không chia nhỏ được. '0901-111, 0902-222' = 2 giá trị trong 1 ô = vi phạm."
+          },
+          {
+            "id": "b",
+            "text": "Bảng phải có ít nhất 3 cột",
+            "correct": false,
+            "explanation": "Sai — 1NF không quan tâm số cột. Bảng 2 cột vẫn OK nếu atomic."
+          },
+          {
+            "id": "c",
+            "text": "Mỗi dòng phải có giá trị NULL",
+            "correct": false,
+            "explanation": "Sai — NULL là thiếu dữ liệu. 1NF không bắt buộc NULL."
+          },
+          {
+            "id": "d",
+            "text": "Bảng phải có đúng 1 khóa chính",
+            "correct": false,
+            "explanation": "Sai — 1NF không quy định số PK. Composite key vẫn OK (vd: enrollment(student_id, course_id))."
+          }
+        ]
+      },
+      {
+        "question": "Bảng <code>student_raw</code> có cột <code>phones = \"0901-111, 0902-222\"</code>. Cách fix đúng?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Tách thành bảng riêng (1 dòng / số điện thoại)",
+            "correct": true,
+            "explanation": "Đúng — tách phones thành bảng student_phone với cột phone riêng. Mỗi phone 1 dòng → atomic, đạt 1NF."
+          },
+          {
+            "id": "b",
+            "text": "Đổi VARCHAR thành TEXT",
+            "correct": false,
+            "explanation": "Sai — TEXT chỉ tăng dung lượng lưu, không fix multivalued. phones vẫn chứa NHIỀU giá trị."
+          },
+          {
+            "id": "c",
+            "text": "Thêm cột phone2, phone3",
+            "correct": false,
+            "explanation": "Sai — thêm cột giới hạn số phone (max 3?). Mỗi user có số phone khác nhau. Tách bảng là giải pháp đúng."
+          },
+          {
+            "id": "d",
+            "text": "Không cần fix",
+            "correct": false,
+            "explanation": "Sai — multivalued vi phạm 1NF rõ ràng. Truy vấn phones cụ thể rất khó (WHERE phones LIKE '0901%' = sai). Phải fix."
+          }
+        ]
+      }
+    ],
+    "decomp_game": {
+      "rule_label": "1NF — Atomic Domains",
+      "rule": "Mỗi attribute phải có domain nguyên tử (không thể chia nhỏ thành nhiều giá trị có ý nghĩa). Cột phones chứa NHIỀU số điện thoại trong 1 ô → multivalued → tách thành bảng riêng (mỗi phone 1 dòng).",
+      "mission": "Kéo các cột từ bảng <code>student_raw</code> vào 2 bảng mục tiêu. Cột multivalued <code>phones</code> phải rời đi thành bảng riêng.",
+      "source_table": {
+        "name": "student_raw",
+        "columns": [
+          {
+            "name": "student_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👤"
+          },
+          {
+            "name": "phones",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚠️"
+          }
+        ],
+        "data": [
+          [
+            "S01",
+            "Minh",
+            "0901-111-111"
+          ],
+          [
+            "S01",
+            "Minh",
+            "0902-222-222"
+          ],
+          [
+            "S02",
+            "Yuki",
+            "0903-333-333"
+          ],
+          [
+            "S03",
+            "Sara",
+            "0904-444-444"
+          ],
+          [
+            "S03",
+            "Sara",
+            "0905-555-555"
+          ],
+          [
+            "S03",
+            "Sara",
+            "0906-666-666"
+          ]
+        ]
+      },
+      "target_tables": [
+        {
+          "name": "student",
+          "icon": "🧑‍🎓",
+          "description": "Bảng sinh viên (giữ student_id + name, KHÔNG có phones)"
+        },
+        {
+          "name": "student_phone",
+          "icon": "📞",
+          "description": "Bảng số điện thoại (mỗi phone 1 dòng riêng)"
+        }
+      ],
+      "solution": {
+        "student": [
+          "student_id",
+          "name"
+        ],
+        "student_phone": [
+          "student_id",
+          "phone"
+        ]
+      },
+      "hint": "Cột phones chứa nhiều giá trị → tách thành bảng riêng (mỗi phone 1 dòng). Cột name chỉ phụ thuộc student_id → ở lại bảng student."
+    },
+    "mini_game": {
+      "type": "order",
+      "title": "Sắp xếp bước xử lý vi phạm 1NF",
+      "instruction": "Kéo thả đúng thứ tự fix 1NF khi gặp multivalued.",
+      "xp": 20,
+      "items": [
+        {
+          "id": "s1",
+          "label": "Bước 1: Phát hiện cột multivalued (phones chứa \"0901, 0902\")"
+        },
+        {
+          "id": "s2",
+          "label": "Bước 2: Tạo bảng con (student_phone) với PK riêng"
+        },
+        {
+          "id": "s3",
+          "label": "Bước 3: Di chuyển multivalued data sang bảng con"
+        },
+        {
+          "id": "s4",
+          "label": "Bước 4: Thêm FK (student_id) liên kết bảng con ↔ bảng gốc"
+        },
+        {
+          "id": "s5",
+          "label": "Bước 5: Xóa cột multivalued khỏi bảng gốc"
+        }
+      ],
+      "solution": {
+        "s1": 1,
+        "s2": 2,
+        "s3": 3,
+        "s4": 4,
+        "s5": 5
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Tìm <code>name</code> của sinh viên có số điện thoại <code>0901-111-111</code> — dùng subquery <code>IN</code> nối 2 bảng 1NF.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "name",
+        "slot": "col-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "student",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "student_id",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "kw",
+        "token": "IN",
+        "slot": "kw-in"
+      },
+      {
+        "type": "op",
+        "token": "(SELECT student_id FROM student_phone WHERE phone = '0901-111-111')",
+        "slot": "op-sub"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ IN (subquery)",
+        "accepts": [
+          "kw",
+          "col",
+          "op"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT name FROM student WHERE student_id IN (SELECT student_id FROM student_phone WHERE phone = '0901-111-111');",
+    "reveal_hints": {
+      "select-line": "SELECT 1 cột: <strong>name</strong> — lấy tên sinh viên từ bảng student.",
+      "from-line": "FROM bảng <strong>student</strong> (bảng chứa tên SV, không phải student_phone).",
+      "where-line": "WHERE <strong>student_id IN (subquery)</strong> — subquery tìm student_id từ bảng student_phone theo phone. Đây là cách nối 2 bảng 1NF mà không dùng JOIN."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — <strong>đếm mỗi sinh viên có bao nhiêu số điện thoại</strong> (JOIN student ↔ student_phone + <code>GROUP BY</code> + <code>COUNT</code>), sắp xếp nhiều → ít. Nhờ 1NF mỗi số là 1 dòng nên đếm được.",
+    "context": {
+      "scenario": "Ticket tư vấn cho trường esports đã xong phần tách bảng: <code>student_phone</code> giờ mỗi dòng đúng 1 số. Phòng đào tạo muốn nghiệm thu: <strong>mỗi sinh viên đang đăng ký bao nhiêu số?</strong> — câu hỏi KHÔNG THỂ trả lời khi phones còn dính chùm 1 ô.",
+      "real_world": "Đây là phép thử kinh điển sau khi đưa dữ liệu về 1NF: <strong>Zalo/Telegram</strong> lưu mỗi số 1 dòng nên đếm/tìm/khoá từng số dễ dàng — thử đếm số điện thoại trong 1 ô text \"0901-111, 0902-222\" bằng SQL mà xem, ác mộng ngay.",
+      "steps": [
+        "Nối 2 bảng: <code>student s JOIN student_phone sp ON s.student_id = sp.student_id</code>.",
+        "Gộp theo sinh viên: <code>GROUP BY s.name</code> — mỗi nhóm = 1 người.",
+        "Đếm số dòng mỗi nhóm (= số điện thoại): <code>COUNT(*) AS phone_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY phone_count DESC</code>. Run → bảng nghiệm thu."
+      ],
+      "hint_explore": "Chưa nhớ 2 bảng có gì? Gõ <code>SELECT * FROM student</code> rồi <code>SELECT * FROM student_phone</code>, Run từng cái để xem.",
+      "expected": "Bảng nhiều dòng × 2 cột (<code>name, phone_count</code>): mỗi sinh viên kèm số lượng số điện thoại, xếp giảm dần — chỉ đếm được vì dữ liệu đã đạt 1NF."
+    },
+    "schema": {
+      "table_name": "student_phone",
+      "columns": [
+        {
+          "name": "student_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "S01",
+          "0901-111-111"
+        ],
+        [
+          "S01",
+          "0902-222-222"
+        ],
+        [
+          "S02",
+          "0903-333-333"
+        ],
+        [
+          "S03",
+          "0904-444-444"
+        ],
+        [
+          "S03",
+          "0905-555-555"
+        ],
+        [
+          "S03",
+          "0906-666-666"
+        ]
+      ],
+      "related_schemas": [
+        {
+          "table_name": "student",
+          "columns": [
+            {
+              "name": "student_id",
+              "type": "INT",
+              "key": "PK"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "key": ""
+            }
+          ],
+          "data": [
+            [
+              "S01",
+              "Alice"
+            ],
+            [
+              "S02",
+              "Bob"
+            ],
+            [
+              "S03",
+              "Carol"
+            ]
+          ]
+        }
+      ]
+    },
+    "starter": "-- Tìm tên SV có số ĐT '0901-111-111'\n-- Gợi ý: dùng WHERE student_id IN (subquery)\nSELECT \n  FROM student\n WHERE student_id  (\n   SELECT student_id FROM student_phone WHERE \n );\n",
+    "expected_sql": "SELECT s.name, COUNT(*) AS phone_count FROM student s JOIN student_phone sp ON s.student_id = sp.student_id GROUP BY s.name ORDER BY phone_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần lấy <code>name</code> từ bảng <code>student</code> — nơi có tên sinh viên."
+      },
+      {
+        "level": 2,
+        "text": "Dùng <code>IN (subquery)</code>: <code>WHERE student_id IN (...)</code> với subquery tìm student_id từ bảng <code>student_phone</code>."
+      },
+      {
+        "level": 3,
+        "text": "Subquery: <code>(SELECT student_id FROM student_phone WHERE phone = '0901-111-111')</code>"
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT s.name, COUNT(*) AS phone_count FROM student s JOIN student_phone sp ON s.student_id = sp.student_id GROUP BY s.name ORDER BY phone_count DESC;</code>"
+      }
+    ],
+    "success_message": "Hoàn thành 1NF! Dữ liệu đã nguyên tử hóa — mỗi ô chỉ chứa 1 giá trị, query đơn giản không cần LIKE. Tiếp theo: 2NF loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp!",
+    "xp_reward": 50
+  }
+}

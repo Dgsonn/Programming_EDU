@@ -1,0 +1,501 @@
+{
+  "id": "nc_11",
+  "index": 11,
+  "title": "Hai giao dịch một mili-giây — vì sao gem bốc hơi?",
+  "subtitle": "Isolation là lời hứa dễ vỡ nhất: không ai canh ví, thứ tự XEN NHỊP quyết định tiền đúng hay sai",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "wallets (ví gem của seller — mẫu 3)",
+      "columns": [
+        "seller_id",
+        "ten_shop",
+        "balance_gem"
+      ],
+      "dataRows": [
+        [
+          "4102",
+          "DragonForge",
+          "500"
+        ],
+        [
+          "9",
+          "GrandBazaar",
+          "8200"
+        ],
+        [
+          "15",
+          "NoobMart",
+          "120"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #52",
+    "hook": "23:59:59.001 đêm flash-sale: khách MythicSlayer88 trả <strong>100 gem</strong> mua skin Hỏa Long ĐÚNG LÚC DragonForge bấm rút <strong>50 gem</strong> về ngân hàng. Sáng ra ví thiếu đúng 100 gem — khách có biên lai, lệnh rút có log chuẩn, và <em>không ai sai một dòng code nào</em>. Module 7 dạy bạn làm query chạy NHANH; Module 8 mở màn bằng câu hỏi đắt hơn nhiều: nhiều giao dịch chạy <strong>CÙNG LÚC</strong> thì tiền có còn ĐÚNG?"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Isolation — tính chất \"mỗi transaction tưởng mình chạy MỘT MÌNH\" — bị phá khi nhiều transaction chạy đồng thời mà không ai kiểm soát chỗ chúng ĐỤNG nhau (sách Ch.18 mở màn đúng câu này)",
+        "SCHEDULE = thứ tự xen nhịp các thao tác đọc/ghi: chạy TUẦN TỰ (serial) luôn đúng; xen kẽ thì đúng hay sai TÙY kịch bản xen — lost update là kịch bản xen sai kinh điển",
+        "Không thể bắt cả sàn xếp hàng chạy tuần tự (chậm chết) → cần CONCURRENCY-CONTROL SCHEME; hai họ phổ biến nhất ngoài đời: two-phase locking và snapshot isolation — chính là mạch của cả Module 8"
+      ],
+      "intro": "Hai nhân viên cùng cầm sổ ra két đếm: cả hai thấy <strong>500</strong>, mỗi người về bàn tự cộng trừ trên <em>tờ nháp của mình</em>, rồi lần lượt quay lại GHI ĐÈ con số mới lên két. Người ghi sau không hề biết két đã đổi — tờ nháp của họ vẫn là con số cũ. Database không khóa cũng y hệt: <code>read</code> là chép về nháp, <code>write</code> là đè lên két.",
+      "example": "Ví 500 gem. T1 (khách trả): đọc 500 → tính 600 → ghi. T2 (seller rút): đọc 500 → tính 450 → ghi. Xen kẽ kiểu \"cùng đọc trước, lần lượt ghi sau\": ví chốt <strong>450</strong> — bản ghi 600 bị đè, <strong>+100 gem của khách bốc hơi không dấu vết</strong>. Chạy tuần tự bất kỳ chiều nào: <strong>550</strong>, đúng từng gem."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-shield-halved",
+        "title": "Isolation vỡ khi nào — theo đúng sách",
+        "body": "Khi nhiều transaction chạy đồng thời, <strong>isolation có thể không còn được bảo toàn</strong> — hệ thống phải kiểm soát tương tác giữa chúng bằng một <em>concurrency-control scheme</em>. Không scheme nào thắng tuyệt đối; hai cơ chế được dùng nhiều nhất trong thực tế là <strong>two-phase locking</strong> và <strong>snapshot isolation</strong>.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18 — Concurrency Control, intro"
+      },
+      {
+        "icon": "fa-arrows-turn-right",
+        "title": "Schedule — kịch bản xen nhịp",
+        "body": "Cùng 4 thao tác <code>T1.đọc · T1.ghi · T2.đọc · T2.ghi</code> có nhiều cách XEN thành một schedule. Serial (hết T1 rồi mới T2) luôn cho kết quả đúng. Xen kẽ thì có bản vẫn đúng (tương đương serial) — có bản làm mất tiền như đêm qua. Kẻ quyết định đúng/sai là <strong>THỨ TỰ XEN</strong>, không phải code của từng transaction: từng dòng lệnh của T1 lẫn T2 đều chuẩn."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Bạn từng thấy số like tụt 1 rồi nhảy lại, lượt xem \"đếm thiếu\", 2 người cùng đặt trúng 1 ghế chưa? Cùng một họ bệnh: hai phiên cùng <code>đọc → tính trên bản cũ → ghi đè</code>. Nghề gọi là <strong>lost update</strong> — bài này bắt bệnh; các bài sau của Trading Floor lần lượt phát thuốc: khóa, 2PL, MVCC."
+      }
+    ],
+    "txn_visual": {
+      "eyebrow": "LOST UPDATE — VÍ 500 GEM · T1 KHÁCH TRẢ +100 · T2 SELLER RÚT −50",
+      "caption": "Chạy CẢ HAI chế độ mà so: xen kẽ = ví chốt 450 (mất đúng 100 gem của khách) — tuần tự = 550, đúng từng gem. Cùng 4 thao tác, chỉ khác THỨ TỰ XEN.",
+      "wallet_label": "💰 VÍ DragonForge",
+      "start": 500,
+      "unit": "gem",
+      "t1_label": "🧾 T1 — khách trả +100",
+      "t2_label": "🏧 T2 — seller rút −50",
+      "modes": [
+        {
+          "id": "bad",
+          "short": "XEN KẼ",
+          "ok": false,
+          "btn": "▶ Chạy XEN KẼ (đêm qua trên prod)",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "đọc ví → thấy 500",
+              "note": "T1 chép 500 vào TỜ NHÁP của nó — từ giờ nó tính trên nháp, không nhìn lại ví nữa."
+            },
+            {
+              "who": "t2",
+              "text": "đọc ví → cũng thấy 500",
+              "cls": "warn",
+              "note": "Không ai canh ví — T2 cũng chép đúng 500. Hai tờ nháp giống hệt nhau: mầm họa nằm ở nhịp này."
+            },
+            {
+              "who": "t1",
+              "text": "tính 500 + 100 → GHI 600",
+              "wallet": 600,
+              "note": "Ví thành 600 — tiền khách đã vào két. Nhưng tờ nháp của T2 vẫn ghi 500…"
+            },
+            {
+              "who": "t2",
+              "text": "tính 500 − 50 → GHI 450",
+              "wallet": 450,
+              "cls": "bad",
+              "note": ""
+            }
+          ],
+          "verdict": "❌ Ví chốt 450 — bản ghi 600 bị ĐÈ không thương tiếc: +100 gem của khách bốc hơi. Tên hồ sơ: LOST UPDATE."
+        },
+        {
+          "id": "good",
+          "short": "TUẦN TỰ",
+          "ok": true,
+          "btn": "▶ Chạy TUẦN TỰ (serial)",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "đọc ví → 500",
+              "note": "T1 chạy TRỌN VẸN trước — không ai chen ngang."
+            },
+            {
+              "who": "t1",
+              "text": "tính 500 + 100 → GHI 600",
+              "wallet": 600,
+              "note": "T1 xong hẳn. Giờ mới tới lượt T2."
+            },
+            {
+              "who": "t2",
+              "text": "đọc ví → 600 (bản MỚI)",
+              "note": "T2 đọc SAU khi T1 ghi — tờ nháp của nó chép con số đã có tiền khách."
+            },
+            {
+              "who": "t2",
+              "text": "tính 600 − 50 → GHI 550",
+              "wallet": 550,
+              "cls": "ok",
+              "note": ""
+            }
+          ],
+          "verdict": "✓ Ví chốt 550 = 500 + 100 − 50, đúng từng gem. Serial LUÔN đúng — cái giá: cả sàn phải xếp hàng chạy từng giao dịch một."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "4 thao tác — 2 cách xen",
+        "columns": [
+          {
+            "name": "T1: đọc ví → +100 → ghi",
+            "type": "giao dịch thanh toán",
+            "key": "T1"
+          },
+          {
+            "name": "T2: đọc ví → −50 → ghi",
+            "type": "giao dịch rút gem",
+            "key": "T2"
+          },
+          {
+            "name": "schedule",
+            "type": "thứ tự XEN các nhịp",
+            "key": "⚡"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "tuần tự T1→T2",
+          "500 → 600 → 550",
+          "đúng",
+          "✓"
+        ],
+        [
+          "tuần tự T2→T1",
+          "500 → 450 → 550",
+          "đúng",
+          "✓"
+        ],
+        [
+          "đọc-đọc-ghi-ghi",
+          "500 → 600 → 450",
+          "MẤT 100 của khách",
+          "❌"
+        ],
+        [
+          "đọc-đọc-ghi(T2)-ghi(T1)",
+          "500 → 450 → 600",
+          "MẤT 50 lệnh rút",
+          "❌"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Schedule đêm qua: T1 đọc 500 · T2 đọc 500 · T1 ghi 600 · T2 ghi 450. Vì sao 100 gem của khách biến mất?",
+        "options": [
+          {
+            "id": "a",
+            "text": "T2 tính 500−50 trên TỜ NHÁP nó chép từ TRƯỚC khi T1 ghi — rồi ghi 450 ĐÈ lên 600, xóa sạch dấu vết của T1",
+            "correct": true,
+            "explanation": "Đúng — read chép về nháp, write đè lên két. T2 không \"nhìn lại\" ví trước khi ghi, nên bản cập nhật của T1 bị nuốt trọn: lost update."
+          },
+          {
+            "id": "b",
+            "text": "Vì T2 là lệnh RÚT tiền — rút thì ví phải giảm, mất là đúng rồi",
+            "correct": false,
+            "explanation": "Sai — rút 50 từ 600 phải còn 550. Ví chốt 450 nghĩa là mất thêm đúng 100 của khách, không phải chỉ 50 của lệnh rút."
+          },
+          {
+            "id": "c",
+            "text": "Vì database chạy chậm, ghi của T1 chưa kịp xuống đĩa",
+            "correct": false,
+            "explanation": "Sai — ghi 600 đã THÀNH CÔNG vào ví. Nó không chậm, nó bị GHI ĐÈ bởi một transaction cầm số liệu cũ."
+          },
+          {
+            "id": "d",
+            "text": "Vì hai transaction dùng chung connection nên biến bị lẫn sang nhau",
+            "correct": false,
+            "explanation": "Sai — mỗi transaction có vùng nháp riêng, biến không lẫn. Vấn đề là cả hai cùng chép MỘT con số rồi lần lượt đè nhau."
+          }
+        ]
+      },
+      {
+        "question": "Serial schedule (chạy trọn T1 rồi mới T2) LUÔN đúng — vậy sao GameHub không ép cả sàn chạy tuần tự cho lành?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì mất sạch concurrency: nghìn giao dịch/giây phải xếp MỘT hàng, giao dịch chậm nhất bắt cả sàn đứng chờ",
+            "correct": true,
+            "explanation": "Đúng — sách nói thẳng: cần scheme kiểm soát để vừa chạy đồng thời vừa giữ isolation. Hai họ phổ biến: 2PL (bài sau) và snapshot isolation."
+          },
+          {
+            "id": "b",
+            "text": "Vì serial vẫn có thể ra kết quả sai nếu xui",
+            "correct": false,
+            "explanation": "Sai — serial đúng theo định nghĩa: không ai chen giữa read và write của ai."
+          },
+          {
+            "id": "c",
+            "text": "Vì CPU nhiều nhân không chạy tuần tự được",
+            "correct": false,
+            "explanation": "Sai — chạy tuần tự trên máy nhiều nhân vẫn được, chỉ là phí phạm và chậm."
+          },
+          {
+            "id": "d",
+            "text": "Vì tuần tự làm hết deadlock nhưng sinh thêm lost update",
+            "correct": false,
+            "explanation": "Sai ngược — tuần tự không sinh lost update; nó chỉ trả giá bằng throughput. (Deadlock là hồ sơ của vài bài nữa.)"
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Schedule nào an toàn?",
+      "instruction": "Ví 500 · T1 +100 · T2 −50. Xếp mỗi schedule về đúng bên.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "s1",
+          "label": "T1 trọn vẹn → rồi T2 trọn vẹn"
+        },
+        {
+          "id": "s2",
+          "label": "T1 đọc · T2 đọc · T1 ghi · T2 ghi"
+        },
+        {
+          "id": "s3",
+          "label": "T2 trọn vẹn → rồi T1 trọn vẹn"
+        },
+        {
+          "id": "s4",
+          "label": "T1 đọc · T2 đọc · T2 ghi · T1 ghi"
+        }
+      ],
+      "bins": [
+        {
+          "id": "ok",
+          "label": "VÍ CHỐT 550 ✓"
+        },
+        {
+          "id": "lost",
+          "label": "MẤT CẬP NHẬT ❌"
+        }
+      ],
+      "solution": {
+        "s1": "ok",
+        "s2": "lost",
+        "s3": "ok",
+        "s4": "lost"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Dựng lại đúng 4 nhịp làm 100 gem bốc hơi — hồ sơ vụ án Ticket #52. Có MỘT khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "T1 đọc ví: chép 500 vào tờ nháp riêng — từ giờ chỉ tính trên nháp",
+        "slot": "tx-read1"
+      },
+      {
+        "type": "op",
+        "token": "T2 ghi 450 (= 500 nháp cũ − 50) — ĐÈ lên 600, cập nhật của T1 bốc hơi",
+        "slot": "tx-write2"
+      },
+      {
+        "type": "op",
+        "token": "Database thấy 2 giao dịch cùng sửa một ví thì tự báo lỗi, chặn người đến sau",
+        "slot": "tx-x"
+      },
+      {
+        "type": "op",
+        "token": "T2 cũng đọc ví: vẫn 500 — chẳng ai giữ khóa để bắt nó chờ",
+        "slot": "tx-read2"
+      },
+      {
+        "type": "op",
+        "token": "T1 ghi 600 (= 500 + 100) — tiền khách vào két, nhưng nháp của T2 vẫn là 500",
+        "slot": "tx-write1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "tx-read1",
+        "placeholder": "Nhịp 1 — T1 mở màn thế nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📖",
+          "label": "T1 đọc",
+          "sub": "Nhịp 1",
+          "hint": "read không phải là \"nhìn\" — nó là CHÉP về vùng nháp riêng."
+        }
+      },
+      {
+        "id": "tx-read2",
+        "placeholder": "Nhịp 2 — T2 chen vào, thấy gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📖",
+          "label": "T2 đọc",
+          "sub": "Nhịp 2",
+          "hint": "T1 đã đọc nhưng CHƯA ghi — và không có cơ chế nào bắt T2 đứng ngoài."
+        }
+      },
+      {
+        "id": "tx-write1",
+        "placeholder": "Nhịp 3 — T1 quay lại két",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "✍️",
+          "label": "T1 ghi",
+          "sub": "Nhịp 3",
+          "hint": "Tiền khách vào ví thật — con số trên két đổi. Nhưng có ai báo cho T2 biết không?"
+        }
+      },
+      {
+        "id": "tx-write2",
+        "placeholder": "Nhịp 4 — cú ghi giết chết 100 gem",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "💥",
+          "label": "T2 ghi đè",
+          "sub": "Nhịp 4",
+          "hint": "T2 tính từ tờ nháp nào? Nó có nhìn lại két trước khi ghi không?"
+        }
+      }
+    ],
+    "expected_sql": "T1 đọc ví: chép 500 vào tờ nháp riêng — từ giờ chỉ tính trên nháp T2 cũng đọc ví: vẫn 500 — chẳng ai giữ khóa để bắt nó chờ T1 ghi 600 (= 500 + 100) — tiền khách vào két, nhưng nháp của T2 vẫn là 500 T2 ghi 450 (= 500 nháp cũ − 50) — ĐÈ lên 600, cập nhật của T1 bốc hơi",
+    "expected_zones": {
+      "tx-read1": "T1 đọc ví: chép 500 vào tờ nháp riêng — từ giờ chỉ tính trên nháp",
+      "tx-read2": "T2 cũng đọc ví: vẫn 500 — chẳng ai giữ khóa để bắt nó chờ",
+      "tx-write1": "T1 ghi 600 (= 500 + 100) — tiền khách vào két, nhưng nháp của T2 vẫn là 500",
+      "tx-write2": "T2 ghi 450 (= 500 nháp cũ − 50) — ĐÈ lên 600, cập nhật của T1 bốc hơi"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA DỰNG lại trọn vụ án: đọc chung một bản → tính trên nháp cũ → ghi đè nhau. Khối \"database tự báo lỗi, chặn người đến sau\" là BỊA — không khóa, không cơ chế, DB im re cho ghi sau đè ghi trước. Muốn có người gác ví THẬT? Bài sau phát ổ khóa. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "tx-read1": "Nhịp 1 — mọi giao dịch mở màn bằng việc CHÉP số dư về nháp riêng của mình. T1 chép được bao nhiêu?",
+      "tx-read2": "Nhịp 1 chốt: nháp T1 = 500. Giờ T2 chen vào đọc — ví ĐÃ đổi chưa? Có ai bắt nó chờ không?",
+      "tx-write1": "Nhịp 2 chốt: hai tờ nháp cùng ghi 500. T1 về két trước — nó ghi con số nào lên ví?",
+      "tx-write2": "Nhịp 3 chốt: két = 600. T2 cầm nháp 500 quay lại — cú ghi này lấy 600 − 50 hay 500 − 50?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #52 — phiên tòa kết án:</strong> schedule tang vật ghi 4 nhịp: <code>T1 đọc(500) · T2 đọc(500) · T1 ghi(600) · T2 ghi(?)</code>. Ví DragonForge chốt bao nhiêu — và vì sao?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "Ví chốt 450 — T2 tính 500 − 50 trên bản nháp CŨ nó đọc từ nhịp 2, rồi ghi đè lên 600: +100 gem của khách bị nuốt không dấu vết",
+        "correct": true
+      },
+      {
+        "text": "Ví chốt 550 — T2 ghi sau cùng nên nó thấy két đang là 600 mà trừ 50",
+        "correct": false,
+        "explain": "Sai — T2 ĐÃ đọc từ nhịp 2 (thấy 500) và tính trên nháp. write không \"nhìn lại\" két trước khi đè; muốn nó thấy 600 thì phải có cơ chế bắt nó đọc LẠI — thứ chưa tồn tại trong bài này."
+      },
+      {
+        "text": "Ví chốt 600 — cú ghi của T2 bị database từ chối vì phát hiện xung đột",
+        "correct": false,
+        "explain": "Sai — không khóa, không validation, không ai \"phát hiện\" gì cả: DB mặc định cho ghi sau đè ghi trước, im lặng tuyệt đối. (Các scheme biết từ chối là chuyện của những bài sau.)"
+      },
+      {
+        "text": "Ví chốt 500 — hai giao dịch +100 và −50 tự triệt tiêu về số cũ",
+        "correct": false,
+        "explain": "Sai — +100 rồi −50 mà \"triệt tiêu về 500\" thì toán đã sai từ vỡ lòng (500+100−50 = 550). Ví chốt bằng đúng CÚ GHI CUỐI: 450."
+      }
+    ],
+    "schema": {
+      "table_name": "schedule tang vật — 23:59:59 đêm flash-sale",
+      "columns": [
+        {
+          "name": "nhịp",
+          "type": "thứ tự thật trên prod",
+          "key": "#"
+        },
+        {
+          "name": "thao tác",
+          "type": "read/write ví 4102",
+          "key": ""
+        },
+        {
+          "name": "két sau nhịp",
+          "type": "balance_gem",
+          "key": "💰"
+        }
+      ],
+      "data": [
+        [
+          "1",
+          "T1 đọc ví → nháp T1 = 500",
+          "500"
+        ],
+        [
+          "2",
+          "T2 đọc ví → nháp T2 = 500",
+          "500"
+        ],
+        [
+          "3",
+          "T1 ghi 500 + 100",
+          "600"
+        ],
+        [
+          "4",
+          "T2 ghi 500 − 50",
+          "❓"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây là bài \"đọc schedule\" đầu tiên của Trading Floor — kỹ năng bạn sẽ dùng suốt module: dò từng nhịp, theo dõi NHÁP của từng transaction và KÉT thật, tách bạch hai thứ đó.",
+      "real_world": "Postgres/MySQL mặc định KHÔNG để chuyện này xảy ra trần trụi như sim — vì chúng chạy sẵn locking/MVCC. Nhưng viết app kiểu \"SELECT balance rồi UPDATE balance = giá_trị_tính_ở_app\" là bạn tự tay tái hiện đúng vụ 450 này, DB nào cũng bó tay.",
+      "steps": [
+        "Nhịp 2: T2 đọc TRƯỚC khi T1 ghi → nháp T2 = 500, chốt cứng.",
+        "Nhịp 3: két = 600, nhưng không ai báo cho T2.",
+        "Nhịp 4: T2 ghi 500 − 50 = 450, đè lên 600.",
+        "Két chốt = cú ghi cuối cùng: 450. Mất đúng 100 của khách."
+      ],
+      "hint_explore": "Chạy lại sim Step 1 chế độ XEN KẼ, nhìn hàng VÍ GEM đổi 500 → 600 → 450 — con số 600 sống được đúng một nhịp.",
+      "expected": "Chọn phương án \"450 — T2 tính trên nháp cũ, ghi đè lên 600\"."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Tách hai thứ: KÉT (ví thật) và NHÁP của mỗi transaction. Nháp T2 chép lúc nào — trước hay sau khi két thành 600?"
+      },
+      {
+        "level": 2,
+        "text": "write không nhìn lại két — nó đè nguyên con số tính từ nháp. Nháp T2 = 500 thì cú ghi của T2 là bao nhiêu?"
+      },
+      {
+        "level": 3,
+        "text": "Két chốt bằng CÚ GHI CUỐI CÙNG của schedule. Cú cuối là của ai, giá trị nào?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: 450 — bản ghi 600 của T1 bị đè, +100 của khách bốc hơi. Đó chính là lost update."
+      }
+    ],
+    "success_message": "TICKET #52 ĐÓNG — thủ phạm không phải code, là SCHEDULE! 🕵️ Bạn vừa học kỹ năng nền của cả Trading Floor: đọc kịch bản xen nhịp và chỉ đúng chỗ isolation vỡ. Nhưng bắt được bệnh chưa phải chữa: bài sau, lock manager ra quầy — phát ổ khóa S/X cho từng giao dịch, ai đọc chung được, ai phải xếp hàng. 🔒",
+    "xp_reward": 120
+  }
+}

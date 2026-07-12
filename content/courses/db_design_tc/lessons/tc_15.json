@@ -1,0 +1,376 @@
+{
+  "id": "tc_15",
+  "index": 15,
+  "title": "Row-Store vs Column-Store — xếp ngang hay xếp dọc",
+  "subtitle": "Feed đọc nguyên dòng thì xếp ngang; kho chỉ cộng 2 cột thì xếp dọc",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "fact_post_action (12 cột, dashboard chỉ cần 2)",
+      "columns": [
+        "action_id",
+        "user_id",
+        "date_id",
+        "action_type",
+        "act_count",
+        "…7 cột nữa"
+      ],
+      "dataRows": [
+        [
+          "1",
+          "7",
+          "D1",
+          "like",
+          "3",
+          "…"
+        ],
+        [
+          "4",
+          "7",
+          "D2",
+          "like",
+          "5",
+          "…"
+        ],
+        [
+          "5",
+          "9",
+          "D2",
+          "like",
+          "4",
+          "…"
+        ],
+        [
+          "10",
+          "12",
+          "D3",
+          "like",
+          "6",
+          "…"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #35",
+    "hook": "Dashboard kho (Ticket #25) chạy <code>SUM(act_count)</code> — chỉ đụng <strong>2 cột trong 12</strong>, vậy mà row-store vẫn khiêng NGUYÊN TỪNG DÒNG qua RAM: trả tiền vận chuyển cho 10 cột vứt đi. Ticket #35: <em>column-store</em> — xoay kho 90 độ, mỗi CỘT nằm liền một dải; đọc đúng cột cần, nén sướng tay. Nhưng khoan bê cả Community sang: feed đọc nguyên post thì xếp ngang vẫn vô địch. Chốt đợt này: chọn đúng trận địa cho từng kho."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Row-store: các giá trị CÙNG DÒNG nằm cạnh nhau — đọc/ghi nguyên bản ghi cực nhanh (OLTP)",
+        "Column-store: các giá trị CÙNG CỘT nằm liền dải — analytics chỉ chạm đúng cột cần (OLAP)",
+        "Cột đồng kiểu nén cực tốt (act_count toàn số nhỏ) → ít trang hơn = ít I/O hơn"
+      ],
+      "intro": "Cùng một bảng, hai cách trải xuống đĩa. <strong>Xếp ngang</strong> (row): dòng 1 trọn vẹn, rồi dòng 2… — mở 1 post lấy đủ 12 cột trong MỘT trang, feed mê. <strong>Xếp dọc</strong> (column): cột act_count của MỌI dòng nằm liền nhau thành dải — <code>SUM(act_count)</code> đọc đúng dải đó, 10 cột kia không tốn một byte vận chuyển. Thêm quà: cột đồng kiểu nén được gấp nhiều lần (toàn số nhỏ, giá trị lặp) — dải đã ngắn còn ngắn nữa. Giá phải trả: ghi 1 dòng mới phải chạm 12 dải — OLTP khóc.",
+      "example": "SUM(act_count) trên 38M dòng × 12 cột: row-store đọc ~4GB (cả bảng) · column-store đọc ~30MB (một cột đã nén) — chênh trăm lần, đúng bằng số cột bỏ qua × tỷ lệ nén."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-table-columns",
+        "title": "Xoay 90 độ — cùng dữ liệu, khác hàng xóm",
+        "body": "Row-store: hàng xóm của <code>act_count</code> dòng 1 là <code>action_type</code> dòng 1. Column-store: hàng xóm của nó là <code>act_count</code> dòng 2. \"Ai nằm cạnh ai\" quyết định query nào được đọc LIỀN DẢI (bài học Ticket #32) — chọn layout là chọn query mình cưng.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 13 — Data Storage Structures / Column-Oriented Storage"
+      },
+      {
+        "icon": "fa-file-zipper",
+        "title": "Nén — vũ khí bí mật của cột",
+        "body": "Một dải toàn <code>like, like, like, comment, like…</code> nén kiểu run-length còn vài phần trăm. Nén tốt = ít trang = ít chuyến đĩa = ít RAM buffer. Row-store nén kém hơn hẳn vì mỗi dòng trộn đủ kiểu dữ liệu."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "GameHub cần CẢ HAI: feed/likes ghi-đọc từng dòng → Postgres row-store ở lại. Kho fact_post_action chỉ để SUM/GROUP BY → bản sao column-store (kiểu Redshift/BigQuery/Parquet). ETL đêm (Ticket #25) chính là cây cầu chở dữ liệu giữa hai thế giới."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "fact_post_action — 2 cách trải xuống đĩa",
+        "columns": [
+          {
+            "name": "row-store",
+            "type": "dòng liền dòng",
+            "key": "feed ❤",
+            "icon": "↔️"
+          },
+          {
+            "name": "column-store",
+            "type": "cột liền dải",
+            "key": "kho 📊",
+            "icon": "↕️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "[1,7,D1,like,3,…] [4,7,D2,like,5,…]",
+          "action_id: [1,4,5,10…]"
+        ],
+        [
+          "[5,9,D2,like,4,…] [10,12,D3,like,6,…]",
+          "act_count: [3,5,4,6…] ← SUM chỉ đọc dải này"
+        ],
+        [
+          "mở 1 post = 1 trang có đủ 12 cột",
+          "action_type: [like,like,like,like…] ← nén cực gọn"
+        ],
+        [
+          "ghi 1 dòng = chạm 1 trang",
+          "ghi 1 dòng = chạm 12 dải 😱"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "<code>SUM(act_count)</code> trên 38M dòng × 12 cột — vì sao column-store đọc ít hơn cả TRĂM lần?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nó chỉ vận chuyển DẢI CỘT act_count (bỏ qua 11 cột kia) — và dải đồng kiểu đó còn được nén thêm nhiều lần",
+            "correct": true,
+            "explanation": "Đúng — hai tầng tiết kiệm nhân nhau: bỏ cột thừa × tỷ lệ nén. Row-store buộc khiêng cả dòng dù chỉ cần 1 cột."
+          },
+          {
+            "id": "b",
+            "text": "Vì column-store dùng RAM nhanh hơn",
+            "correct": false,
+            "explanation": "Sai — cùng RAM, cùng đĩa; khác nhau ở SỐ BYTE phải khiêng."
+          },
+          {
+            "id": "c",
+            "text": "Vì column-store bỏ bớt dòng, chỉ tính mẫu đại diện",
+            "correct": false,
+            "explanation": "Sai — kết quả chính xác tuyệt đối, đủ 38M giá trị; chỉ là chúng nằm gọn trong ít trang hơn."
+          },
+          {
+            "id": "d",
+            "text": "Vì SUM là phép tính riêng của column-store",
+            "correct": false,
+            "explanation": "Sai — SUM chạy ở đâu cũng được; layout quyết định CHI PHÍ ĐỌC, không phải khả năng tính."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao KHÔNG bê luôn bảng posts của feed sang column-store cho \"nhanh\"?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Feed đọc/ghi NGUYÊN DÒNG: mở 1 post cần đủ mọi cột (row = 1 trang), ghi 1 post mới vào column-store phải chạm đủ 12 dải",
+            "correct": true,
+            "explanation": "Đúng — workload OLTP ngược hẳn sở trường của cột. Chọn layout là chọn theo QUERY, không theo mốt."
+          },
+          {
+            "id": "b",
+            "text": "Vì column-store không lưu được chữ, chỉ lưu được số",
+            "correct": false,
+            "explanation": "Sai — lưu được mọi kiểu; chữ lặp nhiều còn nén tốt là đằng khác."
+          },
+          {
+            "id": "c",
+            "text": "Vì Postgres cấm column-store",
+            "correct": false,
+            "explanation": "Sai — không ai cấm (có cả extension); vấn đề là workload không hợp."
+          },
+          {
+            "id": "d",
+            "text": "Vì column-store bắt buộc phải trả phí bản quyền",
+            "correct": false,
+            "explanation": "Sai — Parquet/ClickHouse miễn phí đầy; đây là bài toán kỹ thuật, không phải giấy phép."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Hệ nào xếp kiểu nào?",
+      "instruction": "Nối mỗi hệ thống với layout nó chọn — và lý do.",
+      "xp": 20,
+      "pairs": [
+        {
+          "left": "Feed Community — mở/ghi nguyên post",
+          "leftId": "y1",
+          "rightId": "z1",
+          "right": {
+            "id": "z1",
+            "label": "Row-store — 1 dòng gọn trong 1 trang"
+          }
+        },
+        {
+          "left": "Kho fact 38M dòng — toàn SUM/GROUP BY",
+          "leftId": "y2",
+          "rightId": "z2",
+          "right": {
+            "id": "z2",
+            "label": "Column-store — đọc đúng dải cột cần"
+          }
+        },
+        {
+          "left": "File Parquet đội data đưa cho ML",
+          "leftId": "y3",
+          "rightId": "z3",
+          "right": {
+            "id": "z3",
+            "label": "Column-store — nén sâu, quét cột nhanh"
+          }
+        },
+        {
+          "left": "Bảng likes — INSERT dồn dập từng dòng",
+          "leftId": "y4",
+          "rightId": "z4",
+          "right": {
+            "id": "z4",
+            "label": "Row-store — mỗi lần ghi chạm 1 chỗ"
+          }
+        }
+      ],
+      "solution": {
+        "y1": "z1",
+        "y2": "z2",
+        "y3": "z3",
+        "y4": "z4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp bức tranh \"xoay 90 độ\": row-store trải thế nào, column-store trải thế nào, và dashboard đọc kiểu gì trên bản xếp dọc. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Column-store: act_count của MỌI dòng nằm liền một dải — [3,5,4,6,…] nén cực gọn",
+        "slot": "lay-col"
+      },
+      {
+        "type": "op",
+        "token": "Row-store: mỗi dòng trọn vẹn 12 cột nằm cạnh nhau — [1,7,D1,like,3,…] rồi tới dòng kế",
+        "slot": "lay-row"
+      },
+      {
+        "type": "op",
+        "token": "Column-store: mỗi cột được in ra giấy và cất vào két riêng ở chi nhánh khác thành phố",
+        "slot": "lay-x"
+      },
+      {
+        "type": "op",
+        "token": "Dashboard SUM(act_count): chỉ kéo dải act_count qua RAM — 11 cột kia không tốn một byte",
+        "slot": "lay-read"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "lay-row",
+        "placeholder": "Xếp NGANG — cách của feed",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "↔️",
+          "label": "Xếp ngang",
+          "sub": "Row-store",
+          "hint": "Hàng xóm của một giá trị là các cột CÙNG DÒNG — mở 1 post lấy đủ bộ."
+        }
+      },
+      {
+        "id": "lay-col",
+        "placeholder": "Xếp DỌC — cách của kho",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "↕️",
+          "label": "Xếp dọc",
+          "sub": "Column-store",
+          "hint": "Hàng xóm là giá trị CÙNG CỘT của dòng kế — dải đồng kiểu, nén sướng."
+        }
+      },
+      {
+        "id": "lay-read",
+        "placeholder": "Và dashboard đọc thế nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📊",
+          "label": "Đọc kho",
+          "sub": "Đúng cột cần",
+          "hint": "SUM một cột = kéo đúng MỘT dải liền mạch — bài học Ticket #32 hiện nguyên hình."
+        }
+      }
+    ],
+    "expected_sql": "Row-store: mỗi dòng trọn vẹn 12 cột nằm cạnh nhau — [1,7,D1,like,3,…] rồi tới dòng kế Column-store: act_count của MỌI dòng nằm liền một dải — [3,5,4,6,…] nén cực gọn Dashboard SUM(act_count): chỉ kéo dải act_count qua RAM — 11 cột kia không tốn một byte",
+    "expected_zones": {
+      "lay-row": "Row-store: mỗi dòng trọn vẹn 12 cột nằm cạnh nhau — [1,7,D1,like,3,…] rồi tới dòng kế",
+      "lay-col": "Column-store: act_count của MỌI dòng nằm liền một dải — [3,5,4,6,…] nén cực gọn",
+      "lay-read": "Dashboard SUM(act_count): chỉ kéo dải act_count qua RAM — 11 cột kia không tốn một byte"
+    },
+    "reveal_hints": {
+      "lay-row": "Xếp ngang = <strong>dòng trọn vẹn nằm cạnh nhau</strong> — trận địa của feed.",
+      "lay-col": "Xếp dọc = <strong>cột liền dải</strong>. Khối \"in ra giấy cất két chi nhánh\" là bịa cho vui — column-store vẫn là file trên đĩa.",
+      "lay-read": "Đọc kho = <strong>kéo đúng dải cột cần</strong>, phần còn lại miễn vận chuyển."
+    }
+  },
+  "step_4": {
+    "prompt": "CTO hỏi câu chốt đợt: \"Community nên lưu thế nào?\" — chọn phương án ĐÚNG TRẬN ĐỊA cho cả hai hệ:",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "Feed/likes/comments ở lại Postgres row-store (đọc-ghi nguyên dòng); kho fact_post_action sang column-store cho SUM/GROUP BY — ETL đêm làm cầu nối như Ticket #25.",
+        "correct": true
+      },
+      {
+        "text": "Bê toàn bộ sang column-store — công nghệ mới hơn thì nhanh hơn ở mọi việc.",
+        "correct": false
+      },
+      {
+        "text": "Bê toàn bộ sang row-store kể cả kho — đồng bộ một kiểu cho dễ quản.",
+        "correct": false
+      },
+      {
+        "text": "Lưu mỗi bảng HAI bản row + column và ghi thẳng vào cả hai trong mọi INSERT của feed.",
+        "correct": false
+      }
+    ],
+    "context": {
+      "scenario": "Đây là quyết định kiến trúc thật sự của mọi công ty có cả app lẫn dashboard — và là câu chốt của cả đợt storage: KHÔNG có layout vô địch, chỉ có layout ĐÚNG TRẬN ĐỊA.",
+      "real_world": "Đúng mô hình công nghiệp: Postgres/MySQL phục vụ app + Redshift/BigQuery/ClickHouse phục vụ phân tích, nối bằng ETL/CDC. Phương án \"ghi thẳng 2 bản trong mọi INSERT\" chết ở độ trễ ghi — nên người ta mới cần ETL đêm.",
+      "steps": [
+        "Workload feed: đọc/ghi nguyên dòng, độ trễ thấp → row.",
+        "Workload kho: quét ít cột trên núi dòng → column.",
+        "Cầu nối: ETL đêm (đã dựng ở Ticket #25) — không bắt INSERT của feed gánh 2 lần ghi.",
+        "Loại 2 phương án \"một kiểu cho tất cả\": mỗi kiểu thua đau ở trận địa còn lại."
+      ],
+      "hint_explore": "Xem lại 2 dòng cuối bảng minh họa Step 1: chi phí GHI của mỗi layout — chính nó loại phương án cuối.",
+      "expected": "Chọn phương án hai-thế-giới: feed row + kho column, ETL làm cầu."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Nhớ MCQ 2: vì sao KHÔNG bê feed sang column? Rồi nghĩ ngược cho kho."
+      },
+      {
+        "level": 2,
+        "text": "Loại 2 phương án \"tất cả một kiểu\" — mỗi layout đều có trận địa thua đau."
+      },
+      {
+        "level": 3,
+        "text": "Phương án ghi 2 bản trong MỌI INSERT bắt feed trả giá ghi ×12 dải — ETL đêm tồn tại để né đúng việc này."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: feed row-store + kho column-store, ETL đêm làm cầu."
+      }
+    ],
+    "success_message": "Ticket #35 đóng — nửa đầu Module 6 hoàn tất! Bạn đã thuộc lòng tầng hầm: tháp lưu trữ, giá vé seek, buffer, trang, và hai kiểu xếp kho. Đợt sau: xây LỐI TẮT xuyên qua tất cả — INDEX, B+-Tree, và vụ án tốt nghiệp \"Social Graph Detective\".",
+    "xp_reward": 120
+  }
+}

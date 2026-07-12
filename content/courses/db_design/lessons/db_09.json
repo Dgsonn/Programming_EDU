@@ -1,0 +1,941 @@
+{
+  "id": "db_09",
+  "index": 10,
+  "title": "Dạng chuẩn 2 (2NF) — Phụ thuộc hàm đầy đủ",
+  "subtitle": "Loại bỏ phụ thuộc bộ phận với khóa chính tổng hợp",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 22,
+  "xp_reward": 70,
+  "project_piece": "🔬 Thu thập \"Kính hiển vi Phụ thuộc hàm\"",
+  "story": {
+    "tag": "🎫 GameHub Consulting · Ticket #10",
+    "hook": "Khách tiếp theo: <strong>thư viện thành phố</strong>. Sổ mượn của họ dùng khoá ghép nhưng lại <em>chép dính thông tin thành viên vào từng lượt mượn</em> — đổi tên 1 người là sửa cả trăm dòng. Ticket yêu cầu: mọi cột phải phụ thuộc <strong>TRỌN khoá</strong> của bảng nó (2NF) — tách <code>members</code> / <code>loans</code>, rồi chứng minh dữ liệu vẫn nguyên vẹn bằng truy vấn đếm lượt mượn."
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "book_loan_raw",
+      "columns": [
+        "book_id",
+        "copy_no",
+        "loan_date",
+        "member_name"
+      ],
+      "dataRows": [
+        [
+          "B01",
+          "1",
+          "2024-06-01",
+          "Minh"
+        ],
+        [
+          "B01",
+          "2",
+          "2024-06-03",
+          "Minh"
+        ],
+        [
+          "B02",
+          "1",
+          "2024-06-05",
+          "Yuki"
+        ],
+        [
+          "B02",
+          "2",
+          "2024-06-06",
+          "Sara"
+        ],
+        [
+          "B03",
+          "1",
+          "2024-06-08",
+          "Nam"
+        ],
+        [
+          "B03",
+          "2",
+          "2024-06-09",
+          "Minh"
+        ],
+        [
+          "B04",
+          "1",
+          "2024-06-10",
+          "Lan"
+        ],
+        [
+          "B04",
+          "2",
+          "2024-06-12",
+          "Yuki"
+        ],
+        [
+          "B05",
+          "1",
+          "2024-06-14",
+          "Hùng"
+        ],
+        [
+          "B05",
+          "2",
+          "2024-06-15",
+          "Sara"
+        ],
+        [
+          "B06",
+          "1",
+          "2024-06-17",
+          "Minh"
+        ],
+        [
+          "B06",
+          "2",
+          "2024-06-18",
+          "Nam"
+        ],
+        [
+          "B07",
+          "1",
+          "2024-06-20",
+          "Mai"
+        ],
+        [
+          "B07",
+          "2",
+          "2024-06-21",
+          "Lan"
+        ],
+        [
+          "B08",
+          "1",
+          "2024-06-23",
+          "Yuki"
+        ],
+        [
+          "B08",
+          "2",
+          "2024-06-24",
+          "Minh"
+        ],
+        [
+          "B09",
+          "1",
+          "2024-06-26",
+          "Hùng"
+        ],
+        [
+          "B09",
+          "2",
+          "2024-06-27",
+          "Sara"
+        ],
+        [
+          "B10",
+          "1",
+          "2024-06-29",
+          "Nam"
+        ],
+        [
+          "B10",
+          "2",
+          "2024-06-30",
+          "Mai"
+        ],
+        [
+          "B11",
+          "1",
+          "2024-07-01",
+          "Minh"
+        ],
+        [
+          "B11",
+          "2",
+          "2024-07-02",
+          "Lan"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Phá phụ thuộc bộ phận",
+    "desc": "2NF"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "2NF áp dụng khi bảng có KHÓA CHÍNH TỔNG HỢP (composite key)",
+        "Mỗi cột non-key phải phụ thuộc vào TOÀN BỘ khóa, không chỉ một phần",
+        "Vi phạm = phụ thuộc bộ phận (partial dependency) → tách thành bảng riêng"
+      ],
+      "intro": "Bạn quản lý <strong>thư viện sách</strong>. Bảng <code class=\"code\">book_loan_raw</code> có khóa chính tổng hợp <code class=\"code\">(book_id, copy_no)</code> (mỗi cuốn sách có thể có nhiều bản copy). Vấn đề: <code class=\"code\">member_name</code> chỉ phụ thuộc vào <code class=\"code\">member_id</code> (một phần khóa qua loan) — không phụ thuộc <code class=\"code\">copy_no</code>. <strong>2NF</strong> yêu cầu mỗi cột non-key phải phụ thuộc <em>toàn bộ</em> khóa.",
+      "example": "Nếu đổi tên người mượn từ \"Minh\" → \"Minh Nguyễn\", bạn phải sửa MỌI DÒNG có member_name = \"Minh\" (vì Minh mượn nhiều sách → có nhiều dòng). Đó là <strong>update anomaly</strong>. Tách member ra bảng riêng → sửa 1 chỗ là xong."
+    },
+    "intro": "70% database mới ra trường có <strong>partial dependency</strong> mà dev không biết. Khi data lên 100K dòng, update sai = mất 3 ngày fix. Bài này tóm gọn 2NF trong 5 phút — thay vì 3 tuần tự mò. Sau bài này bạn sẽ <em>chủ động tách bảng</em> trước khi code, không phải fix sau.",
+    "concept_cards": [
+      {
+        "icon": "fa-puzzle-piece",
+        "title": "2NF — Phụ thuộc CẢ PK",
+        "body": "Thư viện A lưu tên thành viên LẶP LẠI 500 lần — mỗi lần mượn sách = 1 dòng có <code>member_name</code>. Sửa tên 1 người = UPDATE 500 dòng. Quên 1 dòng? <strong>Dữ liệu mâu thuẫn</strong>. Đây là partial dependency — cột <code>member_name</code> chỉ phụ thuộc <code>member_id</code>, không cần <code>book_id</code>. 2NF fix vấn đề này."
+      },
+      {
+        "icon": "fa-scissors",
+        "title": "Cách fix 2NF",
+        "body": "Tách phần PK gây phụ thuộc ra bảng riêng. <code>loans(book_id, copy_no, member_id, member_name)</code> có <code>member_id → member_name</code> → tách thành bảng <code>member(member_id, member_name)</code>. Bảng loans chỉ giữ FK <code>member_id</code>. 1 dòng UPDATE, 1 dòng sửa — xong."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Nếu đổi tên người mượn từ \"Minh\" → \"Minh Nguyễn"
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — vi phạm 2NF",
+          "columns": [
+            "book_id",
+            "copy_no",
+            "member_id",
+            "member_name",
+            "loan_date"
+          ],
+          "rows": [
+            [
+              "B1",
+              "1",
+              "M01",
+              "Alice",
+              "2026-01-01"
+            ],
+            [
+              "B1",
+              "2",
+              "M01",
+              "Alice",
+              "2026-01-05"
+            ],
+            [
+              "B2",
+              "1",
+              "M02",
+              "Bob",
+              "2026-01-03"
+            ]
+          ],
+          "violations": {
+            "0-3": true,
+            "1-3": true
+          }
+        },
+        "after": {
+          "title": "SAU — đã 2NF (tách member)",
+          "columns": [
+            "book_id",
+            "copy_no",
+            "member_id",
+            "loan_date"
+          ],
+          "rows": [
+            [
+              "B1",
+              "1",
+              "M01",
+              "2026-01-01"
+            ],
+            [
+              "B1",
+              "2",
+              "M01",
+              "2026-01-05"
+            ],
+            [
+              "B2",
+              "1",
+              "M02",
+              "2026-01-03"
+            ]
+          ]
+        },
+        "note": "PK (book_id, copy_no) nhưng member_name chỉ phụ thuộc member_id → tách member riêng."
+      },
+      "schema": {
+        "table_name": "book_loan_raw",
+        "columns": [
+          {
+            "name": "book_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "copy_no",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "member_id",
+            "type": "INT",
+            "key": "",
+            "icon": "🔗"
+          },
+          {
+            "name": "member_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚠️"
+          },
+          {
+            "name": "loan_date",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "B01",
+          "1",
+          "M01",
+          "Minh",
+          "2024-06-01"
+        ],
+        [
+          "B01",
+          "2",
+          "M01",
+          "Minh",
+          "2024-06-03"
+        ],
+        [
+          "B02",
+          "1",
+          "M02",
+          "Yuki",
+          "2024-06-05"
+        ],
+        [
+          "B02",
+          "2",
+          "M03",
+          "Sara",
+          "2024-06-06"
+        ],
+        [
+          "B03",
+          "1",
+          "M04",
+          "Nam",
+          "2024-06-08"
+        ],
+        [
+          "B03",
+          "2",
+          "M01",
+          "Minh",
+          "2024-06-09"
+        ],
+        [
+          "B04",
+          "1",
+          "M05",
+          "Lan",
+          "2024-06-10"
+        ],
+        [
+          "B04",
+          "2",
+          "M02",
+          "Yuki",
+          "2024-06-12"
+        ],
+        [
+          "B05",
+          "1",
+          "M06",
+          "Hùng",
+          "2024-06-14"
+        ],
+        [
+          "B05",
+          "2",
+          "M03",
+          "Sara",
+          "2024-06-15"
+        ],
+        [
+          "B06",
+          "1",
+          "M01",
+          "Minh",
+          "2024-06-17"
+        ],
+        [
+          "B06",
+          "2",
+          "M04",
+          "Nam",
+          "2024-06-18"
+        ],
+        [
+          "B07",
+          "1",
+          "M07",
+          "Mai",
+          "2024-06-20"
+        ],
+        [
+          "B07",
+          "2",
+          "M05",
+          "Lan",
+          "2024-06-21"
+        ],
+        [
+          "B08",
+          "1",
+          "M02",
+          "Yuki",
+          "2024-06-23"
+        ],
+        [
+          "B08",
+          "2",
+          "M01",
+          "Minh",
+          "2024-06-24"
+        ],
+        [
+          "B09",
+          "1",
+          "M06",
+          "Hùng",
+          "2024-06-26"
+        ],
+        [
+          "B09",
+          "2",
+          "M03",
+          "Sara",
+          "2024-06-27"
+        ],
+        [
+          "B10",
+          "1",
+          "M04",
+          "Nam",
+          "2024-06-29"
+        ],
+        [
+          "B10",
+          "2",
+          "M07",
+          "Mai",
+          "2024-06-30"
+        ],
+        [
+          "B11",
+          "1",
+          "M01",
+          "Minh",
+          "2024-07-01"
+        ],
+        [
+          "B11",
+          "2",
+          "M05",
+          "Lan",
+          "2024-07-02"
+        ]
+      ]
+    },
+    "mission": "Quan sát bảng: <code>member_name</code> chỉ phụ thuộc <code>member_id</code> — không phụ thuộc <code>copy_no</code>. Đây là phụ thuộc bộ phận → vi phạm 2NF."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Trong bảng <code>book_loan_raw(book_id, copy_no, member_id, member_name)</code> với PK là <code>(book_id, copy_no)</code>, cột nào VI PHẠM 2NF?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>member_id</code> — vì là một phần quan hệ",
+            "correct": false,
+            "explanation": "Sai — member_id là FK (tham chiếu members.member_id). Nó phụ thuộc 1 phần khóa nhưng vẫn cần thiết trong loans. member_name mới là cần tách, không phải member_id."
+          },
+          {
+            "id": "b",
+            "text": "<code>member_name</code> — vì chỉ phụ thuộc <code>member_id</code> (một phần của khóa qua loan)",
+            "correct": true,
+            "explanation": "Đúng — member_name chỉ phụ thuộc member_id, KHÔNG phụ thuộc book_id hay copy_no. Đây là partial dependency classic: Y chỉ phụ thuộc 1 PHẦN của composite key."
+          },
+          {
+            "id": "c",
+            "text": "<code>loan_date</code> — vì là cột ngày tháng",
+            "correct": false,
+            "explanation": "Sai — loan_date phụ thuộc TOÀN BỘ PK (cần biết cả book_id + copy_no để biết ngày mượn bản cụ thể). Đó là full functional dependency, không vi phạm 2NF."
+          },
+          {
+            "id": "d",
+            "text": "<code>copy_no</code> — vì là một phần khóa",
+            "correct": false,
+            "explanation": "Sai — copy_no là 1 phần PK (composite key). Các phần của PK không vi phạm 2NF — chúng định nghĩa identity, không phụ thuộc ai."
+          }
+        ]
+      },
+      {
+        "question": "Để sửa vi phạm 2NF (phụ thuộc bộ phận), cần làm gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "ALTER TABLE book_loan_raw ADD PRIMARY KEY (member_id)",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — PK hiện tại (book_id, copy_no) đã đúng (mỗi cuốn sách có nhiều copy, mỗi copy có thể mượn nhiều lần). member_id KHÔNG thuộc PK — nó là FK."
+          },
+          {
+            "id": "b",
+            "text": "CREATE TABLE loans (book_id INT, copy_no INT, member_id INT, loan_date DATE, PRIMARY KEY (book_id, copy_no), FOREIGN KEY (member_id) REFERENCES members);\n\nCREATE TABLE members (member_id INT PRIMARY KEY, member_name VARCHAR(100));",
+            "correct": true,
+            "format": "code",
+            "explanation": "Đúng — tách member_name về bảng members riêng → ở members, member_name chỉ phụ thuộc member_id (PK). member_id ở loans là FK tham chiếu members. Mỗi bảng đạt 2NF."
+          },
+          {
+            "id": "c",
+            "text": "ALTER TABLE book_loan_raw DROP COLUMN copy_no",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — mất data. copy_no cần để phân biệt nhiều bản copy cùng book_id (VD: 2 bản \"Harry Potter 1\" có copy_no=1 và copy_no=2, mượn riêng)."
+          },
+          {
+            "id": "d",
+            "text": "ALTER TABLE book_loan_raw RENAME COLUMN member_name TO member_full_name",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — đổi tên không fix partial dependency. member_name vẫn chỉ phụ thuộc member_id → vẫn vi phạm 2NF. Phải tách bảng."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "title": "Phân loại: cột nào phụ thuộc TOÀN BỘ khóa vs MỘT PHẦN khóa?",
+      "instruction": "Bảng <code>book_loan_raw</code> với PK <code>(book_id, copy_no)</code>. Kéo mỗi cột vào ô tương ứng.<br><strong style=\"color:var(--success)\">Toàn bộ khóa</strong> · <strong style=\"color:var(--warning)\">Một phần khóa (vi phạm 2NF)</strong> · <strong style=\"color:var(--text-400)\">Không liên quan</strong>.",
+      "chips": [
+        {
+          "id": "c-bid",
+          "label": "book_id"
+        },
+        {
+          "id": "c-cno",
+          "label": "copy_no"
+        },
+        {
+          "id": "c-mid",
+          "label": "member_id"
+        },
+        {
+          "id": "c-mname",
+          "label": "member_name"
+        },
+        {
+          "id": "c-ldate",
+          "label": "loan_date"
+        }
+      ],
+      "bins": [
+        {
+          "id": "full",
+          "label": "Phụ thuộc TOÀN BỘ khóa",
+          "correct": "full"
+        },
+        {
+          "id": "part",
+          "label": "Phụ thuộc MỘT PHẦN khóa (2NF)",
+          "correct": "part"
+        },
+        {
+          "id": "none",
+          "label": "Là 1 phần của khóa / không liên quan",
+          "correct": "none"
+        }
+      ],
+      "solution": {
+        "c-bid": "none",
+        "c-cno": "none",
+        "c-mid": "none",
+        "c-mname": "part",
+        "c-ldate": "full"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Tìm <strong>top 3 thành viên mượn nhiều sách nhất</strong> — JOIN <code>members</code> ↔ <code>loans</code>, đếm + sắp xếp giảm dần.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "m.member_name",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "loan_count",
+        "slot": "col-alias"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "members m",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join"
+      },
+      {
+        "type": "tbl",
+        "token": "loans l",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on"
+      },
+      {
+        "type": "col",
+        "token": "l.member_id = m.member_id",
+        "slot": "col-on"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "m.member_id, m.member_name",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "loan_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      },
+      {
+        "type": "kw",
+        "token": "LIMIT",
+        "slot": "kw-limit"
+      },
+      {
+        "type": "val",
+        "token": "3",
+        "slot": "val-limit"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , COUNT(*) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____ ON ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC LIMIT ____",
+        "accepts": [
+          "kw",
+          "col",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC",
+          "LIMIT"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC LIMIT 3;",
+    "reveal_hints": {
+      "select-line": "SELECT <strong>m.member_name</strong> + <strong>COUNT(*) AS loan_count</strong> — đếm số lượt mượn.",
+      "from-line": "FROM <strong>members m</strong> JOIN <strong>loans l</strong> ON <strong>l.member_id = m.member_id</strong> — nối 2 bảng qua FK.",
+      "group-line": "GROUP BY <strong>m.member_id, m.member_name</strong> — gom theo từng thành viên.",
+      "order-line": "ORDER BY <strong>loan_count DESC</strong> + <strong>LIMIT 3</strong> — top 3 mượn nhiều nhất."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — chỉ tính <strong>lượt mượn TỪ 2024-02-01</strong> (thêm <code>WHERE loan_date &gt;= ...</code>), đếm theo thành viên, sắp xếp nhiều → ít (bỏ giới hạn top 3).",
+    "context": {
+      "scenario": "Thư viện thành phố đã nhận bàn giao 2 bảng sạch <code>members</code> / <code>loans</code> (2NF). Giám đốc thư viện muốn báo cáo quý mới: <strong>ai mượn nhiều nhất kể từ 2024-02-01?</strong> — giờ tên thành viên chỉ nằm 1 chỗ, đếm bao nhiêu cũng không sợ lệch.",
+      "real_world": "Mọi hệ thống điểm thưởng thành viên (<strong>thư viện, Starbucks, hãng bay</strong>) đều chạy đúng truy vấn này: JOIN bảng người dùng với bảng giao dịch + lọc theo kỳ + GROUP BY. Nếu tên khách còn chép dính trong từng giao dịch (vi phạm 2NF), 1 lần đổi tên là báo cáo sai.",
+      "steps": [
+        "Nối: <code>members m JOIN loans l ON l.member_id = m.member_id</code>.",
+        "Lọc theo kỳ báo cáo: <code>WHERE l.loan_date >= '2024-02-01'</code>.",
+        "Gộp + đếm: <code>GROUP BY m.member_name</code>, <code>COUNT(*) AS loan_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY loan_count DESC</code>."
+      ],
+      "hint_explore": "Xem dữ liệu gốc: <code>SELECT * FROM loans</code> (chú ý cột <code>loan_date</code>) và <code>SELECT * FROM members</code>.",
+      "expected": "Bảng nhiều dòng × 2 cột (<code>member_name, loan_count</code>): thành viên kèm số lượt mượn TỪ 2024-02-01, xếp giảm dần."
+    },
+    "starter": "-- Top 3 thành viên mượn nhiều sách nhất\n-- JOIN loans ↔ members + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT m., COUNT(*) AS \n  FROM members m\n  JOIN loans l ON l. = m.\n GROUP BY m., m.\n ORDER BY  DESC\n LIMIT 3;\n",
+    "schema": {
+      "table_name": "members",
+      "columns": [
+        {
+          "name": "member_id",
+          "type": "INT",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "member_name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "👤"
+        },
+        {
+          "name": "join_date",
+          "type": "DATE",
+          "key": "",
+          "icon": "📅"
+        }
+      ],
+      "data": [
+        [
+          "M01",
+          "Minh",
+          "2023-01-15"
+        ],
+        [
+          "M02",
+          "Yuki",
+          "2023-05-20"
+        ],
+        [
+          "M03",
+          "Sara",
+          "2023-03-10"
+        ],
+        [
+          "M04",
+          "Alex",
+          "2023-07-01"
+        ],
+        [
+          "M05",
+          "Nam",
+          "2023-09-12"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "loans",
+        "columns": [
+          {
+            "name": "book_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "copy_no",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "member_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "loan_date",
+            "type": "DATE",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "B01",
+            "1",
+            "M01",
+            "2024-01-05"
+          ],
+          [
+            "B02",
+            "1",
+            "M01",
+            "2024-01-12"
+          ],
+          [
+            "B03",
+            "1",
+            "M01",
+            "2024-02-01"
+          ],
+          [
+            "B04",
+            "1",
+            "M01",
+            "2024-02-15"
+          ],
+          [
+            "B05",
+            "1",
+            "M01",
+            "2024-03-01"
+          ],
+          [
+            "B06",
+            "1",
+            "M03",
+            "2024-01-08"
+          ],
+          [
+            "B07",
+            "1",
+            "M03",
+            "2024-01-20"
+          ],
+          [
+            "B08",
+            "1",
+            "M03",
+            "2024-02-10"
+          ],
+          [
+            "B09",
+            "1",
+            "M03",
+            "2024-03-05"
+          ],
+          [
+            "B10",
+            "1",
+            "M02",
+            "2024-01-15"
+          ],
+          [
+            "B11",
+            "1",
+            "M02",
+            "2024-02-20"
+          ],
+          [
+            "B12",
+            "1",
+            "M02",
+            "2024-03-10"
+          ],
+          [
+            "B13",
+            "1",
+            "M05",
+            "2024-02-05"
+          ],
+          [
+            "B14",
+            "1",
+            "M05",
+            "2024-03-15"
+          ],
+          [
+            "B15",
+            "1",
+            "M04",
+            "2024-01-25"
+          ]
+        ]
+      }
+    ],
+    "expected_sql": "SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id WHERE l.loan_date >= '2024-02-01' GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>đếm sách mượn theo từng thành viên</em>. Hãy nghĩ: <strong>JOIN</strong> 2 bảng qua <code>member_id</code>, <strong>GROUP BY</strong> member, <strong>COUNT(*)</strong>, <strong>ORDER BY</strong> giảm dần, <strong>LIMIT</strong> top 3."
+      },
+      {
+        "level": 2,
+        "text": "JOIN: <code>members m JOIN loans l ON l.member_id = m.member_id</code>."
+      },
+      {
+        "level": 3,
+        "text": "GROUP BY theo cả 2 cột: <code>m.member_id, m.member_name</code>. COUNT(*) đếm số dòng loans."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT m.member_name, COUNT(*) AS loan_count FROM members m JOIN loans l ON l.member_id = m.member_id WHERE l.loan_date >= '2024-02-01' GROUP BY m.member_id, m.member_name ORDER BY loan_count DESC;</code>"
+      }
+    ],
+    "success_message": "Hoàn thành 2NF nâng cao! Phụ thuộc bộ phận đã được loại bỏ, và bạn đã JOIN + GROUP BY qua 2 bảng. Tiếp theo Bài 11 sẽ xét 3NF — loại bỏ phụ thuộc bắc cầu.",
+    "xp_reward": 70
+  }
+}

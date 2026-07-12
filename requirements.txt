@@ -9,3 +9,4 @@ flask-limiter>=3.5
 redis>=5.0
 requests>=2.31.0
 flask-dance>=7.0
+mini-racer>=0.12  # eval lesson_content*.js -> seed lessons.content_json (db/seed_lesson_content.py)

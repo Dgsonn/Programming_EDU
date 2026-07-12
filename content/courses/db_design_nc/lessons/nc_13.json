@@ -1,0 +1,512 @@
+{
+  "id": "nc_13",
+  "index": 13,
+  "title": "Two-Phase Locking — gom cho hết, rồi mới buông",
+  "subtitle": "Pha GOM chỉ xin khóa, pha NHẢ chỉ trả khóa — một luật đơn giản mua được cả serializability",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "wallets — DragonForge có 2 két (mẫu 2)",
+      "columns": [
+        "két",
+        "mục đích",
+        "balance_gem"
+      ],
+      "dataRows": [
+        [
+          "A — két QUẢNG CÁO",
+          "trả phí banner sàn",
+          "100"
+        ],
+        [
+          "B — két CHÍNH",
+          "nhận tiền bán hàng",
+          "200"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #54",
+    "hook": "Khóa S/X chạy ngon được đúng ba hôm thì bot audit réo: DragonForge chuyển <strong>50 gem</strong> từ két CHÍNH sang két QUẢNG CÁO — chuyển xong tổng vẫn phải là <strong>300</strong>, vậy mà audit chộp được khoảnh khắc tổng chỉ còn <strong>250</strong>. Soi log: giao dịch xin khóa ĐÚNG KIỂU từng két một… nhưng <em>nhả két này rồi mới gom két kia</em>. Ticket #54: khóa thôi chưa đủ — phải luật hóa cả chuyện <strong>GIỮ ĐẾN BAO GIỜ</strong>."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "TWO-PHASE LOCKING (2PL): mỗi giao dịch có đúng 2 pha — GROWING chỉ được XIN khóa, SHRINKING chỉ được NHẢ khóa; đã nhả một cái là vĩnh viễn không được xin thêm (sách 18.1.3)",
+        "LOCK POINT = khoảnh khắc gom được khóa CUỐI CÙNG — xếp các giao dịch theo lock point là ra đúng một thứ tự serial tương đương: 2PL mua được conflict serializability bằng một luật cực ngắn",
+        "2PL KHÔNG miễn deadlock: hai giao dịch cùng tuân luật vẫn có thể gom chéo két của nhau rồi đứng hình chờ nhau vĩnh viễn (Fig 18.7) — vị khách không mời đó là chuyện của bài sau"
+      ],
+      "intro": "Người dọn tiệc khôn ngoan: gom <strong>ĐỦ</strong> chìa của mọi phòng cần dọn rồi mới bắt đầu trả dần từng chìa. Kẻ vụng: trả chìa phòng 1 xong mới xin chìa phòng 2 — đúng khe đó khách quản lý bước vào phòng 1 thấy bàn ghế dọn nửa chừng. Luật 2PL chính là \"đường một chiều\" của việc cầm chìa: chỉ có dâng lên rồi hạ xuống, tuyệt đối không hạ rồi dâng lại.",
+      "example": "Chuyển 50 gem két CHÍNH (200) → két QC (100). Bản NHẢ SỚM: khóa CHÍNH, trừ 50, <em>unlock</em>, rồi mới khóa QC — audit chen đúng khe: đọc 150 + 100 = <strong>250 SAI</strong>. Bản 2PL: gom X(CHÍNH), gom X(QC) — <strong>📍 lock point</strong> — làm việc, nhả cả hai: audit chen nhịp nào cũng bị chặn tới khi tiền về đủ chỗ, tổng luôn <strong>300</strong>."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-chart-line",
+        "title": "Hai pha và lock point — theo đúng sách",
+        "body": "Giao dịch bắt đầu trong <strong>growing phase</strong>, xin khóa khi cần; vừa nhả khóa đầu tiên là rơi vào <strong>shrinking phase</strong> và không được xin thêm bất kỳ khóa nào. Điểm gom được khóa cuối cùng gọi là <strong>lock point</strong> — xếp các giao dịch theo lock point chính là một thứ tự serializability của chúng.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.3 — The Two-Phase Locking Protocol"
+      },
+      {
+        "icon": "fa-skull-crossbones",
+        "title": "2PL không phải bùa hộ mệnh toàn năng",
+        "body": "Sách chỉ mặt hai khe hở còn lại: <strong>①</strong> hai giao dịch cùng tuân 2PL vẫn có thể DEADLOCK — T3 gom két B xin két A, T4 gom két A xin két B, cả hai đứng hình (Fig 18.7); <strong>②</strong> nhả khóa X trước khi commit thì kẻ khác đọc được dữ liệu CHƯA CHẮC sống — T5 sập là T6, T7 đọc theo phải sập dây chuyền (cascading rollback, Fig 18.8). Khe ② có thuốc ngay: hồ sơ Strict vs Rigorous chờ sau bài."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Vì sao mọi DBMS thương mại (Postgres, MySQL/InnoDB, SQL Server…) mặc định giữ khóa ghi <strong>đến tận COMMIT</strong> thay vì nhả ngay khi xong câu lệnh? Vì đó là strict 2PL — phiên bản 2PL vá luôn khe hở ②. Code app của bạn không phải đếm pha: cứ gói việc trong một transaction, engine tự giữ đúng luật."
+      }
+    ],
+    "phase_visual": {
+      "eyebrow": "PHASE-METER 2PL — CHUYỂN 50 GEM: KÉT CHÍNH 200 → KÉT QC 100 · TỔNG THẬT 300",
+      "caption": "Chạy CẢ HAI bản mà nhìn đường khóa: bản 2PL chỉ dâng rồi hạ (một đỉnh, một lock point) — bản nhả sớm hạ rồi DÂNG LẠI: gãy luật, và audit chen đúng khe đọc 250.",
+      "modes": [
+        {
+          "id": "good",
+          "short": "2PL CHUẨN",
+          "ok": true,
+          "btn": "▶ Chạy bản 2PL (gom hết mới buông)",
+          "ops": [
+            {
+              "text": "lock-X(két CHÍNH) → GRANT",
+              "delta": 1,
+              "note": "Pha GOM mở màn — 1 khóa trong tay."
+            },
+            {
+              "text": "đọc CHÍNH 200 → trừ 50 → ghi 150",
+              "delta": 0,
+              "note": "Làm việc trong lúc vẫn GIỮ khóa — audit xin đọc lúc này là xếp hàng."
+            },
+            {
+              "text": "lock-X(két QC) → GRANT",
+              "delta": 1,
+              "lockpoint": true,
+              "note": "📍 LOCK POINT — khóa cuối cùng đã gom. Từ mốc này giao dịch chỉ còn đường đi xuống."
+            },
+            {
+              "text": "đọc QC 100 → cộng 50 → ghi 150",
+              "delta": 0,
+              "note": "Tiền về đủ chỗ: CHÍNH 150 + QC 150 = 300."
+            },
+            {
+              "text": "unlock(két CHÍNH)",
+              "delta": -1,
+              "note": "Vào pha NHẢ — trả dần, tuyệt đối không xin thêm."
+            },
+            {
+              "text": "unlock(két QC)",
+              "delta": -1,
+              "note": ""
+            }
+          ],
+          "verdict": "✓ Đường khóa MỘT ĐỈNH: dâng 1→2 rồi hạ 2→1→0. Audit chen bất kỳ nhịp nào cũng chỉ đọc được trạng thái tổng 300 — 2PL đổi một luật ngắn lấy cả serializability."
+        },
+        {
+          "id": "bad",
+          "short": "NHẢ SỚM",
+          "ok": false,
+          "btn": "▶ Chạy bản NHẢ SỚM (đêm bị audit réo)",
+          "ops": [
+            {
+              "text": "lock-X(két CHÍNH) → GRANT",
+              "delta": 1,
+              "note": "Mở màn giống hệt bản chuẩn…"
+            },
+            {
+              "text": "đọc CHÍNH 200 → trừ 50 → ghi 150",
+              "delta": 0,
+              "note": "50 gem đã RỜI két CHÍNH — đang \"bay\" giữa hai két."
+            },
+            {
+              "text": "unlock(két CHÍNH) — nhả sớm cho thoáng",
+              "delta": -1,
+              "cls": "warn",
+              "note": "Khóa về 0 giữa chừng — cánh cửa mở toang đúng lúc tiền đang bay."
+            },
+            {
+              "text": "⚡ AUDIT chen: đọc CHÍNH 150 + QC 100 → tổng 250",
+              "delta": 0,
+              "cls": "bad",
+              "note": "Audit xin khóa S — được GRANT NGAY vì chẳng ai giữ gì. Nó đọc đúng trạng thái dở dang."
+            },
+            {
+              "text": "lock-X(két QC) — xin khóa SAU KHI đã nhả",
+              "delta": 1,
+              "cls": "bad",
+              "note": ""
+            },
+            {
+              "text": "cộng 50 → ghi QC 150 → unlock(két QC)",
+              "delta": -1,
+              "note": "Tiền về đủ — nhưng bản chụp 250 của audit đã kịp thành báo cáo sai."
+            }
+          ],
+          "verdict": "❌ Audit đọc tổng 250 — 50 gem tàng hình đúng khe hở. Đường khóa GÃY: hạ 1→0 rồi dâng lại 0→1 = vi phạm 2PL, và đó chính là toàn bộ vụ án."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "Luật 2PL — đường một chiều của khóa",
+        "columns": [
+          {
+            "name": "GROWING — chỉ XIN khóa",
+            "type": "dâng: 0 → 1 → 2 …",
+            "key": "📈"
+          },
+          {
+            "name": "📍 LOCK POINT",
+            "type": "khóa cuối cùng gom được",
+            "key": ""
+          },
+          {
+            "name": "SHRINKING — chỉ NHẢ khóa",
+            "type": "hạ: … 2 → 1 → 0",
+            "key": "📉"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "gom B → gom A → nhả B → nhả A",
+          "dâng rồi hạ",
+          "2PL hợp lệ",
+          "✓"
+        ],
+        [
+          "gom B → NHẢ B → gom A",
+          "hạ rồi dâng lại",
+          "vi phạm",
+          "❌"
+        ],
+        [
+          "gom hết → làm hết → nhả hết lúc commit",
+          "rigorous — vẫn là 2PL",
+          "hợp lệ",
+          "✓"
+        ],
+        [
+          "xếp giao dịch theo lock point",
+          "= một thứ tự serial tương đương",
+          "định lý 2PL",
+          "⭐"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "LOCK POINT của một giao dịch là gì — và vì sao nó quý đến mức thành định lý?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Là khoảnh khắc gom được khóa CUỐI CÙNG — xếp các giao dịch theo lock point là ra một thứ tự serial tương đương: 2PL nhờ đó đảm bảo conflict serializability",
+            "correct": true,
+            "explanation": "Đúng — mỗi giao dịch 2PL có một đỉnh duy nhất; cả sàn chạy xen kẽ loạn xạ mà vẫn tương đương với chạy tuần tự theo thứ tự các đỉnh đó."
+          },
+          {
+            "id": "b",
+            "text": "Là lúc giao dịch commit — mọi khóa được nhả tại đó",
+            "correct": false,
+            "explanation": "Sai — lock point là đỉnh của pha GOM, có thể đến rất lâu trước commit. (Giữ khóa đến commit là chuyện của strict/rigorous — hồ sơ sau bài.)"
+          },
+          {
+            "id": "c",
+            "text": "Là lúc xin khóa ĐẦU TIÊN — giao dịch chính thức bước vào cuộc chơi",
+            "correct": false,
+            "explanation": "Sai — khóa đầu tiên chỉ mở pha growing; thứ tự serial xếp theo khóa CUỐI, không phải khóa đầu."
+          },
+          {
+            "id": "d",
+            "text": "Là điểm giao dịch bị deadlock nếu xin thêm khóa",
+            "correct": false,
+            "explanation": "Sai — deadlock không dính gì tới lock point; sau lock point giao dịch không xin thêm khóa nào nữa nên càng không thể kẹt vì xin."
+          }
+        ]
+      },
+      {
+        "question": "T3 gom két B rồi xin két A; cùng lúc T4 gom két A rồi xin két B. Cả hai đều tuân 2PL chuẩn chỉ. Chuyện gì xảy ra?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cả hai đứng hình chờ nhau vĩnh viễn — 2PL đảm bảo serializability nhưng KHÔNG đảm bảo thoát deadlock",
+            "correct": true,
+            "explanation": "Đúng — Fig 18.7 trong sách chụp đúng cảnh này. Luật \"gom hết mới buông\" khiến ai cũng ôm khư khư thứ kẻ kia cần. Bài sau xử vụ này."
+          },
+          {
+            "id": "b",
+            "text": "Lock manager phát hiện vênh và từ chối yêu cầu của T4 ngay từ đầu",
+            "correct": false,
+            "explanation": "Sai — từng yêu cầu lẻ đều hợp lệ tại thời điểm xin; cái chết nằm ở TỔ HỢP hai hàng chờ, thứ lock manager thường không nhìn khi grant."
+          },
+          {
+            "id": "c",
+            "text": "Không sao — 2PL bắt buộc gom khóa theo cùng một thứ tự nên không kẹt được",
+            "correct": false,
+            "explanation": "Sai — 2PL KHÔNG quy định thứ tự gom; gom theo thứ tự thống nhất là một chiêu PHÒNG deadlock riêng (ordered locking), không nằm trong luật 2 pha."
+          },
+          {
+            "id": "d",
+            "text": "Giao dịch đến sau tự động thắng vì khóa của nó \"mới\" hơn",
+            "correct": false,
+            "explanation": "Sai — không có luật \"mới hơn thắng\"; cả hai cứ thế chờ. Các scheme phân xử theo tuổi (wait-die/wound-wait) là hồ sơ của bài sau."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "2PL hợp lệ — hay gãy luật?",
+      "instruction": "Soi đường khóa của từng kịch bản: chỉ dâng-rồi-hạ là hợp lệ.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "k1",
+          "label": "gom X(B) → gom X(A) → nhả B → nhả A"
+        },
+        {
+          "id": "k2",
+          "label": "gom X(B) → NHẢ B → gom X(A)"
+        },
+        {
+          "id": "k3",
+          "label": "gom X(B) → gom X(A) → nhả A → xin S(C)"
+        },
+        {
+          "id": "k4",
+          "label": "gom đủ hết → làm việc → nhả sạch lúc commit"
+        }
+      ],
+      "bins": [
+        {
+          "id": "ok",
+          "label": "2PL HỢP LỆ ✓"
+        },
+        {
+          "id": "no",
+          "label": "GÃY LUẬT ❌"
+        }
+      ],
+      "solution": {
+        "k1": "ok",
+        "k2": "no",
+        "k3": "no",
+        "k4": "ok"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp 4 chốt của luật 2PL cho giao dịch chuyển gem — có MỘT khối bịa (nghe cực kỳ hợp lý).",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Pha GOM: xin dần từng khóa cần dùng — tuyệt đối chưa nhả cái nào",
+        "slot": "ph-grow"
+      },
+      {
+        "type": "op",
+        "token": "Xong việc với két nào nhả NGAY két đó rồi gom tiếp két sau — đỡ giữ khóa lâu",
+        "slot": "ph-x"
+      },
+      {
+        "type": "op",
+        "token": "LOCK POINT: khóa cuối cùng vào tay — mốc xếp thứ tự serial của cả sàn",
+        "slot": "ph-point"
+      },
+      {
+        "type": "op",
+        "token": "Pha NHẢ: trả dần khóa — từ giây này không được xin thêm bất kỳ khóa nào",
+        "slot": "ph-shrink"
+      },
+      {
+        "type": "op",
+        "token": "STRICT: riêng khóa X găm đến tận commit — không ai đọc được dữ liệu chưa chắc sống",
+        "slot": "ph-strict"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ph-grow",
+        "placeholder": "Nửa đầu đời giao dịch — được làm gì với khóa?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📈",
+          "label": "Pha GOM",
+          "sub": "Growing",
+          "hint": "Đường khóa chỉ có một chiều ở nửa này — chiều nào?"
+        }
+      },
+      {
+        "id": "ph-point",
+        "placeholder": "Đỉnh của đường khóa là mốc gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📍",
+          "label": "Lock point",
+          "sub": "Đỉnh",
+          "hint": "Chính cái mốc làm nên định lý: xếp cả sàn theo nó là ra thứ tự serial."
+        }
+      },
+      {
+        "id": "ph-shrink",
+        "placeholder": "Nửa sau — luật cấm điều gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📉",
+          "label": "Pha NHẢ",
+          "sub": "Shrinking",
+          "hint": "Vừa nhả cái đầu tiên là cánh cửa xin-thêm đóng sập vĩnh viễn."
+        }
+      },
+      {
+        "id": "ph-strict",
+        "placeholder": "Chốt gia cố cho khóa X — giữ đến bao giờ?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔩",
+          "label": "Strict 2PL",
+          "sub": "Gia cố",
+          "hint": "T5 sập mà T6, T7 đã đọc dữ liệu nó ghi thì sập cả dây chuyền — chốt này chặn đúng cảnh đó."
+        }
+      }
+    ],
+    "expected_sql": "Pha GOM: xin dần từng khóa cần dùng — tuyệt đối chưa nhả cái nào LOCK POINT: khóa cuối cùng vào tay — mốc xếp thứ tự serial của cả sàn Pha NHẢ: trả dần khóa — từ giây này không được xin thêm bất kỳ khóa nào STRICT: riêng khóa X găm đến tận commit — không ai đọc được dữ liệu chưa chắc sống",
+    "expected_zones": {
+      "ph-grow": "Pha GOM: xin dần từng khóa cần dùng — tuyệt đối chưa nhả cái nào",
+      "ph-point": "LOCK POINT: khóa cuối cùng vào tay — mốc xếp thứ tự serial của cả sàn",
+      "ph-shrink": "Pha NHẢ: trả dần khóa — từ giây này không được xin thêm bất kỳ khóa nào",
+      "ph-strict": "STRICT: riêng khóa X găm đến tận commit — không ai đọc được dữ liệu chưa chắc sống"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 LUẬT ĐÃ THÀNH HÌNH: gom → 📍 đỉnh → nhả → riêng X găm tới commit. Khối \"xong két nào nhả ngay két đó\" nghe tiết kiệm mà là BỊA — nó chính là bản NHẢ SỚM làm audit đọc 250: hạ rồi dâng lại là gãy 2PL. Nhưng nhớ lời sách: hai kẻ cùng tuân luật vẫn có thể ôm chéo két của nhau mà đứng hình — bài sau xử vụ đó. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "ph-grow": "Chốt 1 — nửa đầu đời giao dịch, đường khóa chỉ được phép đi LÊN. Khối nào tả đúng luật nửa này?",
+      "ph-point": "Chốt 1 xong: đang gom. Đỉnh của đường — khoảnh khắc gom được khóa CUỐI — sách đặt tên là gì và nó quý vì sao?",
+      "ph-shrink": "Qua đỉnh rồi — nửa sau chỉ còn một chiều đi xuống. Luật cấm tuyệt đối điều gì ở nửa này?",
+      "ph-strict": "Khung 2PL đủ rồi — còn một chốt GIA CỐ riêng cho khóa X: giữ đến bao giờ để kẻ khác khỏi đọc ké dữ liệu chưa commit?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #54 — soi 4 bản nháp:</strong> bốn dev nộp bốn kịch bản khóa cho giao dịch \"chuyển 50 gem két CHÍNH → két QC\". Chỉ MỘT bản tuân 2PL trọn vẹn — bản nào?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "lock-X(CHÍNH) → trừ 50 → lock-X(QC) → cộng 50 → unlock(CHÍNH) → unlock(QC)",
+        "correct": true
+      },
+      {
+        "text": "lock-X(CHÍNH) → trừ 50 → unlock(CHÍNH) → lock-X(QC) → cộng 50 → unlock(QC)",
+        "correct": false,
+        "explain": "Gãy luật — unlock(CHÍNH) rồi mới lock-X(QC): hạ rồi dâng lại. Đây chính là bản NHẢ SỚM làm audit đọc 250; khe giữa unlock và lock là cửa cho kẻ khác chen."
+      },
+      {
+        "text": "lock-X(CHÍNH) → trừ 50 → unlock(CHÍNH) → cộng 50 vào QC (khỏi khóa — có ai đụng QC đâu)",
+        "correct": false,
+        "explain": "Gãy kép — vừa nhả-rồi-làm-tiếp, vừa GHI vào két không giữ khóa. \"Có ai đụng đâu\" là lời nói dối nổi tiếng nhất Trading Floor: lost update bài 11 sinh ra đúng từ câu đó."
+      },
+      {
+        "text": "lock-X(CHÍNH) → lock-X(QC) → trừ 50 → unlock(CHÍNH) → cộng 50 vào QC → unlock(QC) → nhưng lỡ quên, lock-X(CHÍNH) lần nữa để check lại số dư",
+        "correct": false,
+        "explain": "Suýt thì hợp lệ — cho tới cú \"lock lại để check\": đã vào pha nhả (unlock CHÍNH từ giữa chừng) mà còn xin thêm khóa là vi phạm. Muốn check lại thì phải gom đủ TRƯỚC khi nhả bất kỳ cái nào."
+      }
+    ],
+    "schema": {
+      "table_name": "đường khóa của 4 bản nháp",
+      "columns": [
+        {
+          "name": "bản",
+          "type": "kịch bản lock/unlock",
+          "key": "#"
+        },
+        {
+          "name": "đường khóa",
+          "type": "số khóa giữ theo thời gian",
+          "key": "📈"
+        },
+        {
+          "name": "2PL?",
+          "type": "một đỉnh duy nhất?",
+          "key": "❓"
+        }
+      ],
+      "data": [
+        [
+          "1",
+          "1 → 2 → 1 → 0",
+          "❓"
+        ],
+        [
+          "2",
+          "1 → 0 → 1 → 0",
+          "❓"
+        ],
+        [
+          "3",
+          "1 → 0 (ghi không khóa)",
+          "❓"
+        ],
+        [
+          "4",
+          "1 → 2 → 1 → 0 → 1",
+          "❓"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Bài kiểm tra 2PL nhanh nhất không phải đọc từng lệnh — là VẼ đường khóa: đếm số khóa đang giữ sau mỗi lệnh. Đường hợp lệ có đúng MỘT đỉnh; cứ thấy hạ-rồi-dâng-lại là gãy, khỏi đọc tiếp.",
+      "real_world": "Trong Postgres/InnoDB bạn không tự viết lock-X từng dòng — engine làm hộ theo strict 2PL: khóa ghi găm đến COMMIT. Bug \"nhả sớm\" đời thực thường mặc bộ đồ khác: tách một việc thành 2 transaction riêng để \"nhanh hơn\", chính là tự tay unlock giữa chừng.",
+      "steps": [
+        "Vẽ đường khóa từng bản: cộng 1 khi lock, trừ 1 khi unlock.",
+        "Bản 2: 1 → 0 → 1 — hạ rồi dâng: gãy.",
+        "Bản 3: ghi vào két khi đang giữ 0 khóa — gãy kiểu khác.",
+        "Bản 4: về 0 xong dâng lại 1 — cú \"check lại\" giết cả bản nháp.",
+        "Bản 1: 1 → 2 (đỉnh) → 1 → 0 — một đỉnh duy nhất: hợp lệ."
+      ],
+      "hint_explore": "Chạy lại sim Step 1: bản 2PL chuẩn vẽ đường một đỉnh, bản nhả sớm vẽ đường gãy — 4 bản nháp này chỉ là 4 biến thể của hai đường đó.",
+      "expected": "Chọn bản 1 — gom đủ 2 két rồi mới bắt đầu nhả."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Đừng đọc ngữ nghĩa vội — vẽ ĐƯỜNG KHÓA: lock = +1, unlock = −1. Đường 2PL hợp lệ trông thế nào?"
+      },
+      {
+        "level": 2,
+        "text": "Một đỉnh duy nhất: dâng hết cỡ rồi chỉ đi xuống. Bản nào có đoạn HẠ rồi DÂNG lại?"
+      },
+      {
+        "level": 3,
+        "text": "Bản 3 không dâng lại — nhưng nó GHI vào két lúc đang giữ 0 khóa. Locking protocol cho phép không?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: bản 1 — lock CHÍNH, lock QC (📍), làm việc, nhả dần. Chính là T3 trong sách."
+      }
+    ],
+    "success_message": "TICKET #54 ĐÓNG — luật 2 pha đã treo trên quầy lock manager! 📈📉 Một hồ sơ kỹ thuật đang chờ bên dưới: STRICT vs RIGOROUS — giữ khóa đến commit thì mua thêm được gì (gợi ý: chặn sập dây chuyền). Nhưng đọc xong nhớ quay lại chuyện sách bỏ lửng: T3 ôm két B xin két A, T4 ôm két A xin két B — cả hai ĐỨNG HÌNH. Bài sau: DEADLOCK, và tấm bản đồ wait-for graph soi ra kẻ phải chết. ⛓️",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_strict_rigorous"
+  ]
+}

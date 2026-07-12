@@ -38,3 +38,39 @@ QODER.md
 # MCP configs
 .mcp.json
 .opencode.json
+# 2026-07-04 (Mavis P0#1): dev artifacts — không cho vào repo
+*.log
+__applog.txt
+__*.json
+_*.json
+__backup/
+__*.js
+probe_*.mjs
+probe_*.py
+debug_*.py
+debug_*.mjs
+dev_artifacts/
+tmp/
+docs/repomix-output*.txt
+
+# 2026-07-04 (Mavis v4 P1#2): artifacts session ở ROOT — log app/test/scratch của các vòng audit
+# (anchor "/" = chỉ root, không đụng file cùng tên trong static/, docs/…)
+/_*.txt
+/_*.err
+/_*.js
+/app_test_start.err
+/check_css*.py
+/css_*.mjs
+/build_mock.mjs
+/swap_queryline.py
+/test_*.py
+/test_parseWhereRows.js
+/node_check.mjs
+/smoke_*.mjs
+/take_screenshots.mjs
+/trim_banners.py
+/grapuco_arch*.json
+/playwright_args.json
+/pw_args.json
+/logs/
+/test_args/

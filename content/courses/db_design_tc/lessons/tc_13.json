@@ -1,0 +1,374 @@
+{
+  "id": "tc_13",
+  "index": 13,
+  "title": "Buffer Manager — trí nhớ ngắn hạn của database",
+  "subtitle": "Trang nóng ở lại RAM: hit thì miễn phí, miss mới xuống đĩa, chật thì LRU đuổi",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 18,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "buffer_state",
+      "columns": [
+        "khung",
+        "trang",
+        "lần_dùng_cuối"
+      ],
+      "dataRows": [
+        [
+          "F1",
+          "P7 (post 501 viral)",
+          "vừa xong"
+        ],
+        [
+          "F2",
+          "P2 (feed trang đầu)",
+          "5 phút trước"
+        ],
+        [
+          "F3",
+          "P9 (hồ sơ cũ)",
+          "30 phút trước"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #33",
+    "hook": "Post \"GuildBoard sập\" (Ticket #24) lại viral — <strong>10.000 lượt mở mỗi phút</strong>. Không lẽ đĩa bị chạm 10.000 lần cho CÙNG MỘT trang dữ liệu? May là không: Postgres giữ các trang nóng trong <em>buffer</em> trên RAM — lần mở đầu tốn một chuyến đĩa, 9.999 lần sau lấy thẳng từ RAM. Ticket #33: vận hành trí nhớ ngắn hạn ấy — hit, miss, và luật đuổi khách LRU khi buffer chật."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Buffer = dàn khung (frame) trên RAM giữ bản sao các trang đĩa đang nóng",
+        "HIT: trang cần đã ở buffer → miễn phí chuyến đĩa · MISS: phải xuống đĩa khiêng lên",
+        "Buffer chật → đuổi trang theo LRU: trang LÂU-KHÔNG-DÙNG-NHẤT ra đi"
+      ],
+      "intro": "Mọi trang dữ liệu muốn được đọc đều phải qua RAM (Ticket #31) — buffer manager tận dụng luôn: <strong>đã khiêng lên thì giữ lại</strong>. Trang post viral nằm lì trong buffer, 10.000 request chỉ tốn 1 chuyến đĩa. Nghệ thuật nằm ở lúc CHẬT: khung có hạn, nạp trang mới là phải đuổi trang cũ. Đuổi ai? <strong>LRU</strong> — Least Recently Used: kẻ lâu không được hỏi thăm nhất, với niềm tin \"quá khứ gần dự báo tương lai gần\".",
+      "example": "buffer_state bên cạnh: 3 khung F1-F3. Request trang P2 → HIT (đang ở F2). Request P4 → MISS + buffer đầy → đuổi P9 (30 phút không ai đụng)."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-memory",
+        "title": "Hit ratio — chỉ số ăn tiền nhất",
+        "body": "Tỷ lệ request được phục vụ ngay từ buffer gọi là <strong>hit ratio</strong>. 99% hit nghĩa là 100 request chỉ 1 chuyến đĩa. Câu thần chú \"thêm RAM cho database\" thực chất là: buffer to hơn → giữ được nhiều trang nóng hơn → hit ratio tăng.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 13 — Data Storage Structures / Buffer Manager"
+      },
+      {
+        "icon": "fa-door-open",
+        "title": "LRU — luật đuổi khách",
+        "body": "Chật chỗ thì đuổi trang <strong>lâu-không-dùng-nhất</strong> — vì trang vừa được đọc nhiều khả năng sắp được đọc lại (locality). Chú ý bẫy ngược: một cú full-scan bảng khổng lồ có thể \"xả lũ\" đuổi sạch trang nóng — nên Postgres dùng ring buffer riêng cho scan lớn."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Vì sao trang đầu feed lúc nào cũng mở nhanh còn hồ sơ cũ 2 năm thì khựng một nhịp? Trang feed được cả nghìn người giữ NÓNG hộ nhau trong buffer; hồ sơ cũ là MISS gần như chắc chắn — một chuyến đĩa trọn gói seek + rotate + transfer (Ticket #32)."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "buffer_state",
+        "columns": [
+          {
+            "name": "khung",
+            "type": "TEXT",
+            "key": "frame",
+            "icon": "🖼️"
+          },
+          {
+            "name": "trang",
+            "type": "TEXT",
+            "key": "page",
+            "icon": "📄"
+          },
+          {
+            "name": "lần_dùng_cuối",
+            "type": "TEXT",
+            "key": "LRU",
+            "icon": "🕐"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "F1",
+          "P7 (post 501 viral)",
+          "vừa xong"
+        ],
+        [
+          "F2",
+          "P2 (feed trang đầu)",
+          "5 phút trước"
+        ],
+        [
+          "F3",
+          "P9 (hồ sơ cũ)",
+          "30 phút trước"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "10.000 lượt mở post 501 trong một phút — đĩa bị chạm bao nhiêu lần (buffer đủ chỗ)?",
+        "options": [
+          {
+            "id": "a",
+            "text": "~1 lần: chuyến MISS đầu tiên khiêng trang lên; 9.999 lượt sau là HIT ngay trên RAM",
+            "correct": true,
+            "explanation": "Đúng — đó là toàn bộ phép màu của buffer: trả tiền đĩa một lần, dùng cả phút."
+          },
+          {
+            "id": "b",
+            "text": "10.000 lần — mỗi request một chuyến đĩa",
+            "correct": false,
+            "explanation": "Sai — thế thì đĩa cháy thật; buffer tồn tại để chặn đúng thảm họa này."
+          },
+          {
+            "id": "c",
+            "text": "0 lần — dữ liệu viral tự động sinh ra trong RAM",
+            "correct": false,
+            "explanation": "Sai — bản gốc luôn từ đĩa (Ticket #31); lần đầu bắt buộc là một chuyến MISS."
+          },
+          {
+            "id": "d",
+            "text": "5.000 lần — buffer chỉ phục vụ được một nửa",
+            "correct": false,
+            "explanation": "Sai — một trang đã ở buffer phục vụ được mọi request tới nó, không chia phần trăm."
+          }
+        ]
+      },
+      {
+        "question": "Buffer đầy, cần nạp trang mới — LRU chọn đuổi trang nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Trang có lần-dùng-cuối XA NHẤT — đặt cược rằng ai lâu không được hỏi thăm thì sắp tới cũng không",
+            "correct": true,
+            "explanation": "Đúng — Least Recently Used: quá khứ gần dự báo tương lai gần (locality)."
+          },
+          {
+            "id": "b",
+            "text": "Trang vừa được dùng xong — vì nhu cầu của nó đã được đáp ứng",
+            "correct": false,
+            "explanation": "Sai cho tình huống này — đó là MRU. Truy cập kiểu feed thì trang vừa dùng rất hay bị dùng lại ngay (F5!) → LRU đúng; MRU chỉ tỏa sáng ở pattern quét vòng lặp lại (sách 13.5.2 — khóa NC gặp lại ở JOIN)."
+          },
+          {
+            "id": "c",
+            "text": "Trang có kích thước lớn nhất để lấy nhiều chỗ",
+            "correct": false,
+            "explanation": "Sai — các trang cùng cỡ (8KB); không có \"trang to trang nhỏ\" để chọn."
+          },
+          {
+            "id": "d",
+            "text": "Ngẫu nhiên — cho công bằng",
+            "correct": false,
+            "explanation": "Sai — random bỏ phí thông tin truy cập; LRU dùng chính lịch sử để đoán tương lai."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "HIT hay MISS?",
+      "instruction": "Với buffer_state ở Step 1 (P7 · P2 · P9 đang trong buffer), mỗi request sau là HIT hay MISS?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "k1",
+          "label": "Mở lại post 501 (trang P7) — viral, vừa đọc 1 giây trước"
+        },
+        {
+          "id": "k2",
+          "label": "Mở hồ sơ user từ 2 năm trước (trang P44, lần đầu được đụng)"
+        },
+        {
+          "id": "k3",
+          "label": "F5 trang feed (trang P2) lần thứ ba liên tiếp"
+        },
+        {
+          "id": "k4",
+          "label": "Mở trang P31 — vừa bị LRU đuổi khỏi buffer sáng nay"
+        }
+      ],
+      "bins": [
+        {
+          "id": "hit",
+          "label": "HIT — có sẵn trong buffer",
+          "correct": "hit"
+        },
+        {
+          "id": "miss",
+          "label": "MISS — phải xuống đĩa",
+          "correct": "miss"
+        }
+      ],
+      "solution": {
+        "k1": "hit",
+        "k2": "miss",
+        "k3": "hit",
+        "k4": "miss"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp quy trình buffer xử lý MỘT request trang, đúng thứ tự 4 bước. Trong khay có một luật đuổi khách giả mạo.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "MISS: xuống đĩa đọc trang — chuyến đi đắt nhất của request",
+        "slot": "buf-2"
+      },
+      {
+        "type": "op",
+        "token": "Tra buffer trước: trang đã ở RAM chưa? Có = HIT, trả ngay, miễn phí chuyến đĩa",
+        "slot": "buf-1"
+      },
+      {
+        "type": "op",
+        "token": "Nạp trang mới vào khung trống — request sau tới trang này sẽ là HIT",
+        "slot": "buf-4"
+      },
+      {
+        "type": "op",
+        "token": "Buffer đầy: đuổi trang LÂU-KHÔNG-DÙNG-NHẤT (LRU) để lấy chỗ",
+        "slot": "buf-3"
+      },
+      {
+        "type": "op",
+        "token": "Buffer đầy: đuổi trang VỪA-MỚI-DÙNG-XONG — nó được đọc rồi còn gì",
+        "slot": "buf-x"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "buf-1",
+        "placeholder": "Bước 1 — hỏi ai trước?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔍",
+          "label": "CHECK",
+          "sub": "Tra buffer",
+          "hint": "Luôn hỏi RAM trước khi làm phiền đĩa."
+        }
+      },
+      {
+        "id": "buf-2",
+        "placeholder": "Bước 2 — khi câu trả lời là \"chưa có\"",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "💸",
+          "label": "MISS",
+          "sub": "Xuống đĩa",
+          "hint": "Không có trong buffer thì đành trả tiền vé seek + rotate + transfer."
+        }
+      },
+      {
+        "id": "buf-3",
+        "placeholder": "Bước 3 — hết chỗ thì sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🚪",
+          "label": "EVICT",
+          "sub": "Đuổi khách",
+          "hint": "Chọn nạn nhân theo LỊCH SỬ truy cập — không phải theo cảm tính."
+        }
+      },
+      {
+        "id": "buf-4",
+        "placeholder": "Bước 4 — chốt hạ",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📥",
+          "label": "LOAD",
+          "sub": "Nạp & nhớ",
+          "hint": "Trang mới vào khung — và từ giờ nó phục vụ mọi request miễn phí."
+        }
+      }
+    ],
+    "expected_sql": "Tra buffer trước: trang đã ở RAM chưa? Có = HIT, trả ngay, miễn phí chuyến đĩa MISS: xuống đĩa đọc trang — chuyến đi đắt nhất của request Buffer đầy: đuổi trang LÂU-KHÔNG-DÙNG-NHẤT (LRU) để lấy chỗ Nạp trang mới vào khung trống — request sau tới trang này sẽ là HIT",
+    "expected_zones": {
+      "buf-1": "Tra buffer trước: trang đã ở RAM chưa? Có = HIT, trả ngay, miễn phí chuyến đĩa",
+      "buf-2": "MISS: xuống đĩa đọc trang — chuyến đi đắt nhất của request",
+      "buf-3": "Buffer đầy: đuổi trang LÂU-KHÔNG-DÙNG-NHẤT (LRU) để lấy chỗ",
+      "buf-4": "Nạp trang mới vào khung trống — request sau tới trang này sẽ là HIT"
+    },
+    "reveal_hints": {
+      "buf-1": "Bước rẻ nhất đi trước: <strong>tra buffer</strong> — HIT là xong việc.",
+      "buf-2": "Chưa có mới phải <strong>xuống đĩa</strong> (MISS).",
+      "buf-3": "Đuổi theo LỊCH SỬ: <strong>LRU — lâu không dùng nhất</strong>. Khối \"đuổi trang vừa dùng xong\" là MRU đặt SAI CHỖ: chiến lược đó có đất diễn thật ở pattern quét vòng lặp (sách 13.5.2), nhưng với truy cập kiểu feed thì trang vừa đọc rất hay bị đọc lại (F5!).",
+      "buf-4": "Khép vòng: <strong>nạp trang mới</strong> — lần sau nó là HIT."
+    }
+  },
+  "step_4": {
+    "prompt": "Buffer 3 khung đang giữ: P7 (vừa dùng xong) · P2 (dùng 5 phút trước) · P9 (dùng 30 phút trước). Request mới cần trang P4. Theo LRU, chuyện gì xảy ra?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "MISS → buffer đầy → đuổi P9 (lâu-không-dùng-nhất, 30 phút) → nạp P4 vào khung vừa trống.",
+        "correct": true
+      },
+      {
+        "text": "MISS → đuổi P7 — nó vừa được dùng xong nên nhu cầu đã hết.",
+        "correct": false
+      },
+      {
+        "text": "HIT — P4 chắc chắn có sẵn trong buffer vì buffer chứa mọi trang.",
+        "correct": false
+      },
+      {
+        "text": "MISS → từ chối request P4 vì buffer đã đầy — người dùng thử lại sau.",
+        "correct": false
+      }
+    ],
+    "context": {
+      "scenario": "Đây chính là quyết định buffer manager đưa ra hàng triệu lần mỗi giây trên server Community — và bạn vừa lắp đủ 4 bước của nó ở Step 3.",
+      "real_world": "shared_buffers của Postgres, buffer pool của MySQL/InnoDB, page cache của hệ điều hành — tất cả chạy vòng CHECK → MISS → EVICT(LRU-ish) → LOAD y như bạn vừa học.",
+      "steps": [
+        "P4 không có trong {P7, P2, P9} → MISS.",
+        "3 khung đều bận → phải đuổi trước khi nạp.",
+        "So lần-dùng-cuối: P7 vừa xong · P2 5 phút · P9 30 phút → P9 là LRU.",
+        "Đuổi P9, nạp P4 — và ghi lại thời điểm dùng cho vòng sau."
+      ],
+      "hint_explore": "Xem lại bảng buffer_state ở Step 1 — cột lần_dùng_cuối là toàn bộ dữ liệu LRU cần.",
+      "expected": "Chọn phương án MISS → đuổi P9 → nạp P4."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Ba câu hỏi theo thứ tự Step 3: có trong buffer không? còn khung trống không? đuổi ai?"
+      },
+      {
+        "level": 2,
+        "text": "P4 không nằm trong 3 khung → MISS chắc chắn. Loại ngay phương án HIT và phương án \"từ chối request\"."
+      },
+      {
+        "level": 3,
+        "text": "LRU nhìn lần-dùng-cuối XA NHẤT: 30 phút > 5 phút > vừa xong."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: MISS → đuổi P9 → nạp P4."
+      }
+    ],
+    "success_message": "Ticket #33 đóng! Giờ bạn hiểu vì sao \"thêm RAM\" là câu thần chú — và vì sao nó không cứu được MISS đầu tiên. Ticket #34: một user sửa bio dài gấp ba, và dòng dữ liệu… không còn vừa chỗ cũ trên trang.",
+    "xp_reward": 120
+  }
+}

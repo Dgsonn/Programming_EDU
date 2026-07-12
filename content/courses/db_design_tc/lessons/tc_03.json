@@ -1,0 +1,420 @@
+{
+  "id": "tc_03",
+  "index": 3,
+  "title": "Trigger — database tự phản ứng",
+  "subtitle": "AFTER INSERT ON likes: like_count tự nhảy, không ai phải nhớ gọi",
+  "module": 4,
+  "module_title": "Advanced SQL",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "likes",
+      "columns": [
+        "user_id",
+        "post_id",
+        "liked_at"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "501",
+          "2026-06-10"
+        ],
+        [
+          "9",
+          "501",
+          "2026-06-10"
+        ],
+        [
+          "12",
+          "501",
+          "2026-06-11"
+        ],
+        [
+          "15",
+          "507",
+          "2026-06-11"
+        ],
+        [
+          "9",
+          "507",
+          "2026-06-12"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #23",
+    "hook": "Nút ❤ vừa lên sóng, feed lập tức khựng: hiện 50 post là bắn 50 câu <code>COUNT(*)</code> đếm like. Bạn thêm cột <code>like_count</code> vào <code>posts</code> cho nhanh — nhưng backend quên cập nhật ở đúng 1 chỗ, số hiển thị vênh số thật (bóng ma dữ liệu vênh từ Ticket #03 hiện về). Ticket #23: dạy database <em>tự phản ứng</em> — like rơi vào là <code>like_count</code> tự nhảy, không ai phải nhớ gọi."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Trigger = phản xạ của database: SỰ KIỆN xảy ra → HÀNH ĐỘNG tự chạy, không ai gọi",
+        "Khai báo đủ 4 phần: tên → thời điểm + sự kiện + bảng → phạm vi → hành động",
+        "NEW = dòng vừa chèn/sửa; OLD = dòng vừa xóa/trước khi sửa"
+      ],
+      "intro": "Cột <code>like_count</code> là dữ liệu DẪN XUẤT — nó phải khớp với số dòng thật trong <code>likes</code>. Giao việc giữ khớp cho backend là giao cho trí nhớ con người. <strong>Trigger</strong> chuyển việc đó cho database: <em>\"AFTER INSERT ON likes — cứ có dòng like mới, tự cộng 1 vào đúng post\"</em>. App nào chèn like cũng vậy, kể cả admin gõ tay: phản xạ luôn chạy.",
+      "example": "<code>CREATE TRIGGER trg_like_count AFTER INSERT ON likes FOR EACH ROW EXECUTE FUNCTION bump_like_count();</code>"
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-bolt",
+        "title": "Giải phẫu một trigger",
+        "body": "Trigger là cơ chế <strong>Sự kiện → Hành động</strong>: <code>AFTER INSERT ON likes</code> (khi nào, trên bảng nào) + <code>FOR EACH ROW</code> (chạy cho TỪNG dòng bị chèn) + <code>EXECUTE FUNCTION …</code> (làm gì). Hệ thống tự kích hoạt — không lệnh nào phải gọi nó.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 5.3 — Triggers"
+      },
+      {
+        "icon": "fa-code-compare",
+        "title": "NEW và OLD — dòng nào đang nói?",
+        "body": "Trong thân trigger: <code>NEW</code> = dòng VỪA vào (INSERT/UPDATE), <code>OLD</code> = dòng VỪA mất (DELETE/UPDATE). Like mới → <code>NEW.post_id</code> cho biết post nào +1; bỏ like → <code>OLD.post_id</code> cho biết post nào −1."
+      },
+      {
+        "icon": "fa-triangle-exclamation",
+        "title": "Dao hai lưỡi (Apply)",
+        "body": "Trigger chạy <em>vô hình</em> — dev mới vào đọc code app sẽ không thấy nó. Quy tắc nghề: chỉ dùng cho việc GIỮ DỮ LIỆU KHỚP (đếm dẫn xuất, audit log), đừng giấu business logic phức tạp vào trigger — debug \"ma làm\" là ác mộng có thật."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "posts",
+        "columns": [
+          {
+            "name": "post_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "content",
+            "type": "TEXT",
+            "key": "",
+            "icon": "📝"
+          },
+          {
+            "name": "like_count",
+            "type": "INT",
+            "key": "",
+            "icon": "❤️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "501",
+          "7",
+          "Elden Ring DLC ra rồi anh em ơi!",
+          "12"
+        ],
+        [
+          "502",
+          "9",
+          "Tìm team leo rank tối nay",
+          "5"
+        ],
+        [
+          "503",
+          "7",
+          "Review tay cầm mới mua ở GameHub",
+          "8"
+        ],
+        [
+          "505",
+          "9",
+          "Setup góc chơi game 15 triệu",
+          "9"
+        ],
+        [
+          "507",
+          "7",
+          "GuildBoard sập, mọi người qua đây",
+          "15"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Ai GỌI cho trigger <code>trg_like_count</code> chạy?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Không ai — database tự kích hoạt khi sự kiện khai báo (INSERT vào likes) xảy ra, bất kể lệnh đến từ app nào",
+            "correct": true,
+            "explanation": "Đúng — đó là điểm ăn tiền: web, mobile, admin gõ tay… cứ chèn like là phản xạ chạy. Không phụ thuộc trí nhớ dev."
+          },
+          {
+            "id": "b",
+            "text": "Backend phải gọi CALL trg_like_count() sau mỗi INSERT",
+            "correct": false,
+            "explanation": "Sai — CALL là của procedure. Trigger tự chạy theo sự kiện, không gọi được trực tiếp."
+          },
+          {
+            "id": "c",
+            "text": "Một cron job quét bảng likes mỗi phút",
+            "correct": false,
+            "explanation": "Sai — cron là polling định kỳ (trễ + tốn). Trigger chạy NGAY trong giao dịch chèn like."
+          },
+          {
+            "id": "d",
+            "text": "Người dùng bấm nút ❤ trên giao diện",
+            "correct": false,
+            "explanation": "Sai — người dùng chỉ gây ra INSERT; trigger nghe sự kiện INSERT đó ở tầng database."
+          }
+        ]
+      },
+      {
+        "question": "Trong trigger <code>AFTER INSERT ON likes</code>, biến <code>NEW</code> chứa gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Dòng likes VỪA được chèn — NEW.post_id cho biết post nào vừa nhận tim",
+            "correct": true,
+            "explanation": "Đúng — NEW là chính dòng gây ra sự kiện; nhờ nó hành động biết cộng 1 vào ĐÚNG post."
+          },
+          {
+            "id": "b",
+            "text": "Dòng posts sắp được cập nhật",
+            "correct": false,
+            "explanation": "Sai — NEW thuộc về bảng gắn trigger (likes); posts chỉ bị đụng tới trong THÂN hành động."
+          },
+          {
+            "id": "c",
+            "text": "Toàn bộ bảng likes sau khi chèn",
+            "correct": false,
+            "explanation": "Sai — FOR EACH ROW chạy từng dòng; NEW là đúng 1 dòng vừa chèn, không phải cả bảng."
+          },
+          {
+            "id": "d",
+            "text": "Dòng cũ trước khi bị sửa",
+            "correct": false,
+            "explanation": "Sai — đó là OLD (của UPDATE/DELETE). INSERT không có dòng cũ."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Tìm lỗi trong thân trigger",
+      "instruction": "Trigger dưới đây làm feed loạn tim: MỌI post đều +1 khi bất kỳ ai like bất kỳ post nào. Click vào DÒNG có lỗi.",
+      "xp": 25,
+      "code": "CREATE FUNCTION bump_like_count() RETURNS trigger AS $$\nBEGIN\n  UPDATE posts\n     SET like_count = like_count + 1;\n  RETURN NEW;\nEND; $$ LANGUAGE plpgsql;",
+      "bugType": "logic",
+      "bugs": [
+        {
+          "line": 4,
+          "description": "UPDATE không có WHERE — cộng 1 vào like_count của TẤT CẢ posts. Phải khoanh đúng post vừa nhận tim: SET like_count = like_count + 1 WHERE post_id = NEW.post_id;"
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "mission": "Khai báo VỎ trigger đếm tim: tên → sự kiện → phạm vi → hành động. Trong khay có 2 khối mồi nhử — chọn cho đúng.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "CREATE TRIGGER trg_like_count",
+        "slot": "trig-name"
+      },
+      {
+        "type": "op",
+        "token": "AFTER UPDATE ON posts",
+        "slot": "trig-event-x"
+      },
+      {
+        "type": "op",
+        "token": "AFTER INSERT ON likes",
+        "slot": "trig-event"
+      },
+      {
+        "type": "op",
+        "token": "FOR EACH STATEMENT",
+        "slot": "trig-scope-x"
+      },
+      {
+        "type": "op",
+        "token": "FOR EACH ROW",
+        "slot": "trig-scope"
+      },
+      {
+        "type": "kw",
+        "token": "EXECUTE FUNCTION bump_like_count();",
+        "slot": "trig-action"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "trig-name",
+        "placeholder": "CREATE TRIGGER ____",
+        "accepts": [
+          "kw"
+        ],
+        "acceptedKeywords": [
+          "CREATE"
+        ],
+        "multi": false
+      },
+      {
+        "id": "trig-event",
+        "placeholder": "thời điểm + sự kiện + bảng nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "trig-scope",
+        "placeholder": "chạy cho từng dòng hay cả lệnh?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "trig-action",
+        "placeholder": "EXECUTE ____",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      }
+    ],
+    "expected_sql": "CREATE TRIGGER trg_like_count AFTER INSERT ON likes FOR EACH ROW EXECUTE FUNCTION bump_like_count();",
+    "expected_zones": {
+      "trig-name": "CREATE TRIGGER trg_like_count",
+      "trig-event": "AFTER INSERT ON likes",
+      "trig-scope": "FOR EACH ROW",
+      "trig-action": "EXECUTE FUNCTION bump_like_count();"
+    },
+    "reveal_hints": {
+      "trig-name": "Khai tên trước: <strong>CREATE TRIGGER trg_like_count</strong>.",
+      "trig-event": "Sự kiện gốc là LIKE MỚI rơi vào bảng <code>likes</code> — không phải sửa trên <code>posts</code> (đó là hệ quả, không phải nguyên nhân).",
+      "trig-scope": "Chèn 10 like = cộng 10 lần riêng biệt → <strong>FOR EACH ROW</strong>. STATEMENT chỉ chạy 1 lần cho cả lệnh.",
+      "trig-action": "Việc cần làm nằm trong hàm: <strong>EXECUTE FUNCTION bump_like_count();</strong>"
+    }
+  },
+  "step_4": {
+    "prompt": "Step 3 là VỎ — giờ viết RUỘT. Hai thân UPDATE cho hai phản xạ: <strong>like</strong> (sau INSERT — dùng <code>NEW</code>, +1) và <strong>bỏ like</strong> (sau DELETE — dùng <code>OLD</code>, −1). Viết CẢ HAI câu, mỗi câu kết thúc bằng <code>;</code>",
+    "starter": "-- Ruot trigger 1: sau INSERT INTO likes -> cong 1 cho DUNG post (dong vua chen = NEW)\n\n-- Ruot trigger 2: sau DELETE FROM likes -> tru 1 cho DUNG post (dong vua xoa = OLD)\n",
+    "schema": {
+      "table_name": "posts",
+      "columns": [
+        {
+          "name": "post_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "key": ""
+        },
+        {
+          "name": "like_count",
+          "type": "INT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "501",
+          "7",
+          "Elden Ring DLC ra rồi anh em ơi!",
+          "12"
+        ],
+        [
+          "502",
+          "9",
+          "Tìm team leo rank tối nay",
+          "5"
+        ],
+        [
+          "503",
+          "7",
+          "Review tay cầm mới mua ở GameHub",
+          "8"
+        ],
+        [
+          "504",
+          "12",
+          "Ai cày Hades 2 điểm danh",
+          "2"
+        ],
+        [
+          "505",
+          "9",
+          "Setup góc chơi game 15 triệu",
+          "9"
+        ],
+        [
+          "506",
+          "15",
+          "Mẹo farm rune nhanh gấp đôi",
+          "7"
+        ],
+        [
+          "507",
+          "7",
+          "GuildBoard sập, mọi người qua đây",
+          "15"
+        ],
+        [
+          "508",
+          "9",
+          "Top 5 game indie tháng này",
+          "4"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT post_id, content, like_count FROM posts ORDER BY like_count DESC;",
+    "context": {
+      "scenario": "Hai trigger <code>AFTER INSERT ON likes</code> và <code>AFTER DELETE ON likes</code> cùng trỏ vào hai hàm — bạn viết chính hai câu UPDATE nằm trong ruột hai hàm đó. Cộng thì theo dòng VỪA CHÈN, trừ thì theo dòng VỪA XÓA.",
+      "real_world": "Số tim trên mọi mạng xã hội lớn là <strong>counter dẫn xuất</strong> được duy trì đúng kiểu này (trigger hoặc job tương đương) — không hệ nào dám COUNT(*) bảng likes hàng tỷ dòng mỗi lần render feed.",
+      "steps": [
+        "Phản xạ like: <code>UPDATE posts SET like_count = like_count + 1</code>…",
+        "…nhưng chỉ cho ĐÚNG post vừa nhận tim: <code>WHERE post_id = NEW.post_id;</code>",
+        "Phản xạ bỏ like: như trên nhưng <code>− 1</code> và dòng vừa xóa là <code>OLD.post_id</code>.",
+        "Đối chiếu bug_spot ở Step 2: thiếu WHERE là loạn cả feed."
+      ],
+      "hint_explore": "Xem trạng thái tim hiện tại: <code>SELECT post_id, content, like_count FROM posts</code> rồi Run.",
+      "expected": "Bảng posts xếp theo tim giảm dần — post 507 (GuildBoard sập) đang dẫn đầu với 15 tim. Hai câu UPDATE của bạn chính là thứ giữ cột này luôn ĐÚNG."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần 2 câu <code>UPDATE posts SET like_count = …</code> — một câu +1, một câu −1. Mỗi câu phải có WHERE khoanh đúng post."
+      },
+      {
+        "level": 2,
+        "text": "Trigger INSERT nhìn thấy dòng like vừa chèn qua <code>NEW</code> → <code>WHERE post_id = NEW.post_id</code>."
+      },
+      {
+        "level": 3,
+        "text": "Trigger DELETE không có NEW — dòng vừa biến mất nằm trong <code>OLD</code> → <code>WHERE post_id = OLD.post_id</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">UPDATE posts SET like_count = like_count + 1 WHERE post_id = NEW.post_id;<br>UPDATE posts SET like_count = like_count - 1 WHERE post_id = OLD.post_id;</code>"
+      }
+    ],
+    "expected_sql": "UPDATE posts SET like_count = like_count + 1 WHERE post_id = NEW.post_id; UPDATE posts SET like_count = like_count - 1 WHERE post_id = OLD.post_id;",
+    "success_message": "Ticket #23 đóng! Feed hiện tim tức thì, số không bao giờ vênh — và không dev nào phải \"nhớ\" gì cả. Ticket #24: một cuộc khẩu chiến 3 tầng reply đang chờ bạn gom về đủ bộ.",
+    "xp_reward": 120
+  }
+}

@@ -1,0 +1,432 @@
+{
+  "id": "tc_19",
+  "index": 19,
+  "title": "Composite & Bitmap — mục lục hai lớp và mục lục bàn cờ",
+  "subtitle": "Danh bạ xếp Họ-rồi-Tên: đủ prefix thì trúng dải — và bitmap cho cột lèo tèo giá trị",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "idx (user_id, action_type) — trang danh bạ đã xếp",
+      "columns": [
+        "user_id",
+        "action_type",
+        "RID"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "comment",
+          "(p3, 1)"
+        ],
+        [
+          "7",
+          "like",
+          "(p1, 1) ← cụm \"7·like\""
+        ],
+        [
+          "7",
+          "like",
+          "(p2, 2) ← nằm LIỀN nhau"
+        ],
+        [
+          "9",
+          "comment",
+          "(p1, 2)"
+        ],
+        [
+          "9",
+          "like",
+          "(p2, 1)"
+        ],
+        [
+          "12",
+          "post",
+          "(p2, 3)"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #39",
+    "hook": "Trang \"hoạt động của tôi\" lọc HAI điều kiện: <code>WHERE user_id = ? AND action_type = ?</code>. Index đơn trên user_id vẫn phải bới tiếp trong cả nghìn hành động của user đó. Ticket #39: <strong>composite index</strong> — danh bạ xếp <em>Họ trước, Tên sau</em>: mọi mục \"user 7 · like\" nằm LIỀN thành một dải. Nhưng danh bạ có luật sắt: <strong>thiếu Họ thì đừng mơ tra Tên</strong> (leftmost prefix). Khuyến mãi cuối: kho analytics có vũ khí riêng cho cột lèo tèo giá trị — <em>bitmap index</em>."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Composite index (a, b): xếp theo a trước, cùng a xếp tiếp theo b — cụm (a,b) nằm liền dải",
+        "Luật leftmost prefix: tra được (a) và (a,b); tra riêng (b) là mù — như tra Tên mà không biết Họ",
+        "Bitmap index: mỗi giá trị một dãy bit — chỉ đáng cho cột ÍT giá trị, kho đọc-nhiều-ghi-ít"
+      ],
+      "intro": "Danh bạ điện thoại xếp Họ trước, Tên sau: mọi người họ Nguyễn đứng cạnh nhau, trong đó Nguyễn An đứng trước Nguyễn Bình. Composite index <code>(user_id, action_type)</code> y hệt: cây B+ vẫn là cây B+ (Ticket #38), chỉ khác KHÓA là cặp ghép. Tra \"user 7 AND like\": lần cây tới thẳng cụm <code>7·like</code> — cả dải cần lấy nằm liền nhau. Tra \"user 7\" thôi cũng ngon: cả khối họ-7 đứng cạnh nhau. Nhưng tra \"mọi like của mọi người\"? Cụm like RẢI theo từng user khắp danh bạ — index bó tay, quét sổ. Muốn tra Tên không cần Họ thì phải xây danh bạ khác xếp (action_type, user_id) — và trả thêm một món nợ ghi.",
+      "example": "User 7 có 1.200 hành động, trong đó 300 like: index đơn user_id → đọc 1.200 mục rồi lọc · composite (user_id, action_type) → nhảy thẳng dải 300 mục. Càng lọc sâu, composite càng thắng đậm."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-address-book",
+        "title": "Leftmost prefix — luật sắt của danh bạ",
+        "body": "Index (a, b) phục vụ được: WHERE a = ? · WHERE a = ? AND b = ? · thậm chí a = ? AND b > ?. KHÔNG phục vụ được: WHERE chỉ có b. Thứ tự cột trong CREATE INDEX vì thế là quyết định thiết kế — cột nào query nào cũng lọc, cột đó đứng đầu.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — Indices on Multiple Keys"
+      },
+      {
+        "icon": "fa-chess-board",
+        "title": "Bitmap — mục lục bàn cờ của kho",
+        "body": "Cột action_type chỉ có 3-4 giá trị? Mỗi giá trị một dãy bit dài bằng số dòng: like = 10110100… AND/OR hai điều kiện = phép bit trên triệu dòng trong nháy mắt. Đổi lại, UPDATE một dòng phải sửa cả dãy bit — nên bitmap sống ở KHO analytics (Ticket #35), không sống nổi ở feed OLTP."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "GameHub: trang \"hoạt động của tôi\" → composite (user_id, action_type) cho fact_post_action. Dashboard kho lọc action_type + date_id (cả hai đều lèo tèo giá trị) → cặp bitmap, AND bit là xong. Chọn vũ khí theo TRẬN ĐỊA — bài học không bao giờ cũ."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "hai vũ khí đặc chủng",
+        "columns": [
+          {
+            "name": "composite",
+            "type": "(user_id, action_type)",
+            "key": "📇",
+            "icon": "🌳"
+          },
+          {
+            "name": "bitmap",
+            "type": "action_type ∈ {like,comment,post}",
+            "key": "♟",
+            "icon": "📊"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "7·comment → RID",
+          "like:    1 0 1 0 1 1 0 0"
+        ],
+        [
+          "7·like ×2 → RID (liền dải 🎯)",
+          "comment: 0 1 0 0 0 0 1 0"
+        ],
+        [
+          "9·comment → RID",
+          "post:    0 0 0 1 0 0 0 1"
+        ],
+        [
+          "thiếu Họ = mù (leftmost!)",
+          "AND/OR bit = triệu dòng/nháy mắt"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Composite (user_id, action_type) — vì sao tra \"mọi <code>action_type = 'like'</code> của MỌI user\" lại KHÔNG dùng được nó?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Danh bạ xếp Họ trước — cụm \"like\" bị rải theo từng user khắp danh bạ, không nằm liền dải nào để nhảy tới",
+            "correct": true,
+            "explanation": "Đúng — luật leftmost prefix: thiếu cột ĐẦU là mù. Muốn tra riêng action_type phải có index khác đặt nó lên đầu."
+          },
+          {
+            "id": "b",
+            "text": "Vì composite chỉ dùng được khi WHERE có đủ CẢ HAI cột",
+            "correct": false,
+            "explanation": "Sai — WHERE user_id = 7 (thiếu cột SAU) vẫn ngon: cả khối họ-7 nằm liền. Chỉ thiếu cột ĐẦU mới chết."
+          },
+          {
+            "id": "c",
+            "text": "Vì like là giá trị chữ, composite chỉ nhận số",
+            "correct": false,
+            "explanation": "Sai — kiểu dữ liệu không liên quan; vị trí cột trong khóa ghép mới quyết định."
+          },
+          {
+            "id": "d",
+            "text": "Dùng được bình thường — index nào cũng tra được mọi cột của nó",
+            "correct": false,
+            "explanation": "Sai — thử tra danh bạ tìm mọi người tên \"An\" mà không biết họ xem: lật từng trang."
+          }
+        ]
+      },
+      {
+        "question": "Bitmap index đáng dùng cho cột nào — và tại sao nó sống ở KHO chứ không sống nổi ở feed?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cột ÍT giá trị khác nhau (action_type 3-4 loại): mỗi giá trị 1 dãy bit, AND/OR cực nhanh — nhưng mỗi UPDATE phải sửa dãy bit nên chỉ hợp kho đọc-nhiều-ghi-ít",
+            "correct": true,
+            "explanation": "Đúng — low cardinality + workload OLAP là môi trường sống của bitmap."
+          },
+          {
+            "id": "b",
+            "text": "Cột duy-nhất-từng-dòng như email — càng nhiều giá trị bitmap càng lợi",
+            "correct": false,
+            "explanation": "Sai — 2 triệu email = 2 triệu dãy bit × 2 triệu dòng: thảm họa. Ngược hẳn môi trường sống của bitmap."
+          },
+          {
+            "id": "c",
+            "text": "Mọi cột — bitmap là phiên bản nâng cấp của B+-Tree",
+            "correct": false,
+            "explanation": "Sai — hai vũ khí khác trận địa, không ai \"nâng cấp\" ai."
+          },
+          {
+            "id": "d",
+            "text": "Cột kiểu ngày tháng, vì bit xếp theo thời gian",
+            "correct": false,
+            "explanation": "Sai — ngày tháng thường nhiều giá trị; tiêu chí là SỐ GIÁ TRỊ KHÁC NHAU ít."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Composite (user_id, action_type) cứu query nào?",
+      "instruction": "Kéo từng WHERE vào đúng giỏ — nhớ luật danh bạ: có Họ mới tra được.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "w1",
+          "label": "WHERE user_id = 7 AND action_type = 'like'"
+        },
+        {
+          "id": "w2",
+          "label": "WHERE user_id = 7 (chỉ Họ)"
+        },
+        {
+          "id": "w3",
+          "label": "WHERE action_type = 'like' (chỉ Tên)"
+        },
+        {
+          "id": "w4",
+          "label": "WHERE act_count > 3 (cột ngoài danh bạ)"
+        }
+      ],
+      "bins": [
+        {
+          "id": "hit",
+          "label": "TRÚNG DẢI 🎯"
+        },
+        {
+          "id": "miss",
+          "label": "BÓ TAY 🚫"
+        }
+      ],
+      "solution": {
+        "w1": "hit",
+        "w2": "hit",
+        "w3": "miss",
+        "w4": "miss"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp bức tranh composite (user_id, action_type): danh bạ xếp thế nào, query nào trúng dải, query nào trượt. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "WHERE action_type = 'like' (thiếu Họ): cụm like rải theo từng user khắp danh bạ → quét sổ",
+        "slot": "cp-miss"
+      },
+      {
+        "type": "op",
+        "token": "Danh bạ xếp: 7·comment, 7·like, 7·like, 9·comment, 9·like… — cùng Họ đứng cạnh, trong Họ xếp theo Tên",
+        "slot": "cp-order"
+      },
+      {
+        "type": "op",
+        "token": "Thấy query cần thì index tự đảo thành (action_type, user_id) — danh bạ biết tự xoay",
+        "slot": "cp-x"
+      },
+      {
+        "type": "op",
+        "token": "WHERE user_id = 7 AND action_type = 'like': lần cây tới thẳng cụm 7·like — cả dải nằm liền",
+        "slot": "cp-hit"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "cp-order",
+        "placeholder": "Trang danh bạ — xếp kiểu gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📇",
+          "label": "Danh bạ",
+          "sub": "Họ rồi Tên",
+          "hint": "Khóa ghép: so cột đầu trước, hòa thì so cột sau — như xếp tên người."
+        }
+      },
+      {
+        "id": "cp-hit",
+        "placeholder": "Query TRÚNG dải",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Trúng dải",
+          "sub": "Đủ prefix",
+          "hint": "Đủ Họ (+ Tên càng tốt) → nhảy thẳng cụm liền mạch."
+        }
+      },
+      {
+        "id": "cp-miss",
+        "placeholder": "Query TRƯỢT prefix",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🚫",
+          "label": "Trượt prefix",
+          "sub": "Thiếu cột đầu",
+          "hint": "Thiếu Họ → giá trị cần tìm rải khắp nơi, không có dải nào để nhảy."
+        }
+      }
+    ],
+    "expected_sql": "Danh bạ xếp: 7·comment, 7·like, 7·like, 9·comment, 9·like… — cùng Họ đứng cạnh, trong Họ xếp theo Tên WHERE user_id = 7 AND action_type = 'like': lần cây tới thẳng cụm 7·like — cả dải nằm liền WHERE action_type = 'like' (thiếu Họ): cụm like rải theo từng user khắp danh bạ → quét sổ",
+    "expected_zones": {
+      "cp-order": "Danh bạ xếp: 7·comment, 7·like, 7·like, 9·comment, 9·like… — cùng Họ đứng cạnh, trong Họ xếp theo Tên",
+      "cp-hit": "WHERE user_id = 7 AND action_type = 'like': lần cây tới thẳng cụm 7·like — cả dải nằm liền",
+      "cp-miss": "WHERE action_type = 'like' (thiếu Họ): cụm like rải theo từng user khắp danh bạ → quét sổ"
+    },
+    "reveal_hints": {
+      "cp-order": "Danh bạ = <strong>so cột đầu trước, hòa mới so cột sau</strong>. Khối \"index tự đảo\" là bịa — thứ tự khóa chốt từ lúc CREATE, muốn chiều ngược phải xây danh bạ khác.",
+      "cp-hit": "Đủ prefix (Họ, hoặc Họ+Tên) = <strong>nhảy thẳng vào dải liền mạch</strong>.",
+      "cp-miss": "Thiếu cột đầu = <strong>giá trị rải khắp danh bạ</strong> — trở về kiếp quét sổ."
+    }
+  },
+  "step_4": {
+    "prompt": "Đóng Ticket #39: tạo composite index cho trang \"hoạt động của tôi\" — bảng <code>fact_post_action</code>, lọc theo <code>user_id</code> rồi <code>action_type</code> (đúng thứ tự đó!). Tên index: <code>idx_act_user_type</code>.",
+    "schema": {
+      "table_name": "fact_post_action",
+      "columns": [
+        {
+          "name": "action_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "🔑 Họ"
+        },
+        {
+          "name": "date_id",
+          "type": "CHAR(2)",
+          "key": ""
+        },
+        {
+          "name": "action_type",
+          "type": "VARCHAR",
+          "key": "🔑 Tên"
+        },
+        {
+          "name": "act_count",
+          "type": "INT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "1",
+          "7",
+          "D1",
+          "like",
+          "3"
+        ],
+        [
+          "2",
+          "9",
+          "D1",
+          "comment",
+          "2"
+        ],
+        [
+          "3",
+          "7",
+          "D2",
+          "like",
+          "5"
+        ],
+        [
+          "4",
+          "12",
+          "D2",
+          "post",
+          "1"
+        ],
+        [
+          "5",
+          "9",
+          "D2",
+          "like",
+          "4"
+        ],
+        [
+          "6",
+          "15",
+          "D3",
+          "like",
+          "2"
+        ],
+        [
+          "7",
+          "7",
+          "D3",
+          "comment",
+          "1"
+        ],
+        [
+          "8",
+          "9",
+          "D3",
+          "post",
+          "1"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT date_id, act_count FROM fact_post_action WHERE user_id = 7 AND action_type = 'like';",
+    "context": {
+      "scenario": "Thứ tự cột trong ngoặc chính là bài học của cả ticket: user_id đứng đầu (query nào của trang này cũng lọc user), action_type đứng sau. Viết ngược là danh bạ xếp Tên-trước-Họ — trang \"hoạt động của tôi\" trượt prefix ngay.",
+      "real_world": "Chọn thứ tự cột composite là câu hỏi phỏng vấn backend kinh điển. Quy tắc thực chiến: cột lọc-bằng (=) ở mọi query đứng trước, cột lọc-khoảng hoặc lọc-tùy-lúc đứng sau.",
+      "steps": [
+        "Cú pháp không đổi: <code>CREATE INDEX tên ON bảng(cột1, cột2);</code>",
+        "Tên: <code>idx_act_user_type</code>.",
+        "Thứ tự trong ngoặc: <code>(user_id, action_type)</code> — Họ trước, Tên sau.",
+        "Khung kết quả minh họa dải \"7·like\" — engine demo không chạy DDL, đáp án chấm khi Run/Submit."
+      ],
+      "hint_explore": "Nhìn lại bảng danh bạ ở Step 3: cụm \"7·like\" nằm liền là NHỜ user_id đứng trước. Lệnh của bạn quyết định điều đó.",
+      "expected": "Khung kết quả minh họa: 2 dòng dải 7·like (D1·3, D2·5)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Giống Ticket #36 nhưng trong ngoặc có HAI cột, cách nhau dấu phẩy."
+      },
+      {
+        "level": 2,
+        "text": "Tên index: <code>idx_act_user_type</code>, bảng <code>fact_post_action</code>."
+      },
+      {
+        "level": 3,
+        "text": "Thứ tự cột là linh hồn bài này: Họ = <code>user_id</code> đứng TRƯỚC, Tên = <code>action_type</code> đứng sau."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">CREATE INDEX idx_act_user_type ON fact_post_action(user_id, action_type);</code>"
+      }
+    ],
+    "expected_sql": "CREATE INDEX idx_act_user_type ON fact_post_action(user_id, action_type);",
+    "success_message": "Ticket #39 đóng — trang \"hoạt động của tôi\" mượt như bơ! Nhưng Ticket #40 mở ra với dòng chữ lạnh gáy: \"dashboard VẪN 6 giây — index có mà như không\". Đến lúc bắt máy tự khai: EXPLAIN.",
+    "xp_reward": 120
+  }
+}

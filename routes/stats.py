@@ -19,8 +19,10 @@ def parse_time_spent(value) -> float:
         return 0.0
     if result < 0:
         return 0.0
-    if result > 24:
-        return 24.0
+    # Sanity clamp: time_spent là TỔNG giờ học của cả khóa (sum estimated_minutes
+    # các bài đã hoàn thành) — khóa dài nhất ~60h, 500h là chặn dữ liệu rác.
+    if result > 500:
+        return 500.0
     return result
 
 

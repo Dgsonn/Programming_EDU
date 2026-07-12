@@ -1,0 +1,991 @@
+{
+  "id": "db_06",
+  "index": 7,
+  "title": "Mapping ER → Bảng quan hệ",
+  "subtitle": "Quy tắc ánh xạ Entity Set, Relationship, Multi-valued sang bảng vật lý",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 22,
+  "xp_reward": 65,
+  "project_piece": "🗺️ Mở khóa \"Bản đồ dịch ER → Bảng\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #07 — ticket cuối trước release",
+    "hook": "Sáu ticket đã đóng — GameHub giờ có <strong>cả một hệ bảng</strong>: danh mục, hồ sơ, nhà phát hành, cầu nối sở hữu, kệ DLC. Sếp đặt lên bàn ticket cuối cùng: <em>\"Vẽ cho tôi bản thiết kế tổng — để team backend dựng database thật.\"</em> Mọi hình vẽ ER phải <strong>dịch được thành bảng vật lý</strong> theo đúng 7 quy tắc kinh điển. Đóng ticket này… là <strong>GameHub v1.0 sẵn sàng ra mắt</strong>. 🚀"
+  },
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "game_mapping_demo",
+      "columns": [
+        "game_id",
+        "title",
+        "pub_id",
+        "genre"
+      ],
+      "dataRows": [
+        [
+          "101",
+          "Elden Ring",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "102",
+          "God of War",
+          "20",
+          "Action"
+        ],
+        [
+          "103",
+          "Hades",
+          "30",
+          "Roguelike"
+        ],
+        [
+          "104",
+          "Stardew Valley",
+          "40",
+          "Cozy"
+        ],
+        [
+          "105",
+          "Bastion",
+          "30",
+          "Action-RPG"
+        ],
+        [
+          "106",
+          "Transistor",
+          "30",
+          "Action-RPG"
+        ],
+        [
+          "107",
+          "Pyre",
+          "30",
+          "RPG"
+        ],
+        [
+          "108",
+          "Hades II",
+          "30",
+          "Roguelike"
+        ],
+        [
+          "109",
+          "Dark Souls III",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "110",
+          "Sekiro",
+          "10",
+          "Action"
+        ],
+        [
+          "111",
+          "Bloodborne",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "112",
+          "God of War Ragnarok",
+          "20",
+          "Action"
+        ],
+        [
+          "113",
+          "The Last of Us",
+          "20",
+          "Action"
+        ],
+        [
+          "114",
+          "The Witcher 3",
+          "60",
+          "RPG"
+        ],
+        [
+          "115",
+          "Cyberpunk 2077",
+          "60",
+          "RPG"
+        ],
+        [
+          "116",
+          "Animal Crossing",
+          "50",
+          "Cozy"
+        ],
+        [
+          "117",
+          "Splatoon 3",
+          "50",
+          "Shooter"
+        ],
+        [
+          "118",
+          "Zelda: TOTK",
+          "50",
+          "Adventure"
+        ],
+        [
+          "119",
+          "Stardew Multiplayer",
+          "40",
+          "Cozy"
+        ],
+        [
+          "120",
+          "Mario Odyssey",
+          "50",
+          "Platformer"
+        ],
+        [
+          "121",
+          "Demon Souls",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "122",
+          "Returnal",
+          "20",
+          "Roguelike"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Dịch giả ER",
+    "desc": "ánh xạ ER sang bảng"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Mỗi Entity Set → 1 bảng quan hệ",
+        "Mỗi Attribute đơn → 1 cột trong bảng",
+        "Quan hệ 1:N đặt FK ở phía N; M:N tạo Junction Table; Weak Entity dùng composite PK"
+      ],
+      "intro": "Có ER Diagram đẹp đẽ nhưng DB không hiểu hình vẽ — phải <strong>ánh xạ (mapping)</strong> sang bảng vật lý. Silberschatz định nghĩa 7 quy tắc mapping trong Ch 6.7: <em>Mỗi entity set mạnh → 1 bảng; mỗi weak entity set → 1 bảng với PK tổng hợp; mỗi 1:1 → FK ở 1 bên; 1:N → FK ở phía N; M:N → junction table riêng; multi-valued attribute → bảng riêng.</em>",
+      "example": "ER có <code>Game</code> (entity mạnh) + <code>Publisher</code> (entity mạnh) + quan hệ <em>publishes</em> (1:N — 1 publisher xuất bản nhiều game). Mapping: tạo bảng <code>game(game_id PK, title, pub_id FK)</code> và <code>publisher(id PK, name)</code>. FK <code>pub_id</code> nằm phía N (game) — đúng quy tắc."
+    },
+    "intro": "<strong>Trước</strong>: bạn có 1 bản vẽ ER trên giấy với 12 entity, 18 quan hệ, 30 attribute. <strong>Sau</strong>: bạn cần chuyển thành SQL DDL. Có 1 quy tắc mapping chuẩn, 7 trường hợp. Nắm vững 7 quy tắc này = 30 phút làm xong thay vì 3 ngày mò mẫm.",
+    "concept_cards": [
+      {
+        "icon": "fa-arrow-right-arrow-left",
+        "title": "ER → Bảng: 1 quy tắc, 7 trường hợp",
+        "body": "<strong>Trước</strong>: bạn vẽ ER với entity, attribute, relationship. <strong>Sau</strong>: bạn có schema quan hệ với table, column, FK. Mọi ER concept đều ánh xạ được — chỉ cần nhớ 7 quy tắc mapping. Bài này tóm gọn tất cả trong 1 bảng."
+      },
+      {
+        "icon": "fa-diagram-project",
+        "title": "Bảng 7 quy tắc Mapping",
+        "body": "<strong>Strong entity</strong> → table có PK. <strong>Weak entity</strong> → table có FK + partial key = composite PK. <strong>1:1</strong> → FK ở 1 bên. <strong>1:N</strong> → FK ở bên N. <strong>M:N</strong> → bảng riêng. <strong>Multivalued</strong> → bảng riêng. <strong>Derived</strong> → KHÔNG lưu. Hết!",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 6.7 — Mapping E-R to Relational"
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Quan hệ 1:N \"publishes\" map sang bảng thế nào? KHÔNG tạo bảng riêng — chỉ cắm <code>pub_id</code> (FK) vào bảng phía \"nhiều\" (game). Thử làm ngược (cắm danh sách game vào publisher) → 1 ô phải chứa nhiều game = hỏng 1NF."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "er",
+        "width": 600,
+        "height": 280,
+        "entities": [
+          {
+            "name": "employee",
+            "columns": [
+              {
+                "name": "emp_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "name",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "dept_id",
+                "type": "INT",
+                "key": "FK"
+              }
+            ]
+          },
+          {
+            "name": "department",
+            "columns": [
+              {
+                "name": "dept_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "dept_name",
+                "type": "VARCHAR"
+              }
+            ]
+          },
+          {
+            "name": "project",
+            "columns": [
+              {
+                "name": "proj_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "proj_name",
+                "type": "VARCHAR"
+              }
+            ]
+          },
+          {
+            "name": "works_on",
+            "columns": [
+              {
+                "name": "emp_id",
+                "type": "INT",
+                "key": "FK,PK"
+              },
+              {
+                "name": "proj_id",
+                "type": "INT",
+                "key": "FK,PK"
+              },
+              {
+                "name": "hours",
+                "type": "INT"
+              }
+            ]
+          }
+        ],
+        "connectors": [
+          {
+            "from": "employee",
+            "to": "department",
+            "label": "belongs_to",
+            "fromCard": "N",
+            "toCard": "1"
+          },
+          {
+            "from": "employee",
+            "to": "works_on",
+            "label": "works",
+            "fromCard": "1",
+            "toCard": "N"
+          },
+          {
+            "from": "project",
+            "to": "works_on",
+            "label": "has",
+            "fromCard": "1",
+            "toCard": "N"
+          }
+        ],
+        "note": "3 entity + 1 junction. Bài 6: áp dụng 7 bước mapping để tạo table vật lý."
+      },
+      "schema": {
+        "table_name": "game",
+        "columns": [
+          {
+            "name": "game_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "title",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🎮"
+          },
+          {
+            "name": "pub_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "genre",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🏷️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "101",
+          "Elden Ring",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "102",
+          "God of War",
+          "20",
+          "Action"
+        ],
+        [
+          "103",
+          "Hades",
+          "30",
+          "Roguelike"
+        ],
+        [
+          "104",
+          "Stardew Valley",
+          "40",
+          "Cozy"
+        ],
+        [
+          "105",
+          "Bastion",
+          "30",
+          "Action-RPG"
+        ],
+        [
+          "106",
+          "Transistor",
+          "30",
+          "Action-RPG"
+        ],
+        [
+          "107",
+          "Pyre",
+          "30",
+          "RPG"
+        ],
+        [
+          "108",
+          "Hades II",
+          "30",
+          "Roguelike"
+        ],
+        [
+          "109",
+          "Dark Souls III",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "110",
+          "Sekiro",
+          "10",
+          "Action"
+        ],
+        [
+          "111",
+          "Bloodborne",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "112",
+          "God of War Ragnarok",
+          "20",
+          "Action"
+        ],
+        [
+          "113",
+          "The Last of Us",
+          "20",
+          "Action"
+        ],
+        [
+          "114",
+          "The Witcher 3",
+          "60",
+          "RPG"
+        ],
+        [
+          "115",
+          "Cyberpunk 2077",
+          "60",
+          "RPG"
+        ],
+        [
+          "116",
+          "Animal Crossing",
+          "50",
+          "Cozy"
+        ],
+        [
+          "117",
+          "Splatoon 3",
+          "50",
+          "Shooter"
+        ],
+        [
+          "118",
+          "Zelda: TOTK",
+          "50",
+          "Adventure"
+        ],
+        [
+          "119",
+          "Stardew Multiplayer",
+          "40",
+          "Cozy"
+        ],
+        [
+          "120",
+          "Mario Odyssey",
+          "50",
+          "Platformer"
+        ],
+        [
+          "121",
+          "Demon Souls",
+          "10",
+          "Soulslike"
+        ],
+        [
+          "122",
+          "Returnal",
+          "20",
+          "Roguelike"
+        ]
+      ],
+      "related_tables": [
+        {
+          "name": "publisher",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INT",
+              "key": "PK",
+              "icon": "🔑"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "key": "",
+              "icon": "🏢"
+            }
+          ],
+          "data": [
+            [
+              "10",
+              "FromSoftware"
+            ],
+            [
+              "20",
+              "Sony Santa Monica"
+            ],
+            [
+              "30",
+              "Supergiant"
+            ],
+            [
+              "40",
+              "ConcernedApe"
+            ],
+            [
+              "50",
+              "Nintendo"
+            ],
+            [
+              "60",
+              "CD Projekt"
+            ]
+          ]
+        }
+      ]
+    },
+    "mission": "Lấy <code>title</code> của tất cả game do <code>FromSoftware</code> xuất bản — quan sát FK <code>pub_id</code> ánh xạ từ quan hệ 1:N."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Khi mapping quan hệ 1:N từ ER sang bảng quan hệ, Foreign Key nên đặt ở đâu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Đặt FK ở phía \"1\" (bảng bên nhiều quan hệ)",
+            "correct": false,
+            "explanation": "Sai — phía 1 có nhiều records bên N (vd: 1 game có N DLC). Nếu đặt FK ở phía 1, mỗi record phía 1 chỉ giữ 1 FK → mất quan hệ N (không biết game nào có DLC nào)."
+          },
+          {
+            "id": "b",
+            "text": "Đặt FK ở phía \"N\" (bảng chứa nhiều record ứng với 1 record bên kia)",
+            "correct": true,
+            "explanation": "Đúng — phía N có nhiều records per 1 (vd: N DLC của 1 game → mỗi DLC có game_id FK). Mỗi record N giữ 1 FK trỏ về đúng 1 record phía 1."
+          },
+          {
+            "id": "c",
+            "text": "Tạo bảng trung gian junction table",
+            "correct": false,
+            "explanation": "Sai — junction table dùng cho quan hệ M:N, không phải 1:N. Dùng junction cho 1:N = overkill (1 bảng thừa, query phức tạp hơn)."
+          },
+          {
+            "id": "d",
+            "text": "Không cần FK vì quan hệ đã rõ trong ER diagram",
+            "correct": false,
+            "explanation": "Sai — ER diagram chỉ là design tool. Khi implement vào relational, FK là cách enforce quan hệ. Không có FK = không có constraint ở DB level."
+          }
+        ]
+      },
+      {
+        "question": "Multi-valued attribute (vd: 1 user có nhiều số điện thoại) nên mapping thế nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Schema A (vi phạm 1NF — comma-separated)",
+            "correct": false,
+            "format": "diagram",
+            "diagram": "┌─────────┬────────────────────────┐\n│ user_id │ phones                 │\n├─────────┼────────────────────────┤\n│    1    │ 0901-xxx, 0902-yyy     │\n│    2    │ 0903-aaa               │\n└─────────┴────────────────────────┘",
+            "explanation": "Sai — multivalue trong 1 cột = vi phạm 1NF. Query rất khó (WHERE phones LIKE '0901%' sẽ miss phones = \"0901-xxx, 0902-yyy\")."
+          },
+          {
+            "id": "b",
+            "text": "Schema B (chuẩn 1NF — bảng riêng)",
+            "correct": true,
+            "format": "diagram",
+            "diagram": "┌─────────┬────────────┐     ┌─────────┬────────────┐\n│ user_id │ name       │     │ user_id │ phone      │\n├─────────┼────────────┤     ├─────────┼────────────┤\n│    1    │ Alice      │     │    1    │ 0901-xxx   │\n│    2    │ Bob        │     │    1    │ 0902-yyy   │\n└─────────┴────────────┘     │    2    │ 0903-aaa   │\n                              └─────────┴────────────┘",
+            "explanation": "Đúng — tách thành bảng phụ user_phone (user_id FK, phone). Mỗi số là 1 dòng → atomic, đạt 1NF. Query dễ: WHERE phone = '0901...'."
+          },
+          {
+            "id": "c",
+            "text": "Schema C (nhiều cột — giới hạn)",
+            "correct": false,
+            "format": "diagram",
+            "diagram": "┌─────────┬──────────┬──────────┬──────────┐\n│ user_id │ phone_1  │ phone_2  │ phone_3  │\n├─────────┼──────────┼──────────┼──────────┤\n│    1    │ 0901-xxx │ 0902-yyy │ NULL     │\n│    2    │ 0903-aaa │ NULL     │ NULL     │\n└─────────┴──────────┴──────────┴──────────┘",
+            "explanation": "Sai — giới hạn số phone (max N?). User có số phone khác nhau (Alice 2 số, Bob 5 số). Cứng nhắc + lãng phí NULL cho user ít phone."
+          },
+          {
+            "id": "d",
+            "text": "Schema D (bỏ qua — mất data)",
+            "correct": false,
+            "format": "diagram",
+            "diagram": "┌─────────┬────────┐\n│ user_id │ name   │\n├─────────┼────────┤\n│    1    │ Alice  │\n│    2    │ Bob    │\n└─────────┴────────┘\n\n⚠️ Mất toàn bộ số điện thoại!",
+            "explanation": "Sai — mất dữ liệu quan trọng. Mỗi attribute trong ER đều phải được reflect trong relational model (theo mapping rules)."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Nối ER element → Relational",
+      "instruction": "Mỗi thành phần ER ánh xạ thành gì trong bảng quan hệ?",
+      "xp": 25,
+      "pairs": [
+        {
+          "left": "Strong Entity Set",
+          "leftId": "e1",
+          "rightId": "r1",
+          "right": {
+            "id": "r1",
+            "label": "Table + PK riêng"
+          }
+        },
+        {
+          "left": "Weak Entity Set",
+          "leftId": "e2",
+          "rightId": "r2",
+          "right": {
+            "id": "r2",
+            "label": "Table + FK + partial key = composite PK"
+          }
+        },
+        {
+          "left": "M:N Relationship",
+          "leftId": "e3",
+          "rightId": "r3",
+          "right": {
+            "id": "r3",
+            "label": "Junction table + 2 FK"
+          }
+        },
+        {
+          "left": "1:N Relationship",
+          "leftId": "e4",
+          "rightId": "r4",
+          "right": {
+            "id": "r4",
+            "label": "FK ở phía N"
+          }
+        }
+      ],
+      "solution": {
+        "e1": "r1",
+        "e2": "r2",
+        "e3": "r3",
+        "e4": "r4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lấy <code>title</code> và <code>genre</code> của tất cả game do <code>Supergiant</code> xuất bản — kéo thả SQL, JOIN qua FK.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "title",
+        "slot": "col-1"
+      },
+      {
+        "type": "col",
+        "token": "genre",
+        "slot": "col-2"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "game",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join"
+      },
+      {
+        "type": "tbl",
+        "token": "publisher",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on"
+      },
+      {
+        "type": "col",
+        "token": "game.pub_id = publisher.id",
+        "slot": "col-on"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "publisher.name",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'Supergiant'",
+        "slot": "val-1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____ ON ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT title, genre FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant';",
+    "reveal_hints": {
+      "select-line": "SELECT 2 cột: <strong>title</strong> và <strong>genre</strong>.",
+      "from-line": "FROM <strong>game</strong> JOIN <strong>publisher</strong> ON <strong>game.pub_id = publisher.id</strong> — FK ánh xạ từ quan hệ 1:N.",
+      "where-line": "WHERE lọc hãng: <strong>publisher.name = 'Supergiant'</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — <strong>đếm số game theo từng thể loại</strong> mà <code>FromSoftware</code> phát hành (JOIN + <code>GROUP BY genre</code> + <code>COUNT</code>), sắp xếp nhiều → ít.",
+    "starter": "-- Lấy title + genre của game do Supergiant xuất bản\n-- JOIN game ↔ publisher ON game.pub_id = publisher.id\nSELECT g., g.\n  FROM  g\n  JOIN  p ON g. = p.\n WHERE p. = ;\n",
+    "schema": {
+      "table_name": "game",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "genre",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "pub_id",
+          "type": "INT",
+          "key": "FK"
+        }
+      ],
+      "data": [
+        [
+          "101",
+          "Elden Ring",
+          "Soulslike",
+          "10"
+        ],
+        [
+          "102",
+          "God of War",
+          "Action",
+          "20"
+        ],
+        [
+          "103",
+          "Hades",
+          "Roguelike",
+          "30"
+        ],
+        [
+          "104",
+          "Stardew Valley",
+          "Cozy",
+          "40"
+        ],
+        [
+          "105",
+          "Bastion",
+          "Action-RPG",
+          "30"
+        ],
+        [
+          "106",
+          "Transistor",
+          "Action-RPG",
+          "30"
+        ],
+        [
+          "107",
+          "Pyre",
+          "RPG",
+          "30"
+        ],
+        [
+          "108",
+          "Hades II",
+          "Roguelike",
+          "30"
+        ],
+        [
+          "109",
+          "Dark Souls III",
+          "Soulslike",
+          "10"
+        ],
+        [
+          "110",
+          "Sekiro",
+          "Action",
+          "10"
+        ],
+        [
+          "111",
+          "Bloodborne",
+          "Soulslike",
+          "10"
+        ],
+        [
+          "112",
+          "God of War Ragnarok",
+          "Action",
+          "20"
+        ],
+        [
+          "113",
+          "The Last of Us",
+          "Action",
+          "20"
+        ],
+        [
+          "114",
+          "The Witcher 3",
+          "RPG",
+          "60"
+        ],
+        [
+          "115",
+          "Cyberpunk 2077",
+          "RPG",
+          "60"
+        ],
+        [
+          "116",
+          "Animal Crossing",
+          "Cozy",
+          "50"
+        ],
+        [
+          "117",
+          "Splatoon 3",
+          "Shooter",
+          "50"
+        ],
+        [
+          "118",
+          "Zelda: TOTK",
+          "Adventure",
+          "50"
+        ],
+        [
+          "119",
+          "Stardew Multiplayer",
+          "Cozy",
+          "40"
+        ],
+        [
+          "120",
+          "Mario Odyssey",
+          "Platformer",
+          "50"
+        ],
+        [
+          "121",
+          "Demon Souls",
+          "Soulslike",
+          "10"
+        ],
+        [
+          "122",
+          "Returnal",
+          "Roguelike",
+          "20"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "publisher",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "10",
+            "FromSoftware"
+          ],
+          [
+            "20",
+            "Sony Santa Monica"
+          ],
+          [
+            "30",
+            "Supergiant"
+          ],
+          [
+            "40",
+            "ConcernedApe"
+          ],
+          [
+            "50",
+            "Nintendo"
+          ],
+          [
+            "60",
+            "CD Projekt"
+          ]
+        ]
+      }
+    ],
+    "context": {
+      "scenario": "Sau khi mapping ER → bảng, quan hệ 1:N \"publishes\" biến thành <code>pub_id</code> (FK) trong bảng <code>game</code>. Giờ thống kê danh mục 1 hãng: FromSoftware phát hành những THỂ LOẠI nào, mỗi loại mấy game.",
+      "real_world": "Đúng kiểu trang \"<strong>Nhà phát hành</strong>\" trên Steam: mở FromSoftware ra thấy \"Soulslike ×4, Action ×1…\". Behind the scene chính là JOIN game↔publisher + <code>GROUP BY genre</code> + <code>COUNT</code> — pattern phân tích danh mục theo hãng.",
+      "steps": [
+        "JOIN <code>game</code> với <code>publisher</code> qua <code>game.pub_id = publisher.id</code>.",
+        "Lọc đúng hãng: <code>WHERE publisher.name = 'FromSoftware'</code>.",
+        "Gom theo thể loại + đếm: <code>GROUP BY game.genre</code>, <code>COUNT(*) AS game_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>. Run."
+      ],
+      "hint_explore": "Chưa rõ hãng/thể loại nào có sẵn? Gõ <code>SELECT * FROM game</code> rồi <strong>Run</strong>.",
+      "example": {
+        "question": "Ví dụ tương tự — đếm game theo thể loại của <strong>Supergiant</strong>:",
+        "sql": "SELECT game.genre, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Supergiant' GROUP BY game.genre ORDER BY game_count DESC;",
+        "sample_output": "→ mỗi genre của Supergiant + số lượng"
+      },
+      "expected": "Bảng kết quả: mỗi thể loại (do FromSoftware phát hành) 1 dòng × 2 cột (<code>genre, game_count</code>), giảm dần. JOIN + WHERE + GROUP BY = phân tích danh mục theo hãng."
+    },
+    "expected_sql": "SELECT game.genre, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware' GROUP BY game.genre ORDER BY game_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần 2 cột: <code>title</code> và <code>genre</code>."
+      },
+      {
+        "level": 2,
+        "text": "Bảng <code>game</code> JOIN <code>publisher</code> ON <code>game.pub_id = publisher.id</code>."
+      },
+      {
+        "level": 3,
+        "text": "WHERE <code>publisher.name = 'Supergiant'</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT game.genre, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'FromSoftware' GROUP BY game.genre ORDER BY game_count DESC;</code>"
+      }
+    ],
+    "success_message": "Xuất sắc! Bạn đã nắm vững quy tắc mapping ER → Bảng quan hệ. Bài 8 sẽ dùng FD để phát hiện dư thừa trong bảng đã mapping xong.",
+    "xp_reward": 35
+  }
+}

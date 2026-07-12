@@ -1,0 +1,458 @@
+{
+  "id": "tc_10",
+  "index": 10,
+  "title": "Tumbling Windows — đếm trên dòng chảy",
+  "subtitle": "Chia thời gian thành cửa sổ khít 5 phút, bắt spammer ngay trong ô của hắn",
+  "module": 5,
+  "module_title": "Big Data & Analytics",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "post_stream",
+      "columns": [
+        "post_id",
+        "user_id",
+        "window_5m"
+      ],
+      "dataRows": [
+        [
+          "901",
+          "12",
+          "14:00"
+        ],
+        [
+          "902",
+          "12",
+          "14:00"
+        ],
+        [
+          "903",
+          "7",
+          "14:00"
+        ],
+        [
+          "904",
+          "12",
+          "14:00"
+        ],
+        [
+          "905",
+          "9",
+          "14:05"
+        ],
+        [
+          "906",
+          "12",
+          "14:05"
+        ],
+        [
+          "907",
+          "7",
+          "14:10"
+        ],
+        [
+          "908",
+          "7",
+          "14:10"
+        ],
+        [
+          "909",
+          "7",
+          "14:10"
+        ],
+        [
+          "910",
+          "7",
+          "14:10"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #30",
+    "hook": "Một tài khoản lạ <strong>xả 4 post trong 3 phút</strong> — bot? Kho của Ticket #25 chỉ trả lời được \"hôm qua\" (ETL chạy đêm), còn chuyện này cần bắt <strong>ngay bây giờ</strong>, trên dữ liệu đang chảy. Ticket #30: chia dòng thời gian thành các <em>cửa sổ tumbling 5 phút</em> khít nhau — đếm ngay trong từng ô, user nào vượt ngưỡng trong MỘT cửa sổ là chuông reo. Đóng ticket này, <strong>Community v2.0 lên kệ</strong>. 🚀"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Stream ≠ batch: dữ liệu ĐẾN LIÊN TỤC, không có \"cuối bảng\" để chờ",
+        "Tumbling window: các ô thời gian khít nhau, KHÔNG chờm — mỗi sự kiện thuộc đúng 1 ô",
+        "Đếm trong ô = GROUP BY bucket thời gian; cảnh báo = HAVING vượt ngưỡng"
+      ],
+      "intro": "Mọi thứ bạn học tới giờ đều chờ dữ liệu NẰM YÊN rồi mới hỏi. Nhưng \"đang có ai spam KHÔNG?\" không chờ được — post mới đổ về từng giây. Lời giải của thế giới streaming: <strong>đóng khung thời gian</strong>. Cửa sổ <em>tumbling</em> 5 phút chia trục thời gian thành các ô khít [14:00–14:05), [14:05–14:10)… — sự kiện 14:04:59 vào ô trước, 14:05:00 sang ô sau, không ô nào chờm ô nào. Trong mỗi ô, bài toán lại thành đếm nhóm quen thuộc: <code>GROUP BY window</code>.",
+      "example": "<code>SELECT window_5m, user_id, COUNT(*) FROM post_stream GROUP BY window_5m, user_id HAVING COUNT(*) > 2;</code> — user nào xả >2 post trong MỘT cửa sổ?"
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-water",
+        "title": "Stream — bảng không có dòng cuối",
+        "body": "Batch (kho #25) hỏi trên dữ liệu ĐÃ CHỐT; stream xử lý sự kiện NGAY KHI ĐẾN. Không thể \"SELECT hết rồi tính\" vì chẳng bao giờ hết — mọi phép đếm phải tự khoanh phạm vi thời gian cho mình.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 10 — Streaming Data"
+      },
+      {
+        "icon": "fa-table-cells",
+        "title": "Tumbling · Hopping · Sliding · Session",
+        "body": "<strong>Tumbling</strong>: ô khít, không chờm — mỗi sự kiện đúng 1 ô. <strong>Hopping</strong>: bề rộng cố định nhưng tính theo NHỊP riêng — \"cửa sổ 5 phút, tính lại mỗi phút\", các ô chờm nhau. <strong>Sliding</strong>: cửa sổ trượt quanh TỪNG sự kiện đến (dạng chuẩn SQL hỗ trợ). <strong>Session</strong>: ô co giãn theo hành vi — hết im lặng 10 phút là đóng phiên. Chọn sai loại là báo động sai."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Cột <code>window_5m</code> trong bảng chính là nhãn ô đã gán sẵn cho từng post (phút làm tròn xuống bội 5). Nhờ nó, \"đếm trên dòng chảy\" quy về <code>GROUP BY window_5m</code> — kỹ năng từ Bài 1 tới giờ vẫn dùng, chỉ thêm khung thời gian."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "post_stream",
+        "columns": [
+          {
+            "name": "post_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "👤"
+          },
+          {
+            "name": "window_5m",
+            "type": "VARCHAR",
+            "key": "bucket",
+            "icon": "⏱️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "901",
+          "12",
+          "14:00"
+        ],
+        [
+          "902",
+          "12",
+          "14:00"
+        ],
+        [
+          "903",
+          "7",
+          "14:00"
+        ],
+        [
+          "904",
+          "12",
+          "14:00"
+        ],
+        [
+          "905",
+          "9",
+          "14:05"
+        ],
+        [
+          "907",
+          "7",
+          "14:10"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Post đăng lúc <code>14:04:59</code> và post lúc <code>14:05:00</code> thuộc cửa sổ tumbling 5 phút nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Hai cửa sổ KHÁC nhau: [14:00–14:05) và [14:05–14:10) — ranh giới khít, không chờm",
+            "correct": true,
+            "explanation": "Đúng — tumbling chia ô nửa-mở [bắt_đầu, kết_thúc): 14:04:59 vào ô trước, 14:05:00 mở ô sau. Mỗi sự kiện đúng 1 ô."
+          },
+          {
+            "id": "b",
+            "text": "Cùng một cửa sổ vì chỉ cách nhau 1 giây",
+            "correct": false,
+            "explanation": "Sai — ranh giới là ranh giới; \"gần nhau\" không phải tiêu chí, thuộc-ô-nào mới là tiêu chí."
+          },
+          {
+            "id": "c",
+            "text": "Cả hai thuộc cả hai cửa sổ",
+            "correct": false,
+            "explanation": "Sai — đó là SLIDING window (chờm nhau); tumbling mỗi sự kiện đúng 1 ô."
+          },
+          {
+            "id": "d",
+            "text": "Không xác định được nếu thiếu timezone",
+            "correct": false,
+            "explanation": "Sai — timezone là chuyện chuẩn hóa đầu vào; với cùng đồng hồ, phép chia ô là tuyệt đối."
+          }
+        ]
+      },
+      {
+        "question": "\"Số post trong cửa sổ 5 phút, TÍNH LẠI mỗi phút\" — cần loại cửa sổ nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Hopping — bề rộng cố định 5 phút nhưng tính theo nhịp 1 phút: các cửa sổ CHỜM nhau, một sự kiện có thể được đếm ở nhiều cửa sổ",
+            "correct": true,
+            "explanation": "Đúng — \"bề rộng cố định + nhịp tính riêng\" là chữ ký của hopping (sách xếp nó riêng khỏi sliding); tumbling chỉ chốt sổ mỗi 5 phút một lần."
+          },
+          {
+            "id": "b",
+            "text": "Sliding — cửa sổ trượt quanh từng sự kiện",
+            "correct": false,
+            "explanation": "Sai theo phân loại của sách — sliding trượt quanh TỪNG SỰ KIỆN đến; còn khung cố định tính theo NHỊP đều là hopping."
+          },
+          {
+            "id": "c",
+            "text": "Tumbling — vì vẫn là 5 phút",
+            "correct": false,
+            "explanation": "Sai — tumbling trả lời \"trong Ô 14:00–14:05 có gì\", các ô không chờm; đây cần ô chờm nhau theo nhịp."
+          },
+          {
+            "id": "d",
+            "text": "Session — vì người dùng đang hoạt động",
+            "correct": false,
+            "explanation": "Sai — session co giãn theo khoảng lặng hành vi, không phải khung cố định tính theo nhịp."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Vì sao báo động oan người dùng lâu năm?",
+      "instruction": "Query \"bắt spammer\" dưới đây reo chuông với cả tài khoản 2 năm tuổi đăng đều đặn. Click DÒNG có lỗi.",
+      "xp": 25,
+      "code": "SELECT user_id,\n       COUNT(*) AS total_posts\n  FROM post_stream\n GROUP BY user_id\nHAVING COUNT(*) > 2;",
+      "bugType": "logic",
+      "bugs": [
+        {
+          "line": 4,
+          "description": "GROUP BY thiếu window_5m — đếm TOÀN BỘ lịch sử thay vì trong từng cửa sổ 5 phút: ai đăng >2 post trong đời cũng thành \"spammer\". Phải GROUP BY window_5m, user_id."
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "mission": "Bước một của hệ cảnh báo: nhịp đăng bài toàn mạng — <strong>đếm số post trong TỪNG cửa sổ 5 phút</strong>, theo dòng thời gian.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "window_5m",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*) AS posts",
+        "slot": "fn-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "post_stream",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "window_5m",
+        "slot": "col-g"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "window_5m",
+        "slot": "col-o"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____ (mỗi ô một nhóm)",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ (theo dòng thời gian)",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT window_5m, COUNT(*) AS posts FROM post_stream GROUP BY window_5m ORDER BY window_5m;",
+    "reveal_hints": {
+      "select-line": "Nhãn ô + số đếm: <strong>window_5m, COUNT(*) AS posts</strong>.",
+      "from-line": "Dòng sự kiện: <strong>post_stream</strong>.",
+      "group-line": "Mỗi cửa sổ một nhóm: <strong>window_5m</strong>.",
+      "order-line": "Theo trục thời gian: <strong>window_5m</strong> (tăng dần — không cần DESC)."
+    }
+  },
+  "step_4": {
+    "prompt": "Giờ mới là chuông báo thật — thêm chiều NGƯỜI và NGƯỠNG: <strong>\"user nào đăng hơn 2 post trong MỘT cửa sổ?\"</strong>. GROUP BY hai cột (cửa sổ, user) + <code>HAVING COUNT(*) > 2</code>, nhiều → ít.",
+    "starter": "-- Chuong bao spam: user vuot 2 post / 1 cua so 5 phut\nSELECT window_5m, user_id, COUNT(*) AS posts\n  FROM post_stream\n GROUP BY ____, ____\nHAVING ____\n ORDER BY posts DESC;\n",
+    "schema": {
+      "table_name": "post_stream",
+      "columns": [
+        {
+          "name": "post_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "window_5m",
+          "type": "VARCHAR",
+          "key": "bucket"
+        }
+      ],
+      "data": [
+        [
+          "901",
+          "12",
+          "14:00"
+        ],
+        [
+          "902",
+          "12",
+          "14:00"
+        ],
+        [
+          "903",
+          "7",
+          "14:00"
+        ],
+        [
+          "904",
+          "12",
+          "14:00"
+        ],
+        [
+          "905",
+          "9",
+          "14:05"
+        ],
+        [
+          "906",
+          "12",
+          "14:05"
+        ],
+        [
+          "907",
+          "7",
+          "14:10"
+        ],
+        [
+          "908",
+          "7",
+          "14:10"
+        ],
+        [
+          "909",
+          "7",
+          "14:10"
+        ],
+        [
+          "910",
+          "7",
+          "14:10"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Job cảnh báo chạy que này mỗi khi một cửa sổ đóng sổ. Chú ý bug_spot ở Step 2: thiếu <code>window_5m</code> trong GROUP BY là đếm cả đời người ta — oan sai đúng kiểu đó.",
+      "real_world": "Chống spam/DDoS thực tế đều là <strong>đếm theo cửa sổ + ngưỡng</strong> (rate limiting): \"100 request / phút / IP\" — cùng bộ xương GROUP BY window, user HAVING vượt ngưỡng, chỉ khác quy mô.",
+      "steps": [
+        "Hai chiều nhóm: <code>GROUP BY window_5m, user_id</code> — từng user TRONG từng ô.",
+        "Ngưỡng trên nhóm: <code>HAVING COUNT(*) > 2</code> (WHERE không lọc được kết quả đếm).",
+        "Xếp mức độ: <code>ORDER BY posts DESC</code>.",
+        "Nhẩm tay: ô 14:00 — toxic_lord 3 post; ô 14:10 — minhkiller 4 post. Hai chuông sẽ reo."
+      ],
+      "hint_explore": "Nhìn dòng chảy thô: <code>SELECT * FROM post_stream</code> rồi Run — để ý cụm 4 dòng cuối cùng một user, cùng một ô.",
+      "expected": "Bảng 2 dòng: (14:10, user 7, 4 post) và (14:00, user 12, 3 post) — chuông reo đúng hai kẻ xả bài, người đăng đều đặn vô can."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khác Step 3 hai chỗ: nhóm thêm chiều user, và LỌC TRÊN KẾT QUẢ ĐẾM — việc của HAVING, không phải WHERE."
+      },
+      {
+        "level": 2,
+        "text": "Nhóm kép: <code>GROUP BY window_5m, user_id</code>."
+      },
+      {
+        "level": 3,
+        "text": "Ngưỡng: <code>HAVING COUNT(*) > 2</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT window_5m, user_id, COUNT(*) AS posts FROM post_stream GROUP BY window_5m, user_id HAVING COUNT(*) > 2 ORDER BY posts DESC;</code>"
+      }
+    ],
+    "expected_sql": "SELECT window_5m, user_id, COUNT(*) AS posts FROM post_stream GROUP BY window_5m, user_id HAVING COUNT(*) > 2 ORDER BY posts DESC;",
+    "success_message": "Ticket #30 đóng — Module 5 hoàn tất, GameHub Community v2.0 lên kệ! 🚀 Module 6: dữ liệu phình theo từng release — feed bắt đầu chậm, và câu trả lời nằm SÂU dưới lớp SQL: Storage, Index & Performance.",
+    "xp_reward": 120
+  }
+}

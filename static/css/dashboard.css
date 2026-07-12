@@ -767,8 +767,11 @@ body.dark .course-filter-panel { background: var(--card); border-color: var(--ca
 
 .courses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(278px, 1fr));
-  gap: 14px;
+  /* auto-fit + min() : card giãn đều kín bề ngang page, không dồn cục bên trái;
+     min(280px,100%) chống tràn ngang trên màn hình < 280px. */
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 18px;
+  align-items: stretch;
 }
 
 .course-card {
@@ -779,6 +782,9 @@ body.dark .course-filter-panel { background: var(--card); border-color: var(--ca
   border: 1px solid var(--border);
   box-shadow: none;
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  /* Flex column để card cùng hàng cao bằng nhau, footer luôn thẳng hàng đáy */
+  display: flex;
+  flex-direction: column;
 }
 
 .course-card:hover {
@@ -839,9 +845,17 @@ body.dark .course-filter-panel { background: var(--card); border-color: var(--ca
 
 .card-title-overlay {
   position: absolute;
-  bottom: 10px;
-  left: 12px;
-  right: 12px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* 2026-07-04: guard chống mất chữ — nền gradient tối + text-shadow, tiêu đề luôn
+     đọc được bất kể art phía sau (từng bị chữ nướng trong SVG đè lên). */
+  padding: 26px 12px 12px;
+  background: linear-gradient(180deg, rgba(6, 11, 22, 0) 0%, rgba(6, 11, 22, 0.55) 40%, rgba(6, 11, 22, 0.88) 100%);
+}
+.card-title-overlay h3,
+.card-tag {
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
 }
 
 .card-tag {
@@ -861,6 +875,9 @@ body.dark .course-filter-panel { background: var(--card); border-color: var(--ca
 
 .card-body {
   padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .card-desc {
@@ -899,6 +916,7 @@ body.dark .course-filter-panel { background: var(--card); border-color: var(--ca
   display: flex;
   align-items: center;
   gap: 7px;
+  margin-top: auto; /* đẩy footer xuống đáy để hàng nút thẳng hàng giữa các card */
 }
 .card-footer-spacer { flex: 1; }
 
@@ -2991,6 +3009,11 @@ body.dark .streak-btn-skip:hover { color: #9CA3AF; }
 }
 .dash-row .section-card { margin-bottom: 0; }
 
+/* 2026-07-09: hàng lịch KHÔNG stretch — card lịch chỉ cao 1 tuần + legend,
+   nếu stretch theo cột roadmap (min-height 460px) sẽ dư ~400px trống chết. */
+.dash-row--cal { align-items: start; }
+.dash-row--cal .mini-rm-card--full { align-self: stretch; }
+
 /* ── Learning progress card (empty state) ── */
 .dash-progress-card { display: flex; flex-direction: column; }
 .dash-progress-empty {
@@ -3304,6 +3327,19 @@ body.dark .mini-rm-canvas {
 body.dark .mini-rm-arrow { stroke: #475569; }
 .mini-rm-arrow--solid { stroke-dasharray: none; }
 
+/* Truck animation on roadmap path */
+.mini-rm-truck {
+  /* drop-shadow on a small static element is cheap, but we use will-change to
+     hint the compositor that the truck + its shadow may move along a path. */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.20));
+  z-index: 5;
+  will-change: transform;
+  /* Promote the truck to its own GPU layer (cheap on modern GPUs; avoids
+     re-rasterization on each animateMotion frame). */
+  transform: translateZ(0);
+}
+body.dark .mini-rm-truck circle { fill: #FBBF24; stroke: #D97706; }
+
 .mini-rm-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -3500,4 +3536,216 @@ body.dark .prof-post-excerpt {
 }
 body.dark .prof-post-stats {
   color: #64748B;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * REDESIGN 2026-06-28 — PHASE B (dashboard brand signatures)
+ * Author: Mavis (autonomous session, user vắng 4-5h)
+ * References:
+ *   - shadcn/ui: card grid + dark mode tokens → .section-card polish
+ *   - Brilliant.org: progress visualization + achievement badges
+ *   - Codecademy.com: course card layouts with completion percentages
+ *   - Shaders.com: ambient gradient mesh + glow halos
+ *   - google-labs-code/design.md: token alignment with lesson player
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── B1: Design tokens bridge (re-use lesson :root values) ────────────────── */
+:root {
+  --module-amber: #F59E0B;
+  --module-amber-soft: rgba(245, 158, 11, 0.12);
+  --module-indigo: #8B5CF6;
+  --module-indigo-soft: rgba(139, 92, 241, 0.12);
+  --module-emerald: #10B981;
+  --module-emerald-soft: rgba(16, 185, 129, 0.12);
+  --glow-primary: 0 0 24px rgba(6, 182, 212, 0.30);
+  --glow-amber: 0 0 24px rgba(245, 158, 11, 0.30);
+  --glow-indigo: 0 0 24px rgba(139, 92, 241, 0.30);
+  --glow-emerald: 0 0 24px rgba(16, 185, 129, 0.30);
+  --strip-h: 3px;
+}
+
+/* ─── B2: Welcome banner — stronger glass + animated gradient ─────────────── */
+.welcome-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  isolation: isolate;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 85% 50%, rgba(236, 72, 153, 0.30), transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(6, 182, 212, 0.25), transparent 50%);
+  z-index: -1;
+  animation: welcome-mesh-drift 12s ease-in-out infinite alternate;
+}
+
+@keyframes welcome-mesh-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-3%, 2%) scale(1.06); }
+}
+
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 18px;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(6, 182, 212, 0.45),
+    rgba(168, 85, 247, 0.35) 40%,
+    rgba(236, 72, 153, 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.welcome-banner h2 {
+  background: linear-gradient(135deg, #FFFFFF 0%, #06B6D4 50%, #A855F7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.welcome-banner .banner-code {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.20), rgba(168, 85, 247, 0.20));
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  color: var(--text-100, #F8FAFC);
+  transition: all var(--anim-fast, 200ms) var(--ease-out-quart);
+}
+
+.welcome-banner:hover .banner-code {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.40), rgba(168, 85, 247, 0.40));
+  box-shadow: 0 0 24px rgba(6, 182, 212, 0.35);
+  transform: scale(1.05);
+}
+
+/* ─── B3: Section cards — shadcn-style polish + module strips ────────────── */
+.section-card {
+  position: relative;
+  border-radius: 16px;
+  transition: transform var(--anim-fast, 200ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)),
+              border-color var(--anim-fast, 200ms),
+              box-shadow var(--anim-fast, 200ms);
+}
+
+/* Module color strip — top edge accent */
+.section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: var(--strip-h, 3px);
+  background: linear-gradient(90deg,
+    var(--module-amber) 0%,
+    var(--module-indigo) 50%,
+    var(--module-emerald) 100%);
+  border-radius: 0 0 3px 3px;
+  opacity: 0.5;
+  transition: opacity var(--anim-fast, 200ms);
+}
+
+.section-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(6, 182, 212, 0.25);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), var(--glow-primary);
+}
+
+.section-card:hover::before {
+  opacity: 1;
+}
+
+/* Section title — gradient text option */
+.section-title span:not(.title-icon-blue) {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ─── B4: Calendar grid — module color heatmap ─────────────────────────── */
+.study-cal-grid {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.skel-cal-day {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(11, 17, 33, 0.4));
+  border: 1px solid rgba(148, 163, 184, 0.06);
+  border-radius: 10px;
+  transition: all var(--anim-fast, 200ms) ease;
+}
+
+/* ─── B5: Leaderboard card — hex node avatars ──────────────────────────── */
+.lb-card { padding-top: 14px; }
+
+.lb-list li {
+  position: relative;
+  padding-left: 44px;
+}
+
+.lb-list li::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--module-indigo), rgba(168, 85, 247, 0.6));
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lb-list li:nth-child(1)::before { background: linear-gradient(135deg, #FBBF24, #F59E0B); }
+.lb-list li:nth-child(2)::before { background: linear-gradient(135deg, #D1D5DB, #9CA3AF); }
+.lb-list li:nth-child(3)::before { background: linear-gradient(135deg, #FB923C, #EA580C); }
+
+/* ─── B6: Roadmap canvas — module accent tints ─────────────────────────── */
+.mini-rm-canvas {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 241, 0.04), transparent 60%),
+    linear-gradient(180deg, rgba(11, 17, 33, 0.4), rgba(15, 23, 42, 0.6));
+  border-radius: 12px;
+}
+
+.mini-rm-loading {
+  color: var(--text-400, #94A3B8);
+  font-style: italic;
+}
+
+/* ─── B7: Stats gradient (re-use from course detail polish) ───────────── */
+.streak-pill,
+.cal-streak-num {
+  background: linear-gradient(135deg, #F59E0B, #EF4444);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* ─── B8: Hover lift on interactive cards (Codecademy-inspired) ────────── */
+.study-cal-card,
+.lb-card,
+.mini-rm-card {
+  cursor: default;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-banner::before {
+    animation: none !important;
+  }
 }

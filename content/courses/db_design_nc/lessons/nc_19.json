@@ -1,0 +1,520 @@
+{
+  "id": "nc_19",
+  "index": 19,
+  "title": "Write Skew — hai bài soát đều đậu, cái két vẫn thủng",
+  "subtitle": "Đọc chéo, ghi khác món: con quái mà cửa soát snapshot không tự bắt — và bùa FOR UPDATE",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 22,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "bug_fix",
+  "drag_map": {
+    "table": {
+      "name": "vaults — két gem theo seller (mẫu 5)",
+      "columns": [
+        "vault_id",
+        "seller_id",
+        "vault_name",
+        "balance"
+      ],
+      "dataRows": [
+        [
+          "V-01",
+          "4102",
+          "KÉT QUẢNG CÁO (A)",
+          "100"
+        ],
+        [
+          "V-02",
+          "4102",
+          "KÉT CHÍNH (B)",
+          "200"
+        ],
+        [
+          "V-03",
+          "9",
+          "KÉT CHÍNH",
+          "12500"
+        ],
+        [
+          "V-04",
+          "15",
+          "KÉT CHÍNH",
+          "790"
+        ],
+        [
+          "V-05",
+          "12",
+          "KÉT QUẢNG CÁO",
+          "320"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #60",
+    "hook": "Sáng nay đối soát phát hiện chuyện không thể tin: tổng 2 két của DragonForge = <strong>−100 gem</strong>, trong khi luật sàn khắc rõ \"tổng 2 két không được âm\". Soi log: hai lệnh rút chạy đêm qua, <em>lệnh nào cũng soát luật trước khi rút</em>, cửa soát snapshot bài 18 hoạt động hoàn hảo, không một cú abort. Hai bài soát đều ĐẬU — mà két vẫn THỦNG. Ticket #60: con quái này đọc CHÉO nhau nhưng ghi hai món KHÁC nhau, nên máy soát \"cùng món mới vênh\" nhìn xuyên qua nó như nhìn không khí. 😈"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "WRITE SKEW: hai giao dịch chồng lấn ĐỌC chéo dữ liệu của nhau rồi mỗi đứa GHI một món KHÁC nhau — writeset {A} ∩ {B} = ∅ nên first-committer-wins (bài 18) không thấy gì để chặn, nhưng đồ thị precedence có VÒNG: kết quả không khớp bất kỳ lịch tuần tự nào",
+        "Kịch bản sách: két A=100, két B=200, luật \"TỔNG ≥ 0\"; T1 rút 200 từ A, T2 rút 200 từ B — mỗi đứa soát luật trên snapshot RIÊNG đều ra 100 ✓ → cùng commit → tổng −100; anh em cùng nhà: hai lệnh cùng lấy max(số hóa đơn)+1 → hai hóa đơn TRÙNG SỐ",
+        "Thuốc: FOR UPDATE — món ĐỌC bị hệ thống coi như ĐÃ GHI cho mục đích soát va chạm → hai giao dịch thành \"cùng ghi\" cả A lẫn B → chỉ một đứa qua; hoặc SSI (Postgres 9.1+) tự theo dõi rw-conflict; hoặc để PRIMARY KEY đỡ giùm (vụ hóa đơn)"
+      ],
+      "intro": "Hai bảo vệ trực hai cổng, luật công ty: \"lúc nào cũng phải còn ÍT NHẤT một người trong ca\". Nửa đêm cùng lúc, mỗi anh nhìn bảng phân công (bản in lúc 23:59 của riêng mình), thấy \"còn 2 người trực — mình về thì vẫn còn 1\" và cùng ký giấy về. Sáng ra: kho không người gác. Không anh nào nói dối — mỗi bản in đều đúng tại thời điểm in; cái sai nằm ở chỗ <strong>hai quyết định dựa vào nhau mà không hề nhìn thấy nhau</strong>.",
+      "example": "T1: đọc A=100, B=200 → soát 300−200=100 ✓ → ghi A=−100. T2 (chồng lấn): đọc A=100, B=200 → soát 100 ✓ → ghi B=0. Cửa soát bài 18 hỏi mỗi câu \"có ai dán bản mới vào món TÔI GHI không?\" — A của T1 không ai đụng, B của T2 không ai đụng → cả hai qua. Tổng chốt: −100 + 0 = <strong>−100</strong>."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-scale-unbalanced",
+        "title": "Vụ hai két — theo đúng sách",
+        "body": "Ngân hàng ràng buộc: tổng số dư checking + savings của một khách <strong>không được âm</strong> (100 + 200). T36 rút 200 từ checking <em>sau khi soát ràng buộc bằng cách đọc cả hai số dư</em>; T37 đồng thời rút 200 từ savings, cũng soát y như thế. Mỗi giao dịch soát trên snapshot CỦA MÌNH nên đều tin tổng còn 100. Chúng ghi hai món khác nhau — <strong>không có update conflict</strong> — và dưới snapshot isolation, cả hai được commit. Tổng sau đó: <strong>−100</strong> — điều không lịch tuần tự nào tạo ra nổi.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.8.3 — Serializability Issues"
+      },
+      {
+        "icon": "fa-file-invoice",
+        "title": "Anh em cùng nhà: hóa đơn trùng số",
+        "body": "App tài chính đánh số hóa đơn bằng <code>max(số hiện có) + 1</code>. Hai giao dịch chạy song song cùng thấy max = 1041 trong snapshot → cùng phát hành hóa đơn <strong>#1042</strong>. Không ai sửa dòng của ai — cửa soát lại nhìn xuyên qua. Sách kể chuyện thật: vụ này <em>nổ nhiều lần ở I.I.T. Bombay</em> vì số hóa đơn không được khai primary key; kiểm toán viên là người phát hiện. Khai PK là DB tự chặn ngoài-snapshot — một lý do vì sao write skew hiếm nổ trong thực tế."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Trong code thật bạn có ba nút bấm: <code>SELECT … FOR UPDATE</code> (Django: <code>select_for_update()</code>, Rails: <code>lock</code>) cho các cú đọc-để-quyết-định; mức cô lập <strong>SERIALIZABLE</strong> trên Postgres 9.1+ (SSI tự bắt, đổi lại thi thoảng ăn \"serialization failure — retry\"); hoặc ràng buộc DB (PK/CHECK) làm lưới đỡ cuối. Câu hỏi vàng khi review code: <em>\"quyết định GHI này dựa trên cú ĐỌC nào — và ai có thể đổi thứ vừa đọc?\"</em>"
+      }
+    ],
+    "txn_visual": {
+      "eyebrow": "ĐỒNG HỒ TỔNG 2 KÉT — LUẬT SÀN: TỔNG ≥ 0 · T1 RÚT 200 TỪ A · T2 RÚT 200 TỪ B",
+      "caption": "Chạy CẢ HAI chế độ: đường snapshot hai bài soát cùng đậu mà tổng âm; đường FOR UPDATE ép va chạm — chỉ một lệnh rút sống sót.",
+      "wallet_label": "⚖️ TỔNG 2 KÉT",
+      "start": 300,
+      "unit": "gem — luật: ≥ 0",
+      "t1_label": "🤖 T1 — rút 200 từ két A (100)",
+      "t2_label": "🤖 T2 — rút 200 từ két B (200)",
+      "modes": [
+        {
+          "id": "skew",
+          "short": "SNAPSHOT TRẦN",
+          "ok": false,
+          "btn": "▶ Chạy kiểu BÀI 18 (soát trần)",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "đọc ảnh chụp: A=100, B=200 → soát luật: 300 − 200 = 100 ≥ 0 ✓",
+              "note": "Soát cẩn thận trên snapshot của mình — đúng bài bản 18 dạy. Kẽ hở cũng nằm ngay đó."
+            },
+            {
+              "who": "t2",
+              "text": "đọc ảnh chụp: A=100, B=200 → soát luật: 300 − 200 = 100 ≥ 0 ✓",
+              "cls": "warn",
+              "note": "Hai bài soát trên hai ảnh chụp — không đứa nào nhìn thấy ý đồ đứa kia."
+            },
+            {
+              "who": "t1",
+              "text": "commit: ghi A = −100 · cửa soát hỏi \"ai đụng KÉT A?\" — không ai → qua",
+              "wallet": 100
+            },
+            {
+              "who": "t2",
+              "text": "commit: ghi B = 0 · cửa soát hỏi \"ai đụng KÉT B?\" — không ai → qua",
+              "cls": "bad",
+              "wallet": -100
+            },
+            {
+              "who": "sys",
+              "text": "luật \"tổng ≥ 0\" vỡ toang — log sạch bong, không một cú abort",
+              "cls": "bad"
+            }
+          ],
+          "verdict": "❌ WRITE SKEW: writeset {A} ∩ {B} = ∅ nên máy soát first-committer-wins mù tịt. Mỗi bản án đều đúng trên ảnh chụp của nó — và cả hai cùng sai trên sổ thật."
+        },
+        {
+          "id": "fu",
+          "short": "FOR UPDATE",
+          "ok": true,
+          "btn": "▶ Chạy kiểu FOR UPDATE",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "SELECT A, B … FOR UPDATE → cả 2 két bị coi như T1 ĐÃ GHI",
+              "note": "FOR UPDATE = tự khai \"mấy món tôi vừa đọc, tính là tôi đụng\" — kể cả chỉ để soát luật."
+            },
+            {
+              "who": "t2",
+              "text": "⏳ SELECT A, B … FOR UPDATE → đụng đúng 2 món T1 đang giữ → xếp hàng",
+              "cls": "wait",
+              "note": "Va chạm NHÂN TẠO thành hình: giờ hai giao dịch \"cùng ghi\" cả A lẫn B — hết tàng hình."
+            },
+            {
+              "who": "t1",
+              "text": "soát 300 − 200 = 100 ✓ → ghi A = −100 → commit",
+              "wallet": 100
+            },
+            {
+              "who": "t2",
+              "text": "tới lượt: đọc SỰ THẬT A=−100, B=200 → soát: 100 − 200 = −100 < 0",
+              "cls": "warn"
+            },
+            {
+              "who": "t2",
+              "text": "lệnh rút bị LUẬT SÀN từ chối — két B còn nguyên 200",
+              "cls": "ok"
+            }
+          ],
+          "verdict": "✓ Ép hai giao dịch nhìn thấy nhau: chỉ một đứa qua, đứa sau soát trên sự thật thay vì ảnh chụp cũ. Tổng chốt 100 — luật sàn sống. (Postgres SERIALIZABLE có SSI tự làm việc này; không có thì tự khai bằng FOR UPDATE.)"
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "ba con quái nhà snapshot — đứa nào tự bị bắt?",
+        "columns": [
+          {
+            "name": "con quái",
+            "type": "kiểu va chạm",
+            "key": "😈"
+          },
+          {
+            "name": "cửa soát FCW",
+            "type": "bắt được?",
+            "key": "⚖️"
+          },
+          {
+            "name": "thuốc",
+            "type": "",
+            "key": "💊"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "Lost update",
+          "hai đứa GHI CÙNG món",
+          "✓ tự bắt (bài 18)",
+          ""
+        ],
+        [
+          "Write skew",
+          "đọc chéo, ghi KHÁC món",
+          "❌ lọt",
+          "FOR UPDATE / SSI"
+        ],
+        [
+          "Hóa đơn trùng max+1",
+          "cùng đọc max, cùng chèn",
+          "❌ lọt",
+          "PRIMARY KEY đỡ"
+        ],
+        [
+          "Reader thuần",
+          "chỉ đọc snapshot",
+          "miễn tố tụng",
+          "không cần gì"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Cửa soát first-committer-wins vừa chặn đẹp lost update ở bài 18 — vì sao với write skew nó lại mù hoàn toàn?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì nó chỉ soát \"có bản lạ dán vào món TÔI GHI không\" — write skew ghi hai món KHÁC nhau nên writeset không giao; trong khi cái sai nằm ở chỗ mỗi đứa ĐỌC thứ đứa kia sắp đổi (rw-conflict chéo tạo vòng precedence)",
+            "correct": true,
+            "explanation": "Đúng — sách chỉ mặt: snapshot isolation không theo dõi read-write conflict. Đó chính là kẽ hở SSI sinh ra để vá."
+          },
+          {
+            "id": "b",
+            "text": "Vì write skew chạy quá nhanh, cửa soát chưa kịp ghi sổ",
+            "correct": false,
+            "explanation": "Sai — không có chuyện đua tốc độ: cửa soát chạy atomic lúc commit; nó nhìn thấy đầy đủ mọi version, chỉ là câu hỏi nó đặt ra không chạm tới kiểu va chạm này."
+          },
+          {
+            "id": "c",
+            "text": "Vì hai giao dịch chạy ở hai mức isolation khác nhau",
+            "correct": false,
+            "explanation": "Sai — cả hai cùng snapshot isolation chuẩn chỉnh; write skew là lỗ hổng CỦA CHÍNH mức này, không phải do trộn mức."
+          },
+          {
+            "id": "d",
+            "text": "Vì luật \"tổng ≥ 0\" là ràng buộc ứng dụng, DB không hề biết — nên không gì cứu nổi",
+            "correct": false,
+            "explanation": "Vế đầu đúng (DB không biết luật tổng) nhưng vế sau sai: FOR UPDATE, SSI, hay đưa luật vào CHECK/trigger đều cứu được — bài này tồn tại vì có thuốc."
+          }
+        ]
+      },
+      {
+        "question": "Chính xác thì FOR UPDATE làm gì để vá write skew?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nó bảo hệ thống coi các dòng vừa ĐỌC như thể mình ĐÃ GHI — hai giao dịch cùng FOR UPDATE lên A và B thành \"cùng ghi cả hai món\", va chạm nhân tạo hiện hình và chỉ một đứa được commit",
+            "correct": true,
+            "explanation": "Nguyên văn tinh thần sách: \"treat data that are read as if they had been updated for purposes of concurrency control\". Từ tàng hình thành hữu hình."
+          },
+          {
+            "id": "b",
+            "text": "Nó khóa X toàn bộ bảng vaults cho chắc",
+            "correct": false,
+            "explanation": "Sai — FOR UPDATE chỉ đụng các dòng câu SELECT trả về (theo WHERE); khóa cả bảng là dùng dao mổ trâu, két seller khác vẫn phải được rút song song."
+          },
+          {
+            "id": "c",
+            "text": "Nó chỉ là hint tài liệu cho dev đọc, không đổi hành vi engine",
+            "correct": false,
+            "explanation": "Sai — nó đổi hẳn hành vi concurrency control; chính vì thế mà thêm bừa vào câu đọc thuần sẽ CHẶN OAN người khác (grader bài này cũng sẽ mắng y như vậy)."
+          },
+          {
+            "id": "d",
+            "text": "Nó nâng cả phiên làm việc lên mức SERIALIZABLE",
+            "correct": false,
+            "explanation": "Sai — nó là con dao phẫu thuật cho ĐÚNG MỘT câu đọc, không đổi isolation level của phiên; SSI mới là giải pháp cấp-cả-phiên."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Cửa soát bắt được không?",
+      "instruction": "Dưới snapshot isolation chuẩn (first-committer-wins), va chạm nào TỰ bị bắt — va chạm nào lọt lưới?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "w1",
+          "label": "T5/T6 cùng sửa GIÁ Kiếm Rồng (bài 18)"
+        },
+        {
+          "id": "w2",
+          "label": "Rút 2 két KHÁC nhau, luật nằm trên TỔNG"
+        },
+        {
+          "id": "w3",
+          "label": "Hai lệnh cùng lấy max(số hóa đơn)+1"
+        },
+        {
+          "id": "w4",
+          "label": "Hai bảo vệ cùng rời ca, luật \"còn ≥1 người trực\""
+        }
+      ],
+      "bins": [
+        {
+          "id": "bat",
+          "label": "TỰ BẮT ✓"
+        },
+        {
+          "id": "lot",
+          "label": "LỌT LƯỚI 😈"
+        }
+      ],
+      "solution": {
+        "w1": "bat",
+        "w2": "lot",
+        "w3": "lot",
+        "w4": "lot"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp hồ sơ bắt quái 4 bước cho write skew — có MỘT khối bịa (nghe rất chi là \"yên tâm\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "NHẬN DIỆN: hai giao dịch đọc CHÉO dữ liệu của nhau rồi mỗi đứa ghi MỘT MÓN KHÁC — quyết định dựa trên thứ kẻ kia sắp đổi",
+        "slot": "ws-spot"
+      },
+      {
+        "type": "op",
+        "token": "Hai giao dịch không đụng cùng dòng nào thì chắc chắn an toàn — khỏi soát gì nhau cho mất công",
+        "slot": "ws-x"
+      },
+      {
+        "type": "op",
+        "token": "VÌ SAO LỌT: cửa soát chỉ hỏi \"ai dán bản mới vào món TÔI GHI?\" — writeset không giao thì im re, dù đồ thị precedence đã có vòng",
+        "slot": "ws-why"
+      },
+      {
+        "type": "op",
+        "token": "BÙA FOR UPDATE: khai các món ĐỌC-để-quyết-định như thể đã GHI — va chạm nhân tạo hiện hình, chỉ một đứa qua",
+        "slot": "ws-fix"
+      },
+      {
+        "type": "op",
+        "token": "LƯỚI CUỐI: SSI theo dõi rw-conflict vào+ra rồi tự tế một đứa · ràng buộc PK/CHECK cho DB tự chặn ngoài snapshot",
+        "slot": "ws-net"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ws-spot",
+        "placeholder": "Bước 1 — nhận mặt con quái?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "😈",
+          "label": "Nhận diện",
+          "sub": "Bước 1",
+          "hint": "Hai lệnh rút đêm qua: chúng ĐỌC gì của nhau, và GHI có chạm nhau không?"
+        }
+      },
+      {
+        "id": "ws-why",
+        "placeholder": "Bước 2 — vì sao cửa soát bài 18 im re?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🕳️",
+          "label": "Kẽ hở",
+          "sub": "Bước 2",
+          "hint": "Nhớ lại câu hỏi DUY NHẤT mà first-committer-wins đặt ra lúc commit — nó hỏi về tập nào?"
+        }
+      },
+      {
+        "id": "ws-fix",
+        "placeholder": "Bước 3 — bùa nào ép quái hiện hình?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔐",
+          "label": "Bùa chú",
+          "sub": "Bước 3",
+          "hint": "Không đổi được câu hỏi của cửa soát — vậy đổi thứ gì để câu hỏi cũ bắt được quái mới?"
+        }
+      },
+      {
+        "id": "ws-net",
+        "placeholder": "Bước 4 — hết bùa thủ công thì ai đỡ?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🥅",
+          "label": "Lưới cuối",
+          "sub": "Bước 4",
+          "hint": "Một giải pháp cấp-cả-phiên (Postgres 9.1+) và một lưới đỡ khai ngay trong schema."
+        }
+      }
+    ],
+    "expected_sql": "NHẬN DIỆN: hai giao dịch đọc CHÉO dữ liệu của nhau rồi mỗi đứa ghi MỘT MÓN KHÁC — quyết định dựa trên thứ kẻ kia sắp đổi VÌ SAO LỌT: cửa soát chỉ hỏi \"ai dán bản mới vào món TÔI GHI?\" — writeset không giao thì im re, dù đồ thị precedence đã có vòng BÙA FOR UPDATE: khai các món ĐỌC-để-quyết-định như thể đã GHI — va chạm nhân tạo hiện hình, chỉ một đứa qua LƯỚI CUỐI: SSI theo dõi rw-conflict vào+ra rồi tự tế một đứa · ràng buộc PK/CHECK cho DB tự chặn ngoài snapshot",
+    "expected_zones": {
+      "ws-spot": "NHẬN DIỆN: hai giao dịch đọc CHÉO dữ liệu của nhau rồi mỗi đứa ghi MỘT MÓN KHÁC — quyết định dựa trên thứ kẻ kia sắp đổi",
+      "ws-why": "VÌ SAO LỌT: cửa soát chỉ hỏi \"ai dán bản mới vào món TÔI GHI?\" — writeset không giao thì im re, dù đồ thị precedence đã có vòng",
+      "ws-fix": "BÙA FOR UPDATE: khai các món ĐỌC-để-quyết-định như thể đã GHI — va chạm nhân tạo hiện hình, chỉ một đứa qua",
+      "ws-net": "LƯỚI CUỐI: SSI theo dõi rw-conflict vào+ra rồi tự tế một đứa · ràng buộc PK/CHECK cho DB tự chặn ngoài snapshot"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 HỒ SƠ BẮT QUÁI KHÉP: nhận diện đọc-chéo-ghi-khác-món → kẽ hở writeset-không-giao → bùa FOR UPDATE → lưới SSI/PK. Khối \"không đụng cùng dòng là an toàn\" chính là BỊA — cả bài này tồn tại để chôn câu đó: hai lệnh rút không chạm nhau một dòng nào mà két thủng −100. An toàn hay không nằm ở chỗ bạn ĐỌC gì để quyết định, không phải bạn GHI vào đâu. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "ws-spot": "Bước 1 — soi lại vụ án: T1 đọc những két nào, ghi két nào? T2 thì sao? Chỗ nào \"chéo\"?",
+      "ws-why": "Bước 2 — cửa soát bài 18 chỉ đặt MỘT câu hỏi lúc commit. Câu đó nhắc tới readset hay writeset?",
+      "ws-fix": "Bước 3 — nếu các món ĐỌC được \"tính là ghi\", thì writeset hai đứa còn rời nhau không?",
+      "ws-net": "Bước 4 — một đằng engine tự theo dõi rw-conflict, một đằng schema tự chặn. Tên chúng là gì?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #60 — vá đúng một dòng:</strong> đây là câu đọc-để-soát-luật trong job rút gem — chính nó để write skew lọt qua đêm qua. Sửa cho các két vừa đọc được <strong>giữ chỗ</strong> tới hết giao dịch.",
+    "challenge_type": "bug_fix",
+    "buggy": "SELECT vault_name, balance\nFROM vaults\nWHERE seller_id = 4102;",
+    "buggy_line": 2,
+    "expected_sql": "SELECT vault_name, balance FROM vaults WHERE seller_id = 4102 FOR UPDATE;",
+    "schema": {
+      "table_name": "vaults",
+      "columns": [
+        {
+          "name": "vault_id",
+          "type": "VARCHAR",
+          "key": "PK"
+        },
+        {
+          "name": "seller_id",
+          "type": "INT",
+          "key": "🔑 idx_seller"
+        },
+        {
+          "name": "vault_name",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "balance",
+          "type": "INT (gem)",
+          "key": "⚖️ luật: tổng ≥ 0"
+        }
+      ],
+      "data": [
+        [
+          "V-01",
+          "4102",
+          "KÉT QUẢNG CÁO (A)",
+          "100"
+        ],
+        [
+          "V-02",
+          "4102",
+          "KÉT CHÍNH (B)",
+          "200"
+        ],
+        [
+          "V-03",
+          "9",
+          "KÉT CHÍNH",
+          "12500"
+        ],
+        [
+          "V-04",
+          "15",
+          "KÉT CHÍNH",
+          "790"
+        ],
+        [
+          "V-05",
+          "12",
+          "KÉT QUẢNG CÁO",
+          "320"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Câu SELECT tự nó không sai một ly — nó trả về đúng 2 két của DragonForge. Cái sai là NGHỀ của nó: đây là cú đọc-để-quyết-định (đọc xong là rút tiền dựa trên con số vừa thấy), mà lại đọc TRẦN — không giữ chỗ, không khai báo. FOR UPDATE gắn vào cuối câu là lời khai đó.",
+      "real_world": "Django viết <code>Vault.objects.select_for_update().filter(seller_id=4102)</code>, Rails viết <code>lock</code>, JPA có <code>PESSIMISTIC_WRITE</code> — tất cả đẻ ra đúng câu SQL này. Luật bỏ túi: đọc chỉ để HIỂN THỊ thì đọc trần; đọc để QUYẾT ĐỊNH GHI thì giữ chỗ.",
+      "steps": [
+        "Dòng tô đỏ: WHERE lọc đúng — nhưng câu lệnh kết thúc mà không giữ chỗ.",
+        "Gắn FOR UPDATE vào cuối câu (trước dấu chấm phẩy).",
+        "SELECT / FROM / WHERE không có tội — giữ nguyên.",
+        "Chạy thử: kết quả vẫn 2 két y hệt — thứ đổi là hành vi CONCURRENCY, không phải kết quả."
+      ],
+      "hint_explore": "Chạy TRƯỚC khi sửa mà xem: 2 dòng két hiện ra ngon lành — bug này không nằm trong kết quả, nó nằm trong thứ mắt thường không thấy.",
+      "expected": "SELECT vault_name, balance FROM vaults WHERE seller_id = 4102 FOR UPDATE;"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Kết quả query ĐÚNG mà vẫn là bug — vậy thứ thiếu không phải cột hay điều kiện. Câu đọc này còn thiếu lời khai gì?"
+      },
+      {
+        "level": 2,
+        "text": "Muốn các dòng vừa đọc được \"tính như đã ghi\" thì SQL có mệnh đề chuyên dụng — 2 từ, đứng cuối câu."
+      },
+      {
+        "level": 3,
+        "text": "Gắn FOR UPDATE vào cuối: … WHERE seller_id = 4102 FOR UPDATE;"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: SELECT vault_name, balance FROM vaults WHERE seller_id = 4102 FOR UPDATE;"
+      }
+    ],
+    "success_message": "TICKET #60 ĐÓNG — hai két giữ chỗ xong, write skew hết cửa tàng hình! 🔐 Nhưng khoan: FOR UPDATE giữ khóa tới hết giao dịch… vậy cái giao dịch có CON NGƯỜI ngồi giữa — mở sơ đồ ghế, ngắm nghía 5 phút rồi mới chốt — thì giữ kiểu gì? Giữ khóa 5 phút là treo cả sàn. Bài cuối Module 8: không giữ gì hết — để CÁI GHẾ tự nhớ nó đã đổi chủ mấy lần. VERSION NUMBER. 🎫",
+    "xp_reward": 120
+  }
+}

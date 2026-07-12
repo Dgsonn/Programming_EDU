@@ -1,0 +1,696 @@
+{
+  "id": "db_05",
+  "index": 6,
+  "title": "Weak Entity & Khóa chính tổng hợp",
+  "subtitle": "Thực thể yếu — không có khóa riêng, phải ghép FK (cha) + discriminator",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 24,
+  "xp_reward": 60,
+  "project_piece": "🧩 Khởi động \"Máy Chia Trung Gian\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #06",
+    "hook": "Doanh thu mới xuất hiện: <strong>các game bắt đầu bán DLC</strong>. Nhưng đơn hàng đầu tiên đã gây bối rối — khách mua <em>\"Gói #2\"</em>… mà game nào cũng có Gói #2! Hoá ra DLC <strong>không tự đứng một mình được</strong>: nó chỉ có nghĩa khi gắn với game gốc. Ticket này dạy bạn thiết kế những \"thực thể sống nhờ\" như vậy — với khoá chính <strong>ghép</strong> từ khoá của cha + số thứ tự riêng."
+  },
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "dlc_content",
+      "columns": [
+        "ref_game_id",
+        "dlc_no",
+        "dlc_name"
+      ],
+      "dataRows": [
+        [
+          "300",
+          "1",
+          "Hearts of Stone"
+        ],
+        [
+          "300",
+          "2",
+          "Blood and Wine"
+        ],
+        [
+          "400",
+          "1",
+          "Phantom Liberty"
+        ],
+        [
+          "400",
+          "2",
+          "Corpo Gear Pack"
+        ],
+        [
+          "500",
+          "1",
+          "Shadow of the Erdtree"
+        ],
+        [
+          "500",
+          "2",
+          "Colosseum Update"
+        ],
+        [
+          "500",
+          "3",
+          "Ranni's Quest Pack"
+        ],
+        [
+          "600",
+          "1",
+          "Hell Mode"
+        ],
+        [
+          "600",
+          "2",
+          "Olympus Pack"
+        ],
+        [
+          "600",
+          "3",
+          "Underworld Map"
+        ],
+        [
+          "300",
+          "3",
+          "Witcher School Gear"
+        ],
+        [
+          "400",
+          "3",
+          "Night City Expansion"
+        ],
+        [
+          "700",
+          "1",
+          "Survivor Pass S1"
+        ],
+        [
+          "700",
+          "2",
+          "Survivor Pass S2"
+        ],
+        [
+          "700",
+          "3",
+          "Survivor Pass S3"
+        ],
+        [
+          "800",
+          "1",
+          "Ranked Mode DLC"
+        ],
+        [
+          "800",
+          "2",
+          "Cosmetic Bundle"
+        ],
+        [
+          "800",
+          "3",
+          "Winter Event Pack"
+        ],
+        [
+          "900",
+          "1",
+          "Story Expansion I"
+        ],
+        [
+          "900",
+          "2",
+          "Story Expansion II"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Kiến trúc thực thể yếu",
+    "desc": "định danh weak entity bằng khóa ghép"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Thực thể yếu = loại thực thể KHÔNG có Khóa chính độc lập, phải nhờ \"cha\"",
+        "Khóa chính tổng hợp = FK trỏ về thực thể cha + Discriminator (cột phân biệt)",
+        "Dùng AND để nối 2 vế của khóa chính tổng hợp trong WHERE"
+      ],
+      "intro": "Có những thực thể không thể tự tồn tại nếu thiếu \"cha\". Ví dụ: bản mở rộng (DLC) <em>\"Gói số 1\"</em> — chưa biết của game nào. Nó cần kết hợp với <code>ref_game_id</code> mới định danh được. <strong>Thực thể yếu</strong> dùng Khóa chính tổng hợp: FK (trỏ về cha) + Discriminator (cột phân biệt trong phạm vi cha).",
+      "example": "Trong bảng <code>dlc_content</code>, không có cột <code>dlc_id</code> riêng. Khóa chính là 2 cột cộng lại: <code>ref_game_id</code> (FK) + <code>dlc_no</code> (Discriminator). Truy vấn cần dùng <code>AND</code>: <code>WHERE dlc_no = 1 AND ref_game_id = 400</code>."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-link-slash",
+        "title": "Weak Entity — không có khóa riêng",
+        "body": "Bản mở rộng (DLC) \"Gói số 1\" — chưa biết của game nào! DLC là <strong>thực thể yếu</strong>: không tự định danh, phải dựa vào game gốc. Xóa game gốc → các DLC của nó cũng mất (cascading)."
+      },
+      {
+        "icon": "fa-key",
+        "title": "Partial key + FK = Composite PK",
+        "body": "<strong>Discriminator</strong> <code>dlc_no</code> chỉ phân biệt TRONG 1 game (như \"nhà số 1\" trong 1 khu phố). <strong>FK</strong> <code>ref_game_id</code> trỏ game cha. Khóa chính = GHÉP <code>(ref_game_id, dlc_no)</code>."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay",
+        "body": "Bảng <code>dlc_content</code> KHÔNG có cột <code>dlc_id</code> riêng. Định danh duy nhất cần CẢ 2: <code>ref_game_id</code> + <code>dlc_no</code>."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "er",
+        "width": 600,
+        "height": 280,
+        "entities": [
+          {
+            "name": "game",
+            "columns": [
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "title",
+                "type": "VARCHAR"
+              }
+            ]
+          },
+          {
+            "name": "dlc_content",
+            "weak": true,
+            "columns": [
+              {
+                "name": "ref_game_id",
+                "type": "INT",
+                "key": "FK,PK"
+              },
+              {
+                "name": "dlc_no",
+                "type": "INT",
+                "key": "PK partial"
+              },
+              {
+                "name": "dlc_name",
+                "type": "VARCHAR"
+              }
+            ]
+          }
+        ],
+        "connectors": [
+          {
+            "from": "game",
+            "to": "dlc_content",
+            "label": "có DLC",
+            "fromCard": "1",
+            "toCard": "N"
+          }
+        ],
+        "note": "dlc_content = WEAK entity (viền đứt) · identifying relationship · PK ghép (ref_game_id, dlc_no)"
+      },
+      "schema": {
+        "table_name": "dlc_content",
+        "columns": [
+          {
+            "name": "ref_game_id",
+            "type": "INT",
+            "key": "PK+FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "dlc_no",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "dlc_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🎁"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "300",
+          "1",
+          "Hearts of Stone"
+        ],
+        [
+          "300",
+          "2",
+          "Blood and Wine"
+        ],
+        [
+          "400",
+          "1",
+          "Phantom Liberty"
+        ],
+        [
+          "400",
+          "2",
+          "Corpo Gear Pack"
+        ],
+        [
+          "500",
+          "1",
+          "Shadow of the Erdtree"
+        ],
+        [
+          "500",
+          "2",
+          "Colosseum Update"
+        ],
+        [
+          "500",
+          "3",
+          "Ranni's Quest Pack"
+        ],
+        [
+          "600",
+          "1",
+          "Hell Mode"
+        ],
+        [
+          "600",
+          "2",
+          "Olympus Pack"
+        ],
+        [
+          "600",
+          "3",
+          "Underworld Map"
+        ],
+        [
+          "300",
+          "3",
+          "Witcher School Gear"
+        ],
+        [
+          "400",
+          "3",
+          "Night City Expansion"
+        ],
+        [
+          "700",
+          "1",
+          "Survivor Pass S1"
+        ],
+        [
+          "700",
+          "2",
+          "Survivor Pass S2"
+        ],
+        [
+          "700",
+          "3",
+          "Survivor Pass S3"
+        ],
+        [
+          "800",
+          "1",
+          "Ranked Mode DLC"
+        ],
+        [
+          "800",
+          "2",
+          "Cosmetic Bundle"
+        ],
+        [
+          "800",
+          "3",
+          "Winter Event Pack"
+        ],
+        [
+          "900",
+          "1",
+          "Story Expansion I"
+        ],
+        [
+          "900",
+          "2",
+          "Story Expansion II"
+        ]
+      ]
+    },
+    "mission": "Lấy <code>dlc_name</code> của gói DLC số 1 thuộc game id 400 — kéo thả SQL với khóa chính tổng hợp."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Thực thể yếu (Weak Entity) khác thực thể thường ở điểm nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Có nhiều cột hơn các thực thể khác",
+            "correct": false,
+            "explanation": "Sai — weak entity thường ÍT cột hơn (chỉ partial key + FK). Số cột không phải đặc trưng phân biệt."
+          },
+          {
+            "id": "b",
+            "text": "Không có Khóa chính độc lập — cần kết hợp với FK từ thực thể cha",
+            "correct": true,
+            "explanation": "Đúng — weak entity không có PK riêng; PK phải là composite (FK từ entity cha + partial key vd: dlc_no). VD: dlc_content cần (game_id, dlc_no) để định danh duy nhất."
+          },
+          {
+            "id": "c",
+            "text": "Không thể lưu dữ liệu số, chỉ lưu chuỗi",
+            "correct": false,
+            "explanation": "Sai — weak entity có thể lưu INT, VARCHAR, DECIMAL... tất cả kiểu SQL. Đặc trưng là về IDENTITY, không phải data type."
+          },
+          {
+            "id": "d",
+            "text": "Tự động xóa khi database tắt",
+            "correct": false,
+            "explanation": "Sai — dữ liệu persistent khi DB tắt (ghi vào disk). Weak entity là khái niệm ER, không liên quan persistence hay session."
+          }
+        ]
+      },
+      {
+        "question": "Trong <code>dlc_content(ref_game_id, dlc_no, dlc_name)</code>, khóa chính là cột nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chỉ <code>ref_game_id</code>",
+            "correct": false,
+            "explanation": "Sai — ref_game_id lặp lại cho mỗi DLC của 1 game (1 game có nhiều DLC). Không unique."
+          },
+          {
+            "id": "b",
+            "text": "Chỉ <code>dlc_no</code>",
+            "correct": false,
+            "explanation": "Sai — dlc_no = 1 có ở game khác nhau (Elden Ring DLC1 ≠ Hades DLC1). Không unique across games."
+          },
+          {
+            "id": "c",
+            "text": "<code>(ref_game_id, dlc_no)</code> — cả 2 cột cộng lại mới định danh duy nhất",
+            "correct": true,
+            "explanation": "Đúng — composite key: (game, số DLC) là duy nhất. DLC1 của game101 ≠ DLC1 của game102. Đây là pattern classic của weak entity."
+          },
+          {
+            "id": "d",
+            "text": "Không có khóa chính (bảng lỗi)",
+            "correct": false,
+            "explanation": "Sai — mọi bảng chuẩn đều có PK (nguyên tắc entity integrity). Bảng này có composite PK (ref_game_id, dlc_no)."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Tìm lỗi trong Weak Entity setup",
+      "instruction": "Dòng nào sai trong SQL tạo bảng weak entity DLC?",
+      "xp": 25,
+      "code": "CREATE TABLE dlc_content (\n  dlc_no INT PRIMARY KEY,\n  ref_game_id INT,\n  dlc_name VARCHAR(100),\n  price DECIMAL(10,2)\n);",
+      "bugType": "logic",
+      "bugs": [
+        {
+          "line": 2,
+          "description": "Weak entity KHÔNG có PK riêng! dlc_no chỉ là khóa MỘT PHẦN. PK đúng = composite (ref_game_id, dlc_no). Sửa: bỏ PRIMARY KEY ở dlc_no → PRIMARY KEY (ref_game_id, dlc_no) + FOREIGN KEY (ref_game_id) REFERENCES game(game_id)."
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "dlc_name",
+        "slot": "col-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "dlc_content",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "dlc_no",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "2",
+        "slot": "val-1"
+      },
+      {
+        "type": "kw",
+        "token": "AND",
+        "slot": "kw-and"
+      },
+      {
+        "type": "col",
+        "token": "ref_game_id",
+        "slot": "wcol-2"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-2"
+      },
+      {
+        "type": "val",
+        "token": "300",
+        "slot": "val-2"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____ ____ ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT dlc_name FROM dlc_content WHERE dlc_no = 2 AND ref_game_id = 300;",
+    "reveal_hints": {
+      "select-line": "SELECT 1 cột: <strong>dlc_name</strong>.",
+      "from-line": "FROM <strong>dlc_content</strong>.",
+      "where-line": "WHERE khóa tổng hợp: <strong>dlc_no = 2 AND ref_game_id = 300</strong> (thiếu AND → trả về nhầm DLC của game khác)."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — tìm <strong>gói DLC MỚI NHẤT</strong> (số <code>dlc_no</code> LỚN NHẤT) của game id <code>500</code>. Mẫu Top-N kinh điển: <code>ORDER BY ... DESC</code> + <code>LIMIT 1</code> — vẫn trong phạm vi 1 game vì <code>dlc_no</code> chỉ có nghĩa KHI gắn với game.",
+    "starter": "-- Gói DLC mới nhất (dlc_no lớn nhất) của game 500\n-- Mẫu Top-N: ORDER BY ... DESC + LIMIT 1\nSELECT ____, ____\n  FROM dlc_content\n WHERE ____ = ____\n ORDER BY ____ DESC\n LIMIT 1;\n",
+    "schema": {
+      "table_name": "dlc_content",
+      "columns": [
+        {
+          "name": "ref_game_id",
+          "type": "INT",
+          "key": "PK+FK",
+          "icon": "🔗"
+        },
+        {
+          "name": "dlc_no",
+          "type": "INT",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "dlc_name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "🎁"
+        }
+      ],
+      "data": [
+        [
+          "300",
+          "1",
+          "Hearts of Stone"
+        ],
+        [
+          "300",
+          "2",
+          "Blood and Wine"
+        ],
+        [
+          "400",
+          "1",
+          "Phantom Liberty"
+        ],
+        [
+          "400",
+          "2",
+          "Corpo Gear Pack"
+        ],
+        [
+          "500",
+          "1",
+          "Shadow of the Erdtree"
+        ],
+        [
+          "500",
+          "2",
+          "Colosseum Update"
+        ],
+        [
+          "500",
+          "3",
+          "Ranni's Quest Pack"
+        ],
+        [
+          "600",
+          "1",
+          "Hell Mode"
+        ],
+        [
+          "600",
+          "2",
+          "Olympus Pack"
+        ],
+        [
+          "600",
+          "3",
+          "Underworld Map"
+        ],
+        [
+          "300",
+          "3",
+          "Witcher School Gear"
+        ],
+        [
+          "400",
+          "3",
+          "Night City Expansion"
+        ],
+        [
+          "700",
+          "1",
+          "Survivor Pass S1"
+        ],
+        [
+          "700",
+          "2",
+          "Survivor Pass S2"
+        ],
+        [
+          "700",
+          "3",
+          "Survivor Pass S3"
+        ],
+        [
+          "800",
+          "1",
+          "Ranked Mode DLC"
+        ],
+        [
+          "800",
+          "2",
+          "Cosmetic Bundle"
+        ],
+        [
+          "800",
+          "3",
+          "Winter Event Pack"
+        ],
+        [
+          "900",
+          "1",
+          "Story Expansion I"
+        ],
+        [
+          "900",
+          "2",
+          "Story Expansion II"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "DLC là <strong>thực thể yếu</strong>: KHÔNG có khoá riêng, phải bám vào game gốc — <code>dlc_no</code> chỉ có nghĩa TRONG 1 game. Game 500 vừa ra gói DLC mới; trang cửa hàng cần hiện banner <strong>\"DLC mới nhất\"</strong> = gói có <code>dlc_no</code> lớn nhất của RIÊNG game đó.",
+      "real_world": "Chính là mục \"<strong>Chương mới nhất</strong>\" trong app đọc truyện hay \"<strong>tập mới nhất</strong>\" trên Netflix — luôn là <code>ORDER BY ... DESC LIMIT 1</code> TRONG PHẠM VI 1 chủ thể (1 truyện, 1 series, 1 game). Lọc sai phạm vi là hiện nhầm chương của truyện khác.",
+      "steps": [
+        "Khoanh phạm vi 1 game trước: <code>WHERE ref_game_id = 500</code> (vì dlc_no game nào cũng có #1, #2…).",
+        "Đưa gói MỚI NHẤT lên đầu: <code>ORDER BY dlc_no DESC</code> (số lớn nhất = ra sau cùng).",
+        "Chỉ lấy đúng 1 dòng đầu: <code>LIMIT 1</code> — mẫu Top-N kinh điển.",
+        "SELECT 2 cột <code>dlc_no, dlc_name</code>. Run → đúng 1 dòng duy nhất."
+      ],
+      "hint_explore": "Muốn xem toàn bộ DLC của mọi game? Gõ <code>SELECT * FROM dlc_content</code> rồi <strong>Run</strong> — để ý game nào cũng có dlc_no #1, #2… trùng nhau.",
+      "example": {
+        "question": "Ví dụ tương tự — gói DLC mới nhất của game <strong>300</strong>:",
+        "sql": "SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 300 ORDER BY dlc_no DESC LIMIT 1;",
+        "sample_output": "→ 1 dòng: <code>3, Witcher School Gear</code>"
+      },
+      "expected": "Đúng 1 dòng × 2 cột (<code>dlc_no, dlc_name</code>): gói DLC số lớn nhất của game 500 — <code>3, Ranni's Quest Pack</code>. Thiếu WHERE là lấy nhầm DLC mới nhất của game KHÁC."
+    },
+    "expected_sql": "SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no DESC LIMIT 1;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khoanh phạm vi 1 game trước đã: <code>WHERE ref_game_id = 500</code> — vì <code>dlc_no</code> game nào cũng có #1, #2… (đúng tinh thần khoá ghép của bài)."
+      },
+      {
+        "level": 2,
+        "text": "\"Mới nhất\" = <code>dlc_no</code> LỚN NHẤT → <code>ORDER BY dlc_no DESC</code> đưa nó lên dòng đầu."
+      },
+      {
+        "level": 3,
+        "text": "Chỉ cần dòng đầu tiên: thêm <code>LIMIT 1</code>. Bộ đôi <code>ORDER BY ... DESC + LIMIT 1</code> là mẫu Top-N kinh điển."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT dlc_no, dlc_name FROM dlc_content WHERE ref_game_id = 500 ORDER BY dlc_no DESC LIMIT 1;</code>"
+      }
+    ],
+    "success_message": "Bài 7 tiếp theo — chuyển ER Diagram → bảng quan hệ vật lý (7 quy tắc mapping chuẩn).",
+    "xp_reward": 50
+  }
+}

@@ -1,0 +1,560 @@
+{
+  "id": "nc_03",
+  "index": 3,
+  "title": "Full Scan vs Index Scan — index không phải lúc nào cũng nhanh",
+  "subtitle": "Cùng một query lúc bay lúc bò: access path đổi theo số dòng match",
+  "module": 7,
+  "module_title": "Engine Room — Query Processing",
+  "estimated_minutes": 18,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "orders (100.000 đơn ≈ 1.000 block — mẫu 6)",
+      "columns": [
+        "order_id",
+        "buyer_id",
+        "seller_id",
+        "total",
+        "status"
+      ],
+      "dataRows": [
+        [
+          "9001",
+          "88",
+          "12",
+          "80",
+          "delivered"
+        ],
+        [
+          "9002",
+          "88",
+          "9",
+          "12500",
+          "shipped"
+        ],
+        [
+          "9003",
+          "21",
+          "12",
+          "99",
+          "delivered"
+        ],
+        [
+          "9004",
+          "88",
+          "15",
+          "790",
+          "delivered"
+        ],
+        [
+          "9005",
+          "707",
+          "12",
+          "45",
+          "delivered"
+        ],
+        [
+          "9006",
+          "707",
+          "9",
+          "320",
+          "delivered"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #44",
+    "hook": "Marketplace lên tính năng <em>\"Lịch sử mua\"</em> — bấm avatar là ra mọi đơn của khách. Demo mượt, khách thường mở trong nháy mắt. Rồi thứ Sáu, khách VIP nghiện săn đồ — <strong>5.000 đơn</strong> — bấm vào và… treo. CÙNG MỘT QUERY, lúc bay lúc bò. Không phải bug, không phải mạng: là <strong>access path</strong> — con đường engine chọn để vào kho dữ liệu. Ticket #44: học đủ các lối vào, hiểu vì sao index không phải lúc nào cũng nhanh — và vì sao optimizer thà quét cả kho."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Access path = lối vào dữ liệu: Seq Scan (quét tuần tự) · index theo khóa — nhảy 1 phát · secondary index — nhảy theo TỪNG dòng match",
+        "Secondary index phản chủ khi match NHIỀU: n dòng rải rác = n cú nhảy × 4,1ms — sách gọi thẳng: \"có thể tệ hơn cả linear search\"",
+        "Optimizer chọn lối vào theo THỐNG KÊ số dòng match — nên cùng 1 query có thể đổi plan theo dữ liệu"
+      ],
+      "intro": "\"Lịch sử mua\" của khách thường: 20 đơn — index dẫn 20 cú nhảy, <strong>82ms</strong>, ngon lành. Của VIP: 5.000 đơn rải khắp 1.000 block — 5.000 cú nhảy × 4,1ms = <strong>20.500ms</strong>, trong khi quét TUẦN TỰ cả kho chỉ 104ms. Cùng query, cùng index — chỉ khác SỐ DÒNG MATCH, và plan rẻ nhất lật ngược hoàn toàn. Optimizer nhìn thống kê (\"buyer này tầm bao nhiêu đơn?\") để chọn lối vào — đó là lý do nó thản nhiên quét cả kho khi bạn đụng khách VIP.",
+      "example": "Lằn ranh nằm ở điểm hòa vốn: n cú nhảy × 4,1ms so với 104ms quét cả kho → n ≈ 25 đơn. Lấy ít hơn: index thắng. Lấy nhiều hơn: seq scan thắng. Index không \"nhanh\" hay \"chậm\" — nó nhanh KHI LẤY ÍT."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-door-open",
+        "title": "Ba lối vào kho dữ liệu",
+        "body": "<strong>Linear search (A1)</strong>: quét mọi block — chậm mà chắc, chấp mọi điều kiện, không cần gì sẵn. <strong>Index theo khóa (A2)</strong>: lần cây tới đúng block chứa MỘT dòng cần tìm — một cú seek, xong việc. <strong>Secondary index nhiều match (A4)</strong>: tra mục lục ra danh sách RID, rồi nhảy random theo TỪNG dòng — mỗi dòng một vé seek.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.3 — Selection: A1/A2/A4, \"worst-case cost could become even worse than linear search\""
+      },
+      {
+        "icon": "fa-scale-unbalanced",
+        "title": "Điểm hòa vốn của index",
+        "body": "Kho 1.000 block: seq scan cố định <strong>104ms</strong> bất kể lấy mấy dòng; index tốn <strong>n × 4,1ms</strong> theo số dòng lấy ra. Hòa vốn: n ≈ 25. Sách chốt luật (A6): secondary index <em>\"chỉ nên dùng khi chọn RẤT ÍT record\"</em>. Con số hòa vốn đổi theo kích thước bảng — nguyên tắc thì không."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Soi 3 query của chính Marketplace: tra 1 đơn theo <code>order_id</code> (khóa chính) — index, nhảy 1 phát. Lịch sử khách thường ~20 đơn — index, thắng sít sao. \"Tổng doanh thu cả kho\" — đằng nào cũng đụng MỌI block, seq scan chính đáng (bạn đã gặp luật này ở Ticket #36 của Community!)."
+      }
+    ],
+    "plan_visual": {
+      "query": "SELECT * FROM orders WHERE buyer_id = 707;  -- VIP \"wh4le\" · ~5.000 đơn",
+      "caption": "Đổi buyer_id thành khách thường 20 đơn — cán cân lật ngược: index 82ms thắng seq scan 104ms. Cost sống theo DỮ LIỆU, không theo query.",
+      "price": {
+        "seek_ms": 4,
+        "block_ms": 0.1,
+        "note": "Bảng giá Ticket #43: seek 4ms · block 0,1ms (HDD minh họa theo sách)."
+      },
+      "trees": [
+        {
+          "name": "Plan A — Seq Scan cả kho",
+          "chosen": true,
+          "note": "✓ Optimizer chọn khi match NHIỀU — 104ms cố định",
+          "io": {
+            "access": "seq",
+            "seeks": 1,
+            "blocks": 1000
+          },
+          "nodes": [
+            {
+              "op": "orders",
+              "kind": "table",
+              "detail": "100.000 đơn ≈ 1.000 block",
+              "rows": "1.000 block"
+            },
+            {
+              "op": "Seq Scan",
+              "kind": "scan",
+              "detail": "quét liền mạch, lọc trong lúc quét",
+              "rows": "100.000 dòng",
+              "cost": "1 seek + 1.000 block"
+            },
+            {
+              "op": "σ buyer_id = 707",
+              "kind": "filter",
+              "detail": "giữ đơn của VIP",
+              "rows": "5.000 dòng"
+            }
+          ]
+        },
+        {
+          "name": "Plan B — Index idx_buyer",
+          "chosen": false,
+          "note": "5.000 cú nhảy — index phản chủ khi match nhiều",
+          "io": {
+            "access": "random",
+            "seeks": 5000,
+            "blocks": 5000
+          },
+          "nodes": [
+            {
+              "op": "orders",
+              "kind": "table",
+              "detail": "5.000 đơn rải khắp 1.000 block",
+              "rows": "5.000 block đọc lẻ"
+            },
+            {
+              "op": "Index Scan idx_buyer",
+              "kind": "scan",
+              "detail": "mỗi đơn một cú nhảy random",
+              "rows": "5.000 dòng",
+              "cost": "5.000 × 4,1 ms"
+            }
+          ]
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "orders — sổ đơn hàng (100.000 đơn ≈ 1.000 block)",
+        "columns": [
+          {
+            "name": "order_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "buyer_id",
+            "type": "INT",
+            "key": "🔑 idx_buyer"
+          },
+          {
+            "name": "seller_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "total",
+            "type": "INT (gem)",
+            "key": ""
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "9001",
+          "88 (khách thường)",
+          "12",
+          "80",
+          "delivered"
+        ],
+        [
+          "9004",
+          "88 (khách thường)",
+          "15",
+          "790",
+          "delivered"
+        ],
+        [
+          "9005",
+          "707 ← VIP wh4le",
+          "12",
+          "45",
+          "delivered"
+        ],
+        [
+          "9006",
+          "707 ← VIP wh4le",
+          "9",
+          "320",
+          "delivered"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Cùng query \"lịch sử mua\", cùng index — vì sao khách thường mở trong nháy mắt còn VIP 5.000 đơn thì treo?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Số dòng match quyết định số cú nhảy random: 20 cú (82ms) so với 5.000 cú (20.500ms) — index trả tiền seek THEO TỪNG DÒNG lấy ra",
+            "correct": true,
+            "explanation": "Đúng — index không có tốc độ cố định; hóa đơn của nó tỉ lệ thuận với số dòng match. Query không đổi, DỮ LIỆU đổi là plan rẻ nhất đổi."
+          },
+          {
+            "id": "b",
+            "text": "Trang VIP bị nhiều người xem cùng lúc nên nghẽn",
+            "correct": false,
+            "explanation": "Sai — một mình VIP mở lúc 3 giờ sáng vẫn treo y hệt; vấn đề nằm ở access path, không ở tải."
+          },
+          {
+            "id": "c",
+            "text": "Đơn của VIP nằm ở vùng đĩa cũ, đọc chậm hơn",
+            "correct": false,
+            "explanation": "Sai — block nào cũng cùng giá vé; đắt là ở SỐ CÚ NHẢY, không phải vị trí sang hèn của block."
+          },
+          {
+            "id": "d",
+            "text": "buyer_id của VIP là số to nên so sánh lâu hơn",
+            "correct": false,
+            "explanation": "Sai — so sánh số là tiền CPU, rẻ như bèo so với 5.000 cú seek cơ học."
+          }
+        ]
+      },
+      {
+        "question": "Optimizer thấy index sờ sờ mà vẫn chọn Seq Scan cho VIP. Nó \"lười\" hay nó đúng?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Đúng — nó ước lượng bằng thống kê: 5.000 match × 4,1ms/cú vượt xa 104ms quét cả kho; index chỉ đáng khi lấy RẤT ÍT",
+            "correct": true,
+            "explanation": "Đúng — sách A6 nói thẳng: secondary index \"chỉ nên dùng khi chọn rất ít record\". Optimizer làm đúng phép tính Ticket #43."
+          },
+          {
+            "id": "b",
+            "text": "Lười — về lý thuyết index luôn nhanh hơn quét tuần tự",
+            "correct": false,
+            "explanation": "Sai — chính \"lý thuyết\" trong sách (Ch 15.3) viết rằng index nhiều match có thể TỆ HƠN cả linear search."
+          },
+          {
+            "id": "c",
+            "text": "Nó chọn liều vì không chạy thử được",
+            "correct": false,
+            "explanation": "Sai — không chạy thử nhưng cũng không liều: ước lượng từ thống kê là phương pháp, không phải xổ số."
+          },
+          {
+            "id": "d",
+            "text": "Seq scan được chọn vì an toàn hơn, chứ không rẻ hơn",
+            "correct": false,
+            "explanation": "Sai — nó rẻ hơn thật: 104ms so với 20.500ms, chênh 200 lần chứ không phải chuyện \"an toàn\"."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Lối nào cho query này?",
+      "instruction": "Nhớ điểm hòa vốn ~25 đơn của kho 1.000 block — xếp từng query vào đúng lối.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "q1",
+          "label": "Tra MỘT đơn: WHERE order_id = 9001 (khóa chính)"
+        },
+        {
+          "id": "q2",
+          "label": "Lịch sử khách thường — ~20 đơn"
+        },
+        {
+          "id": "q3",
+          "label": "Lịch sử VIP wh4le — ~5.000 đơn rải rác"
+        },
+        {
+          "id": "q4",
+          "label": "Tổng doanh thu TOÀN KHO (đụng mọi đơn)"
+        }
+      ],
+      "bins": [
+        {
+          "id": "idx",
+          "label": "Index dẫn lối 📖"
+        },
+        {
+          "id": "seq",
+          "label": "Seq Scan rẻ hơn 🚚"
+        }
+      ],
+      "solution": {
+        "q1": "idx",
+        "q2": "idx",
+        "q3": "seq",
+        "q4": "seq"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Bốn cánh cửa vào kho — chọn đúng lối cho từng tình huống. Có MỘT lối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Index 20 cú nhảy ≈ 82ms — vẫn rẻ hơn quét cả kho 104ms: index THẮNG sít sao",
+        "slot": "ap-few"
+      },
+      {
+        "type": "op",
+        "token": "Kho đã có index thì mọi query cứ đi index — đọc ít dữ liệu hơn chắc chắn rẻ hơn",
+        "slot": "ap-x"
+      },
+      {
+        "type": "op",
+        "token": "Lần cây index khóa chính → nhảy đúng 1 block — trả 1 cú seek, xong việc",
+        "slot": "ap-pk"
+      },
+      {
+        "type": "op",
+        "token": "Secondary index chỉ đáng dùng khi lấy RẤT ÍT dòng — nghi ngờ thì cộng hóa đơn I/O rồi so",
+        "slot": "ap-rule"
+      },
+      {
+        "type": "op",
+        "token": "5.000 cú nhảy ≈ 20.500ms, thua xa quét cả kho 104ms — Seq Scan thắng áp đảo: index phản chủ",
+        "slot": "ap-many"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ap-pk",
+        "placeholder": "Cửa 1 — tra MỘT đơn theo khóa chính?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Tra theo PK",
+          "sub": "1 đơn",
+          "hint": "Khóa chính có cây index xếp sẵn — lần cây là ra đúng block chứa đơn."
+        }
+      },
+      {
+        "id": "ap-few",
+        "placeholder": "Cửa 2 — khách thường, ~20 đơn?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📖",
+          "label": "Khách 20 đơn",
+          "sub": "Match ít",
+          "hint": "20 cú nhảy × 4,1ms — so với 104ms quét cả kho thì bên nào rẻ?"
+        }
+      },
+      {
+        "id": "ap-many",
+        "placeholder": "Cửa 3 — VIP, ~5.000 đơn rải rác?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🐋",
+          "label": "VIP 5.000 đơn",
+          "sub": "Match nhiều",
+          "hint": "Nhân 5.000 cú nhảy với giá vé Ticket #43 xem index còn thắng không."
+        }
+      },
+      {
+        "id": "ap-rule",
+        "placeholder": "Cửa 4 — rút thành LUẬT bỏ túi?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⚖️",
+          "label": "Luật chọn lối",
+          "sub": "Access path",
+          "hint": "Sách A6 chốt một câu về secondary index — khi nào mới đáng dùng?"
+        }
+      }
+    ],
+    "expected_sql": "Lần cây index khóa chính → nhảy đúng 1 block — trả 1 cú seek, xong việc Index 20 cú nhảy ≈ 82ms — vẫn rẻ hơn quét cả kho 104ms: index THẮNG sít sao 5.000 cú nhảy ≈ 20.500ms, thua xa quét cả kho 104ms — Seq Scan thắng áp đảo: index phản chủ Secondary index chỉ đáng dùng khi lấy RẤT ÍT dòng — nghi ngờ thì cộng hóa đơn I/O rồi so",
+    "expected_zones": {
+      "ap-pk": "Lần cây index khóa chính → nhảy đúng 1 block — trả 1 cú seek, xong việc",
+      "ap-few": "Index 20 cú nhảy ≈ 82ms — vẫn rẻ hơn quét cả kho 104ms: index THẮNG sít sao",
+      "ap-many": "5.000 cú nhảy ≈ 20.500ms, thua xa quét cả kho 104ms — Seq Scan thắng áp đảo: index phản chủ",
+      "ap-rule": "Secondary index chỉ đáng dùng khi lấy RẤT ÍT dòng — nghi ngờ thì cộng hóa đơn I/O rồi so"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA VẼ xong bản đồ access path: PK → nhảy 1 phát · match ít → index · match nhiều → seq scan · luật A6: secondary chỉ đáng khi lấy RẤT ÍT. Khối \"cứ có index là dùng\" là bịa — chính hóa đơn Ticket #43 đã bác nó. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "ap-pk": "Cửa 1 mở màn: cần đúng MỘT đơn, và khóa chính có cây index xếp sẵn — lối vào nào trả đúng một cú seek?",
+      "ap-few": "Cửa 1 chốt: lần cây → nhảy 1 phát. Cửa 2: khách 20 đơn — lấy bảng giá Ticket #43 ra nhẩm trước khi chọn.",
+      "ap-many": "Cửa 2 chốt: 82ms < 104ms — index thắng SÍT SAO. Cửa 3: nhân số cú nhảy lên 5.000 xem còn thắng nổi không.",
+      "ap-rule": "Cửa 3 chốt: 20.500ms — index thua thảm, đúng câu sách: \"có thể tệ hơn cả linear search\". Cửa cuối: rút tất cả thành một luật bỏ túi."
+    }
+  },
+  "step_4": {
+    "prompt": "Đóng Ticket #44: viết query \"Lịch sử mua\" bản chuẩn cho khách <strong>#88</strong> (khách thường — lối index chính đáng): lấy <code>order_id, total</code> từ <code>orders</code> với <code>buyer_id = 88</code> VÀ chỉ đơn đã giao <code>status = 'delivered'</code>.",
+    "schema": {
+      "table_name": "orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "buyer_id",
+          "type": "INT",
+          "key": "🔑 idx_buyer"
+        },
+        {
+          "name": "seller_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "item_name",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "total",
+          "type": "INT (gem)",
+          "key": ""
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "9001",
+          "88",
+          "12",
+          "Khiên gỗ sồi",
+          "80",
+          "delivered"
+        ],
+        [
+          "9002",
+          "88",
+          "9",
+          "Giáp rồng Huyền thoại",
+          "12500",
+          "shipped"
+        ],
+        [
+          "9003",
+          "21",
+          "12",
+          "Bùa may mắn",
+          "99",
+          "delivered"
+        ],
+        [
+          "9004",
+          "88",
+          "15",
+          "Skin súng Neon",
+          "790",
+          "delivered"
+        ],
+        [
+          "9005",
+          "88",
+          "12",
+          "Kiếm gỗ Newbie",
+          "45",
+          "cancelled"
+        ],
+        [
+          "9006",
+          "34",
+          "9",
+          "Giáp da sói",
+          "320",
+          "delivered"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Plan mô phỏng cho query này: <code>Index Scan using idx_buyer (≈20 cú nhảy) → Filter: status = 'delivered'</code> — combo kinh điển của sách 15.3: MỘT index lo điều kiện gắt nhất (buyer_id), điều kiện còn lại lọc tay trên đống dòng đã ít.",
+      "real_world": "Chiến thuật \"1 index + filter phần còn lại\" là cách Postgres xử đa số WHERE nhiều điều kiện — không cần index cho MỌI cột, chỉ cần cho cột gắt nhất. Đó cũng là lý do đừng rải index bừa (món nợ ghi — Ticket #36).",
+      "steps": [
+        "Lấy đúng 2 cột: <code>order_id, total</code>.",
+        "Hai điều kiện nối bằng <code>AND</code>: buyer_id = 88 và status = 'delivered'.",
+        "So sánh chuỗi nằm trong nháy đơn: <code>'delivered'</code>.",
+        "Khách #88 ~20 đơn — dưới điểm hòa vốn 25, index scan chính đáng."
+      ],
+      "hint_explore": "Chạy thử <code>SELECT * FROM orders WHERE buyer_id = 88</code> trước — thấy cả đơn shipped/cancelled cần loại đi.",
+      "expected": "Bảng 2 đơn đã giao của khách #88: 9001 (80 gem) và 9004 (790 gem)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Hai điều kiện, một chữ AND: <code>WHERE buyer_id = 88 AND status = …</code>"
+      },
+      {
+        "level": 2,
+        "text": "Chuỗi so sánh trong nháy đơn: <code>'delivered'</code> (viết thường)."
+      },
+      {
+        "level": 3,
+        "text": "Khung câu: <code>SELECT order_id, total FROM orders WHERE … AND … ;</code>"
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT order_id, total FROM orders WHERE buyer_id = 88 AND status = 'delivered';</code>"
+      }
+    ],
+    "expected_sql": "SELECT order_id, total FROM orders WHERE buyer_id = 88 AND status = 'delivered';",
+    "success_message": "TICKET #44 ĐÓNG — \"Lịch sử mua\" chạy đúng lối! 📖 Engine Room đi được 3/10: pipeline → bảng giá → access path. Nhưng phía trước là một khách hàng khó chiều hơn mọi VIP: <strong>ORDER BY</strong>. Sắp xếp 100.000 đơn khi RAM không chứa nổi cả bảng? Bài sau: External Sort-Merge — nghệ thuật sắp xếp thứ TO HƠN bộ nhớ.",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_bitmap_scan"
+  ]
+}

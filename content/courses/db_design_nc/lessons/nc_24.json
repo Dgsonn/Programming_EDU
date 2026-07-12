@@ -1,0 +1,597 @@
+{
+  "id": "nc_24",
+  "index": 24,
+  "title": "ARIES — phục hồi 3 pass, và mẹo bỏ qua việc thừa",
+  "subtitle": "LSN + PageLSN + DirtyPageTable: hệ phục hồi thật ngoài đời, khôn tới mức không redo lại thứ đã có trên đĩa",
+  "module": 9,
+  "module_title": "Hộp Đen — Sự cố & Phục hồi",
+  "estimated_minutes": 24,
+  "xp_reward": 130,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "log ARIES có LSN + trang có PageLSN (crash sau LSN 90)",
+      "columns": [
+        "LSN",
+        "log record",
+        "ghi chú"
+      ],
+      "dataRows": [
+        [
+          "20",
+          "<T1, A, 1000, 900>",
+          "A update 1"
+        ],
+        [
+          "50",
+          "checkpoint {A,B · active T1}",
+          "mốc"
+        ],
+        [
+          "60",
+          "<T1, A, 900, 850>",
+          "A update 2"
+        ],
+        [
+          "80",
+          "<T3, C, 700, 600>",
+          "C update"
+        ],
+        [
+          "90",
+          "<T3 commit>",
+          "T3 chốt"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #65",
+    "hook": "Mọi thứ ta học suốt phần Recovery — log, undo/redo, WAL, checkpoint — đều là bản <em>giản lược cho dễ hiểu</em> của một hệ thống thật đang chạy trong hàng nghìn database ngoài đời: <strong>ARIES</strong>. Nó khôn hơn thuật toán mộc mạc của ta ở một chỗ tinh quái: sau crash, thay vì redo lại mọi cú ghi từ đầu (chậm mà vô ích), nó hỏi từng trang <em>\"cú này mày đã có trên đĩa chưa?\"</em> — có rồi thì BỎ QUA. Ticket #65, bài dạy cuối của Hộp Đen: mở bảng điều khiển ARIES và xem 3 pass phục hồi vận hành. 🎛️"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "LSN (Log Sequence Number): mỗi log record một số định danh tăng dần; mỗi TRANG nhớ PageLSN = LSN của cú sửa cuối đã áp lên nó. Mẹo vàng: khi redo, nếu LSN của record ≤ PageLSN của trang → cú sửa ĐÃ có trên đĩa → BỎ QUA (không redo lại)",
+        "DIRTYPAGETABLE: bảng các trang \"bẩn\" (đã sửa trong buffer, đĩa chưa cập nhật) + RecLSN mỗi trang; giúp redo chỉ động vào trang cần, và fuzzy checkpoint chỉ cần ghi bảng này chứ KHÔNG phải flush hết trang xuống đĩa",
+        "3 PASS phục hồi: ANALYSIS (từ checkpoint gần nhất → tính RedoLSN = min RecLSN, dựng undo-list) → REDO (xuôi từ RedoLSN, lặp lại lịch sử nhưng bỏ qua cái đã có nhờ PageLSN) → UNDO (ngược, roll back mọi giao dịch trong undo-list, ghi CLR)"
+      ],
+      "intro": "Đội cứu hộ tới hiện trường không dọn lại từng phòng một cách mù quáng. Họ mở sổ nhật ký toà nhà, đối chiếu \"phòng nào đã được xử lý, phòng nào chưa\" — rồi chỉ làm phần CÒN THIẾU. ARIES phục hồi y vậy: mỗi trang đeo một cái tem (PageLSN) ghi \"tôi đã cập nhật tới đâu\"; recovery so tem với log, cái nào trang đã có thì bỏ qua, chỉ áp phần trang còn thiếu. Nhờ thế database khổng lồ vẫn khởi động lại trong phút thay vì giờ.",
+      "example": "Trang A trên đĩa có PageLSN=20 (chỉ cú sửa LSN 20 đã xuống đĩa). Redo gặp record LSN 20 → <code>20 ≤ 20</code> → đã có → <strong>SKIP</strong>. Gặp record LSN 60 (cũng sửa A) → <code>60 &gt; 20</code> → chưa có → <strong>REDO</strong>, và cập nhật PageLSN của A thành 60. Cứ thế, ARIES chỉ làm đúng phần việc còn thiếu."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-fingerprint",
+        "title": "LSN & PageLSN — theo đúng sách",
+        "body": "Mỗi log record ARIES có một <strong>LSN</strong> định danh, giá trị lớn hơn cho record xuất hiện muộn hơn. Mỗi trang giữ một <strong>PageLSN</strong>: mỗi khi một thao tác cập nhật trang, LSN của log record đó được lưu vào PageLSN. \"Trong pha redo, bất kỳ log record nào có LSN <strong>nhỏ hơn hoặc bằng</strong> PageLSN của trang thì KHÔNG được thực thi lại, vì tác động của nó đã phản ánh trên trang.\" Đây là chìa khóa để ARIES bỏ qua — thậm chí không cần đọc — nhiều trang mà thao tác đã nằm sẵn trên đĩa, cắt giảm mạnh thời gian phục hồi.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.9.1 — ARIES Data Structures"
+      },
+      {
+        "icon": "fa-list-check",
+        "title": "Ba pass — analysis, redo, undo",
+        "body": "<strong>① Analysis</strong>: tìm checkpoint hoàn chỉnh gần nhất, đọc DirtyPageTable từ đó, đặt RedoLSN = min các RecLSN (điểm bắt đầu redo); dựng undo-list (quét xuôi: gặp record của txn mới → thêm, gặp txn end → bớt). <strong>② Redo</strong>: quét xuôi từ RedoLSN, \"lặp lại lịch sử\" — nhưng mỗi record so LSN với PageLSN/RecLSN, đã có thì bỏ qua. <strong>③ Undo</strong>: quét ngược, roll back mọi txn còn trong undo-list, mỗi cú undo ghi một <em>CLR (compensation log record)</em> — redo-only, để nếu crash lần nữa giữa lúc undo thì không undo trùng."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "ARIES (IBM, đầu thập niên 90) là khuôn mẫu cho hầu hết recovery hiện đại: SQL Server, DB2, và tinh thần của nó trong Postgres/Oracle. \"Analysis → Redo → Undo\" chính là 3 dòng bạn thấy khi một database lớn khởi động sau crash. <strong>Fuzzy checkpoint</strong> của ARIES (chỉ ghi DirtyPageTable, không ép flush trang) là lý do checkpoint không làm treo cả hệ thống. Hiểu PageLSN là hiểu vì sao \"database 2TB vẫn recovery trong 3 phút\" chứ không phải 3 tiếng."
+      }
+    ],
+    "aries_visual": {
+      "eyebrow": "BẢNG ĐIỀU KHIỂN ARIES — CRASH SAU LSN 90 · 3 PASS ANALYSIS→REDO→UNDO",
+      "caption": "Bấm chạy tuần tự 3 pass. Để mắt vào pha REDO: record nào LSN ≤ PageLSN trang thì được BỎ QUA — đó là mẹo khôn ngoan giúp ARIES phục hồi nhanh.",
+      "pages": [
+        {
+          "id": "A",
+          "label": "💰 A (page 4894)",
+          "disk": 900,
+          "pagelsn": 20
+        },
+        {
+          "id": "B",
+          "label": "💰 B (page 7200)",
+          "disk": 2050,
+          "pagelsn": 30
+        },
+        {
+          "id": "C",
+          "label": "💰 C (page 2390)",
+          "disk": 700,
+          "pagelsn": 0
+        }
+      ],
+      "log": [
+        {
+          "lsn": 10,
+          "txn": "T1",
+          "type": "start"
+        },
+        {
+          "lsn": 20,
+          "txn": "T1",
+          "type": "write",
+          "page": "A",
+          "old": 1000,
+          "new": 900
+        },
+        {
+          "lsn": 30,
+          "txn": "T2",
+          "type": "write",
+          "page": "B",
+          "old": 2000,
+          "new": 2050
+        },
+        {
+          "lsn": 40,
+          "txn": "T2",
+          "type": "commit"
+        },
+        {
+          "lsn": 50,
+          "txn": "",
+          "type": "checkpoint"
+        },
+        {
+          "lsn": 60,
+          "txn": "T1",
+          "type": "write",
+          "page": "A",
+          "old": 900,
+          "new": 850
+        },
+        {
+          "lsn": 70,
+          "txn": "T3",
+          "type": "start"
+        },
+        {
+          "lsn": 80,
+          "txn": "T3",
+          "type": "write",
+          "page": "C",
+          "old": 700,
+          "new": 600
+        },
+        {
+          "lsn": 90,
+          "txn": "T3",
+          "type": "commit"
+        }
+      ],
+      "verdict": "✓ 3 PASS XONG. ARIES bỏ qua 2 cú redo thừa (LSN 20, 30 — đã có trên đĩa nhờ PageLSN) và chỉ redo phần còn thiếu (60, 80); rồi undo T1 (chưa commit) đưa A về 1000. Chốt sổ: A=1000 · B=2050 · C=600. Đó là lý do database khổng lồ vẫn khởi động lại trong vài phút.",
+      "steps": [
+        {
+          "phase": "analysis",
+          "text": "tìm checkpoint gần nhất (LSN 50) → đọc DirtyPageTable: A (RecLSN 20), B (RecLSN 30). Trang bẩn = đã sửa trong buffer, đĩa chưa chắc kịp.",
+          "note": "Analysis không sửa gì — nó chỉ ĐỌC để lập kế hoạch cho 2 pass sau."
+        },
+        {
+          "phase": "analysis",
+          "text": "RedoLSN = min các RecLSN = min(20, 30) = 20 → pha REDO sẽ bắt đầu quét từ LSN 20 (mọi thứ trước đó chắc chắn đã trên đĩa).",
+          "setRedoLSN": 20,
+          "note": "RedoLSN là điểm xuất phát — trước nó khỏi cần ngó tới."
+        },
+        {
+          "phase": "analysis",
+          "text": "quét xuôi từ checkpoint dựng undo-list: T3 start (thêm T3) → T3 commit (bớt T3). Còn lại undo-list = {T1} (T1 chưa commit).",
+          "setUndo": [
+            "T1"
+          ],
+          "note": "Cuối analysis: biết bắt đầu redo từ đâu (20) và phải undo ai (T1)."
+        },
+        {
+          "phase": "redo",
+          "lsn": 20,
+          "action": "skip",
+          "text": "LSN 20 sửa A. So: LSN(20) ≤ PageLSN đĩa của A (20) → cú này ĐÃ có trên đĩa → ⏭ BỎ QUA.",
+          "note": "Mẹo vàng đầu tiên: khỏi redo cái trang đã có sẵn. Thậm chí không cần đọc trang từ đĩa."
+        },
+        {
+          "phase": "redo",
+          "lsn": 30,
+          "action": "skip",
+          "text": "LSN 30 sửa B. So: LSN(30) ≤ PageLSN của B (30) → đã có → ⏭ BỎ QUA.",
+          "note": "Cú redo thừa thứ hai được cắt. ARIES đang tiết kiệm từng phần việc."
+        },
+        {
+          "phase": "redo",
+          "lsn": 60,
+          "action": "redo",
+          "page": "A",
+          "val": 850,
+          "setPageLsn": 60,
+          "text": "LSN 60 sửa A. So: LSN(60) > PageLSN(20) → CHƯA có trên đĩa → ↻ REDO: A = 850, cập nhật PageLSN của A thành 60.",
+          "note": "Đây mới là việc THẬT cần làm — áp lại cú sửa mà đĩa còn thiếu."
+        },
+        {
+          "phase": "redo",
+          "lsn": 80,
+          "action": "redo",
+          "page": "C",
+          "val": 600,
+          "setPageLsn": 80,
+          "text": "LSN 80 sửa C. PageLSN của C là 0 < 80 → chưa có → ↻ REDO: C = 600.",
+          "note": "Hết pha redo: database đã được đưa về đúng trạng thái ngay-trước-crash (repeating history)."
+        },
+        {
+          "phase": "undo",
+          "lsn": 60,
+          "action": "undo",
+          "page": "A",
+          "val": 900,
+          "text": "undo-list = {T1}. Quét ngược: LSN 60 của T1 → UNDO: A 850 → 900 (giá cũ), ghi một CLR.",
+          "note": "T1 chưa commit nên mọi dấu vết của nó phải bị xóa — bắt đầu từ cú sửa mới nhất."
+        },
+        {
+          "phase": "undo",
+          "lsn": 20,
+          "action": "undo",
+          "page": "A",
+          "val": 1000,
+          "text": "tiếp: LSN 20 của T1 → UNDO: A 900 → 1000 (giá cũ gốc), ghi CLR.",
+          "note": "Lùi dần theo PrevLSN của T1 về tận cú sửa đầu tiên."
+        },
+        {
+          "phase": "undo",
+          "text": "gặp <T1 start> (LSN 10) → ghi <T1 abort>, undo-list rỗng → PHỤC HỒI XONG. Chốt: A=1000, B=2050, C=600.",
+          "note": ""
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "ba pass ARIES — mỗi pass một nhiệm vụ",
+        "columns": [
+          {
+            "name": "pass",
+            "type": "hướng quét",
+            "key": "🧭"
+          },
+          {
+            "name": "làm gì",
+            "type": "",
+            "key": "🛠️"
+          },
+          {
+            "name": "kết quả",
+            "type": "",
+            "key": "🎯"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "① Analysis",
+          "từ checkpoint, đọc DPT",
+          "RedoLSN + undo-list"
+        ],
+        [
+          "② Redo (xuôi)",
+          "lặp lịch sử, skip cái đã có",
+          "DB về trạng thái trước crash"
+        ],
+        [
+          "③ Undo (ngược)",
+          "roll back undo-list, ghi CLR",
+          "xóa dấu txn dở"
+        ],
+        [
+          "mẹo skip",
+          "LSN ≤ PageLSN → bỏ qua",
+          "phục hồi nhanh"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Trong pha REDO, ARIES gặp log record LSN 20 sửa trang A, mà PageLSN của A trên đĩa cũng đang là 20. Nó làm gì và vì sao?",
+        "options": [
+          {
+            "id": "a",
+            "text": "BỎ QUA (skip) — vì LSN(20) ≤ PageLSN(20) nghĩa là cú sửa này ĐÃ phản ánh trên trang đĩa rồi; redo lại là thừa (và với physiological redo còn có thể gây sai)",
+            "correct": true,
+            "explanation": "Đúng — đây là mẹo cốt lõi của ARIES. PageLSN là cái tem \"trang này đã cập nhật tới LSN mấy\"; ≤ thì khỏi làm lại."
+          },
+          {
+            "id": "b",
+            "text": "REDO lại cho chắc — thà làm thừa còn hơn bỏ sót",
+            "correct": false,
+            "explanation": "Sai — \"làm thừa cho chắc\" chính là cái ARIES tránh: nó chậm, và với physiological redo (không idempotent) còn có thể làm HỎNG trang. PageLSN tồn tại để KHÔNG làm lại."
+          },
+          {
+            "id": "c",
+            "text": "UNDO trang A vì LSN trùng PageLSN",
+            "correct": false,
+            "explanation": "Sai — pha redo không undo gì cả; và LSN trùng PageLSN nghĩa là \"đã có rồi\", không phải tín hiệu hoàn tác."
+          },
+          {
+            "id": "d",
+            "text": "Báo lỗi vì hai số bằng nhau là bất thường",
+            "correct": false,
+            "explanation": "Sai — bằng nhau là chuyện hoàn toàn bình thường (cú sửa cuối áp lên trang chính là cú có LSN đó); nó chỉ có nghĩa \"trang đã tới đúng cú này\"."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao ARIES tách phục hồi thành 3 pass riêng (analysis → redo → undo) thay vì làm một lượt như thuật toán giản lược bài 22?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Analysis đi trước để BIẾT bắt đầu redo từ đâu (RedoLSN) và phải undo ai (undo-list) — nhờ đó redo/undo chạy có mục tiêu, tận dụng PageLSN/DirtyPageTable để bỏ qua việc thừa, cắt mạnh thời gian phục hồi",
+            "correct": true,
+            "explanation": "Đúng — chia pass để mỗi pass tối ưu được: analysis lập kế hoạch, redo dùng PageLSN skip, undo chỉ động undo-list. Đó là cái giá \"phức tạp hơn\" đổi lấy \"nhanh hơn nhiều\"."
+          },
+          {
+            "id": "b",
+            "text": "Vì 3 pass an toàn hơn, 1 pass có thể làm hỏng dữ liệu",
+            "correct": false,
+            "explanation": "Sai — thuật toán 1-lượt của bài 22 cũng ĐÚNG (không hỏng dữ liệu); ARIES tách pass để NHANH và ít việc thừa, không phải vì 1-lượt sai."
+          },
+          {
+            "id": "c",
+            "text": "Vì luật quy định recovery phải có đúng 3 bước",
+            "correct": false,
+            "explanation": "Sai — không có \"luật 3 bước\"; số pass là lựa chọn thiết kế của ARIES để tối ưu, không phải quy định."
+          },
+          {
+            "id": "d",
+            "text": "Vì mỗi pass chạy trên một CPU khác nhau",
+            "correct": false,
+            "explanation": "Sai — 3 pass là 3 GIAI ĐOẠN logic (chủ yếu tuần tự vì phụ thuộc nhau), không phải phân chia theo CPU; song song hóa là chuyện tối ưu khác."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Pass nào làm việc này?",
+      "instruction": "Mỗi nhiệm vụ dưới đây thuộc về pass nào của ARIES?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "a1",
+          "label": "Tính RedoLSN + dựng undo-list từ checkpoint"
+        },
+        {
+          "id": "a2",
+          "label": "So LSN với PageLSN, bỏ qua cú đã có trên đĩa"
+        },
+        {
+          "id": "a3",
+          "label": "Roll back txn chưa commit, ghi CLR"
+        },
+        {
+          "id": "a4",
+          "label": "Lặp lại lịch sử, đưa DB về trạng thái trước crash"
+        }
+      ],
+      "bins": [
+        {
+          "id": "analysis",
+          "label": "① ANALYSIS"
+        },
+        {
+          "id": "redo",
+          "label": "② REDO"
+        },
+        {
+          "id": "undo",
+          "label": "③ UNDO"
+        }
+      ],
+      "solution": {
+        "a1": "analysis",
+        "a2": "redo",
+        "a3": "undo",
+        "a4": "redo"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp quy trình ARIES 4 bước — có MỘT khối bịa (nghe rất chi là \"cho chắc\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "MỖI TRANG đeo PageLSN (LSN cú sửa cuối đã áp lên nó); mỗi log record có LSN định danh tăng dần",
+        "slot": "ar-lsn"
+      },
+      {
+        "type": "op",
+        "token": "ANALYSIS: từ checkpoint gần nhất, đọc DirtyPageTable → tính RedoLSN (min RecLSN) và dựng undo-list",
+        "slot": "ar-analysis"
+      },
+      {
+        "type": "op",
+        "token": "REDO: quét xuôi từ RedoLSN, lặp lịch sử — nhưng LSN record ≤ PageLSN trang thì BỎ QUA (đã có trên đĩa)",
+        "slot": "ar-redo"
+      },
+      {
+        "type": "op",
+        "token": "Redo lại TẤT CẢ record từ đầu log cho chắc ăn — bỏ qua PageLSN để khỏi sót cú nào",
+        "slot": "ar-x"
+      },
+      {
+        "type": "op",
+        "token": "UNDO: quét ngược, roll back mọi txn trong undo-list, mỗi cú undo ghi một CLR (redo-only) chống undo trùng",
+        "slot": "ar-undo"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ar-lsn",
+        "placeholder": "Bước 1 — mỗi trang & mỗi record mang gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔖",
+          "label": "LSN & PageLSN",
+          "sub": "Bước 1",
+          "hint": "Cái tem cho phép so \"trang đã cập nhật tới đâu\" với \"record này ở LSN mấy\"."
+        }
+      },
+      {
+        "id": "ar-analysis",
+        "placeholder": "Bước 2 — pass đầu tiên làm gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🧭",
+          "label": "Analysis",
+          "sub": "Bước 2",
+          "hint": "Chưa sửa gì — chỉ lập kế hoạch: bắt đầu redo từ đâu, phải undo ai?"
+        }
+      },
+      {
+        "id": "ar-redo",
+        "placeholder": "Bước 3 — redo chạy sao cho khôn?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "↻",
+          "label": "Redo có skip",
+          "sub": "Bước 3",
+          "hint": "Lặp lịch sử xuôi, nhưng đừng làm lại cái trang đã có. So gì với gì để biết?"
+        }
+      },
+      {
+        "id": "ar-undo",
+        "placeholder": "Bước 4 — dọn nốt txn dở?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "↺",
+          "label": "Undo + CLR",
+          "sub": "Bước 4",
+          "hint": "Quét ngược, hoàn tác undo-list; mỗi cú undo ghi lại gì để crash-giữa-undo không undo trùng?"
+        }
+      }
+    ],
+    "expected_sql": "MỖI TRANG đeo PageLSN (LSN cú sửa cuối đã áp lên nó); mỗi log record có LSN định danh tăng dần ANALYSIS: từ checkpoint gần nhất, đọc DirtyPageTable → tính RedoLSN (min RecLSN) và dựng undo-list REDO: quét xuôi từ RedoLSN, lặp lịch sử — nhưng LSN record ≤ PageLSN trang thì BỎ QUA (đã có trên đĩa) UNDO: quét ngược, roll back mọi txn trong undo-list, mỗi cú undo ghi một CLR (redo-only) chống undo trùng",
+    "expected_zones": {
+      "ar-lsn": "MỖI TRANG đeo PageLSN (LSN cú sửa cuối đã áp lên nó); mỗi log record có LSN định danh tăng dần",
+      "ar-analysis": "ANALYSIS: từ checkpoint gần nhất, đọc DirtyPageTable → tính RedoLSN (min RecLSN) và dựng undo-list",
+      "ar-redo": "REDO: quét xuôi từ RedoLSN, lặp lịch sử — nhưng LSN record ≤ PageLSN trang thì BỎ QUA (đã có trên đĩa)",
+      "ar-undo": "UNDO: quét ngược, roll back mọi txn trong undo-list, mỗi cú undo ghi một CLR (redo-only) chống undo trùng"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 QUY TRÌNH ARIES KHÉP: LSN/PageLSN → analysis → redo-có-skip → undo-ghi-CLR. Khối \"redo lại TẤT CẢ từ đầu log cho chắc\" là BỊA — và bịa đúng cái mà ARIES sinh ra để tránh: redo mù quáng từ đầu vừa chậm khủng khiếp (database lớn recovery hàng giờ) vừa có thể làm sai với physiological redo. Cả PageLSN lẫn checkpoint đều để redo BỎ QUA việc đã xong, chỉ làm phần còn thiếu. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "ar-lsn": "Bước 1 — nền móng: hai cái tem để so \"trang tới đâu\" với \"record ở đâu\".",
+      "ar-analysis": "Bước 2 — pass đầu không sửa gì, chỉ trả lời \"bắt đầu redo từ LSN nào, undo những txn nào\".",
+      "ar-redo": "Bước 3 — lặp lịch sử, nhưng khôn: record có LSN ≤ PageLSN thì trang đã có rồi, bỏ qua.",
+      "ar-undo": "Bước 4 — hoàn tác undo-list; ghi CLR để nếu crash lần nữa giữa undo thì không làm lại từ đầu."
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #65 — đọc bảng điều khiển ARIES:</strong> checkpoint ở LSN 50 với DirtyPageTable = A(RecLSN 20), B(RecLSN 30); crash sau LSN 90. Trên đĩa: PageLSN của A=20, B=30, C=0. Điền 3 con số của cuộc phục hồi.",
+    "challenge_type": "fill_blank",
+    "template": "-- BANG DIEU KHIEN ARIES — crash sau LSN 90\n-- Checkpoint LSN 50 · DirtyPageTable: A(RecLSN 20), B(RecLSN 30)\n-- PageLSN tren dia: A=20 · B=30 · C=0\n-- Log: 20<T1,A> 30<T2,B> 40<T2 commit> 50 ckpt\n--      60<T1,A> 70<T3 start> 80<T3,C> 90<T3 commit>\n\n-- ANALYSIS: RedoLSN = min cac RecLSN trong DPT =\n--   RedoLSN = ____\n\n-- REDO (tu RedoLSN): record nao co LSN <= PageLSN trang thi SKIP.\n--   LSN20 (A, PageLSN 20): skip · LSN30 (B, PageLSN 30): skip\n--   -> so record REDO bi BO QUA (skip) =\n--   so_skip = ____\n\n-- Sau analysis, txn nao chua commit -> phai undo?\n--   undo-list = ____",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "? LSN",
+        "expected": "20"
+      },
+      {
+        "id": "b2",
+        "hint": "? record",
+        "expected": "2"
+      },
+      {
+        "id": "b3",
+        "hint": "T?",
+        "expected": "T1"
+      }
+    ],
+    "schema": {
+      "table_name": "bảng điều khiển ARIES — chờ điền",
+      "columns": [
+        {
+          "name": "đại lượng",
+          "type": "",
+          "key": "📊"
+        },
+        {
+          "name": "cách tính",
+          "type": "",
+          "key": "🧮"
+        },
+        {
+          "name": "giá trị",
+          "type": "",
+          "key": "❓"
+        }
+      ],
+      "data": [
+        [
+          "RedoLSN",
+          "min(RecLSN) = min(20, 30)",
+          "❓"
+        ],
+        [
+          "số skip",
+          "LSN20 + LSN30 đều ≤ PageLSN",
+          "❓"
+        ],
+        [
+          "undo-list",
+          "txn có start, thiếu commit",
+          "❓"
+        ],
+        [
+          "(T2, T3 đã commit)",
+          "không undo",
+          "—"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây là ba con số cốt lõi của một cuộc phục hồi ARIES: điểm bắt đầu redo (RedoLSN), số việc thừa được bỏ qua (skip nhờ PageLSN), và danh sách phải hoàn tác (undo-list). Đọc được ba số này là đọc được bất kỳ log khởi động-sau-crash nào.",
+      "real_world": "Khi SQL Server/DB2 in \"Recovery: analysis pass complete, redo starting at LSN ..., N transactions to undo\" — đó chính xác là ba con số này. RedoLSN nhỏ = ít việc; số skip lớn = PageLSN đang phát huy; undo-list ngắn = ít giao dịch dở lúc sập.",
+      "steps": [
+        "RedoLSN = min các RecLSN trong DirtyPageTable = min(20, 30) = 20.",
+        "Redo skip: LSN20 ≤ PageLSN A (20) và LSN30 ≤ PageLSN B (30) → 2 record bỏ qua.",
+        "undo-list: T2 commit (40), T3 commit (90) → loại; chỉ T1 có start (10) mà thiếu commit.",
+        "Điền 20 / 2 / T1."
+      ],
+      "hint_explore": "Panel schema bên trái đã bày sẵn cách tính từng đại lượng — cột \"cách tính\" là gợi ý.",
+      "expected": "20 · 2 · T1"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "RedoLSN lấy GIÁ TRỊ NHỎ NHẤT trong các RecLSN của DirtyPageTable. DPT có A(20), B(30) — nhỏ nhất là?"
+      },
+      {
+        "level": 2,
+        "text": "Redo skip khi LSN record ≤ PageLSN trang. LSN20 vs PageLSN A(20)? LSN30 vs PageLSN B(30)? Đếm số cái skip."
+      },
+      {
+        "level": 3,
+        "text": "undo-list = txn có <start> mà THIẾU <commit>. T2 commit, T3 commit — còn ai?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: 20 · 2 · T1."
+      }
+    ],
+    "success_message": "TICKET #65 ĐÓNG — và đó là mảnh ghép CUỐI CÙNG của phần dạy Recovery! 🎛️ Bạn đã đi trọn Hộp Đen: phân loại sự cố, ba tầng lưu trữ, log undo/redo, luật WAL, checkpoint, và giờ là ARIES thứ thiệt với LSN/PageLSN/3-pass. Hồ sơ chót: PHYSICAL vs LOGICAL UNDO. Còn phía trước chỉ còn MỘT cửa ải: BOSS BATTLE — \"Engine Under Fire\". Query chậm, nghìn người tranh một món, VÀ server sập giữa thanh toán — tất cả những gì Marketplace dạy bạn, dồn vào một trận. 🔥",
+    "xp_reward": 130
+  },
+  "concept_cards_after": [
+    "nc_card_physical_logical_undo"
+  ]
+}

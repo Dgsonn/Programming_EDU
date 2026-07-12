@@ -1,0 +1,810 @@
+{
+  "id": "db_16",
+  "index": 17,
+  "story": {
+    "tag": "🎫 GameHub · Ticket #17",
+    "hook": "Backend GameHub chuyển sang <strong>Django</strong> — và junior mới vào hoảng hốt: <em>\"viết SQL ở đâu?!\"</em>. Không đâu cả: ORM ánh xạ <strong>class ↔ bảng</strong>, bảng <code>log_events</code> giờ truy vấn bằng Python. Nhưng đừng lo mất nghề — mỗi <code>.filter()</code>, <code>.annotate()</code> đều dịch ngược ra đúng câu SQL bạn đã thạo. Ticket: dịch kỹ năng SQL sang ORM mà không đánh rơi tư duy database."
+  },
+  "title": "ORM với Django — Ánh xạ Class ↔ Table",
+  "subtitle": "Từ Python class đến SQL query tự động",
+  "module": 3,
+  "module_title": "Application Design",
+  "icon": "&#9881;",
+  "color": "#F59E0B",
+  "estimated_minutes": 18,
+  "xp_reward": 60,
+  "drag_type": "order",
+  "challenge_type": "full_ide",
+  "achievement": {
+    "name": "Pháp sư ORM",
+    "desc": "class Python ↔ bảng"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "ORM = ánh xạ class Python ↔ bảng SQL, viết query = gọi method",
+        "select_related() = INNER JOIN tự động qua FK (1:1 / N:1)",
+        "filter / order_by / values / annotate = WHERE / ORDER BY / GROUP BY"
+      ],
+      "intro": "Django tự tạo bảng <code class=\"code\">log_events</code> từ class <code class=\"code\">LogEvent</code>. Thay vì viết SQL, bạn gọi <code class=\"code\">LogEvent.objects.filter(event_type='login')</code>. ORM chuyển thành SQL: <code class=\"code\">SELECT * FROM log_events WHERE event_type = 'login'</code>. Không SQL thuần? Không sao — nhưng hiểu SQL giúp viết ORM tốt hơn.",
+      "example": "<code class=\"code\">LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]</code> tương đương: <code>SELECT ... FROM log_events le JOIN app_users u ON ... WHERE user_id='U01' AND event_type='login' ORDER BY timestamp DESC LIMIT 10</code>"
+    },
+    "intro": "Team dev 1 startup fintech 5 người, mỗi người tự viết SQL cho module mình. 6 tháng sau: 1 người nghỉ, người thay phải đọc 200 query SQL viết tay, mất 3 tuần mới hiểu hết. Refactor sang <strong>Django ORM</strong> → 1 dev mới onboard trong 3 ngày. ORM = documentation sống. Nhưng có cạm bẫy N+1 — bài này dạy cả 2 mặt.",
+    "concept_cards": [
+      {
+        "icon": "fa-layer-group",
+        "title": "ORM — Câu chuyện team 3 người",
+        "body": "Team A: 3 dev backend, ai cũng viết SQL thuần. 1 người nghỉ → 2 người còn lại đọc SQL của người nghỉ mất 2 tuần. Team B: 3 dev, dùng Django ORM. 1 người nghỉ → 2 người còn lại đọc <code>User.objects.filter(role=\"admin\")</code> hiểu ngay. <strong>ORM = code đọc gần như tiếng Anh</strong>."
+      },
+      {
+        "icon": "fa-bolt",
+        "title": "N+1 Query — Cạm bẫy ORM",
+        "body": "1000 users, mỗi user có 5 posts. Code <code>for user in users: print(user.posts.all())</code> → <strong>1 + 1000 = 1001 queries</strong>! Fix: <code>users = User.objects.prefetch_related(\"posts\")</code> → chỉ 2 queries. <strong>Ưu</strong> ORM: ít SQL, type-safe. <strong>Nhược</strong>: dễ N+1, raw SQL phức tạp vẫn cần."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Thử ghép SQL log-analytics bằng chuỗi string tay → dễ dính SQL-injection + khó bảo trì. ORM: <code>LogEvent.objects.filter(...).annotate(Count(...))</code> — viết Python thuần, an toàn, tự sinh SQL chuẩn."
+      }
+    ],
+    "visual": {
+      "diagram_legacy_3": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — 1 bảng tổng (BAD)",
+          "columns": [
+            "user_id",
+            "username",
+            "post_id",
+            "post_text",
+            "game_name",
+            "genre"
+          ],
+          "rows": [
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "RPG"
+            ],
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "Action"
+            ],
+            [
+              "U2",
+              "bob",
+              "P2",
+              "Check this",
+              "Hades",
+              "Rogue"
+            ]
+          ],
+          "violations": {
+            "0-5": true,
+            "0-4": true,
+            "1-5": true,
+            "1-4": true
+          }
+        },
+        "after": {
+          "title": "SAU — 5 bảng + 2 junction",
+          "columns": [
+            "user_id",
+            "post_id",
+            "game_id",
+            "genre_id",
+            "platform_id"
+          ],
+          "rows": [
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_RPG",
+              "PC"
+            ],
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_Act",
+              "PC"
+            ],
+            [
+              "U2",
+              "P2",
+              "G2",
+              "G_Rog",
+              "PS5"
+            ]
+          ]
+        },
+        "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."
+      },
+      "diagram_legacy_2": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user",
+            "title": "Web App / Form",
+            "sub": "User thay đổi setting (theme: dark)",
+            "payload": "POST /api/settings"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Python / Django ORM",
+            "sub": "Validate + serialize sang JSONB",
+            "payload": "settings = {'theme': 'dark'}"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Lưu JSONB vào cột settings",
+            "payload": "INSERT INTO app_users (..., settings) VALUES (...)"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python dict",
+            "sub": "Đọc lại: settings->>theme = \"dark\"",
+            "payload": "SELECT settings->>'theme' FROM app_users"
+          },
+          {
+            "icon": "fa-display",
+            "title": "HTML Response",
+            "sub": "Render UI với theme mới",
+            "payload": "<html data-theme=\"dark\">"
+          }
+        ]
+      },
+      "diagram_legacy_1": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-map-pin",
+            "title": "User location",
+            "sub": "Browser geolocation API",
+            "payload": "(106.7, 10.78)"
+          },
+          {
+            "icon": "fa-mobile",
+            "title": "Mobile App",
+            "sub": "POST /api/nearest?lat=10.78&lon=106.7",
+            "payload": "GET /nearest"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Django + GeoDjango",
+            "sub": "Build query PostGIS",
+            "payload": "ST_DWithin(geo, point, 5000)"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL + PostGIS",
+            "sub": "Spatial index (GIST)",
+            "payload": "shop_branches WHERE ST_DWithin(...)"
+          },
+          {
+            "icon": "fa-list",
+            "title": "Sorted by distance",
+            "sub": "ST_Distance ORDER BY",
+            "payload": "ORDER BY dist ASC LIMIT 5"
+          }
+        ]
+      },
+      "diagram": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-code",
+            "title": "Python code (ORM)",
+            "sub": "LogEvent.objects.filter(...)",
+            "payload": "Event.objects.all()[:20]"
+          },
+          {
+            "icon": "fa-cogs",
+            "title": "Django ORM Layer",
+            "sub": "Build SQL từ queryset",
+            "payload": "SELECT * FROM log_events LIMIT 20"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Execute SQL",
+            "payload": "20 rows"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python list",
+            "sub": "Map row → LogEvent object",
+            "payload": "events = [LogEvent(...), ...]"
+          },
+          {
+            "icon": "fa-display",
+            "title": "Template render",
+            "sub": "events truyền vào template",
+            "payload": "{% for e in events %}"
+          }
+        ]
+      },
+      "schema": {
+        "table_name": "log_events",
+        "columns": [
+          {
+            "name": "event_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "&#128273;"
+          },
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "&#128279;"
+          },
+          {
+            "name": "event_type",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "event_data",
+            "type": "JSONB",
+            "key": "",
+            "icon": "&#123;...&#125;"
+          },
+          {
+            "name": "timestamp",
+            "type": "TIMESTAMP",
+            "key": "",
+            "icon": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "E01",
+          "U01",
+          "login",
+          "{\"ip\":\"1.1.1.1\"}",
+          "2026-01-10 08:00:00"
+        ],
+        [
+          "E02",
+          "U02",
+          "logout",
+          "{\"session\":\"sess_abc\"}",
+          "2026-01-10 09:30:00"
+        ],
+        [
+          "E03",
+          "U01",
+          "purchase",
+          "{\"amount\":500000}",
+          "2026-01-10 10:00:00"
+        ],
+        [
+          "E04",
+          "U01",
+          "login",
+          "{\"ip\":\"1.1.1.2\"}",
+          "2026-01-11 08:05:00"
+        ],
+        [
+          "E05",
+          "U03",
+          "login",
+          "{\"ip\":\"2.2.2.1\"}",
+          "2026-01-11 09:00:00"
+        ],
+        [
+          "E06",
+          "U01",
+          "logout",
+          "{\"session\":\"sess_def\"}",
+          "2026-01-11 18:00:00"
+        ],
+        [
+          "E07",
+          "U02",
+          "purchase",
+          "{\"amount\":120000}",
+          "2026-01-12 11:00:00"
+        ],
+        [
+          "E08",
+          "U04",
+          "login",
+          "{\"ip\":\"3.3.3.1\"}",
+          "2026-01-12 08:30:00"
+        ],
+        [
+          "E09",
+          "U01",
+          "login",
+          "{\"ip\":\"1.1.1.3\"}",
+          "2026-01-13 08:10:00"
+        ],
+        [
+          "E10",
+          "U03",
+          "purchase",
+          "{\"amount\":250000}",
+          "2026-01-13 14:00:00"
+        ],
+        [
+          "E11",
+          "U05",
+          "login",
+          "{\"ip\":\"4.4.4.1\"}",
+          "2026-01-13 09:15:00"
+        ],
+        [
+          "E12",
+          "U01",
+          "purchase",
+          "{\"amount\":75000}",
+          "2026-01-14 12:00:00"
+        ],
+        [
+          "E13",
+          "U02",
+          "login",
+          "{\"ip\":\"2.2.2.5\"}",
+          "2026-01-14 08:00:00"
+        ],
+        [
+          "E14",
+          "U04",
+          "logout",
+          "{\"session\":\"sess_ghi\"}",
+          "2026-01-14 17:30:00"
+        ],
+        [
+          "E15",
+          "U01",
+          "login",
+          "{\"ip\":\"1.1.1.4\"}",
+          "2026-01-15 08:00:00"
+        ],
+        [
+          "E16",
+          "U06",
+          "login",
+          "{\"ip\":\"5.5.5.1\"}",
+          "2026-01-15 09:00:00"
+        ],
+        [
+          "E17",
+          "U03",
+          "login",
+          "{\"ip\":\"2.2.2.7\"}",
+          "2026-01-15 10:00:00"
+        ],
+        [
+          "E18",
+          "U01",
+          "logout",
+          "{\"session\":\"sess_jkl\"}",
+          "2026-01-15 18:30:00"
+        ],
+        [
+          "E19",
+          "U05",
+          "purchase",
+          "{\"amount\":340000}",
+          "2026-01-16 13:00:00"
+        ],
+        [
+          "E20",
+          "U02",
+          "login",
+          "{\"ip\":\"2.2.2.9\"}",
+          "2026-01-16 08:00:00"
+        ],
+        [
+          "E21",
+          "U01",
+          "login",
+          "{\"ip\":\"1.1.1.5\"}",
+          "2026-01-17 08:00:00"
+        ],
+        [
+          "E22",
+          "U04",
+          "login",
+          "{\"ip\":\"3.3.3.4\"}",
+          "2026-01-17 09:00:00"
+        ]
+      ]
+    },
+    "mission": "Viết Django ORM query tương đương SQL. Kéo thả khối lệnh ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "<code>LogEvent.objects.select_related('user')</code> sinh ra loại JOIN nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "LEFT JOIN — lấy cả event không có user",
+            "correct": false,
+            "explanation": "Sai — select_related mặc định INNER JOIN. LEFT JOIN chỉ khi explicit dùng prefetch_related hoặc custom raw SQL."
+          },
+          {
+            "id": "b",
+            "text": "INNER JOIN — chỉ lấy event có user tồn tại",
+            "correct": true,
+            "explanation": "Đúng — select_related dùng SQL JOIN INNER mặc định. Event không có user (FK NULL hoặc user bị xóa) sẽ bị loại khỏi kết quả."
+          },
+          {
+            "id": "c",
+            "text": "OUTER JOIN — lấy tất cả kể cả user NULL",
+            "correct": false,
+            "explanation": "Sai — OUTER JOIN không phải default của select_related. Cần explicit annotation (vd: .annotate(user_name=F('user__username')) với LEFT JOIN logic)."
+          },
+          {
+            "id": "d",
+            "text": "CROSS JOIN — tổ hợp mọi cặp (hiếm dùng)",
+            "correct": false,
+            "explanation": "Sai — select_related không tạo CROSS JOIN. Nó follow FK relationship → 1 JOIN cụ thể. CROSS JOIN rất hiếm, không phải pattern này."
+          }
+        ]
+      },
+      {
+        "question": "Django ORM nào tương đương <code>GROUP BY event_type ORDER BY COUNT(*) DESC</code>?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>.values('event_type').order_by('event_type')</code>",
+            "correct": false,
+            "explanation": "Sai — order_by không có annotate Count → không có COUNT trong query. Chỉ SELECT event_type, ORDER BY event_type ASC. Thiếu GROUP BY và aggregate."
+          },
+          {
+            "id": "b",
+            "text": "<code>.values('event_type').annotate(cnt=Count('id')).order_by('-cnt')</code>",
+            "correct": true,
+            "explanation": "Đúng — values('event_type') → GROUP BY event_type, annotate(cnt=Count('id')) → COUNT(id) AS cnt, order_by('-cnt') → DESC theo cnt. Đây là pattern Django ORM chuẩn cho GROUP BY + ORDER BY COUNT."
+          },
+          {
+            "id": "c",
+            "text": "<code>.filter().group_by('event_type')</code>",
+            "correct": false,
+            "explanation": "Sai — Django ORM KHÔNG có method .group_by(). GROUP BY được implicit qua .values() + .annotate(). Đây là khác biệt với SQL thuần."
+          },
+          {
+            "id": "d",
+            "text": "<code>.aggregate(Count('event_type'))</code> — sai, aggregate chỉ trả 1 dòng",
+            "correct": false,
+            "explanation": "Sai — aggregate trả 1 scalar value (tổng tất cả events), KHÔNG group theo event_type. Để group theo từng event_type → dùng annotate() kết hợp values()."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Thứ tự ORM query (Django)",
+      "instruction": "Sắp xếp theo thứ tự Django thực thi.",
+      "items": [
+        {
+          "id": "i1",
+          "label": "1. .filter(user__role=\"admin\")"
+        },
+        {
+          "id": "i2",
+          "label": "2. .select_related(\"user\")"
+        },
+        {
+          "id": "i3",
+          "label": "3. .order_by(\"-created_at\")"
+        },
+        {
+          "id": "i4",
+          "label": "4. [:20] (slice)"
+        }
+      ],
+      "solution": {
+        "i1": 1,
+        "i2": 2,
+        "i3": 3,
+        "i4": 4
+      }
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "tbl",
+        "token": "LogEvent",
+        "slot": "tbl-name"
+      },
+      {
+        "type": "op",
+        "token": ".objects",
+        "slot": "op-obj"
+      },
+      {
+        "type": "kw",
+        "token": ".filter",
+        "slot": "kw-filter"
+      },
+      {
+        "type": "op",
+        "token": "(user__user_id='U01', event_type='login')",
+        "slot": "op-args"
+      },
+      {
+        "type": "kw",
+        "token": ".select_related",
+        "slot": "kw-selrel"
+      },
+      {
+        "type": "op",
+        "token": "('user')",
+        "slot": "op-relarg"
+      },
+      {
+        "type": "kw",
+        "token": ".order_by",
+        "slot": "kw-order"
+      },
+      {
+        "type": "op",
+        "token": "('-timestamp')",
+        "slot": "op-orderarg"
+      },
+      {
+        "type": "kw",
+        "token": "[:10]",
+        "slot": "op-limit"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "setup-zone",
+        "placeholder": "LogEvent.objects",
+        "accepts": [
+          "tbl",
+          "op"
+        ],
+        "multi": true
+      },
+      {
+        "id": "chain-zone",
+        "placeholder": ".filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')",
+        "accepts": [
+          "kw",
+          "op"
+        ],
+        "multi": true
+      },
+      {
+        "id": "slice-zone",
+        "placeholder": "[:10]",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      }
+    ],
+    "expected_sql": "LogEvent.objects.filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')[:10]",
+    "expected_zones": {
+      "setup-zone": "LogEvent.objects",
+      "chain-zone": ".filter(user__user_id='U01', event_type='login').select_related('user').order_by('-timestamp')",
+      "slice-zone": "[:10]"
+    },
+    "reveal_hints": {
+      "setup-zone": "<strong>Setup:</strong> <code>LogEvent</code> = Django model class, <code>.objects</code> = manager trả về QuerySet.",
+      "chain-zone": "<strong>Chain methods:</strong> <code>.filter(...)</code> = WHERE, <code>.select_related('user')</code> = INNER JOIN, <code>.order_by('-timestamp')</code> = ORDER BY DESC.",
+      "slice-zone": "<strong>Slice:</strong> <code>[:10]</code> = LIMIT 10 (Python list slice syntax cho QuerySet)."
+    }
+  },
+  "step_4": {
+    "prompt": "Viết <strong>Django ORM query</strong> đếm <strong>số events theo từng event_type</strong> cho user U01. Dùng <code>values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')</code>. ORM Django — không viết SQL thuần.",
+    "context": {
+      "scenario": "Backend GameHub đã sang Django. Team vận hành nghi user <code>U01</code> có hành vi bất thường — họ cần <strong>bảng đếm hoạt động theo từng loại event</strong> (login, purchase, logout…) của riêng user này, viết bằng ORM cho khớp codebase mới.",
+      "real_world": "Trong Django thật, <code>.values('x').annotate(Count(...))</code> chính là <code>GROUP BY x</code> + <code>COUNT</code> — ORM chỉ là lớp áo: hiểu SQL bên dưới thì đọc được mọi query <strong>Instagram</strong> (chạy Django) sinh ra, và biết khi nào nó sinh query tệ.",
+      "steps": [
+        "Khoanh vùng user: <code>LogEvent.objects.filter(user_id='U01')</code>.",
+        "Chọn cột gộp (tương đương GROUP BY): <code>.values('event_type')</code>.",
+        "Đếm trong nhóm: <code>.annotate(event_count=Count('event_id'))</code>.",
+        "Xếp giảm dần: <code>.order_by('-event_count')</code> — dấu trừ = DESC."
+      ],
+      "hint_explore": "Model <code>LogEvent</code> ánh xạ bảng <code>log_events(event_id, user_id, event_type, timestamp)</code> — mọi filter/annotate xoay quanh 4 cột này.",
+      "expected": "Bảng vài dòng × 2 cột (<code>event_type, event_count</code>) của riêng U01, giảm dần — chính là GROUP BY + COUNT nhưng viết bằng Python."
+    },
+    "starter": "# Đếm events theo event_type cho user U01 (Django ORM)\n# filter(user_id='U01') + values('event_type') + annotate(event_count=Count('event_id')) + order_by('-event_count')\nLogEvent.objects.__________________________________\n",
+    "schema": {
+      "table_name": "log_events",
+      "columns": [
+        {
+          "name": "event_id",
+          "type": "INT",
+          "key": "PK",
+          "icon": "&#128273;"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FK",
+          "icon": "&#128279;"
+        },
+        {
+          "name": "event_type",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMP",
+          "key": "",
+          "icon": ""
+        }
+      ],
+      "data": [
+        [
+          "E01",
+          "U01",
+          "login",
+          "2026-01-10 08:00:00"
+        ],
+        [
+          "E02",
+          "U02",
+          "logout",
+          "2026-01-10 09:30:00"
+        ],
+        [
+          "E03",
+          "U01",
+          "purchase",
+          "2026-01-10 10:00:00"
+        ],
+        [
+          "E04",
+          "U01",
+          "login",
+          "2026-01-11 08:05:00"
+        ],
+        [
+          "E05",
+          "U03",
+          "login",
+          "2026-01-11 09:00:00"
+        ],
+        [
+          "E06",
+          "U01",
+          "logout",
+          "2026-01-11 18:00:00"
+        ],
+        [
+          "E07",
+          "U02",
+          "purchase",
+          "2026-01-12 11:00:00"
+        ],
+        [
+          "E08",
+          "U04",
+          "login",
+          "2026-01-12 08:30:00"
+        ],
+        [
+          "E09",
+          "U01",
+          "login",
+          "2026-01-13 08:10:00"
+        ],
+        [
+          "E10",
+          "U03",
+          "purchase",
+          "2026-01-13 14:00:00"
+        ],
+        [
+          "E11",
+          "U05",
+          "login",
+          "2026-01-13 09:15:00"
+        ],
+        [
+          "E12",
+          "U01",
+          "purchase",
+          "2026-01-14 12:00:00"
+        ],
+        [
+          "E13",
+          "U02",
+          "login",
+          "2026-01-14 08:00:00"
+        ],
+        [
+          "E14",
+          "U04",
+          "logout",
+          "2026-01-14 17:30:00"
+        ],
+        [
+          "E15",
+          "U01",
+          "login",
+          "2026-01-15 08:00:00"
+        ],
+        [
+          "E16",
+          "U06",
+          "login",
+          "2026-01-15 09:00:00"
+        ],
+        [
+          "E17",
+          "U03",
+          "login",
+          "2026-01-15 10:00:00"
+        ],
+        [
+          "E18",
+          "U01",
+          "logout",
+          "2026-01-15 18:30:00"
+        ],
+        [
+          "E19",
+          "U05",
+          "purchase",
+          "2026-01-16 13:00:00"
+        ],
+        [
+          "E20",
+          "U02",
+          "login",
+          "2026-01-16 08:00:00"
+        ],
+        [
+          "E21",
+          "U01",
+          "login",
+          "2026-01-17 08:00:00"
+        ],
+        [
+          "E22",
+          "U04",
+          "login",
+          "2026-01-17 09:00:00"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT event_type, COUNT(event_id) AS event_count FROM log_events WHERE user_id = 'U01' GROUP BY event_type ORDER BY event_count DESC;",
+    "expected_sql": "LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn muốn <em>đếm sự kiện theo loại</em> cho 1 user cụ thể — bằng ORM: filter user trước, values() chọn cột nhóm, annotate() đếm, order_by() giảm dần."
+      },
+      {
+        "level": 2,
+        "text": "Lọc user (WHERE phiên bản ORM): <code>.filter(user_id='U01')</code>."
+      },
+      {
+        "level": 3,
+        "text": "GROUP BY + COUNT phiên bản ORM: <code>.values('event_type').annotate(event_count=Count('event_id'))</code> — rồi <code>.order_by('-event_count')</code> (dấu trừ = DESC)."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">LogEvent.objects.filter(user_id='U01').values('event_type').annotate(event_count=Count('event_id')).order_by('-event_count')</code>"
+      }
+    ],
+    "success_message": "values().annotate() = GROUP BY trong SQL. ORM và SQL luôn tương đương — hiểu SQL giúp bạn viết ORM tốt hơn!",
+    "xp_reward": 60
+  }
+}

@@ -1,0 +1,499 @@
+{
+  "id": "nc_07",
+  "index": 7,
+  "title": "Aggregation — GROUP BY cả sàn giá bằng một lần quét",
+  "subtitle": "Sort-agg xếp rồi gom · Hash-agg cộng dồn từng Ô — và DISTINCT chỉ là GROUP BY không cột tính",
+  "module": 7,
+  "module_title": "Engine Room — Query Processing",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "orders (100.000 đơn ≈ 1.000 block — mẫu 5, seller lộn xộn)",
+      "columns": [
+        "order_id",
+        "seller_id",
+        "total"
+      ],
+      "dataRows": [
+        [
+          "9001",
+          "4102",
+          "80"
+        ],
+        [
+          "9002",
+          "2001",
+          "12500"
+        ],
+        [
+          "9003",
+          "4102",
+          "790"
+        ],
+        [
+          "9004",
+          "2001",
+          "45"
+        ],
+        [
+          "9005",
+          "3300",
+          "150"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #48",
+    "hook": "Sàn ra mắt <em>\"Bảng vàng seller\"</em> — trang vinh danh doanh thu từng người bán. Nghĩa là gom <strong>100.000 đơn</strong> về <strong>2.000 seller</strong> và cộng tiền từng nhóm. Dev mới nhìn mà rùng mình: \"gom nhóm cả sàn chắc đắt gấp mấy lần JOIN\". Rồi EXPLAIN in ra hóa đơn: <strong>104ms</strong> — đúng bằng giá MỘT lần seq scan ở Ticket #43, không hơn một xu. Ticket #48: mở nắp máy xem engine gom nhóm kiểu gì mà rẻ vậy — và khi nào phép màu này HẾT hiệu lực."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "GROUP BY có 2 lối: SORT-AGG — xếp cả bảng theo khóa nhóm (bài 4) rồi gom các dòng nằm liền kề; HASH-AGG — mỗi dòng hash thẳng vào Ô của nhóm mình",
+        "On-the-fly: sum/count/min/max cộng dồn NGAY khi đọc từng dòng — mỗi nhóm chỉ giữ MỘT Ô, đơn đọc xong là bỏ; avg = giữ sum + count, chia nhau lúc đổ sổ",
+        "Điều kiện phép màu: bảng Ô vừa RAM → đọc bảng đúng 1 lượt = br block + 1 cú nhảy; Ô KHÔNG vừa RAM → phải chia xô ra đĩa như hash join (≈3·br). DISTINCT? Cùng cỗ máy — GROUP BY không có cột tính"
+      ],
+      "intro": "Đếm phiếu bầu cho 2.000 ứng viên từ thùng 100.000 phiếu. Cách 1: đổ hết ra, XẾP phiếu theo tên, rồi đếm từng cụm nằm cạnh nhau. Cách 2: kẻ bảng 2.000 Ô — bốc từng phiếu, nhìn tên, <strong>cộng một vạch vào đúng Ô</strong> rồi bỏ phiếu đi. Cách 2 không giữ lại phiếu nào: thứ nằm trên bàn chỉ là BẢNG Ô — và 2.000 ô thì bàn nào chả để vừa.",
+      "example": "Bảng vàng seller: hash-agg đọc orders 1.000 block một lượt, mỗi đơn cộng dồn SUM[seller] += total vào bảng Ô ~20 block trong RAM → <strong>1.000 block + 1 nhảy = 104ms</strong>. Sort-agg phải external sort trước: ≈3.000 block ≈ <strong>348ms</strong> — nhưng đổi lại kết quả ra ĐÃ xếp thứ tự."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-calculator",
+        "title": "On-the-fly — giữ Ô, bỏ đơn",
+        "body": "Gặp 2 dòng cùng nhóm, engine KHÔNG giữ cả hai — nó thay bằng MỘT dòng mang sum/min/max/count đang cộng dồn. Nhờ thế mỗi nhóm chỉ tốn một Ô, và khi mọi Ô vừa RAM: cả phép GROUP BY = đọc bảng 1 lượt, <strong>br block + 1 cú nhảy</strong> — thay vì ≈3·br nếu phải ghi tạm ra đĩa.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.6.5 — Aggregation: on-the-fly sum/count/min/max/avg, br transfers + 1 seek khi kết quả vừa bộ nhớ"
+      },
+      {
+        "icon": "fa-clone",
+        "title": "DISTINCT — người anh em ruột",
+        "body": "Khử trùng lặp (duplicate elimination) chạy CÙNG cỗ máy: sort thì bản sao nằm cạnh nhau — xóa; hash thì bản sao rơi vào cùng Ô — giữ một. <code>SELECT DISTINCT seller_id</code> về bản chất là GROUP BY seller_id không có cột tính. Nhớ luật SQL: mặc định GIỮ trùng lặp — muốn khử phải tự gõ DISTINCT, vì khử là có giá."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Đổi khóa nhóm là đổi số phận: GROUP BY <strong>buyer_id × ngày</strong> → hơn triệu Ô ≈ 12.000 block — KHÔNG vừa RAM → engine phải chia xô ra đĩa như bài 6, hóa đơn ≈3·br. Còn sort-agg vẫn có đất diễn: cần <code>ORDER BY seller_id</code> kèm theo? Sort một công đôi việc — optimizer sẽ tự cân."
+      }
+    ],
+    "plan_visual": {
+      "query": "SELECT seller_id, SUM(total)\nFROM orders\nGROUP BY seller_id;  -- 100.000 đơn → 2.000 seller",
+      "caption": "Cùng một GROUP BY — hai cỗ máy. Optimizer chọn hash-agg vì bảng Ô ~20 block vừa RAM: giá 104ms, đúng bằng MỘT lần seq scan Ticket #43. Đổi khóa nhóm cho Ô phình quá RAM là phép màu tắt.",
+      "price": {
+        "seek_ms": 4,
+        "block_ms": 0.1,
+        "note": "orders 1.000 block · 2.000 seller → bảng Ô ≈ 20 block, RAM M = 100 · bảng giá HDD như cũ."
+      },
+      "trees": [
+        {
+          "name": "Sort-Aggregate",
+          "chosen": false,
+          "note": "External sort (bài 4) rồi gom nhóm liền kề — bonus: kết quả ra ĐÃ xếp",
+          "io": {
+            "access": "seq",
+            "seeks": 12,
+            "blocks": 3000
+          },
+          "nodes": [
+            {
+              "op": "orders (1.000 block)",
+              "kind": "table",
+              "detail": "kho chưa có trật tự",
+              "rows": "100.000 dòng"
+            },
+            {
+              "op": "External Sort theo seller_id",
+              "kind": "scan",
+              "detail": "10 run + 1 pass merge",
+              "rows": "100.000 dòng đã xếp"
+            },
+            {
+              "op": "γ Gom nhóm liền kề + SUM",
+              "kind": "project",
+              "detail": "cùng seller nằm cạnh nhau — cắt cụm",
+              "rows": "2.000 nhóm"
+            }
+          ]
+        },
+        {
+          "name": "Hash-Aggregate on-the-fly",
+          "chosen": true,
+          "note": "✓ Optimizer chọn — đọc 1 lượt, mỗi đơn cộng dồn vào Ô của nhóm",
+          "io": {
+            "access": "seq",
+            "seeks": 1,
+            "blocks": 1000
+          },
+          "nodes": [
+            {
+              "op": "orders (1.000 block)",
+              "kind": "table",
+              "detail": "kho chưa có trật tự",
+              "rows": "100.000 dòng"
+            },
+            {
+              "op": "Seq Scan — một lượt duy nhất",
+              "kind": "scan",
+              "detail": "từng đơn một, không sort",
+              "rows": "100.000 dòng"
+            },
+            {
+              "op": "γ Hash(seller_id) → SUM[Ô] += total",
+              "kind": "project",
+              "detail": "chỉ giữ 2.000 Ô ≈ 20 block trong RAM",
+              "rows": "2.000 nhóm"
+            }
+          ]
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "orders — nguyên liệu Bảng vàng seller",
+        "columns": [
+          {
+            "name": "order_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "seller_id",
+            "type": "INT",
+            "key": "🪣 khóa nhóm"
+          },
+          {
+            "name": "total",
+            "type": "INT (gem)",
+            "key": "Σ cột tính"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "9001",
+          "4102",
+          "80"
+        ],
+        [
+          "9002",
+          "2001",
+          "12500 ← seller trùng nhau",
+          ""
+        ],
+        [
+          "9003",
+          "4102",
+          "790 ← nằm RẢI RÁC, không liền kề",
+          ""
+        ],
+        [
+          "9004",
+          "2001",
+          "45",
+          ""
+        ],
+        [
+          "9005",
+          "3300",
+          "150",
+          ""
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Hash-agg gom 100.000 đơn mà RAM chỉ cần chứa ~20 block — nó giấu 100.000 đơn đi đâu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Không giấu đâu cả — nó KHÔNG GIỮ đơn: mỗi đơn đọc lên, cộng dồn vào Ô của seller rồi bỏ luôn; trong RAM chỉ sống bảng Ô (mỗi nhóm đúng một dòng tổng)",
+            "correct": true,
+            "explanation": "Đúng — on-the-fly nghĩa là \"tính ngay trên dòng chảy\". Thứ phải vừa RAM là BẢNG Ô, không phải dữ liệu — vì thế 100.000 đơn hay 10 triệu đơn cũng chỉ cần 20 block ô."
+          },
+          {
+            "id": "b",
+            "text": "Nén 100.000 đơn lại còn 20 block",
+            "correct": false,
+            "explanation": "Sai — không nén gì cả; đơn được ĐỌC rồi BỎ, chỉ con số cộng dồn ở lại."
+          },
+          {
+            "id": "c",
+            "text": "Ghi tạm các đơn ra đĩa rồi đọc lại sau",
+            "correct": false,
+            "explanation": "Sai — đó là kịch bản khi Ô KHÔNG vừa RAM (chia xô ≈3·br); ở đây Ô vừa RAM nên không có lượt ghi tạm nào."
+          },
+          {
+            "id": "d",
+            "text": "Dựa vào index có sẵn trên seller_id",
+            "correct": false,
+            "explanation": "Sai — hash-agg không cần index nào; bảng Ô dựng tại chỗ trong RAM lúc quét."
+          }
+        ]
+      },
+      {
+        "question": "AVG(total) tính on-the-fly — mỗi Ô phải giữ gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "SUM và COUNT đang cộng dồn — đến lúc đổ sổ mới lấy SUM ÷ COUNT",
+            "correct": true,
+            "explanation": "Đúng — sách tả đúng cách này: avg không cộng dồn trực tiếp được, nhưng sum và count thì được, và thương của chúng là avg."
+          },
+          {
+            "id": "b",
+            "text": "Toàn bộ danh sách total của nhóm",
+            "correct": false,
+            "explanation": "Sai — thế thì hết on-the-fly: nhóm to là RAM ngập; chỉ cần 2 con số cộng dồn là đủ."
+          },
+          {
+            "id": "c",
+            "text": "Chỉ giá trị AVG hiện tại — mỗi đơn mới thì lấy trung bình của (AVG cũ, total mới)",
+            "correct": false,
+            "explanation": "Sai — trung bình của trung bình cho kết quả LỆCH (nhóm 3 đơn: avg(avg(a,b), c) ≠ avg(a,b,c)); phải giữ sum + count."
+          },
+          {
+            "id": "d",
+            "text": "MIN và MAX của nhóm",
+            "correct": false,
+            "explanation": "Sai — min/max là hai hàm khác; avg cần sum và count."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "SORT-AGG hay HASH-AGG?",
+      "instruction": "Mỗi lá bài mô tả một cỗ máy — xếp về đúng bên.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "s1",
+          "label": "Gom nhóm nằm LIỀN KỀ nhau sau khi xếp cả bảng"
+        },
+        {
+          "id": "s2",
+          "label": "Kết quả phụ: bảng ra đã CÓ THỨ TỰ theo khóa nhóm"
+        },
+        {
+          "id": "h1",
+          "label": "Mỗi dòng nhảy thẳng vào Ô của nhóm, cộng dồn ngay"
+        },
+        {
+          "id": "h2",
+          "label": "Bảng Ô vừa RAM là một lượt xong — không sort gì cả"
+        }
+      ],
+      "bins": [
+        {
+          "id": "s",
+          "label": "SORT-AGG 📚"
+        },
+        {
+          "id": "h",
+          "label": "HASH-AGG 🪣"
+        }
+      ],
+      "solution": {
+        "s1": "s",
+        "s2": "s",
+        "h1": "h",
+        "h2": "h"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp 4 trạm của hash-aggregate on-the-fly — có MỘT khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Hash(seller_id) trỏ thẳng tới Ô của seller trong bảng RAM — seller lạ mặt thì mở Ô mới",
+        "slot": "ag-hash"
+      },
+      {
+        "type": "op",
+        "token": "Seq Scan: đọc orders đúng MỘT lượt, từng đơn một — không sort, không index",
+        "slot": "ag-scan"
+      },
+      {
+        "type": "op",
+        "token": "Gom HẾT đơn của từng seller vào RAM, đủ bộ rồi mới bắt đầu cộng",
+        "slot": "ag-x"
+      },
+      {
+        "type": "op",
+        "token": "Cộng dồn tại chỗ: SUM[Ô] += total, COUNT[Ô] += 1 — rồi BỎ đơn, không giữ lại",
+        "slot": "ag-update"
+      },
+      {
+        "type": "op",
+        "token": "Hết kho thì đổ 2.000 Ô ra kết quả — AVG lúc này mới chia SUM ÷ COUNT",
+        "slot": "ag-out"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ag-scan",
+        "placeholder": "Trạm 1 — kho 1.000 block chưa trật tự: đọc kiểu gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📥",
+          "label": "Quét 1 lượt",
+          "sub": "Trạm 1",
+          "hint": "Hash-agg không cần trật tự — đọc kiểu rẻ nhất mà Ticket #43 đã niêm yết."
+        }
+      },
+      {
+        "id": "ag-hash",
+        "placeholder": "Trạm 2 — đơn này thuộc về ai?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🪣",
+          "label": "Tìm Ô nhóm",
+          "sub": "Trạm 2",
+          "hint": "Cùng seller thì phải về cùng một chỗ — mà không được sort. Nghe quen chứ (bài 6)?"
+        }
+      },
+      {
+        "id": "ag-update",
+        "placeholder": "Trạm 3 — vào tới Ô rồi làm gì với đơn?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🧮",
+          "label": "Cộng dồn on-the-fly",
+          "sub": "Trạm 3",
+          "hint": "Giữ Ô, bỏ đơn — bí quyết khiến RAM chỉ cần 20 block."
+        }
+      },
+      {
+        "id": "ag-out",
+        "placeholder": "Trạm 4 — đọc hết 100.000 đơn rồi, kết thúc sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📤",
+          "label": "Đổ sổ",
+          "sub": "Trạm 4",
+          "hint": "Bảng Ô thành bảng kết quả — và AVG đến giờ mới được tính."
+        }
+      }
+    ],
+    "expected_sql": "Seq Scan: đọc orders đúng MỘT lượt, từng đơn một — không sort, không index Hash(seller_id) trỏ thẳng tới Ô của seller trong bảng RAM — seller lạ mặt thì mở Ô mới Cộng dồn tại chỗ: SUM[Ô] += total, COUNT[Ô] += 1 — rồi BỎ đơn, không giữ lại Hết kho thì đổ 2.000 Ô ra kết quả — AVG lúc này mới chia SUM ÷ COUNT",
+    "expected_zones": {
+      "ag-scan": "Seq Scan: đọc orders đúng MỘT lượt, từng đơn một — không sort, không index",
+      "ag-hash": "Hash(seller_id) trỏ thẳng tới Ô của seller trong bảng RAM — seller lạ mặt thì mở Ô mới",
+      "ag-update": "Cộng dồn tại chỗ: SUM[Ô] += total, COUNT[Ô] += 1 — rồi BỎ đơn, không giữ lại",
+      "ag-out": "Hết kho thì đổ 2.000 Ô ra kết quả — AVG lúc này mới chia SUM ÷ COUNT"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA LẮP xong hash-aggregate on-the-fly: quét 1 lượt → hash tìm Ô → cộng dồn, bỏ đơn → đổ sổ. Khối \"gom hết đơn rồi mới cộng\" là bịa — giữ hết đơn thì RAM cần cả 1.000 block, phép màu 104ms tắt ngóm; on-the-fly chỉ giữ MỘT Ô mỗi nhóm. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "ag-scan": "Trạm 1 mở máy: hash-agg không đòi trật tự, không đòi index — kho 1.000 block thì kiểu đọc nào rẻ nhất bảng giá?",
+      "ag-hash": "Trạm 1 chốt: seq scan 1 lượt, 104ms trọn gói. Đơn đầu tiên lên băng chuyền — thuộc seller 4102: làm sao biết NGĂN nào của nó mà không sort?",
+      "ag-update": "Trạm 2 chốt: hash trỏ thẳng Ô — Ô mới mở nếu seller lạ. Đơn đã đứng trước Ô của mình: xử nó thế nào để RAM không phình?",
+      "ag-out": "Trạm 3 chốt: cộng dồn rồi bỏ đơn — bảng Ô 20 block gánh cả kho. Đơn cuối cùng đã qua: còn việc gì trước khi trả kết quả?"
+    }
+  },
+  "step_4": {
+    "prompt": "Đóng Ticket #48: viết query <strong>Bảng vàng seller</strong> — doanh thu từng người bán: lấy <code>seller_id</code> và <code>SUM(total)</code> từ <code>orders</code>, gom theo <code>seller_id</code>.",
+    "schema": {
+      "table_name": "orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "seller_id",
+          "type": "INT",
+          "key": "🪣 khóa nhóm"
+        },
+        {
+          "name": "total",
+          "type": "INT (gem)",
+          "key": "Σ cột tính"
+        }
+      ],
+      "data": [
+        [
+          "9001",
+          "4102",
+          "80"
+        ],
+        [
+          "9002",
+          "2001",
+          "12500"
+        ],
+        [
+          "9003",
+          "4102",
+          "790"
+        ],
+        [
+          "9004",
+          "2001",
+          "45"
+        ],
+        [
+          "9005",
+          "3300",
+          "150"
+        ],
+        [
+          "9006",
+          "4102",
+          "320"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Plan mô phỏng: <code>HashAggregate — Seq Scan orders → hash(seller_id) → 2.000 Ô cộng dồn</code>. Bảng demo 6 đơn, 3 seller — trong đó 4102 là seller bị soi ở Ticket #44, doanh thu lịch sử vẫn phải đối soát đủ (tính cả đơn refund).",
+      "real_world": "Chạy EXPLAIN trên Postgres sẽ thấy đúng hai cỗ máy của bài này: \"HashAggregate\" khi Ô vừa work_mem, \"GroupAggregate\" (sort trước) khi cần thứ tự hoặc Ô quá to. Bảng vàng, dashboard doanh thu, analytics — tất cả đứng trên GROUP BY này.",
+      "steps": [
+        "Hai cột ra bảng: <code>seller_id, SUM(total)</code>.",
+        "Nguồn: <code>FROM orders</code>.",
+        "Gom nhóm: <code>GROUP BY seller_id</code>."
+      ],
+      "hint_explore": "Chạy thử <code>SELECT * FROM orders</code> — thấy đơn của 4102 nằm RẢI RÁC (9001, 9003, 9006, không liền kề): đó chính là lý do phải gom, và là thứ hash-agg xử mà chẳng cần sort.",
+      "expected": "Bảng 3 nhóm: 4102 → 1190 · 2001 → 12545 · 3300 → 150."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khung: <code>SELECT …, SUM(…) FROM orders GROUP BY …;</code>"
+      },
+      {
+        "level": 2,
+        "text": "Cột gom và cột tính: <code>seller_id</code> và <code>SUM(total)</code>."
+      },
+      {
+        "level": 3,
+        "text": "Mọi cột KHÔNG nằm trong hàm tính phải có mặt trong GROUP BY — ở đây là <code>seller_id</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT seller_id, SUM(total) FROM orders GROUP BY seller_id;</code>"
+      }
+    ],
+    "expected_sql": "SELECT seller_id, SUM(total) FROM orders GROUP BY seller_id;",
+    "success_message": "TICKET #48 ĐÓNG — Bảng vàng seller lên sóng, giá đúng một lần quét kho! 🏆 Engine Room đã đi 7/10. Nhìn lại mà xem: sort (bài 4) nuôi merge join VÀ sort-agg; hash (bài 6) nuôi hash join VÀ hash-agg — hai ngón nghề, nửa cái engine. Bài sau đổi góc máy: các toán tử NỐI VỚI NHAU thế nào — ghi tạm ra đĩa hay truyền tay từng dòng? Materialization vs Pipelining, kèm hai hồ sơ Iterator & Blocking.",
+    "xp_reward": 120
+  }
+}

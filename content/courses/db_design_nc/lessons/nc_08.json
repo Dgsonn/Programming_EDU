@@ -1,0 +1,465 @@
+{
+  "id": "nc_08",
+  "index": 8,
+  "title": "Materialization vs Pipelining — nối toán tử kiểu gì?",
+  "subtitle": "Ghi bảng tạm từng tầng, hay để tuple chảy sống — cùng cây, khác cả hóa đơn lẫn trải nghiệm",
+  "module": 7,
+  "module_title": "Engine Room — Query Processing",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "listings (cây sao kê: scan → σ price<100 → π — mẫu 4)",
+      "columns": [
+        "listing_id",
+        "item_name",
+        "price"
+      ],
+      "dataRows": [
+        [
+          "3001",
+          "Kiếm gỗ Newbie",
+          "45"
+        ],
+        [
+          "3002",
+          "Giáp rồng Huyền thoại",
+          "12500"
+        ],
+        [
+          "3005",
+          "Khiên gỗ sồi",
+          "80"
+        ],
+        [
+          "3008",
+          "Mũ vải thô",
+          "35"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #49",
+    "hook": "Trang \"Món dưới 100 gem\" chạy ĐÚNG — nhưng khách bấm là màn hình <strong>trắng</strong> một nhịp dài rồi mới hiện cả trang. Bên sàn đối thủ, dòng đầu tiên nhảy ra <em>tức thì</em> rồi danh sách dài dần. Cùng dữ liệu, hóa đơn tổng na ná — khác nhau ở thứ chưa bài nào đụng tới: các toán tử trong cây <strong>NỐI với nhau kiểu gì</strong>. Ticket #49: chạy xong tầng dưới rồi mới đưa cả bảng cho tầng trên (ghi tạm), hay rửa xong cái bát nào chuyền tay ngay cái đó (pipeline)?"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Cây toán tử chạy được theo 2 cách nối: MATERIALIZE — mỗi tầng chạy XONG, ghi bảng tạm ra đĩa cho tầng trên đọc lại; PIPELINE — tuple từ tầng dưới truyền THẲNG lên tầng trên, không bảng tạm nào",
+        "Pipeline ăn hai đường (sách 15.7.2): bỏ hẳn tiền GHI + ĐỌC temp, và khi root nối pipeline với input thì DÒNG ĐẦU trả về ngay lúc kho còn chưa đọc xong",
+        "Không phải toán tử nào cũng chảy được: sort (bài 4) hay pha build của hash (bài 6) là BLOCKING — chưa nuốt hết input chưa nhả nổi dòng nào; nhưng chặn chỉ nằm GIỮA 2 pha của nó, không giết pipeline cả cây"
+      ],
+      "intro": "Ba người rửa bát: rửa — tráng — úp. Cách 1: người rửa rửa <strong>HẾT chồng</strong> bát, chất đống ra bàn (= ghi tạm ra đĩa), người tráng mới bê cả đống về tráng tiếp. Cách 2: dây chuyền — rửa xong cái nào <strong>chuyền tay</strong> ngay cái đó, khách có bát sạch đầu tiên sau vài giây dù chồng bát còn cao. Engine cũng đứng trước đúng lựa chọn đó với mỗi cạnh của cây toán tử.",
+      "example": "Cây sao kê <code>scan → σ price&lt;100 → π</code>: materialize phải ghi 1.204 dòng đậu (~12 block) ra temp rồi π đọc lại — <strong>24 block trả tiền 2 lần</strong>, và user chờ trọn 104ms mới thấy chữ đầu tiên. Pipeline: 0 temp, dòng đầu hiện sau ~4,1ms — ngay khi block đầu của kho được đọc lên."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-arrow-down-wide-short",
+        "title": "Hai lợi ích của pipeline — theo đúng sách",
+        "body": "<strong>①</strong> Xóa khoản đọc + ghi quan hệ tạm: công thức cost các bài trước vốn tính cả tiền đọc input từ đĩa — input được PIPE từ toán tử dưới thì khoản đó gạch bỏ. <strong>②</strong> Kết quả trả SỚM: root nối pipeline với input thì dòng đầu hiện ngay khi được sinh ra — quý vô cùng khi kết quả đang đổ về màn hình người dùng.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2 — Pipelining: two benefits"
+      },
+      {
+        "icon": "fa-road-barrier",
+        "title": "Cạnh chảy được — cạnh bị chặn",
+        "body": "Mỗi CẠNH của cây được dán nhãn: <strong>pipelined edge</strong> (hai đầu chạy đồng thời, tuple sinh ra là bị tiêu thụ ngay) hoặc <strong>blocking/materialized edge</strong>. Cây chia thành các <em>pipeline stage</em> ngăn bởi cạnh chặn — engine chạy từng stage một. Sort là kẻ chặn bẩm sinh: dòng bé nhất có thể nằm CUỐI kho, chưa nhìn hết thì nhả gì cũng liều."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Vì sao <code>LIMIT 10</code> trên trang chợ hiện tức thì? Pipeline + root chỉ đòi 10 dòng — kho 400 block mới đọc được vài block đã đủ trả khách, phần còn lại KHỎI đọc. Nhưng thêm <code>ORDER BY price</code> là sort chặn ngang — muốn 10 dòng rẻ nhất vẫn phải nhìn đủ 40.000 món. Trừ khi… có chiêu Top-K — hồ sơ chờ ở bài 10."
+      }
+    ],
+    "flow_visual": {
+      "eyebrow": "MATERIALIZE VS PIPELINE — CÂY scan → σ price<100 → π · 6 MÓN MẪU",
+      "caption": "Chạy CẢ HAI chế độ mà so: ghi tạm = 6 lượt temp I/O + dòng đầu mãi nhịp 4; pipeline = 0 temp + dòng đầu ngay nhịp 1 — đúng hai lợi ích sách nêu, nhìn bằng mắt.",
+      "threshold": 100,
+      "filter_label": "σ price < 100",
+      "items": [
+        {
+          "label": "Kiếm",
+          "v": 45
+        },
+        {
+          "label": "Giáp",
+          "v": 12500
+        },
+        {
+          "label": "Mũ",
+          "v": 35
+        },
+        {
+          "label": "Skin",
+          "v": 790
+        },
+        {
+          "label": "Khiên",
+          "v": 80
+        },
+        {
+          "label": "Nhẫn",
+          "v": 510
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "Cây toán tử sao kê — đọc từ ĐÁY lên",
+        "columns": [
+          {
+            "name": "π item_name, price",
+            "type": "tầng ĐỈNH — trả về user",
+            "key": "3"
+          },
+          {
+            "name": "σ price < 100",
+            "type": "tầng giữa — lọc từng dòng",
+            "key": "2"
+          },
+          {
+            "name": "Seq Scan listings",
+            "type": "tầng ĐÁY — kho 400 block",
+            "key": "1"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "cạnh scan → σ",
+          "pipeline",
+          "tuple đọc lên là xét liền",
+          "0 temp"
+        ],
+        [
+          "cạnh σ → π",
+          "pipeline",
+          "đậu là chuyền tay ngay",
+          "0 temp"
+        ],
+        [
+          "(nếu ghi tạm)",
+          "materialized",
+          "σ xong hết → đổ đĩa → π đọc lại",
+          "+24 block"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Pipeline vừa RẺ hơn vừa cho dòng đầu SỚM hơn materialize — hai khoản lời đó đến từ đâu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Rẻ: khoản ghi + đọc bảng tạm bị xóa sổ. Sớm: root nhận tuple từ dưới lên NGAY khi nó được sinh ra, không phải chờ tầng dưới chạy xong",
+            "correct": true,
+            "explanation": "Đúng cả hai vế — và để ý: tiền đọc KHO thì y nguyên (vẫn 400 block); thứ biến mất là tiền temp và thời gian NGỒI CHỜ."
+          },
+          {
+            "id": "b",
+            "text": "Pipeline nén tuple lại nên truyền nhanh hơn",
+            "correct": false,
+            "explanation": "Sai — không nén gì cả; tuple vẫn nguyên, chỉ là nó được CHUYỀN TAY thay vì ghi xuống đĩa rồi đọc lên."
+          },
+          {
+            "id": "c",
+            "text": "Pipeline được bỏ qua bước lọc σ nên ít việc hơn",
+            "correct": false,
+            "explanation": "Sai — σ vẫn xét đủ từng dòng; pipeline đổi cách NỐI các toán tử, không bỏ toán tử nào."
+          },
+          {
+            "id": "d",
+            "text": "Pipeline đọc kho ít block hơn nhờ chỉ lấy dòng đậu",
+            "correct": false,
+            "explanation": "Sai — muốn biết đậu hay rớt vẫn phải đọc lên đủ; số block đọc KHO của hai cách bằng nhau, khác nhau ở khoản TEMP."
+          }
+        ]
+      },
+      {
+        "question": "Toán tử nào sau đây là BLOCKING — không thể nhả dòng nào khi chưa nuốt hết input?",
+        "options": [
+          {
+            "id": "a",
+            "text": "SORT — dòng bé nhất có thể nằm ở CUỐI kho: chưa nhìn hết mà dám nhả là sai thứ tự",
+            "correct": true,
+            "explanation": "Đúng — sort là kẻ chặn bẩm sinh (sách 15.7.2.2). σ, π hay scan đều xử được từng dòng một; sort thì phải thấy đủ mới dám mở miệng."
+          },
+          {
+            "id": "b",
+            "text": "σ — phải gom đủ bảng mới lọc chính xác được",
+            "correct": false,
+            "explanation": "Sai — σ xét TỪNG DÒNG độc lập: đậu hay rớt của dòng này chẳng dính gì dòng khác."
+          },
+          {
+            "id": "c",
+            "text": "π — phải thấy mọi dòng mới biết cột nào cần cắt",
+            "correct": false,
+            "explanation": "Sai — danh sách cột nằm sẵn trong query; π cắt được ngay trên từng dòng chảy qua."
+          },
+          {
+            "id": "d",
+            "text": "Seq Scan — phải đọc trọn kho rồi mới nhả được",
+            "correct": false,
+            "explanation": "Sai — scan nhả từng dòng ngay khi đọc tới; nó chính là đầu nguồn của mọi dòng chảy."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Chảy được — hay bị chặn?",
+      "instruction": "Xếp mỗi toán tử về đúng bên của dòng chảy.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "p1",
+          "label": "σ lọc — xét từng dòng, đậu là nhả liền"
+        },
+        {
+          "id": "p2",
+          "label": "π chọn cột — nhận dòng nào cắt dòng đó"
+        },
+        {
+          "id": "b1",
+          "label": "Sort — dòng bé nhất có thể nằm CUỐI kho"
+        },
+        {
+          "id": "b2",
+          "label": "Hash join pha BUILD — chưa nạp hết bảng nhỏ chưa probe được"
+        }
+      ],
+      "bins": [
+        {
+          "id": "p",
+          "label": "PIPELINE ⚡"
+        },
+        {
+          "id": "b",
+          "label": "BLOCKING 🚧"
+        }
+      ],
+      "solution": {
+        "p1": "p",
+        "p2": "p",
+        "b1": "b",
+        "b2": "b"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp dây chuyền pipeline kéo-từ-đỉnh cho câu sao kê — có MỘT khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "σ xét NGAY tuple vừa nhận: rớt thì hỏi xin tuple kế, đậu thì chuyền lên trên",
+        "slot": "fl-filter"
+      },
+      {
+        "type": "op",
+        "token": "Scan không tự chạy — được HỎI (next) mới đọc và nhả tuple kế, tự nhớ mình đang đứng ở đâu",
+        "slot": "fl-scan"
+      },
+      {
+        "type": "op",
+        "token": "Mỗi toán tử chạy XONG toàn bộ phần mình, ghi bảng tạm ra đĩa cho tầng trên đọc lại",
+        "slot": "fl-x"
+      },
+      {
+        "type": "op",
+        "token": "π cắt cột ngay trên dòng chảy — không chờ gom đủ bảng",
+        "slot": "fl-project"
+      },
+      {
+        "type": "op",
+        "token": "Root trả dòng ĐẦU cho user khi cả kho còn chưa đọc xong — không tốn một block temp nào",
+        "slot": "fl-out"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "fl-scan",
+        "placeholder": "Tầng đáy — nguồn của mọi dòng chảy hoạt động sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📥",
+          "label": "Scan lười",
+          "sub": "Tầng 1",
+          "hint": "Trong dây chuyền kéo-từ-đỉnh, không ai tự làm việc — kể cả kẻ giữ kho."
+        }
+      },
+      {
+        "id": "fl-filter",
+        "placeholder": "Tầng giữa — σ đứng trên dòng chảy làm gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔍",
+          "label": "σ trên dòng chảy",
+          "sub": "Tầng 2",
+          "hint": "Từng dòng một: rớt thì làm gì tiếp, đậu thì làm gì tiếp?"
+        }
+      },
+      {
+        "id": "fl-project",
+        "placeholder": "Tầng kế — π có cần chờ đủ bảng không?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "✂️",
+          "label": "π cắt cột sống",
+          "sub": "Tầng 3",
+          "hint": "Danh sách cột nằm sẵn trong query — vậy π cần thấy bao nhiêu dòng để bắt đầu?"
+        }
+      },
+      {
+        "id": "fl-out",
+        "placeholder": "Đỉnh cây — user thấy gì, từ lúc nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🖥️",
+          "label": "Root trả sớm",
+          "sub": "Đỉnh",
+          "hint": "Lợi ích thứ hai của pipeline — thứ làm trang đối thủ \"hiện chữ tức thì\"."
+        }
+      }
+    ],
+    "expected_sql": "Scan không tự chạy — được HỎI (next) mới đọc và nhả tuple kế, tự nhớ mình đang đứng ở đâu σ xét NGAY tuple vừa nhận: rớt thì hỏi xin tuple kế, đậu thì chuyền lên trên π cắt cột ngay trên dòng chảy — không chờ gom đủ bảng Root trả dòng ĐẦU cho user khi cả kho còn chưa đọc xong — không tốn một block temp nào",
+    "expected_zones": {
+      "fl-scan": "Scan không tự chạy — được HỎI (next) mới đọc và nhả tuple kế, tự nhớ mình đang đứng ở đâu",
+      "fl-filter": "σ xét NGAY tuple vừa nhận: rớt thì hỏi xin tuple kế, đậu thì chuyền lên trên",
+      "fl-project": "π cắt cột ngay trên dòng chảy — không chờ gom đủ bảng",
+      "fl-out": "Root trả dòng ĐẦU cho user khi cả kho còn chưa đọc xong — không tốn một block temp nào"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA NỐI xong dây chuyền pipeline: scan lười → σ trên dòng chảy → π cắt sống → root trả sớm. Khối \"chạy xong, ghi bảng tạm\" KHÔNG bịa về khái niệm — nó chính là MATERIALIZE — nhưng lắp vào dây chuyền này là phá sạch cả hai khoản lời. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "fl-scan": "Tầng 1 — dây chuyền này KÉO từ đỉnh: mọi toán tử chỉ làm việc khi bị hỏi. Vậy kẻ giữ kho ở đáy hành xử thế nào?",
+      "fl-filter": "Tầng 1 chốt: scan nhả từng tuple khi được hỏi. Tuple đầu tiên (Kiếm 45) vừa lên tới σ — nó xử ngay hay đợi gom đủ?",
+      "fl-project": "Tầng 2 chốt: σ xét liền từng dòng, đậu thì chuyền. Tới lượt π — danh sách cột có sẵn trong query, nó cần chờ gì không?",
+      "fl-out": "Tầng 3 chốt: π cắt cột ngay trên dòng chảy. Trên cùng là user đang nhìn màn hình — pipeline hứa với họ điều gì mà materialize không hứa nổi?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #49 — đọc cây mà đoán trải nghiệm:</strong> khách xem \"món dưới 100 gem, RẺ NHẤT xếp trước\". Plan: <code>1. Seq Scan listings → 2. Filter price&lt;100 → 3. SORT BY price → 4. Output</code>. Dòng chảy trong cây này thực sự trông ra sao?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "Scan → Filter chảy thẳng vào pha TẠO-RUN của sort; chặn nằm giữa tạo-run và merge; pha merge lại chảy tiếp lên Output — nhưng dòng đầu chỉ hiện SAU khi đọc hết kho",
+        "correct": true
+      },
+      {
+        "text": "Cả cây chảy tuốt từ đáy lên đỉnh — có sort hay không thì dòng đầu vẫn hiện ngay tức thì",
+        "correct": false,
+        "explain": "Sai — món rẻ nhất có thể nằm ở block CUỐI kho: sort mà nhả dòng khi chưa nhìn hết input là trả sai thứ tự. Sort là blocking bẩm sinh."
+      },
+      {
+        "text": "Có sort trong cây là mọi cạnh phải materialize: σ cũng ghi temp, π cũng ghi temp, từng tầng một",
+        "correct": false,
+        "explain": "Sai — chặn của sort là chuyện CỤC BỘ giữa 2 pha của nó; σ vẫn pipe thẳng vào pha tạo-run, merge vẫn pipe lên Output. Blocking không lây cả cây."
+      },
+      {
+        "text": "Tăng work_mem đủ lớn thì sort hết blocking — dòng đầu lại hiện ngay như thường",
+        "correct": false,
+        "explain": "Sai — RAM to giúp ÍT pass hơn (bài 4), nhưng bản chất không đổi: chưa nhìn hết input thì không ai biết dòng bé nhất là dòng nào."
+      }
+    ],
+    "schema": {
+      "table_name": "plan — Món <100 gem, rẻ nhất xếp trước",
+      "columns": [
+        {
+          "name": "Output item_name, price",
+          "type": "đỉnh",
+          "key": "4"
+        },
+        {
+          "name": "SORT BY price",
+          "type": "2 pha: tạo-run ‖ merge",
+          "key": "3"
+        },
+        {
+          "name": "Filter price < 100",
+          "type": "trên dòng chảy",
+          "key": "2"
+        },
+        {
+          "name": "Seq Scan listings",
+          "type": "kho 400 block",
+          "key": "1"
+        }
+      ],
+      "data": [
+        [
+          "cạnh 1→2",
+          "pipeline",
+          "đọc tới đâu xét tới đó"
+        ],
+        [
+          "cạnh 2→3",
+          "pipeline (vào pha tạo-run)",
+          "dòng đậu chảy vào run"
+        ],
+        [
+          "TRONG sort",
+          "🚧 BLOCKING",
+          "tạo-run xong hết mới merge"
+        ],
+        [
+          "cạnh 3→4",
+          "pipeline (từ pha merge)",
+          "nhả dần theo thứ tự"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây chính là cây của sim Step 1 cộng thêm một tầng SORT. Câu hỏi ăn tiền: chặn nằm Ở ĐÂU — cả cây, hay chỉ một khớp nối? Vẽ được ranh giới đó là bạn đọc plan như DBA.",
+      "real_world": "Vì lẽ này mà dashboard có ORDER BY luôn \"khựng rồi hiện cả cụm\", còn feed cuộn vô tận (không sort toàn cục) hiện dòng đầu tức thì. Người thiết kế API phân trang chọn keyset pagination cũng là đang né kẻ chặn này.",
+      "steps": [
+        "σ và π có blocking không? — Không, chúng xử từng dòng.",
+        "Sort có nhả sớm được không? — Không: dòng bé nhất có thể nằm cuối kho.",
+        "Chặn của sort nằm ở đâu? — GIỮA 2 pha: tạo-run (nhận dòng chảy vào) ‖ merge (nhả dòng chảy ra).",
+        "work_mem có đổi bản chất blocking không? — Không, chỉ đổi số pass."
+      ],
+      "hint_explore": "Xem lại sim bài 4: nút \"Nạp & sort\" (tạo run) phải bấm ĐỦ 4 lần rồi nút merge mới xuất hiện — ranh giới 2 pha nằm đúng chỗ đó.",
+      "expected": "Chọn phương án \"chặn nằm giữa tạo-run và merge, hai đầu vẫn chảy\"."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Xét từng CẠNH của cây: scan→filter, filter→sort, sort→output — cạnh nào hai đầu chạy đồng thời được?"
+      },
+      {
+        "level": 2,
+        "text": "Sort có 2 pha (bài 4): tạo-run và merge. Pha nào nhận được dòng chảy VÀO? Pha nào nhả được dòng chảy RA?"
+      },
+      {
+        "level": 3,
+        "text": "Blocking của sort không lây: nó chỉ là một RANH GIỚI giữa 2 pipeline stage. Còn \"tăng RAM hết blocking\" — bài 4 nói RAM to đổi cái gì?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: dòng chảy sống ở cả hai đầu, chặn nằm GIỮA 2 pha của sort — vì thế dòng đầu chỉ hiện sau khi kho được đọc trọn."
+      }
+    ],
+    "success_message": "TICKET #49 ĐÓNG — giờ bạn nhìn cây plan là thấy cả DÒNG CHẢY lẫn chỗ NGHẼN! ⚡ Hai hồ sơ kỹ thuật đang chờ bên dưới: Iterator (bộ ba open/next/close vận hành cú \"kéo từ đỉnh\") và Blocking Operator (vì sao kẻ chặn không giết cả cây). Rồi bài sau lên tầng cao nhất của module: OPTIMIZER tự viết lại query của dev — cùng kết quả, hóa đơn rẻ gấp mấy lần.",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_iterator",
+    "nc_card_blocking"
+  ]
+}

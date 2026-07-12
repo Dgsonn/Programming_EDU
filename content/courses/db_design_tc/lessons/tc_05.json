@@ -1,0 +1,620 @@
+{
+  "id": "tc_05",
+  "index": 5,
+  "title": "Star Schema — Fact & Dimension",
+  "subtitle": "Tách kho phân tích khỏi bảng đang phục vụ feed: FACT ở giữa, DIM tỏa tia",
+  "module": 5,
+  "module_title": "Big Data & Analytics",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "fact_post_action",
+      "columns": [
+        "action_id",
+        "user_id",
+        "date_id",
+        "action_type",
+        "act_count"
+      ],
+      "dataRows": [
+        [
+          "1",
+          "7",
+          "D1",
+          "like",
+          "3"
+        ],
+        [
+          "2",
+          "9",
+          "D1",
+          "comment",
+          "2"
+        ],
+        [
+          "3",
+          "12",
+          "D1",
+          "post",
+          "1"
+        ],
+        [
+          "4",
+          "7",
+          "D2",
+          "like",
+          "5"
+        ],
+        [
+          "5",
+          "9",
+          "D2",
+          "like",
+          "4"
+        ],
+        [
+          "6",
+          "12",
+          "D2",
+          "comment",
+          "3"
+        ],
+        [
+          "7",
+          "15",
+          "D2",
+          "like",
+          "2"
+        ],
+        [
+          "8",
+          "9",
+          "D3",
+          "post",
+          "1"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #25",
+    "hook": "Community v1.0 vừa lên kệ thì sếp mở laptop: <strong>\"Hôm qua toàn mạng bao nhiêu like? Nước nào sôi động nhất?\"</strong> — mỗi câu là một query cào thẳng bảng đang phục vụ feed, người dùng lại kêu lag (bệnh cũ Ticket #23). Ticket #25: dựng kho phân tích riêng — bảng <em>FACT</em> ghi số đo, quay quanh các bảng <em>DIM</em> ngày tháng & người dùng. Câu hỏi nặng từ nay có sân riêng."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "OLTP phục vụ app (ghi/đọc từng dòng) ≠ OLAP phục vụ phân tích (quét & cộng hàng triệu dòng)",
+        "FACT = bảng số đo cộng được (act_count), mỗi dòng trỏ vào các chiều bằng FK",
+        "DIM = bảng chiều để cắt dữ liệu: dim_date (ngày/tháng/thứ), dim_user (nước)"
+      ],
+      "intro": "Bảng <code>posts/likes</code> được thiết kế để app ghi nhanh từng thao tác — KHÔNG phải để quét 38 triệu dòng tính tổng mỗi lần sếp hỏi. Kho phân tích tổ chức lại theo hình NGÔI SAO: giữa là <strong>fact_post_action</strong> (mỗi dòng = \"user X, ngày Y, làm hành động Z, act_count lần\"), các tia là <strong>dim_date</strong>, <strong>dim_user</strong>. Muốn cắt theo chiều nào, JOIN sang dim đó.",
+      "example": "<code>SELECT d.full_date, COUNT(*) FROM fact_post_action f JOIN dim_date d ON f.date_id = d.date_id GROUP BY d.full_date;</code> — \"mỗi ngày bao nhiêu nhóm hành động\"."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-star",
+        "title": "Fact ở giữa, Dimension tỏa tia",
+        "body": "Bảng <strong>fact</strong> chứa SỐ ĐO (measure — cộng/đếm được) + FK trỏ vào các bảng <strong>dimension</strong> mô tả ngữ cảnh (ai, khi nào, loại gì). Vẽ ra đúng hình ngôi sao — vì thế gọi là <em>star schema</em>.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 11 — Data Analytics / §11.2 Data Warehousing"
+      },
+      {
+        "icon": "fa-truck-ramp-box",
+        "title": "ETL — hàng đêm chuyển kho",
+        "body": "Dữ liệu KHÔNG sinh ra trong kho: job <strong>ETL</strong> (Extract-Transform-Load) chạy đêm, gom likes/posts/comments của ngày, đếm sẵn thành <code>act_count</code>, nạp vào fact. Feed ban ngày không hề bị đụng — hai thế giới tách hẳn."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Câu \"nước nào nhiều like nhất?\" trên kho = JOIN <code>fact</code> với <code>dim_user</code> rồi <code>SUM(act_count)</code> theo <code>country</code>. Cùng câu đó trên OLTP phải quét cả bảng likes 38M dòng + JOIN users — đắt gấp nghìn lần."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "fact_post_action",
+        "columns": [
+          {
+            "name": "action_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "FK→dim_user",
+            "icon": "👤"
+          },
+          {
+            "name": "date_id",
+            "type": "VARCHAR",
+            "key": "FK→dim_date",
+            "icon": "📅"
+          },
+          {
+            "name": "action_type",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚡"
+          },
+          {
+            "name": "act_count",
+            "type": "INT",
+            "key": "measure",
+            "icon": "🔢"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "1",
+          "7",
+          "D1",
+          "like",
+          "3"
+        ],
+        [
+          "2",
+          "9",
+          "D1",
+          "comment",
+          "2"
+        ],
+        [
+          "3",
+          "12",
+          "D1",
+          "post",
+          "1"
+        ],
+        [
+          "4",
+          "7",
+          "D2",
+          "like",
+          "5"
+        ],
+        [
+          "5",
+          "9",
+          "D2",
+          "like",
+          "4"
+        ],
+        [
+          "6",
+          "12",
+          "D2",
+          "comment",
+          "3"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao KHÔNG chạy query dashboard thẳng trên bảng <code>likes</code> của app?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Quét + cộng hàng chục triệu dòng sẽ giành tài nguyên với chính feed đang phục vụ người dùng",
+            "correct": true,
+            "explanation": "Đúng — OLTP tối ưu cho ghi/đọc từng dòng; một query phân tích quét cả bảng là feed khựng ngay (đã nếm ở Ticket #23)."
+          },
+          {
+            "id": "b",
+            "text": "Vì bảng likes không JOIN được với bảng khác",
+            "correct": false,
+            "explanation": "Sai — JOIN được bình thường; vấn đề là TẢI, không phải khả năng."
+          },
+          {
+            "id": "c",
+            "text": "Vì SQL không tính được SUM trên bảng lớn",
+            "correct": false,
+            "explanation": "Sai — SUM chạy được, chỉ là chạy CHẬM và chèn ép app đang sống."
+          },
+          {
+            "id": "d",
+            "text": "Vì dashboard cần dữ liệu realtime từng giây",
+            "correct": false,
+            "explanation": "Sai — ngược lại: dashboard chịu được độ trễ 1 ngày (ETL đêm); realtime là chuyện của Ticket #30."
+          }
+        ]
+      },
+      {
+        "question": "Trong star schema, cột nào là <strong>số đo (measure)</strong> đúng nghĩa?",
+        "options": [
+          {
+            "id": "a",
+            "text": "act_count trong fact_post_action — con số cộng/đếm được qua mọi chiều",
+            "correct": true,
+            "explanation": "Đúng — measure nằm trong FACT; mọi câu hỏi phân tích quy về SUM/COUNT nó theo các chiều."
+          },
+          {
+            "id": "b",
+            "text": "country trong dim_user",
+            "correct": false,
+            "explanation": "Sai — country là THUỘC TÍNH CHIỀU để cắt (GROUP BY), không cộng được."
+          },
+          {
+            "id": "c",
+            "text": "full_date trong dim_date",
+            "correct": false,
+            "explanation": "Sai — ngày tháng là chiều thời gian; \"cộng hai ngày\" không có nghĩa."
+          },
+          {
+            "id": "d",
+            "text": "date_id — vì nó xuất hiện ở cả fact lẫn dim",
+            "correct": false,
+            "explanation": "Sai — date_id là KHÓA nối fact↔dim, không phải số đo."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Nối thành phần kho → vai trò",
+      "instruction": "Mỗi mảnh của kho phân tích đóng vai gì? Click ô trái rồi ô phải tương ứng.",
+      "xp": 20,
+      "pairs": [
+        {
+          "left": "fact_post_action",
+          "leftId": "s1",
+          "rightId": "r1",
+          "right": {
+            "id": "r1",
+            "label": "Bảng SỐ ĐO — trung tâm ngôi sao, chứa act_count"
+          }
+        },
+        {
+          "left": "dim_date",
+          "leftId": "s2",
+          "rightId": "r2",
+          "right": {
+            "id": "r2",
+            "label": "Chiều thời gian — cắt theo ngày/tháng/thứ"
+          }
+        },
+        {
+          "left": "dim_user",
+          "leftId": "s3",
+          "rightId": "r3",
+          "right": {
+            "id": "r3",
+            "label": "Chiều người dùng — cắt theo nước"
+          }
+        },
+        {
+          "left": "Job ETL chạy đêm",
+          "leftId": "s4",
+          "rightId": "r4",
+          "right": {
+            "id": "r4",
+            "label": "Đường chuyển: gom OLTP → đếm sẵn → nạp kho"
+          }
+        }
+      ],
+      "solution": {
+        "s1": "r1",
+        "s2": "r2",
+        "s3": "r3",
+        "s4": "r4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Câu hỏi đầu tiên của sếp: <strong>\"Ngày nào toàn mạng sôi động nhất?\"</strong> — đếm số nhóm hành động MỖI NGÀY, nhiều → ít. JOIN kho fact với chiều thời gian.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "d.full_date",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*) AS actions",
+        "slot": "fn-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "fact_post_action f",
+        "slot": "tbl"
+      },
+      {
+        "type": "op",
+        "token": "JOIN dim_date d ON f.date_id = d.date_id",
+        "slot": "op-join"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "d.full_date",
+        "slot": "col-g"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "actions DESC",
+        "slot": "col-o"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "op"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT d.full_date, COUNT(*) AS actions FROM fact_post_action f JOIN dim_date d ON f.date_id = d.date_id GROUP BY d.full_date ORDER BY actions DESC;",
+    "reveal_hints": {
+      "select-line": "Chọn chiều hiển thị + số đếm: <strong>d.full_date, COUNT(*) AS actions</strong>.",
+      "from-line": "Fact đứng trước, chiều nối sau: <strong>fact_post_action f JOIN dim_date d ON f.date_id = d.date_id</strong>.",
+      "group-line": "Mỗi ngày một nhóm: <strong>GROUP BY d.full_date</strong>.",
+      "order-line": "Sôi động nhất lên đầu: <strong>actions DESC</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Câu hỏi thứ hai của sếp khó hơn — đổi CHIỀU và đổi PHÉP TÍNH: <strong>\"Bảng xếp hạng quốc gia theo TỔNG SỐ LIKE\"</strong>. Lần này phải <code>SUM(act_count)</code> (cộng số đo thật, không đếm dòng), JOIN sang <code>dim_user</code>, và chỉ lấy hành động <code>like</code>.",
+    "starter": "-- BXH quoc gia theo TONG like (SUM so do, khong phai COUNT dong)\nSELECT u.country, ____(f.act_count) AS total_likes\n  FROM fact_post_action f\n  JOIN ____ ON f.user_id = u.user_id\n WHERE f.action_type = ____\n GROUP BY ____\n ORDER BY total_likes DESC;\n",
+    "schema": {
+      "table_name": "fact_post_action",
+      "columns": [
+        {
+          "name": "action_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "date_id",
+          "type": "VARCHAR",
+          "key": "FK"
+        },
+        {
+          "name": "action_type",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "act_count",
+          "type": "INT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "1",
+          "7",
+          "D1",
+          "like",
+          "3"
+        ],
+        [
+          "2",
+          "9",
+          "D1",
+          "comment",
+          "2"
+        ],
+        [
+          "3",
+          "12",
+          "D1",
+          "post",
+          "1"
+        ],
+        [
+          "4",
+          "7",
+          "D2",
+          "like",
+          "5"
+        ],
+        [
+          "5",
+          "9",
+          "D2",
+          "like",
+          "4"
+        ],
+        [
+          "6",
+          "12",
+          "D2",
+          "comment",
+          "3"
+        ],
+        [
+          "7",
+          "15",
+          "D2",
+          "like",
+          "2"
+        ],
+        [
+          "8",
+          "9",
+          "D3",
+          "post",
+          "1"
+        ],
+        [
+          "9",
+          "7",
+          "D3",
+          "comment",
+          "1"
+        ],
+        [
+          "10",
+          "12",
+          "D3",
+          "like",
+          "6"
+        ],
+        [
+          "11",
+          "15",
+          "D3",
+          "like",
+          "1"
+        ],
+        [
+          "12",
+          "7",
+          "D3",
+          "post",
+          "1"
+        ]
+      ],
+      "related_schemas": [
+        {
+          "table_name": "dim_user",
+          "columns": [
+            {
+              "name": "user_id",
+              "type": "INT",
+              "key": "PK"
+            },
+            {
+              "name": "username",
+              "type": "VARCHAR",
+              "key": ""
+            },
+            {
+              "name": "country",
+              "type": "VARCHAR",
+              "key": ""
+            }
+          ],
+          "data": [
+            [
+              "7",
+              "minhkiller",
+              "VN"
+            ],
+            [
+              "9",
+              "yuki_sama",
+              "JP"
+            ],
+            [
+              "12",
+              "toxic_lord",
+              "VN"
+            ],
+            [
+              "15",
+              "sara_gg",
+              "US"
+            ]
+          ]
+        }
+      ]
+    },
+    "context": {
+      "scenario": "Widget \"Top quốc gia\" trên dashboard chạy đúng query này mỗi sáng, trên KHO — không đụng một byte nào của feed. Chú ý: đếm DÒNG fact là sai, phải CỘNG <code>act_count</code> (một dòng có thể gói 6 like).",
+      "real_world": "Mọi dashboard BI (Metabase, Looker, Power BI) đằng sau đều là fact JOIN dim + SUM theo chiều — <strong>star schema là ngôn ngữ chung của giới phân tích</strong>, học một lần dùng ở mọi công ty.",
+      "steps": [
+        "Cộng số đo: <code>SUM(f.act_count) AS total_likes</code> — không phải COUNT(*).",
+        "Nối chiều người dùng: <code>JOIN dim_user u ON f.user_id = u.user_id</code>.",
+        "Chỉ lấy like: <code>WHERE f.action_type = 'like'</code>.",
+        "Cắt theo nước + xếp hạng: <code>GROUP BY u.country ORDER BY total_likes DESC</code>."
+      ],
+      "hint_explore": "Ngó kho trước: <code>SELECT * FROM fact_post_action</code> rồi Run — để ý dòng 10: một dòng = 6 like.",
+      "expected": "Bảng 3 dòng: VN 14 · JP 4 · US 3 — VN vô địch nhờ minhkiller + toxic_lord cùng cày."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khung: SELECT chiều + SUM(số đo) FROM fact JOIN dim WHERE lọc GROUP BY chiều ORDER BY tổng."
+      },
+      {
+        "level": 2,
+        "text": "JOIN chiều người dùng: <code>JOIN dim_user u ON f.user_id = u.user_id</code> — rồi lọc <code>WHERE f.action_type = 'like'</code>."
+      },
+      {
+        "level": 3,
+        "text": "Cộng số đo: <code>SUM(f.act_count) AS total_likes</code>, cắt: <code>GROUP BY u.country</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT u.country, SUM(f.act_count) AS total_likes FROM fact_post_action f JOIN dim_user u ON f.user_id = u.user_id WHERE f.action_type = 'like' GROUP BY u.country ORDER BY total_likes DESC;</code>"
+      }
+    ],
+    "expected_sql": "SELECT u.country, SUM(f.act_count) AS total_likes FROM fact_post_action f JOIN dim_user u ON f.user_id = u.user_id WHERE f.action_type = 'like' GROUP BY u.country ORDER BY total_likes DESC;",
+    "success_message": "Ticket #25 đóng! Kho đã dựng, sếp tự bấm dashboard không cần gọi bạn. Ticket #26: sếp muốn subtotal từng nước + tổng toàn cầu — trong CÙNG MỘT bảng.",
+    "xp_reward": 120
+  }
+}

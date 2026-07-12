@@ -1,0 +1,864 @@
+{
+  "id": "db_18",
+  "index": 20,
+  "story": {
+    "tag": "🎫 GameHub · Ticket #20 — ticket cuối cùng",
+    "hook": "Sau vụ tấn công hụt, CEO ra lệnh <strong>tổng kiểm tra két mật khẩu</strong> <code>security_users_vault</code>: tài khoản nào còn băm bằng thuật toán yếu (<em>md5, sha1?</em>) phải bị lôi ra ánh sáng trước khi hacker kịp làm điều đó. Ticket cuối cùng của bạn: xếp hạng bảo mật từng user bằng <strong>CASE WHEN</strong> — bảng audit hoàn tất là <strong>GameHub v3.0 ra mắt toàn cầu</strong>. 🎓"
+  },
+  "title": "Password Security — Salt & Hashing",
+  "subtitle": "Từ plain text đến bcrypt — chọn thuật toán nào?",
+  "module": 3,
+  "module_title": "Application Design",
+  "icon": "&#128272;",
+  "color": "#6366F1",
+  "estimated_minutes": 18,
+  "xp_reward": 70,
+  "drag_type": "classify",
+  "challenge_type": "full_ide",
+  "achievement": {
+    "name": "Vệ binh mật khẩu",
+    "desc": "Salt & Hashing"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Không lưu plain text — hash password để attacker không đọc được",
+        "md5/sha1 quá yếu: GPU tính hàng tỷ hash/giây + rainbow table attack",
+        "bcrypt/scrypt = recommended: có salt tự động, cost factor chỉnh được"
+      ],
+      "intro": "Bảng <code class=\"code\">security_users_vault</code> lưu <code>password_hash</code> và <code>salt</code> riêng biệt. <strong>Salt</strong> = chuỗi ngẫu nhiên gắn vào password trước khi hash → cùng password của 2 user sẽ có hash khác nhau. md5(\"pass\") → rainbow table tra được ngay. bcrypt(\"pass\") → cần brute force với cost factor cao → mất nhiều năm.",
+      "example": "md5 hash bắt đầu bằng chuỗi hex 32 ký tự (5f4dcc3b5aa...). bcrypt hash bắt đầu bằng <code>$2a$</code> hoặc <code>$2b$</code>. Nhìn format là biết thuật toán — và biết cần migrate ngay!"
+    },
+    "intro": "<strong>Trước 2010</strong>: web app lưu password plain text. Hacker SQL injection → đọc hết password → login vào mọi nơi user dùng cùng password. LinkedIn 2012 mất 6.5M password, bán công khai. <strong>Sau 2010</strong>: hash + salt. Hacker lấy DB → chỉ thấy <code>$2b$12$...</code> vô nghĩa. Bài này dạy <strong>bcrypt + salt</strong>.",
+    "concept_cards": [
+      {
+        "icon": "fa-lock",
+        "title": "Trước vs Sau — Password Storage",
+        "body": "<strong>Trước 2010</strong>: lưu plain text. Hacker đánh cắp DB → đọc hết. LinkedIn 2012 bị hack 6.5M password, bán công khai. <strong>Sau 2010</strong>: hash + salt. Hacker đánh cắp DB → chỉ thấy <code>$2b$12$...</code> chuỗi vô nghĩa. Crack 1 password cần 10^12 lần thử = nhiều năm."
+      },
+      {
+        "icon": "fa-key",
+        "title": "bcrypt + Salt — Công thức chuẩn",
+        "body": "<strong>bcrypt</strong>: hash 1 chiều, có cost factor (mỗi +1 = gấp đôi thời gian). <strong>Salt</strong>: chuỗi ngẫu nhiên gắn vào password trước khi hash. Cùng password \"123456\" → hash khác nhau (do salt khác) → rainbow table vô dụng. <strong>md5/sha1</strong> quá yếu, không có salt → crack trong vài giây. Dùng bcrypt hoặc argon2."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Thử: 2 user cùng đặt mật khẩu \"123456\" → cùng 1 chuỗi md5 (lộ ngay khi rò DB). Thêm <code>salt</code> ngẫu nhiên mỗi người → 2 hash KHÁC nhau, rainbow table vô dụng. Rồi bcrypt/argon2 đủ chậm để chặn brute-force."
+      }
+    ],
+    "visual": {
+      "diagram_legacy_5": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — 1 bảng tổng (BAD)",
+          "columns": [
+            "user_id",
+            "username",
+            "post_id",
+            "post_text",
+            "game_name",
+            "genre"
+          ],
+          "rows": [
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "RPG"
+            ],
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "Action"
+            ],
+            [
+              "U2",
+              "bob",
+              "P2",
+              "Check this",
+              "Hades",
+              "Rogue"
+            ]
+          ],
+          "violations": {
+            "0-5": true,
+            "0-4": true,
+            "1-5": true,
+            "1-4": true
+          }
+        },
+        "after": {
+          "title": "SAU — 5 bảng + 2 junction",
+          "columns": [
+            "user_id",
+            "post_id",
+            "game_id",
+            "genre_id",
+            "platform_id"
+          ],
+          "rows": [
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_RPG",
+              "PC"
+            ],
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_Act",
+              "PC"
+            ],
+            [
+              "U2",
+              "P2",
+              "G2",
+              "G_Rog",
+              "PS5"
+            ]
+          ]
+        },
+        "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."
+      },
+      "diagram_legacy_4": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user",
+            "title": "Web App / Form",
+            "sub": "User thay đổi setting (theme: dark)",
+            "payload": "POST /api/settings"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Python / Django ORM",
+            "sub": "Validate + serialize sang JSONB",
+            "payload": "settings = {'theme': 'dark'}"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Lưu JSONB vào cột settings",
+            "payload": "INSERT INTO app_users (..., settings) VALUES (...)"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python dict",
+            "sub": "Đọc lại: settings->>theme = \"dark\"",
+            "payload": "SELECT settings->>'theme' FROM app_users"
+          },
+          {
+            "icon": "fa-display",
+            "title": "HTML Response",
+            "sub": "Render UI với theme mới",
+            "payload": "<html data-theme=\"dark\">"
+          }
+        ]
+      },
+      "diagram_legacy_3": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-map-pin",
+            "title": "User location",
+            "sub": "Browser geolocation API",
+            "payload": "(106.7, 10.78)"
+          },
+          {
+            "icon": "fa-mobile",
+            "title": "Mobile App",
+            "sub": "POST /api/nearest?lat=10.78&lon=106.7",
+            "payload": "GET /nearest"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Django + GeoDjango",
+            "sub": "Build query PostGIS",
+            "payload": "ST_DWithin(geo, point, 5000)"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL + PostGIS",
+            "sub": "Spatial index (GIST)",
+            "payload": "shop_branches WHERE ST_DWithin(...)"
+          },
+          {
+            "icon": "fa-list",
+            "title": "Sorted by distance",
+            "sub": "ST_Distance ORDER BY",
+            "payload": "ORDER BY dist ASC LIMIT 5"
+          }
+        ]
+      },
+      "diagram_legacy_2": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-code",
+            "title": "Python code (ORM)",
+            "sub": "LogEvent.objects.filter(...)",
+            "payload": "Event.objects.all()[:20]"
+          },
+          {
+            "icon": "fa-cogs",
+            "title": "Django ORM Layer",
+            "sub": "Build SQL từ queryset",
+            "payload": "SELECT * FROM log_events LIMIT 20"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Execute SQL",
+            "payload": "20 rows"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python list",
+            "sub": "Map row → LogEvent object",
+            "payload": "events = [LogEvent(...), ...]"
+          },
+          {
+            "icon": "fa-display",
+            "title": "Template render",
+            "sub": "events truyền vào template",
+            "payload": "{% for e in events %}"
+          }
+        ]
+      },
+      "diagram_legacy_1": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user-secret",
+            "title": "Attacker input",
+            "sub": "username = ' OR '1'='1' --",
+            "payload": "MALICIOUS_PAYLOAD"
+          },
+          {
+            "icon": "fa-bug",
+            "title": "App build SQL (NGUY HIỂM)",
+            "sub": "f\"SELECT * FROM users WHERE name='{input}'\"",
+            "payload": "VULNERABLE"
+          },
+          {
+            "icon": "fa-server",
+            "title": "DB execute",
+            "sub": "Trả về TẤT CẢ users (không cần password!)",
+            "payload": "ALL_ROWS_RETURNED"
+          },
+          {
+            "icon": "fa-shield-halved",
+            "title": "FIX: Prepared Statement",
+            "sub": "WHERE username = %s + params",
+            "payload": "SAFE"
+          },
+          {
+            "icon": "fa-check",
+            "title": "DB execute (SAFE)",
+            "sub": "Input là literal, escape tự động",
+            "payload": "NORMAL_QUERY"
+          }
+        ]
+      },
+      "diagram": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-keyboard",
+            "title": "User nhập password",
+            "sub": "\"hunter2\" (plain text)",
+            "payload": "hunter2"
+          },
+          {
+            "icon": "fa-plus",
+            "title": "Server append salt",
+            "sub": "salt = random 16 bytes",
+            "payload": "hunter2 + \"rand_abc\""
+          },
+          {
+            "icon": "fa-cogs",
+            "title": "bcrypt.hashpw (cost 12)",
+            "sub": "Hash 2^12 lần SHA256 + bcrypt",
+            "payload": "$2a$12$..."
+          },
+          {
+            "icon": "fa-database",
+            "title": "Lưu vào DB",
+            "sub": "password_hash + salt (2 cột)",
+            "payload": "INSERT INTO security_users_vault"
+          },
+          {
+            "icon": "fa-shield-halved",
+            "title": "Verify: bcrypt.checkpw",
+            "sub": "So sánh hash với input mới",
+            "payload": "True / False"
+          }
+        ]
+      },
+      "schema": {
+        "table_name": "security_users_vault",
+        "columns": [
+          {
+            "name": "user_id",
+            "type": "VARCHAR",
+            "key": "PK",
+            "icon": "&#128273;"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "password_hash",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "&#128272;"
+          },
+          {
+            "name": "salt",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "&#129517;"
+          },
+          {
+            "name": "hash_algorithm",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "&#9881;"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "U01",
+          "minh_dev",
+          "5f4dcc3b5aa765d61d8327deb882cf99",
+          "rand_abc",
+          "md5"
+        ],
+        [
+          "U02",
+          "yuki_dev",
+          "e10adc3949ba59abbe56e057f20f883e",
+          "rand_xyz",
+          "md5"
+        ],
+        [
+          "U03",
+          "sara_dev",
+          "356a192b7913b04c54574d18c28d46e6395428ab",
+          "rand_123",
+          "sha1"
+        ],
+        [
+          "U04",
+          "alex_dev",
+          "$2b$12$vPZ...XzZxKIX...",
+          "rand_456",
+          "argon2"
+        ],
+        [
+          "U05",
+          "lisa_dev",
+          "5994471abb01112afcc18159f6cc74b4f511b99806dcaf8c1c2c0d8c6c9e0d8c",
+          "rand_lisa",
+          "sha256"
+        ],
+        [
+          "U06",
+          "nam_dev",
+          "$2b$12$9N8...3aBcDeFgH",
+          "rand_nam",
+          "bcrypt"
+        ],
+        [
+          "U07",
+          "lan_dev",
+          "d41d8cd98f00b204e9800998ecf8427e",
+          "rand_lan",
+          "md5"
+        ],
+        [
+          "U08",
+          "hung_dev",
+          "$2b$12$Lp9...q1w2e3r4t",
+          "rand_hung",
+          "scrypt"
+        ],
+        [
+          "U09",
+          "mai_dev",
+          "a59b7d5cdd1e6a4b1c8e3f5d7a9b1c3e5f7d9a1b3c5e7f9d1a3b5c7e9f1d3a5b",
+          "rand_mai",
+          "sha256"
+        ],
+        [
+          "U10",
+          "tu_dev",
+          "$2b$12$Xy7...8z9A0B1C2",
+          "rand_tu",
+          "bcrypt"
+        ],
+        [
+          "U11",
+          "linh_dev",
+          "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+          "rand_linh",
+          "sha1"
+        ],
+        [
+          "U12",
+          "phuc_dev",
+          "$2b$12$Qq4...rR5sS6tT",
+          "rand_phuc",
+          "argon2"
+        ],
+        [
+          "U13",
+          "quan_dev",
+          "098f6bcd4621d373cade4e832627b4f6",
+          "rand_quan",
+          "md5"
+        ],
+        [
+          "U14",
+          "ha_dev",
+          "$2b$12$Mk6...pP7qQ8rR",
+          "rand_ha",
+          "bcrypt"
+        ],
+        [
+          "U15",
+          "dat_dev",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "rand_dat",
+          "sha256"
+        ],
+        [
+          "U16",
+          "vy_dev",
+          "$2b$12$Jd2...sS3tT4uU",
+          "rand_vy",
+          "scrypt"
+        ],
+        [
+          "U17",
+          "khoa_dev",
+          "5d41402abc4b2a76b9719d911017c592",
+          "rand_khoa",
+          "md5"
+        ],
+        [
+          "U18",
+          "trang_dev",
+          "$2b$12$Wq8...yY9zZ0A1",
+          "rand_trang",
+          "bcrypt"
+        ],
+        [
+          "U19",
+          "bao_dev",
+          "a9993e364706816aba3e25717850c26c9cd0d89d",
+          "rand_bao",
+          "sha1"
+        ],
+        [
+          "U20",
+          "ngoc_dev",
+          "$2b$12$Bn5...fF6gG7hH",
+          "rand_ngoc",
+          "argon2"
+        ],
+        [
+          "U21",
+          "son_dev",
+          "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3",
+          "rand_son",
+          "sha256"
+        ],
+        [
+          "U22",
+          "thao_dev",
+          "$2b$12$Ct3...eE4fF5gG",
+          "rand_thao",
+          "bcrypt"
+        ],
+        [
+          "U23",
+          "duc_dev",
+          "8277e0910d750195b448797616e091ad",
+          "rand_duc",
+          "md5"
+        ],
+        [
+          "U24",
+          "an_dev",
+          "$2b$12$Vm1...dD2eE3fF",
+          "rand_an",
+          "scrypt"
+        ]
+      ]
+    },
+    "mission": "Viết query phân loại <strong>mức độ bảo mật</strong> theo thuật toán. Kéo thả khối lệnh ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Thuật toán nào <strong>KHÔNG nên dùng</strong> để lưu password?",
+        "options": [
+          {
+            "id": "a",
+            "text": "md5 — quá nhanh + không có salt → rainbow table attack",
+            "correct": true,
+            "explanation": "Đúng — md5 là cryptographic hash bị broken (collision attacks từ 2004) + không có salt built-in → rainbow table attack trivial. 1 GPU crack md5 ~50 GH/s."
+          },
+          {
+            "id": "b",
+            "text": "bcrypt — cost factor chỉnh được, salt tự động",
+            "correct": false,
+            "explanation": "Sai — bcrypt là thuật toán hash password AN TOÀN hiện đại. cost factor làm chậm brute-force (1 hash ~100ms), salt tự động 16-byte chống rainbow table. Bcrypt = recommended."
+          },
+          {
+            "id": "c",
+            "text": "argon2 — winner của Password Hashing Competition 2015",
+            "correct": false,
+            "explanation": "Sai — argon2 là winner PHC 2015, hiện đại nhất. Memory-hard → chống GPU/ASIC attack (parallel crack khó hơn bcrypt). Recommended cho new systems."
+          },
+          {
+            "id": "d",
+            "text": "scrypt — memory-hard, cần nhiều RAM để tính",
+            "correct": false,
+            "explanation": "Sai — scrypt là thuật toán AN TOÀN: memory-hard khiến GPU/ASIC khó crack song song. Cùng nhóm recommended với bcrypt/argon2."
+          }
+        ]
+      },
+      {
+        "question": "Salt trong password hashing có tác dụng gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mã hóa password để không ai đọc được",
+            "correct": false,
+            "explanation": "Sai — hash function (bcrypt/argon2) mã hóa. Salt là random data thêm vào TRƯỚC khi hash, không phải encryption."
+          },
+          {
+            "id": "b",
+            "text": "Chống rainbow table attack — cùng password sẽ có hash khác nhau",
+            "correct": true,
+            "explanation": "Đúng — Salt random → cùng \"password123\" nhưng user A và user B có hash khác nhau. Attacker không thể dùng 1 rainbow table pre-compute cho tất cả users. Mỗi user phải crack riêng."
+          },
+          {
+            "id": "c",
+            "text": "Làm hash ngắn hơn để tiết kiệm storage",
+            "correct": false,
+            "explanation": "Sai — Salt thêm bytes vào input (bcrypt salt = 16 bytes) → hash output dài hơn (60 chars cho $2a$ format). Không làm hash ngắn hơn."
+          },
+          {
+            "id": "d",
+            "text": "Thay thế cho bcrypt — không cần thuật toán mạnh",
+            "correct": false,
+            "explanation": "Sai — Salt là PHỤ TRỢ, không thay thế. Vẫn cần bcrypt/argon2/scrypt làm hash function mạnh. Salt yếu + md5 = vẫn crack được."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Phân loại: thuật toán hash nào AN TOÀN?",
+      "instruction": "Mỗi thẻ là một hash algorithm. Kéo vào ô <strong style=\"color:var(--success)\">AN TOÀN</strong> (recommended) hoặc <strong style=\"color:var(--danger)\">KHÔNG AN TOÀN</strong> (lỗi thời, có thể crack).",
+      "chips": [
+        {
+          "id": "h-md5",
+          "label": "md5 (32 hex chars)"
+        },
+        {
+          "id": "h-sha1",
+          "label": "sha1 (40 hex chars)"
+        },
+        {
+          "id": "h-sha256",
+          "label": "sha256 (64 hex chars, no salt)"
+        },
+        {
+          "id": "h-bcrypt",
+          "label": "bcrypt ($2a$ / $2b$ prefix)"
+        },
+        {
+          "id": "h-argon2",
+          "label": "argon2 (PHC winner 2015)"
+        },
+        {
+          "id": "h-scrypt",
+          "label": "scrypt (memory-hard)"
+        },
+        {
+          "id": "h-plain",
+          "label": "plain text password"
+        }
+      ],
+      "bins": [
+        {
+          "id": "safe",
+          "label": "AN TOÀN (recommended)",
+          "correct": "safe"
+        },
+        {
+          "id": "unsafe",
+          "label": "KHÔNG AN TOÀN (cần migrate)",
+          "correct": "unsafe"
+        }
+      ],
+      "solution": {
+        "h-md5": "unsafe",
+        "h-sha1": "unsafe",
+        "h-sha256": "unsafe",
+        "h-bcrypt": "safe",
+        "h-argon2": "safe",
+        "h-scrypt": "safe",
+        "h-plain": "unsafe"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Phân loại <strong>mức độ bảo mật</strong> theo thuật toán hash — dùng <code>CASE WHEN</code> + <code>GROUP BY</code> + <code>COUNT</code>.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "fn",
+        "token": "CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END",
+        "slot": "fn-case"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "security_level",
+        "slot": "col-alias"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(user_id)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as2"
+      },
+      {
+        "type": "col",
+        "token": "user_count",
+        "slot": "col-alias2"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "security_users_vault",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "security_level",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "user_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT CASE WHEN ... END AS ____, COUNT(...) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM security_users_vault",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level, COUNT(user_id) AS user_count FROM security_users_vault GROUP BY security_level ORDER BY user_count DESC;",
+    "reveal_hints": {
+      "select-line": "<strong>CASE WHEN</strong> phân loại thuật toán → HIGH/MEDIUM/LOW + <strong>COUNT</strong> đếm user.",
+      "from-line": "FROM <strong>security_users_vault</strong>.",
+      "group-line": "GROUP BY <strong>security_level</strong> — gom theo mức bảo mật.",
+      "order-line": "ORDER BY <strong>user_count DESC</strong> — mức nào nhiều user nhất lên đầu."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — thay vì đếm gộp, hãy <strong>liệt kê TỪNG user kèm mức bảo mật</strong> (dùng lại <code>CASE WHEN</code>) làm bảng audit, sắp xếp theo <code>username</code>.",
+    "context": {
+      "scenario": "Ticket cuối cùng: CEO cần <strong>bảng audit két mật khẩu</strong> <code>security_users_vault</code> — từng user kèm nhãn mức bảo mật suy từ thuật toán băm (bcrypt/argon2 = HIGH, sha256 = MEDIUM, còn lại = nguy hiểm). Nộp bảng này là GameHub v3.0 ra mắt toàn cầu.",
+      "real_world": "Sau các vụ rò rỉ, những công ty như <strong>LinkedIn</strong> (từng lộ hash SHA-1 không salt) đều phải chạy audit đúng kiểu này để ép nâng cấp thuật toán. <code>CASE WHEN</code> là công cụ phân loại tại chỗ — biến giá trị kỹ thuật thành nhãn mà sếp đọc hiểu ngay.",
+      "steps": [
+        "Chọn cột định danh: <code>SELECT username, hash_algorithm</code>.",
+        "Gắn nhãn: <code>CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code> (đúng mẫu ở Bước 3).",
+        "Sắp xếp danh bạ audit: <code>ORDER BY username</code>.",
+        "Run → mỗi user 1 dòng kèm nhãn — bảng nộp CEO."
+      ],
+      "hint_explore": "Mở két xem trước: <code>SELECT * FROM security_users_vault</code> — chú ý cột <code>hash_algorithm</code>.",
+      "expected": "Bảng mỗi user 1 dòng × 3 cột (<code>username, hash_algorithm, security_level</code>) theo alphabet. Đóng ticket này — 🎓 GameHub v3.0 ra mắt toàn cầu."
+    },
+    "starter": "-- CASE WHEN phân loại security level\n-- HIGH (bcrypt/argon2/scrypt), MEDIUM (sha256), LOW (md5/sha1)\nSELECT CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN ''\n            WHEN hash_algorithm = '' THEN ''\n            ELSE '' END AS security_level,\n       COUNT() AS \n  FROM security_users_vault\n GROUP BY security_level\n ORDER BY  DESC;\n",
+    "schema": {
+      "table_name": "security_users_vault",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "VARCHAR",
+          "key": "PK",
+          "icon": "&#128273;"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "hash_algorithm",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "&#9881;"
+        }
+      ],
+      "data": [
+        [
+          "U01",
+          "minh_dev",
+          "md5"
+        ],
+        [
+          "U02",
+          "yuki_dev",
+          "bcrypt"
+        ],
+        [
+          "U03",
+          "sara_dev",
+          "sha1"
+        ],
+        [
+          "U04",
+          "alex_dev",
+          "argon2"
+        ],
+        [
+          "U05",
+          "lisa_dev",
+          "sha256"
+        ],
+        [
+          "U06",
+          "ken_dev",
+          "bcrypt"
+        ],
+        [
+          "U07",
+          "jen_dev",
+          "scrypt"
+        ]
+      ]
+    },
+    "expected_sql": "SELECT username, hash_algorithm, CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level FROM security_users_vault ORDER BY username;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>phân loại security level</em> theo thuật toán, đếm user theo từng mức, sắp xếp giảm dần. Hãy nghĩ: <code>CASE WHEN</code> để gán nhãn, <code>GROUP BY</code> theo nhãn, <code>COUNT</code> + <code>ORDER BY</code>."
+      },
+      {
+        "level": 2,
+        "text": "<code>CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH'</code> — recommended algorithms."
+      },
+      {
+        "level": 3,
+        "text": "<code>WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT username, hash_algorithm, CASE WHEN hash_algorithm IN ('bcrypt','argon2','scrypt') THEN 'HIGH' WHEN hash_algorithm = 'sha256' THEN 'MEDIUM' ELSE 'LOW' END AS security_level FROM security_users_vault ORDER BY username;</code>"
+      }
+    ],
+    "success_message": "CASE WHEN + GROUP BY = audit password security mạnh mẽ! Đã hoàn thành toàn bộ 20 bài Database Design Cơ bản!",
+    "xp_reward": 70
+  }
+}

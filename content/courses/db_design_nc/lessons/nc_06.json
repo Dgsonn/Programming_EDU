@@ -1,0 +1,495 @@
+{
+  "id": "nc_06",
+  "index": 6,
+  "title": "Join II — Merge Join & Hash Join: hai võ sĩ hạng nặng",
+  "subtitle": "Không có vua tuyệt đối: ĐÃ SORT thì merge, BUILD NHỎ thì hash — điều kiện quyết định đai",
+  "module": 7,
+  "module_title": "Engine Room — Query Processing",
+  "estimated_minutes": 22,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "listings (40.000 món ≈ 400 block — phía BUILD, mẫu 4)",
+      "columns": [
+        "listing_id",
+        "item_name",
+        "price"
+      ],
+      "dataRows": [
+        [
+          "3001",
+          "Kiếm gỗ Newbie",
+          "45"
+        ],
+        [
+          "3002",
+          "Giáp rồng Huyền thoại",
+          "12500"
+        ],
+        [
+          "3004",
+          "Skin súng Neon",
+          "790"
+        ],
+        [
+          "3005",
+          "Khiên gỗ sồi",
+          "80"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #47",
+    "hook": "Cuối tháng, sếp muốn <em>\"sao kê TOÀN SÀN: 100.000 đơn, đơn nào cũng kèm tên món\"</em> — vẫn là phép ⋈ của Ticket #46, nhưng outer không còn là 3 đơn của khách #88 nữa: outer giờ là CẢ KHO. Block NLJ gồng được 472ms… trong khi đội vận hành thì thào: sàn sắp mở rộng gấp 10. Ticket #47: hai võ sĩ hạng nặng bước lên đài — <strong>Merge Join</strong> đứng trên vai external sort của Ticket #45, và <strong>Hash Join</strong> với chiêu CHIA XÔ. Cả hai cùng ra giá 148ms — nhưng mỗi người kèm một ĐIỀU KIỆN."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Merge Join: 2 bảng ĐÃ sort theo khóa ghép → 2 con trỏ chạy song song, mỗi bảng đọc đúng 1 lượt (br + bs); CHƯA sort thì phải cộng tiền sort (bài 4) vào hóa đơn",
+        "Hash Join: hash(khóa ghép) chia CẢ HAI bảng thành các cặp xô — khớp nhau thì bắt buộc CÙNG xô, nên chỉ so trong từng cặp; BUILD bảng tra từ xô nhỏ, PROBE bằng xô kia",
+        "Luật chọn: build = bảng NHỎ hơn; build vừa RAM → 1 lượt (br + bs) không cần chia xô; cả hai bảng đều to → grace hash 3(br + bs) — vẫn rẻ khi kho phình"
+      ],
+      "intro": "Ghép 100.000 hóa đơn với 40.000 nhãn giá. Cách 1: nếu CẢ HAI chồng giấy đã xếp theo mã món, hai thủ kho dò song song từ trên xuống — mỗi tờ cầm đúng một lần (<strong>merge</strong>). Cách 2: chẳng cần xếp gì — kẻ 4 cái XÔ, ném giấy vào xô theo đuôi mã số; hóa đơn ở xô 2 chỉ có thể khớp nhãn ở xô 2, khỏi so chéo (<strong>hash</strong>). Cả hai đều né được cảnh \"mỗi tờ dò cả chồng\" của nested loop.",
+      "example": "Toàn sàn orders 1.000 block ⋈ listings 400 block: BNLJ = 4.400 block ≈ <strong>472ms</strong>. Hai file ĐÃ sort theo listing_id? Merge = 1.400 block + 2 nhảy = <strong>148ms</strong>. Báo cáo chỉ cần món &lt;100 gem — build sau lọc ~12 block VỪA RAM? Hash 1 lượt = cũng <strong>148ms</strong>, mà không cần sort gì hết."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-code-merge",
+        "title": "Merge Join — trả công một lần đọc",
+        "body": "Input đã sort thì mỗi tuple chỉ cần đọc MỘT lần: 2 con trỏ nhích song song, gặp khóa bằng nhau thì ghép — tổng chuyển block = <strong>br + bs</strong>. Cái giá thật nằm ở chữ \"đã sort\": chưa có trật tự thì phải external sort trước (Ticket #45), hóa đơn toàn sàn đội lên ≈820ms — lúc đó thà BNLJ.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.4 — Merge Join: br + bs block transfers khi 2 quan hệ đã sort theo khóa ghép"
+      },
+      {
+        "icon": "fa-fill-drip",
+        "title": "Hash Join — build nhỏ, probe lớn",
+        "body": "Chia 2 bảng bằng CÙNG hàm hash thành nh cặp xô (nh = ⌈b_build/M⌉ để mỗi xô build VỪA RAM). Với từng cặp: nạp xô <strong>build</strong> (bảng nhỏ) vào RAM dựng bảng tra, rồi <strong>probe</strong> — duyệt xô kia, tra từng dòng. Chia xô tốn đọc + ghi cả 2 bảng, build/probe đọc lại lần nữa: tổng ≈ <strong>3(br + bs)</strong>. Còn build vốn đã vừa RAM? Khỏi chia xô: br + bs, một lượt."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Sàn phình listings ×10 (4.000 block): BNLJ leo lên 41.000 block ≈ <strong>4.180ms</strong>, grace hash chỉ 3×5.000 = 15.000 ≈ <strong>1.668ms</strong> — hash knock-out khi CẢ HAI bảng đều to. Vẫn triết lý cũ: cost sống theo dữ liệu. Còn một cú lừa mang tên <strong>skew</strong> — xô phình vì món hit — hồ sơ chờ ngay sau bài này."
+      }
+    ],
+    "hash_visual": {
+      "eyebrow": "HASH JOIN — MÔ HÌNH THU NHỎ: 8 MÓN BUILD · 6 ĐƠN PROBE · 4 XÔ",
+      "caption": "Fig 15.9-15.10 sách thu nhỏ: hash(id % 4) chia món vào xô — rồi từng đơn chỉ mở ĐÚNG xô của nó. Để ý đơn #9005: cùng xô 3 mà vẫn trượt — cùng xô chưa chắc khớp, phải so thật; nhưng KHÁC xô thì chắc chắn khỏi so.",
+      "buckets": 4,
+      "build": [
+        {
+          "label": "Kiếm 3001",
+          "v": 3001
+        },
+        {
+          "label": "Giáp 3002",
+          "v": 3002
+        },
+        {
+          "label": "Skin 3004",
+          "v": 3004
+        },
+        {
+          "label": "Khiên 3005",
+          "v": 3005
+        },
+        {
+          "label": "Cung 3006",
+          "v": 3006
+        },
+        {
+          "label": "Mũ 3008",
+          "v": 3008
+        },
+        {
+          "label": "Nhẫn 3011",
+          "v": 3011
+        },
+        {
+          "label": "Đai 3013",
+          "v": 3013
+        }
+      ],
+      "probe": [
+        {
+          "label": "#9001→3005",
+          "v": 3005
+        },
+        {
+          "label": "#9002→3002",
+          "v": 3002
+        },
+        {
+          "label": "#9003→3011",
+          "v": 3011
+        },
+        {
+          "label": "#9004→3004",
+          "v": 3004
+        },
+        {
+          "label": "#9005→3007",
+          "v": 3007
+        },
+        {
+          "label": "#9006→3001",
+          "v": 3001
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "orders ⋈ listings — trận TOÀN SÀN (không WHERE)",
+        "columns": [
+          {
+            "name": "orders",
+            "type": "100.000 đơn ≈ 1.000 block",
+            "key": "PROBE"
+          },
+          {
+            "name": "listings",
+            "type": "40.000 món ≈ 400 block",
+            "key": "BUILD (nhỏ hơn)"
+          },
+          {
+            "name": "khóa ghép",
+            "type": "listing_id",
+            "key": "⋈"
+          },
+          {
+            "name": "RAM buffer",
+            "type": "M = 100 block",
+            "key": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "BNLJ (bài 5)",
+          "4 mẻ × 1.000",
+          "4.400 block + 8 nhảy",
+          "472 ms"
+        ],
+        [
+          "Sort-Merge (chưa sort)",
+          "sort 2 bảng rồi dò",
+          "≈7.000 block",
+          "≈820 ms"
+        ],
+        [
+          "Merge (ĐÃ sort)",
+          "2 con trỏ song song",
+          "1.400 block + 2 nhảy",
+          "148 ms"
+        ],
+        [
+          "Grace Hash",
+          "4 cặp xô",
+          "3×1.400 = 4.200 block",
+          "492 ms"
+        ],
+        [
+          "Hash build-vừa-RAM",
+          "lọc còn 12 block",
+          "1.400 block + 2 nhảy",
+          "148 ms"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Hash join KHÔNG sort gì cả — vậy nhờ đâu nó né được 12 triệu phép so chéo của nested loop?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nhờ chia CẢ HAI bảng bằng cùng một hàm hash: hai dòng khớp nhau thì hash bằng nhau → bắt buộc CÙNG xô — nên chỉ cần so trong từng cặp xô",
+            "correct": true,
+            "explanation": "Đúng — khác xô là chắc chắn khỏi so. Đó là toàn bộ phép màu: không cần trật tự, chỉ cần \"cùng khóa thì cùng xô\"."
+          },
+          {
+            "id": "b",
+            "text": "Nhờ hash tự xếp thứ tự các dòng bên trong mỗi xô",
+            "correct": false,
+            "explanation": "Sai — trong xô vẫn lộn xộn nguyên; hash chỉ CHIA NGĂN, không xếp. So trong xô là việc của bảng tra khi build/probe."
+          },
+          {
+            "id": "c",
+            "text": "Nhờ bỏ qua các dòng không khớp ngay từ trên đĩa",
+            "correct": false,
+            "explanation": "Sai — muốn biết khớp hay không vẫn phải đọc lên; hash chỉ đảm bảo bạn không phí công so hai dòng KHÁC xô."
+          },
+          {
+            "id": "d",
+            "text": "Nhờ CPU so mã hash nhanh hơn so số thường",
+            "correct": false,
+            "explanation": "Sai — tiết kiệm nằm ở SỐ CẶP phải so (chỉ trong xô), không phải tốc độ một phép so."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao build phải là bảng NHỎ hơn (listings 400 block chứ không phải orders 1.000)?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì bảng tra dựng từ xô build phải nằm TRỌN trong RAM khi probe — build càng nhỏ càng ít xô phải chia, thậm chí khỏi chia; còn xô probe to bao nhiêu cũng được, duyệt tuần tự mà",
+            "correct": true,
+            "explanation": "Đúng — sách nói thẳng: partition của PROBE không cần vừa bộ nhớ. Ràng buộc RAM chỉ đè lên vai build, nên đưa người nhẹ cân nhất lên."
+          },
+          {
+            "id": "b",
+            "text": "Vì bảng to làm hash tính chậm hơn",
+            "correct": false,
+            "explanation": "Sai — hàm hash tính trên từng dòng, bảng nào cũng phải hash đủ số dòng của nó; vấn đề là RAM, không phải tốc độ hash."
+          },
+          {
+            "id": "c",
+            "text": "Vì bảng nhỏ luôn có index sẵn",
+            "correct": false,
+            "explanation": "Sai — hash join không dùng index có sẵn nào; bảng tra được dựng TẠI CHỖ trong RAM lúc build."
+          },
+          {
+            "id": "d",
+            "text": "Không quan trọng — hash join đối xứng hai bên",
+            "correct": false,
+            "explanation": "Sai — đối xứng lúc CHIA XÔ thôi; đến lúc build thì một bên phải chui vào RAM, và đó nên là bên nhỏ."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Chạy đúng dây chuyền grace hash join",
+      "instruction": "Kéo 5 bước vào đúng thứ tự chạy.",
+      "xp": 20,
+      "items": [
+        {
+          "id": "r3",
+          "label": "Probe: duyệt xô orders #0, tra từng đơn vào bảng — khớp thì ghép"
+        },
+        {
+          "id": "r1",
+          "label": "Hash(listing_id): chia CẢ HAI bảng thành 4 cặp xô, ghi ra đĩa"
+        },
+        {
+          "id": "r5",
+          "label": "Nối kết quả 4 cặp — không cặp nào phải so chéo nhau"
+        },
+        {
+          "id": "r2",
+          "label": "Nạp xô listings #0 (bé) vào RAM, dựng bảng tra"
+        },
+        {
+          "id": "r4",
+          "label": "Đổ RAM, lặp build + probe với cặp xô #1, #2, #3"
+        }
+      ],
+      "solution": {
+        "r1": 1,
+        "r2": 2,
+        "r3": 3,
+        "r4": 4,
+        "r5": 5
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Dàn trận hash join toàn sàn + chốt luật chọn đai — có MỘT khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Nạp xô listings (bé hơn) vào RAM dựng bảng tra — ràng buộc \"vừa bộ nhớ\" chỉ đè lên vai build",
+        "slot": "hj-build"
+      },
+      {
+        "type": "op",
+        "token": "Hash(listing_id) chia CẢ orders lẫn listings thành 4 cặp xô — khớp thì bắt buộc CÙNG xô, hết so chéo",
+        "slot": "hj-hash"
+      },
+      {
+        "type": "op",
+        "token": "Sort cả hai bảng theo listing_id TRƯỚC rồi mới chia xô — hash cần input có trật tự mới chia đều",
+        "slot": "hj-x"
+      },
+      {
+        "type": "op",
+        "token": "Duyệt xô orders cùng số hiệu, tra từng đơn vào bảng trong RAM — xong cặp thì đổ RAM, sang cặp kế",
+        "slot": "hj-probe"
+      },
+      {
+        "type": "op",
+        "token": "ĐÃ sort → merge 148ms · build vừa RAM → hash 1 lượt 148ms · cả hai to → grace hash 3(br+bs)",
+        "slot": "hj-rule"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "hj-hash",
+        "placeholder": "Nước đi 1 — chưa ai sort, kho nào cũng to: mở trận sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🪣",
+          "label": "Chia cặp xô",
+          "sub": "Nước đi 1",
+          "hint": "Hai dòng khớp nhau thì hash giống nhau — chia cả 2 bảng theo CÙNG một hàm."
+        }
+      },
+      {
+        "id": "hj-build",
+        "placeholder": "Nước đi 2 — cặp xô #0 mở ra, ai được vào RAM?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🏗️",
+          "label": "Build bảng tra",
+          "sub": "Nước đi 2",
+          "hint": "Bảng tra phải VỪA bộ nhớ — đưa người nhẹ cân lên trước."
+        }
+      },
+      {
+        "id": "hj-probe",
+        "placeholder": "Nước đi 3 — bảng tra sẵn sàng, xô còn lại làm gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Probe từng đơn",
+          "sub": "Nước đi 3",
+          "hint": "Xô orders cùng số hiệu — từng đơn một cú tra vào bảng trong RAM."
+        }
+      },
+      {
+        "id": "hj-rule",
+        "placeholder": "Nước đi 4 — chốt luật: khi nào chọn ai?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⚖️",
+          "label": "Luật chọn đai",
+          "sub": "Nước đi 4",
+          "hint": "Hai võ sĩ cùng ra giá 148ms — nhưng mỗi người kèm một ĐIỀU KIỆN."
+        }
+      }
+    ],
+    "expected_sql": "Hash(listing_id) chia CẢ orders lẫn listings thành 4 cặp xô — khớp thì bắt buộc CÙNG xô, hết so chéo Nạp xô listings (bé hơn) vào RAM dựng bảng tra — ràng buộc \"vừa bộ nhớ\" chỉ đè lên vai build Duyệt xô orders cùng số hiệu, tra từng đơn vào bảng trong RAM — xong cặp thì đổ RAM, sang cặp kế ĐÃ sort → merge 148ms · build vừa RAM → hash 1 lượt 148ms · cả hai to → grace hash 3(br+bs)",
+    "expected_zones": {
+      "hj-hash": "Hash(listing_id) chia CẢ orders lẫn listings thành 4 cặp xô — khớp thì bắt buộc CÙNG xô, hết so chéo",
+      "hj-build": "Nạp xô listings (bé hơn) vào RAM dựng bảng tra — ràng buộc \"vừa bộ nhớ\" chỉ đè lên vai build",
+      "hj-probe": "Duyệt xô orders cùng số hiệu, tra từng đơn vào bảng trong RAM — xong cặp thì đổ RAM, sang cặp kế",
+      "hj-rule": "ĐÃ sort → merge 148ms · build vừa RAM → hash 1 lượt 148ms · cả hai to → grace hash 3(br+bs)"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA DÀN xong grace hash: chia cặp xô → build bảng nhỏ → probe → luật chọn đai theo điều kiện. Khối \"sort trước rồi chia xô\" là bịa — KHÔNG CẦN SORT chính là điểm bán hàng của hash join: hàm hash chia ngăn được cả đống giấy lộn xộn (sim Step 1 là bằng chứng sống). Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "hj-hash": "Nước đi 1 — nested loop chết vì so chéo mọi cặp. Muốn \"khớp nhau thì tự tìm về cùng chỗ\" mà không tốn công sort, dùng phép gì lên khóa ghép?",
+      "hj-build": "Nước đi 1 chốt: 4 cặp xô trên đĩa, so chéo bị xóa sổ. Mở cặp #0: RAM chỉ chứa nổi MỘT xô để dựng bảng tra — xô của bảng nào được vào?",
+      "hj-probe": "Nước đi 2 chốt: bảng tra listings nằm gọn trong RAM. Xô orders #0 vẫn nằm trên đĩa — từng đơn trong đó làm gì với bảng tra?",
+      "hj-rule": "Nước đi 3 chốt: probe xong 4 cặp là hết trận. Còn nước cuối — treo LUẬT lên tường: khi nào merge, khi nào hash 1 lượt, khi nào grace?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #47 — tự lập hóa đơn hash:</strong> trận toàn sàn orders 1.000 block ⋈ listings 400 block, RAM M = 100. Điền 3 con số. (Số viết liền, ví dụ <code>4200</code>.)",
+    "challenge_type": "fill_blank",
+    "template": "-- TRAN TOAN SAN: orders 1.000 block ⋈ listings 400 block · RAM M = 100\n\n-- GRACE HASH · Buoc 1: chia xo sao cho moi xo BUILD vua RAM\nso_cap_xo = ⌈400 / 100⌉  =  ____ cap\n\n-- Buoc 2: chia xo = doc + ghi CA HAI bang · Buoc 3: build/probe = doc lai ca hai\ntong_block_grace = 3 × (1.000 + 400)  =  ____ block\n\n-- VE DAC BIET: bao cao chi can mon < 100 gem → build sau loc ~12 block, VUA RAM\n-- → khoi chia xo: doc listings 400 (build) + doc orders 1.000 (probe)\ntong_block_1_luot = ____ block",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "? cặp xô",
+        "expected": "4"
+      },
+      {
+        "id": "b2",
+        "hint": "? block",
+        "expected": "4200"
+      },
+      {
+        "id": "b3",
+        "hint": "? block",
+        "expected": "1400"
+      }
+    ],
+    "schema": {
+      "table_name": "orders ⋈ listings",
+      "columns": [
+        {
+          "name": "orders",
+          "type": "1.000 block",
+          "key": "PROBE"
+        },
+        {
+          "name": "listings",
+          "type": "400 block",
+          "key": "BUILD"
+        },
+        {
+          "name": "RAM",
+          "type": "M = 100 block",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "grace hash",
+          "3 × (br + bs)",
+          "4 cặp xô"
+        ],
+        [
+          "build vừa RAM",
+          "br + bs",
+          "không chia xô"
+        ],
+        [
+          "merge (đã sort)",
+          "br + bs",
+          "2 con trỏ"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây là bản nháp optimizer cân grace hash cho trận toàn sàn. Chú ý tại kho NÀY grace hash (4.200 block ≈ 492ms) vẫn chưa hạ được BNLJ (4.400 block ≈ 472ms) — nhưng phình kho ×10 là hash knock-out (15.000 vs 41.000 block). Và vé đặc biệt: build lọc còn vừa RAM thì hash rẻ ngang merge-đã-sort mà chẳng cần trật tự nào.",
+      "real_world": "Postgres chọn Hash Join làm mặc định cho equi-join giữa hai bảng lớn — EXPLAIN sẽ hiện \"Hash Cond: (o.listing_id = l.listing_id)\". Và lại là work_mem: build vừa work_mem thì 1 lượt, tràn thì Postgres tự chia batch — đúng grace hash bạn vừa tính.",
+      "steps": [
+        "Số cặp xô: mỗi xô build phải ≤ M block → ⌈400 / 100⌉.",
+        "Grace = 3 lượt đi qua cả hai bảng: chia xô (đọc + ghi) rồi build/probe (đọc lại).",
+        "Vé 1 lượt: khỏi chia xô — mỗi bảng đọc đúng một lần: 1.000 + 400."
+      ],
+      "hint_explore": "Bí thì bấm lại sim Step 1: 8 món + 6 đơn, mỗi bên đúng MỘT lượt — nhân số đó lên 1.400 block là ra vé đặc biệt.",
+      "expected": "so_cap_xo = 4 · tong_block_grace = 4200 · tong_block_1_luot = 1400."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Mỗi xô build phải vừa RAM 100 block — kho build 400 block thì cần mấy xô?"
+      },
+      {
+        "level": 2,
+        "text": "Grace hash đi qua mỗi bảng 3 lần (chia xô: đọc + ghi; build/probe: đọc) — nhân 3 với tổng block hai bảng."
+      },
+      {
+        "level": 3,
+        "text": "Build vừa RAM thì mỗi bảng chỉ đọc MỘT lần: cộng thẳng 1.000 + 400."
+      },
+      {
+        "level": 4,
+        "text": "so_cap_xo = <code>4</code> · tong_block_grace = <code>4200</code> · tong_block_1_luot = <code>1400</code>."
+      }
+    ],
+    "success_message": "TICKET #47 ĐÓNG — sao kê toàn sàn có thuật toán dự phòng cho ngày kho phình gấp 10! 🪣 Nhưng khoan đóng sổ: hash join có một cú lừa mang tên SKEW — món hit chiếm 30.000 đơn làm một xô phình nổ. Hồ sơ kỹ thuật ngay bên dưới. Rồi bài sau: một phép tưởng nặng nhất sàn — GROUP BY 100.000 đơn — hóa ra giá đúng bằng MỘT lần quét kho.",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_hash_skew"
+  ]
+}

@@ -1,0 +1,581 @@
+{
+  "id": "nc_05",
+  "index": 5,
+  "title": "Join I — Nested Loop ba đời: từng dòng, từng block, tra index",
+  "subtitle": "JOIN không phải syntax — là thuật toán ghép đôi, và chọn sai là trả giá gấp trăm",
+  "module": 7,
+  "module_title": "Engine Room — Query Processing",
+  "estimated_minutes": 22,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "orders ⋈ listings (mẫu 4 + 4)",
+      "columns": [
+        "order_id",
+        "buyer_id",
+        "listing_id",
+        "total",
+        "status"
+      ],
+      "dataRows": [
+        [
+          "9001",
+          "88",
+          "3005",
+          "80",
+          "delivered"
+        ],
+        [
+          "9002",
+          "88",
+          "3002",
+          "12500",
+          "shipped"
+        ],
+        [
+          "9004",
+          "88",
+          "3004",
+          "790",
+          "delivered"
+        ],
+        [
+          "9005",
+          "707",
+          "3001",
+          "45",
+          "delivered"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #46",
+    "hook": "Trang \"Lịch sử mua\" chạy ngon từ Ticket #44… nhưng khách chỉ thấy <code>listing_id = 3005</code> vô hồn — TÊN vật phẩm nằm bên sổ <code>listings</code>. Đội từng có người đòi chép thẳng <code>item_name</code> vào orders \"cho tiện\" — bạn gạt ngay: chép tay là mầm lệch giá, bài học xương máu từ thời chuẩn hóa GameHub. Làm tử tế: orders giữ <code>listing_id</code>, muốn có tên thì <strong>JOIN</strong>. Nhưng JOIN là phép đắt nhất sàn diễn — Ticket #46: xem engine ghép 2 bảng bằng thuật toán gì, và vì sao cùng một phép ⋈ có thể chênh nhau cả trăm lần."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "JOIN không phải syntax — là THUẬT TOÁN: engine phải chọn cách ghép từng dòng 2 bảng",
+        "Nested Loop ba đời: từng-DÒNG (nr lượt quét inner) → từng-BLOCK (br lượt) → TRA-INDEX (nr cú nhảy)",
+        "Chọn bảng NHỎ làm outer + chọn đời thuật toán theo kích thước & index — vẫn là cộng hóa đơn I/O"
+      ],
+      "intro": "Ghép danh sách 300 đơn với kho 40.000 món: cách ngây thơ — cầm TỪNG ĐƠN chạy dọc cả kho (nested loop). Khôn hơn — ôm nguyên MỘT TRANG đơn (1 block) rồi đối chiếu cả trang trong MỘT lượt dạo kho (block nested loop): số phép so y hệt, nhưng số lượt DẠO KHO giảm trăm lần. Cách thứ ba — kho có mục lục: cầm mã món TRA THẲNG index (indexed nested loop), khỏi dạo, nhưng mỗi lần tra là một cú nhảy random. Ba đời, một mục đích — hóa đơn khác nhau một trời.",
+      "example": "300 đơn ⋈ 40.000 món: NLJ từng-dòng <strong>13.212ms</strong> · Block NLJ <strong>144ms</strong> · Indexed NLJ <strong>1.242ms</strong>. Cùng kết quả, chênh ~90 lần — và quán quân ở kho NÀY lại không phải anh có index."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-circle-nodes",
+        "title": "Outer và Inner — ai cầm trịch?",
+        "body": "Nested loop = 2 vòng lặp: bảng <strong>outer</strong> duyệt một lần, bảng <strong>inner</strong> bị quét ĐI QUÉT LẠI theo từng lượt của outer. Vì thế chọn bảng NHỎ làm outer: outer 3 block → inner chỉ bị quét 3 lượt. Đảo vai (outer 400 block) là hóa đơn phình ngay trăm lần.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.1-15.5.2 — Nested-Loop & Block Nested-Loop Join"
+      },
+      {
+        "icon": "fa-people-arrows",
+        "title": "Ba đời nested loop",
+        "body": "<strong>Đời 1 — NLJ:</strong> mỗi DÒNG outer quét trọn inner (nr × bs block). <strong>Đời 2 — Block NLJ:</strong> mỗi BLOCK outer quét inner một lượt (br × bs) — cùng số phép so, I/O giảm theo số dòng/block. <strong>Đời 3 — Indexed NLJ:</strong> mỗi dòng outer TRA index inner — đổi những lượt quét lấy nr cú nhảy random."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Indexed NLJ chính là access path Ticket #44 tái xuất: n cú nhảy × 4,1ms. Nó vô địch khi inner KHỔNG LỒ còn outer bé: phình listings lên 1 triệu món (10.000 block) — Block NLJ thành 3 × 10.000 = 3.001ms, Indexed NLJ vẫn đứng im 1.242ms → lật cờ. Vẫn bài học cũ: cost sống theo DỮ LIỆU."
+      }
+    ],
+    "plan_visual": {
+      "query": "SELECT o.order_id, l.item_name, o.total\nFROM orders o JOIN listings l ON o.listing_id = l.listing_id\nWHERE o.seller_id = 4102;  -- 300 đơn ⋈ 40.000 món",
+      "caption": "Cùng phép ⋈ — ba đời thuật toán. Twist: index KHÔNG thắng ở kho này (listings quá nhỏ); phình kho lên 1 triệu món thì Indexed NL lật cờ — cost sống theo dữ liệu.",
+      "price": {
+        "seek_ms": 4,
+        "block_ms": 0.1,
+        "note": "outer = 300 đơn đã lọc ≈ 3 block · inner = listings 40.000 món ≈ 400 block · listings có index PK."
+      },
+      "trees": [
+        {
+          "name": "Đời 1 · NLJ — từng DÒNG",
+          "chosen": false,
+          "note": "Mỗi đơn dạo trọn kho: 300 lượt × 400 block",
+          "io": {
+            "access": "seq",
+            "seeks": 303,
+            "blocks": 120003
+          },
+          "nodes": [
+            {
+              "op": "orders (300 đơn)",
+              "kind": "table",
+              "detail": "outer — duyệt từng dòng",
+              "rows": "300 dòng"
+            },
+            {
+              "op": "⋈ Nested Loop",
+              "kind": "join",
+              "detail": "mỗi DÒNG quét cả listings",
+              "rows": "300 dòng ghép",
+              "cost": "12.000.000 phép so"
+            }
+          ]
+        },
+        {
+          "name": "Đời 2 · Block NLJ — từng BLOCK",
+          "chosen": true,
+          "note": "✓ Optimizer chọn — cùng số phép so, I/O giảm 100 lần",
+          "io": {
+            "access": "seq",
+            "seeks": 6,
+            "blocks": 1203
+          },
+          "nodes": [
+            {
+              "op": "orders (3 block)",
+              "kind": "table",
+              "detail": "outer — duyệt từng BLOCK",
+              "rows": "3 block"
+            },
+            {
+              "op": "⋈ Block Nested Loop",
+              "kind": "join",
+              "detail": "mỗi BLOCK quét listings 1 lượt",
+              "rows": "300 dòng ghép",
+              "cost": "12.000.000 phép so"
+            }
+          ]
+        },
+        {
+          "name": "Đời 3 · Indexed NLJ — tra index",
+          "chosen": false,
+          "note": "Thắng NLJ 10 lần — vẫn thua BNLJ ở kho nhỏ này",
+          "io": {
+            "access": "random",
+            "seeks": 303,
+            "blocks": 303
+          },
+          "nodes": [
+            {
+              "op": "orders (300 đơn)",
+              "kind": "table",
+              "detail": "outer — từng dòng",
+              "rows": "300 dòng"
+            },
+            {
+              "op": "⋈ Indexed NL (PK listings)",
+              "kind": "join",
+              "detail": "mỗi đơn 1 cú tra index",
+              "rows": "300 dòng ghép",
+              "cost": "~4.800 phép so trên cây"
+            }
+          ]
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "orders (đã chuẩn hóa — listing_id thay cho item_name chép tay)",
+        "columns": [
+          {
+            "name": "order_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "buyer_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "listing_id",
+            "type": "INT",
+            "key": "FK → listings"
+          },
+          {
+            "name": "total",
+            "type": "INT (gem)",
+            "key": ""
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "9001",
+          "88",
+          "3005 → Khiên gỗ sồi",
+          "80",
+          "delivered"
+        ],
+        [
+          "9002",
+          "88",
+          "3002 → Giáp rồng",
+          "12500",
+          "shipped"
+        ],
+        [
+          "9004",
+          "88",
+          "3004 → Skin súng Neon",
+          "790",
+          "delivered"
+        ],
+        [
+          "9005",
+          "707",
+          "3001 → Kiếm gỗ",
+          "45",
+          "delivered"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Block NLJ so với NLJ thường: số PHÉP SO vẫn y nguyên 12 triệu — vậy nó tiết kiệm ở đâu mà hóa đơn giảm từ 13.212ms còn 144ms?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Ở I/O: inner chỉ bị quét 3 lượt (mỗi BLOCK outer một lượt) thay vì 300 lượt (mỗi DÒNG một lượt) — phép so là tiền CPU rẻ, khiêng block mới là tiền I/O đắt",
+            "correct": true,
+            "explanation": "Đúng — cùng khối lượng so sánh, khác số lần DẠO KHO. Bài học Ticket #43 nguyên vẹn: hóa đơn nằm ở I/O."
+          },
+          {
+            "id": "b",
+            "text": "Ở phép so — đi theo block giúp so ít cặp hơn hẳn",
+            "correct": false,
+            "explanation": "Sai — mọi cặp dòng vẫn phải so như cũ (12 triệu); block chỉ đổi CÁCH ĐỌC, không đổi phép so."
+          },
+          {
+            "id": "c",
+            "text": "Block NLJ nén dữ liệu nên đọc nhanh hơn",
+            "correct": false,
+            "explanation": "Sai — không nén gì cả; nó chỉ tận dụng những dòng ĐÃ nằm cùng block trong một lần đọc."
+          },
+          {
+            "id": "d",
+            "text": "Nó bỏ qua các dòng không match ngay từ trên đĩa",
+            "correct": false,
+            "explanation": "Sai — muốn biết match hay không vẫn phải đọc lên và so; không ai \"nhìn xuyên\" được block trên đĩa."
+          }
+        ]
+      },
+      {
+        "question": "Khi nào Indexed NLJ đáng đồng tiền bát gạo nhất?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Outer ÍT dòng còn inner RẤT LỚN — vài trăm cú tra index rẻ hơn hẳn việc quét đi quét lại một kho khổng lồ",
+            "correct": true,
+            "explanation": "Đúng — mỗi dòng outer đổi \"một lượt dạo kho\" lấy \"một cú nhảy\". Kho càng to, cú đổi càng hời; kho bé (400 block) thì BNLJ vẫn rẻ hơn."
+          },
+          {
+            "id": "b",
+            "text": "Mọi lúc — inner có index thì cứ dùng (nghe quen không?)",
+            "correct": false,
+            "explanation": "Sai — đây là người anh em của \"cứ có index là dùng\" ở Ticket #44; hóa đơn 1.242ms vs 144ms ngay đầu bài đã bác nó."
+          },
+          {
+            "id": "c",
+            "text": "Khi hai bảng to đúng bằng nhau",
+            "correct": false,
+            "explanation": "Sai — kích thước bằng nhau không nói lên gì; thứ quyết định là outer nhỏ + inner lớn + index."
+          },
+          {
+            "id": "d",
+            "text": "Khi inner bé đến mức nằm gọn trong một block",
+            "correct": false,
+            "explanation": "Sai — inner bé thì quét trọn nó còn rẻ hơn tra index; index tỏa sáng khi inner LỚN."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Chọn thuật toán cho từng trận đấu",
+      "instruction": "Nhìn kích thước outer/inner và index — xếp mỗi trận vào đúng góc đài.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "m1",
+          "label": "Outer 3 block ⋈ inner 400 block, KHÔNG có index"
+        },
+        {
+          "id": "m2",
+          "label": "Outer 300 dòng ⋈ inner 10.000 block, inner có index PK"
+        },
+        {
+          "id": "m3",
+          "label": "Tra 1 đơn duy nhất ⋈ kho lớn có index"
+        },
+        {
+          "id": "m4",
+          "label": "Inner không có index nào trên cột ghép"
+        }
+      ],
+      "bins": [
+        {
+          "id": "b",
+          "label": "Block NLJ 🚚"
+        },
+        {
+          "id": "i",
+          "label": "Indexed NLJ 📖"
+        }
+      ],
+      "solution": {
+        "m1": "b",
+        "m4": "b",
+        "m2": "i",
+        "m3": "i"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Dàn trận JOIN: chọn vai + xếp đúng ba đời nested loop. Có MỘT khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Từng BLOCK outer quét inner một lượt: 3 × 400 = 1.200 block — 144ms, số phép so giữ nguyên",
+        "slot": "jn-bnlj"
+      },
+      {
+        "type": "op",
+        "token": "Chọn bảng NHỎ (300 đơn ≈ 3 block) làm outer — vòng ngoài càng ít lượt, inner càng ít bị quét lại",
+        "slot": "jn-outer"
+      },
+      {
+        "type": "op",
+        "token": "JOIN là phép có sẵn trong CPU — engine ghép 2 bảng trong một nhịp, không tốn I/O nào",
+        "slot": "jn-x"
+      },
+      {
+        "type": "op",
+        "token": "Từng DÒNG outer quét trọn inner: 300 × 400 = 120.000 block — hóa đơn 13.212ms",
+        "slot": "jn-nlj"
+      },
+      {
+        "type": "op",
+        "token": "Từng dòng outer TRA INDEX inner: 300 cú nhảy — 1.242ms, sẽ vô địch khi inner phình to",
+        "slot": "jn-inlj"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "jn-outer",
+        "placeholder": "Nước đi 1 — chọn vai: bảng nào cầm trịch vòng ngoài?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎬",
+          "label": "Chọn outer",
+          "sub": "Nước đi 1",
+          "hint": "Inner bị quét lại theo TỪNG LƯỢT của outer — vậy nên để ai cầm trịch?"
+        }
+      },
+      {
+        "id": "jn-nlj",
+        "placeholder": "Đời 1 — cách ngây thơ nhất chạy thế nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🐌",
+          "label": "Đời 1 · từng dòng",
+          "sub": "Nested Loop",
+          "hint": "Cầm từng ĐƠN chạy dọc cả kho — đếm xem bao nhiêu lượt dạo."
+        }
+      },
+      {
+        "id": "jn-bnlj",
+        "placeholder": "Đời 2 — nâng cấp gì mà I/O giảm trăm lần?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🚚",
+          "label": "Đời 2 · từng block",
+          "sub": "Block NL",
+          "hint": "Những dòng nằm CÙNG block được đọc lên trong cùng một lần — tận dụng đi."
+        }
+      },
+      {
+        "id": "jn-inlj",
+        "placeholder": "Đời 3 — kho có mục lục thì sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📖",
+          "label": "Đời 3 · tra index",
+          "sub": "Indexed NL",
+          "hint": "Đổi mỗi lượt dạo kho lấy một cú nhảy — giá cú nhảy thì Ticket #43 đã niêm yết."
+        }
+      }
+    ],
+    "expected_sql": "Chọn bảng NHỎ (300 đơn ≈ 3 block) làm outer — vòng ngoài càng ít lượt, inner càng ít bị quét lại Từng DÒNG outer quét trọn inner: 300 × 400 = 120.000 block — hóa đơn 13.212ms Từng BLOCK outer quét inner một lượt: 3 × 400 = 1.200 block — 144ms, số phép so giữ nguyên Từng dòng outer TRA INDEX inner: 300 cú nhảy — 1.242ms, sẽ vô địch khi inner phình to",
+    "expected_zones": {
+      "jn-outer": "Chọn bảng NHỎ (300 đơn ≈ 3 block) làm outer — vòng ngoài càng ít lượt, inner càng ít bị quét lại",
+      "jn-nlj": "Từng DÒNG outer quét trọn inner: 300 × 400 = 120.000 block — hóa đơn 13.212ms",
+      "jn-bnlj": "Từng BLOCK outer quét inner một lượt: 3 × 400 = 1.200 block — 144ms, số phép so giữ nguyên",
+      "jn-inlj": "Từng dòng outer TRA INDEX inner: 300 cú nhảy — 1.242ms, sẽ vô địch khi inner phình to"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA DÀN xong trận JOIN: outer nhỏ cầm trịch → đời 1 ngây thơ → đời 2 đi theo block (quán quân kho này) → đời 3 tra index (chờ inner phình to để lật cờ). Khối \"JOIN một nhịp CPU\" là bịa — JOIN là thuật toán ghép trên block và index, trả tiền I/O như mọi người. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "jn-outer": "Nước đi 1 — trước khi chọn thuật toán phải chọn VAI: inner sẽ bị quét đi quét lại, vậy bảng nào nên đứng vòng ngoài?",
+      "jn-nlj": "Vai đã chốt: 300 đơn cầm trịch. Giờ đời 1 — cách ngây thơ nhất: cầm từng gì… chạy dọc đâu?",
+      "jn-bnlj": "Đời 1 chốt: 120.000 block — 13.212ms, hóa đơn thảm họa. Đời 2 tận dụng những dòng nằm CÙNG block: quét theo đơn vị nào?",
+      "jn-inlj": "Đời 2 chốt: 1.200 block — 144ms, giảm trăm lần không tốn thêm gì. Đời 3: kho có mục lục PK — mỗi đơn đổi lượt dạo lấy cái gì?"
+    }
+  },
+  "step_4": {
+    "prompt": "Đóng Ticket #46: viết query \"Lịch sử mua CÓ TÊN vật phẩm\" cho khách <strong>#88</strong> — lấy <code>o.order_id, l.item_name, o.total</code> từ <code>orders o</code> ghép <code>listings l</code> qua <code>listing_id</code>, lọc <code>o.buyer_id = 88</code>.",
+    "schema": {
+      "table_name": "orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "buyer_id",
+          "type": "INT",
+          "key": "🔑 idx_buyer"
+        },
+        {
+          "name": "listing_id",
+          "type": "INT",
+          "key": "FK → listings"
+        },
+        {
+          "name": "total",
+          "type": "INT (gem)",
+          "key": ""
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "9001",
+          "88",
+          "3005",
+          "80",
+          "delivered"
+        ],
+        [
+          "9002",
+          "88",
+          "3002",
+          "12500",
+          "shipped"
+        ],
+        [
+          "9004",
+          "88",
+          "3004",
+          "790",
+          "delivered"
+        ],
+        [
+          "9005",
+          "707",
+          "3001",
+          "45",
+          "delivered"
+        ]
+      ],
+      "related_schemas": [
+        {
+          "table_name": "listings",
+          "columns": [
+            {
+              "name": "listing_id",
+              "type": "INT",
+              "key": "PK"
+            },
+            {
+              "name": "item_name",
+              "type": "VARCHAR",
+              "key": ""
+            },
+            {
+              "name": "price",
+              "type": "INT (gem)",
+              "key": ""
+            }
+          ],
+          "data": [
+            [
+              "3001",
+              "Kiếm gỗ Newbie",
+              "45"
+            ],
+            [
+              "3002",
+              "Giáp rồng Huyền thoại",
+              "12500"
+            ],
+            [
+              "3004",
+              "Skin súng Neon",
+              "790"
+            ],
+            [
+              "3005",
+              "Khiên gỗ sồi",
+              "80"
+            ]
+          ]
+        }
+      ]
+    },
+    "context": {
+      "scenario": "Plan mô phỏng cho query này: <code>Indexed Nested Loop — Index Scan idx_buyer lấy ~20 đơn của #88 → mỗi đơn tra PK listings lấy tên</code>. Outer bé tí (vài đơn), inner có index khóa chính — đúng sân khấu của đời 3.",
+      "real_world": "Cặp \"FK trỏ PK + JOIN\" là nhịp tim của mọi schema đã chuẩn hóa — và vì PK luôn có index sẵn, Indexed NLJ gần như miễn phí cho các join \"tra theo khóa\" kiểu này. Đó là phần thưởng cho việc KHÔNG chép item_name vào orders.",
+      "steps": [
+        "Đặt bí danh: <code>orders o</code> và <code>listings l</code>.",
+        "Ghép qua khóa: <code>JOIN listings l ON o.listing_id = l.listing_id</code>.",
+        "Lấy 3 cột: <code>o.order_id, l.item_name, o.total</code>.",
+        "Lọc khách: <code>WHERE o.buyer_id = 88</code>."
+      ],
+      "hint_explore": "Chạy thử <code>SELECT * FROM orders WHERE buyer_id = 88</code> — thấy toàn listing_id \"vô hồn\" đúng như khách phàn nàn, rồi hẵng JOIN.",
+      "expected": "Bảng 3 đơn của #88 kèm tên: Khiên gỗ sồi (80) · Giáp rồng Huyền thoại (12500) · Skin súng Neon (790)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khung JOIN hai bảng: <code>FROM orders o JOIN listings l ON o.listing_id = l.listing_id</code>."
+      },
+      {
+        "level": 2,
+        "text": "Ba cột cần lấy, nhớ tiền tố: <code>o.order_id, l.item_name, o.total</code>."
+      },
+      {
+        "level": 3,
+        "text": "Chốt bằng <code>WHERE o.buyer_id = 88;</code>"
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT o.order_id, l.item_name, o.total FROM orders o JOIN listings l ON o.listing_id = l.listing_id WHERE o.buyer_id = 88;</code>"
+      }
+    ],
+    "expected_sql": "SELECT o.order_id, l.item_name, o.total FROM orders o JOIN listings l ON o.listing_id = l.listing_id WHERE o.buyer_id = 88;",
+    "success_message": "TICKET #46 ĐÓNG — \"Lịch sử mua\" hiện tên vật phẩm, schema vẫn sạch chuẩn hóa! ⋈ Engine Room đã đi 5/10. Nhưng nested loop mới là nửa đầu câu chuyện join: bài sau, hai võ sĩ hạng nặng bước lên đài — <strong>Merge Join</strong> (đứng trên vai external sort của Ticket #45) và <strong>Hash Join</strong> (chia giỏ rồi mới đấu). Kèm một hồ sơ về cú lừa mang tên skew.",
+    "xp_reward": 120
+  }
+}

@@ -1,0 +1,902 @@
+{
+  "id": "db_07",
+  "index": 8,
+  "title": "Redundancy & Phụ thuộc hàm (FD)",
+  "subtitle": "Phát hiện dữ liệu lặp và quy tắc X → Y ẩn trong bảng",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 22,
+  "xp_reward": 70,
+  "project_piece": "🛰️ Khởi động \"Còi báo động Hệ thống Dọn Rác\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #08",
+    "hook": "GameHub v1.0 chạy ngon — nhưng một bảng ghép vội từ thuở đầu bắt đầu bốc mùi: <code>game_studio_combined</code> lưu <em>\"Japan\" lặp lại ở mọi dòng game</em> của cùng 1 studio. Sửa quốc gia 1 studio = sửa hàng loạt dòng, sót 1 là dữ liệu vênh. Ticket này mở cả một chương mới: truy ra <strong>gốc bệnh dư thừa</strong> — thứ tên là <strong>phụ thuộc hàm</strong> — trước khi nó lan khắp hệ thống."
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "game_studio_combined",
+      "columns": [
+        "game_id",
+        "game_name",
+        "studio_name",
+        "st_country"
+      ],
+      "dataRows": [
+        [
+          "55",
+          "Elden Ring",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "56",
+          "Bloodborne",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "57",
+          "Sekiro",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "58",
+          "Dark Souls III",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "88",
+          "Portal 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "89",
+          "Half-Life 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "90",
+          "Dota 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "91",
+          "Counter-Strike 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "92",
+          "Left 4 Dead 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "60",
+          "Mario Odyssey",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "61",
+          "Zelda BOTW",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "62",
+          "Splatoon 3",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "70",
+          "The Witcher 3",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "71",
+          "Cyberpunk 2077",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "80",
+          "Hades",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "81",
+          "Bastion",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "82",
+          "Transistor",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "95",
+          "God of War",
+          "Sony",
+          "USA"
+        ],
+        [
+          "96",
+          "The Last of Us",
+          "Sony",
+          "USA"
+        ],
+        [
+          "97",
+          "Spider-Man",
+          "Sony",
+          "USA"
+        ],
+        [
+          "72",
+          "Gwent",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "63",
+          "Mario Kart 8",
+          "Nintendo",
+          "Japan"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Thợ săn phụ thuộc",
+    "desc": "phát hiện FD X→Y"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Redundancy = dữ liệu bị lặp lại không cần thiết trong nhiều dòng",
+        "Phụ thuộc hàm (FD) X → Y nghĩa là: biết X, suy ra được Y duy nhất",
+        "FD chính là gốc rễ của mọi dạng chuẩn (1NF, 2NF, 3NF, BCNF)"
+      ],
+      "intro": "Bảng <code>game_studio_combined</code> dưới đây có vấn đề: <em>FromSoftware</em> xuất hiện 3 lần, mỗi lần lặp lại \"Japan\". Đó là <strong>Redundancy</strong> (dư thừa) — tốn ổ cứng, dễ sinh mâu thuẫn. <strong>Phụ thuộc hàm (Functional Dependency)</strong> là quy tắc: nếu biết <code>studio_name</code> thì biết <code>st_country</code> (mỗi studio chỉ ở 1 nước). Viết: <code>studio_name → st_country</code>.",
+      "example": "Bạn phát hiện FD: <code>studio_name → st_country</code>. Đây là quy tắc toán học — không phải syntax SQL — nhưng là gốc rễ để biết bảng \"có vấn đề\" và cần tách. Có 3 dạng chuẩn sẽ dùng FD để phát hiện vi phạm: 1NF, 2NF, 3NF, BCNF."
+    },
+    "intro": "Bạn được giao maintain database cho 1 startup game. Table <code>games</code> hiện tại có 5000 dòng, mỗi dòng lưu <code>studio_name</code> + <code>studio_country</code>. 1 sáng đẹp trời, CEO bảo: <em>\"Đổi tên Sony Japan thành Sony Japan Holdings\"</em>. Bạn UPDATE... mất 4 giờ. Quên 1 dòng. Dữ liệu mâu thuẫn. Bài này dạy <strong>Functional Dependency</strong>.",
+    "concept_cards": [
+      {
+        "icon": "fa-arrows-to-dot",
+        "title": "Redundancy — Cùng thông tin, nhiều chỗ",
+        "body": "Bạn có bảng 1000 game. Mỗi game lưu <code>studio_name</code> + <code>studio_country</code>. Studio \"Sony\" → \"Japan\" lặp 50 lần. Sửa \"Japan\" thành \"Nhật Bản\" → UPDATE 50 dòng. Quên 1 dòng? <strong>Dữ liệu mâu thuẫn</strong>. Bạn có thấy vấn đề không?"
+      },
+      {
+        "icon": "fa-arrows-left-right",
+        "title": "Functional Dependency (FD)",
+        "body": "Quy tắc <code>X → Y</code>: biết X thì xác định Y duy nhất. <code>game_id → title, genre, price</code> (mọi FD đều từ PK). Nhưng <code>studio_name → studio_country</code> cũng là FD — đây là manh mối để tách bảng. Cứ tìm FD mà PK không liên quan → tách ra."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Bảng gộp lặp <code>st_country</code> ở MỌI game cùng studio. Thử sửa quốc gia Valve ở 1 dòng mà quên 4 dòng kia → dữ liệu mâu thuẫn. FD <code>studio_name → st_country</code> chính là dấu hiệu phải tách bảng."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — chưa tách",
+          "columns": [
+            "game_id",
+            "title",
+            "studio",
+            "studio_country"
+          ],
+          "rows": [
+            [
+              "1",
+              "Mario",
+              "Nintendo",
+              "Japan"
+            ],
+            [
+              "2",
+              "Zelda",
+              "Nintendo",
+              "Japan"
+            ],
+            [
+              "3",
+              "Hades",
+              "Supergiant",
+              "USA"
+            ]
+          ],
+          "violations": {
+            "1-3": true,
+            "2-3": true
+          }
+        },
+        "after": {
+          "title": "SAU — tách studio",
+          "columns": [
+            "game_id",
+            "title",
+            "studio"
+          ],
+          "rows": [
+            [
+              "1",
+              "Mario",
+              "Nintendo"
+            ],
+            [
+              "2",
+              "Zelda",
+              "Nintendo"
+            ],
+            [
+              "3",
+              "Hades",
+              "Supergiant"
+            ]
+          ]
+        },
+        "note": "Tách thành 2 bảng: game + studio. studio_country lưu 1 lần duy nhất."
+      },
+      "schema": {
+        "table_name": "game_studio_combined",
+        "columns": [
+          {
+            "name": "game_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "game_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🎮"
+          },
+          {
+            "name": "studio_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🏢"
+          },
+          {
+            "name": "st_country",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🌏"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "55",
+          "Elden Ring",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "56",
+          "Bloodborne",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "57",
+          "Sekiro",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "58",
+          "Dark Souls III",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "88",
+          "Portal 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "89",
+          "Half-Life 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "90",
+          "Dota 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "91",
+          "Counter-Strike 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "92",
+          "Left 4 Dead 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "60",
+          "Mario Odyssey",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "61",
+          "Zelda BOTW",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "62",
+          "Splatoon 3",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "70",
+          "The Witcher 3",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "71",
+          "Cyberpunk 2077",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "80",
+          "Hades",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "81",
+          "Bastion",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "82",
+          "Transistor",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "95",
+          "God of War",
+          "Sony",
+          "USA"
+        ],
+        [
+          "96",
+          "The Last of Us",
+          "Sony",
+          "USA"
+        ],
+        [
+          "97",
+          "Spider-Man",
+          "Sony",
+          "USA"
+        ],
+        [
+          "72",
+          "Gwent",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "63",
+          "Mario Kart 8",
+          "Nintendo",
+          "Japan"
+        ]
+      ]
+    },
+    "mission": "Lấy <code>studio_name</code> và <code>st_country</code> của các game thuộc studio <em>FromSoftware</em> — quan sát: nếu sửa \"Japan\" → \"Đài Loan\" ở 1 dòng, 2 dòng kia vẫn \"Japan\" → mâu thuẫn."
+  },
+  "step_2": {
+    "decomp_game": {
+      "rule_label": "Tách dư thừa (Redundancy)",
+      "rule": "Bảng <code>game_studio_combined</code> có <em>studio_name</em> lặp 3 lần + <em>st_country</em> lặp 3 lần. Vi phạm FD <code>studio_name → st_country</code>. Tách thành 2 bảng để loại bỏ dư thừa.",
+      "mission": "Kéo các cột từ bảng <code>game_studio_combined</code> vào 2 bảng mục tiêu.",
+      "source_table": {
+        "name": "game_studio_combined",
+        "columns": [
+          {
+            "name": "game_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "game_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🎮"
+          },
+          {
+            "name": "studio_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🏢"
+          },
+          {
+            "name": "st_country",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🌏"
+          }
+        ],
+        "data": [
+          [
+            "55",
+            "Elden Ring",
+            "FromSoftware",
+            "Japan"
+          ],
+          [
+            "56",
+            "Bloodborne",
+            "FromSoftware",
+            "Japan"
+          ],
+          [
+            "88",
+            "Portal 2",
+            "Valve",
+            "USA"
+          ]
+        ]
+      },
+      "target_tables": [
+        {
+          "name": "games",
+          "icon": "🎮",
+          "description": "Bảng game (game_id, game_name, studio_name FK)"
+        },
+        {
+          "name": "studios",
+          "icon": "🏢",
+          "description": "Bảng studio (studio_name PK, st_country)"
+        }
+      ],
+      "solution": {
+        "games": [
+          "game_id",
+          "game_name",
+          "studio_name"
+        ],
+        "studios": [
+          "studio_name",
+          "st_country"
+        ]
+      },
+      "hint": "Cột studio_name nên ở bảng studios (PK). Cột st_country chỉ phụ thuộc studio_name → ở studios. Cột game_id, game_name ở bảng games (FK studio_name tham chiếu studios)."
+    },
+    "mcq": [
+      {
+        "question": "Redundancy (dư thừa) trong bảng game_studio_combined là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cột game_id xuất hiện ở tất cả các dòng",
+            "correct": false,
+            "explanation": "Sai — PK (game_id) bắt buộc xuất hiện ở mỗi dòng — đó là identity, không phải redundancy. Redundancy là giá trị LẶP LẠI không cần thiết."
+          },
+          {
+            "id": "b",
+            "text": "Cùng một studio + country lặp lại ở nhiều dòng, dù đã biết qua FD studio_name → st_country",
+            "correct": true,
+            "explanation": "Đúng — FromSoftware + Japan lặp 2 dòng, Valve + USA lặp 1 dòng. Mỗi lần insert 1 game FromSoftware mới = phải nhập lại \"Japan\" → dễ typo (Japan thành \"Japna\")."
+          },
+          {
+            "id": "c",
+            "text": "Bảng có quá nhiều cột so với cần thiết",
+            "correct": false,
+            "explanation": "Sai — số cột không liên quan redundancy. Redundancy là giá trị lặp lại, không phải số cột. Bảng 100 cột không có redundancy nếu mỗi giá trị unique."
+          },
+          {
+            "id": "d",
+            "text": "Dòng dữ liệu bị thiếu cột",
+            "correct": false,
+            "explanation": "Sai — thiếu cột = NULL. Redundancy là thừa dữ liệu (lặp), không phải thiếu. Đây là 2 vấn đề NGƯỢC nhau."
+          }
+        ]
+      },
+      {
+        "question": "Phụ thuộc hàm <code>studio_name → st_country</code> nghĩa là:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mỗi studio có thể ở nhiều quốc gia",
+            "correct": false,
+            "explanation": "Sai — nếu 1 studio ở N quốc gia, FD ngược lại (country → studio) mới đúng. FD studio → country = 1 studio ở ĐÚNG 1 country."
+          },
+          {
+            "id": "b",
+            "text": "Biết tên studio thì xác định được duy nhất quốc gia của studio đó",
+            "correct": true,
+            "explanation": "Đúng — studio_name làm determinant (X bên trái FD), mỗi studio_name xác định DUY NHẤT 1 st_country. Đó chính là FD."
+          },
+          {
+            "id": "c",
+            "text": "Biết tên game thì biết được studio",
+            "correct": false,
+            "explanation": "Sai — đó là FD game_id → studio_name (khác). Câu này hỏi về studio_name → st_country, không phải game → studio."
+          },
+          {
+            "id": "d",
+            "text": "Country quyết định studio",
+            "correct": false,
+            "explanation": "Sai — country → studio là FD NGƯỢC. FromSoftware (Japan) ≠ Sony (Japan) cùng country nhưng khác studio. Country KHÔNG quyết định studio."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "title": "Phân loại: cặp nào có FD (X → Y)?",
+      "instruction": "Mỗi thẻ là 1 cặp (X, Y). Xác định cặp nào <em>chắc chắn</em> là FD.<br><strong style=\"color:var(--success)\">Có FD</strong> = X quyết định Y duy nhất · <strong style=\"color:var(--danger)\">Không FD</strong> = Y thay đổi tùy dòng.",
+      "chips": [
+        {
+          "id": "fd1",
+          "label": "studio_name → st_country"
+        },
+        {
+          "id": "fd2",
+          "label": "game_id → game_name"
+        },
+        {
+          "id": "fd3",
+          "label": "studio_name → game_name"
+        },
+        {
+          "id": "fd4",
+          "label": "game_name → studio_name"
+        }
+      ],
+      "bins": [
+        {
+          "id": "yes",
+          "label": "Có FD (X quyết định Y)",
+          "correct": "true"
+        },
+        {
+          "id": "no",
+          "label": "Không FD (Y thay đổi tùy dòng)",
+          "correct": "false"
+        }
+      ],
+      "solution": {
+        "fd1": "yes",
+        "fd2": "yes",
+        "fd3": "no",
+        "fd4": "no"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Tìm tất cả <code>game_name</code> của studio <em>Valve</em> — kéo thả SQL từ bảng dư thừa.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "game_name",
+        "slot": "col-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "game_studio_combined",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "studio_name",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'Valve'",
+        "slot": "val-1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
+    "reveal_hints": {
+      "select-line": "SELECT 1 cột: <strong>game_name</strong>.",
+      "from-line": "FROM bảng đang dư thừa: <strong>game_studio_combined</strong>.",
+      "where-line": "WHERE lọc studio: <strong>studio_name = 'Valve'</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — <strong>đếm số game mỗi studio</strong> kèm quốc gia (<code>GROUP BY studio_name, st_country</code>), sắp xếp nhiều → ít. Chú ý: quốc gia bị LẶP theo studio = dấu hiệu dư thừa (FD).",
+    "starter": "-- Lấy tên các game do Valve phát triển\n-- Filter theo studio_name = 'Valve'\nSELECT \n  FROM game_studio_combined\n WHERE ;\n",
+    "schema": {
+      "table_name": "game_studio_combined",
+      "columns": [
+        {
+          "name": "game_id",
+          "type": "INT",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "game_name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "🎮"
+        },
+        {
+          "name": "studio_name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "🏢"
+        },
+        {
+          "name": "st_country",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "🌏"
+        }
+      ],
+      "data": [
+        [
+          "55",
+          "Elden Ring",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "56",
+          "Bloodborne",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "57",
+          "Sekiro",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "58",
+          "Dark Souls III",
+          "FromSoftware",
+          "Japan"
+        ],
+        [
+          "88",
+          "Portal 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "89",
+          "Half-Life 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "90",
+          "Dota 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "91",
+          "Counter-Strike 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "92",
+          "Left 4 Dead 2",
+          "Valve",
+          "USA"
+        ],
+        [
+          "60",
+          "Mario Odyssey",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "61",
+          "Zelda BOTW",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "62",
+          "Splatoon 3",
+          "Nintendo",
+          "Japan"
+        ],
+        [
+          "70",
+          "The Witcher 3",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "71",
+          "Cyberpunk 2077",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "80",
+          "Hades",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "81",
+          "Bastion",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "82",
+          "Transistor",
+          "Supergiant",
+          "USA"
+        ],
+        [
+          "95",
+          "God of War",
+          "Sony",
+          "USA"
+        ],
+        [
+          "96",
+          "The Last of Us",
+          "Sony",
+          "USA"
+        ],
+        [
+          "97",
+          "Spider-Man",
+          "Sony",
+          "USA"
+        ],
+        [
+          "72",
+          "Gwent",
+          "CD Projekt",
+          "Poland"
+        ],
+        [
+          "63",
+          "Mario Kart 8",
+          "Nintendo",
+          "Japan"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Bảng gộp <code>game_studio_combined</code> nhồi cả tên game lẫn studio + quốc gia vào 1 bảng → <code>st_country</code> LẶP LẠI ở mọi game cùng studio (dư thừa). Thống kê số game mỗi studio để thấy rõ mức lặp.",
+      "real_world": "Đây là \"mùi\" dư thừa mà mọi kỹ sư DB phải ngửi ra: 1 studio đổi tên nước → phải sửa HÀNG CHỤC dòng, sót 1 dòng là dữ liệu mâu thuẫn. Phụ thuộc hàm <code>studio_name → st_country</code> chính là tín hiệu \"tách bảng đi\" (chuẩn hoá).",
+      "steps": [
+        "SELECT <code>studio_name</code>, <code>st_country</code>, <code>COUNT(*) AS game_count</code>.",
+        "Gom nhóm theo studio (kèm country): <code>GROUP BY studio_name, st_country</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>.",
+        "Run → mỗi studio 1 dòng; chú ý <code>st_country</code> đi kèm cố định theo studio = dấu hiệu FD."
+      ],
+      "hint_explore": "Muốn thấy sự lặp tận mắt? Gõ <code>SELECT * FROM game_studio_combined</code> rồi <strong>Run</strong> — st_country lặp theo studio.",
+      "example": {
+        "question": "Ví dụ tương tự — liệt kê tên game của studio <strong>Valve</strong>:",
+        "sql": "SELECT game_name FROM game_studio_combined WHERE studio_name = 'Valve';",
+        "sample_output": "→ các game do Valve phát triển"
+      },
+      "expected": "Bảng kết quả: mỗi studio 1 dòng × 3 cột (<code>studio_name, st_country, game_count</code>), giảm dần. <code>st_country</code> đi kèm cố định theo <code>studio_name</code> → đúng là phụ thuộc hàm, nên tách ra bảng studio riêng."
+    },
+    "expected_sql": "SELECT studio_name, st_country, COUNT(*) AS game_count FROM game_studio_combined GROUP BY studio_name, st_country ORDER BY game_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Loại trừ <code>WHERE st_country = 'USA'</code> — Sai logic: WHERE theo country thay vì studio_name. Vẫn đúng trong data này nhưng không định danh được studio cụ thể."
+      },
+      {
+        "level": 2,
+        "text": "Loại trừ <code>SELECT * FROM game_studio_combined;</code> — Sai: lấy hết cột (*) và KHÔNG WHERE → trả cả 22 dòng của 6 studio."
+      },
+      {
+        "level": 3,
+        "text": "Loại trừ <code>WHERE game_name = ...</code> — Sai: WHERE theo name (không phải PK) → chỉ trả 1 dòng, thiếu các game khác của Valve."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT studio_name, st_country, COUNT(*) AS game_count FROM game_studio_combined GROUP BY studio_name, st_country ORDER BY game_count DESC;</code>"
+      }
+    ],
+    "success_message": "Bạn đã hiểu Redundancy + FD. Bài 9 sẽ dùng FD để tách bảng thành 1NF — mỗi ô chỉ 1 giá trị nguyên tử.",
+    "xp_reward": 30
+  }
+}

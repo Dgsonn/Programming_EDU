@@ -8,6 +8,7 @@ from routes.roadmap       import roadmap_bp
 from routes.leaderboard   import leaderboard_bp
 from routes.achievements  import achievements_bp
 from routes.lessons       import lessons_bp
+from routes.quizzes       import quizzes_bp
 from routes.admin         import admin_bp
 from routes.forum         import forum_bp
 from routes.oauth         import google_bp, facebook_bp, _oauth_callback
@@ -24,6 +25,7 @@ def register_blueprints(app):
     app.register_blueprint(leaderboard_bp)
     app.register_blueprint(achievements_bp)
     app.register_blueprint(lessons_bp)
+    app.register_blueprint(quizzes_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(forum_bp)
     app.register_blueprint(google_bp,   url_prefix='/auth')

@@ -258,3 +258,41 @@ body.dark .brand-title { background: linear-gradient(90deg,#60A5FA,#A78BFA,#F472
 body.dark .topbar-nav .nav-btn { color: #94A3B8; }
 body.dark .topbar-nav .nav-btn:hover { background: #1E293B; color: #F1F5F9; }
 body.dark .topbar-nav .nav-btn.active { background: linear-gradient(135deg,rgba(74,158,224,0.18),rgba(232,69,69,0.1)); color: #60A5FA; }
+
+/* ── Block 6: Quiz ôn tập (FE-06) ── */
+#review-quiz-block .cd-block-body > #quiz-idle p { color: #6B7280; font-size: 14px; margin-bottom: 12px; }
+.cd-locked-note { color: #9CA3AF; font-size: 14px; }
+
+.quiz-btn {
+  padding: 10px 22px; border-radius: 10px; border: none;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.quiz-btn:disabled { opacity: 0.6; cursor: default; }
+.quiz-btn.primary {
+  background: linear-gradient(135deg,#4A9EE0,#2563EB); color: #fff;
+  box-shadow: 0 4px 12px rgba(74,158,224,0.35);
+}
+.quiz-btn.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(74,158,224,0.45); }
+.quiz-btn.secondary { background: #F3F4F6; color: #374151; border: 1px solid #E5E7EB; }
+.quiz-btn.secondary:hover { background: #E5E7EB; }
+
+.quiz-q { margin-bottom: 16px; }
+.quiz-q-text { font-weight: 600; font-size: 14px; color: #1F2937; margin-bottom: 6px; }
+.quiz-opt { display: block; padding: 6px 0; cursor: pointer; font-size: 14px; color: #4B5563; }
+.quiz-opt input { margin-right: 8px; }
+
+.quiz-score { font-size: 18px; font-weight: 800; color: #1F2937; margin-bottom: 14px; }
+.quiz-review-item { margin-bottom: 14px; padding-left: 10px; font-size: 14px; color: #4B5563; }
+.quiz-review-item.correct { border-left: 3px solid #22c55e; }
+.quiz-review-item.wrong { border-left: 3px solid #ef4444; }
+.quiz-explain { color: #6b7280; font-size: 13px; margin-top: 4px; }
+
+/* dark mode */
+body.dark #review-quiz-block .cd-block-body > #quiz-idle p { color: #94A3B8; }
+body.dark .cd-locked-note { color: #64748B; }
+body.dark .quiz-btn.secondary { background: #334155; color: #E2E8F0; border-color: #475569; }
+body.dark .quiz-btn.secondary:hover { background: #475569; }
+body.dark .quiz-q-text { color: #F1F5F9; }
+body.dark .quiz-opt { color: #94A3B8; }
+body.dark .quiz-score { color: #F1F5F9; }
+body.dark .quiz-review-item { color: #94A3B8; }

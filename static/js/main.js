@@ -749,6 +749,9 @@ function sortCourses(courseList) {
 function renderCourses() {
   var grid = document.getElementById("courses-grid");
   var empty = document.getElementById("empty-state");
+  // main.js được nhúng cả ở /interface, /lesson/* — các trang đó không có
+  // grid khóa học; thiếu guard sẽ ném TypeError khi _applyCoursesData chạy.
+  if (!grid || !empty) return;
   var q = searchQuery.toLowerCase();
 
   var filtered = courses.filter(function (c) {
@@ -775,8 +778,8 @@ function renderCourses() {
       (activeEnrollmentFilter === "not-enrolled" && !c.enrolled);
     var matchLevel =
       levelFilter === "all" ||
-      // Map: Cơ bản == Phù hợp người mới (DB hiện normalize theo 'Phù hợp người mới')
-      (levelFilter === "Cơ bản" && /phù hợp người mới/i.test(c.level)) ||
+      // Map: Cơ bản == Phù hợp người mới (khóa DB Design Cơ bản dùng level 'Cơ bản' trực tiếp)
+      (levelFilter === "Cơ bản" && /(cơ bản|phù hợp người mới)/i.test(c.level)) ||
       (levelFilter === "Trung cấp" && /trung cấp/i.test(c.level)) ||
       (levelFilter === "Nâng cao" && /nâng cao/i.test(c.level)) ||
       (levelFilter === "Phù hợp người mới" && /phù hợp người mới/i.test(c.level));
@@ -866,6 +869,9 @@ function renderCourses() {
 /* ── My Courses rendering ── */
 function renderMyCourses() {
   var container = document.getElementById("enrolled-list");
+  // FIX 2e-D1: guard null — khi user mở lesson page, #enrolled-list không tồn tại → container null
+  // Trước fix: null.innerHTML = ... → pageerror mỗi lần vào bài
+  if (!container) return;
   if (!enrolledCourses.length) {
     container.innerHTML =
       '<p style="color:#9CA3AF;font-size:14px;padding:24px 0">Bạn chưa đăng ký khóa học nào. <a href="#" onclick="navigate(\'courses\')" style="color:#4A9EE0">Khám phá khóa học →</a></p>';
@@ -1699,29 +1705,39 @@ function loadNotifications() {
 
 var _COURSES_CACHE_KEY = 'edu_courses_cache_v1';
 
-var _DB_DESIGN_CARD = {
-  id: 'db_design',
-  title: 'Database Design',
-  subtitle: 'Thiết kế & Quản lý CSDL',
-  description: 'Thiết kế và quản lý cơ sở dữ liệu quan hệ từ ER Diagram, SQL đến tối ưu hóa query thực tế.',
-  image: 'static/images/db_design.svg',
-  level: 'Trung cấp',
-  duration: '40 giờ',
-  students: '12.5K',
-  rating: 4.8,
-  lessons: 60,
-  color: '#1a2744',
-  accentColor: '#0f172a',
-  tag: 'DATABASE',
-  enrolled: false
-};
+/* 2026-07-04: DB Design tách 3 KHÓA (saga GameHub 3 phần) — fallback khớp seed DB */
+var _DB_DESIGN_CARDS = [
+  {
+    id: 'db_design', title: 'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh', subtitle: 'Phần 1 — Xây nền tảng GameHub',
+    description: 'Từ thực thể đầu tiên đến hệ CSDL hoàn chỉnh: ER Diagram, khóa chính/ngoại, chuẩn hóa 1NF→4NF và SQL ứng dụng thực tế.',
+    image: 'static/images/db_design.svg', level: 'Cơ bản', duration: '~6 giờ',
+    students: '0', rating: 4.9, lessons: 20, color: '#06B6D4', accentColor: '#0E7490',
+    tag: 'DATABASE & BACKEND', enrolled: false
+  },
+  {
+    id: 'db_design_tc', title: 'SQL nâng cao, Dữ liệu lớn & Hiệu năng', subtitle: 'GameHub Community — mạng xã hội của gamers',
+    description: 'Advanced SQL (Trigger, Procedure, Recursive CTE), Big Data & Analytics, Storage & Indexing — xây mạng cộng đồng gamers của GameHub.',
+    image: 'static/images/db_design_tc.svg', level: 'Trung cấp', duration: '~7 giờ',
+    students: '0', rating: 4.9, lessons: 21, color: '#0C4A6E', accentColor: '#38BDF8',
+    tag: 'DATABASE & BACKEND', enrolled: false
+  },
+  {
+    id: 'db_design_nc', title: 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', subtitle: 'GameHub Marketplace — sàn giao dịch vật phẩm',
+    description: 'Query Processing & Optimization, Concurrency Control, Crash Recovery — vận hành chợ giao dịch triệu người dùng của GameHub.',
+    image: 'static/images/db_design_nc.svg', level: 'Nâng cao', duration: '~9 giờ',
+    students: '0', rating: 4.9, lessons: 25, color: '#7C2D12', accentColor: '#FB923C',
+    tag: 'DATABASE & BACKEND', enrolled: false
+  }
+];
 
 function _applyCoursesData(data) {
   courses = data.courses;
-  // Thêm card Database Design nếu backend chưa trả về
-  if (!courses.some(function(c) { return c.id === 'db_design'; })) {
-    courses.push(_DB_DESIGN_CARD);
-  }
+  // Thêm card DB Design nếu backend chưa trả về (fallback khi cache/API cũ)
+  _DB_DESIGN_CARDS.forEach(function (card) {
+    if (!courses.some(function(c) { return c.id === card.id; })) {
+      courses.push(card);
+    }
+  });
   enrolledCourses = data.enrolled;
   renderCourses();
   renderMyCourses();
@@ -1872,7 +1888,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Xử lý hash navigation từ các trang khác (vd: /dashboard#roadmap)
   var hash = window.location.hash.replace('#', '');
-  var validPages = ['dashboard', 'courses', 'roadmap', 'skills', 'forum', 'settings'];
+  var validPages = ['dashboard', 'courses', 'roadmap', 'skills', 'forum', 'settings', 'profile', 'my-courses'];
   if (hash && validPages.includes(hash)) {
     navigate(hash);
   } else {

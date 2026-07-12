@@ -82,23 +82,31 @@ def complete_lesson(lesson_no):
             (uid, lesson_id, course_id, quiz_score, xp_earned)
         )
 
-        # Tính lại cache enrollments từ nguồn thật lesson_progress
+        # Tính lại cache enrollments từ nguồn thật lesson_progress.
+        # time_spent = tổng estimated_minutes các bài đã hoàn thành (fallback
+        # 15 phút/bài khi bài chưa có metadata) — trước đây không ai ghi cột
+        # này nên "Tổng giờ học" luôn 0h.
         done_row = conn.execute(
-            "SELECT COUNT(*) AS n FROM lesson_progress "
-            "WHERE user_id=%s AND course_id=%s AND status='completed'",
+            '''SELECT COUNT(*) AS n,
+                      COALESCE(SUM(COALESCE(l.estimated_minutes, 15)), 0) AS minutes
+               FROM lesson_progress lp
+               JOIN lessons l ON l.id = lp.lesson_id
+               WHERE lp.user_id=%s AND lp.course_id=%s AND lp.status='completed' ''',
             (uid, course_id)
         ).fetchone()
         completed_count = done_row['n']
+        time_spent      = str(round(done_row['minutes'] / 60, 1)) + 'h'
         total_lessons   = course['lessons'] or 0
         progress = min(100, round(completed_count * 100 / total_lessons)) if total_lessons else 0
         conn.execute(
             '''UPDATE enrollments
                SET completed_lessons = %s,
                    progress          = %s,
+                   time_spent        = %s,
                    completed_at      = CASE WHEN %s >= 100 THEN COALESCE(completed_at, now())
                                             ELSE completed_at END
                WHERE user_id=%s AND course_id=%s''',
-            (completed_count, progress, progress, uid, course_id)
+            (completed_count, progress, time_spent, progress, uid, course_id)
         )
 
         gained = 0

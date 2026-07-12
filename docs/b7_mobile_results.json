@@ -1,0 +1,590 @@
+{
+  "B1": {
+    "scrollWidth": 500,
+    "clientWidth": 375,
+    "hasOverflowX": true,
+    "title": "Entity Set & Primary Key",
+    "bodyClass": "lesson-focus-mode theme-amber",
+    "stepPaneCount": 4,
+    "activeStep": 0,
+    "ontouchstart": true,
+    "maxTouchPoints": 1,
+    "dragBlockCount": 20,
+    "buttonSizes": [
+      {
+        "w": 32,
+        "h": 38
+      },
+      {
+        "w": 38,
+        "h": 38
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 97
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 28,
+        "h": 28
+      },
+      {
+        "w": 107,
+        "h": 32
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 32,
+        "h": 32
+      },
+      {
+        "w": 25,
+        "h": 28
+      },
+      {
+        "w": 116,
+        "h": 48
+      },
+      {
+        "w": 77,
+        "h": 50
+      }
+    ],
+    "smallButtons": 10,
+    "activePaneClass": "step-pane active",
+    "activePaneChildren": 1,
+    "bodyFontSize": 16
+  },
+  "B4": {
+    "scrollWidth": 500,
+    "clientWidth": 375,
+    "hasOverflowX": true,
+    "title": "Foreign Key & Mối quan hệ 1:N",
+    "bodyClass": "lesson-focus-mode theme-amber",
+    "stepPaneCount": 4,
+    "activeStep": 0,
+    "ontouchstart": true,
+    "maxTouchPoints": 1,
+    "dragBlockCount": 27,
+    "buttonSizes": [
+      {
+        "w": 32,
+        "h": 38
+      },
+      {
+        "w": 38,
+        "h": 38
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 97
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 80,
+        "h": 31
+      },
+      {
+        "w": 73,
+        "h": 31
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 32,
+        "h": 32
+      },
+      {
+        "w": 25,
+        "h": 28
+      },
+      {
+        "w": 116,
+        "h": 48
+      },
+      {
+        "w": 77,
+        "h": 50
+      },
+      {
+        "w": 73,
+        "h": 50
+      },
+      {
+        "w": 108,
+        "h": 50
+      }
+    ],
+    "smallButtons": 10,
+    "activePaneClass": "step-pane active",
+    "activePaneChildren": 1,
+    "bodyFontSize": 16
+  },
+  "B8": {
+    "scrollWidth": 500,
+    "clientWidth": 375,
+    "hasOverflowX": true,
+    "title": "Dạng chuẩn 1 (1NF) — Atomic Domains",
+    "bodyClass": "lesson-focus-mode theme-indigo",
+    "stepPaneCount": 4,
+    "activeStep": 0,
+    "ontouchstart": true,
+    "maxTouchPoints": 1,
+    "dragBlockCount": 19,
+    "buttonSizes": [
+      {
+        "w": 32,
+        "h": 38
+      },
+      {
+        "w": 38,
+        "h": 38
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 72
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 80,
+        "h": 31
+      },
+      {
+        "w": 73,
+        "h": 31
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 32,
+        "h": 32
+      },
+      {
+        "w": 25,
+        "h": 28
+      },
+      {
+        "w": 116,
+        "h": 48
+      },
+      {
+        "w": 77,
+        "h": 50
+      },
+      {
+        "w": 73,
+        "h": 50
+      }
+    ],
+    "smallButtons": 10,
+    "activePaneClass": "step-pane active",
+    "activePaneChildren": 1,
+    "bodyFontSize": 16
+  },
+  "B13": {
+    "scrollWidth": 500,
+    "clientWidth": 375,
+    "hasOverflowX": true,
+    "title": "Trận chiến cuối — Siêu hệ thống chuẩn hóa",
+    "bodyClass": "lesson-focus-mode theme-indigo",
+    "stepPaneCount": 4,
+    "activeStep": 0,
+    "ontouchstart": true,
+    "maxTouchPoints": 1,
+    "dragBlockCount": 34,
+    "buttonSizes": [
+      {
+        "w": 32,
+        "h": 38
+      },
+      {
+        "w": 38,
+        "h": 38
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 311,
+        "h": 72
+      },
+      {
+        "w": 311,
+        "h": 72
+      },
+      {
+        "w": 311,
+        "h": 97
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 80,
+        "h": 31
+      },
+      {
+        "w": 73,
+        "h": 31
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 32,
+        "h": 32
+      },
+      {
+        "w": 25,
+        "h": 28
+      },
+      {
+        "w": 116,
+        "h": 48
+      }
+    ],
+    "smallButtons": 10,
+    "activePaneClass": "step-pane active",
+    "activePaneChildren": 1,
+    "bodyFontSize": 16
+  },
+  "B14": {
+    "scrollWidth": 500,
+    "clientWidth": 375,
+    "hasOverflowX": true,
+    "title": "JSON trong Database — Path Expressions",
+    "bodyClass": "lesson-focus-mode theme-emerald",
+    "stepPaneCount": 4,
+    "activeStep": 0,
+    "ontouchstart": true,
+    "maxTouchPoints": 1,
+    "dragBlockCount": 26,
+    "buttonSizes": [
+      {
+        "w": 32,
+        "h": 38
+      },
+      {
+        "w": 38,
+        "h": 38
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 43
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 97
+      },
+      {
+        "w": 80,
+        "h": 31
+      },
+      {
+        "w": 73,
+        "h": 31
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 32,
+        "h": 32
+      },
+      {
+        "w": 25,
+        "h": 28
+      },
+      {
+        "w": 116,
+        "h": 48
+      },
+      {
+        "w": 77,
+        "h": 50
+      }
+    ],
+    "smallButtons": 11,
+    "activePaneClass": "step-pane active",
+    "activePaneChildren": 1,
+    "bodyFontSize": 16
+  },
+  "B17": {
+    "scrollWidth": 500,
+    "clientWidth": 375,
+    "hasOverflowX": true,
+    "title": "SQL Injection — Lỗ hổng chết người",
+    "bodyClass": "lesson-focus-mode theme-emerald",
+    "stepPaneCount": 4,
+    "activeStep": 0,
+    "ontouchstart": true,
+    "maxTouchPoints": 1,
+    "dragBlockCount": 20,
+    "buttonSizes": [
+      {
+        "w": 32,
+        "h": 38
+      },
+      {
+        "w": 38,
+        "h": 38
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 44,
+        "h": 33
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 251,
+        "h": 44
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 311,
+        "h": 78
+      },
+      {
+        "w": 311,
+        "h": 97
+      },
+      {
+        "w": 311,
+        "h": 97
+      },
+      {
+        "w": 311,
+        "h": 116
+      },
+      {
+        "w": 76,
+        "h": 27
+      },
+      {
+        "w": 69,
+        "h": 27
+      },
+      {
+        "w": 0,
+        "h": 0
+      },
+      {
+        "w": 32,
+        "h": 32
+      },
+      {
+        "w": 25,
+        "h": 28
+      },
+      {
+        "w": 116,
+        "h": 48
+      }
+    ],
+    "smallButtons": 10,
+    "activePaneClass": "step-pane active",
+    "activePaneChildren": 1,
+    "bodyFontSize": 16
+  }
+}

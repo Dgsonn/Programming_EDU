@@ -1,0 +1,399 @@
+{
+  "id": "tc_11",
+  "index": 11,
+  "title": "Storage Hierarchy — dữ liệu thật sự nằm ở đâu",
+  "subtitle": "Tháp lưu trữ: càng nhanh càng nhỏ càng đắt — và đĩa chậm hơn RAM trăm lần",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "storage_tiers",
+      "columns": [
+        "tầng",
+        "độ_trễ",
+        "sức_chứa",
+        "mất_điện"
+      ],
+      "dataRows": [
+        [
+          "CPU Cache",
+          "~1 ns",
+          "vài MB",
+          "mất sạch"
+        ],
+        [
+          "RAM",
+          "~100 ns",
+          "vài chục GB",
+          "mất sạch"
+        ],
+        [
+          "SSD",
+          "~100 µs",
+          "vài TB",
+          "giữ nguyên"
+        ],
+        [
+          "HDD",
+          "~10 ms",
+          "chục TB",
+          "giữ nguyên"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #31",
+    "hook": "Community v2.0 lên báo, 50 nghìn tài khoản mới một tuần — và lần đầu tiên spinner của feed quay quá 3 giây. Bạn soi lại: <em>câu SQL không hề đổi</em>, chỉ có dữ liệu là phình ra. Thủ phạm không nằm trong SQL — nằm dưới TẦNG HẦM: dữ liệu sống trên đĩa, mà đĩa chậm hơn RAM hàng trăm lần. Ticket #31: xuống hầm xem một dòng post thật sự NẰM Ở ĐÂU, và đi đường nào lên màn hình."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Tháp lưu trữ: CPU cache → RAM → SSD → HDD — càng lên cao càng nhanh, càng nhỏ, càng đắt",
+        "Dữ liệu database phải BỀN VỮNG → bản gốc luôn nằm ở đĩa (SSD/HDD); RAM mất sạch khi cúp điện",
+        "CPU không đọc thẳng từ đĩa: dữ liệu được nạp lên RAM theo TRANG (page ~8KB) rồi mới xử lý"
+      ],
+      "intro": "Trước giờ bạn viết SQL như thể dữ liệu \"ở đó sẵn\". Sự thật: mỗi dòng post nằm trong một TRANG 8KB trên đĩa. Muốn đọc, Postgres phải khiêng nguyên trang đó lên RAM — và cái giá mỗi tầng khác nhau khủng khiếp: RAM tính bằng nano-giây, SSD micro-giây, HDD mili-giây. Feed chậm không phải vì SQL dở đi — vì số chuyến khiêng-trang-từ-đĩa tăng theo dữ liệu. Mọi kỹ thuật của Module 6 quy về đúng một câu: <strong>giảm số lần chạm đĩa</strong>.",
+      "example": "Đọc 1 post trong RAM ≈ 100 ns · từ SSD ≈ 100 µs (chậm hơn ~1.000×) · từ HDD ≈ 10 ms (chậm hơn ~100.000×)."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-layer-group",
+        "title": "Tháp đánh đổi ba chiều",
+        "body": "Không tồn tại bộ nhớ vừa nhanh, vừa to, vừa rẻ — nên máy tính xếp THÁP: đỉnh nhanh-nhỏ-đắt (cache, RAM), đáy chậm-to-rẻ (SSD, HDD). Hệ thống giỏi là hệ thống giữ dữ liệu NÓNG ở gần đỉnh, dữ liệu nguội ở đáy.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 12 — Physical Storage Systems"
+      },
+      {
+        "icon": "fa-plug-circle-xmark",
+        "title": "Volatile vs bền vững — ranh giới sống còn",
+        "body": "CPU cache và RAM là <strong>volatile</strong>: cúp điện là trắng tay. Database cam kết dữ liệu KHÔNG MẤT (nhớ delete_user #22 chạy trọn gói?) — nên bản gốc bắt buộc nằm từ SSD trở xuống. RAM chỉ là chỗ LÀM VIỆC, không phải chỗ Ở."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Nhìn bảng storage_tiers bên cạnh: SSD → RAM chênh ~1.000 lần. Nghĩa là MỘT trang được giữ lại trên RAM (thay vì đọc lại từ đĩa) tiết kiệm bằng cả nghìn lần đọc RAM — đó chính là lý do tồn tại của buffer ở Ticket #33."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "storage_tiers",
+        "columns": [
+          {
+            "name": "tầng",
+            "type": "TEXT",
+            "key": "",
+            "icon": "🏗️"
+          },
+          {
+            "name": "độ_trễ",
+            "type": "TEXT",
+            "key": "",
+            "icon": "⏱️"
+          },
+          {
+            "name": "sức_chứa",
+            "type": "TEXT",
+            "key": "",
+            "icon": "📦"
+          },
+          {
+            "name": "mất_điện",
+            "type": "TEXT",
+            "key": "",
+            "icon": "🔌"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "CPU Cache",
+          "~1 ns",
+          "vài MB",
+          "mất sạch"
+        ],
+        [
+          "RAM",
+          "~100 ns",
+          "vài chục GB",
+          "mất sạch"
+        ],
+        [
+          "SSD",
+          "~100 µs",
+          "vài TB",
+          "giữ nguyên"
+        ],
+        [
+          "HDD",
+          "~10 ms",
+          "chục TB",
+          "giữ nguyên"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao KHÔNG để cả database Community nằm hẳn trong RAM cho nhanh?",
+        "options": [
+          {
+            "id": "a",
+            "text": "RAM vừa đắt vừa VOLATILE — cúp điện là mất sạch; dữ liệu bền vững bắt buộc phải có mặt trên đĩa",
+            "correct": true,
+            "explanation": "Đúng cả hai vế — chi phí và tính bay hơi. RAM là bàn làm việc, đĩa mới là két sắt."
+          },
+          {
+            "id": "b",
+            "text": "Vì RAM đọc chậm hơn SSD",
+            "correct": false,
+            "explanation": "Sai — RAM nhanh hơn SSD cỡ nghìn lần; vấn đề là giá và tính bay hơi."
+          },
+          {
+            "id": "c",
+            "text": "Vì SQL không truy cập được dữ liệu trong RAM",
+            "correct": false,
+            "explanation": "Sai — ngược lại: CPU CHỈ xử lý được dữ liệu đã ở RAM; SQL nào cũng đi qua RAM."
+          },
+          {
+            "id": "d",
+            "text": "Vì luật bảo mật cấm để dữ liệu người dùng trong RAM",
+            "correct": false,
+            "explanation": "Sai — không có luật nào như vậy; mọi hệ thống đều xử lý dữ liệu trong RAM."
+          }
+        ]
+      },
+      {
+        "question": "Postgres cần đúng MỘT dòng post 200 byte đang nằm trên đĩa — nó đọc lên bao nhiêu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nguyên TRANG ~8KB chứa dòng đó — đĩa và RAM nói chuyện theo đơn vị trang, không theo dòng",
+            "correct": true,
+            "explanation": "Đúng — page/block là đơn vị vận chuyển. Muốn 200 byte vẫn khiêng 8KB; vì thế xếp các dòng hay đọc-cùng-nhau vào cùng trang là ăn tiền (hẹn Ticket #34)."
+          },
+          {
+            "id": "b",
+            "text": "Đúng 200 byte của dòng đó",
+            "correct": false,
+            "explanation": "Sai — phần cứng không phục vụ lẻ; giao dịch tối thiểu là 1 trang."
+          },
+          {
+            "id": "c",
+            "text": "Cả bảng posts",
+            "correct": false,
+            "explanation": "Sai — chỉ khi full scan mới đọc mọi trang của bảng; đọc 1 dòng chỉ cần 1 trang."
+          },
+          {
+            "id": "d",
+            "text": "Chỉ cột được SELECT của dòng đó",
+            "correct": false,
+            "explanation": "Sai — row-store lưu cả dòng liền nhau trong trang; đọc theo cột là chuyện của Ticket #35."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "RAM hay Đĩa?",
+      "instruction": "Mỗi đặc tính thuộc về tầng nào? Kéo vào đúng ô.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "h1",
+          "label": "Cúp điện là mất sạch (volatile)"
+        },
+        {
+          "id": "h2",
+          "label": "Bản gốc database bắt buộc nằm ở đây"
+        },
+        {
+          "id": "h3",
+          "label": "Độ trễ tính bằng nano-giây"
+        },
+        {
+          "id": "h4",
+          "label": "Rẻ, chứa hàng TB, giữ dữ liệu khi tắt máy"
+        }
+      ],
+      "bins": [
+        {
+          "id": "ram",
+          "label": "RAM",
+          "correct": "ram"
+        },
+        {
+          "id": "disk",
+          "label": "ĐĨA (SSD/HDD)",
+          "correct": "disk"
+        }
+      ],
+      "solution": {
+        "h1": "ram",
+        "h2": "disk",
+        "h3": "ram",
+        "h4": "disk"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Dựng lại THÁP LƯU TRỮ từ nhanh nhất xuống chậm nhất — gắn đúng vai của từng tầng với hệ Community. Có một khối bịa đặt trong khay.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "RAM — vài chục GB, nơi buffer của Postgres sống, mất sạch khi cúp điện",
+        "slot": "tier-2"
+      },
+      {
+        "type": "op",
+        "token": "CPU Cache — vài MB, nano-giây, đắt nhất",
+        "slot": "tier-1"
+      },
+      {
+        "type": "op",
+        "token": "HDD / băng từ — rẻ nhất, cho backup & dữ liệu nguội",
+        "slot": "tier-4"
+      },
+      {
+        "type": "op",
+        "token": "SSD — bền vững, database Community đang nằm đây",
+        "slot": "tier-3"
+      },
+      {
+        "type": "op",
+        "token": "CPU register — to hàng TB, rẻ như cho",
+        "slot": "tier-x"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "tier-1",
+        "placeholder": "Tầng 1 — nhanh nhất, nhỏ nhất",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⚡",
+          "label": "Tầng 1",
+          "sub": "Đỉnh tháp",
+          "hint": "Sát CPU nhất: dung lượng vài MB nhưng độ trễ nano-giây."
+        }
+      },
+      {
+        "id": "tier-2",
+        "placeholder": "Tầng 2 — bàn làm việc của database",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🧠",
+          "label": "Tầng 2",
+          "sub": "Bàn làm việc",
+          "hint": "Nơi mọi trang dữ liệu phải đi qua trước khi CPU xử lý — nhưng volatile."
+        }
+      },
+      {
+        "id": "tier-3",
+        "placeholder": "Tầng 3 — nhà của dữ liệu Community",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "💾",
+          "label": "Tầng 3",
+          "sub": "Két sắt chính",
+          "hint": "Bền vững + đủ nhanh — bản gốc database ở đây."
+        }
+      },
+      {
+        "id": "tier-4",
+        "placeholder": "Tầng 4 — kho nguội",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🗄️",
+          "label": "Tầng 4",
+          "sub": "Đáy tháp",
+          "hint": "Chậm nhất, rẻ nhất — chỗ của backup và dữ liệu ít đụng tới."
+        }
+      }
+    ],
+    "expected_sql": "CPU Cache — vài MB, nano-giây, đắt nhất RAM — vài chục GB, nơi buffer của Postgres sống, mất sạch khi cúp điện SSD — bền vững, database Community đang nằm đây HDD / băng từ — rẻ nhất, cho backup & dữ liệu nguội",
+    "expected_zones": {
+      "tier-1": "CPU Cache — vài MB, nano-giây, đắt nhất",
+      "tier-2": "RAM — vài chục GB, nơi buffer của Postgres sống, mất sạch khi cúp điện",
+      "tier-3": "SSD — bền vững, database Community đang nằm đây",
+      "tier-4": "HDD / băng từ — rẻ nhất, cho backup & dữ liệu nguội"
+    },
+    "reveal_hints": {
+      "tier-1": "Đỉnh tháp nhanh nhất: <strong>CPU Cache</strong>. Khối \"CPU register to hàng TB\" là bịa — register còn nhỏ hơn cache nhiều.",
+      "tier-2": "Bàn làm việc volatile: <strong>RAM</strong> — buffer của Ticket #33 sẽ sống ở đây.",
+      "tier-3": "Két sắt chính, bền vững: <strong>SSD</strong>.",
+      "tier-4": "Đáy tháp: <strong>HDD/băng từ</strong> cho backup."
+    }
+  },
+  "step_4": {
+    "prompt": "Một người dùng mở post #501. Dòng dữ liệu đó đi ĐƯỜNG NÀO từ đĩa lên màn hình? Chọn mô tả đúng:",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "Đĩa → nạp NGUYÊN TRANG 8KB chứa dòng vào buffer trên RAM → CPU đọc dòng từ RAM. Lần mở sau, nếu trang còn trong buffer thì khỏi chạm đĩa.",
+        "correct": true
+      },
+      {
+        "text": "CPU đọc thẳng dòng 200 byte từ đĩa, không cần qua RAM — vì SSD hiện đại đã đủ nhanh.",
+        "correct": false
+      },
+      {
+        "text": "Cả bảng posts được nạp vào RAM ngay khi Postgres khởi động, nên không bao giờ phải chạm đĩa.",
+        "correct": false
+      },
+      {
+        "text": "Dòng được đọc từ đĩa lên CPU cache trước, rồi mới chuyển xuống RAM cho Postgres.",
+        "correct": false
+      }
+    ],
+    "context": {
+      "scenario": "Đây là chuyến đi mà MỌI truy vấn của Community đều thực hiện — từ Bài 1 tới giờ, chỉ là bạn chưa từng nhìn thấy nó. Hiểu chuyến đi này thì mọi kỹ thuật còn lại của Module 6 chỉ là \"rút ngắn đường\".",
+      "real_world": "Câu \"database của tôi nhanh vì có nhiều RAM\" mà dev hay nói — bản chất là: nhiều RAM = buffer to = nhiều trang nóng khỏi phải xuống đĩa lấy lại.",
+      "steps": [
+        "Bản gốc dòng nằm trong 1 trang ~8KB trên SSD.",
+        "Đơn vị vận chuyển là TRANG — không phải dòng (MCQ 2).",
+        "Trang phải lên RAM thì CPU mới xử lý được.",
+        "Trang ở lại RAM sau lần đọc → lần sau miễn phí chuyến đĩa (Ticket #33 khai thác điều này)."
+      ],
+      "hint_explore": "Ngó lại bảng <code>storage_tiers</code> ở Step 1 — chênh lệch SSD↔RAM là ~1.000 lần.",
+      "expected": "Chọn đúng đường đi 3 chặng: đĩa → trang → RAM → CPU, kèm quyền \"ở lại\" của trang trong buffer."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Nhớ 2 luật từ MCQ: CPU chỉ xử lý được dữ liệu ĐÃ Ở RAM, và đĩa↔RAM giao dịch theo TRANG."
+      },
+      {
+        "level": 2,
+        "text": "Loại phương án nào cho CPU \"đọc thẳng từ đĩa\" hoặc nạp \"cả bảng\" — cả hai đều phạm luật trên."
+      },
+      {
+        "level": 3,
+        "text": "CPU cache là chuyện giữa CPU và RAM — dữ liệu không đi đường đĩa → cache → RAM."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: phương án mô tả Đĩa → TRANG vào buffer RAM → CPU, có \"lần sau khỏi chạm đĩa\"."
+      }
+    ],
+    "success_message": "Ticket #31 đóng! Bạn đã thấy tầng hầm — giờ mọi chữ \"chậm\" đều truy được về \"bao nhiêu chuyến xuống đĩa\". Ticket #32: cùng 100 post, vì sao cuộn timeline thì mượt mà mở bookmark rải rác thì ì ạch?",
+    "xp_reward": 120
+  }
+}

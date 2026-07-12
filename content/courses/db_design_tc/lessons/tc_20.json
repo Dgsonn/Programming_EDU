@@ -1,0 +1,423 @@
+{
+  "id": "tc_20",
+  "index": 20,
+  "title": "Capstone: EXPLAIN — bắt máy khai nó định làm gì",
+  "subtitle": "Index có sẵn mà vẫn ì — lời khai Seq Scan chỉ mặt thủ phạm: hàm bọc quanh cột",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 18,
+  "xp_reward": 140,
+  "drag_type": "chip",
+  "challenge_type": "bug_fix",
+  "concept_cards_after": [
+    "tc_card_index_vs_scan",
+    "tc_card_boss_brief"
+  ],
+  "drag_map": {
+    "table": {
+      "name": "EXPLAIN (mô phỏng Postgres) — lời khai của máy",
+      "columns": [
+        "#",
+        "dòng plan",
+        "nghĩa là gì"
+      ],
+      "dataRows": [
+        [
+          "1",
+          "Seq Scan on fact_post_action",
+          "cách lấy dữ liệu: quét tuần tự cả bảng 🐢"
+        ],
+        [
+          "2",
+          "cost=0.00..18334.00",
+          "giá vé ước tính: bắt đầu..kết thúc"
+        ],
+        [
+          "3",
+          "rows=1000000",
+          "máy ĐOÁN số dòng phải xử lý"
+        ],
+        [
+          "4",
+          "Filter: UPPER(action_type) = 'LIKE'",
+          "lọc TỪNG dòng sau khi đã khiêng lên ⚠️"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #40 — CAPSTONE",
+    "hook": "Tin dữ: dashboard \"tổng like theo user\" VẪN 6,2 GIÂY — dù index <code>idx_fact_type</code> trên action_type đã nằm đó từ tuần trước. Index có mà như không?! Ticket #40 dạy chiêu cuối của Module 6: <strong>đừng đoán — bắt máy KHAI</strong>. Gõ <code>EXPLAIN</code> trước query, máy nộp bản kế hoạch: đi đường nào, tốn bao nhiêu, bao nhiêu dòng. Và bản khai lần này chỉ thẳng mặt thủ phạm: một chiếc <em>hàm bọc quanh cột</em> đã bịt mắt index. (Engine demo không chạy EXPLAIN — các bản plan trong bài là <em>mô phỏng đúng định dạng Postgres</em> để bạn tập đọc.)"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "EXPLAIN = bản KẾ HOẠCH máy nộp trước khi chạy: node (đi đường nào) · cost (giá vé ước tính) · rows (đoán số dòng)",
+        "Seq Scan + Filter = quét cả bảng rồi lọc từng dòng · Index Scan = đi lối tắt qua cây",
+        "Index xếp theo GIÁ TRỊ CỘT — bọc hàm quanh cột (UPPER, ngày cộng trừ…) là index mù: sửa QUERY, đừng vội thêm index"
+      ],
+      "intro": "Đọc bản khai như đọc vé máy bay. Dòng đầu — <strong>node</strong>: máy đi đường nào (<code>Seq Scan</code> = lật sổ từ bìa; <code>Index Scan using idx…</code> = leo cây 3 tầng của Ticket #38). <code>cost=0.00..18334</code> — giá vé ƯỚC TÍNH từ lúc khởi hành tới lúc xong (đơn vị nội bộ, để SO SÁNH các đường, không phải giây). <code>rows=1000000</code> — máy ĐOÁN phải xử lý bао nhiêu dòng. Và dòng đắt giá nhất hôm nay: <code>Filter: UPPER(action_type) = 'LIKE'</code> — nghĩa là máy khiêng TỪNG dòng lên rồi mới lọc. Vì sao không dùng index? Cây idx_fact_type xếp theo <code>action_type</code> — chứ không xếp theo <code>UPPER(action_type)</code>. Bọc hàm quanh cột là phát cho index một cặp kính mù.",
+      "example": "Cùng kết quả, hai bản khai: TRƯỚC — Seq Scan, cost=0.00..18334, Filter: UPPER(action_type)='LIKE' → 6,2s. SAU khi bỏ UPPER — Index Scan using idx_fact_type, cost=0.43..912, Index Cond: action_type='like' → 0,3s. Không thêm index nào — chỉ sửa MỘT dòng WHERE."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-file-lines",
+        "title": "Đọc bản khai: node → cost → rows",
+        "body": "Node nói CÁCH đi (Seq Scan / Index Scan / Bitmap Heap Scan…). Cost nói giá vé ước tính — con số đầu là chi phí trước dòng kết quả đầu tiên, con số sau là trọn gói. Rows là số dòng máy ĐOÁN (dựa thống kê) — và chính nó quyết định ĐƯỜNG đi: dải cần lấy đủ NHỎ thì index thắng; lấy gần cả bảng thì Seq Scan lại là lựa chọn đúng của máy.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15/16 — Query Processing & Optimization (EXPLAIN)"
+      },
+      {
+        "icon": "fa-glasses",
+        "title": "Sargable — đừng bịt mắt index",
+        "body": "Index tra được khi vế cột đứng TRẦN TRỤI một bên phép so sánh: <code>action_type = 'like'</code> ✓. Bọc hàm — <code>UPPER(action_type)</code>, <code>date + 7</code> — là cây phải tính hàm cho TỪNG dòng mới so được: hết đường tra. Chuyển phép biến đổi sang vế HẰNG SỐ (hoặc sửa dữ liệu từ gốc) là nghề của backend có sạn."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Quy trình thực chiến khi có query ì: (1) EXPLAIN — nhìn node; (2) thấy Seq Scan + Filter trên cột ĐÃ có index → soi WHERE tìm hàm bọc/kiểu lệch; (3) sửa query cho sargable; (4) EXPLAIN lại — node đổi thành Index Scan là thắng. Thêm index chỉ là phương án khi index CHƯA có."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "hai bản khai — cùng kết quả, khác số phận",
+        "columns": [
+          {
+            "name": "TRƯỚC",
+            "type": "UPPER(action_type)='LIKE'",
+            "key": "🐢",
+            "icon": "📋"
+          },
+          {
+            "name": "SAU",
+            "type": "action_type='like'",
+            "key": "🚀",
+            "icon": "📋"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "Seq Scan on fact_post_action",
+          "Index Scan using idx_fact_type"
+        ],
+        [
+          "cost=0.00..18334.00",
+          "cost=0.43..912.00"
+        ],
+        [
+          "rows=1000000 · Filter: UPPER(…)",
+          "rows=38000 · Index Cond: ='like'"
+        ],
+        [
+          "dashboard: 6,2 giây 🐢",
+          "dashboard: 0,3 giây 🚀"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Bản khai: <code>Seq Scan on fact_post_action (cost=0.00..18334) Filter: UPPER(action_type)='LIKE'</code> — máy đang thú nhận điều gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nó sẽ quét TUẦN TỰ cả bảng, khiêng từng dòng lên rồi mới lọc bằng hàm — index không được dùng",
+            "correct": true,
+            "explanation": "Đúng — Seq Scan + Filter là cặp bài trùng \"lật sổ từ bìa rồi soi từng dòng\". Có chữ Filter trên cột đã-có-index là đèn đỏ."
+          },
+          {
+            "id": "b",
+            "text": "Nó đã chạy xong query hết 18334 giây",
+            "correct": false,
+            "explanation": "Sai hai lần — cost là ƯỚC TÍNH trước khi chạy, và đơn vị là điểm nội bộ để so sánh, không phải giây."
+          },
+          {
+            "id": "c",
+            "text": "Nó sẽ dùng index nhưng giấu tên index đi",
+            "correct": false,
+            "explanation": "Sai — dùng index thì node ghi rõ \"Index Scan using tên_index\". Seq Scan nghĩa là KHÔNG."
+          },
+          {
+            "id": "d",
+            "text": "Bảng fact_post_action bị hỏng nên phải quét lại",
+            "correct": false,
+            "explanation": "Sai — Seq Scan là lựa chọn kế hoạch bình thường, không phải tín hiệu hỏng hóc."
+          }
+        ]
+      },
+      {
+        "question": "Sửa WHERE thành <code>action_type = 'like'</code>, bản khai mới: <code>Index Scan using idx_fact_type (cost=0.43..912) rows=38000</code>. Vì sao nhanh gấp ~20 lần dù vẫn đụng 38 nghìn dòng?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cây dẫn thẳng tới dải lá chứa \"like\" — máy chỉ đọc các trang liên quan, khỏi khiêng 962 nghìn dòng còn lại lên để rồi vứt",
+            "correct": true,
+            "explanation": "Đúng — leo cây (Ticket #38) + đi dải lá: chi phí tỷ lệ với số dòng CẦN, không phải số dòng CÓ. Chiều ngược cũng phải nhớ: điều kiện lấy GẦN CẢ bảng thì Seq Scan mới là đường rẻ — planner tự so cost hai lối (khóa Nâng cao mổ xẻ tiếp)."
+          },
+          {
+            "id": "b",
+            "text": "Vì Postgres thưởng tốc độ cho query viết đúng chính tả",
+            "correct": false,
+            "explanation": "Sai — không có hệ thưởng phạt nào; chỉ có đường đi ngắn hơn."
+          },
+          {
+            "id": "c",
+            "text": "Vì kết quả lần này ít dòng hơn hẳn lần trước",
+            "correct": false,
+            "explanation": "Sai — cùng kết quả! Khác nhau ở số dòng phải KHIÊNG để lọc ra kết quả đó."
+          },
+          {
+            "id": "d",
+            "text": "Vì index vừa được xây lại nên còn nóng",
+            "correct": false,
+            "explanation": "Sai — idx_fact_type nằm đó từ tuần trước; nó chỉ vừa được THÁO KÍNH MÙ."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Soi bản khai — dòng nào tố cáo?",
+      "instruction": "Bản EXPLAIN của dashboard 6,2s đây. Click DÒNG cho biết vì sao index bị bỏ xó.",
+      "xp": 25,
+      "code": "EXPLAIN SELECT user_id, SUM(act_count)\n       FROM fact_post_action ...;\n----------------------------------------\nSeq Scan on fact_post_action\n  (cost=0.00..18334.00 rows=1000000)\n  Filter: UPPER(action_type) = 'LIKE'",
+      "bugType": "performance",
+      "bugs": [
+        {
+          "line": 6,
+          "description": "Chính nó — Filter: UPPER(action_type) = 'LIKE'. Index xếp theo action_type, KHÔNG xếp theo UPPER(action_type) → máy đành quét cả bảng rồi tính hàm cho từng dòng. Bỏ hàm bọc cột là index mở mắt lại ngay."
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "mission": "Giải phẫu bản khai Seq Scan — gắn từng mảnh lời khai vào đúng ý nghĩa. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "rows=1000000 — máy ĐOÁN số dòng phải xử lý, dựa trên thống kê (không phải đo thật)",
+        "slot": "ex-rows"
+      },
+      {
+        "type": "op",
+        "token": "Filter: UPPER(action_type) = 'LIKE' — khiêng TỪNG dòng lên rồi mới lọc bằng hàm",
+        "slot": "ex-filter"
+      },
+      {
+        "type": "op",
+        "token": "Seq Scan on fact_post_action — cách lấy dữ liệu: quét tuần tự cả bảng, không đi qua index nào",
+        "slot": "ex-node"
+      },
+      {
+        "type": "op",
+        "token": "cost=0.00..18334.00 — số dòng máy đã XÓA khỏi bảng trong lần dọn dẹp gần nhất",
+        "slot": "ex-x"
+      },
+      {
+        "type": "op",
+        "token": "cost=0.00..18334.00 — giá vé ƯỚC TÍNH: trước dòng đầu tiên .. trọn gói (điểm nội bộ để so đường đi)",
+        "slot": "ex-cost"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ex-node",
+        "placeholder": "Dòng 1 — máy đi ĐƯỜNG nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🧭",
+          "label": "Node",
+          "sub": "Cách lấy dữ liệu",
+          "hint": "Seq Scan / Index Scan / Bitmap Heap Scan — chữ đầu tiên của bản khai luôn là con đường."
+        }
+      },
+      {
+        "id": "ex-cost",
+        "placeholder": "Giá vé ước tính",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "💰",
+          "label": "Cost",
+          "sub": "khởi hành..trọn gói",
+          "hint": "Hai con số: chi phí trước dòng kết quả đầu tiên, và trọn chuyến. Đơn vị nội bộ — để SO SÁNH."
+        }
+      },
+      {
+        "id": "ex-rows",
+        "placeholder": "Máy đoán bao nhiêu dòng?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📏",
+          "label": "Rows",
+          "sub": "Ước lượng",
+          "hint": "Đoán từ thống kê — đoán lệch xa thực tế cũng là manh mối chẩn bệnh."
+        }
+      },
+      {
+        "id": "ex-filter",
+        "placeholder": "Và dòng tố cáo thủ phạm",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🧹",
+          "label": "Filter",
+          "sub": "Lọc sau khi khiêng",
+          "hint": "Filter = lọc TỪNG dòng sau khi đã đọc lên — thấy nó trên cột có index là đèn đỏ."
+        }
+      }
+    ],
+    "expected_sql": "Seq Scan on fact_post_action — cách lấy dữ liệu: quét tuần tự cả bảng, không đi qua index nào cost=0.00..18334.00 — giá vé ƯỚC TÍNH: trước dòng đầu tiên .. trọn gói (điểm nội bộ để so đường đi) rows=1000000 — máy ĐOÁN số dòng phải xử lý, dựa trên thống kê (không phải đo thật) Filter: UPPER(action_type) = 'LIKE' — khiêng TỪNG dòng lên rồi mới lọc bằng hàm",
+    "expected_zones": {
+      "ex-node": "Seq Scan on fact_post_action — cách lấy dữ liệu: quét tuần tự cả bảng, không đi qua index nào",
+      "ex-cost": "cost=0.00..18334.00 — giá vé ƯỚC TÍNH: trước dòng đầu tiên .. trọn gói (điểm nội bộ để so đường đi)",
+      "ex-rows": "rows=1000000 — máy ĐOÁN số dòng phải xử lý, dựa trên thống kê (không phải đo thật)",
+      "ex-filter": "Filter: UPPER(action_type) = 'LIKE' — khiêng TỪNG dòng lên rồi mới lọc bằng hàm"
+    },
+    "reveal_hints": {
+      "ex-node": "Dòng đầu bản khai luôn là <strong>con đường</strong> — Seq Scan nghĩa là lật sổ từ bìa.",
+      "ex-cost": "Cost = <strong>giá vé ước tính</strong> hai chặng. Khối \"số dòng đã xóa\" là bịa — EXPLAIN không kể chuyện dọn dẹp.",
+      "ex-rows": "Rows = <strong>máy đoán</strong> — từ thống kê, không phải đếm thật.",
+      "ex-filter": "Filter = <strong>lọc sau khi khiêng</strong> — trên cột đã có index thì đây chính là dòng tố cáo."
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #40 — màn chốt:</strong> đây là query dashboard 6,2 giây. Index <code>idx_fact_type ON fact_post_action(action_type)</code> nằm sẵn. Bản khai vừa đọc đã chỉ mặt dòng WHERE — <strong>tháo kính mù cho index</strong> (giá trị trong bảng là chữ thường <code>like</code>).",
+    "challenge_type": "bug_fix",
+    "buggy": "SELECT user_id, SUM(act_count) AS total_act\nFROM fact_post_action\nWHERE UPPER(action_type) = 'LIKE'\nGROUP BY user_id\nORDER BY total_act DESC;",
+    "buggy_line": 2,
+    "schema": {
+      "table_name": "fact_post_action",
+      "columns": [
+        {
+          "name": "action_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": ""
+        },
+        {
+          "name": "date_id",
+          "type": "CHAR(2)",
+          "key": ""
+        },
+        {
+          "name": "action_type",
+          "type": "VARCHAR",
+          "key": "🔑 idx_fact_type"
+        },
+        {
+          "name": "act_count",
+          "type": "INT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "1",
+          "7",
+          "D1",
+          "like",
+          "3"
+        ],
+        [
+          "2",
+          "9",
+          "D1",
+          "comment",
+          "2"
+        ],
+        [
+          "3",
+          "7",
+          "D2",
+          "like",
+          "5"
+        ],
+        [
+          "4",
+          "12",
+          "D2",
+          "post",
+          "1"
+        ],
+        [
+          "5",
+          "9",
+          "D2",
+          "like",
+          "4"
+        ],
+        [
+          "6",
+          "15",
+          "D3",
+          "like",
+          "2"
+        ],
+        [
+          "7",
+          "7",
+          "D3",
+          "comment",
+          "1"
+        ],
+        [
+          "8",
+          "9",
+          "D3",
+          "post",
+          "1"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Sửa xong, bản khai mô phỏng đổi thành: <code>Index Scan using idx_fact_type (cost=0.43..912) Index Cond: action_type='like'</code> — dashboard 6,2s → 0,3s. Không thêm index nào, chỉ MỘT dòng WHERE.",
+      "real_world": "Lỗi \"hàm bọc cột\" đứng đầu danh sách nguyên nhân query ì trong code thật — thường lẻn vào từ thói quen \"cứ UPPER cho chắc\". Chữa từ gốc: chuẩn hóa dữ liệu khi GHI (lưu toàn chữ thường), thì lúc ĐỌC khỏi bọc hàm.",
+      "steps": [
+        "Dòng tô đỏ: WHERE đang bọc UPPER( ) quanh action_type.",
+        "Dữ liệu trong bảng vốn là chữ thường: like, comment, post.",
+        "Bỏ hàm bọc, so trần trụi: action_type = 'like'.",
+        "Các dòng khác giữ nguyên — SUM/GROUP BY/ORDER BY không có tội."
+      ],
+      "hint_explore": "Chạy thử trước khi sửa để xem engine nói gì — rồi sửa dòng đỏ và chạy lại, bảng kết quả thật sẽ hiện ra.",
+      "expected": "Kết quả sau sửa: user 7 → 8, user 9 → 4, user 15 → 2 (tổng act_count các dòng like)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bản khai Step 3 tố dòng nào? Filter: UPPER(action_type) — hàm đang bọc quanh cột có index."
+      },
+      {
+        "level": 2,
+        "text": "Index xếp theo <code>action_type</code>, không xếp theo <code>UPPER(action_type)</code> — bỏ lớp bọc đi."
+      },
+      {
+        "level": 3,
+        "text": "Giá trị trong bảng là chữ thường: so thẳng với <code>'like'</code> (viết thường, trong nháy đơn)."
+      },
+      {
+        "level": 4,
+        "text": "Dòng WHERE đúng: <code>WHERE action_type = 'like'</code> — các dòng khác giữ nguyên."
+      }
+    ],
+    "expected_sql": "SELECT user_id, SUM(act_count) AS total_act FROM fact_post_action WHERE action_type = 'like' GROUP BY user_id ORDER BY total_act DESC;",
+    "success_message": "TICKET #40 ĐÓNG — MODULE 6 HOÀN TẤT! Bạn đã đi trọn tầng hầm: tháp lưu trữ → giá vé I/O → buffer → trang & RID → row/column → index → B+-Tree → composite/bitmap → và hôm nay là EXPLAIN, chiếc đèn soi tất cả. Còn đúng MỘT bài: hồ sơ CHUYÊN ÁN TỐT NGHIỆP vừa đặt lên bàn — \"Social Graph Detective\": 4 vụ án liên hoàn, dùng mọi vũ khí của cả ba module. Hẹn ở phòng thẩm vấn. 🕵️",
+    "xp_reward": 140
+  }
+}

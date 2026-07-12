@@ -1,0 +1,895 @@
+{
+  "id": "db_15",
+  "index": 16,
+  "story": {
+    "tag": "🎫 GameHub · Ticket #16",
+    "hook": "GameHub bước ra đời thật: mở <strong>chuỗi cửa hàng vật lý</strong> (<code>shop_branches</code> kèm toạ độ <code>geo_location</code>). Marketing hỏi ngay: <em>\"bao nhiêu chi nhánh TP.HCM nằm trong bán kính 10km quanh kho trung tâm?\"</em> — câu hỏi mà <code>WHERE</code> thường bó tay, vì khoảng cách trên mặt cầu không phải phép trừ. Ticket: mở kho vũ khí <strong>spatial</strong> — <code>ST_DWithin</code> và những người bạn."
+  },
+  "title": "Spatial Data — Dữ liệu Không gian",
+  "subtitle": "Truy vấn tọa độ GPS, tìm điểm gần nhất",
+  "module": 3,
+  "module_title": "Application Design",
+  "icon": "&#128205;",
+  "color": "#10B981",
+  "estimated_minutes": 18,
+  "xp_reward": 60,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "achievement": {
+    "name": "Nhà bản đồ",
+    "desc": "dữ liệu không gian"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "POINT = kiểu dữ liệu lưu tọa độ (x, y) trong PostgreSQL",
+        "ST_Distance = tính khoảng cách Euclidean giữa 2 điểm",
+        "ST_DWithin = kiểm tra nằm trong bán kính (dùng spatial index → rất nhanh)"
+      ],
+      "intro": "Chuỗi cửa hàng <code class=\"code\">shop_branches</code> lưu tọa độ GPS trong cột <code class=\"code\">geo_location POINT</code>. Bạn cần tìm cửa hàng <strong>gần trung tâm nhất</strong>, hoặc lọc cửa hàng <strong>trong bán kính 5km</strong>. Dùng <code class=\"code\">ST_Distance</code> và <code class=\"code\">ST_DWithin</code> — hai spatial function phổ biến nhất.",
+      "example": "<code class=\"code\">ST_Distance(geo_location, ST_MakePoint(106.7009, 10.7769))</code> tính khoảng cách từ mỗi cửa hàng đến Quảng trường 10/10. <code class=\"code\">ST_DWithin(geo_location, ST_MakePoint(...), 5)</code> lọc nhanh bằng spatial index (GiST) — hiệu quả hơn ST_Distance."
+    },
+    "intro": "Mỗi phút, Grab xử lý 50.000 request tìm tài xế gần nhất trong bán kính 5km. 100 triệu điểm lưu trong DB. Không có spatial index = query quét full table = chết server. Có <strong>R-tree (GIST) index</strong> + <code>ST_DWithin</code> = tìm trong 10ms. Sai 1 số thập phân = lệch cả km. Bài này dạy <strong>Spatial Data</strong>.",
+    "concept_cards": [
+      {
+        "icon": "fa-location-dot",
+        "title": "Spatial Data — 1 số thập phân = lệch cả km",
+        "body": "Grab, Shopee, now lưu tọa độ 100 triệu điểm giao hàng. <strong>1 số thập phân longitude = ~11km tại xích đạo</strong>. Sai 2 số = lệch cả km → shipper đi lạc, khách hủy đơn, mất tiền. Spatial index (R-tree) tìm 10 quán gần nhất trong 10ms thay vì quét 100 triệu dòng."
+      },
+      {
+        "icon": "fa-globe",
+        "title": "POINT(lon, lat) — Sai thứ tự = lỗi im lặng",
+        "body": "<code>ST_MakePoint(lon, lat)</code> — <strong>longitude TRƯỚC</strong> (X), latitude SAU (Y). Sai thứ tự → tọa độ rác nhưng DB không báo lỗi. VN: lon ≈ 102-110, lat ≈ 8-23. <code>ST_DWithin(geo, center, 5000)</code> = trong bán kính 5km, có index = nhanh."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Thử tìm \"cửa hàng trong 10km\" bằng cách so <code>lat/long</code> thủ công — công thức Haversine rối tung. <code>ST_DWithin(geo, điểm, 10)</code> làm gọn 1 dòng, lại có GiST index nên nhanh cả triệu điểm."
+      }
+    ],
+    "visual": {
+      "diagram_legacy_2": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — 1 bảng tổng (BAD)",
+          "columns": [
+            "user_id",
+            "username",
+            "post_id",
+            "post_text",
+            "game_name",
+            "genre"
+          ],
+          "rows": [
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "RPG"
+            ],
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "Action"
+            ],
+            [
+              "U2",
+              "bob",
+              "P2",
+              "Check this",
+              "Hades",
+              "Rogue"
+            ]
+          ],
+          "violations": {
+            "0-5": true,
+            "0-4": true,
+            "1-5": true,
+            "1-4": true
+          }
+        },
+        "after": {
+          "title": "SAU — 5 bảng + 2 junction",
+          "columns": [
+            "user_id",
+            "post_id",
+            "game_id",
+            "genre_id",
+            "platform_id"
+          ],
+          "rows": [
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_RPG",
+              "PC"
+            ],
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_Act",
+              "PC"
+            ],
+            [
+              "U2",
+              "P2",
+              "G2",
+              "G_Rog",
+              "PS5"
+            ]
+          ]
+        },
+        "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."
+      },
+      "diagram_legacy_1": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user",
+            "title": "Web App / Form",
+            "sub": "User thay đổi setting (theme: dark)",
+            "payload": "POST /api/settings"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Python / Django ORM",
+            "sub": "Validate + serialize sang JSONB",
+            "payload": "settings = {'theme': 'dark'}"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Lưu JSONB vào cột settings",
+            "payload": "INSERT INTO app_users (..., settings) VALUES (...)"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python dict",
+            "sub": "Đọc lại: settings->>theme = \"dark\"",
+            "payload": "SELECT settings->>'theme' FROM app_users"
+          },
+          {
+            "icon": "fa-display",
+            "title": "HTML Response",
+            "sub": "Render UI với theme mới",
+            "payload": "<html data-theme=\"dark\">"
+          }
+        ]
+      },
+      "diagram": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-map-pin",
+            "title": "User location",
+            "sub": "Browser geolocation API",
+            "payload": "(106.7, 10.78)"
+          },
+          {
+            "icon": "fa-mobile",
+            "title": "Mobile App",
+            "sub": "POST /api/nearest?lat=10.78&lon=106.7",
+            "payload": "GET /nearest"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Django + GeoDjango",
+            "sub": "Build query PostGIS",
+            "payload": "ST_DWithin(geo, point, 5000)"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL + PostGIS",
+            "sub": "Spatial index (GIST)",
+            "payload": "shop_branches WHERE ST_DWithin(...)"
+          },
+          {
+            "icon": "fa-list",
+            "title": "Sorted by distance",
+            "sub": "ST_Distance ORDER BY",
+            "payload": "ORDER BY dist ASC LIMIT 5"
+          }
+        ]
+      },
+      "schema": {
+        "table_name": "shop_branches",
+        "columns": [
+          {
+            "name": "branch_id",
+            "type": "VARCHAR",
+            "key": "PK",
+            "icon": "&#128273;"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "geo_location",
+            "type": "POINT",
+            "key": "",
+            "icon": "&#128205;"
+          },
+          {
+            "name": "city",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "B01",
+          "Quận 1 Center",
+          "(106.7009, 10.7769)",
+          "TP.HCM"
+        ],
+        [
+          "B02",
+          "District 7 Hub",
+          "(106.7369, 10.7288)",
+          "TP.HCM"
+        ],
+        [
+          "B03",
+          "Hanoi Old Quarter",
+          "(105.8542, 21.0285)",
+          "Hà Nội"
+        ],
+        [
+          "B04",
+          "District 3 Store",
+          "(106.6872, 10.7822)",
+          "TP.HCM"
+        ],
+        [
+          "B05",
+          "Bình Thạnh Mall",
+          "(106.7038, 10.8106)",
+          "TP.HCM"
+        ],
+        [
+          "B06",
+          "Thủ Đức Tech",
+          "(106.7710, 10.8494)",
+          "TP.HCM"
+        ],
+        [
+          "B07",
+          "Tân Bình Point",
+          "(106.6526, 10.8014)",
+          "TP.HCM"
+        ],
+        [
+          "B08",
+          "Hai Bà Trưng HN",
+          "(105.8480, 21.0080)",
+          "Hà Nội"
+        ],
+        [
+          "B09",
+          "Cầu Giấy HN",
+          "(105.7964, 21.0313)",
+          "Hà Nội"
+        ],
+        [
+          "B10",
+          "Đà Nẵng Center",
+          "(108.2022, 16.0544)",
+          "Đà Nẵng"
+        ],
+        [
+          "B11",
+          "Hải Châu DN",
+          "(108.2208, 16.0678)",
+          "Đà Nẵng"
+        ],
+        [
+          "B12",
+          "Phú Nhuận Store",
+          "(106.6800, 10.7990)",
+          "TP.HCM"
+        ],
+        [
+          "B13",
+          "Gò Vấp Hub",
+          "(106.6657, 10.8386)",
+          "TP.HCM"
+        ],
+        [
+          "B14",
+          "Quận 10 Plaza",
+          "(106.6670, 10.7730)",
+          "TP.HCM"
+        ],
+        [
+          "B15",
+          "Quận 4 Point",
+          "(106.7050, 10.7590)",
+          "TP.HCM"
+        ],
+        [
+          "B16",
+          "Cần Thơ Center",
+          "(105.7469, 10.0452)",
+          "Cần Thơ"
+        ],
+        [
+          "B17",
+          "Huế Store",
+          "(107.5847, 16.4637)",
+          "Huế"
+        ],
+        [
+          "B18",
+          "Nha Trang Bay",
+          "(109.1967, 12.2388)",
+          "Nha Trang"
+        ],
+        [
+          "B19",
+          "Quận 2 Hub",
+          "(106.7500, 10.7870)",
+          "TP.HCM"
+        ],
+        [
+          "B20",
+          "Bình Tân Mall",
+          "(106.6020, 10.7650)",
+          "TP.HCM"
+        ],
+        [
+          "B21",
+          "Long Biên HN",
+          "(105.8800, 21.0450)",
+          "Hà Nội"
+        ],
+        [
+          "B22",
+          "Quận 5 Plaza",
+          "(106.6634, 10.7540)",
+          "TP.HCM"
+        ]
+      ]
+    },
+    "mission": "Tính <code class=\"code\">khoảng cách</code> từ mỗi cửa hàng đến trung tâm TP.HCM. Kéo thả khối lệnh ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Khi tìm cửa hàng <strong>trong bán kính 5km</strong> từ một điểm, hàm nào hiệu quả hơn?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>ST_Distance(geo, ST_MakePoint(...)) &lt; 5</code> — tính chính xác mọi điểm",
+            "correct": false,
+            "explanation": "Sai — ST_Distance tính chính xác cho MỌI cặp điểm, không dùng spatial index. Chậm trên dataset lớn (full table scan O(N))."
+          },
+          {
+            "id": "b",
+            "text": "<code>ST_DWithin(geo, ST_MakePoint(...), 5)</code> — dùng spatial index",
+            "correct": true,
+            "explanation": "Đúng — ST_DWithin có tích hợp bounding box check trước → dùng spatial index (GIST) để nhanh loại điểm xa. Sau đó mới tính chính xác cho candidates. Nhanh hơn ~100x trên 1M rows."
+          },
+          {
+            "id": "c",
+            "text": "<code>ST_Contains(ST_MakeEnvelope(...), geo)</code> — dùng cho polygon",
+            "correct": false,
+            "explanation": "Sai — ST_MakeEnvelope tạo bounding box HÌNH CHỮ NHẬT (4 góc lat/lon), không phải hình tròn. Dùng cho rectangular query, không match \"bán kính\" (circle)."
+          },
+          {
+            "id": "d",
+            "text": "<code>WHERE distance &lt; 5</code> — sai cú pháp, distance chưa tính",
+            "correct": false,
+            "explanation": "Sai — \"distance\" là alias cần define trước (SELECT ST_Distance(...) AS distance). Cú pháp đúng phải tính distance trong SELECT hoặc dùng ST_Distance inline."
+          }
+        ]
+      },
+      {
+        "question": "ST_MakePoint(x, y) dùng thứ tự tọa độ nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "ST_MakePoint(lat, lon) — latitude trước",
+            "correct": false,
+            "explanation": "Sai — PostGIS dùng lon, lat (theo chuẩn X, Y). Lat trước sẽ swap kinh độ/vĩ độ → điểm rơi vào chỗ SAI (vd: TP.HCM ở đại dương)."
+          },
+          {
+            "id": "b",
+            "text": "ST_MakePoint(lon, lat) — longitude trước (X, Y)",
+            "correct": true,
+            "explanation": "Đúng — PostGIS theo chuẩn X (longitude) trước, Y (latitude) sau. SRID 4326 (WGS84) dùng (lon, lat). Đây là chuẩn ISO 6709."
+          },
+          {
+            "id": "c",
+            "text": "ST_MakePoint(x, y) — thứ tự tùy database",
+            "correct": false,
+            "explanation": "Sai — PostGIS deterministic — luôn (X=lon, Y=lat). Có thể tạo POINT với SRID khác (UTM, Mercator) nhưng thứ tự vẫn X-Y."
+          },
+          {
+            "id": "d",
+            "text": "ST_MakePoint(utm_x, utm_y) — luôn dùng UTM",
+            "correct": false,
+            "explanation": "Sai — ST_MakePoint dùng cho POINT trong bất kỳ SRID nào. UTM chỉ là 1 SRID, không phải mặc định. SRID 4326 (lat/lon) là phổ biến nhất."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Thứ tự thực thi Spatial Query",
+      "instruction": "Sắp xếp theo thứ tự DB engine xử lý câu SQL spatial.",
+      "xp": 25,
+      "items": [
+        {
+          "id": "s1",
+          "label": "1. FROM shop_branches"
+        },
+        {
+          "id": "s2",
+          "label": "2. WHERE ST_DWithin(geo, center, 5000)"
+        },
+        {
+          "id": "s3",
+          "label": "3. SELECT name, ST_Distance(geo, center) AS distance"
+        },
+        {
+          "id": "s4",
+          "label": "4. ORDER BY distance ASC LIMIT 10"
+        }
+      ],
+      "solution": {
+        "s1": 1,
+        "s2": 2,
+        "s3": 3,
+        "s4": 4
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Đếm <strong>số cửa hàng theo từng zone</strong> ở TP.HCM trong bán kính 10km — dùng <code>ST_DWithin</code> + <code>GROUP BY zone</code>.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "zone",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "branch_count",
+        "slot": "col-alias"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "shop_branches",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "city",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'TP.HCM'",
+        "slot": "val-1"
+      },
+      {
+        "type": "kw",
+        "token": "AND",
+        "slot": "kw-and"
+      },
+      {
+        "type": "fn",
+        "token": "ST_DWithin",
+        "slot": "fn-dwithin"
+      },
+      {
+        "type": "op",
+        "token": "(geo_location, ST_MakePoint(106.7009, 10.7769), 10)",
+        "slot": "fn-dw-args"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "zone",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "branch_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , COUNT(*) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM shop_branches",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE city = ____ AND ST_DWithin(..., 10)",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10) GROUP BY zone ORDER BY branch_count DESC;",
+    "reveal_hints": {
+      "select-line": "SELECT <strong>zone</strong> + <strong>COUNT(*) AS branch_count</strong> — đếm cửa hàng theo zone.",
+      "from-line": "FROM <strong>shop_branches</strong>.",
+      "where-line": "WHERE <strong>city = 'TP.HCM'</strong> AND <strong>ST_DWithin(..., 10)</strong> — lọc TP.HCM + bán kính 10km.",
+      "group-line": "GROUP BY <strong>zone</strong> — gom theo khu vực.",
+      "order-line": "ORDER BY <strong>branch_count DESC</strong> — zone nhiều cửa hàng nhất lên đầu."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — dùng cột cờ <strong>đã tính sẵn <code>within_10km = 'yes'</code></strong> (thay <code>ST_DWithin</code>) để đếm cửa hàng TP.HCM trong bán kính 10km theo zone, sắp xếp giảm dần — chạy được ngay.",
+    "context": {
+      "scenario": "Chuỗi cửa hàng GameHub tại TP.HCM (<code>shop_branches</code>) cần chia tuyến giao hàng: <strong>mỗi zone có bao nhiêu chi nhánh nằm trong bán kính 10km quanh kho trung tâm?</strong> Kết quả <code>ST_DWithin</code> đã được tính sẵn vào cột cờ <code>within_10km</code> — việc của bạn là thống kê trên nó.",
+      "real_world": "<strong>GrabFood/ShopeeFood</strong> làm y hệt: tính toán không gian (PostGIS) chạy nền rồi lưu cờ/khoảng cách vào cột, để truy vấn thống kê hằng ngày chỉ cần WHERE thường — nhanh hơn nhiều lần so với tính lại hình học mỗi lượt.",
+      "steps": [
+        "Lọc phạm vi: <code>WHERE city = 'TP.HCM' AND within_10km = 'yes'</code>.",
+        "Gộp theo khu: <code>GROUP BY zone</code>.",
+        "Đếm chi nhánh: <code>COUNT(*) AS branch_count</code>.",
+        "Sắp xếp giảm dần: <code>ORDER BY branch_count DESC</code>."
+      ],
+      "hint_explore": "Xem bảng chi nhánh: <code>SELECT * FROM shop_branches</code> — chú ý <code>zone</code>, <code>within_10km</code> và toạ độ <code>geo_location</code>.",
+      "expected": "Bảng vài dòng × 2 cột (<code>zone, branch_count</code>): số chi nhánh trong bán kính 10km theo từng zone TP.HCM, giảm dần."
+    },
+    "starter": "-- Đếm cửa hàng theo zone (TP.HCM, bán kính 10km từ trung tâm)\n-- ST_DWithin + GROUP BY zone + ORDER BY count DESC\nSELECT , COUNT(*) AS \n  FROM shop_branches\n WHERE city = 'TP.HCM'\n   AND ST_DWithin(geo_location, ST_MakePoint(, ), )\n GROUP BY \n ORDER BY  DESC;\n",
+    "equiv_sql": "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND within_10km = 'yes' GROUP BY zone ORDER BY branch_count DESC;",
+    "schema": {
+      "table_name": "shop_branches",
+      "columns": [
+        {
+          "name": "branch_id",
+          "type": "VARCHAR",
+          "key": "PK",
+          "icon": "&#128273;"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "geo_location",
+          "type": "POINT",
+          "key": "",
+          "icon": "&#128205;"
+        },
+        {
+          "name": "city",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "zone",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "within_10km",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "&#127757;"
+        }
+      ],
+      "data": [
+        [
+          "B01",
+          "Quận 1 Center",
+          "(106.7009, 10.7769)",
+          "TP.HCM",
+          "Downtown",
+          "yes"
+        ],
+        [
+          "B02",
+          "District 7 Hub",
+          "(106.7369, 10.7288)",
+          "TP.HCM",
+          "South",
+          "yes"
+        ],
+        [
+          "B03",
+          "Hanoi Old Quarter",
+          "(105.8542, 21.0285)",
+          "Hà Nội",
+          "Old City",
+          "no"
+        ],
+        [
+          "B04",
+          "District 3 Store",
+          "(106.6872, 10.7822)",
+          "TP.HCM",
+          "Downtown",
+          "yes"
+        ],
+        [
+          "B05",
+          "Bình Thạnh Mall",
+          "(106.7038, 10.8106)",
+          "TP.HCM",
+          "North",
+          "yes"
+        ],
+        [
+          "B06",
+          "Thủ Đức Tech",
+          "(106.7710, 10.8494)",
+          "TP.HCM",
+          "East",
+          "no"
+        ],
+        [
+          "B07",
+          "Tân Bình Point",
+          "(106.6526, 10.8014)",
+          "TP.HCM",
+          "South",
+          "yes"
+        ],
+        [
+          "B08",
+          "Hai Bà Trưng HN",
+          "(105.8480, 21.0080)",
+          "Hà Nội",
+          "Old City",
+          "no"
+        ],
+        [
+          "B09",
+          "Cầu Giấy HN",
+          "(105.7964, 21.0313)",
+          "Hà Nội",
+          "North",
+          "no"
+        ],
+        [
+          "B10",
+          "Đà Nẵng Center",
+          "(108.2022, 16.0544)",
+          "Đà Nẵng",
+          "Downtown",
+          "no"
+        ],
+        [
+          "B11",
+          "Hải Châu DN",
+          "(108.2208, 16.0678)",
+          "Đà Nẵng",
+          "South",
+          "no"
+        ],
+        [
+          "B12",
+          "Phú Nhuận Store",
+          "(106.6800, 10.7990)",
+          "TP.HCM",
+          "Downtown",
+          "yes"
+        ],
+        [
+          "B13",
+          "Gò Vấp Hub",
+          "(106.6657, 10.8386)",
+          "TP.HCM",
+          "North",
+          "yes"
+        ],
+        [
+          "B14",
+          "Quận 10 Plaza",
+          "(106.6670, 10.7730)",
+          "TP.HCM",
+          "Downtown",
+          "yes"
+        ],
+        [
+          "B15",
+          "Quận 4 Point",
+          "(106.7050, 10.7590)",
+          "TP.HCM",
+          "South",
+          "yes"
+        ],
+        [
+          "B16",
+          "Cần Thơ Center",
+          "(105.7469, 10.0452)",
+          "Cần Thơ",
+          "Downtown",
+          "no"
+        ],
+        [
+          "B17",
+          "Huế Store",
+          "(107.5847, 16.4637)",
+          "Huế",
+          "Old City",
+          "no"
+        ],
+        [
+          "B18",
+          "Nha Trang Bay",
+          "(109.1967, 12.2388)",
+          "Nha Trang",
+          "Downtown",
+          "no"
+        ],
+        [
+          "B19",
+          "Quận 2 Hub",
+          "(106.7500, 10.7870)",
+          "TP.HCM",
+          "East",
+          "yes"
+        ],
+        [
+          "B20",
+          "Bình Tân Mall",
+          "(106.6020, 10.7650)",
+          "TP.HCM",
+          "West",
+          "no"
+        ],
+        [
+          "B21",
+          "Long Biên HN",
+          "(105.8800, 21.0450)",
+          "Hà Nội",
+          "North",
+          "no"
+        ],
+        [
+          "B22",
+          "Quận 5 Plaza",
+          "(106.6634, 10.7540)",
+          "TP.HCM",
+          "West",
+          "yes"
+        ]
+      ]
+    },
+    "expected_sql": "SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND within_10km = 'yes' GROUP BY zone ORDER BY branch_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>kết hợp spatial filter + aggregation</em>. Lọc TP.HCM → lọc bán kính 10km quanh trung tâm → nhóm theo zone → đếm → sắp xếp. Hãy nghĩ: filter trước (WHERE), aggregate sau (GROUP BY)."
+      },
+      {
+        "level": 2,
+        "text": "<code>WHERE city = 'TP.HCM'</code> — lọc TP.HCM trước."
+      },
+      {
+        "level": 3,
+        "text": "<code>AND ST_DWithin(geo_location, ST_MakePoint(106.7009, 10.7769), 10)</code> — lọc bán kính 10km."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT zone, COUNT(*) AS branch_count FROM shop_branches WHERE city = 'TP.HCM' AND within_10km = 'yes' GROUP BY zone ORDER BY branch_count DESC;</code>"
+      }
+    ],
+    "success_message": "Spatial + GROUP BY = phân tích vùng phủ cửa hàng cực kỳ hiệu quả! ST_DWithin + GiST index = O(log n).",
+    "xp_reward": 60
+  }
+}

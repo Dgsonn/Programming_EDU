@@ -1,0 +1,858 @@
+{
+  "id": "db_03",
+  "index": 3,
+  "title": "Foreign Key & JOIN",
+  "subtitle": "Nối 2 bảng qua Khóa ngoại bằng cú pháp JOIN ... ON",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 25,
+  "xp_reward": 60,
+  "project_piece": "🔗 Mở khóa \"Kênh cung ứng Nhà Phát Hành\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #03",
+    "hook": "Tin lớn: <strong>các nhà phát hành ký hợp đồng</strong> với GameHub. Thực tập sinh nhanh nhảu <em>gõ thẳng tên nhà phát hành vào từng dòng game</em>. Rồi Rockstar đổi thông tin liên hệ — phải sửa <strong>hàng trăm dòng</strong>, sót 3 dòng, dữ liệu vênh nhau. Ticket này yêu cầu nối 2 bảng theo cách chuẩn: mỗi game chỉ giữ <strong>1 con số trỏ về</strong> nhà phát hành của nó."
+  },
+  "drag_type": "connector",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "game",
+      "columns": [
+        "game_id",
+        "title",
+        "pub_id"
+      ],
+      "dataRows": [
+        [
+          "501",
+          "Super Mario Odyssey",
+          "10"
+        ],
+        [
+          "502",
+          "The Legend of Zelda",
+          "10"
+        ],
+        [
+          "503",
+          "GTA V",
+          "20"
+        ],
+        [
+          "504",
+          "Red Dead Redemption 2",
+          "20"
+        ],
+        [
+          "505",
+          "Mario Kart 8",
+          "10"
+        ],
+        [
+          "506",
+          "GTA IV",
+          "20"
+        ],
+        [
+          "507",
+          "Bully",
+          "20"
+        ],
+        [
+          "508",
+          "Assassin's Creed",
+          "30"
+        ],
+        [
+          "509",
+          "Far Cry 6",
+          "30"
+        ],
+        [
+          "510",
+          "FIFA 23",
+          "40"
+        ],
+        [
+          "511",
+          "The Sims 4",
+          "40"
+        ],
+        [
+          "512",
+          "Final Fantasy XVI",
+          "50"
+        ],
+        [
+          "513",
+          "Cyberpunk 2077",
+          "60"
+        ],
+        [
+          "514",
+          "The Witcher 3",
+          "60"
+        ],
+        [
+          "515",
+          "Max Payne 3",
+          "20"
+        ],
+        [
+          "516",
+          "LA Noire",
+          "20"
+        ],
+        [
+          "517",
+          "Splatoon 3",
+          "10"
+        ],
+        [
+          "518",
+          "Watch Dogs",
+          "30"
+        ],
+        [
+          "519",
+          "Battlefield 2042",
+          "40"
+        ],
+        [
+          "520",
+          "Dragon Quest XI",
+          "50"
+        ],
+        [
+          "521",
+          "Animal Crossing",
+          "10"
+        ],
+        [
+          "522",
+          "Red Dead Redemption",
+          "20"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Người nối bảng",
+    "desc": "JOIN qua Khóa ngoại"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Foreign Key (FK) = cột lưu giá trị Khóa chính của bảng khác",
+        "JOIN ... ON ... = cú pháp nối 2 bảng qua FK ↔ PK",
+        "Khi 2 bảng cùng có cột id, dùng table.column để phân biệt"
+      ],
+      "intro": "Trong thực tế, dữ liệu nằm rải rác ở nhiều bảng. <strong>Foreign Key (FK)</strong> là cột lưu <em>bản sao</em> Khóa chính của bảng khác — đánh dấu quan hệ. <strong>JOIN ... ON</strong> là cú pháp nối 2 bảng qua FK ↔ PK để tạo \"siêu bảng\" tạm thời phục vụ truy vấn.",
+      "example": "Bảng <code>game</code> có cột <code>pub_id</code> (FK) trỏ sang <code>publisher.id</code> (PK). Khi muốn biết game nào do Nintendo sản xuất, ta JOIN 2 bảng rồi WHERE theo <code>publisher.name</code>."
+    },
+    "intro": "90% lỗi SQL mới bắt đầu do <strong>JOIN sai bảng</strong>. Bạn tưởng query chạy đúng → 10 giây sau trả về 0 dòng, hoặc tệ hơn: trả về duplicate row. Nguyên nhân gốc: thiếu <strong>Foreign Key constraint</strong> + hiểu sai quan hệ. 1 bài này tiết kiệm 6 tháng debug.",
+    "concept_cards": [
+      {
+        "icon": "fa-link",
+        "title": "Foreign Key — Hợp đồng liên bảng",
+        "body": "60% bug SQL mới bắt đầu do <strong>JOIN sai bảng</strong>. FK là \"hợp đồng\" giữa 2 bảng: <code>game.pub_id</code> HỨA rằng giá trị này PHẢI tồn tại trong <code>publisher.pub_id</code>. Phá hợp đồng → DB từ chối INSERT ngay lập tức."
+      },
+      {
+        "icon": "fa-object-group",
+        "title": "JOIN — Nối bảng qua FK",
+        "body": "1 game có 1 publisher. <strong>Không lưu</strong> tên publisher trong bảng game — chỉ lưu <code>pub_id</code>. Khi cần tên → <code>JOIN</code> qua FK. Đây là lý do database thiết kế chuẩn 3NF tiết kiệm hàng GB storage ở quy mô triệu record."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Thử tìm \"game nào của Rockstar?\" — bảng <code>game</code> chỉ có <code>pub_id = 20</code>, KHÔNG có chữ \"Rockstar\"! Phải <code>JOIN publisher</code> để nối <code>pub_id</code> ↔ tên. Đó chính là lý do Foreign Key tồn tại."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "er",
+        "width": 600,
+        "height": 280,
+        "entities": [
+          {
+            "name": "game",
+            "columns": [
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "title",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "pub_id",
+                "type": "INT",
+                "key": "FK"
+              }
+            ]
+          },
+          {
+            "name": "publisher",
+            "columns": [
+              {
+                "name": "pub_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "name",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "country",
+                "type": "VARCHAR"
+              }
+            ]
+          }
+        ],
+        "connectors": [
+          {
+            "from": "game",
+            "to": "publisher",
+            "label": "published_by",
+            "fromCard": "N",
+            "toCard": "1"
+          }
+        ],
+        "note": "N game thuộc về 1 publisher. Mũi tên từ game.pub_id → publisher.pub_id"
+      },
+      "schema": {
+        "table_name": "game",
+        "columns": [
+          {
+            "name": "game_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "title",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🎮"
+          },
+          {
+            "name": "pub_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "🔗"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "501",
+          "Super Mario Odyssey",
+          "10"
+        ],
+        [
+          "502",
+          "The Legend of Zelda",
+          "10"
+        ],
+        [
+          "503",
+          "GTA V",
+          "20"
+        ],
+        [
+          "504",
+          "Red Dead Redemption 2",
+          "20"
+        ],
+        [
+          "505",
+          "Mario Kart 8",
+          "10"
+        ],
+        [
+          "506",
+          "GTA IV",
+          "20"
+        ],
+        [
+          "507",
+          "Bully",
+          "20"
+        ],
+        [
+          "508",
+          "Assassin's Creed",
+          "30"
+        ],
+        [
+          "509",
+          "Far Cry 6",
+          "30"
+        ],
+        [
+          "510",
+          "FIFA 23",
+          "40"
+        ],
+        [
+          "511",
+          "The Sims 4",
+          "40"
+        ],
+        [
+          "512",
+          "Final Fantasy XVI",
+          "50"
+        ],
+        [
+          "513",
+          "Cyberpunk 2077",
+          "60"
+        ],
+        [
+          "514",
+          "The Witcher 3",
+          "60"
+        ],
+        [
+          "515",
+          "Max Payne 3",
+          "20"
+        ],
+        [
+          "516",
+          "LA Noire",
+          "20"
+        ],
+        [
+          "517",
+          "Splatoon 3",
+          "10"
+        ],
+        [
+          "518",
+          "Watch Dogs",
+          "30"
+        ],
+        [
+          "519",
+          "Battlefield 2042",
+          "40"
+        ],
+        [
+          "520",
+          "Dragon Quest XI",
+          "50"
+        ],
+        [
+          "521",
+          "Animal Crossing",
+          "10"
+        ],
+        [
+          "522",
+          "Red Dead Redemption",
+          "20"
+        ]
+      ],
+      "related_tables": [
+        {
+          "name": "publisher",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INT",
+              "key": "PK",
+              "icon": "🔑"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "key": "",
+              "icon": "🏢"
+            }
+          ],
+          "data": [
+            [
+              "10",
+              "Nintendo"
+            ],
+            [
+              "20",
+              "Rockstar"
+            ],
+            [
+              "30",
+              "Ubisoft"
+            ],
+            [
+              "40",
+              "EA"
+            ],
+            [
+              "50",
+              "Square Enix"
+            ],
+            [
+              "60",
+              "CD Projekt"
+            ]
+          ]
+        }
+      ]
+    },
+    "mission": "Lấy <code>title</code> của tất cả game do <code>Nintendo</code> sản xuất — kéo thả SQL, JOIN qua FK."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Foreign Key (FK) dùng để làm gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Lưu giá trị Khóa chính của bảng khác để tạo liên kết",
+            "correct": true,
+            "explanation": "Đúng — FK lưu giá trị PK từ bảng khác (hoặc cùng bảng) để tạo liên kết. DB engine enforce referential integrity: FK phải tồn tại trong bảng tham chiếu."
+          },
+          {
+            "id": "b",
+            "text": "Mã hóa dữ liệu nhạy cảm",
+            "correct": false,
+            "explanation": "Sai — mã hóa là encryption (AES, bcrypt). FK không liên quan security — nó chỉ là 1 cột integer tham chiếu PK."
+          },
+          {
+            "id": "c",
+            "text": "Tăng tốc độ truy vấn bằng index",
+            "correct": false,
+            "explanation": "Sai — PK có index tự động (clustered). FK CÓ THỂ có index (best practice) nhưng bản chất FK là constraint, không phải performance tool."
+          },
+          {
+            "id": "d",
+            "text": "Đánh dấu cột được phép NULL",
+            "correct": false,
+            "explanation": "Sai — NULLability là property độc lập với FK. FK có thể NULL hoặc NOT NULL tuỳ design. NULL = \"không có liên kết\" trong quan hệ 1:N optional."
+          }
+        ]
+      },
+      {
+        "question": "Muốn lấy <code>id</code> của game KÈM <code>id</code> nhà phát hành ĐÚNG của nó (tránh cả lỗi trùng tên cột lẫn ghép sai cặp), bạn viết:",
+        "options": [
+          {
+            "id": "a",
+            "text": "SELECT id FROM game, publisher",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — cột `id` có ở cả 2 bảng mà không qualify → lỗi \"ambiguous column\". SQL không đoán được bạn muốn id nào."
+          },
+          {
+            "id": "b",
+            "text": "SELECT game.id, publisher.id FROM game JOIN publisher ON game.pub_id = publisher.id",
+            "correct": true,
+            "format": "code",
+            "explanation": "Đúng — qualify `game.id` / `publisher.id` để hết trùng tên, VÀ `JOIN ... ON game.pub_id = publisher.id` để ghép đúng cặp game ↔ publisher của nó."
+          },
+          {
+            "id": "c",
+            "text": "SELECT * FROM game, publisher",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — `*` trả TẤT CẢ cột của cả 2 bảng (2 cột `id` cùng tên), lại thiếu ON → tích Descartes: mỗi game ghép với MỌI publisher."
+          },
+          {
+            "id": "d",
+            "text": "SELECT game.id AS game_id, publisher.id AS pub_id FROM game, publisher",
+            "correct": false,
+            "format": "code",
+            "explanation": "Bẫy hay: cột ĐÃ hết trùng tên (alias ok), NHƯNG thiếu `JOIN ... ON` → đây là cross join, mỗi game ghép với MỌI publisher → sai cặp. Phải thêm ON game.pub_id = publisher.id."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "title": "Phân loại: cột nào là PK / FK / Thường?",
+      "instruction": "Trong 2 bảng <code>game</code> và <code>publisher</code>, mỗi thẻ là 1 cột. Kéo vào ô tương ứng.",
+      "chips": [
+        {
+          "id": "g-gameid",
+          "label": "game.game_id"
+        },
+        {
+          "id": "g-title",
+          "label": "game.title"
+        },
+        {
+          "id": "g-pubid",
+          "label": "game.pub_id"
+        },
+        {
+          "id": "p-id",
+          "label": "publisher.id"
+        },
+        {
+          "id": "p-name",
+          "label": "publisher.name"
+        }
+      ],
+      "bins": [
+        {
+          "id": "pk",
+          "label": "Primary Key (PK)",
+          "correct": "true"
+        },
+        {
+          "id": "fk",
+          "label": "Foreign Key (FK)",
+          "correct": "fk"
+        },
+        {
+          "id": "normal",
+          "label": "Cột thường",
+          "correct": "normal"
+        }
+      ],
+      "solution": {
+        "g-gameid": "pk",
+        "g-title": "normal",
+        "g-pubid": "fk",
+        "p-id": "pk",
+        "p-name": "normal"
+      }
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "game.title",
+        "slot": "col-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "game",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join"
+      },
+      {
+        "type": "tbl",
+        "token": "publisher",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on"
+      },
+      {
+        "type": "col",
+        "token": "game.pub_id = publisher.id",
+        "slot": "col-on"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "publisher.name",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'Rockstar'",
+        "slot": "val-1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____ ON ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Rockstar';",
+    "reveal_hints": {
+      "select-line": "SELECT 1 cột: <strong>game.title</strong> (chỉ rõ bảng để tránh nhầm với publisher).",
+      "from-line": "FROM <strong>game</strong> → <strong>JOIN publisher ON game.pub_id = publisher.id</strong> (nối qua FK ↔ PK).",
+      "where-line": "WHERE lọc hãng: <strong>publisher.name = 'Rockstar'</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — <strong>đếm số game của mỗi nhà phát hành</strong> (JOIN + <code>GROUP BY</code> + <code>COUNT</code>), sắp xếp nhiều → ít. Không chỉ lọc 1 publisher nữa.",
+    "starter": "-- Viết query của bạn ở đây\n",
+    "schema": {
+      "table_name": "game",
+      "columns": [
+        {
+          "name": "game_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "pub_id",
+          "type": "INT",
+          "key": "FK"
+        }
+      ],
+      "data": [
+        [
+          "501",
+          "Super Mario Odyssey",
+          "10"
+        ],
+        [
+          "502",
+          "The Legend of Zelda",
+          "10"
+        ],
+        [
+          "503",
+          "GTA V",
+          "20"
+        ],
+        [
+          "504",
+          "Red Dead Redemption 2",
+          "20"
+        ],
+        [
+          "505",
+          "Mario Kart 8",
+          "10"
+        ],
+        [
+          "506",
+          "GTA IV",
+          "20"
+        ],
+        [
+          "507",
+          "Bully",
+          "20"
+        ],
+        [
+          "508",
+          "Assassin's Creed",
+          "30"
+        ],
+        [
+          "509",
+          "Far Cry 6",
+          "30"
+        ],
+        [
+          "510",
+          "FIFA 23",
+          "40"
+        ],
+        [
+          "511",
+          "The Sims 4",
+          "40"
+        ],
+        [
+          "512",
+          "Final Fantasy XVI",
+          "50"
+        ],
+        [
+          "513",
+          "Cyberpunk 2077",
+          "60"
+        ],
+        [
+          "514",
+          "The Witcher 3",
+          "60"
+        ],
+        [
+          "515",
+          "Max Payne 3",
+          "20"
+        ],
+        [
+          "516",
+          "LA Noire",
+          "20"
+        ],
+        [
+          "517",
+          "Splatoon 3",
+          "10"
+        ],
+        [
+          "518",
+          "Watch Dogs",
+          "30"
+        ],
+        [
+          "519",
+          "Battlefield 2042",
+          "40"
+        ],
+        [
+          "520",
+          "Dragon Quest XI",
+          "50"
+        ],
+        [
+          "521",
+          "Animal Crossing",
+          "10"
+        ],
+        [
+          "522",
+          "Red Dead Redemption",
+          "20"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "publisher",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "10",
+            "Nintendo"
+          ],
+          [
+            "20",
+            "Rockstar"
+          ],
+          [
+            "30",
+            "Ubisoft"
+          ],
+          [
+            "40",
+            "EA"
+          ],
+          [
+            "50",
+            "Square Enix"
+          ],
+          [
+            "60",
+            "CD Projekt"
+          ]
+        ]
+      }
+    ],
+    "context": {
+      "scenario": "Bảng <code>game</code> chỉ lưu <code>pub_id</code> (Khóa ngoại) — KHÔNG lưu tên nhà phát hành (tên nằm ở bảng <code>publisher</code>). Muốn thống kê \"mỗi hãng bao nhiêu game\" phải NỐI 2 bảng rồi đếm.",
+      "real_world": "Truy vấn analytics kinh điển: <strong>Steam</strong>/<strong>App Store</strong> đếm \"mỗi nhà phát hành bao nhiêu tựa\", <strong>Spotify</strong> đếm \"mỗi hãng đĩa bao nhiêu bài\". Dữ liệu tách bảng (chuẩn hoá) + <code>JOIN</code> + <code>GROUP BY</code> + <code>COUNT</code> là bộ tứ nền tảng của mọi dashboard.",
+      "steps": [
+        "<code>JOIN</code> <code>game</code> với <code>publisher</code> qua <code>game.pub_id = publisher.id</code>.",
+        "Gom nhóm theo hãng: <code>GROUP BY publisher.name</code>.",
+        "Đếm số game mỗi nhóm: <code>COUNT(*) AS game_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>. Run → mỗi hãng 1 dòng kèm số game."
+      ],
+      "hint_explore": "Chưa rõ có những hãng nào? Gõ <code>SELECT * FROM publisher</code> rồi <strong>Run</strong>.",
+      "example": {
+        "question": "Ví dụ tương tự — liệt kê tên game của <strong>Nintendo</strong>:",
+        "sql": "SELECT game.title FROM game JOIN publisher ON game.pub_id = publisher.id WHERE publisher.name = 'Nintendo';",
+        "sample_output": "→ các title do Nintendo phát hành"
+      },
+      "expected": "Bảng kết quả: mỗi nhà phát hành 1 dòng × 2 cột (<code>name, game_count</code>), giảm dần. Nhờ JOIN ta ghép TÊN hãng (bảng publisher) với SỐ game (bảng game)."
+    },
+    "expected_sql": "SELECT publisher.name, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id GROUP BY publisher.name ORDER BY game_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần 1 cột: <code>game.title</code> (dùng table.column để rõ ràng)."
+      },
+      {
+        "level": 2,
+        "text": "Bảng <code>game</code>, JOIN với <code>publisher</code> ON <code>game.pub_id = publisher.id</code>."
+      },
+      {
+        "level": 3,
+        "text": "WHERE <code>publisher.name = 'Rockstar'</code>"
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT publisher.name, COUNT(*) AS game_count FROM game JOIN publisher ON game.pub_id = publisher.id GROUP BY publisher.name ORDER BY game_count DESC;</code>"
+      }
+    ],
+    "success_message": "Xuất sắc! Bạn đã nối 2 bảng qua Foreign Key bằng JOIN ON. Bài 4 sẽ học FK & 1:N — quan hệ một-nhiều qua khóa ngoại.",
+    "xp_reward": 60
+  }
+}

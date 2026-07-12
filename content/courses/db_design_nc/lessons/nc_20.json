@@ -1,0 +1,522 @@
+{
+  "id": "nc_20",
+  "index": 20,
+  "title": "Version Number — cái ghế nhớ nó đã đổi chủ mấy lần",
+  "subtitle": "Giao dịch có con người bên trong: không khóa nào sống qua thời-gian-suy-nghĩ — tách giao dịch, so version lúc chốt",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "seats — sơ đồ ghế chung kết (mẫu 4, hàng C)",
+      "columns": [
+        "seat_id",
+        "status",
+        "version"
+      ],
+      "dataRows": [
+        [
+          "C3",
+          "đã bán",
+          "2"
+        ],
+        [
+          "C4",
+          "trống",
+          "7"
+        ],
+        [
+          "C5",
+          "trống",
+          "3"
+        ],
+        [
+          "C6",
+          "đã bán",
+          "5"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Arena · Ticket #61",
+    "hook": "Đêm chung kết Esports mở bán: 50.000 người cùng săn ghế, và mỗi người… <strong>suy nghĩ</strong>. Rủ bạn bè, so giá, đổi ý — tính bằng PHÚT, trong khi mọi cơ chế từ đầu module tính khóa bằng mili-giây. Giữ khóa kiểu bài 12 qua 5 phút suy nghĩ? Cả khoang ghế đóng băng vì một người mải nhắn tin. Ticket #61 — bài cuối của Trading Floor: <em>đừng giữ gì hết trong lúc người ta nghĩ</em>. Tách giao dịch làm đôi, và để mỗi cái ghế tự đeo một con số: nó đã đổi chủ mấy lần. 🎫"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "GIAO DỊCH CÓ USER Ở GIỮA: người nghĩ bằng phút — 2PL giữ S cả khoang ghế suốt lúc đó là \"a very bad idea\" (nguyên văn sách); timestamp/validation thì abort OAN cả khi người kia chọn ghế KHÁC → luật vàng: TÁCH giao dịch, không transaction nào ôm trọn một cú suy nghĩ",
+        "VERSION NUMBER: mỗi dòng đeo thêm cột version (khởi tạo 0); ĐỌC là giao dịch riêng — nhả khóa ngay, chỉ NHỚ version; CHỐT là một giao dịch atomic: so version hiện tại với version đã nhớ — khớp → update + version tăng 1; lệch → abort toàn bộ, báo user",
+        "Đây là first-committer-wins THỦ CÔNG (\"optimistic concurrency control without read validation\") — chạy được trên MỌI database, sống khỏe qua giao dịch dài cả giờ; Hibernate/ORM gọi là conversations và tự so version giùm lúc commit; giá phải trả: không đảm bảo serializability đầy đủ"
+      ],
+      "intro": "Phòng gửi xe không phát chìa khóa giữ chỗ — thay vào đó mỗi ô đeo một <strong>công-tơ đổi chủ</strong>. Bạn ngắm ô C4 thấy công-tơ chỉ 7 rồi đi cân nhắc thoải mái; lúc quay lại đưa xe vào, nhân viên chỉ hỏi một câu: \"công-tơ còn 7 không?\" Còn → xe vào, công-tơ nhảy 8. Đã nhảy → ai đó lấy ô này trong lúc bạn đi — mời chọn ô khác. Không ai từng giữ chỗ giùm bạn, và cũng không ai lấy được đè lên xe người khác.",
+      "example": "12:00 — bạn đọc ghế C4: trống, <code>version = 7</code> (giao dịch đọc xong là nhả sạch khóa). 12:04 — MythicSlayer88 chốt C4 trước: version 7 → 8. 12:04:30 — bạn bấm chốt: <code>UPDATE … WHERE seat='C4' AND version=7</code> → trúng <strong>0 dòng</strong> → giao dịch của bạn abort, app mời chọn ghế khác. Số 7 của bạn đã tuyệt chủng — và chính nó cứu bạn khỏi đè lên vé người khác."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-chair",
+        "title": "Vụ chọn ghế máy bay — theo đúng sách",
+        "body": "Nếu gom cả quy trình — từ lúc hiện sơ đồ ghế đến lúc user xác nhận — vào MỘT giao dịch 2PL, thì <strong>toàn bộ ghế của chuyến bay bị khóa S</strong> cho tới khi user chọn xong; user có thể nghĩ rất lâu, <em>thậm chí bỏ đi mà không hủy</em>. Sách phán một câu hiếm khi gay gắt đến thế: \"such locking would be <strong>a very bad idea</strong>\". Timestamp hay validation thì khỏi khóa nhưng lại abort user A cả khi B chọn ghế KHÁC — oan. Lối ra: tách giao dịch tại mỗi điểm user tương tác.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.3 — Concurrency Control Across User Interactions"
+      },
+      {
+        "icon": "fa-stopwatch-20",
+        "title": "Nghi thức chốt — hai bước, một khối atomic",
+        "body": "Lúc chốt, TẤT CẢ chạy trong một giao dịch DB duy nhất: với TỪNG dòng định sửa — (1) version hiện tại <strong>còn khớp</strong> version đã nhớ lúc đọc? → update + version <strong>tăng 1</strong>; (2) lệch dù chỉ một dòng → <strong>abort toàn bộ</strong>, rollback mọi update của cú chốt. Sách chỉ rõ: phép so version này chính là luật <em>first-committer-wins</em> của snapshot isolation — nhưng chạy thủ công nên dùng được cả khi giao dịch \"sống\" hàng giờ, điều snapshot thứ thiệt rất ngán (phải nhớ update của mọi transaction chồng lấn). Dùng timestamp thay số đếm cũng được, không đổi bản chất."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Bạn gặp pattern này mỗi ngày mà không biết tên: Hibernate/JPA có <code>@Version</code> — ORM tự so-và-tăng lúc commit (giao dịch có user ở giữa được gọi hẳn là <em>conversations</em>); HTTP có <strong>ETag + If-Match</strong> — sửa tài liệu qua API mà ETag lệch là ăn 412 Precondition Failed: đúng nghi thức version check, đổi tên miền. Lần tới thấy lỗi \"phiên bản đã thay đổi, tải lại trang\" — đó không phải bug, đó là 18.9.3 đang cứu dữ liệu của bạn."
+      }
+    ],
+    "seat_visual": {
+      "eyebrow": "SƠ ĐỒ GHẾ CHUNG KẾT — BẠN NHẮM C4 · VERSION CHECK vs KHÓA-SUỐT-5-PHÚT",
+      "caption": "Chạy CẢ HAI kịch bản: version check mất một cú click mà cả khoang sống; khóa kiểu cũ đóng băng tất cả vì một người mải nghĩ.",
+      "stage": "🏟️ SÂN KHẤU CHUNG KẾT — GAMEHUB ARENA",
+      "rows": [
+        "A",
+        "B",
+        "C"
+      ],
+      "cols": 8,
+      "taken": [
+        "A2",
+        "A6",
+        "B3",
+        "B7",
+        "C3",
+        "C6"
+      ],
+      "modes": [
+        {
+          "id": "ver",
+          "short": "VERSION CHECK",
+          "ok": true,
+          "result": "mất 1 cú click — cả khoang sống",
+          "btn": "▶ Kịch bản VERSION CHECK",
+          "steps": [
+            {
+              "text": "Bạn mở sơ đồ: ghế C4 trống · version = 7. Đọc là GIAO DỊCH RIÊNG — khóa nhả ngay tức khắc.",
+              "mine": "C4",
+              "version": "👓 bạn đang ngắm C4 · version = 7",
+              "note": "Con số 7 là \"ảnh chụp\" của bạn về cái ghế — nhớ kỹ, lát nữa nó là bằng chứng."
+            },
+            {
+              "text": "Bạn suy nghĩ, rủ bạn bè… 4 phút. Khán giả khác đặt ầm ầm: A4, B5 có chủ.",
+              "take": [
+                "A4",
+                "B5"
+              ],
+              "cls": "warn",
+              "note": "Không ai phải chờ bạn lấy một giây — vì bạn chẳng giữ khóa nào."
+            },
+            {
+              "text": "MythicSlayer88 CHỐT đúng C4 → version C4: 7 → 8",
+              "steal": "C4",
+              "version": "⚠️ C4 · version = 8 — con số 7 của bạn đã tuyệt chủng",
+              "cls": "bad"
+            },
+            {
+              "text": "Bạn bấm CHỐT: UPDATE … WHERE seat='C4' AND version=7 → trúng 0 dòng → ABORT",
+              "cls": "bad",
+              "note": "Lệnh của bạn tự trượt — không đè lên vé của ai. Đó chính là first-committer-wins, phiên bản thủ công."
+            },
+            {
+              "text": "App: \"C4 vừa có chủ — mời chọn ghế khác\" → bạn chốt C5: version 3 khớp → ghi + tăng lên 4 ✓",
+              "mine": "C5",
+              "version": "🎫 C5 là của bạn · version = 4",
+              "cls": "ok"
+            }
+          ],
+          "verdict": "✓ Bạn mất một cú click — sàn không đóng băng một giây nào, và không vé nào bị đè. So-version-lúc-chốt chạy được trên MỌI database, sống khỏe cả khi user nghĩ nửa tiếng."
+        },
+        {
+          "id": "lock",
+          "short": "KHÓA 5 PHÚT",
+          "ok": false,
+          "result": "cả khoang đóng băng",
+          "btn": "▶ Kịch bản KHÓA KIỂU CŨ",
+          "steps": [
+            {
+              "text": "2PL cổ điển: mở sơ đồ = khóa S CẢ KHOANG ghế — \"đọc nhất quán\" mà.",
+              "lock_all": true,
+              "cls": "warn",
+              "note": "Từng cái ghế trống giờ đeo một ổ khóa — của BẠN, người còn chưa biết mình muốn ngồi đâu."
+            },
+            {
+              "text": "Bạn suy nghĩ 4 phút. MythicSlayer88 muốn C4? XẾP HÀNG. 200 khán giả khác? XẾP HÀNG.",
+              "cls": "bad"
+            },
+            {
+              "text": "Bạn… bỏ đi ăn phở, quên luôn tab đặt vé. Khóa vẫn treo — chờ timeout.",
+              "cls": "bad",
+              "note": "Sách tả đúng cảnh này: user \"may even just abandon the transaction without explicitly cancelling it\"."
+            },
+            {
+              "text": "Cả khoang đóng băng 5 phút vì MỘT người mải nghĩ — sách phán: a very bad idea.",
+              "cls": "bad"
+            }
+          ],
+          "verdict": "❌ Khóa được thiết kế để sống MILI-GIÂY — bắt nó sống qua thời-gian-suy-nghĩ của con người là án tử cho concurrency. Không giữ khóa, không ôm snapshot dài: TÁCH giao dịch + version number."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "seats — mỗi ghế đeo một công-tơ đổi chủ",
+        "columns": [
+          {
+            "name": "seat_id",
+            "type": "VARCHAR",
+            "key": "PK"
+          },
+          {
+            "name": "status",
+            "type": "trống / đã bán",
+            "key": ""
+          },
+          {
+            "name": "version",
+            "type": "INT — khởi tạo 0, mỗi lần ghi +1",
+            "key": "🔢"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "12:00 bạn đọc C4",
+          "trống · version 7",
+          "nhớ số 7, nhả khóa ngay",
+          "👓"
+        ],
+        [
+          "12:04 Mythic chốt C4",
+          "version 7 → 8",
+          "không chờ ai — bạn có giữ gì đâu",
+          "✍️"
+        ],
+        [
+          "12:04:30 bạn chốt",
+          "WHERE version=7 → 0 dòng",
+          "abort — không đè lên vé ai",
+          "⛔"
+        ],
+        [
+          "12:05 bạn chốt C5",
+          "version 3 khớp → ghi, lên 4",
+          "commit ✓",
+          "🎫"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao KHÔNG cơ chế nào từ đầu module — 2PL, timestamp, validation — được phép ôm trọn một giao dịch có user suy nghĩ ở giữa?",
+        "options": [
+          {
+            "id": "a",
+            "text": "2PL sẽ giữ khóa suốt thời gian nghĩ (khoang ghế đóng băng, user có khi bỏ đi không hủy); timestamp/validation khỏi khóa nhưng abort OAN — B đặt ghế KHÁC cũng đủ giết giao dịch của A. Người nghĩ bằng phút, cơ chế tính bằng mili-giây",
+            "correct": true,
+            "explanation": "Đúng trọn — sách điểm mặt từng cơ chế một trước khi đưa ra lối thoát: tách giao dịch tại mỗi điểm user tương tác."
+          },
+          {
+            "id": "b",
+            "text": "Vì trình duyệt không giữ được kết nối DB lâu đến thế",
+            "correct": false,
+            "explanation": "Sai tầng — kết nối là chuyện app server, giữ 5 phút vẫn được về kỹ thuật; cái không chịu nổi là các GIAO DỊCH KHÁC bị chặn/abort trong 5 phút đó."
+          },
+          {
+            "id": "c",
+            "text": "Vì user có thể đổi ý, mà giao dịch DB không cho sửa lệnh giữa chừng",
+            "correct": false,
+            "explanation": "Sai — trong giao dịch vẫn đọc/ghi thêm thoải mái tới lúc commit; vấn đề không phải \"đổi ý được không\" mà là cái giá cả sàn phải trả trong lúc chờ bạn đổi ý."
+          },
+          {
+            "id": "d",
+            "text": "Được chứ — miễn đặt timeout 5 phút cho khóa là xong",
+            "correct": false,
+            "explanation": "Timeout chỉ là phao cứu sinh khỏi treo VĨNH VIỄN — 5 phút đóng băng vẫn nguyên 5 phút; và timeout xong giao dịch của chính bạn cũng chết. Không ai \"vận hành\" bằng phao."
+          }
+        ]
+      },
+      {
+        "question": "Lệnh chốt UPDATE … WHERE seat='C4' AND version=7 trúng 0 dòng. Chuyện gì vừa xảy ra — và vì sao cả nghi thức phải gói trong MỘT giao dịch DB?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Version hiện tại đã ≠ 7 — ai đó ghi C4 sau lúc mình đọc → abort, báo user. Phải atomic vì giữa \"so version\" và \"update\" mà hở một khe thì kẻ khác chen vào đúng khe đó — lại lost update như thường",
+            "correct": true,
+            "explanation": "Chuẩn — 0 dòng chính là tín hiệu \"ảnh của bạn đã cũ\"; và bài test-rồi-ghi nào cũng phải atomic, không thì cái test thành vô nghĩa."
+          },
+          {
+            "id": "b",
+            "text": "Ghế C4 đã bị XÓA khỏi bảng nên UPDATE không tìm thấy",
+            "correct": false,
+            "explanation": "Sai — ghế còn nguyên, chỉ là version đã nhảy sang 8; WHERE version=7 lọc trượt CHÍNH XÁC như thiết kế. (Ghế bị xóa cũng ra 0 dòng thật, nhưng đó không phải chuyện của vụ này.)"
+          },
+          {
+            "id": "c",
+            "text": "Lỗi mạng — cứ bấm chốt lại lần nữa với version=7 là được",
+            "correct": false,
+            "explanation": "Nguy hiểm — retry với version CŨ thì đời nào trúng; muốn thử lại phải ĐỌC LẠI để lấy version mới (và thấy luôn ghế đã có chủ). Đó là lý do app bắt bạn quay về sơ đồ."
+          },
+          {
+            "id": "d",
+            "text": "DB tự động đổi sang ghế trống gần nhất cho mình",
+            "correct": false,
+            "explanation": "Sai — DB không tự quyết giùm ai; nó chỉ trả \"0 dòng\" lạnh lùng, còn \"mời chọn ghế khác\" là tầng app tử tế với bạn."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Số phận cú chốt",
+      "instruction": "Nghi thức: chốt = UPDATE … WHERE version = <số đã đọc>. Cú chốt nào COMMIT, cú nào ABORT?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "v1",
+          "label": "Đọc C4 v=7 · lúc chốt C4 vẫn v=7"
+        },
+        {
+          "id": "v2",
+          "label": "Đọc C4 v=7 · lúc chốt C4 đã v=8"
+        },
+        {
+          "id": "v3",
+          "label": "Đọc C4 v=7 · C4 bị hủy-đặt rồi đặt lại, giờ v=9"
+        },
+        {
+          "id": "v4",
+          "label": "Đọc C5 v=3 · lúc chốt C5 vẫn v=3"
+        }
+      ],
+      "bins": [
+        {
+          "id": "ok",
+          "label": "COMMIT ✓"
+        },
+        {
+          "id": "ab",
+          "label": "ABORT 🔁"
+        }
+      ],
+      "solution": {
+        "v1": "ok",
+        "v2": "ab",
+        "v3": "ab",
+        "v4": "ok"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp nghi thức đặt ghế 4 bước của 18.9.3 — có MỘT khối bịa (nghe rất chi là \"chắc chắn\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "TÁCH: đọc sơ đồ là GIAO DỊCH RIÊNG — nhả khóa ngay tức khắc, user cứ từ từ suy nghĩ",
+        "slot": "vn-split"
+      },
+      {
+        "type": "op",
+        "token": "NHỚ: ghi lại version của từng dòng mình định sửa — con số đó là ảnh chụp của mình về cái ghế",
+        "slot": "vn-mem"
+      },
+      {
+        "type": "op",
+        "token": "Giữ nguyên khóa S trên ghế suốt lúc suy nghĩ — 5 phút có là bao, chắc chắn là trên hết",
+        "slot": "vn-x"
+      },
+      {
+        "type": "op",
+        "token": "CHỐT ATOMIC: một giao dịch duy nhất — so version hiện tại với số đã nhớ, khớp thì update + version tăng 1",
+        "slot": "vn-check"
+      },
+      {
+        "type": "op",
+        "token": "LỆCH: abort toàn bộ cú chốt, báo user tình hình mới — không bao giờ đè lên vé người khác",
+        "slot": "vn-abort"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "vn-split",
+        "placeholder": "Bước 1 — xử sao với thời gian user suy nghĩ?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "✂️",
+          "label": "Tách giao dịch",
+          "sub": "Bước 1",
+          "hint": "Không transaction nào được ôm trọn một cú suy nghĩ — vậy cú ĐỌC sơ đồ phải sống kiểu gì?"
+        }
+      },
+      {
+        "id": "vn-mem",
+        "placeholder": "Bước 2 — nhả hết khóa rồi thì mang theo gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔢",
+          "label": "Nhớ version",
+          "sub": "Bước 2",
+          "hint": "Không giữ khóa, không giữ snapshot — thứ duy nhất bạn cần bỏ túi là MỘT CON SỐ mỗi dòng."
+        }
+      },
+      {
+        "id": "vn-check",
+        "placeholder": "Bước 3 — lúc chốt, nghi thức là gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⚖️",
+          "label": "So & tăng",
+          "sub": "Bước 3",
+          "hint": "So cái gì với cái gì — và vì sao cả bài so-rồi-ghi phải nằm trong MỘT giao dịch?"
+        }
+      },
+      {
+        "id": "vn-abort",
+        "placeholder": "Bước 4 — số không khớp thì sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔁",
+          "label": "Trượt thì sao",
+          "sub": "Bước 4",
+          "hint": "Trúng 0 dòng không phải lỗi mạng — nó là thông điệp. Đọc thông điệp đó thành hành động gì?"
+        }
+      }
+    ],
+    "expected_sql": "TÁCH: đọc sơ đồ là GIAO DỊCH RIÊNG — nhả khóa ngay tức khắc, user cứ từ từ suy nghĩ NHỚ: ghi lại version của từng dòng mình định sửa — con số đó là ảnh chụp của mình về cái ghế CHỐT ATOMIC: một giao dịch duy nhất — so version hiện tại với số đã nhớ, khớp thì update + version tăng 1 LỆCH: abort toàn bộ cú chốt, báo user tình hình mới — không bao giờ đè lên vé người khác",
+    "expected_zones": {
+      "vn-split": "TÁCH: đọc sơ đồ là GIAO DỊCH RIÊNG — nhả khóa ngay tức khắc, user cứ từ từ suy nghĩ",
+      "vn-mem": "NHỚ: ghi lại version của từng dòng mình định sửa — con số đó là ảnh chụp của mình về cái ghế",
+      "vn-check": "CHỐT ATOMIC: một giao dịch duy nhất — so version hiện tại với số đã nhớ, khớp thì update + version tăng 1",
+      "vn-abort": "LỆCH: abort toàn bộ cú chốt, báo user tình hình mới — không bao giờ đè lên vé người khác"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 NGHI THỨC 4 BƯỚC KHẮC XONG: tách giao dịch → nhớ version → so-và-tăng atomic → trượt thì báo lại. Khối \"giữ khóa S suốt lúc nghĩ\" là BỊA — và là câu sách mắng thẳng nhất cả chương: a very bad idea. 5 phút \"có là bao\" nhân với 50.000 khán giả là cả đêm mở bán sập tiệm; chưa kể người giữ khóa có khi đã bỏ đi ăn phở. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "vn-split": "Bước 1 — sách cấm transaction nào \"span a user interaction\". Vậy cú đọc đứng chung hay đứng riêng?",
+      "vn-mem": "Bước 2 — buông hết khóa rồi, lấy gì lát nữa làm bằng chứng \"ghế chưa đổi chủ\"?",
+      "vn-check": "Bước 3 — nghi thức hai-bước-một-khối: so gì, rồi tăng gì? Vì sao không được hở khe ở giữa?",
+      "vn-abort": "Bước 4 — WHERE version=7 trúng 0 dòng. Hủy một phần hay hủy toàn bộ? Rồi nói gì với user?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #61 — điền nốt biên bản đặt ghế:</strong> hồ sơ cú chốt hụt của bạn đêm chung kết — 3 ô trống chờ con số và phán quyết.",
+    "challenge_type": "fill_blank",
+    "template": "-- HO SO DAT GHE — GameHub Arena, chung ket Esports\n-- luat 18.9.3: doc = giao dich rieng (nha khoa ngay)\n--              chot = UPDATE ... WHERE version = <so da doc> (atomic)\n\n-- 12:00:00  ban doc ghe C4: trong · version = 7\n-- 12:04:00  MythicSlayer88 chot C4 truoc (ghi + tang version)\n--   version cua C4 gio la: ____\n\n-- 12:04:30  ban bam CHOT: UPDATE ... WHERE seat='C4' AND version=7\n--   so dong trung: ____\n\n-- phan quyet cho cu chot cua ban (COMMIT/ABORT): ____",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "? version",
+        "expected": "8"
+      },
+      {
+        "id": "b2",
+        "hint": "? dòng",
+        "expected": "0"
+      },
+      {
+        "id": "b3",
+        "hint": "COMMIT / ABORT",
+        "expected": "ABORT"
+      }
+    ],
+    "schema": {
+      "table_name": "seats — hàng C lúc 12:04:30",
+      "columns": [
+        {
+          "name": "seat_id",
+          "type": "VARCHAR",
+          "key": "PK"
+        },
+        {
+          "name": "status",
+          "type": "",
+          "key": ""
+        },
+        {
+          "name": "version",
+          "type": "công-tơ đổi chủ",
+          "key": "🔢"
+        }
+      ],
+      "data": [
+        [
+          "C3",
+          "đã bán",
+          "2"
+        ],
+        [
+          "C4",
+          "ĐÃ BÁN (Mythic, 12:04)",
+          "❓ (7 + 1)"
+        ],
+        [
+          "C5",
+          "trống",
+          "3"
+        ],
+        [
+          "C6",
+          "đã bán",
+          "5"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đúng cú chốt hụt bạn vừa xem trong sim — giờ tự tay điền biên bản: version sau cú ghi của Mythic, số dòng lệnh UPDATE của bạn trúng, và phán quyết. Ba con số này là toàn bộ linh hồn của 18.9.3.",
+      "real_world": "Biên bản này chính là log bạn sẽ đọc khi Hibernate ném OptimisticLockException hay API trả 412 Precondition Failed: version kỳ vọng, version thực tế, 0 rows affected → abort + mời làm lại. Đọc được nó là debug được mọi hệ đặt chỗ.",
+      "steps": [
+        "Mỗi cú ghi thành công làm version TĂNG 1 — Mythic ghi lên ghế đang v=7.",
+        "UPDATE của bạn lọc WHERE version=7 — bảng còn dòng nào thỏa không?",
+        "Luật bước 4: trúng 0 dòng → hủy toàn bộ cú chốt.",
+        "Điền 8 / 0 / ABORT."
+      ],
+      "hint_explore": "Panel trái là hàng C lúc 12:04:30 — ô ❓ của C4 đã gợi sẵn phép tính.",
+      "expected": "8 · 0 · ABORT"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Nghi thức ghi: update + version TĂNG 1. Mythic ghi lên ghế version 7 — công-tơ nhảy tới đâu?"
+      },
+      {
+        "level": 2,
+        "text": "Lệnh của bạn đòi version=7 — trong bảng còn dòng C4 nào mang số 7 nữa không? Đếm đi."
+      },
+      {
+        "level": 3,
+        "text": "Trúng 0 dòng = ảnh chụp của bạn đã cũ. Luật bước 4 phán gì?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: 8 · 0 · ABORT."
+      }
+    ],
+    "success_message": "TICKET #61 ĐÓNG — và đó là mảnh ghép CUỐI CÙNG của Trading Floor! 🏆 MARKETPLACE v2.0 xuất xưởng: khóa S/X, 2PL, wait-for graph, cây intention, bẫy lá index, bàn nháp optimistic, sổ version MVCC, bùa FOR UPDATE, và cái ghế tự nhớ đời mình — mười bài, một sàn giao dịch sống sót được 50.000 người cùng bấm. Hồ sơ chót bên dưới: DEGREE-TWO & CURSOR STABILITY — thế giới thật đôi khi cố tình nới luật. Nghỉ tay một ván — Module 9 mở màn bằng tiếng RẦM: máy chủ sập giữa đêm flash-sale. RECOVERY. 💥",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_degree_two"
+  ]
+}

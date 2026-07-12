@@ -1,0 +1,930 @@
+{
+  "id": "db_02",
+  "index": 2,
+  "title": "Composite, Multivalued & Derived Attributes",
+  "subtitle": "Cột phức hợp · thuộc tính nhiều giá trị · cột dẫn xuất",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 22,
+  "xp_reward": 50,
+  "project_piece": "🧬 Mở khóa \"Hệ thống Hồ sơ Người chơi\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #02",
+    "hook": "GameHub mở đăng ký thành viên — <strong>500 người chơi</strong> ùa vào. Nhưng form cũ lưu địa chỉ vào <em>1 ô text dài</em>: marketing muốn gửi ưu đãi cho \"người chơi ở Tokyo\" mà đành… đọc tay từng dòng. Tệ hơn, có người điền sẵn <code>tuổi</code> — sang năm là sai hết. Ticket này giao bạn thiết kế lại hồ sơ: cột nào nên <strong>tách nhỏ</strong>, cột nào nên <strong>tách bảng</strong>, cột nào <strong>đừng lưu mà hãy tính</strong>?"
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "player_profile",
+      "columns": [
+        "p_id",
+        "username",
+        "address_city",
+        "address_dist",
+        "birth_year"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "DragonLord",
+          "Tokyo",
+          "Akihabara",
+          "2005"
+        ],
+        [
+          "8",
+          "NoobMaster",
+          "Seattle",
+          "Bellevue",
+          "2010"
+        ],
+        [
+          "9",
+          "GG_WellPlayed",
+          "Hanoi",
+          "Cau Giay",
+          "1999"
+        ],
+        [
+          "10",
+          "ShadowBlade",
+          "Seoul",
+          "Gangnam",
+          "2003"
+        ],
+        [
+          "11",
+          "PixelQueen",
+          "Osaka",
+          "Namba",
+          "2008"
+        ],
+        [
+          "12",
+          "CriticalHit",
+          "Hanoi",
+          "Dong Da",
+          "2001"
+        ],
+        [
+          "13",
+          "SpeedRunner",
+          "Busan",
+          "Haeundae",
+          "2006"
+        ],
+        [
+          "14",
+          "MageLord",
+          "Tokyo",
+          "Shibuya",
+          "2000"
+        ],
+        [
+          "15",
+          "LootGoblin",
+          "Saigon",
+          "Quan 1",
+          "2004"
+        ],
+        [
+          "16",
+          "FrostByte",
+          "Seoul",
+          "Hongdae",
+          "2007"
+        ],
+        [
+          "17",
+          "IronWolf",
+          "Hanoi",
+          "Tay Ho",
+          "1998"
+        ],
+        [
+          "18",
+          "NightOwl",
+          "Kyoto",
+          "Gion",
+          "2002"
+        ],
+        [
+          "19",
+          "BladeDancer",
+          "Busan",
+          "Seomyeon",
+          "2009"
+        ],
+        [
+          "20",
+          "ArcaneFox",
+          "Saigon",
+          "Quan 3",
+          "2005"
+        ],
+        [
+          "21",
+          "ThunderGod",
+          "Tokyo",
+          "Ikebukuro",
+          "2003"
+        ],
+        [
+          "22",
+          "SilentArrow",
+          "Hanoi",
+          "Cau Giay",
+          "2011"
+        ],
+        [
+          "23",
+          "RuneMaster",
+          "Osaka",
+          "Umeda",
+          "1997"
+        ],
+        [
+          "24",
+          "VortexGamer",
+          "Seoul",
+          "Itaewon",
+          "2006"
+        ],
+        [
+          "25",
+          "EmberKnight",
+          "Saigon",
+          "Thu Duc",
+          "2008"
+        ],
+        [
+          "26",
+          "ZenMonk",
+          "Kyoto",
+          "Arashiyama",
+          "2001"
+        ],
+        [
+          "27",
+          "CyberNinja",
+          "Tokyo",
+          "Akihabara",
+          "2010"
+        ],
+        [
+          "28",
+          "GhostReaper",
+          "Busan",
+          "Gwangalli",
+          "2004"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Thợ tách thuộc tính",
+    "desc": "composite · multivalued · derived"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Composite Attribute = cột ghép từ nhiều cột nhỏ (vd: address = city + district)",
+        "Multivalued = 1 thuộc tính có NHIỀU giá trị (vd 1 người chơi nhiều platform PS5/Xbox/PC) → KHÔNG nhét 1 ô, phải TÁCH BẢNG riêng",
+        "Derived Attribute = cột KHÔNG lưu, hệ thống tự tính khi truy vấn (vd: age = currentYear - birthYear)",
+        "Dùng AS để đặt tên cột ảo cho giá trị dẫn xuất"
+      ],
+      "intro": "Trong ER diagram, một thuộc tính có thể là <strong>Composite</strong> (gồm nhiều mảnh: address = city + district + street), <strong>Multivalued</strong> (nhiều giá trị: 1 người chơi chơi PS5 + Xbox + PC) hoặc <strong>Derived</strong> (tính toán từ thuộc tính khác: age = currentYear - birthYear). Khi chuyển sang bảng vật lý, ta <em>tách</em> composite thành nhiều cột độc lập, <em>không lưu</em> derived — chỉ tính khi SELECT. Loại thứ ba: <strong>Multivalued</strong> — 1 người chơi có thể chơi trên NHIỀU platform. Không thể nhét \"PS5, Xbox, PC\" vào 1 ô (vi phạm tính nguyên tử). Trong ER vẽ <strong>ellipse đôi</strong>; map sang bảng quan hệ → TÁCH thành bảng riêng <code>player_platform(p_id, platform)</code>.",
+      "example": "Bảng <code class=\"code\">player_profile</code> dưới đây đã tách address thành <code>address_city</code> + <code>address_dist</code>. Cột <code>age</code> KHÔNG tồn tại vật lý — sẽ được tính bằng <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code>. Multivalued platforms → tách bảng <code>player_platform(p_id, platform)</code>, mỗi platform 1 dòng."
+    },
+    "intro": "Điều gì xảy ra khi 1 khách hàng đăng ký tài khoản và bạn cần lưu <strong>địa chỉ</strong>? Ghi thành 1 cột dài \"<code>Q1, Nguyễn Huệ, HCM</code>\"? Hay tách thành <code>city</code>, <code>district</code>, <code>street</code>? Câu trả lời quyết định tốc độ query 100 lần. Bài này dạy <strong>Composite</strong> + <strong>Derived</strong> attribute.",
+    "concept_cards": [
+      {
+        "icon": "fa-puzzle-piece",
+        "title": "Composite Attribute",
+        "body": "Giống <strong>địa chỉ nhà</strong> bạn điền form: số nhà, đường, quận, thành phố. Mỗi mảnh là 1 thông tin riêng. Database ghép lại thành cột <code>address</code> nhưng <em>nên tách thành 4 cột</em> để query \"tìm theo quận\" cực nhanh."
+      },
+      {
+        "icon": "fa-layer-group",
+        "title": "Multivalued — nhiều giá trị",
+        "body": "1 người chơi nhiều platform (PS5, Xbox, PC). KHÔNG nhét list vào 1 ô (vi phạm 1NF). ER: <strong>ellipse đôi</strong>. Map sang bảng → tách bảng riêng <code>player_platform(p_id, platform)</code>, mỗi platform 1 dòng. (Cầu nối tới bài 1NF + bảng trung gian.)"
+      },
+      {
+        "icon": "fa-calculator",
+        "title": "Derived Attribute",
+        "body": "Như <strong>tuổi của bạn</strong> — không ai hỏi mẹ sinh năm nào rồi ghi vào sổ; chỉ cần biết năm sinh, ai cũng tự tính. <code>age = 2026 - birth_year</code>. DB <em>không lưu</em>, chỉ tính khi SELECT với <code>AS</code>."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Thử lưu địa chỉ <code>'Q1, HCM'</code> trong 1 ô rồi tìm \"ai ở Quận 1\" — chịu! Tách <code>address_city</code> + <code>address_dist</code> mới lọc theo quận được. Còn <code>age</code>? Đừng lưu — sinh nhật tới là sai; tính <code>2026 - birth_year</code> ngay lúc SELECT."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "er",
+        "width": 600,
+        "height": 240,
+        "entities": [
+          {
+            "name": "player_profile",
+            "columns": [
+              {
+                "name": "p_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "username",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "address_city",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "address_dist",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "birth_year",
+                "type": "INT",
+                "derived": true,
+                "note": "age"
+              }
+            ]
+          }
+        ],
+        "note": "address = composite (city + dist) · age = derived (KHÔNG lưu)"
+      },
+      "schema": {
+        "table_name": "player_profile",
+        "columns": [
+          {
+            "name": "p_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👤"
+          },
+          {
+            "name": "address_city",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🏙️"
+          },
+          {
+            "name": "address_dist",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🏘️"
+          },
+          {
+            "name": "birth_year",
+            "type": "INT",
+            "key": "",
+            "icon": "🎂"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "7",
+          "DragonLord",
+          "Tokyo",
+          "Akihabara",
+          "2005"
+        ],
+        [
+          "8",
+          "NoobMaster",
+          "Seattle",
+          "Bellevue",
+          "2010"
+        ],
+        [
+          "9",
+          "GG_WellPlayed",
+          "Hanoi",
+          "Cau Giay",
+          "1999"
+        ],
+        [
+          "10",
+          "ShadowBlade",
+          "Seoul",
+          "Gangnam",
+          "2003"
+        ],
+        [
+          "11",
+          "PixelQueen",
+          "Osaka",
+          "Namba",
+          "2008"
+        ],
+        [
+          "12",
+          "CriticalHit",
+          "Hanoi",
+          "Dong Da",
+          "2001"
+        ],
+        [
+          "13",
+          "SpeedRunner",
+          "Busan",
+          "Haeundae",
+          "2006"
+        ],
+        [
+          "14",
+          "MageLord",
+          "Tokyo",
+          "Shibuya",
+          "2000"
+        ],
+        [
+          "15",
+          "LootGoblin",
+          "Saigon",
+          "Quan 1",
+          "2004"
+        ],
+        [
+          "16",
+          "FrostByte",
+          "Seoul",
+          "Hongdae",
+          "2007"
+        ],
+        [
+          "17",
+          "IronWolf",
+          "Hanoi",
+          "Tay Ho",
+          "1998"
+        ],
+        [
+          "18",
+          "NightOwl",
+          "Kyoto",
+          "Gion",
+          "2002"
+        ],
+        [
+          "19",
+          "BladeDancer",
+          "Busan",
+          "Seomyeon",
+          "2009"
+        ],
+        [
+          "20",
+          "ArcaneFox",
+          "Saigon",
+          "Quan 3",
+          "2005"
+        ],
+        [
+          "21",
+          "ThunderGod",
+          "Tokyo",
+          "Ikebukuro",
+          "2003"
+        ],
+        [
+          "22",
+          "SilentArrow",
+          "Hanoi",
+          "Cau Giay",
+          "2011"
+        ],
+        [
+          "23",
+          "RuneMaster",
+          "Osaka",
+          "Umeda",
+          "1997"
+        ],
+        [
+          "24",
+          "VortexGamer",
+          "Seoul",
+          "Itaewon",
+          "2006"
+        ],
+        [
+          "25",
+          "EmberKnight",
+          "Saigon",
+          "Thu Duc",
+          "2008"
+        ],
+        [
+          "26",
+          "ZenMonk",
+          "Kyoto",
+          "Arashiyama",
+          "2001"
+        ],
+        [
+          "27",
+          "CyberNinja",
+          "Tokyo",
+          "Akihabara",
+          "2010"
+        ],
+        [
+          "28",
+          "GhostReaper",
+          "Busan",
+          "Gwangalli",
+          "2004"
+        ]
+      ]
+    },
+    "mission": "Lấy <code>username</code>, 2 mảnh địa chỉ (city + dist) và cột ảo <code>age</code> của người chơi <code>p_id = 7</code> — kéo thả khối lệnh (bao gồm cả cụm tính toán) xuống dưới ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Thuộc tính Composite (Phức hợp) là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cột được lưu nhiều giá trị ngăn cách bằng dấu phẩy",
+            "correct": false,
+            "explanation": "Sai — đó là multivalued attribute, không phải composite. Multivalue = NHIỀU giá trị riêng biệt; composite = 1 giá trị chia nhỏ được thành nhiều sub-attribute có ý nghĩa."
+          },
+          {
+            "id": "b",
+            "text": "Thuộc tính có thể tách thành nhiều thuộc tính nhỏ hơn (vd: address → city + district)",
+            "correct": true,
+            "explanation": "Đúng — composite có thể phân rã thành nhiều thuộc tính nhỏ hơn có ý nghĩa độc lập. address = street + city + district + zip_code, mỗi phần dùng query riêng được."
+          },
+          {
+            "id": "c",
+            "text": "Cột được mã hóa để bảo mật",
+            "correct": false,
+            "explanation": "Sai — composite không liên quan đến bảo mật. Mã hóa là encryption, là attribute khác (encrypted vs plain)."
+          },
+          {
+            "id": "d",
+            "text": "Cột có giá trị NULL mặc định",
+            "correct": false,
+            "explanation": "Sai — composite có thể có giá trị hoặc NULL. NULL mặc định không phải đặc trưng — composite nói về CẤU TRÚC phân rã được, không nói về giá trị."
+          }
+        ]
+      },
+      {
+        "question": "Thuộc tính <strong>multivalued</strong> (1 người chơi nhiều platform) khi map sang bảng quan hệ thì làm sao?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nhét tất cả vào 1 ô, cách nhau dấu phẩy",
+            "correct": false,
+            "explanation": "Sai — vi phạm tính nguyên tử (1NF). 1 ô = 1 giá trị."
+          },
+          {
+            "id": "b",
+            "text": "Tách thành bảng riêng, mỗi giá trị 1 dòng (vd player_platform)",
+            "correct": true,
+            "explanation": "Đúng — multivalued → bảng riêng (p_id, platform)."
+          },
+          {
+            "id": "c",
+            "text": "Thêm cột platform1, platform2, platform3...",
+            "correct": false,
+            "explanation": "Sai — số platform không cố định; thêm cột cứng nhắc, lãng phí, vẫn sai chuẩn."
+          },
+          {
+            "id": "d",
+            "text": "Không lưu được",
+            "correct": false,
+            "explanation": "Sai — lưu được, chỉ cần tách bảng đúng cách."
+          }
+        ]
+      },
+      {
+        "question": "Tại sao KHÔNG lưu cột <code>age</code> trong bảng mà tính mỗi lần truy vấn?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì cột age quá ngắn, không đáng lưu",
+            "correct": false,
+            "explanation": "Sai — age chỉ 4 bytes (INT). Kích thước không phải lý do. Hàng triệu row × 4 bytes vẫn không đáng kể."
+          },
+          {
+            "id": "b",
+            "text": "Vì age thay đổi theo thời gian — lưu sẽ phải cập nhật liên tục, dễ sai",
+            "correct": true,
+            "explanation": "Đúng — age = derived attribute từ (current_date - birth_year). Lưu age = phải UPDATE mỗi năm (cron job) → dễ stale, sai logic. Tính lúc query = luôn đúng với current_date."
+          },
+          {
+            "id": "c",
+            "text": "Vì age không phải số nguyên",
+            "correct": false,
+            "explanation": "Sai — age = INT (3 bytes). Hoàn toàn lưu được. Lý do không liên quan kiểu dữ liệu."
+          },
+          {
+            "id": "d",
+            "text": "Vì age là khóa chính",
+            "correct": false,
+            "explanation": "Sai — age không thể là PK (2 user cùng tuổi). PK phải unique + not null. age vi phạm cả 2."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Nối thuộc tính → loại",
+      "instruction": "Mỗi thuộc tính thuộc loại nào? Click ô trái rồi click ô phải tương ứng.",
+      "xp": 20,
+      "pairs": [
+        {
+          "left": "address = city + district + street",
+          "leftId": "a1",
+          "rightId": "r1",
+          "right": {
+            "id": "r1",
+            "label": "Composite"
+          }
+        },
+        {
+          "left": "age = 2026 - birth_year",
+          "leftId": "a2",
+          "rightId": "r2",
+          "right": {
+            "id": "r2",
+            "label": "Derived"
+          }
+        },
+        {
+          "left": "student_name (1 giá trị đơn)",
+          "leftId": "a3",
+          "rightId": "r3",
+          "right": {
+            "id": "r3",
+            "label": "Simple"
+          }
+        },
+        {
+          "left": "phones = [0901, 0902, 0903]",
+          "leftId": "a4",
+          "rightId": "r4",
+          "right": {
+            "id": "r4",
+            "label": "Multivalued"
+          }
+        }
+      ],
+      "solution": {
+        "a1": "r1",
+        "a2": "r2",
+        "a3": "r3",
+        "a4": "r4"
+      }
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "username",
+        "slot": "col-1"
+      },
+      {
+        "type": "col",
+        "token": "address_city",
+        "slot": "col-2"
+      },
+      {
+        "type": "col",
+        "token": "address_dist",
+        "slot": "col-3"
+      },
+      {
+        "type": "fn",
+        "token": "(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age",
+        "slot": "col-4"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "player_profile",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "p_id",
+        "slot": "wcol"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op"
+      },
+      {
+        "type": "val",
+        "token": "7",
+        "slot": "val"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , ____ , ____ , ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE p_id = 7;",
+    "reveal_hints": {
+      "select-line": "SELECT 4 thứ: <strong>username</strong>, 2 mảnh địa chỉ (<strong>address_city</strong>, <strong>address_dist</strong>), và cụm tính tuổi (<strong>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</strong>).",
+      "from-line": "FROM bảng <strong>player_profile</strong>.",
+      "where-line": "WHERE chốt đúng 1 người: <strong>p_id = 7</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — thay vì 1 người, liệt kê <strong>MỌI người chơi ở Tokyo</strong> kèm cột ảo <code>age</code>, sắp xếp <strong>già → trẻ</strong> (<code>ORDER BY age DESC</code>).",
+    "starter": "-- Tính username + 2 mảnh địa chỉ + cột ảo age\n-- AS dùng để đặt tên cột ảo\nSELECT username, address_city, address_dist, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age\n  FROM player_profile\n WHERE p_id = 7;",
+    "schema": {
+      "table_name": "player_profile",
+      "columns": [
+        {
+          "name": "p_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "address_city",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "address_dist",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "birth_year",
+          "type": "INT",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "7",
+          "DragonLord",
+          "Tokyo",
+          "Akihabara",
+          "2005"
+        ],
+        [
+          "8",
+          "NoobMaster",
+          "Seattle",
+          "Bellevue",
+          "2010"
+        ],
+        [
+          "9",
+          "GG_WellPlayed",
+          "Hanoi",
+          "Cau Giay",
+          "1999"
+        ],
+        [
+          "10",
+          "ShadowBlade",
+          "Seoul",
+          "Gangnam",
+          "2003"
+        ],
+        [
+          "11",
+          "PixelQueen",
+          "Osaka",
+          "Namba",
+          "2008"
+        ],
+        [
+          "12",
+          "CriticalHit",
+          "Hanoi",
+          "Dong Da",
+          "2001"
+        ],
+        [
+          "13",
+          "SpeedRunner",
+          "Busan",
+          "Haeundae",
+          "2006"
+        ],
+        [
+          "14",
+          "MageLord",
+          "Tokyo",
+          "Shibuya",
+          "2000"
+        ],
+        [
+          "15",
+          "LootGoblin",
+          "Saigon",
+          "Quan 1",
+          "2004"
+        ],
+        [
+          "16",
+          "FrostByte",
+          "Seoul",
+          "Hongdae",
+          "2007"
+        ],
+        [
+          "17",
+          "IronWolf",
+          "Hanoi",
+          "Tay Ho",
+          "1998"
+        ],
+        [
+          "18",
+          "NightOwl",
+          "Kyoto",
+          "Gion",
+          "2002"
+        ],
+        [
+          "19",
+          "BladeDancer",
+          "Busan",
+          "Seomyeon",
+          "2009"
+        ],
+        [
+          "20",
+          "ArcaneFox",
+          "Saigon",
+          "Quan 3",
+          "2005"
+        ],
+        [
+          "21",
+          "ThunderGod",
+          "Tokyo",
+          "Ikebukuro",
+          "2003"
+        ],
+        [
+          "22",
+          "SilentArrow",
+          "Hanoi",
+          "Cau Giay",
+          "2011"
+        ],
+        [
+          "23",
+          "RuneMaster",
+          "Osaka",
+          "Umeda",
+          "1997"
+        ],
+        [
+          "24",
+          "VortexGamer",
+          "Seoul",
+          "Itaewon",
+          "2006"
+        ],
+        [
+          "25",
+          "EmberKnight",
+          "Saigon",
+          "Thu Duc",
+          "2008"
+        ],
+        [
+          "26",
+          "ZenMonk",
+          "Kyoto",
+          "Arashiyama",
+          "2001"
+        ],
+        [
+          "27",
+          "CyberNinja",
+          "Tokyo",
+          "Akihabara",
+          "2010"
+        ],
+        [
+          "28",
+          "GhostReaper",
+          "Busan",
+          "Gwangalli",
+          "2004"
+        ]
+      ]
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần lấy <em>nhiều cột</em> + tính <em>cột ảo</em> từ birth_year → tuổi. Hãy nghĩ: <code>EXTRACT(YEAR FROM CURRENT_DATE) - birth_year</code> cho ra tuổi hiện tại."
+      },
+      {
+        "level": 2,
+        "text": "SELECT 4 cột: <code>username</code>, <code>address_city</code>, <code>address_dist</code>, và cột tính tuổi."
+      },
+      {
+        "level": 3,
+        "text": "Cột ảo tuổi: <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code> — dùng <code>AS</code> để đặt tên."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT username, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE address_city = 'Tokyo' ORDER BY age DESC;</code>"
+      }
+    ],
+    "context": {
+      "scenario": "Bạn quản lý cộng đồng game thủ. Bảng <code>player_profile</code> lưu người chơi kèm địa chỉ đã TÁCH (<code>address_city</code> + <code>address_dist</code> — composite) và <code>birth_year</code>. Tuổi (<code>age</code>) KHÔNG lưu sẵn — phải TÍNH khi truy vấn (derived).",
+      "real_world": "Mọi app hồ sơ đều làm vậy: <strong>Facebook</strong>, <strong>Shopee</strong> lưu <code>ngày sinh</code> chứ không lưu <code>tuổi</code> — tuổi đổi mỗi năm, lưu là sai ngay. Tuổi luôn được <strong>tính lúc hiển thị</strong> (<code>năm nay − năm sinh</code>). Địa chỉ tách tỉnh/quận để lọc \"ai ở Quận 1\" trong mili-giây.",
+      "steps": [
+        "Chọn cột hiển thị: <code>username</code> + cột ảo tuổi.",
+        "Cột ảo tuổi: <code>(EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age</code> — dùng <code>AS</code> đặt tên.",
+        "Lọc theo thành phố: <code>WHERE address_city = 'Tokyo'</code> (nhiều người, không chỉ 1).",
+        "Sắp xếp già → trẻ: <code>ORDER BY age DESC</code>. Run → danh sách người Tokyo kèm tuổi giảm dần."
+      ],
+      "hint_explore": "Chưa biết bảng có ai/cột gì? Gõ <code>SELECT * FROM player_profile</code> rồi <strong>Run</strong> để xem toàn bộ.",
+      "example": {
+        "question": "Ví dụ tương tự — người chơi ở <strong>Hanoi</strong> kèm tuổi, già → trẻ:",
+        "sql": "SELECT username, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE address_city = 'Hanoi' ORDER BY age DESC;",
+        "sample_output": "→ nhiều dòng (username, age) của người Hanoi, tuổi giảm dần"
+      },
+      "expected": "Bảng kết quả nhiều dòng × 2 cột (<code>username, age</code>): người chơi ở Tokyo, tuổi tính từ <code>birth_year</code>, sắp xếp giảm dần. Cột <code>age</code> là ẢO — không tồn tại trong bảng gốc."
+    },
+    "expected_sql": "SELECT username, (EXTRACT(YEAR FROM CURRENT_DATE) - birth_year) AS age FROM player_profile WHERE address_city = 'Tokyo' ORDER BY age DESC;",
+    "success_message": "Tuyệt! Bạn đã nắm Composite (tách cột) + Derived (tính cột ảo với AS). Bài 3 sẽ học cách nối 2 bảng bằng Foreign Key + JOIN.",
+    "xp_reward": 50
+  }
+}

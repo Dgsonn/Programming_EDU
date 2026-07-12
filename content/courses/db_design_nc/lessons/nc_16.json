@@ -1,0 +1,508 @@
+{
+  "id": "nc_16",
+  "index": 16,
+  "title": "Phantom — con ma lọt lưới khóa dòng",
+  "subtitle": "Đếm hai lần ra hai số mà không dòng nào bị đụng: xung đột nằm trên tuple CHƯA TỒN TẠI",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "listings — kho món đang bán (mẫu 6)",
+      "columns": [
+        "listing_id",
+        "item_name",
+        "price"
+      ],
+      "dataRows": [
+        [
+          "3001",
+          "Kiếm gỗ Newbie",
+          "45"
+        ],
+        [
+          "3002",
+          "Giáp rồng Huyền thoại",
+          "12500"
+        ],
+        [
+          "3005",
+          "Khiên gỗ sồi",
+          "80"
+        ],
+        [
+          "3008",
+          "Mũ vải thô",
+          "35"
+        ],
+        [
+          "3011",
+          "Skin Hỏa Long",
+          "790"
+        ],
+        [
+          "3013",
+          "Nhẫn dây thừng",
+          "510"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #57",
+    "hook": "Bot kiểm kê chạy MỘT giao dịch: đếm \"món dưới 100 gem\" đầu phiên ra <strong>3</strong>, cuối phiên đếm lại ra <strong>4</strong>. Soi log muốn lòi mắt: cả 3 dòng bot khóa S còn nguyên si, chẳng ai đụng vào. Thủ phạm không nằm trong 3 dòng đó — nó là dòng <strong>CHƯA TỒN TẠI</strong> lúc bot giăng khóa: seller vừa đăng \"Kiếm gỗ 45 gem\" ngay giữa hai lần đếm. Ticket #57: con ma xuyên qua mọi khóa dòng — vì <em>không thể khóa thứ chưa sinh ra</em>. 👻"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "PREDICATE READ = đọc theo ĐIỀU KIỆN (WHERE price < 100): thứ bạn đụng không chỉ là các dòng tìm thấy, mà cả THÔNG TIN \"bảng đang có những dòng nào thỏa điều kiện\" (sách 18.4.3)",
+        "PHANTOM: T2 chèn (hoặc SỬA giá món khác lọt vào vùng <100) — tuple mới không tồn tại lúc T1 giăng khóa nên tuple-lock MÙ: hai giao dịch không chạm dòng chung nào mà vẫn xung đột — xung đột trên con ma",
+        "Thuốc chữa INDEX-LOCKING: lookup phải khóa S các LÁ index nó đọc; insert/delete/update phải khóa X các lá bị ảnh hưởng — chèn món 45 gem đụng đúng lá [0..100) mà bot đang giữ S → ma bị bắt TRƯỚC khi thành hình"
+      ],
+      "intro": "Kiểm lâm đêm đếm thú trong chuồng: khóa từng chuồng CÓ thú, đếm được 3 con. Nửa đêm ai đó thả thêm một con vào <em>chuồng trống</em> — chuồng ấy có bị khóa đâu, lúc đếm nó đâu có thú! Sáng đếm lại: 4. Không ổ khóa nào bị phá — kẽ hở nằm ở chỗ kiểm lâm khóa CHUỒNG CÓ THÚ, trong khi thứ cần khóa là <strong>tấm sổ ghi \"khu này đang có những chuồng nào có thú\"</strong>.",
+      "example": "T1: <code>SELECT COUNT(*) FROM listings WHERE price &lt; 100</code> → 3, khóa S cả 3 dòng. T2: <code>INSERT Kiếm gỗ 45 gem</code> — dòng mới, X cấp ngay, chẳng vênh ai. T1 đếm lại: <strong>4</strong>. Với index-locking: T1 giữ S trên <strong>lá index [0..100)</strong>; T2 muốn chèn 45 phải X đúng lá đó → <strong>xếp hàng</strong> — hai lần đếm cùng ra 3."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-ghost",
+        "title": "Xung đột trên con ma — theo đúng sách",
+        "body": "T30 đếm <code>count(*)</code> các instructor khoa Physics; T31 chèn Feynman vào Physics. Nếu T30 đếm CÓ Feynman → T31 phải đứng trước trong thứ tự serial; đếm KHÔNG có → T30 đứng trước. Hai giao dịch <strong>không truy cập tuple chung nào mà vẫn xung đột</strong> — trên một <em>phantom tuple</em>. Kiểm soát ở mức tuple sẽ ĐỂ LỌT xung đột này, và schedule không-serializable trót lọt qua mặt hệ thống.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 — Predicate Reads and the Phantom Phenomenon"
+      },
+      {
+        "icon": "fa-leaf",
+        "title": "Index-locking — bẫy ma đặt trên lá",
+        "body": "Mọi bảng phải có ít nhất một index; mọi lookup đi qua index và <strong>khóa S các lá nó đọc</strong>; mọi insert/delete/update phải <strong>khóa X các lá bị ảnh hưởng</strong> (lá chứa search-key trước/sau thao tác). Con ma hết đường: muốn thành hình, nó phải ghi vào đúng cái lá mà predicate read đang giữ — <em>xung đột trên ma biến thành xung đột thật trên lá index</em>. Cái giá: khóa lá thô hơn cần thiết — hai insert vào cùng lá vẫn phải xếp hàng dù chẳng liên quan."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Đặt vé máy bay: bạn search \"còn ghế trống hàng 12\" thấy 2 ghế, chọn 12A — đúng lúc đó hãng NHẢ thêm ghế 12C từ quota đối tác. Search của bạn là predicate read, ghế 12C là con ma. Các DBMS thật xử bằng họ hàng của index-locking (Card D + next-key locking) hoặc bằng snapshot — hồ sơ lớn của bài 18. Gặp bug \"đếm lệch dù chẳng ai sửa dòng cũ\", giờ bạn biết gọi tên nó."
+      }
+    ],
+    "txn_visual": {
+      "eyebrow": "CON MA KIỂM KÊ — COUNT(price<100) · T1 BOT ĐẾM 2 LẦN · T2 SELLER ĐĂNG MÓN 45 GEM",
+      "caption": "Chạy CẢ HAI chế độ: tuple-lock kín từng dòng mà ma vẫn chui (3 → 4); index-locking khóa cái LÁ [0..100) — T2 xếp hàng, hai lần đếm cùng ra 3.",
+      "wallet_label": "🔢 COUNT(price < 100)",
+      "start": 3,
+      "unit": "món",
+      "t1_label": "🤖 T1 — bot kiểm kê (1 giao dịch, đếm 2 lần)",
+      "t2_label": "🛒 T2 — seller đăng món mới",
+      "modes": [
+        {
+          "id": "tuple",
+          "short": "TUPLE-LOCK",
+          "ok": false,
+          "btn": "▶ Chạy kiểu KHÓA TỪNG DÒNG",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "đếm <100 → 3 món · khóa S cả 3 dòng tìm thấy",
+              "note": "Bài 12 dạy gì làm nấy: dòng nào đọc là khóa dòng đó — nghe kín kẽ tuyệt đối."
+            },
+            {
+              "who": "t2",
+              "text": "INSERT Kiếm gỗ · 45 gem → X(dòng MỚI) — GRANT NGAY",
+              "cls": "warn",
+              "note": "Dòng này CHƯA TỒN TẠI lúc T1 giăng lưới — chẳng khóa nào của T1 với tới nó. Con ma vừa chui qua đúng khe đó."
+            },
+            {
+              "who": "t2",
+              "text": "commit — món 45 gem lên sàn",
+              "note": "T2 xong xuôi êm đẹp, không chờ một giây nào."
+            },
+            {
+              "who": "t1",
+              "text": "đếm LẠI trong cùng giao dịch → 4 ?!",
+              "wallet": 4,
+              "cls": "bad",
+              "note": ""
+            }
+          ],
+          "verdict": "❌ Cùng một giao dịch, hai lần đếm: 3 rồi 4 — mà cả 3 dòng T1 khóa còn NGUYÊN. Xung đột nằm trên dòng chưa-tồn-tại: PHANTOM. Khóa dòng nhiều cỡ nào cũng mù với ma."
+        },
+        {
+          "id": "index",
+          "short": "INDEX-LOCKING",
+          "ok": true,
+          "btn": "▶ Chạy kiểu KHÓA LÁ INDEX",
+          "steps": [
+            {
+              "who": "t1",
+              "text": "đếm <100 → 3 món · khóa S LÁ INDEX [0..100)",
+              "note": "Khác biệt duy nhất: T1 khóa luôn tấm sổ \"món dưới 100 nằm đây\" — cái LÁ index nó vừa đọc."
+            },
+            {
+              "who": "t2",
+              "text": "⏳ INSERT 45 gem → phải X(lá [0..100)) → XẾP HÀNG",
+              "cls": "wait",
+              "note": "Muốn chèn món 45, T2 buộc phải sửa ĐÚNG cái lá T1 đang giữ S — vênh → chờ. Ma bị bắt trước khi thành hình."
+            },
+            {
+              "who": "t1",
+              "text": "đếm lại → vẫn 3 ✓",
+              "wallet": 3,
+              "cls": "ok",
+              "note": "Hai lần đếm một con số — serializable thở lại được."
+            },
+            {
+              "who": "t1",
+              "text": "commit → T2 được grant, món 45 lên sàn SAU",
+              "note": ""
+            }
+          ],
+          "verdict": "✓ Index-locking biến xung-đột-trên-ma thành xung đột THẬT trên lá index — T2 chỉ chậm một nhịp, còn sổ kiểm kê thì đúng tuyệt đối."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "Lá index price — bẫy ma nằm đây",
+        "columns": [
+          {
+            "name": "lá [0..100)",
+            "type": "45 · 35 · 80 — T1 giữ S",
+            "key": "🍃"
+          },
+          {
+            "name": "lá [100..1000)",
+            "type": "510 · 790",
+            "key": "🍃"
+          },
+          {
+            "name": "lá [1000..∞)",
+            "type": "12.500",
+            "key": "🍃"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "T1 lookup <100",
+          "S(lá [0..100))",
+          "đọc + giữ tấm sổ",
+          "🔒"
+        ],
+        [
+          "T2 chèn 45 gem",
+          "cần X(lá [0..100))",
+          "vênh S → xếp hàng",
+          "⏳"
+        ],
+        [
+          "T2 chèn 510 gem",
+          "cần X(lá [100..1000))",
+          "lá khác — grant ngay",
+          "✓"
+        ],
+        [
+          "T5 sửa 5.000→80",
+          "cần X(lá [0..100))",
+          "update cũng là ma — cũng bị bẫy",
+          "⏳"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "T1 đã khóa S đủ CẢ 3 dòng nó đếm được — vì sao vẫn không chặn nổi T2 chèn món 45 gem?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì dòng của T2 CHƯA TỒN TẠI lúc T1 giăng khóa — không thể khóa thứ chưa sinh ra; thứ T1 cần khóa là THÔNG TIN \"bảng có những dòng nào thỏa <100\", không phải từng dòng lẻ",
+            "correct": true,
+            "explanation": "Đúng — sách gọi thẳng: khóa các tuple truy cập là CHƯA ĐỦ, phải khóa cả thông tin dùng để TÌM ra chúng. Đó là cánh cửa dẫn tới index-locking."
+          },
+          {
+            "id": "b",
+            "text": "Vì khóa S quá yếu — T1 mà xin X cả 3 dòng thì T2 hết cửa",
+            "correct": false,
+            "explanation": "Sai — X cả 3 dòng cũng vô ích y hệt: dòng thứ 4 của T2 vẫn là dòng MỚI, chẳng nằm trong 3 dòng nào để mà vênh."
+          },
+          {
+            "id": "c",
+            "text": "Vì T2 chạy trước khi lock manager kịp ghi sổ khóa của T1",
+            "correct": false,
+            "explanation": "Sai — không có race nào ở quầy cả: khóa của T1 ghi sổ đầy đủ, chỉ là INSERT của T2 không đụng bất kỳ item nào trong sổ."
+          },
+          {
+            "id": "d",
+            "text": "Vì COUNT(*) là hàm tổng hợp nên không được cấp khóa",
+            "correct": false,
+            "explanation": "Sai — COUNT vẫn đọc từng dòng và khóa bình thường; vấn đề không nằm ở hàm, nằm ở chỗ tập-dòng-thỏa-điều-kiện có thể PHÌNH sau lưng nó."
+          }
+        ]
+      },
+      {
+        "question": "Index-locking bắt ma bằng cách nào — và cái giá phải trả là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Lookup khóa S các LÁ index nó đọc; insert/update/delete phải X đúng lá bị ảnh hưởng → ma buộc phải đụng lá đang bị giữ. Giá: lá thô hơn dòng — hai insert chẳng liên quan mà chung lá vẫn phải xếp hàng",
+            "correct": true,
+            "explanation": "Đúng cả hai vế — biến xung đột ảo thành xung đột thật trên một data item CÓ THẬT (cái lá), đổi bằng một ít concurrency thừa."
+          },
+          {
+            "id": "b",
+            "text": "Khóa X toàn bộ index từ gốc tới lá trong lúc đếm",
+            "correct": false,
+            "explanation": "Sai — khóa cả index là bản \"relation data-item lock\" mà sách chê low concurrency; index-locking sinh ra chính là để KHÔNG phải làm thế."
+          },
+          {
+            "id": "c",
+            "text": "Cấm INSERT trong giờ chạy báo cáo kiểm kê",
+            "correct": false,
+            "explanation": "Sai — đó là \"giải pháp\" vận hành thủ công, không phải protocol; và update lọt vùng predicate vẫn tạo ma như thường."
+          },
+          {
+            "id": "d",
+            "text": "So sánh hai lần đếm, lệch thì tự động đếm lần ba",
+            "correct": false,
+            "explanation": "Sai — đếm lại không CHẶN được gì, chỉ chứng kiến ma lần nữa; và hai số tình cờ khớp cũng không chứng minh vô ma (ma chèn rồi ma khác xóa)."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Có ma — hay không ma?",
+      "instruction": "T1 đang đếm \"món < 100 gem\". Tình huống nào sinh phantom với nó?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "m1",
+          "label": "T2 CHÈN món mới giá 45"
+        },
+        {
+          "id": "m2",
+          "label": "T2 SỬA giá món 5.000 → 80"
+        },
+        {
+          "id": "m3",
+          "label": "T2 XÓA món giá 12.500"
+        },
+        {
+          "id": "m4",
+          "label": "T1 đọc đúng dòng #3001; T2 sửa #3001"
+        }
+      ],
+      "bins": [
+        {
+          "id": "ma",
+          "label": "CÓ MA 👻"
+        },
+        {
+          "id": "ko",
+          "label": "KHÔNG MA ✓"
+        }
+      ],
+      "solution": {
+        "m1": "ma",
+        "m2": "ma",
+        "m3": "ko",
+        "m4": "ko"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp quy trình bẫy ma 4 bước của index-locking — có MỘT khối bịa (nghe rất chi là \"cẩn thận\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Nhận diện PREDICATE READ: đọc theo điều kiện là đụng cả thông-tin-bảng-có-gì, không chỉ các dòng tìm thấy",
+        "slot": "pt-pred"
+      },
+      {
+        "type": "op",
+        "token": "Đếm xong đếm lại lần nữa để double-check — hai số khớp nhau là chắc chắn không ma",
+        "slot": "pt-x"
+      },
+      {
+        "type": "op",
+        "token": "Gọi tên con ma: dòng MỚI/dòng bị sửa lọt vào vùng điều kiện — tuple-lock không với tới thứ chưa tồn tại",
+        "slot": "pt-ghost"
+      },
+      {
+        "type": "op",
+        "token": "Đặt bẫy trên LÁ: lookup khóa S lá index nó đọc · insert/update/delete phải X lá bị ảnh hưởng",
+        "slot": "pt-leaf"
+      },
+      {
+        "type": "op",
+        "token": "Ma thành xung đột THẬT: kẻ định chèn phải chờ đúng cái lá đang bị giữ — serializable trở lại",
+        "slot": "pt-turn"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "pt-pred",
+        "placeholder": "Bước 1 — nhận diện kiểu đọc gì dễ bị ma ám?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔍",
+          "label": "Predicate read",
+          "sub": "Bước 1",
+          "hint": "WHERE price < 100 đụng nhiều hơn là \"3 dòng tìm thấy\" — nó đụng cả câu hỏi \"bảng CÓ những gì\"."
+        }
+      },
+      {
+        "id": "pt-ghost",
+        "placeholder": "Bước 2 — thủ phạm là ai, chui qua khe nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "👻",
+          "label": "Gọi tên ma",
+          "sub": "Bước 2",
+          "hint": "Cả 3 dòng bị khóa còn nguyên — vậy thứ làm lệch số đếm nằm Ở ĐÂU lúc T1 giăng khóa?"
+        }
+      },
+      {
+        "id": "pt-leaf",
+        "placeholder": "Bước 3 — bẫy đặt lên thứ gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🍃",
+          "label": "Bẫy trên lá",
+          "sub": "Bước 3",
+          "hint": "Muốn khóa \"thông tin tìm dòng\" thì cần một VẬT THẬT đại diện cho nó — B+-tree cho sẵn vật đó."
+        }
+      },
+      {
+        "id": "pt-turn",
+        "placeholder": "Bước 4 — bẫy sập thì chuyện gì xảy ra?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🪤",
+          "label": "Ma hiện hình",
+          "sub": "Bước 4",
+          "hint": "Xung đột \"ảo\" giữa hai kẻ không chạm dòng chung — sau bẫy, nó thành xung đột kiểu gì, trên cái gì?"
+        }
+      }
+    ],
+    "expected_sql": "Nhận diện PREDICATE READ: đọc theo điều kiện là đụng cả thông-tin-bảng-có-gì, không chỉ các dòng tìm thấy Gọi tên con ma: dòng MỚI/dòng bị sửa lọt vào vùng điều kiện — tuple-lock không với tới thứ chưa tồn tại Đặt bẫy trên LÁ: lookup khóa S lá index nó đọc · insert/update/delete phải X lá bị ảnh hưởng Ma thành xung đột THẬT: kẻ định chèn phải chờ đúng cái lá đang bị giữ — serializable trở lại",
+    "expected_zones": {
+      "pt-pred": "Nhận diện PREDICATE READ: đọc theo điều kiện là đụng cả thông-tin-bảng-có-gì, không chỉ các dòng tìm thấy",
+      "pt-ghost": "Gọi tên con ma: dòng MỚI/dòng bị sửa lọt vào vùng điều kiện — tuple-lock không với tới thứ chưa tồn tại",
+      "pt-leaf": "Đặt bẫy trên LÁ: lookup khóa S lá index nó đọc · insert/update/delete phải X lá bị ảnh hưởng",
+      "pt-turn": "Ma thành xung đột THẬT: kẻ định chèn phải chờ đúng cái lá đang bị giữ — serializable trở lại"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẪY MA GIĂNG XONG: nhận diện predicate read → gọi tên ma → khóa lá index → ma hiện hình thành xung đột thật. Khối \"đếm lại double-check\" là BỊA — chính vụ 3 rồi 4 cho thấy đếm lại chỉ CHỨNG KIẾN ma chứ không chặn; mà hai số khớp cũng chẳng chứng minh vô ma. Còn giải pháp khóa-đúng-VỊ-NGỮ tuyệt đối chính xác? Có thật, mà đắt vô đối — hồ sơ Predicate Locking chờ sau bài. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "pt-pred": "Bước 1 — câu đếm của bot khác gì câu \"đọc dòng #3001\"? Nó đụng vào thứ gì RỘNG hơn các dòng tìm thấy?",
+      "pt-ghost": "Bước 1 chốt: predicate read đụng cả \"bảng có gì\". Vậy kẻ làm lệch số đếm TỒN TẠI chưa, lúc T1 giăng khóa?",
+      "pt-leaf": "Ma không khóa được — nhưng đường nó PHẢI ĐI QUA thì khóa được. Trong B+-tree, món 45 gem buộc phải ghi vào đâu?",
+      "pt-turn": "Bẫy đặt xong. Giờ T2 muốn chèn thì đụng thứ gì của T1 — và xung đột này còn là \"ảo\" nữa không?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #57 — tự tay giăng predicate read:</strong> gõ đúng câu kiểm kê của bot — đếm số món giá <strong>dưới 100 gem</strong> trong bảng <code>listings</code>. (Đây chính là câu SELECT COUNT mà mọi vụ phantom trong sách xoay quanh.)",
+    "challenge_type": "full_ide",
+    "expected_sql": "SELECT COUNT(*) FROM listings WHERE price < 100;",
+    "schema": {
+      "table_name": "listings",
+      "columns": [
+        {
+          "name": "listing_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "item_name",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "price",
+          "type": "INT (gem)",
+          "key": "🔑 idx_price"
+        }
+      ],
+      "data": [
+        [
+          "3001",
+          "Kiếm gỗ Newbie",
+          "45"
+        ],
+        [
+          "3002",
+          "Giáp rồng Huyền thoại",
+          "12500"
+        ],
+        [
+          "3005",
+          "Khiên gỗ sồi",
+          "80"
+        ],
+        [
+          "3008",
+          "Mũ vải thô",
+          "35"
+        ],
+        [
+          "3011",
+          "Skin Hỏa Long",
+          "790"
+        ],
+        [
+          "3013",
+          "Nhẫn dây thừng",
+          "510"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Bạn vừa học cả bài về việc câu đếm này NGUY HIỂM thế nào khi chạy đồng thời — giờ tự tay viết nó. COUNT(*) gom mọi dòng đậu WHERE về một con số; predicate <code>price < 100</code> chính là \"vùng săn ma\" mà index-locking sẽ khóa lá.",
+      "real_world": "Câu này chạy hằng đêm trong mọi hệ kiểm kê thật. Ở isolation mặc định (read committed), hai lần chạy trong một giao dịch VẪN có thể lệch số — đúng con ma bài này; muốn kín phải lên serializable hoặc tựa vào snapshot (bài 18).",
+      "steps": [
+        "Đếm số dòng → SELECT COUNT(*).",
+        "Nguồn: FROM listings.",
+        "Vùng điều kiện: WHERE price < 100.",
+        "Chạy thử — kho mẫu 6 món, đúng 3 món dưới 100."
+      ],
+      "hint_explore": "Panel schema bên trái: cột price có 🔑 idx_price — chính cái index mà bài này đặt bẫy lá lên.",
+      "expected": "SELECT COUNT(*) FROM listings WHERE price < 100;"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần MỘT CON SỐ, không phải danh sách dòng — hàm gom nào đếm số dòng?"
+      },
+      {
+        "level": 2,
+        "text": "COUNT(*) đứng ở vị trí cột trong SELECT; nguồn là bảng listings."
+      },
+      {
+        "level": 3,
+        "text": "Vùng săn ma: giá dưới 100 — mệnh đề WHERE viết sao?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: SELECT COUNT(*) FROM listings WHERE price < 100;"
+      }
+    ],
+    "success_message": "TICKET #57 ĐÓNG — 3 món, đếm chuẩn từng con ma! 👻 Hồ sơ đọc thêm bên dưới: PREDICATE LOCKING — khóa thẳng vào VỊ NGỮ, chính xác tuyệt đối mà đắt vô đối. Và từ bài sau, Trading Floor đổi hẳn trường phái: thay vì khóa-rồi-chờ, để giao dịch chạy TỰ DO rồi soát lúc nộp bài — OPTIMISTIC CONCURRENCY: read → validate → write. Dân read-heavy mê nó như điếu đổ. 🏁",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_predicate_locking"
+  ]
+}

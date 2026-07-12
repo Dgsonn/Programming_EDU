@@ -1,0 +1,447 @@
+{
+  "id": "tc_02",
+  "index": 2,
+  "title": "Functions & Stored Procedures — gói việc vào database",
+  "subtitle": "delete_user(uid): một lệnh CALL, trọn quy trình, đúng thứ tự FK",
+  "module": 4,
+  "module_title": "Advanced SQL",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "users",
+      "columns": [
+        "user_id",
+        "username",
+        "country",
+        "joined_at"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "minhkiller",
+          "VN",
+          "2026-05-20"
+        ],
+        [
+          "9",
+          "yuki_sama",
+          "JP",
+          "2026-05-21"
+        ],
+        [
+          "12",
+          "toxic_lord",
+          "VN",
+          "2026-05-25"
+        ],
+        [
+          "15",
+          "sara_gg",
+          "US",
+          "2026-06-01"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #22",
+    "hook": "Community vừa nóng máy thì luật sư gửi email: user <code>toxic_lord</code> yêu cầu <strong>xóa vĩnh viễn tài khoản</strong> — quyền được lãng quên. Dev xóa tay: <code>users</code> trước → FK chặn đứng; xóa thiếu bảng → comment mồ côi lơ lửng. Ticket #22: gói cả quy trình vào <em>một thủ tục delete_user(uid)</em> nằm ngay trong database — gọi 1 lệnh, sạch đúng thứ tự, không sót gì."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "FUNCTION trả về GIÁ TRỊ — gọi được ngay trong SELECT như một cột",
+        "PROCEDURE là GÓI HÀNH ĐỘNG — gọi bằng CALL, chạy tuần tự nhiều lệnh",
+        "Xóa dữ liệu có FK: bảng CON sạch trước, bảng CHA (users) xóa cuối cùng"
+      ],
+      "intro": "Đến giờ mọi logic nằm ở backend — nhưng có những việc database tự làm tốt hơn: gom quy trình nhiều bước thành <strong>một đơn vị đặt tên được</strong>, chạy trọn trong database, mọi app (web, mobile, admin tool) gọi chung một cửa. <strong>Function</strong> = máy tính toán trả kết quả; <strong>Procedure</strong> = quy trình hành động. Cả hai được lưu NGAY TRONG schema — vì thế gọi là <em>stored</em>.",
+      "example": "SQL: <code>CREATE PROCEDURE delete_user(uid INT) LANGUAGE SQL AS $$ DELETE ...; DELETE ...; $$;</code> — sau đó mọi nơi chỉ cần <code>CALL delete_user(12);</code>"
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-scale-balanced",
+        "title": "Function ≠ Procedure",
+        "body": "<strong>Function</strong> nhận tham số, TRẢ VỀ giá trị — dùng trong SELECT như biểu thức: <code>SELECT username, count_posts(user_id) FROM users</code>. <strong>Procedure</strong> không cần trả gì — nó LÀM: gom nhiều lệnh, gọi bằng <code>CALL</code>.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 5.2 — Functions and Procedures"
+      },
+      {
+        "icon": "fa-warehouse",
+        "title": "Vì sao để logic TRONG database?",
+        "body": "Một quy trình <code>delete_user</code> duy nhất — web, mobile, tool admin gọi CHUNG, không app nào tự chế bản riêng rồi quên bước (đúng bài học \"1 nguồn chân lý\" từ Ticket #03). Bonus: chạy sát dữ liệu, đỡ nhiều vòng round-trip mạng."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Xóa user 12 phải sạch MẤY bảng? <code>comments</code> của hắn <em>và comment của người khác trên POST của hắn</em> (<code>post_id IN (SELECT ...)</code>), rồi <code>posts</code>, cuối cùng mới <code>users</code>. Sai thứ tự → FK chặn; sót bảng → dữ liệu mồ côi."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "users",
+        "columns": [
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👤"
+          },
+          {
+            "name": "country",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🌍"
+          },
+          {
+            "name": "joined_at",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "7",
+          "minhkiller",
+          "VN",
+          "2026-05-20"
+        ],
+        [
+          "9",
+          "yuki_sama",
+          "JP",
+          "2026-05-21"
+        ],
+        [
+          "12",
+          "toxic_lord",
+          "VN",
+          "2026-05-25"
+        ],
+        [
+          "15",
+          "sara_gg",
+          "US",
+          "2026-06-01"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Khác biệt CỐT LÕI giữa <code>FUNCTION</code> và <code>PROCEDURE</code>?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Function TRẢ VỀ giá trị nên gọi được ngay trong SELECT; Procedure là gói hành động, gọi bằng CALL",
+            "correct": true,
+            "explanation": "Đúng — function = biểu thức tính toán (dùng trong SELECT), procedure = quy trình nhiều lệnh (CALL riêng)."
+          },
+          {
+            "id": "b",
+            "text": "Procedure chạy nhanh hơn Function",
+            "correct": false,
+            "explanation": "Sai — tốc độ không phải điểm phân biệt; khác nhau ở TRẢ VỀ giá trị hay THỰC THI hành động."
+          },
+          {
+            "id": "c",
+            "text": "Function phải viết bằng Java, Procedure bằng SQL",
+            "correct": false,
+            "explanation": "Sai — cả hai viết được bằng SQL/PLpgSQL (và nhiều ngôn ngữ khác). Đừng nhầm với JDBC ở Ticket #21."
+          },
+          {
+            "id": "d",
+            "text": "Procedure không được chứa câu SQL nào",
+            "correct": false,
+            "explanation": "Sai — ngược lại: procedure tồn tại để GOM nhiều câu SQL thành một quy trình."
+          }
+        ]
+      },
+      {
+        "question": "Trong <code>delete_user</code>, vì sao phải DELETE <code>comments</code>/<code>posts</code> TRƯỚC rồi mới DELETE <code>users</code>?",
+        "options": [
+          {
+            "id": "a",
+            "text": "FK từ bảng con trỏ vào users — xóa cha trước sẽ bị chặn (hoặc để lại dòng mồ côi)",
+            "correct": true,
+            "explanation": "Đúng — posts.user_id và comments.user_id trỏ vào users: cha chỉ được xóa khi không còn ai tham chiếu."
+          },
+          {
+            "id": "b",
+            "text": "Vì bảng users to nhất nên để xóa cuối cho đỡ chậm",
+            "correct": false,
+            "explanation": "Sai — kích thước không liên quan; ràng buộc khóa ngoại mới là lý do."
+          },
+          {
+            "id": "c",
+            "text": "Thứ tự nào cũng được — database tự sắp xếp lại",
+            "correct": false,
+            "explanation": "Sai — database KHÔNG đảo thứ tự lệnh trong procedure; sai thứ tự là lỗi FK ngay."
+          },
+          {
+            "id": "d",
+            "text": "Vì comments được tạo trước users về mặt thời gian",
+            "correct": false,
+            "explanation": "Sai — thời điểm tạo bảng không liên quan; quan hệ FK con→cha quyết định thứ tự xóa."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Function hay Procedure?",
+      "instruction": "Mỗi tình huống dưới đây nên viết thành FUNCTION hay PROCEDURE?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "c1",
+          "label": "count_posts(uid) — trả về SỐ bài viết, dùng ngay trong SELECT"
+        },
+        {
+          "id": "c2",
+          "label": "delete_user(uid) — gom 3 lệnh DELETE chạy tuần tự"
+        },
+        {
+          "id": "c3",
+          "label": "account_age(joined_at) — trả về số ngày từ khi tham gia"
+        },
+        {
+          "id": "c4",
+          "label": "nightly_cleanup() — xóa post spam rồi ghi log, gọi bằng CALL"
+        }
+      ],
+      "bins": [
+        {
+          "id": "fn",
+          "label": "FUNCTION — trả về giá trị",
+          "correct": "fn"
+        },
+        {
+          "id": "proc",
+          "label": "PROCEDURE — gói hành động",
+          "correct": "proc"
+        }
+      ],
+      "solution": {
+        "c1": "fn",
+        "c2": "proc",
+        "c3": "fn",
+        "c4": "proc"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Luật sư đang chờ xác nhận. Đóng gói quy trình xóa thành <code>delete_user(uid)</code> — lắp các mảnh theo đúng thứ tự FK: con sạch trước, cha xóa cuối.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "CREATE PROCEDURE delete_user(uid INT) LANGUAGE SQL AS $$",
+        "slot": "proc-head"
+      },
+      {
+        "type": "op",
+        "token": "DELETE FROM users WHERE user_id = uid;",
+        "slot": "del-users"
+      },
+      {
+        "type": "op",
+        "token": "DELETE FROM comments WHERE user_id = uid OR post_id IN (SELECT post_id FROM posts WHERE user_id = uid);",
+        "slot": "del-comments"
+      },
+      {
+        "type": "op",
+        "token": "DELETE FROM posts WHERE user_id = uid;",
+        "slot": "del-posts"
+      },
+      {
+        "type": "kw",
+        "token": "$$;",
+        "slot": "proc-end"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "proc-head",
+        "placeholder": "CREATE PROCEDURE ____",
+        "accepts": [
+          "kw"
+        ],
+        "acceptedKeywords": [
+          "CREATE"
+        ],
+        "multi": false
+      },
+      {
+        "id": "del-1",
+        "placeholder": "DELETE thứ nhất — bảng không bị ai trỏ vào",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "del-2",
+        "placeholder": "DELETE thứ hai — con đã sạch thì tới lượt nó",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "del-3",
+        "placeholder": "DELETE cuối — bảng gốc",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "proc-end",
+        "placeholder": "đóng thân procedure ____",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      }
+    ],
+    "expected_sql": "CREATE PROCEDURE delete_user(uid INT) LANGUAGE SQL AS $$ DELETE FROM comments WHERE user_id = uid OR post_id IN (SELECT post_id FROM posts WHERE user_id = uid); DELETE FROM posts WHERE user_id = uid; DELETE FROM users WHERE user_id = uid; $$;",
+    "expected_zones": {
+      "proc-head": "CREATE PROCEDURE delete_user(uid INT) LANGUAGE SQL AS $$",
+      "del-1": "DELETE FROM comments WHERE user_id = uid OR post_id IN (SELECT post_id FROM posts WHERE user_id = uid);",
+      "del-2": "DELETE FROM posts WHERE user_id = uid;",
+      "del-3": "DELETE FROM users WHERE user_id = uid;",
+      "proc-end": "$$;"
+    },
+    "reveal_hints": {
+      "proc-head": "Mở đầu bằng khai báo: <strong>CREATE PROCEDURE delete_user(uid INT) LANGUAGE SQL AS $$</strong>.",
+      "del-1": "Nhìn FK: <code>comments</code> trỏ vào cả <code>posts</code> lẫn <code>users</code> — nhưng KHÔNG AI trỏ vào nó. Nhớ xóa cả comment trên post của user (mảnh có <code>IN</code>).",
+      "del-2": "<code>comments</code> sạch rồi thì <code>posts</code> hết bị trỏ vào — xóa được.",
+      "del-3": "<code>users</code> là gốc bị mọi bảng trỏ vào — chỉ xóa khi các con đã sạch.",
+      "proc-end": "Đóng thân: <strong>$$;</strong>"
+    }
+  },
+  "step_4": {
+    "prompt": "Procedure là HÀNH ĐỘNG — giờ viết chiều ngược lại: một <strong>FUNCTION trả về giá trị</strong>. Trang hồ sơ cần <code>count_posts(uid)</code> đếm số bài của một user để gọi thẳng trong SELECT. Dùng cú pháp SQL-standard (Postgres 14+): <code>CREATE FUNCTION … RETURNS INT RETURN (truy vấn);</code>",
+    "starter": "-- Trang hồ sơ cần: count_posts(uid) -> INT\n-- Khung: CREATE FUNCTION ten(tham_so KIEU) RETURNS kieu RETURN (truy van);\nCREATE FUNCTION ____(uid INT) RETURNS ____\n  RETURN (SELECT ____ FROM posts WHERE ____);\n",
+    "schema": {
+      "table_name": "posts",
+      "columns": [
+        {
+          "name": "post_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FK"
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "key": ""
+        },
+        {
+          "name": "created_at",
+          "type": "DATE",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "501",
+          "7",
+          "Elden Ring DLC ra rồi anh em ơi!",
+          "2026-06-01"
+        ],
+        [
+          "502",
+          "9",
+          "Tìm team leo rank tối nay",
+          "2026-06-01"
+        ],
+        [
+          "503",
+          "7",
+          "Review tay cầm mới mua ở GameHub",
+          "2026-06-02"
+        ],
+        [
+          "504",
+          "12",
+          "Ai cày Hades 2 điểm danh",
+          "2026-06-03"
+        ],
+        [
+          "505",
+          "9",
+          "Setup góc chơi game 15 triệu",
+          "2026-06-04"
+        ],
+        [
+          "506",
+          "15",
+          "Mẹo farm rune nhanh gấp đôi",
+          "2026-06-05"
+        ],
+        [
+          "507",
+          "7",
+          "GuildBoard sập, mọi người qua đây",
+          "2026-06-06"
+        ],
+        [
+          "508",
+          "9",
+          "Top 5 game indie tháng này",
+          "2026-06-07"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT user_id, COUNT(*) AS count_posts FROM posts WHERE user_id = 7 GROUP BY user_id;",
+    "context": {
+      "scenario": "Trang hồ sơ gọi <code>SELECT username, count_posts(user_id) FROM users</code> — hàm của bạn chạy cho TỪNG dòng users. Viết một lần, mọi màn hình dùng chung, đổi cách đếm chỉ sửa 1 chỗ.",
+      "real_world": "Các hệ lớn đặt hàm đếm/tính điểm ngay trong DB để <strong>mọi ngôn ngữ backend</strong> (Java, Python, Go) nhận cùng một con số — không còn cảnh mỗi service tự đếm một kiểu rồi lệch nhau.",
+      "steps": [
+        "Khai tên + tham số: <code>CREATE FUNCTION count_posts(uid INT)</code>.",
+        "Khai kiểu trả về: <code>RETURNS INT</code>.",
+        "Thân = 1 biểu thức: <code>RETURN (SELECT COUNT(*) FROM posts WHERE user_id = uid);</code>",
+        "Đối chiếu: user 7 (minhkiller) đang có 3 bài — hàm phải trả 3."
+      ],
+      "hint_explore": "Đếm thử bằng tay trước: <code>SELECT * FROM posts</code> rồi Run — đếm số dòng có user_id = 7.",
+      "expected": "Khung kết quả minh họa <code>count_posts(7)</code>: 1 dòng (user_id 7, count_posts 3). Engine demo không chạy được CREATE — đáp án chấm khi Run/Submit."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cấu trúc: <code>CREATE FUNCTION tên(tham_số KIỂU) RETURNS kiểu RETURN (truy vấn);</code> — thân hàm là MỘT biểu thức SELECT trong ngoặc."
+      },
+      {
+        "level": 2,
+        "text": "Tên <code>count_posts</code>, trả về <code>INT</code>. Truy vấn bên trong đếm bài: <code>COUNT(*)</code>."
+      },
+      {
+        "level": 3,
+        "text": "Lọc theo THAM SỐ, không phải số cụ thể: <code>WHERE user_id = uid</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">CREATE FUNCTION count_posts(uid INT) RETURNS INT RETURN (SELECT COUNT(*) FROM posts WHERE user_id = uid);</code>"
+      }
+    ],
+    "expected_sql": "CREATE FUNCTION count_posts(uid INT) RETURNS INT RETURN (SELECT COUNT(*) FROM posts WHERE user_id = uid);",
+    "success_message": "Ticket #22 đóng! Quy trình xóa giờ là MỘT lệnh CALL — luật sư hài lòng. Ticket #23: nút ❤ sắp lên sóng, và feed sẽ khựng nếu bạn không dạy database tự phản ứng.",
+    "xp_reward": 120
+  }
+}

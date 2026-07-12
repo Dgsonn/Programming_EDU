@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 from db import get_db
@@ -186,6 +186,28 @@ def enroll(course_id):
                ON CONFLICT (user_id, course_id) DO NOTHING''',
             (uid, course_id, first_lesson)
         )
+        # Re-enroll sau khi unenroll: lesson_progress (nguồn thật) vẫn giữ tiến độ
+        # cũ — tính lại cache để dashboard không hiển thị 0% sai.
+        done_row = conn.execute(
+            '''SELECT COUNT(*) AS n,
+                      COALESCE(SUM(COALESCE(l.estimated_minutes, 15)), 0) AS minutes
+               FROM lesson_progress lp
+               JOIN lessons l ON l.id = lp.lesson_id
+               WHERE lp.user_id=%s AND lp.course_id=%s AND lp.status='completed' ''',
+            (uid, course_id)
+        ).fetchone()
+        if done_row['n']:
+            total = conn.execute(
+                'SELECT lessons FROM courses WHERE id=%s', (course_id,)
+            ).fetchone()['lessons'] or 0
+            done     = done_row['n']
+            progress = min(100, round(done * 100 / total)) if total else 0
+            conn.execute(
+                'UPDATE enrollments SET completed_lessons=%s, progress=%s, time_spent=%s '
+                'WHERE user_id=%s AND course_id=%s',
+                (done, progress, str(round(done_row['minutes'] / 60, 1)) + 'h',
+                 uid, course_id)
+            )
         conn.commit()
     finally:
         conn.close()
@@ -235,7 +257,7 @@ def rate_course():
                VALUES (%s, %s, %s, %s)
                ON CONFLICT (user_id, course_id)
                DO UPDATE SET rating = EXCLUDED.rating, created_at = EXCLUDED.created_at''',
-            (uid, course_id, rating, datetime.utcnow().isoformat())
+            (uid, course_id, rating, datetime.now(timezone.utc).isoformat())
         )
         conn.commit()
     finally:
@@ -265,124 +287,6 @@ def get_course_rating(course_id):
     return jsonify({'average': average, 'count': row['rating_count']})
 
 
-_MOCK_SKILLS = [
-    {
-        'id': 'python-core', 'title': 'Python Core', 'icon': '🐍',
-        'skills': [
-            {
-                'id': 'py-syntax', 'title': 'Cú pháp cơ bản',
-                'sub_skills': [
-                    {'title': 'Biến và kiểu dữ liệu', 'done': True},
-                    {'title': 'Toán tử và biểu thức', 'done': True},
-                    {'title': 'Chuỗi (string)', 'done': True},
-                    {'title': 'List, Tuple, Dict, Set', 'done': True},
-                ],
-            },
-            {
-                'id': 'py-control', 'title': 'Cấu trúc điều khiển',
-                'sub_skills': [
-                    {'title': 'if / elif / else', 'done': True},
-                    {'title': 'Vòng lặp for & while', 'done': True},
-                    {'title': 'break / continue', 'done': False},
-                    {'title': 'List comprehension', 'done': False},
-                ],
-            },
-            {
-                'id': 'py-func', 'title': 'Hàm & Module',
-                'sub_skills': [
-                    {'title': 'Định nghĩa và gọi hàm', 'done': True},
-                    {'title': '*args / **kwargs', 'done': False},
-                    {'title': 'Lambda & decorator', 'done': False},
-                    {'title': 'Import module', 'done': False},
-                ],
-            },
-            {
-                'id': 'py-oop', 'title': 'Lập trình hướng đối tượng',
-                'sub_skills': [
-                    {'title': 'Class & Object', 'done': False},
-                    {'title': 'Kế thừa (inheritance)', 'done': False},
-                    {'title': 'Đa hình (polymorphism)', 'done': False},
-                    {'title': 'Dunder methods', 'done': False},
-                ],
-            },
-        ],
-    },
-    {
-        'id': 'web-dev', 'title': 'Phát triển Web', 'icon': '🌐',
-        'skills': [
-            {
-                'id': 'html5', 'title': 'HTML5',
-                'sub_skills': [
-                    {'title': 'Cấu trúc tài liệu HTML', 'done': True},
-                    {'title': 'Thẻ semantic', 'done': True},
-                    {'title': 'Form & input', 'done': True},
-                    {'title': 'Web Accessibility', 'done': False},
-                ],
-            },
-            {
-                'id': 'css3', 'title': 'CSS3',
-                'sub_skills': [
-                    {'title': 'Box model & selectors', 'done': True},
-                    {'title': 'Flexbox', 'done': True},
-                    {'title': 'CSS Grid', 'done': True},
-                    {'title': 'Animation & transition', 'done': False},
-                ],
-            },
-            {
-                'id': 'responsive', 'title': 'Responsive Design',
-                'sub_skills': [
-                    {'title': 'Media queries', 'done': True},
-                    {'title': 'Mobile-first approach', 'done': False},
-                    {'title': 'Fluid typography', 'done': False},
-                ],
-            },
-        ],
-    },
-    {
-        'id': 'java-core', 'title': 'Java Core', 'icon': '☕',
-        'skills': [
-            {
-                'id': 'java-basics', 'title': 'Java cơ bản',
-                'sub_skills': [
-                    {'title': 'Kiểu dữ liệu nguyên thủy', 'done': False},
-                    {'title': 'Mảng & chuỗi', 'done': False},
-                    {'title': 'Vòng lặp & điều kiện', 'done': False},
-                ],
-            },
-            {
-                'id': 'java-oop', 'title': 'OOP với Java',
-                'sub_skills': [
-                    {'title': 'Class & Interface', 'done': False},
-                    {'title': 'Abstract class', 'done': False},
-                    {'title': 'Collections Framework', 'done': False},
-                ],
-            },
-        ],
-    },
-    {
-        'id': 'algorithms', 'title': 'Thuật toán & CTDL', 'icon': '⚙️',
-        'skills': [
-            {
-                'id': 'algo-basic', 'title': 'Thuật toán cơ bản',
-                'sub_skills': [
-                    {'title': 'Sắp xếp (Bubble, Selection, Insertion)', 'done': True},
-                    {'title': 'Tìm kiếm nhị phân', 'done': True},
-                    {'title': 'Đệ quy', 'done': False},
-                    {'title': 'Độ phức tạp Big-O', 'done': False},
-                ],
-            },
-            {
-                'id': 'data-struct', 'title': 'Cấu trúc dữ liệu',
-                'sub_skills': [
-                    {'title': 'Stack & Queue', 'done': True},
-                    {'title': 'Linked List', 'done': False},
-                    {'title': 'Tree & Graph', 'done': False},
-                    {'title': 'Hash Table', 'done': False},
-                ],
-            },
-        ],
-    },
-]
 
 
 def _calc_progress(sub_skills):
@@ -392,28 +296,69 @@ def _calc_progress(sub_skills):
     return round(done * 100 / len(sub_skills))
 
 
+# Icon hiển thị cho skill set theo course (trang Kỹ năng)
+_SKILL_SET_ICONS = {'db_design': '🏗️', 'db_design_tc': '🌐', 'db_design_nc': '⚙️'}
+
+
 @courses_bp.route('/api/skills', methods=['GET'])
 @api_login_required
 def get_skills():
+    """Kỹ năng THẬT gắn với user (2026-07-09, thay _MOCK_SKILLS):
+    skill set = khóa học · skill = module · sub_skill = bài học.
+    'done' đọc từ lesson_progress của chính user (JOIN theo user_id) —
+    metadata bài/module seed sẵn trong bảng lessons (db/lessons_seed.py)."""
+    uid = current_user_id()
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            '''SELECT l.course_id, l.module, l.title, l.sort_order,
+                      c.title AS course_title,
+                      (lp.status = 'completed') AS done
+               FROM lessons l
+               JOIN courses c ON c.id = l.course_id
+               LEFT JOIN lesson_progress lp
+                      ON lp.lesson_id = l.id AND lp.user_id = %s
+               WHERE l.module <> '' AND l.module IS NOT NULL
+               ORDER BY l.course_id, l.sort_order''',
+            (uid,)
+        ).fetchall()
+    finally:
+        conn.close()
+
+    # Gom course → module → bài (dict giữ thứ tự insert = sort_order)
+    sets = {}
+    for r in rows:
+        cid = r['course_id']
+        st = sets.setdefault(cid, {
+            'id': cid,
+            'title': r['course_title'],
+            'icon': _SKILL_SET_ICONS.get(cid, '📘'),
+            '_modules': {},
+        })
+        st['_modules'].setdefault(r['module'], []).append(
+            {'title': 'Bài ' + str(r['sort_order']) + ': ' + r['title'], 'done': bool(r['done'])}
+        )
+
     result = []
-    for bk in _MOCK_SKILLS:
+    for st in sets.values():
         skills_out = []
-        for sk in bk['skills']:
-            prog = _calc_progress(sk['sub_skills'])
+        for m_idx, (m_title, subs) in enumerate(st['_modules'].items(), 1):
             skills_out.append({
-                'id': sk['id'],
-                'title': sk['title'],
-                'progress': prog,
-                'sub_skills': sk['sub_skills'],
+                'id': st['id'] + '-m' + str(m_idx),
+                'title': m_title,
+                'progress': _calc_progress(subs),
+                'sub_skills': subs,
             })
-        total_subs = sum(len(sk['sub_skills']) for sk in bk['skills'])
-        done_subs  = sum(s['done'] for sk in bk['skills'] for s in sk['sub_skills'])
-        overall    = round(done_subs * 100 / total_subs) if total_subs else 0
+        total_subs = sum(len(sk['sub_skills']) for sk in skills_out)
+        done_subs  = sum(s['done'] for sk in skills_out for s in sk['sub_skills'])
         result.append({
-            'id': bk['id'],
-            'title': bk['title'],
-            'icon': bk['icon'],
-            'progress': overall,
+            'id': st['id'],
+            'title': st['title'],
+            'icon': st['icon'],
+            'progress': round(done_subs * 100 / total_subs) if total_subs else 0,
             'skills': skills_out,
         })
+    # Cơ bản → Trung cấp → Nâng cao
+    order = {'db_design': 0, 'db_design_tc': 1, 'db_design_nc': 2}
+    result.sort(key=lambda s: order.get(s['id'], 99))
     return jsonify({'skill_sets': result})

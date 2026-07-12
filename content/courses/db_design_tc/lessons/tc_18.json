@@ -1,0 +1,377 @@
+{
+  "id": "tc_18",
+  "index": 18,
+  "title": "B+-Tree — cái cây sống trong mọi index",
+  "subtitle": "2 triệu khóa, cao đúng 3 tầng — và những chiếc lá móc nhau cân luôn range query",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "idx_users_email — B+-Tree 3 tầng (mỗi ô = 1 trang 8KB)",
+      "columns": [
+        "tầng",
+        "node",
+        "chứa gì"
+      ],
+      "dataRows": [
+        [
+          "1 · ROOT",
+          "1 trang",
+          "ngưỡng chia: \"h…\" | \"s…\" — chỉ đường xuống"
+        ],
+        [
+          "2 · INTERNAL",
+          "~100 trang",
+          "ngưỡng chia mịn hơn: \"j…\" | \"mai…\" | \"p…\""
+        ],
+        [
+          "3 · LEAF",
+          "~25.000 trang",
+          "khóa ĐÃ XẾP + RID — và móc sang lá kế →"
+        ],
+        [
+          "(sổ chính)",
+          "25.000 trang",
+          "heap: nơi RID trỏ về"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #38",
+    "hook": "Câu hỏi xoáy cuối Ticket #37 vẫn treo đó: mục lục email tự nó cũng 2 TRIỆU mục — chẳng lẽ tra mục lục lại phải… quét mục lục? Ticket #38 mở nắp capo: mọi index bạn từng CREATE đều là một <strong>B+-Tree</strong> — cây phân tầng mà mỗi node là MỘT TRANG chứa hàng trăm ngưỡng chia. Root hỏi một câu, internal hỏi câu nữa, tầng ba đã là lá chứa đáp án. Và những chiếc lá <em>móc tay nhau</em> — bí mật giúp index cân luôn câu hỏi \"từ ngày X đến ngày Y\"."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "B+-Tree: root → internal → leaf; mỗi node = 1 trang chứa HÀNG TRĂM khóa (fanout lớn)",
+        "Cao 3-4 tầng cho hàng triệu khóa → tra 1 khóa = 3-4 lần đọc trang, mãi mãi",
+        "Lá chứa khóa đã xếp + RID, và MÓC sang lá kế → range scan đi ngang, khỏi leo lại cây"
+      ],
+      "intro": "Đừng tưởng tượng cây gia phả lèo tèo 2 nhánh — node của B+-Tree là MỘT TRANG 8KB (Ticket #31) nhét được hàng trăm ngưỡng chia. Tra <code>mai@ghub.vn</code>: ROOT nói \"m nằm giữa h và s → nhánh giữa\"; INTERNAL nói \"xuống lá 812\"; LÁ 812 mở ra — khóa xếp sẵn, <code>mai@… → RID(8112, 4)</code>. Ba lần đọc trang, xong. Vì mỗi tầng NHÂN hàng trăm lần sức chứa, 100³ đã là một tỷ — cây triệu khóa vẫn lùn tịt. Còn INSERT? Node đầy thì tách đôi, cây tự cân bằng — không ai phải \"chạy lại index\".",
+      "example": "Tra 1 email trong 2M khóa: seq scan mục lục ~25.000 trang · B+-Tree: root + internal + lá = 3 trang. Log₁₀₀ của 2 triệu ≈ 3,05 — con số 3-4 tầng không phải may mắn, nó là toán."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-tree",
+        "title": "Fanout — vì sao cây triệu khóa vẫn lùn",
+        "body": "Node = 1 trang chứa n ngưỡng chia (n hàng trăm) → mỗi tầng nhân n lần số khóa với tới được. Chiều cao ~log_n(N): với n=100, một tỷ khóa cũng chỉ cần 4-5 tầng. Root với internal nóng hổi nằm lì trong buffer (Ticket #33) — thực tế thường chỉ tốn 1 lần đọc đĩa cho lá.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — B+-Tree Index Files"
+      },
+      {
+        "icon": "fa-link",
+        "title": "Lá móc nhau — vũ khí của range query",
+        "body": "\"Post từ 01/06 đến 30/06\"? Lần cây tìm lá chứa 01/06 (3 bước), rồi ĐI NGANG theo con trỏ lá-sang-lá, gom khóa đến khi vượt 30/06 thì dừng. Khỏi leo cây lại từ đầu cho từng ngày — lá đã xếp thứ tự và nắm tay nhau sẵn."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Vậy idx_users_email của Ticket #36 thực chất là gì? Một B+-Tree khóa email. Còn feed \"20 post mới nhất\"? B+-Tree trên created_at: lần tới lá mới nhất rồi đi ngược 20 mục. Mọi CREATE INDEX bạn gõ từ giờ — trong đầu hãy thấy một cái cây."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "lookup mai@ghub.vn — 3 lần đọc trang",
+        "columns": [
+          {
+            "name": "ROOT",
+            "type": "\"m\" giữa h và s",
+            "key": "1️⃣",
+            "icon": "🌳"
+          },
+          {
+            "name": "INTERNAL",
+            "type": "→ lá 812",
+            "key": "2️⃣",
+            "icon": "🌿"
+          },
+          {
+            "name": "LEAF 812",
+            "type": "mai@ → RID",
+            "key": "3️⃣",
+            "icon": "🍃"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "h… | s…",
+          "j… | mai… | p…",
+          "mai@ghub.vn → (8112, 4) 🎯"
+        ],
+        [
+          "1 trang",
+          "~100 trang cùng tầng",
+          "lá móc lá kế →"
+        ],
+        [
+          "thường nằm lì trong buffer",
+          "hay trúng buffer",
+          "đọc đĩa thật sự: thường chỉ 1"
+        ],
+        [
+          "INSERT làm node đầy?",
+          "tách đôi node",
+          "cây TỰ cân bằng — không ai phải xây lại"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "2 triệu khóa mà B+-Tree chỉ cao 3 tầng — phép màu nằm ở đâu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mỗi node là 1 TRANG chứa hàng trăm ngưỡng chia — mỗi tầng nhân hàng trăm lần, 100³ đã vượt 2 triệu",
+            "correct": true,
+            "explanation": "Đúng — fanout lớn là toàn bộ phép màu. Cây nhị phân 2 nhánh phải cao ~21 tầng cho 2M khóa; cây trang-8KB chỉ cần 3."
+          },
+          {
+            "id": "b",
+            "text": "Vì database nén 2 triệu khóa xuống còn vài nghìn",
+            "correct": false,
+            "explanation": "Sai — đủ 2 triệu khóa nằm ở lá; chỉ là đường XUỐNG tới chúng rất ngắn."
+          },
+          {
+            "id": "c",
+            "text": "Vì cây được chép toàn bộ vào RAM nên coi như 0 tầng",
+            "correct": false,
+            "explanation": "Sai — root/internal hay trúng buffer thật, nhưng cấu trúc 3 tầng vẫn là 3 tầng; lá vẫn phải đọc."
+          },
+          {
+            "id": "d",
+            "text": "Vì chỉ những khóa hay tra mới được đưa vào cây",
+            "correct": false,
+            "explanation": "Sai — index dense: đủ mọi khóa (Ticket #37). Không ai bị bỏ rơi."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao các LÁ móc nhau (con trỏ lá → lá kế) là vũ khí quyết định cho câu \"posts từ 01/06 đến 30/06\"?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Tìm lá chứa 01/06 xong chỉ việc ĐI NGANG gom dần tới 30/06 — mỗi ngày không phải leo cây lại từ root",
+            "correct": true,
+            "explanation": "Đúng — lá đã xếp thứ tự + nắm tay nhau = range scan thành một đường đi bộ thẳng."
+          },
+          {
+            "id": "b",
+            "text": "Vì con trỏ giúp các lá chia sẻ RAM với nhau",
+            "correct": false,
+            "explanation": "Sai — con trỏ là đường đi, không phải cơ chế chia RAM."
+          },
+          {
+            "id": "c",
+            "text": "Vì lá móc nhau giúp INSERT nhanh hơn",
+            "correct": false,
+            "explanation": "Sai — INSERT hưởng lợi từ cơ chế tách node; móc lá phục vụ ĐỌC DẢI."
+          },
+          {
+            "id": "d",
+            "text": "Không quan trọng — range query nào cũng phải quét cả bảng",
+            "correct": false,
+            "explanation": "Sai — chính nhờ móc lá mà range query KHÔNG phải quét cả bảng."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Range scan tháng 6",
+      "instruction": "Xếp đúng trình tự B+-Tree trả lời \"mọi post từ 01/06 đến 30/06\".",
+      "xp": 20,
+      "items": [
+        {
+          "id": "r1",
+          "label": "Từ ROOT lần ngưỡng chia xuống INTERNAL"
+        },
+        {
+          "id": "r2",
+          "label": "Tới LÁ chứa khóa 01/06 — điểm khởi hành"
+        },
+        {
+          "id": "r3",
+          "label": "Đọc các mục trong lá, theo RID lấy dòng"
+        },
+        {
+          "id": "r4",
+          "label": "Đi ngang sang lá kế qua con trỏ móc"
+        },
+        {
+          "id": "r5",
+          "label": "Gặp khóa vượt 30/06 → dừng, trả kết quả"
+        }
+      ],
+      "solution": {
+        "r1": 1,
+        "r2": 2,
+        "r3": 3,
+        "r4": 4,
+        "r5": 5
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp đường tra \"mai@ghub.vn\" xuyên cây — từ root xuống lá, rồi về sổ chính. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "LÁ 812: khóa xếp sẵn — thấy ngay mục \"mai@ghub.vn → RID (8112, 4)\"",
+        "slot": "bt-leaf"
+      },
+      {
+        "type": "op",
+        "token": "ROOT: \"m…\" nằm giữa ngưỡng \"h…\" và \"s…\" → rẽ nhánh giữa",
+        "slot": "bt-root"
+      },
+      {
+        "type": "op",
+        "token": "Duyệt lần lượt TỪNG LÁ từ trái sang phải cho chắc ăn",
+        "slot": "bt-x"
+      },
+      {
+        "type": "op",
+        "token": "Cầm RID về sổ chính: trang 8112, slot 4 — đọc đúng 1 dòng",
+        "slot": "bt-heap"
+      },
+      {
+        "type": "op",
+        "token": "INTERNAL: so tiếp \"mai…\" với ngưỡng mịn hơn → chỉ xuống lá 812",
+        "slot": "bt-mid"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "bt-root",
+        "placeholder": "Tầng 1 — cửa vào duy nhất",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🌳",
+          "label": "ROOT",
+          "sub": "Hỏi câu đầu",
+          "hint": "Một trang, vài trăm ngưỡng chia — trả lời \"đi nhánh nào?\"."
+        }
+      },
+      {
+        "id": "bt-mid",
+        "placeholder": "Tầng 2 — chỉ đường mịn hơn",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🌿",
+          "label": "INTERNAL",
+          "sub": "Hỏi câu nữa",
+          "hint": "Ngưỡng chia mịn hơn — chốt xuống đúng chiếc lá."
+        }
+      },
+      {
+        "id": "bt-leaf",
+        "placeholder": "Tầng 3 — nơi đáp án nằm",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🍃",
+          "label": "LEAF",
+          "sub": "Khóa + RID",
+          "hint": "Lá chứa khóa ĐÃ XẾP kèm RID — và móc sang lá kế cho range scan."
+        }
+      },
+      {
+        "id": "bt-heap",
+        "placeholder": "Trạm cuối — ra khỏi index",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🏠",
+          "label": "Sổ chính",
+          "sub": "RID trỏ về",
+          "hint": "RID (trang, slot) — đúng địa chỉ nhà của Ticket #34."
+        }
+      }
+    ],
+    "expected_sql": "ROOT: \"m…\" nằm giữa ngưỡng \"h…\" và \"s…\" → rẽ nhánh giữa INTERNAL: so tiếp \"mai…\" với ngưỡng mịn hơn → chỉ xuống lá 812 LÁ 812: khóa xếp sẵn — thấy ngay mục \"mai@ghub.vn → RID (8112, 4)\" Cầm RID về sổ chính: trang 8112, slot 4 — đọc đúng 1 dòng",
+    "expected_zones": {
+      "bt-root": "ROOT: \"m…\" nằm giữa ngưỡng \"h…\" và \"s…\" → rẽ nhánh giữa",
+      "bt-mid": "INTERNAL: so tiếp \"mai…\" với ngưỡng mịn hơn → chỉ xuống lá 812",
+      "bt-leaf": "LÁ 812: khóa xếp sẵn — thấy ngay mục \"mai@ghub.vn → RID (8112, 4)\"",
+      "bt-heap": "Cầm RID về sổ chính: trang 8112, slot 4 — đọc đúng 1 dòng"
+    },
+    "reveal_hints": {
+      "bt-root": "Cửa vào là <strong>ROOT</strong> — so khóa với ngưỡng chia để rẽ nhánh.",
+      "bt-mid": "<strong>INTERNAL</strong> hỏi câu thứ hai, mịn hơn. Khối \"duyệt từng lá\" là bịa — duyệt hết lá chính là seq scan, thứ ta đang chạy trốn.",
+      "bt-leaf": "Đáp án nằm ở <strong>LÁ</strong>: khóa xếp sẵn + RID.",
+      "bt-heap": "RID dẫn <strong>về sổ chính</strong> — đọc đúng 1 trang, 1 dòng."
+    }
+  },
+  "step_4": {
+    "prompt": "Feed cần \"20 post MỚI NHẤT kể từ 2026-06-28\" — bảng posts có B+-Tree trên <code>created_at</code>. Cây giúp kiểu gì?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "Lần từ root xuống lá chứa 2026-06-28 (3-4 trang), rồi đi ngang theo con trỏ lá móc nhau gom đủ 20 post — đọc vài chục trang thay vì cả bảng.",
+        "correct": true
+      },
+      {
+        "text": "B+-Tree vẫn phải đọc đủ 2 triệu mục lá, nhưng đọc trong RAM nên coi như miễn phí.",
+        "correct": false
+      },
+      {
+        "text": "Cây tự xếp lại toàn bộ sổ chính theo created_at mỗi lần có INSERT, nên đọc lúc nào cũng nhanh.",
+        "correct": false
+      },
+      {
+        "text": "Không giúp gì — index chỉ dùng được cho WHERE bằng (=), khoảng ngày thì chịu.",
+        "correct": false
+      }
+    ],
+    "context": {
+      "scenario": "Đây là truy vấn NẶNG NHẤT của mọi mạng xã hội — trang feed. Nó sống được là nhờ đúng hai thứ bạn vừa học: lần cây (điểm khởi hành) + đi ngang lá (gom dải).",
+      "real_world": "Postgres đọc index theo cả hai chiều nên \"mới nhất\" chỉ là đi ngang từ lá cuối ngược về. Cặp <code>ORDER BY created_at DESC LIMIT 20</code> + B+-Tree là xương sống feed của mọi mạng xã hội thật.",
+      "steps": [
+        "Điều kiện ≥ 2026-06-28 là RANGE — nhớ mini-game: tìm lá đầu rồi đi ngang.",
+        "Loại phương án \"đọc đủ 2 triệu mục\": đọc đủ thì cần cây làm gì.",
+        "Loại phương án \"tự xếp lại sổ chính\": đó là chuyện của clustering (Ticket #37), và không ai xếp lại cả bảng mỗi INSERT.",
+        "Loại phương án \"chỉ dùng cho =\": lá móc nhau sinh ra ĐỂ phục vụ khoảng."
+      ],
+      "hint_explore": "Xem lại mini-game range scan tháng 6 — thay 01/06→30/06 bằng 28/06→mới nhất là ra đáp án.",
+      "expected": "Chọn phương án lần-cây-rồi-đi-ngang (3-4 trang + vài chục trang lá)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Câu hỏi là RANGE (từ ngày X trở đi) — vũ khí nào của B+-Tree sinh ra cho range?"
+      },
+      {
+        "level": 2,
+        "text": "Hai bước: lần cây tìm ĐIỂM KHỞI HÀNH, rồi đi ngang theo lá móc nhau."
+      },
+      {
+        "level": 3,
+        "text": "Ba phương án sai đều phạm một lỗi đã học: đọc đủ mọi mục = seq scan; xếp lại sổ mỗi INSERT = phá giá ghi; \"chỉ dùng cho =\" quên mất lá móc nhau."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: lần từ root xuống lá 2026-06-28 rồi đi ngang gom 20 post."
+      }
+    ],
+    "success_message": "Ticket #38 đóng — từ giờ mỗi CREATE INDEX trong đầu bạn là một cái cây 3 tầng. Ticket #39: trang \"hoạt động của tôi\" lọc HAI điều kiện cùng lúc — một cột không đủ, đến giờ học mục lục hai lớp.",
+    "xp_reward": 120
+  }
+}

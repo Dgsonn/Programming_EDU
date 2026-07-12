@@ -1,0 +1,486 @@
+{
+  "id": "nc_09",
+  "index": 9,
+  "title": "Optimizer viết lại query — pushdown, đảo join, né Descartes",
+  "subtitle": "Luật tương đương cho optimizer quyền đảo cây: cùng kết quả, trung gian teo từ 200.000 xuống 71 dòng",
+  "module": 7,
+  "module_title": "Engine Room — Query Processing",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "sellers (2.000 shop ≈ 20 block — bảng bé nhất, mẫu 3)",
+      "columns": [
+        "seller_id",
+        "seller_name",
+        "joined"
+      ],
+      "dataRows": [
+        [
+          "2001",
+          "DragonForge",
+          "2024"
+        ],
+        [
+          "3300",
+          "MysticVault",
+          "2025"
+        ],
+        [
+          "4102",
+          "ShadowTrader (banned)",
+          "2023"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #50",
+    "hook": "Trang \"gian hàng DragonForge\" chậm ì ạch. Dev viết query kiểu thấy sao nối vậy: <code>orders ⋈ listings ⋈ sellers</code> rồi MỚI lọc <code>seller_name = 'DragonForge'</code> ở cuối. DBA được gọi tới… không sửa một chữ SQL nào — chỉ mở EXPLAIN: engine đã <strong>tự viết lại</strong> biểu thức từ đời nào, lọc được đẩy xuống tận đáy. Ticket #50: học bộ luật cho phép optimizer đảo cây mà dám CAM KẾT kết quả y hệt — và con số nó săn lùng từng dòng: <strong>intermediate result</strong>."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Đại số quan hệ có LUẬT TƯƠNG ĐƯƠNG: hai biểu thức khác hình nhưng cam kết cùng tập kết quả — optimizer dựa vào đó để viết lại query, dev không cần xin phép",
+        "Mục tiêu săn lùng là INTERMEDIATE RESULT: σ đẩy xuống sát bảng nguồn (điều kiện đụng bảng nào lọc ngay bảng đó), π cắt cột thừa sớm — tầng trên chỉ khiêng thứ cần khiêng",
+        "Join giao hoán + kết hợp → được ĐẢO thứ tự: xuất phát từ bảng-sau-lọc NHỎ nhất; và tuyệt đối né tích Descartes — ghép 2 bảng không có điều kiện nối là nhân bùng số dòng"
+      ],
+      "intro": "Tìm \"mọi đơn hàng của shop DragonForge\" trong chợ 100.000 đơn. Cách vụng: ghép TẤT CẢ đơn với TẤT CẢ món với TẤT CẢ shop thành một núi giấy, rồi mới soi tên shop — núi trung gian ~200.000 dòng để giữ lại 50. Cách của optimizer: tìm shop TRƯỚC (1 dòng), lần ra 20 món của shop, rồi mới kéo 50 đơn — chưa tầng nào phải khiêng quá trăm dòng. Cùng kết quả, khác nhau là thứ nằm GIỮA các phép toán.",
+      "example": "Mật độ chợ: 40.000 món ÷ 2.000 shop = <strong>20 món/shop</strong> · 100.000 đơn ÷ 40.000 món = <strong>2,5 đơn/món</strong>. Cây sau biến đổi: σ sellers → <strong>1</strong> → ⋈ listings → <strong>20</strong> → ⋈ orders → <strong>50</strong>. Còn lỡ QUÊN điều kiện nối sellers–listings? Tích Descartes 2.000 × 40.000 = <strong>80 TRIỆU</strong> dòng trung gian."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-scale-balanced",
+        "title": "Luật tương đương — giấy phép của optimizer",
+        "body": "Điều kiện lọc chỉ đụng MỘT bảng thì σ được đẩy xuyên qua join xuống sát bảng đó; π được đẩy theo để cắt cột thừa; join đổi chỗ, đổi nhóm thoải mái. Mỗi luật là một phép biến hình <strong>bảo toàn kết quả</strong> — ví dụ trong sách: lọc khoa Music đẩy xuống trước khi ⋈ teaches, y đúc bài toán DragonForge của ta.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 16.2.1-16.2.2 — Equivalence Rules & Examples of Transformations"
+      },
+      {
+        "icon": "fa-arrow-down-1-9",
+        "title": "Join order & cú né Descartes",
+        "body": "Cùng 3 bảng có nhiều cách xếp lịch ghép — optimizer chọn lịch cho trung gian NHỎ nhất: xuất phát từ bảng-sau-lọc bé nhất (sellers còn 1 dòng) rồi mới lan ra. Và luật sắt: hai bảng KHÔNG có điều kiện nối thì đừng ghép trực tiếp — sellers × listings trần trụi = 80 triệu dòng, chưa kịp lọc đã sập."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Đọc EXPLAIN thấy Filter nằm SÂU dưới đáy dù bạn viết WHERE ở cuối câu — đừng hoảng, đó là pushdown đang làm việc. Nhưng optimizer không phải thánh: nhét điều kiện vào hàm (<code>WHERE UPPER(name)=…</code>) hay OR chằng chịt là nó bó tay không đẩy nổi. Còn câu hỏi treo lơ lửng: nó lấy đâu ra \"1 dòng, 20 món\" khi CHƯA chạy? Bài 10 mở sổ thống kê."
+      }
+    ],
+    "plan_visual": {
+      "query": "SELECT l.item_name, o.total\nFROM sellers s JOIN listings l ON s.seller_id = l.seller_id\n              JOIN orders o ON l.listing_id = o.listing_id\nWHERE s.seller_name = 'DragonForge';",
+      "caption": "Cùng một query — optimizer viết lại cây bên phải: σ tụt xuống đáy, join đảo lại xuất phát từ 1 dòng. Nhìn con số trên các mũi tên: đó chính là intermediate result mà nó săn lùng. (Hóa đơn ms là ước lượng minh họa, gồm cả bảng tạm.)",
+      "price": {
+        "seek_ms": 4,
+        "block_ms": 0.1,
+        "note": "sellers 2.000 ≈ 20 block · listings 40.000 ≈ 400 · orders 100.000 ≈ 1.000 · mật độ 20 món/shop, 2,5 đơn/món."
+      },
+      "trees": [
+        {
+          "name": "Cây VỤNG — như dev viết",
+          "chosen": false,
+          "note": "Join hết 3 bảng rồi mới lọc — hai tầng trung gian ~200.000 dòng",
+          "io": {
+            "access": "seq",
+            "seeks": 10,
+            "blocks": 5400
+          },
+          "nodes": [
+            {
+              "op": "orders ⋈ listings",
+              "kind": "join",
+              "detail": "ghép TOÀN SÀN trước",
+              "rows": "100.000 dòng ghép"
+            },
+            {
+              "op": "⋈ sellers",
+              "kind": "join",
+              "detail": "đèo thêm tên shop cho cả sàn",
+              "rows": "100.000 dòng"
+            },
+            {
+              "op": "σ seller_name = 'DragonForge'",
+              "kind": "filter",
+              "detail": "lọc CUỐI CÙNG mới làm",
+              "rows": "50 đơn"
+            },
+            {
+              "op": "π item_name, total",
+              "kind": "project",
+              "rows": "50 dòng"
+            }
+          ]
+        },
+        {
+          "name": "Sau PUSHDOWN + REORDER",
+          "chosen": true,
+          "note": "✓ Cây EXPLAIN thật — trung gian cả thảy 71 dòng",
+          "io": {
+            "access": "seq",
+            "seeks": 4,
+            "blocks": 1430
+          },
+          "nodes": [
+            {
+              "op": "σ seller_name (sellers)",
+              "kind": "filter",
+              "detail": "lọc TRƯỚC TIÊN — 2.000 shop còn 1",
+              "rows": "1 dòng"
+            },
+            {
+              "op": "⋈ listings",
+              "kind": "join",
+              "detail": "chỉ món của shop này",
+              "rows": "20 món"
+            },
+            {
+              "op": "⋈ orders",
+              "kind": "join",
+              "detail": "chỉ đơn của 20 món đó",
+              "rows": "50 đơn"
+            },
+            {
+              "op": "π item_name, total",
+              "kind": "project",
+              "rows": "50 dòng"
+            }
+          ]
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "Ba bảng của trận này",
+        "columns": [
+          {
+            "name": "sellers",
+            "type": "2.000 shop ≈ 20 block",
+            "key": "σ đậu 1"
+          },
+          {
+            "name": "listings",
+            "type": "40.000 món ≈ 400 block",
+            "key": "20 món/shop"
+          },
+          {
+            "name": "orders",
+            "type": "100.000 đơn ≈ 1.000 block",
+            "key": "2,5 đơn/món"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "cây vụng",
+          "⋈⋈ rồi σ",
+          "trung gian ~200.000 dòng",
+          "~580 ms"
+        ],
+        [
+          "sau biến đổi",
+          "σ rồi ⋈⋈",
+          "trung gian 1 + 20 + 50 = 71 dòng",
+          "~159 ms"
+        ],
+        [
+          "quên điều kiện nối",
+          "sellers × listings",
+          "80.000.000 dòng",
+          "💀"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Optimizer lấy QUYỀN gì mà dám đảo tung cây phép toán do dev viết — không hỏi lấy một câu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Luật tương đương của đại số quan hệ: mỗi phép biến đổi đều được chứng minh bảo toàn tập kết quả — cây khác hình, kết quả CAM KẾT y hệt",
+            "correct": true,
+            "explanation": "Đúng — SQL là ngôn ngữ KHAI BÁO: dev tả thứ mình muốn, còn \"làm thế nào\" thuộc toàn quyền engine, miễn kết quả đúng."
+          },
+          {
+            "id": "b",
+            "text": "Nó chạy thử cả hai cây trên dữ liệu thật rồi giữ cây nhanh hơn",
+            "correct": false,
+            "explanation": "Sai — bài học từ Ticket #42 vẫn nguyên: optimizer cân bằng THỐNG KÊ, không chạy thử; chạy thử cây vụng một lần là đã trả trọn giá đắt rồi."
+          },
+          {
+            "id": "c",
+            "text": "Nó chỉ dám đảo khi hai cây cho kết quả gần giống nhau",
+            "correct": false,
+            "explanation": "Sai — \"gần giống\" không tồn tại trong từ điển này: luật tương đương đòi Y HỆT tuyệt đối, khác một dòng cũng không được dùng."
+          },
+          {
+            "id": "d",
+            "text": "Quyền do dev cấp qua hint trong câu SQL",
+            "correct": false,
+            "explanation": "Sai — hint (ở vài hệ) chỉ là lời khuyên thêm; quyền viết lại có sẵn từ bản chất khai báo của SQL, không cần ai cấp."
+          }
+        ]
+      },
+      {
+        "question": "Dev sửa query, lỡ tay XÓA điều kiện nối giữa sellers và listings. Chuyện gì xảy ra ở tầng ghép đó?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Tích Descartes: MỖI shop ghép với MỌI món — 2.000 × 40.000 = 80 triệu dòng trung gian, chưa kịp lọc đã ngộp",
+            "correct": true,
+            "explanation": "Đúng — thiếu điều kiện nối thì join thành phép NHÂN. Optimizer luôn xếp lịch để né Descartes, còn dev thì đừng tự tạo ra nó."
+          },
+          {
+            "id": "b",
+            "text": "Engine báo lỗi cú pháp ngay, không chạy",
+            "correct": false,
+            "explanation": "Sai — về cú pháp nó HỢP LỆ một cách nguy hiểm: engine sẽ ngoan ngoãn ghép chéo đủ 80 triệu tổ hợp."
+          },
+          {
+            "id": "c",
+            "text": "Optimizer tự đoán điều kiện nối đúng rồi thêm vào",
+            "correct": false,
+            "explanation": "Sai — optimizer chỉ BIẾN ĐỔI tương đương thứ bạn viết; tự bịa thêm điều kiện là đổi kết quả, vượt quyền của nó."
+          },
+          {
+            "id": "d",
+            "text": "Không sao — số dòng vẫn thế, chỉ chậm hơn chút",
+            "correct": false,
+            "explanation": "Sai — join có điều kiện giữ ~1 cặp đúng cho mỗi dòng; bỏ điều kiện là NHÂN số dòng: 80 triệu so với 40.000."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Tay nghề optimizer: biến cây vụng thành cây khôn",
+      "instruction": "Kéo 5 nước biến đổi vào đúng thứ tự.",
+      "xp": 20,
+      "items": [
+        {
+          "id": "r4",
+          "label": "Join tiếp 20 món với orders — trung gian chỉ 50 đơn"
+        },
+        {
+          "id": "r1",
+          "label": "Nhận cây nguyên bản của dev: σ seller_name nằm tít trên đỉnh"
+        },
+        {
+          "id": "r3",
+          "label": "Đảo join order: sellers-đã-lọc (1 dòng) ⋈ listings trước tiên"
+        },
+        {
+          "id": "r5",
+          "label": "π đẩy xuống: chỉ khiêng item_name, total lên các tầng trên"
+        },
+        {
+          "id": "r2",
+          "label": "Đẩy σ seller_name xuyên qua các join, xuống sát bảng sellers"
+        }
+      ],
+      "solution": {
+        "r1": 1,
+        "r2": 2,
+        "r3": 3,
+        "r4": 4,
+        "r5": 5
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Ra 4 nước biến đổi của optimizer cho trận DragonForge — có MỘT khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Chọn điểm xuất phát join: bảng-sau-lọc NHỎ nhất (1 dòng) cầm đầu — trung gian teo theo nó",
+        "slot": "op-order"
+      },
+      {
+        "type": "op",
+        "token": "Đẩy σ seller_name xuyên xuống sát sellers — điều kiện chỉ đụng 1 bảng thì lọc ngay tại bảng đó",
+        "slot": "op-push"
+      },
+      {
+        "type": "op",
+        "token": "Muốn đảo thứ tự join phải xin phép dev — đảo bừa là đổi kết quả trả về",
+        "slot": "op-x"
+      },
+      {
+        "type": "op",
+        "token": "π đẩy xuống: cắt cột thừa ngay từ tầng thấp — tầng trên khỏi khiêng cột không ai cần",
+        "slot": "op-proj"
+      },
+      {
+        "type": "op",
+        "token": "Chỉ ghép cặp bảng CÓ điều kiện nối — thiếu nó là tích Descartes 80 triệu dòng",
+        "slot": "op-cart"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "op-push",
+        "placeholder": "Nước đi 1 — σ đang ngồi trên đỉnh cây, xử sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⬇️",
+          "label": "Đẩy σ xuống",
+          "sub": "Nước đi 1",
+          "hint": "Điều kiện seller_name chỉ dính dáng tới đúng MỘT bảng — vậy chỗ đứng hợp lý của nó ở đâu?"
+        }
+      },
+      {
+        "id": "op-order",
+        "placeholder": "Nước đi 2 — ba bảng, ghép từ đâu trước?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎬",
+          "label": "Chọn join order",
+          "sub": "Nước đi 2",
+          "hint": "Bài 5 dạy outer nhỏ cầm trịch — giờ có một \"bảng\" chỉ còn đúng 1 dòng."
+        }
+      },
+      {
+        "id": "op-proj",
+        "placeholder": "Nước đi 3 — còn cắt gọt được gì nữa?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "✂️",
+          "label": "π cắt cột sớm",
+          "sub": "Nước đi 3",
+          "hint": "σ cắt DÒNG thừa — còn ai chuyên cắt CỘT thừa?"
+        }
+      },
+      {
+        "id": "op-cart",
+        "placeholder": "Nước đi 4 — luật sắt khi xếp lịch ghép?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🚧",
+          "label": "Né Descartes",
+          "sub": "Nước đi 4",
+          "hint": "Hai bảng không có sợi dây nối nào mà ghép trực tiếp thì ra bao nhiêu tổ hợp?"
+        }
+      }
+    ],
+    "expected_sql": "Đẩy σ seller_name xuyên xuống sát sellers — điều kiện chỉ đụng 1 bảng thì lọc ngay tại bảng đó Chọn điểm xuất phát join: bảng-sau-lọc NHỎ nhất (1 dòng) cầm đầu — trung gian teo theo nó π đẩy xuống: cắt cột thừa ngay từ tầng thấp — tầng trên khỏi khiêng cột không ai cần Chỉ ghép cặp bảng CÓ điều kiện nối — thiếu nó là tích Descartes 80 triệu dòng",
+    "expected_zones": {
+      "op-push": "Đẩy σ seller_name xuyên xuống sát sellers — điều kiện chỉ đụng 1 bảng thì lọc ngay tại bảng đó",
+      "op-order": "Chọn điểm xuất phát join: bảng-sau-lọc NHỎ nhất (1 dòng) cầm đầu — trung gian teo theo nó",
+      "op-proj": "π đẩy xuống: cắt cột thừa ngay từ tầng thấp — tầng trên khỏi khiêng cột không ai cần",
+      "op-cart": "Chỉ ghép cặp bảng CÓ điều kiện nối — thiếu nó là tích Descartes 80 triệu dòng"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẠN VỪA RA trọn 4 nước của optimizer: σ tụt đáy → 1 dòng cầm đầu join → π cắt cột sớm → tuyệt không Descartes. Khối \"xin phép dev\" là bịa — luật tương đương CHÍNH LÀ giấy phép: cây đổi hình, kết quả cam kết y hệt, dev thậm chí không hay biết. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "op-push": "Nước đi 1 — cây vụng đang khiêng 100.000 dòng lên tận đỉnh chỉ để vứt gần hết. Điều kiện seller_name vốn chỉ đụng MỘT bảng: nước đi hiển nhiên là gì?",
+      "op-order": "Nước đi 1 chốt: σ nằm sát sellers, 2.000 shop còn đúng 1 dòng. Ba bảng chờ ghép — kẻ nào xứng đáng cầm đầu lịch join?",
+      "op-proj": "Nước đi 2 chốt: 1 dòng cầm trịch, trung gian 20 rồi 50. σ đã cắt DÒNG thừa — còn chiều ngang của bảng thì ai cắt?",
+      "op-cart": "Nước đi 3 chốt: chỉ khiêng 2 cột cần thiết. Nước cuối — treo luật sắt của việc xếp lịch ghép: cặp bảng nào KHÔNG BAO GIỜ được ghép trực tiếp?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #50 — tự làm optimizer:</strong> điền 3 con số intermediate result của cây SAU biến đổi. (Số viết liền, ví dụ <code>20</code>.)",
+    "challenge_type": "fill_blank",
+    "template": "-- QUERY: don cua cac mon thuoc seller 'DragonForge'\n-- MAT DO CHO: 40.000 mon / 2.000 shop = 20 mon/shop\n--             100.000 don / 40.000 mon = 2,5 don/mon\n\n-- CAY SAU PUSHDOWN + REORDER:\nσ seller_name = 'DragonForge' (sellers 2.000 shop)   ->  ____ dong\n⋈ listings   (moi shop trung binh 20 mon)            ->  ____ mon\n⋈ orders     (moi mon trung binh 2,5 don)            ->  ____ don",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "? dòng",
+        "expected": "1"
+      },
+      {
+        "id": "b2",
+        "hint": "? món",
+        "expected": "20"
+      },
+      {
+        "id": "b3",
+        "hint": "? đơn",
+        "expected": "50"
+      }
+    ],
+    "schema": {
+      "table_name": "chợ GameHub — 3 bảng",
+      "columns": [
+        {
+          "name": "sellers",
+          "type": "2.000 shop",
+          "key": "σ tên shop"
+        },
+        {
+          "name": "listings",
+          "type": "40.000 món",
+          "key": "20 món/shop"
+        },
+        {
+          "name": "orders",
+          "type": "100.000 đơn",
+          "key": "2,5 đơn/món"
+        }
+      ],
+      "data": [
+        [
+          "cây vụng",
+          "trung gian ~200.000 dòng",
+          "~580 ms"
+        ],
+        [
+          "cây sau biến đổi",
+          "trung gian 71 dòng",
+          "~159 ms"
+        ],
+        [
+          "quên điều kiện nối",
+          "80.000.000 dòng",
+          "💀"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây là bản nháp optimizer ước lượng cây sau biến đổi — meter trung gian xẹp từ ~200.000 xuống 71 dòng mà kết quả y hệt. Để ý: cả ba con số đều tính ra từ MẬT ĐỘ, chưa hề chạy query.",
+      "real_world": "Postgres làm màn này với mọi query bạn gửi — EXPLAIN sẽ thấy Filter nằm sâu dưới đáy plan dù WHERE viết ở cuối câu. Giới data gọi chung là predicate pushdown: Spark, Parquet, Elasticsearch đều học lại bài này của RDBMS.",
+      "steps": [
+        "σ tên shop trên 2.000 shop, tên là duy nhất → còn mấy dòng?",
+        "Mỗi shop trung bình 20 món → 1 shop kéo ra bao nhiêu món?",
+        "Mỗi món trung bình 2,5 đơn → 20 món kéo ra bao nhiêu đơn?"
+      ],
+      "hint_explore": "Nhân dây chuyền: 1 → ×20 → ×2,5. Meter trung gian của cây vụng để so: 100.000 + 100.000.",
+      "expected": "σ = 1 · ⋈ listings = 20 · ⋈ orders = 50."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "seller_name là định danh shop — lọc trên 2.000 shop còn lại bao nhiêu?"
+      },
+      {
+        "level": 2,
+        "text": "Mật độ 20 món/shop: 1 shop × 20."
+      },
+      {
+        "level": 3,
+        "text": "Mật độ 2,5 đơn/món: 20 món × 2,5."
+      },
+      {
+        "level": 4,
+        "text": "σ = <code>1</code> · ⋈ listings = <code>20</code> · ⋈ orders = <code>50</code>."
+      }
+    ],
+    "success_message": "TICKET #50 ĐÓNG — bạn vừa đảo cây y như optimizer, trung gian teo 2.800 lần! ⚡ Nhưng còn một bí mật chưa khui: nó lấy đâu ra \"20 món/shop, 2,5 đơn/món\" khi CHƯA chạy query? Bài cuối module mở cuốn sổ quyền lực nhất engine: STATISTICS & HISTOGRAMS — nơi cost-based optimizer đọc tương lai, và lệnh EXPLAIN cho bạn đọc ké. Kèm hai hồ sơ: Histogram & ANALYZE, Top-K.",
+    "xp_reward": 120
+  }
+}

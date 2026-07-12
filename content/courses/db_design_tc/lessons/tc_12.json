@@ -1,0 +1,350 @@
+{
+  "id": "tc_12",
+  "index": 12,
+  "title": "Sequential vs Random — cách chạm đĩa quyết định tốc độ",
+  "subtitle": "Cùng 100 dòng: đọc liền dải trả 1 lần seek, đọc rải rác trả 100 lần",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "io_benchmark",
+      "columns": [
+        "thao_tác",
+        "số_dòng",
+        "cách_đọc",
+        "thời_gian"
+      ],
+      "dataRows": [
+        [
+          "Cuộn timeline",
+          "100",
+          "liền dải",
+          "12 ms"
+        ],
+        [
+          "Mở bookmark rải rác",
+          "100",
+          "nhảy cóc",
+          "980 ms"
+        ],
+        [
+          "Full scan kho #25",
+          "38M",
+          "liền dải",
+          "41 s"
+        ],
+        [
+          "Tra 1000 id trộn",
+          "1000",
+          "nhảy cóc",
+          "9.8 s"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #32",
+    "hook": "Đo thử hai thao tác cùng đọc đúng 100 post: cuộn timeline mượt như bơ — 12 mili-giây; mở 100 post đã bookmark rải rác — gần MỘT GIÂY. Cùng số dòng, cùng bảng, cùng SQL độ khó như nhau. Khác đúng một thứ: <em>cách chạm đĩa</em> — một bên đọc liền một dải, một bên nhảy cóc trăm nơi. Ticket #32: mổ xẻ vì sao random đắt thế, và database làm gì để né nó."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Một lần đọc HDD = seek (di chuyển đầu đọc) + rotate (chờ đĩa quay) + transfer (đọc thật)",
+        "Sequential trả seek+rotate MỘT lần rồi transfer suốt; random trả TỪNG dòng một",
+        "Database né random bằng cách GOM: sort trước khi đọc, xếp dữ liệu hay đọc-cùng-nhau nằm cạnh nhau"
+      ],
+      "intro": "Trên HDD, đầu đọc là cánh tay cơ khí thật: muốn đọc chỗ khác phải DI CHUYỂN (seek, vài ms) rồi CHỜ đĩa quay tới nơi (rotate). Phần đọc dữ liệu thật (transfer) lại rất nhanh. Đọc 100 post nằm liền nhau: trả seek+rotate MỘT lần, transfer 100 dòng một hơi. Đọc 100 post rải rác: trả đủ bộ seek+rotate MỘT TRĂM lần — tiền vé đắt hơn tiền hàng. SSD không có cánh tay cơ khí nên đỡ hơn nhiều, nhưng đọc liền dải vẫn thắng nhờ đọc theo trang và prefetch.",
+      "example": "io_benchmark: 100 dòng liền dải 12ms vs 100 dòng nhảy cóc 980ms — chênh ~80 lần, toàn bộ là tiền seek."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-compact-disc",
+        "title": "Giải phẫu một lần đọc đĩa",
+        "body": "HDD: <strong>seek</strong> (đầu đọc dời track, ~vài ms) + <strong>rotational delay</strong> (chờ sector quay tới, ~vài ms) + <strong>transfer</strong> (đọc dải dữ liệu — phần rẻ). Random access = trả 2 khoản đầu cho MỖI lần đọc; sequential chỉ trả 1 lần cho cả chuyến.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 12 — Physical Storage Systems / Magnetic Disks"
+      },
+      {
+        "icon": "fa-bolt",
+        "title": "SSD có thoát nạn không?",
+        "body": "SSD không có đầu đọc cơ khí — random rẻ hơn HDD cả trăm lần. NHƯNG sequential vẫn thắng: đọc theo trang liền kề tận dụng prefetch và băng thông nội bộ. Nguyên tắc \"gom việc đọc liền mạch\" sống lâu hơn mọi đời phần cứng."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Mẹo rẻ nhất để cứu random: <strong>SORT danh sách vị trí trước khi đọc</strong> — 100 điểm rải rác sau khi sắp xếp thành lộ trình một chiều, seek ngắn dần thay vì nhảy loạn. Mini-game bên dưới có đúng bug này."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "io_benchmark",
+        "columns": [
+          {
+            "name": "thao_tác",
+            "type": "TEXT",
+            "key": "",
+            "icon": "🖱️"
+          },
+          {
+            "name": "số_dòng",
+            "type": "INT",
+            "key": "",
+            "icon": "🔢"
+          },
+          {
+            "name": "cách_đọc",
+            "type": "TEXT",
+            "key": "",
+            "icon": "🧭"
+          },
+          {
+            "name": "thời_gian",
+            "type": "TEXT",
+            "key": "",
+            "icon": "⏱️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "Cuộn timeline",
+          "100",
+          "liền dải",
+          "12 ms"
+        ],
+        [
+          "Mở bookmark rải rác",
+          "100",
+          "nhảy cóc",
+          "980 ms"
+        ],
+        [
+          "Full scan kho #25",
+          "38M",
+          "liền dải",
+          "41 s"
+        ],
+        [
+          "Tra 1000 id trộn",
+          "1000",
+          "nhảy cóc",
+          "9.8 s"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Cùng đọc 100 post, vì sao bản \"rải rác\" chậm hơn bản \"liền dải\" tới ~80 lần?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì phải trả seek + rotate cho TỪNG post — còn liền dải chỉ trả một lần rồi transfer suốt",
+            "correct": true,
+            "explanation": "Đúng — tiền vé (seek+rotate) đắt hơn tiền hàng (transfer); random trả vé 100 lần."
+          },
+          {
+            "id": "b",
+            "text": "Vì 100 post rải rác có dung lượng lớn hơn",
+            "correct": false,
+            "explanation": "Sai — cùng 100 dòng, cùng dung lượng; khác nhau ở số lần DI CHUYỂN."
+          },
+          {
+            "id": "c",
+            "text": "Vì SQL của bản rải rác phức tạp hơn",
+            "correct": false,
+            "explanation": "Sai — độ phức tạp SQL như nhau; chi phí nằm ở tầng vật lý."
+          },
+          {
+            "id": "d",
+            "text": "Vì bản rải rác không dùng được RAM",
+            "correct": false,
+            "explanation": "Sai — cả hai đều đi qua RAM; khác nhau ở số chuyến XUỐNG ĐĨA."
+          }
+        ]
+      },
+      {
+        "question": "Chuyển hết sang SSD (không còn đầu đọc cơ khí) — bài học \"đọc liền dải\" còn giá trị không?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Còn — random trên SSD rẻ hơn HDD nhiều nhưng sequential vẫn thắng nhờ đọc theo trang liền kề + prefetch",
+            "correct": true,
+            "explanation": "Đúng — chênh lệch co lại (từ ~100× còn vài lần) nhưng không biến mất; nguyên tắc gom liền mạch vẫn ăn tiền."
+          },
+          {
+            "id": "b",
+            "text": "Hết — trên SSD random và sequential nhanh y hệt nhau",
+            "correct": false,
+            "explanation": "Sai — prefetch, kích thước trang và băng thông nội bộ vẫn ưu ái đọc liền dải."
+          },
+          {
+            "id": "c",
+            "text": "Ngược lại — SSD đọc random còn nhanh hơn sequential",
+            "correct": false,
+            "explanation": "Sai — không có phần cứng phổ biến nào như vậy."
+          },
+          {
+            "id": "d",
+            "text": "SSD không đọc được theo kiểu random",
+            "correct": false,
+            "explanation": "Sai — đọc được và khá nhanh; chỉ là vẫn thua liền dải."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Cứu trang bookmark",
+      "instruction": "Code mở danh sách bookmark chạy chậm gấp chục lần mức cần thiết. Click DÒNG có lỗi (gợi ý: thứ tự!).",
+      "xp": 25,
+      "code": "bookmarks = [8821, 302, 4577, 91, 15023]\nfor post_id in bookmarks:\n    vi_tri = locate_on_disk(post_id)\n    page = disk.read_page(vi_tri)\n    render(page.get(post_id))",
+      "bugType": "performance",
+      "bugs": [
+        {
+          "line": 2,
+          "description": "Duyệt theo thứ tự NGẪU NHIÊN của danh sách → đầu đọc nhảy loạn (seek tối đa). Sort danh sách theo vị trí trên đĩa trước khi đọc — lộ trình thành một chiều, random hóa gần-tuần-tự."
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "mission": "Mổ xẻ MỘT lần đọc random trên HDD thành 3 chặng chi phí, đúng thứ tự — và vạch mặt chặng mà đọc TUẦN TỰ cũng phải trả. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Transfer: đọc dải dữ liệu — chặng DUY NHẤT mà đọc tuần tự cũng phải trả",
+        "slot": "io-3"
+      },
+      {
+        "type": "op",
+        "token": "Seek: đầu đọc DI CHUYỂN tới đúng track — vài mili-giây mỗi lần",
+        "slot": "io-1"
+      },
+      {
+        "type": "op",
+        "token": "Compile: đĩa biên dịch lại câu SQL trước khi đọc",
+        "slot": "io-x"
+      },
+      {
+        "type": "op",
+        "token": "Rotational delay: CHỜ sector cần đọc quay tới dưới đầu đọc",
+        "slot": "io-2"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "io-1",
+        "placeholder": "Chặng 1 — trả tiền di chuyển",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Chặng 1",
+          "sub": "Di chuyển",
+          "hint": "Cánh tay cơ khí phải TỚI ĐÚNG track trước đã — khoản đắt nhất."
+        }
+      },
+      {
+        "id": "io-2",
+        "placeholder": "Chặng 2 — trả tiền chờ",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⏳",
+          "label": "Chặng 2",
+          "sub": "Chờ quay",
+          "hint": "Tới track rồi vẫn phải chờ đĩa quay đến đúng sector."
+        }
+      },
+      {
+        "id": "io-3",
+        "placeholder": "Chặng 3 — mua hàng thật",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📤",
+          "label": "Chặng 3",
+          "sub": "Đọc dữ liệu",
+          "hint": "Phần rẻ nhất — và là phần duy nhất sequential cũng trả."
+        }
+      }
+    ],
+    "expected_sql": "Seek: đầu đọc DI CHUYỂN tới đúng track — vài mili-giây mỗi lần Rotational delay: CHỜ sector cần đọc quay tới dưới đầu đọc Transfer: đọc dải dữ liệu — chặng DUY NHẤT mà đọc tuần tự cũng phải trả",
+    "expected_zones": {
+      "io-1": "Seek: đầu đọc DI CHUYỂN tới đúng track — vài mili-giây mỗi lần",
+      "io-2": "Rotational delay: CHỜ sector cần đọc quay tới dưới đầu đọc",
+      "io-3": "Transfer: đọc dải dữ liệu — chặng DUY NHẤT mà đọc tuần tự cũng phải trả"
+    },
+    "reveal_hints": {
+      "io-1": "Trước khi đọc phải TỚI NƠI: <strong>Seek</strong>. Khối \"Compile\" là bịa — đĩa không biết SQL là gì.",
+      "io-2": "Tới track rồi còn phải <strong>chờ đĩa quay</strong> tới đúng sector.",
+      "io-3": "Cuối cùng mới là <strong>Transfer</strong> — sequential chỉ phải trả đúng chặng này (sau lần seek đầu)."
+    }
+  },
+  "step_4": {
+    "prompt": "Điền 3 con số/từ chốt hạ bài toán 100 post — nhìn lại io_benchmark nếu cần.",
+    "challenge_type": "fill_blank",
+    "template": "# Đọc 100 post LIỀN DẢI trên đĩa:\n#   → trả seek + rotate ____ lần, rồi transfer một mạch\n\n# Đọc 100 post RẢI RÁC:\n#   → trả seek + rotate ____ lần — mỗi post một vé\n\n# Mẹo của database khi buộc phải đọc rải rác:\n#   → ____ danh sách vị trí trước khi đọc (bug ở mini-game!),\n#     biến lộ trình nhảy loạn thành một chiều gần-tuần-tự",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "mấy lần?",
+        "expected": "1"
+      },
+      {
+        "id": "b2",
+        "hint": "mấy lần?",
+        "expected": "100"
+      },
+      {
+        "id": "b3",
+        "hint": "tiếng Anh, 4 chữ cái",
+        "expected": "sort"
+      }
+    ],
+    "context": {
+      "scenario": "Ba ô này là toàn bộ \"kinh tế học\" của I/O: vé (seek+rotate) đắt, hàng (transfer) rẻ — mua sỉ một chuyến thay vì mua lẻ trăm chuyến.",
+      "real_world": "Elevator algorithm của hệ điều hành, bitmap heap scan của Postgres — đều là \"sort vị trí trước khi đọc\" ở quy mô công nghiệp.",
+      "steps": [
+        "Liền dải: một vé cho cả chuyến — seek + rotate đúng 1 lần.",
+        "Rải rác: mỗi post một vé — 100 lần.",
+        "Không đổi được vị trí dữ liệu ngay? Đổi THỨ TỰ GHÉ: sort.",
+        "Muốn triệt để hơn — xếp dữ liệu nằm sẵn cạnh nhau: chờ clustering ở Ticket #37."
+      ],
+      "hint_explore": "Bảng io_benchmark Step 1: 12ms vs 980ms cho cùng 100 dòng — toàn bộ chênh lệch là tiền vé.",
+      "expected": "Điền đúng 3/3: 1 · 100 · sort. Bài pseudo-code — chấm theo ô điền."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Tiền vé = seek + rotate. Liền dải mua vé mấy lần? Rải rác mấy lần?"
+      },
+      {
+        "level": 2,
+        "text": "Ô 1 và ô 2: 1 và 100 — đó chính là chênh lệch ~80× trong io_benchmark."
+      },
+      {
+        "level": 3,
+        "text": "Ô 3: mini-game vừa sửa bug gì? Sắp xếp danh sách vị trí = <code>sort</code>."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: <code>1</code> · <code>100</code> · <code>sort</code>."
+      }
+    ],
+    "success_message": "Ticket #32 đóng! Từ giờ thấy chữ \"chậm\" là bạn hỏi ngay: bao nhiêu vé seek? Ticket #33: post viral bị mở 10.000 lần/phút — và lý do đĩa không bốc cháy tên là BUFFER.",
+    "xp_reward": 120
+  }
+}

@@ -9,13 +9,16 @@ WTF_CSRF_TIME_LIMIT = 3600
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 class Config:
-    DB_PATH    = os.path.join(os.path.dirname(__file__), 'database', 'edu.db')
     FLASK_ENV  = os.environ.get('FLASK_ENV', 'development')
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    if FLASK_ENV == 'production' and not SECRET_KEY:
-        raise RuntimeError('SECRET_KEY phải được thiết lập trong production')
     if not SECRET_KEY:
-        SECRET_KEY = 'edu-secret-key-change-in-production'
+        # Mavis P0#3 (2026-07-04): không fallback hardcode nữa — dev thiếu SECRET_KEY thì
+        # sinh khóa ngẫu nhiên per-process (session mất khi restart — chấp nhận ở dev);
+        # production bắt buộc phải set, không có thì chết sớm.
+        if FLASK_ENV == 'production':
+            raise RuntimeError('SECRET_KEY phải được thiết lập trong production')
+        import secrets as _secrets
+        SECRET_KEY = _secrets.token_hex(32)
     DEBUG      = os.environ.get('FLASK_DEBUG', '0') == '1'
     SEND_FILE_MAX_AGE_DEFAULT = 0
     PORT       = 9000

@@ -1,0 +1,525 @@
+{
+  "id": "nc_23",
+  "index": 23,
+  "title": "WAL — cuốn log phải xuống trước cái data",
+  "subtitle": "Write-ahead logging + checkpoint: thứ tự log-trước-data là thứ giữ cho phục hồi khả thi",
+  "module": 9,
+  "module_title": "Hộp Đen — Sự cố & Phục hồi",
+  "estimated_minutes": 22,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "buffer ↔ đĩa — ai xuống trước? (T0 sửa A: 1000→950)",
+      "columns": [
+        "thành phần",
+        "trạng thái",
+        "ở đâu"
+      ],
+      "dataRows": [
+        [
+          "log record <T0,A,1000,950>",
+          "chờ flush",
+          "log buffer (RAM)"
+        ],
+        [
+          "block A = 950",
+          "dirty, chờ ghi",
+          "data buffer (RAM)"
+        ],
+        [
+          "A = 1000 (giá cũ)",
+          "bản trên đĩa",
+          "đĩa"
+        ],
+        [
+          "B = 2000 · C = 700",
+          "chưa đụng",
+          "đĩa"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #64",
+    "hook": "Bài trước, cái Hộp Đen (log) cứu cả atomicity lẫn durability — nhưng ta lén giả định một điều: <em>\"log luôn kịp ra stable storage\"</em>. Đời không hiền vậy. Log cũng nằm trong buffer RAM chờ ghi; block data cũng chờ ghi. Nếu buffer đầy và engine đẩy block A xuống đĩa <strong>trước</strong> khi log record của A ra stable, rồi crash — ta có đĩa mang giá mới mà log không có giá cũ để undo. Database kẹt trạng thái dở dang, không cứu nổi. Ticket #64: một luật thứ-tự duy nhất chặn thảm họa đó — <strong>Write-Ahead Logging</strong>. ⚡"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "LUẬT WAL (Write-Ahead Logging): TRƯỚC khi một block data xuống đĩa, MỌI log record liên quan block đó phải đã ra stable storage; và trước <Ti commit>, mọi log record của Ti phải ra stable. Nói gọn: LOG luôn đi trước DATA",
+        "Đây là nền của STEAL policy — cho phép đẩy block của giao dịch CHƯA commit xuống đĩa (giải phóng buffer); an toàn vì log đã giữ giá CŨ để undo nếu giao dịch đó chết. Cặp policy chuẩn công nghiệp: NO-FORCE (khỏi ép block committed xuống đĩa ngay → cần REDO) + STEAL (→ cần UNDO)",
+        "CHECKPOINT bó hẹp phạm vi phục hồi: ghi <checkpoint L> (L = giao dịch đang chạy) → sau crash chỉ cần quét log TỪ checkpoint gần nhất; mọi giao dịch xong trước đó đã an toàn trên đĩa, khỏi redo"
+      ],
+      "intro": "Kế toán có một luật bất di bất dịch: <strong>ghi vào SỔ NHẬT KÝ trước, rồi mới được động vào két</strong>. Vì sao? Nếu lỡ tay bỏ tiền vào két trước mà chưa kịp ghi sổ, rồi mất điện quên mất — sáng ra nhìn két thấy tiền lạ, không sổ nào giải thích nổi nó từ đâu ra hay có phải hoàn lại không. Database y hệt: đẩy block xuống đĩa (bỏ tiền vào két) mà log record (ghi sổ) chưa ra stable là tự bịt đường phục hồi. Log trước, data sau — luôn luôn.",
+      "example": "T0 sửa A 1000→950, buffer đầy nên block A phải xuống đĩa (steal). <strong>Theo WAL</strong>: flush log <code>&lt;T0,A,1000,950&gt;</code> ra stable TRƯỚC → rồi ghi block A=950 → crash → recovery đọc log, thấy T0 chưa commit, undo A về 1000 ✓. <strong>Phá WAL</strong>: ghi block A=950 xuống đĩa khi log record còn kẹt RAM → crash → log mất record → đĩa kẹt 950, không biết giá cũ, database <strong>950/2000/700 SAI</strong>."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-forward",
+        "title": "Luật WAL — theo đúng sách",
+        "body": "Ba điều kiện, gói trong một tinh thần \"log đi trước\": (1) Ti chỉ vào trạng thái committed sau khi <code>&lt;Ti commit&gt;</code> ra stable; (2) trước <code>&lt;Ti commit&gt;</code>, MỌI log record của Ti phải ra stable; (3) <strong>trước khi một block data xuống non-volatile storage, mọi log record liên quan dữ liệu trong block đó phải đã ra stable</strong>. Sách nói thẳng: nhờ điều (3), dù engine áp dụng <em>steal policy</em> (đẩy block chưa-commit xuống đĩa), recovery vẫn luôn có log record với giá cũ để đưa database về trạng thái nhất quán.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.5.1 — Write-Ahead Logging"
+      },
+      {
+        "icon": "fa-table-cells",
+        "title": "Force/Steal — và vì sao chuẩn là no-force + steal",
+        "body": "Hai trục chính sách buffer: <strong>FORCE</strong> (ép mọi block đã sửa xuống đĩa lúc commit) vs <strong>NO-FORCE</strong> (khỏi ép — commit nhanh, nhưng block committed có thể chưa trên đĩa → cần <em>REDO</em> lúc phục hồi). <strong>NO-STEAL</strong> (không cho block chưa-commit xuống đĩa) vs <strong>STEAL</strong> (cho — giải phóng buffer, nhưng block chưa-commit có thể đã trên đĩa → cần <em>UNDO</em>). Đa số DB chọn <strong>no-force + steal</strong>: nhanh và không kẹt buffer — đổi lại phải có cả redo lẫn undo, và cả hai chỉ an toàn khi tuân WAL."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Postgres có tham số <code>fsync</code>, <code>wal_level</code>, <code>synchronous_commit</code> — tất cả xoay quanh \"log ra đĩa lúc nào\". Tắt <code>fsync</code> để nhập liệu nhanh là bạn đang <em>tự phá WAL</em>, đổi tốc độ lấy rủi ro mất dữ liệu khi crash. Còn <code>CHECKPOINT</code> (Postgres chạy định kỳ) chính là cái bó hẹp thời gian phục hồi — sau crash chỉ replay WAL từ checkpoint gần nhất, không phải từ đầu thời gian."
+      }
+    ],
+    "wal_visual": {
+      "eyebrow": "CỔNG WAL — T0 SỬA A 1000→950, BUFFER ĐẦY, BLOCK A PHẢI XUỐNG ĐĨA",
+      "caption": "Chạy CẢ HAI kịch bản: theo WAL thì log giữ giá cũ nên crash vẫn undo được; phá WAL thì log record bay theo RAM, database kẹt trạng thái sai.",
+      "disk": [
+        {
+          "id": "A",
+          "label": "💰 A · Quỹ Sàn",
+          "val": 1000
+        },
+        {
+          "id": "B",
+          "label": "💰 B · DragonForge",
+          "val": 2000
+        },
+        {
+          "id": "C",
+          "label": "💰 C · NightRaven",
+          "val": 700
+        }
+      ],
+      "modes": [
+        {
+          "id": "wal",
+          "short": "THEO WAL",
+          "ok": true,
+          "result": "undo được A→1000",
+          "btn": "▶ Kịch bản THEO WAL",
+          "steps": [
+            {
+              "text": "T0 sửa A: 1000→950 trong buffer · log record của A đang ở LOG BUFFER (RAM)",
+              "gate": "🚧 CỔNG WAL — block A muốn xuống đĩa",
+              "note": "Buffer đầy, phải đẩy block A xuống đĩa (steal). Cổng WAL chặn lại hỏi trước."
+            },
+            {
+              "text": "CỔNG hỏi: log record của A đã ra stable chưa? → CHƯA",
+              "gate": "❓ log của A đã an toàn trên stable?",
+              "note": "Đây là bài kiểm tra sống còn: data chỉ được qua cổng khi log của nó đã an toàn."
+            },
+            {
+              "text": "flush LOG trước: <T0, A, 1000, 950> ra stable storage",
+              "log": "<T0, A, 1000, 950>",
+              "gate": "✓ log đã an toàn — giờ mới mở cổng cho data",
+              "cls": "ok",
+              "note": "Log record mang giá CŨ 1000 và giá MỚI 950 — đã nằm chắc trên stable."
+            },
+            {
+              "text": "giờ đẩy block A=950 xuống đĩa (steal hợp lệ)",
+              "diskItem": "A",
+              "diskVal": 950,
+              "cls": "warn",
+              "note": "Đĩa giờ mang 950 của một giao dịch CHƯA commit — nhưng không sao, log đã thủ sẵn giá cũ."
+            },
+            {
+              "text": "💥 CRASH — T0 chưa kịp commit",
+              "crash": true,
+              "recovery": "↻ recovery đọc log: thấy <T0,A,1000,950>, T0 KHÔNG commit → UNDO A về <b>1000</b> ✓",
+              "cls": "ok",
+              "note": ""
+            }
+          ],
+          "verdict": "✓ Log xuống trước nên luôn có giá cũ để hoàn tác — crash lúc nào cũng đưa được database về nhất quán. Steal policy sống khỏe chính nhờ luật thứ-tự này."
+        },
+        {
+          "id": "break",
+          "short": "PHÁ WAL",
+          "ok": false,
+          "result": "A kẹt 950 SAI",
+          "btn": "▶ Kịch bản PHÁ WAL",
+          "steps": [
+            {
+              "text": "T0 sửa A: 1000→950 trong buffer · log record CÒN kẹt trong log buffer (RAM)",
+              "gate": "⚠️ block A muốn xuống đĩa — bỏ qua cổng cho nhanh",
+              "cls": "warn",
+              "note": "Ai đó \"tối ưu\": đẩy data xuống đĩa luôn, log để lát flush sau. Nghe nhanh gọn — và chí mạng."
+            },
+            {
+              "text": "CỔNG BỊ VƯỢT: ghi block A=950 xuống đĩa TRƯỚC khi log record ra stable",
+              "diskItem": "A",
+              "diskVal": 950,
+              "gate": "⛔ CỔNG BỊ VƯỢT — data đi trước log",
+              "cls": "bad",
+              "note": "Đĩa đã mang 950, nhưng log record giá-cũ-1000 vẫn chỉ nằm trong RAM."
+            },
+            {
+              "text": "💥 CRASH — RAM bay, log record của A mất theo",
+              "crash": true,
+              "recovery": "↻ recovery đọc log: THIẾU record của A → không biết giá CŨ → A kẹt <b>950</b>, database <b>950/2000/700 SAI</b> ❌",
+              "cls": "bad",
+              "note": ""
+            }
+          ],
+          "verdict": "❌ Data xuống trước log: crash làm mất record, recovery không có giá cũ để undo → giao dịch dở dang đông cứng trên đĩa. Đây đúng là thảm họa mà WAL sinh ra để chặn."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "ma trận policy — cần undo/redo gì?",
+        "columns": [
+          {
+            "name": "policy",
+            "type": "buffer làm gì",
+            "key": "⚙️"
+          },
+          {
+            "name": "hệ quả lúc crash",
+            "type": "thiếu gì trên đĩa",
+            "key": "💥"
+          },
+          {
+            "name": "phải có",
+            "type": "",
+            "key": "🛠️"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "NO-FORCE",
+          "block committed CHƯA xuống đĩa",
+          "cần REDO (áp lại giá mới)"
+        ],
+        [
+          "STEAL",
+          "block chưa-commit ĐÃ xuống đĩa",
+          "cần UNDO (khôi phục giá cũ)"
+        ],
+        [
+          "no-force + steal (chuẩn)",
+          "nhanh, không kẹt buffer",
+          "cần CẢ redo lẫn undo → WAL"
+        ],
+        [
+          "(WAL đảm bảo)",
+          "log luôn có mặt để undo/redo",
+          "✓"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Steal policy cho phép đẩy block của giao dịch CHƯA commit xuống đĩa. Điều gì khiến việc đó AN TOÀN thay vì là quả bom hẹn giờ?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Luật WAL: trước khi block đó xuống đĩa, log record của nó (mang giá CŨ) đã phải ra stable — nên nếu giao dịch chết, recovery luôn có giá cũ để UNDO block về trạng thái trước",
+            "correct": true,
+            "explanation": "Đúng — steal và WAL là cặp bài trùng: steal giải phóng buffer, WAL đảm bảo luôn có đường lùi. Thiếu WAL thì steal đúng là bom hẹn giờ."
+          },
+          {
+            "id": "b",
+            "text": "Vì block chưa-commit được đánh dấu \"tạm\" nên recovery tự bỏ qua",
+            "correct": false,
+            "explanation": "Sai — trên đĩa không có nhãn \"tạm\" tự động; recovery biết undo được là nhờ LOG RECORD giá cũ, không phải nhờ cái nhãn nào trên block."
+          },
+          {
+            "id": "c",
+            "text": "Vì steal chỉ đẩy block của giao dịch sắp commit tới nơi",
+            "correct": false,
+            "explanation": "Sai — steal đẩy bất kỳ block dirty nào khi buffer cần chỗ, kể cả của giao dịch còn lâu mới commit (hoặc sẽ abort); đó chính là lý do phải có undo."
+          },
+          {
+            "id": "d",
+            "text": "Vì đĩa có bản sao stable nên ghi sai cũng khôi phục được",
+            "correct": false,
+            "explanation": "Sai — stable storage chống mất-đĩa, không chống ghi-đè-giá-mới; cái cứu ở đây là log record giá cũ, không phải bản sao block."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao đa số database chọn NO-FORCE thay vì FORCE (ép mọi block xuống đĩa lúc commit)?",
+        "options": [
+          {
+            "id": "a",
+            "text": "No-force cho commit nhanh (khỏi chờ ghi đĩa) và cho nhiều cập nhật dồn trên một block trước khi ghi, giảm mạnh số lần I/O — đổi lại phải có REDO để áp lại block committed chưa kịp xuống đĩa sau crash",
+            "correct": true,
+            "explanation": "Đúng cả hai vế — no-force là đánh đổi kinh điển: nhanh + ít I/O, trả bằng khả năng redo (mà log đã sẵn có)."
+          },
+          {
+            "id": "b",
+            "text": "Force policy làm mất dữ liệu nên bị cấm",
+            "correct": false,
+            "explanation": "Sai — force KHÔNG mất dữ liệu (nó ghi hết xuống đĩa, còn \"an toàn\" hơn ở khoản durability tức thì); nó chỉ CHẬM và tốn I/O, nên bị chê về hiệu năng chứ không phải đúng-sai."
+          },
+          {
+            "id": "c",
+            "text": "No-force không cần log gì cả",
+            "correct": false,
+            "explanation": "Sai ngược — no-force CẦN log (để redo); chính vì block committed có thể chưa xuống đĩa mà log phải giữ giá mới để áp lại sau crash."
+          },
+          {
+            "id": "d",
+            "text": "Vì no-force tự động ghi block xuống đĩa ngầm sau lưng",
+            "correct": false,
+            "explanation": "Sai — no-force nghĩa là KHÔNG ép ghi lúc commit; block xuống đĩa lúc buffer cần chỗ hoặc tiến trình nền dọn, không phải \"ngầm ghi ngay\"."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Thứ tự này ổn hay toang?",
+      "instruction": "Với luật WAL, tình huống ghi xuống stable/đĩa nào là HỢP LỆ, tình huống nào PHÁ luật?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "w1",
+          "label": "Flush log <T0,A,..> ra stable → rồi ghi block A xuống đĩa"
+        },
+        {
+          "id": "w2",
+          "label": "Ghi block A xuống đĩa → rồi mới flush log của A"
+        },
+        {
+          "id": "w3",
+          "label": "Flush hết log của T0 ra stable → rồi ghi <T0 commit>"
+        },
+        {
+          "id": "w4",
+          "label": "Ghi <T0 commit> ra stable khi log các cú write của T0 còn ở RAM"
+        }
+      ],
+      "bins": [
+        {
+          "id": "ok",
+          "label": "HỢP LỆ ✓"
+        },
+        {
+          "id": "bad",
+          "label": "PHÁ WAL ✗"
+        }
+      ],
+      "solution": {
+        "w1": "ok",
+        "w2": "bad",
+        "w3": "ok",
+        "w4": "bad"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp luật WAL + checkpoint 4 bước — có MỘT khối bịa (nghe rất chi là \"cho nhanh\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "LUẬT WAL: trước khi một block data xuống đĩa, MỌI log record của block đó phải đã ra stable storage — log luôn đi trước data",
+        "slot": "wl-rule"
+      },
+      {
+        "type": "op",
+        "token": "Cứ đẩy block xuống đĩa lúc nào tiện cho nhẹ buffer, log flush theo sau cũng kịp",
+        "slot": "wl-x"
+      },
+      {
+        "type": "op",
+        "token": "NHỜ WAL: steal policy an toàn — block chưa-commit xuống đĩa vẫn undo được vì log đã giữ giá CŨ",
+        "slot": "wl-steal"
+      },
+      {
+        "type": "op",
+        "token": "CHECKPOINT: ghi <checkpoint L> định kỳ → sau crash chỉ quét log TỪ checkpoint gần nhất, txn xong trước đó khỏi redo",
+        "slot": "wl-ckpt"
+      },
+      {
+        "type": "op",
+        "token": "PHỤC HỒI: redo xuôi từ checkpoint (dựng undo-list) rồi undo ngược — nhanh vì phạm vi đã bó hẹp",
+        "slot": "wl-recover"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "wl-rule",
+        "placeholder": "Bước 1 — luật thứ tự cốt lõi?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⚡",
+          "label": "Luật WAL",
+          "sub": "Bước 1",
+          "hint": "Hai thứ cùng chờ ghi: log và data. Cái nào BẮT BUỘC xuống trước?"
+        }
+      },
+      {
+        "id": "wl-steal",
+        "placeholder": "Bước 2 — nhờ luật đó, steal an toàn ra sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🤝",
+          "label": "Steal an toàn",
+          "sub": "Bước 2",
+          "hint": "Block chưa-commit đã lỡ xuống đĩa — điều gì trong log cứu được nếu giao dịch đó chết?"
+        }
+      },
+      {
+        "id": "wl-ckpt",
+        "placeholder": "Bước 3 — làm sao khỏi quét cả log?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📍",
+          "label": "Checkpoint",
+          "sub": "Bước 3",
+          "hint": "Đặt một cái mốc định kỳ; sau crash chỉ cần quét từ mốc đó về sau. Mốc ấy tên gì?"
+        }
+      },
+      {
+        "id": "wl-recover",
+        "placeholder": "Bước 4 — phục hồi chạy sao cho nhanh?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔧",
+          "label": "Redo rồi undo",
+          "sub": "Bước 4",
+          "hint": "Hai pha: một pha lặp lại lịch sử xuôi, một pha hoàn tác ngược — bắt đầu từ đâu để nhanh?"
+        }
+      }
+    ],
+    "expected_sql": "LUẬT WAL: trước khi một block data xuống đĩa, MỌI log record của block đó phải đã ra stable storage — log luôn đi trước data NHỜ WAL: steal policy an toàn — block chưa-commit xuống đĩa vẫn undo được vì log đã giữ giá CŨ CHECKPOINT: ghi <checkpoint L> định kỳ → sau crash chỉ quét log TỪ checkpoint gần nhất, txn xong trước đó khỏi redo PHỤC HỒI: redo xuôi từ checkpoint (dựng undo-list) rồi undo ngược — nhanh vì phạm vi đã bó hẹp",
+    "expected_zones": {
+      "wl-rule": "LUẬT WAL: trước khi một block data xuống đĩa, MỌI log record của block đó phải đã ra stable storage — log luôn đi trước data",
+      "wl-steal": "NHỜ WAL: steal policy an toàn — block chưa-commit xuống đĩa vẫn undo được vì log đã giữ giá CŨ",
+      "wl-ckpt": "CHECKPOINT: ghi <checkpoint L> định kỳ → sau crash chỉ quét log TỪ checkpoint gần nhất, txn xong trước đó khỏi redo",
+      "wl-recover": "PHỤC HỒI: redo xuôi từ checkpoint (dựng undo-list) rồi undo ngược — nhanh vì phạm vi đã bó hẹp"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 LUẬT WAL KHÉP: log-trước-data → steal an toàn → checkpoint bó hẹp → redo-rồi-undo. Khối \"đẩy block xuống đĩa lúc nào tiện, log theo sau\" là BỊA — và là chính cái phá WAL: data xuống trước log thì crash làm mất giá cũ, database kẹt trạng thái dở. Thứ tự log-trước-data không phải chuyện phong cách, nó là điều kiện SỐNG CÒN của phục hồi. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "wl-rule": "Bước 1 — hai thứ chờ ghi, một luật thứ tự. Đọc lại tên bài: Write-Ahead nghĩa là gì đi trước?",
+      "wl-steal": "Bước 2 — steal đẩy block chưa-commit xuống đĩa. Nếu giao dịch đó chết, lấy gì trong log để lùi?",
+      "wl-ckpt": "Bước 3 — không ai muốn quét cả cuốn log từ đầu vũ trụ. Cái mốc định kỳ giúp bắt đầu gần hơn tên là gì?",
+      "wl-recover": "Bước 4 — nhớ bài 22: redo cái đã commit, undo cái dở. Ở đây bắt đầu từ checkpoint cho nhanh."
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #64 — chẩn đoán cú phá luật:</strong> engine chạy steal policy nhưng ai đó tắt đồng bộ log. Block A=950 (của T0, <strong>chưa commit</strong>) đã xuống đĩa, nhưng log record <code>&lt;T0,A,1000,950&gt;</code> CHƯA ra stable thì server sập. Sau khởi động, ví A ra sao?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "A kẹt ở 950 — SAI. Log thiếu record nên recovery không biết giá cũ 1000 để undo; giao dịch dở dang đông cứng trên đĩa. Đây đúng là thảm họa mà luật WAL sinh ra để chặn",
+        "correct": true
+      },
+      {
+        "text": "A = 1000 — recovery luôn undo được giao dịch chưa commit về giá cũ",
+        "correct": false,
+        "explain": "Chỉ đúng KHI có WAL. Ở đây WAL bị phá: log record giá-cũ-1000 bay theo RAM lúc crash, recovery không có gì để undo. Chính vì thế WAL là bắt buộc."
+      },
+      {
+        "text": "A = 950 và ĐÚNG — block đã xuống đĩa nghĩa là dữ liệu đã bền vững",
+        "correct": false,
+        "explain": "Bền vững nhưng SAI: 950 là kết quả của một giao dịch CHƯA commit (có thể sẽ abort). \"Đã trên đĩa\" không có nghĩa là \"đúng\" — atomicity đòi giao dịch dở phải bị xóa sạch."
+      },
+      {
+        "text": "Recovery bỏ qua A vì block không có commit record",
+        "correct": false,
+        "explain": "Không có cơ chế \"tự bỏ qua\": recovery chỉ biết hành động qua LOG. Không có log record của A thì recovery còn chẳng biết A vừa bị đụng — nó cứ để nguyên 950 sai."
+      }
+    ],
+    "schema": {
+      "table_name": "hiện trường phá WAL — lúc crash",
+      "columns": [
+        {
+          "name": "thành phần",
+          "type": "",
+          "key": "📍"
+        },
+        {
+          "name": "trạng thái",
+          "type": "lúc server sập",
+          "key": "💥"
+        },
+        {
+          "name": "hệ quả",
+          "type": "",
+          "key": "→"
+        }
+      ],
+      "data": [
+        [
+          "block A trên đĩa",
+          "= 950 (T0 chưa commit)",
+          "đã bền, nhưng SAI"
+        ],
+        [
+          "log record của A",
+          "còn trong RAM → bay",
+          "mất giá cũ 1000"
+        ],
+        [
+          "recovery cần",
+          "giá cũ để undo",
+          "✗ không có"
+        ],
+        [
+          "→ ví A chốt",
+          "❓",
+          "kẹt 950"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây là mặt trái của cú \"tối ưu\" tắt đồng bộ log: steal policy vẫn đẩy block chưa-commit xuống đĩa (bình thường), nhưng luật WAL bị vi phạm nên mất luôn đường undo. Cùng một hành động (block xuống đĩa) — có WAL thì cứu được, không WAL thì thành thảm họa.",
+      "real_world": "Chính vì rủi ro này mà không ai khuyên tắt fsync/synchronous_commit trên database sản xuất. Vụ mất dữ liệu \"database corrupt sau khi mất điện\" nổi tiếng thường quy về đúng đây: cấu hình cho phép data xuống đĩa mà không đảm bảo log đã bền trước.",
+      "steps": [
+        "Block A=950 của T0 (chưa commit) đã trên đĩa — bền vững nhưng chưa chính thức.",
+        "Log record giá-cũ của A còn kẹt RAM → crash làm mất.",
+        "Recovery không có giá cũ 1000 → không thể undo.",
+        "A kẹt 950 — trạng thái dở dang, sai, không cứu được."
+      ],
+      "hint_explore": "Panel schema bên trái dựng sẵn hiện trường — dòng \"recovery cần: ✗ không có\" là mấu chốt.",
+      "expected": "Chọn \"A kẹt 950 — SAI, thiếu log để undo\"."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Recovery undo bằng gì? Bằng LOG RECORD giá cũ. Ở đây log record còn ở đâu lúc crash?"
+      },
+      {
+        "level": 2,
+        "text": "Log record kẹt RAM → crash làm bay. Không có giá cũ 1000 thì recovery làm gì được?"
+      },
+      {
+        "level": 3,
+        "text": "Block A=950 đã trên đĩa (bền) nhưng của giao dịch CHƯA commit — không undo được thì nó kẹt."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: A kẹt 950 — SAI, đúng thảm họa WAL sinh ra để chặn."
+      }
+    ],
+    "success_message": "TICKET #64 ĐÓNG — bạn đã thấy vì sao log PHẢI đi trước data! ⚡ Hai hồ sơ đọc thêm bên dưới: FORCE/STEAL (ma trận policy buffer) và DATABASE DUMP + REMOTE BACKUP (khi mất cả cái đĩa thì sao). Còn bài cuối cùng của phần dạy Recovery: tất cả kỹ thuật ta học là bản GIẢN LƯỢC của một hệ thống thật ngoài đời — ARIES, với LSN, PageLSN, DirtyPageTable và 3 pass phục hồi khôn ngoan đến mức bỏ qua được cả đống việc thừa. 🎛️",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_force_steal",
+    "nc_card_dump_backup"
+  ]
+}

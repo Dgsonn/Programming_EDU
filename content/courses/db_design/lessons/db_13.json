@@ -1,0 +1,1517 @@
+{
+  "id": "db_13",
+  "index": 14,
+  "title": "Trận chiến cuối — Siêu hệ thống chuẩn hóa",
+  "subtitle": "Tổng hợp mọi quy tắc — Boss battle Diễn đàn GuildBoard",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 30,
+  "xp_reward": 100,
+  "project_piece": "👑 Mở khóa Vương Miện \"Kiến Trúc Sư CSDL Nội tại\"",
+  "story": {
+    "tag": "🎫 GameHub Consulting · Ticket #14 — BOSS",
+    "hook": "Khách lớn nhất lịch sử công ty: <strong>GuildBoard</strong> — diễn đàn guild lớn nhất khu vực, hàng triệu <code>users</code> và <code>posts</code>, đòi audit <strong>toàn bộ thiết kế</strong> — mọi kỹ năng bạn tích từ Ticket #01 tới giờ đều được gọi tên: chuẩn hoá, JOIN, aggregate, top-N. Đóng được ticket này, mùa tư vấn khép lại vẻ vang — và GameHub đủ tiền <strong>ship bản v2.0</strong>. ⚔️"
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "users",
+      "col": 0,
+      "row": 5,
+      "width": 4,
+      "height": 1,
+      "columns": [
+        "user_id",
+        "username",
+        "country",
+        "is_premium"
+      ],
+      "dataRows": [
+        [
+          "U01",
+          "minh_gamer",
+          "VN",
+          "true"
+        ],
+        [
+          "U02",
+          "yuki_99",
+          "JP",
+          "false"
+        ],
+        [
+          "U03",
+          "sara_plays",
+          "VN",
+          "true"
+        ],
+        [
+          "U04",
+          "alex_pro",
+          "US",
+          "true"
+        ],
+        [
+          "U05",
+          "dragon_vn",
+          "VN",
+          "true"
+        ],
+        [
+          "U06",
+          "ninja_jp",
+          "JP",
+          "true"
+        ],
+        [
+          "U07",
+          "noob_us",
+          "US",
+          "false"
+        ],
+        [
+          "U08",
+          "pixel_vn",
+          "VN",
+          "true"
+        ],
+        [
+          "U09",
+          "frost_kr",
+          "KR",
+          "false"
+        ],
+        [
+          "U10",
+          "blade_vn",
+          "VN",
+          "true"
+        ],
+        [
+          "U11",
+          "mage_jp",
+          "JP",
+          "true"
+        ],
+        [
+          "U12",
+          "loot_us",
+          "US",
+          "false"
+        ],
+        [
+          "U13",
+          "iron_vn",
+          "VN",
+          "true"
+        ],
+        [
+          "U14",
+          "owl_kr",
+          "KR",
+          "true"
+        ],
+        [
+          "U15",
+          "arcane_us",
+          "US",
+          "false"
+        ],
+        [
+          "U16",
+          "thunder_vn",
+          "VN",
+          "true"
+        ],
+        [
+          "U17",
+          "silent_jp",
+          "JP",
+          "false"
+        ],
+        [
+          "U18",
+          "rune_vn",
+          "VN",
+          "true"
+        ],
+        [
+          "U19",
+          "vortex_kr",
+          "KR",
+          "true"
+        ],
+        [
+          "U20",
+          "ember_us",
+          "US",
+          "false"
+        ],
+        [
+          "U21",
+          "zen_jp",
+          "JP",
+          "true"
+        ],
+        [
+          "U22",
+          "ghost_vn",
+          "VN",
+          "true"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Nhà vô địch chuẩn hóa",
+    "desc": "hạ Boss chuẩn hóa"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Áp dụng 1NF → 2NF → 3NF → BCNF tuần tự trên cùng một bảng phức tạp",
+        "Mục tiêu: từ 1 bảng \"siêu lộn xộn\" thành schema sạch cho Diễn đàn GuildBoard",
+        "Đây là bài tổng hợp — chuẩn bị nhận Vương Miện Kiến Trúc Sư!"
+      ],
+      "intro": "BOSS BATTLE! Bạn nhận được một bảng <code class=\"code\">gamers_social</code> khổng lồ — mỗi dòng chứa thông tin user + post + game + tag + platform, lẫn lộn. Bạn sẽ trải qua <strong>4 vòng chiến</strong>, mỗi vòng áp dụng 1 dạng chuẩn lên bảng trung gian. Mỗi stage sẽ có một bảng nhỏ hơn, tập trung vào một tập con cột.",
+      "example": "Sau 4 vòng, bạn sẽ có một schema sạch cho Diễn đàn GuildBoard: <code class=\"code\">users</code>, <code class=\"code\">posts</code>, <code class=\"code\">games</code>, <code class=\"code\">genres</code>, <code class=\"code\">platforms</code>, và các bảng junction. Đó là sản phẩm thực tế của một Database Engineer chuyên nghiệp."
+    },
+    "intro": "Bạn nhận brief: <em>\"Thiết kế database cho MXH Gamers, scale 1 triệu user, 10 triệu post, 100 triệu like, query response &lt;100ms\"</em>. 8 giờ deadline. Bạn bắt đầu từ đâu? Bài này là <strong>boss battle</strong> — tổng hợp 1NF → BCNF → M:N → indexing. Giải xong = pass môn.",
+    "concept_cards": [
+      {
+        "icon": "fa-crown",
+        "title": "Boss Battle — Hệ thống Diễn đàn GuildBoard",
+        "body": "Bạn được giao thiết kế schema cho MXH Gamers: users, posts, games, genres, platforms, friends, likes, comments. Áp lực: 1 triệu user, 10 triệu post, 100 triệu like. <strong>Bạn bắt đầu từ đâu?</strong>",
+        "extra": "<strong>Liệt kê entity trước</strong> → xác định quan hệ → áp 1NF → BCNF → cuối cùng mới thêm junction table. Bắt đầu bằng entity giúp bạn không bỏ sót concept nào trước khi vẽ quan hệ.",
+        "variant": "interactive"
+      },
+      {
+        "icon": "fa-trophy",
+        "title": "Đáp án mẫu — 7 bảng cốt lõi chuẩn BCNF",
+        "body": "5 bảng chính: <code>users, posts, games, genres, platforms</code>. 2 junction cốt lõi: <code>post_games</code> (post ↔ game) và <code>game_genres</code> (game ↔ genre, tránh MVD). <strong>Đã 4NF</strong> vì mỗi MVD được tách riêng. <em>(Mở rộng tùy use-case: thêm <code>user_friends</code> cho follow, <code>post_likes</code> cho like — không bắt buộc cho schema cốt lõi.)</em> Tổng 7 bảng cốt lõi, query nhanh, không dư thừa."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Boss battle: 1 bảng \"Diễn đàn GuildBoard\" nhồi đủ thứ (user, post, game, platform) đang vi phạm cả 1NF→4NF. Nhiệm vụ: soi từng cột, hỏi \"nó phụ thuộc vào ai?\", rồi tách cho đúng chuẩn."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — bảng tổng (siêu vi phạm)",
+          "columns": [
+            "user_id",
+            "username",
+            "country",
+            "is_premium",
+            "post_id",
+            "post_text",
+            "game_name"
+          ],
+          "rows": [
+            [
+              "U01",
+              "minh_gamer",
+              "VN",
+              "true",
+              "P01",
+              "Clear Elden Ring!",
+              "Elden Ring"
+            ],
+            [
+              "U02",
+              "yuki_99",
+              "JP",
+              "false",
+              "P02",
+              "Hades quá hay",
+              "Hades"
+            ]
+          ],
+          "violations": {
+            "0-5": true,
+            "0-6": true
+          }
+        },
+        "after": {
+          "title": "SAU — schema sạch (sau 4 vòng)",
+          "columns": [
+            "user_id",
+            "post_id",
+            "game_id",
+            "post_date"
+          ],
+          "rows": [
+            [
+              "U01",
+              "P01",
+              "G01",
+              "2024-05-01"
+            ],
+            [
+              "U02",
+              "P02",
+              "G02",
+              "2024-05-02"
+            ]
+          ]
+        },
+        "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."
+      },
+      "schema": {
+        "table_name": "users",
+        "columns": [
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👤"
+          },
+          {
+            "name": "user_email",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "📧"
+          },
+          {
+            "name": "country",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🌏"
+          },
+          {
+            "name": "is_premium",
+            "type": "BOOLEAN",
+            "key": "",
+            "icon": "👑"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "U01",
+          "minh_gamer",
+          "minh@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U02",
+          "yuki_99",
+          "yuki@x.com",
+          "JP",
+          "false"
+        ],
+        [
+          "U03",
+          "sara_plays",
+          "sara@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U04",
+          "alex_pro",
+          "alex@x.com",
+          "US",
+          "true"
+        ],
+        [
+          "U05",
+          "dragon_vn",
+          "dragon@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U06",
+          "ninja_jp",
+          "ninja@x.com",
+          "JP",
+          "true"
+        ],
+        [
+          "U07",
+          "noob_us",
+          "noob@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U08",
+          "pixel_vn",
+          "pixel@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U09",
+          "frost_kr",
+          "frost@x.com",
+          "KR",
+          "false"
+        ],
+        [
+          "U10",
+          "blade_vn",
+          "blade@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U11",
+          "mage_jp",
+          "mage@x.com",
+          "JP",
+          "true"
+        ],
+        [
+          "U12",
+          "loot_us",
+          "loot@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U13",
+          "iron_vn",
+          "iron@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U14",
+          "owl_kr",
+          "owl@x.com",
+          "KR",
+          "true"
+        ],
+        [
+          "U15",
+          "arcane_us",
+          "arcane@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U16",
+          "thunder_vn",
+          "thunder@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U17",
+          "silent_jp",
+          "silent@x.com",
+          "JP",
+          "false"
+        ],
+        [
+          "U18",
+          "rune_vn",
+          "rune@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U19",
+          "vortex_kr",
+          "vortex@x.com",
+          "KR",
+          "true"
+        ],
+        [
+          "U20",
+          "ember_us",
+          "ember@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U21",
+          "zen_jp",
+          "zen@x.com",
+          "JP",
+          "true"
+        ],
+        [
+          "U22",
+          "ghost_vn",
+          "ghost@x.com",
+          "VN",
+          "true"
+        ]
+      ]
+    },
+    "mission": "Hoàn thành 4 vòng chiến bằng cách tách dần bảng <code class=\"code\">gamers_social</code> khổng lồ thành schema sạch: <code class=\"code\">users</code>, <code class=\"code\">posts</code>, <code class=\"code\">games</code>, <code class=\"code\">genres</code>, <code class=\"code\">platforms</code>, và các bảng junction."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Sau khi áp dụng đầy đủ 1NF → 2NF → 3NF → BCNF, Diễn đàn GuildBoard nên có tối thiểu bao nhiêu bảng?",
+        "options": [
+          {
+            "id": "a",
+            "text": "1 bảng (gamers_social)",
+            "correct": false,
+            "explanation": "Sai — 1 bảng chứa hết = vi phạm mọi NF (multivalued, partial dep, transitive dep). Schema nguyên thủy của Boss Battle."
+          },
+          {
+            "id": "b",
+            "text": "2 bảng (users + games)",
+            "correct": false,
+            "explanation": "Sai — quá ít. Thiếu posts (1:N từ users), genres, platforms (M:N qua junction), và các junction tables."
+          },
+          {
+            "id": "c",
+            "text": "5 bảng chính (users, posts, games, genres, platforms) + 2 junction cốt lõi = 7 bảng",
+            "correct": true,
+            "explanation": "Đúng — 5 entity chính (users, posts, games, genres, platforms) + 2 junction (post_game, post_genre). Đủ để cover M:N, 1:N, đạt BCNF."
+          },
+          {
+            "id": "d",
+            "text": "20 bảng (mỗi user một bảng riêng)",
+            "correct": false,
+            "explanation": "Sai — 20 bảng là quá nhiều, gây over-engineering. Schema chuẩn BCNF cần ~7-10 bảng cho bài toán này."
+          }
+        ]
+      },
+      {
+        "question": "Boss Battle — junction table dùng cho quan hệ nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "user ↔ post (1:N — không cần junction)",
+            "correct": false,
+            "explanation": "Sai — 1:N chỉ cần FK ở bên N (post.user_id), không cần junction."
+          },
+          {
+            "id": "b",
+            "text": "post ↔ game (M:N — mỗi post có thể nhắc nhiều game, mỗi game có thể ở nhiều post)",
+            "correct": true,
+            "explanation": "Đúng — quan hệ M:N giữa post và game cần junction post_game(post_id, game_id). Mỗi dòng = 1 lần nhắc game trong post."
+          },
+          {
+            "id": "c",
+            "text": "user ↔ country (1:1 — không cần junction)",
+            "correct": false,
+            "explanation": "Sai — 1:1 hiếm gặp, thường gộp vào 1 bảng hoặc FK ở 1 bên. Không cần junction."
+          },
+          {
+            "id": "d",
+            "text": "post ↔ post_date (cùng bảng)",
+            "correct": false,
+            "explanation": "Sai — post_date là cột của post, không phải entity riêng. Cùng bảng, không cần junction."
+          }
+        ]
+      }
+    ],
+    "decomp_game": {
+      "stages": [
+        {
+          "stage_title": "Tách tags ra khỏi post (1NF)",
+          "rule_label": "1NF — Nguyên tử hóa",
+          "rule": "Bảng <code>posts</code> có cột <code>post_tags</code> chứa nhiều tag cách nhau bởi dấu phẩy (vd: \"rpg, indie, soulslike\") — vi phạm 1NF. Tách tag thành bảng riêng.",
+          "mission": "Kéo các cột từ bảng <code>posts</code> vào 2 bảng mục tiêu.",
+          "source_table": {
+            "name": "posts",
+            "columns": [
+              {
+                "name": "post_id",
+                "type": "INT",
+                "key": "PK",
+                "icon": "🔑"
+              },
+              {
+                "name": "user_id",
+                "type": "INT",
+                "key": "",
+                "icon": "👤"
+              },
+              {
+                "name": "content",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "📝"
+              },
+              {
+                "name": "post_date",
+                "type": "DATE",
+                "key": "",
+                "icon": "📅"
+              },
+              {
+                "name": "post_tags",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "⚠️"
+              },
+              {
+                "name": "post_id",
+                "type": "INT",
+                "key": "",
+                "icon": "🔗"
+              }
+            ],
+            "data": [
+              [
+                "P01",
+                "U01",
+                "Vừa clear Elden Ring!",
+                "2024-05-01",
+                "rpg, soulslike, hard"
+              ],
+              [
+                "P02",
+                "U02",
+                "Hades quá hay",
+                "2024-05-02",
+                "roguelike, indie"
+              ],
+              [
+                "P03",
+                "U03",
+                "Stardew chill",
+                "2024-05-03",
+                "farming, cozy, indie"
+              ]
+            ]
+          },
+          "target_tables": [
+            {
+              "name": "posts",
+              "icon": "📝",
+              "description": "Bảng bài viết (KHÔNG có tags)"
+            },
+            {
+              "name": "post_tags",
+              "icon": "🏷️",
+              "description": "Bảng nối post ↔ tag"
+            }
+          ],
+          "solution": {
+            "posts": [
+              "post_id",
+              "user_id",
+              "content",
+              "post_date"
+            ],
+            "post_tags": [
+              "post_id",
+              "post_tags"
+            ]
+          },
+          "hint": "Cột post_tags vi phạm 1NF (multi-value). Giữ nó nhưng tách sang bảng riêng — sau này sẽ chuẩn hóa tiếp."
+        },
+        {
+          "stage_title": "Tách users và games (2NF)",
+          "rule_label": "2NF — Phụ thuộc hàm đầy đủ",
+          "rule": "Bảng <code>user_activities</code> có composite key (user_id, game_id). Cột <code>username</code> chỉ phụ thuộc user_id; cột <code>game_title</code> chỉ phụ thuộc game_id → vi phạm 2NF.",
+          "mission": "Kéo cột từ <code>user_activities</code> vào 3 bảng: users, games, user_activities.",
+          "source_table": {
+            "name": "user_activities",
+            "columns": [
+              {
+                "name": "user_id",
+                "type": "INT",
+                "key": "PK",
+                "icon": "🔑"
+              },
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "PK",
+                "icon": "🔑"
+              },
+              {
+                "name": "username",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "⚠️"
+              },
+              {
+                "name": "user_email",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "⚠️"
+              },
+              {
+                "name": "game_title",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "⚠️"
+              },
+              {
+                "name": "playtime_hours",
+                "type": "INT",
+                "key": "",
+                "icon": "⏱️"
+              },
+              {
+                "name": "last_played",
+                "type": "DATE",
+                "key": "",
+                "icon": "📅"
+              },
+              {
+                "name": "user_id",
+                "type": "INT",
+                "key": "",
+                "icon": "🔗"
+              },
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "",
+                "icon": "🔗"
+              }
+            ],
+            "data": [
+              [
+                "U01",
+                "G01",
+                "minh_gamer",
+                "minh@x.com",
+                "Elden Ring",
+                "120",
+                "2024-05-01"
+              ],
+              [
+                "U01",
+                "G02",
+                "minh_gamer",
+                "minh@x.com",
+                "Hades",
+                "45",
+                "2024-05-02"
+              ],
+              [
+                "U02",
+                "G01",
+                "yuki_99",
+                "yuki@x.com",
+                "Elden Ring",
+                "200",
+                "2024-05-03"
+              ],
+              [
+                "U02",
+                "G03",
+                "yuki_99",
+                "yuki@x.com",
+                "Stardew",
+                "80",
+                "2024-05-04"
+              ],
+              [
+                "U03",
+                "G02",
+                "sara_plays",
+                "sara@x.com",
+                "Hades",
+                "60",
+                "2024-05-05"
+              ]
+            ]
+          },
+          "target_tables": [
+            {
+              "name": "users",
+              "icon": "👤",
+              "description": "Bảng người chơi"
+            },
+            {
+              "name": "games",
+              "icon": "🎮",
+              "description": "Bảng trò chơi"
+            },
+            {
+              "name": "user_activities",
+              "icon": "⏱️",
+              "description": "Bảng hoạt động (chỉ FK + playtime + date)"
+            }
+          ],
+          "solution": {
+            "users": [
+              "user_id",
+              "username",
+              "user_email"
+            ],
+            "games": [
+              "game_id",
+              "game_title"
+            ],
+            "user_activities": [
+              "user_id",
+              "game_id",
+              "playtime_hours",
+              "last_played"
+            ]
+          },
+          "hint": "Composite key (user_id, game_id). username chỉ cần user_id → rời đi. game_title chỉ cần game_id → rời đi. playtime cần CẢ HAI → ở lại."
+        },
+        {
+          "stage_title": "Tách genres (3NF)",
+          "rule_label": "3NF — Phụ thuộc bắc cầu",
+          "rule": "Bảng <code>games</code>: game_id → genre → genre_description. Cột genre_description bị phụ thuộc bắc cầu. Tách genres ra bảng riêng.",
+          "mission": "Kéo cột từ <code>games</code> vào 2 bảng: games, genres.",
+          "source_table": {
+            "name": "games",
+            "columns": [
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "PK",
+                "icon": "🔑"
+              },
+              {
+                "name": "game_title",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "🎮"
+              },
+              {
+                "name": "genre",
+                "type": "VARCHAR",
+                "key": "PK",
+                "icon": "🔑"
+              },
+              {
+                "name": "genre_description",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "⚠️"
+              },
+              {
+                "name": "release_year",
+                "type": "INT",
+                "key": "",
+                "icon": "📅"
+              },
+              {
+                "name": "genre",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "🔗"
+              }
+            ],
+            "data": [
+              [
+                "G01",
+                "Elden Ring",
+                "Soulslike",
+                "Game nhập vai khó, đánh boss cường độ cao",
+                "2022"
+              ],
+              [
+                "G02",
+                "Hades",
+                "Roguelike",
+                "Game hành động chạy đi chạy lại mỗi lần chết",
+                "2020"
+              ],
+              [
+                "G03",
+                "Stardew",
+                "Cozy",
+                "Game nông trại thư giãn, không chiến đấu",
+                "2016"
+              ],
+              [
+                "G04",
+                "Dark Souls",
+                "Soulslike",
+                "Game nhập vai khó, đánh boss cường độ cao",
+                "2011"
+              ]
+            ]
+          },
+          "target_tables": [
+            {
+              "name": "genres",
+              "icon": "🗂️",
+              "description": "Bảng thể loại game"
+            },
+            {
+              "name": "games",
+              "icon": "🎮",
+              "description": "Bảng trò chơi (FK genre + title + year)"
+            }
+          ],
+          "solution": {
+            "genres": [
+              "genre",
+              "genre_description"
+            ],
+            "games": [
+              "game_id",
+              "game_title",
+              "genre",
+              "release_year"
+            ]
+          },
+          "hint": "Phụ thuộc bắc cầu: game_id → genre → genre_description. genre_description chỉ cần genre → tách ra. games vẫn giữ genre làm FK."
+        },
+        {
+          "stage_title": "Tách platforms (BCNF)",
+          "rule_label": "BCNF — Siêu khóa",
+          "rule": "Bảng <code>games_platforms</code> có cột <code>platforms</code> chứa nhiều platform (vd: \"PC, PS5, Switch\") — multi-value, vi phạm BCNF. Tách platform thành bảng riêng.",
+          "mission": "Kéo cột từ <code>games_platforms</code> vào 2 bảng: games, game_platforms.",
+          "source_table": {
+            "name": "games_platforms",
+            "columns": [
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "PK",
+                "icon": "🔑"
+              },
+              {
+                "name": "game_title",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "🎮"
+              },
+              {
+                "name": "platforms",
+                "type": "VARCHAR",
+                "key": "",
+                "icon": "⚠️"
+              },
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "",
+                "icon": "🔗"
+              }
+            ],
+            "data": [
+              [
+                "G01",
+                "Elden Ring",
+                "PC, PS5, Xbox"
+              ],
+              [
+                "G02",
+                "Hades",
+                "PC, Switch"
+              ],
+              [
+                "G03",
+                "Stardew",
+                "PC, Switch, PS4, Xbox"
+              ],
+              [
+                "G04",
+                "Dark Souls",
+                "PC, PS4, Xbox"
+              ]
+            ]
+          },
+          "target_tables": [
+            {
+              "name": "games",
+              "icon": "🎮",
+              "description": "Bảng trò chơi (chỉ chứa thông tin game)"
+            },
+            {
+              "name": "game_platforms",
+              "icon": "🖥️",
+              "description": "Bảng nối game ↔ platform"
+            }
+          ],
+          "solution": {
+            "games": [
+              "game_id",
+              "game_title"
+            ],
+            "game_platforms": [
+              "game_id",
+              "platforms"
+            ]
+          },
+          "hint": "Cột platforms multi-value (một game chạy nhiều platform). Tách thành junction table — mỗi dòng là 1 game-platform pair."
+        }
+      ]
+    },
+    "mini_game": {
+      "type": "order",
+      "title": "Thiết kế schema Boss Battle — sắp xếp thứ tự",
+      "instruction": "Kéo thả theo thứ tự đúng để thiết kế Diễn đàn GuildBoard.",
+      "items": [
+        {
+          "id": "i1",
+          "label": "1. Xác định entity: users, posts, games, genres, platforms"
+        },
+        {
+          "id": "i2",
+          "label": "2. Tách game ↔ genre (M:N → junction table)"
+        },
+        {
+          "id": "i3",
+          "label": "3. Tách post ↔ game (M:N → junction)"
+        },
+        {
+          "id": "i4",
+          "label": "4. Kiểm tra BCNF cho từng bảng"
+        }
+      ],
+      "solution": {
+        "i1": 1,
+        "i2": 2,
+        "i3": 3,
+        "i4": 4
+      }
+    }
+  },
+  "step_3": {
+    "mission": "BOSS BATTLE — Tìm <strong>top 3 user premium có nhiều post nhất</strong> — JOIN <code>users</code> ↔ <code>posts</code>, lọc premium, đếm + sắp xếp giảm dần.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "u.username",
+        "slot": "col-1"
+      },
+      {
+        "type": "col",
+        "token": "u.country",
+        "slot": "col-2"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(p.post_id)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "post_count",
+        "slot": "col-alias"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "users u",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join"
+      },
+      {
+        "type": "tbl",
+        "token": "posts p",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on"
+      },
+      {
+        "type": "col",
+        "token": "p.user_id = u.user_id",
+        "slot": "col-on"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "u.is_premium",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "true",
+        "slot": "val-1"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "u.user_id, u.username, u.country",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "post_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      },
+      {
+        "type": "kw",
+        "token": "LIMIT",
+        "slot": "kw-limit"
+      },
+      {
+        "type": "val",
+        "token": "3",
+        "slot": "val-limit"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , ____ , COUNT(...) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____ ON ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC LIMIT ____",
+        "accepts": [
+          "kw",
+          "col",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC",
+          "LIMIT"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
+    "reveal_hints": {
+      "select-line": "SELECT <strong>u.username</strong>, <strong>u.country</strong> + <strong>COUNT(p.post_id) AS post_count</strong> — đếm số post.",
+      "from-line": "FROM <strong>users u</strong> JOIN <strong>posts p</strong> ON <strong>p.user_id = u.user_id</strong> — nối 2 bảng.",
+      "where-line": "WHERE <strong>u.is_premium = true</strong> — chỉ lấy user premium.",
+      "group-line": "GROUP BY <strong>u.user_id, u.username, u.country</strong> — gom theo user.",
+      "order-line": "ORDER BY <strong>post_count DESC</strong> + <strong>LIMIT 3</strong> — top 3 post nhiều nhất."
+    }
+  },
+  "step_4": {
+    "prompt": "BOSS+ — thu hẹp còn <strong>user premium ở Việt Nam (country = 'VN')</strong>: top 3 người đăng nhiều post nhất (thêm điều kiện <code>AND u.country = 'VN'</code>).",
+    "context": {
+      "scenario": "Vòng chốt hợp đồng với diễn đàn GuildBoard: CEO của họ muốn danh sách trao thưởng <strong>thành viên premium Việt Nam</strong> — top 3 người đăng nhiều bài nhất trong nhóm <code>is_premium = true</code> và <code>country = 'VN'</code>. Một câu SQL gói mọi kỹ năng của cả mùa tư vấn.",
+      "real_world": "Bảng xếp hạng creator của <strong>TikTok/YouTube</strong> chạy đúng khuôn: JOIN user ↔ content, lọc phân khúc (quốc gia, gói trả phí), GROUP BY, rồi <code>LIMIT</code> lấy top. Thêm 1 điều kiện AND = đổi cả tệp trao thưởng — vì thế WHERE phải chính xác tuyệt đối.",
+      "steps": [
+        "Nối: <code>users u JOIN posts p ON p.user_id = u.user_id</code>.",
+        "Lọc phân khúc: <code>WHERE u.is_premium = true AND u.country = 'VN'</code>.",
+        "Gộp + đếm: <code>GROUP BY u.user_id, u.username, u.country</code> (gộp theo PK cho chuẩn), <code>COUNT(p.post_id) AS post_count</code>.",
+        "Xếp hạng lấy top: <code>ORDER BY post_count DESC LIMIT 3</code>."
+      ],
+      "hint_explore": "Trinh sát trước trận: <code>SELECT * FROM users</code> (chú ý <code>is_premium</code>, <code>country</code>) và <code>SELECT * FROM posts</code>.",
+      "expected": "Đúng tối đa 3 dòng (<code>username, country, post_count</code>): creator premium VN đăng nhiều nhất, giảm dần. Đóng ticket = mùa Consulting toàn thắng. ⚔️"
+    },
+    "starter": "-- BOSS BATTLE: Top 3 user premium có nhiều post nhất\n-- JOIN 2 bảng (users ↔ posts) + GROUP BY + ORDER BY + LIMIT\nSELECT u., u., COUNT(p.) AS post_count\n  FROM users u\n  JOIN posts p ON p. = u.\n WHERE u. = \n GROUP BY u., u., u.\n ORDER BY post_count DESC\n LIMIT 3;\n",
+    "schema": {
+      "table_name": "users",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "user_email",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "is_premium",
+          "type": "BOOLEAN",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "U01",
+          "minh_gamer",
+          "minh@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U02",
+          "yuki_99",
+          "yuki@x.com",
+          "JP",
+          "false"
+        ],
+        [
+          "U03",
+          "sara_plays",
+          "sara@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U04",
+          "alex_pro",
+          "alex@x.com",
+          "US",
+          "true"
+        ],
+        [
+          "U05",
+          "dragon_vn",
+          "dragon@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U06",
+          "ninja_jp",
+          "ninja@x.com",
+          "JP",
+          "true"
+        ],
+        [
+          "U07",
+          "noob_us",
+          "noob@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U08",
+          "pixel_vn",
+          "pixel@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U09",
+          "frost_kr",
+          "frost@x.com",
+          "KR",
+          "false"
+        ],
+        [
+          "U10",
+          "blade_vn",
+          "blade@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U11",
+          "mage_jp",
+          "mage@x.com",
+          "JP",
+          "true"
+        ],
+        [
+          "U12",
+          "loot_us",
+          "loot@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U13",
+          "iron_vn",
+          "iron@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U14",
+          "owl_kr",
+          "owl@x.com",
+          "KR",
+          "true"
+        ],
+        [
+          "U15",
+          "arcane_us",
+          "arcane@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U16",
+          "thunder_vn",
+          "thunder@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U17",
+          "silent_jp",
+          "silent@x.com",
+          "JP",
+          "false"
+        ],
+        [
+          "U18",
+          "rune_vn",
+          "rune@x.com",
+          "VN",
+          "true"
+        ],
+        [
+          "U19",
+          "vortex_kr",
+          "vortex@x.com",
+          "KR",
+          "true"
+        ],
+        [
+          "U20",
+          "ember_us",
+          "ember@x.com",
+          "US",
+          "false"
+        ],
+        [
+          "U21",
+          "zen_jp",
+          "zen@x.com",
+          "JP",
+          "true"
+        ],
+        [
+          "U22",
+          "ghost_vn",
+          "ghost@x.com",
+          "VN",
+          "true"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "posts",
+        "columns": [
+          {
+            "name": "post_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "user_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "post_text",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "P01",
+            "U01",
+            "Clear Elden Ring!"
+          ],
+          [
+            "P02",
+            "U01",
+            "Boss tips"
+          ],
+          [
+            "P03",
+            "U01",
+            "Build guide"
+          ],
+          [
+            "P04",
+            "U01",
+            "PvP montage"
+          ],
+          [
+            "P05",
+            "U01",
+            "Lore thread"
+          ],
+          [
+            "P06",
+            "U05",
+            "Ranked climb"
+          ],
+          [
+            "P07",
+            "U05",
+            "Deck list"
+          ],
+          [
+            "P08",
+            "U05",
+            "Patch notes"
+          ],
+          [
+            "P09",
+            "U05",
+            "Tier list"
+          ],
+          [
+            "P10",
+            "U03",
+            "Speedrun WR"
+          ],
+          [
+            "P11",
+            "U03",
+            "Glitch found"
+          ],
+          [
+            "P12",
+            "U03",
+            "Route guide"
+          ],
+          [
+            "P13",
+            "U08",
+            "New skin"
+          ],
+          [
+            "P14",
+            "U08",
+            "Event recap"
+          ],
+          [
+            "P15",
+            "U10",
+            "First post"
+          ],
+          [
+            "P16",
+            "U02",
+            "(non-premium)"
+          ],
+          [
+            "P17",
+            "U02",
+            "(non-premium)"
+          ],
+          [
+            "P18",
+            "U07",
+            "(non-premium)"
+          ]
+        ]
+      }
+    ],
+    "expected_sql": "SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true AND u.country = 'VN' GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Boss Battle! Bạn cần <em>kết hợp dữ liệu từ 2 bảng</em> (users và posts), lọc theo điều kiện, đếm, sắp xếp, lấy top. Hãy nghĩ: dùng JOIN + GROUP BY + ORDER BY + LIMIT."
+      },
+      {
+        "level": 2,
+        "text": "Cần <code>JOIN users ↔ posts</code> qua <code>user_id</code>."
+      },
+      {
+        "level": 3,
+        "text": "<code>WHERE is_premium = true</code> + <code>GROUP BY u.user_id, u.username, u.country</code>"
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT u.username, u.country, COUNT(p.post_id) AS post_count FROM users u JOIN posts p ON p.user_id = u.user_id WHERE u.is_premium = true AND u.country = 'VN' GROUP BY u.user_id, u.username, u.country ORDER BY post_count DESC LIMIT 3;</code>"
+      }
+    ],
+    "success_message": "👑 CHÚC MỪNG! Bạn đã trở thành KIẾN TRÚC SƯ CSDL! Bạn đã chinh phục 14 bài Module 1+2, từ Entity/PK cơ bản đến chuẩn hóa 4NF + multi-table JOIN trên hệ thống Diễn đàn GuildBoard phức tạp. Sắp tới Module 3 — bước vào thế giới Ứng dụng Thực tế (JSON, Spatial, ORM, Web Services, Bảo mật).",
+    "xp_reward": 100
+  }
+}

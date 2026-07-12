@@ -1,0 +1,761 @@
+{
+  "id": "db_14",
+  "index": 15,
+  "story": {
+    "tag": "🎫 GameHub · Ticket #15",
+    "hook": "Về nhà — <strong>GameHub v2.0 khởi động</strong>. Tính năng đầu tiên: cho người chơi tuỳ biến app (theme tối/sáng, ngôn ngữ, thông báo). Đội sản phẩm muốn nhét cả cụm cài đặt vào <em>1 cột JSONB</em> <code>settings</code> thay vì đẻ 10 cột mới. Hợp lý — nhưng truy vấn kiểu gì vào TRONG một cục JSON? Ticket: làm chủ <strong>path expression <code>->></code></strong> để đếm user theo theme, theo ngôn ngữ."
+  },
+  "title": "JSON trong Database — Path Expressions",
+  "subtitle": "Lưu và truy vấn JSON bên trong cột quan hệ",
+  "module": 3,
+  "module_title": "Application Design",
+  "icon": "&#123;...&#125;",
+  "color": "#8B5CF6",
+  "estimated_minutes": 18,
+  "xp_reward": 60,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "achievement": {
+    "name": "Thợ lặn JSON",
+    "desc": "truy vấn JSON path"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "JSONB = cột lưu JSON thật, query bằng operator -> và ->>",
+        "->> trả về TEXT (chuỗi thuần), -> trả về JSON value",
+        "GROUP BY JSON key = phân tích dữ liệu linh hoạt không cần thêm cột"
+      ],
+      "intro": "Bảng <code class=\"code\">app_users</code> cần lưu <strong>settings của user</strong>: theme (dark/light), notifications (on/off), language (vi/en). Tạo 10 cột? Không — dùng <strong>JSONB</strong>: 1 cột lưu cả object, query bằng <code class=\"code\">->></code> để trích xuất giá trị. PostgreSQL parse JSON binary → truy vấn cực nhanh.",
+      "example": "Query <code class=\"code\">settings->>'theme'</code> trả về <strong>text thuần</strong> (dark, light…). Dùng trong SELECT, WHERE, GROUP BY. Filter: <code class=\"code\">WHERE settings->>'notifications' = 'true'</code> — lưu ý: value là string, dùng nháy đơn."
+    },
+    "intro": "Điều gì xảy ra khi 1 user có 30 settings (theme, language, notification, font_size, ...)? Tạo 30 cột? Thêm setting mới = ALTER TABLE = downtime 5 phút. Hay lưu vào 1 cột <code>JSONB</code>? 1 lần INSERT, schema không đổi. PostgreSQL cho query JSON cực nhanh với GIN index. Bài này dạy <strong>JSON in Relational</strong>.",
+    "concept_cards": [
+      {
+        "icon": "fa-brackets-curly",
+        "title": "JSONB — Tủ đồ cá nhân",
+        "body": "Hãy nghĩ <strong>JSONB</strong> như tủ đồ trong phòng: bạn nhét gì cũng được — quần áo, sách, đồ chơi, không ai ép bạn theo khuôn. Còn cột quan hệ như nhà kho công ty: mỗi ô đều có nhãn, mọi thứ đúng chỗ. JSONB = linh hoạt cho settings, preferences, tags. Quan hệ = chặt chẽ cho orders, users."
+      },
+      {
+        "icon": "fa-database",
+        "title": "JSON Path Operators",
+        "body": "<code>-&gt;</code> lấy element (trả JSON), <code>-&gt;&gt;</code> lấy element (trả TEXT), <code>#&gt;</code> lấy nested path, <code>@&gt;</code> kiểm tra contains. <strong>Index GIN</strong> trên JSONB column → query <code>WHERE settings @&gt; '{...}'</code> chạy nhanh như index B-tree trên cột thường."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Thử thêm cột <code>lang</code> cho 1000 user bằng <code>ALTER TABLE</code> — chậm + khóa bảng. Với JSONB chỉ cần nhét vào <code>settings</code> rồi <code>settings->>'lang'</code> lôi ra. Linh hoạt, không phải đổi schema."
+      }
+    ],
+    "visual": {
+      "diagram_legacy_1": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — 1 bảng tổng (BAD)",
+          "columns": [
+            "user_id",
+            "username",
+            "post_id",
+            "post_text",
+            "game_name",
+            "genre"
+          ],
+          "rows": [
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "RPG"
+            ],
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "Action"
+            ],
+            [
+              "U2",
+              "bob",
+              "P2",
+              "Check this",
+              "Hades",
+              "Rogue"
+            ]
+          ],
+          "violations": {
+            "0-5": true,
+            "0-4": true,
+            "1-5": true,
+            "1-4": true
+          }
+        },
+        "after": {
+          "title": "SAU — 5 bảng + 2 junction",
+          "columns": [
+            "user_id",
+            "post_id",
+            "game_id",
+            "genre_id",
+            "platform_id"
+          ],
+          "rows": [
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_RPG",
+              "PC"
+            ],
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_Act",
+              "PC"
+            ],
+            [
+              "U2",
+              "P2",
+              "G2",
+              "G_Rog",
+              "PS5"
+            ]
+          ]
+        },
+        "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."
+      },
+      "diagram": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user",
+            "title": "Web App / Form",
+            "sub": "User thay đổi setting (theme: dark)",
+            "payload": "POST /api/settings"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Python / Django ORM",
+            "sub": "Validate + serialize sang JSONB",
+            "payload": "settings = {'theme': 'dark'}"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Lưu JSONB vào cột settings",
+            "payload": "INSERT INTO app_users (..., settings) VALUES (...)"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python dict",
+            "sub": "Đọc lại: settings->>theme = \"dark\"",
+            "payload": "SELECT settings->>'theme' FROM app_users"
+          },
+          {
+            "icon": "fa-display",
+            "title": "HTML Response",
+            "sub": "Render UI với theme mới",
+            "payload": "<html data-theme=\"dark\">"
+          }
+        ]
+      },
+      "schema": {
+        "table_name": "app_users",
+        "columns": [
+          {
+            "name": "user_id",
+            "type": "VARCHAR",
+            "key": "PK",
+            "icon": "&#128273;"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "settings",
+            "type": "JSONB",
+            "key": "",
+            "icon": "&#123;...&#125;"
+          },
+          {
+            "name": "last_login",
+            "type": "TIMESTAMP",
+            "key": "",
+            "icon": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "U01",
+          "minh_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-10"
+        ],
+        [
+          "U02",
+          "yuki_dev",
+          "{\"theme\":\"light\",\"notifications\":false,\"lang\":\"en\"}",
+          "2026-01-11"
+        ],
+        [
+          "U03",
+          "sara_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"en\"}",
+          "2026-01-12"
+        ],
+        [
+          "U04",
+          "alex_dev",
+          "{\"theme\":\"auto\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-13"
+        ],
+        [
+          "U05",
+          "nam_dev",
+          "{\"theme\":\"dark\",\"notifications\":false,\"lang\":\"vi\"}",
+          "2026-01-14"
+        ],
+        [
+          "U06",
+          "lan_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"en\"}",
+          "2026-01-15"
+        ],
+        [
+          "U07",
+          "hung_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-16"
+        ],
+        [
+          "U08",
+          "mai_dev",
+          "{\"theme\":\"auto\",\"notifications\":false,\"lang\":\"en\"}",
+          "2026-01-17"
+        ],
+        [
+          "U09",
+          "tu_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-18"
+        ],
+        [
+          "U10",
+          "linh_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-19"
+        ],
+        [
+          "U11",
+          "phuc_dev",
+          "{\"theme\":\"dark\",\"notifications\":false,\"lang\":\"en\"}",
+          "2026-01-20"
+        ],
+        [
+          "U12",
+          "quan_dev",
+          "{\"theme\":\"auto\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-21"
+        ],
+        [
+          "U13",
+          "ha_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"en\"}",
+          "2026-01-22"
+        ],
+        [
+          "U14",
+          "dat_dev",
+          "{\"theme\":\"light\",\"notifications\":false,\"lang\":\"vi\"}",
+          "2026-01-23"
+        ],
+        [
+          "U15",
+          "vy_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-24"
+        ],
+        [
+          "U16",
+          "khoa_dev",
+          "{\"theme\":\"auto\",\"notifications\":true,\"lang\":\"en\"}",
+          "2026-01-25"
+        ],
+        [
+          "U17",
+          "trang_dev",
+          "{\"theme\":\"dark\",\"notifications\":false,\"lang\":\"vi\"}",
+          "2026-01-26"
+        ],
+        [
+          "U18",
+          "bao_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"en\"}",
+          "2026-01-27"
+        ],
+        [
+          "U19",
+          "ngoc_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-28"
+        ],
+        [
+          "U20",
+          "son_dev",
+          "{\"theme\":\"auto\",\"notifications\":false,\"lang\":\"vi\"}",
+          "2026-01-29"
+        ],
+        [
+          "U21",
+          "thao_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"en\"}",
+          "2026-01-30"
+        ],
+        [
+          "U22",
+          "duc_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"vi\"}",
+          "2026-01-31"
+        ]
+      ]
+    },
+    "mission": "Lấy <code class=\"code\">username</code> và giá trị <code class=\"code\">theme</code> từ JSON. Kéo thả khối lệnh ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Query nào trả về giá trị <strong>text thuần</strong> (không có nháy) từ JSON?",
+        "options": [
+          {
+            "id": "a",
+            "text": "SELECT settings->'theme' FROM app_users;",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — toán tử -> trả về JSON value (có nháy kép). Muốn text thuần cần ->>."
+          },
+          {
+            "id": "b",
+            "text": "SELECT settings->>'theme' FROM app_users;",
+            "correct": true,
+            "format": "code",
+            "explanation": "Đúng — toán tử ->> trả về text (varchar). Nháy kép bị strip. Dùng để compare với string."
+          },
+          {
+            "id": "c",
+            "text": "SELECT settings#>'{theme}' FROM app_users;",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — #> dùng cho path lookup (nested JSON), vẫn trả về JSON value. Để lấy text dùng #>>."
+          },
+          {
+            "id": "d",
+            "text": "SELECT theme FROM app_users;",
+            "correct": false,
+            "format": "code",
+            "explanation": "Sai — không có cột 'theme' trong bảng. settings là JSONB column, cần ->> để extract."
+          }
+        ]
+      },
+      {
+        "question": "Filter user có <code>notifications = true</code> trong JSONB. Cú pháp nào ĐÚNG?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>WHERE settings->>'notifications' = true</code> — so sánh boolean",
+            "correct": false,
+            "explanation": "Sai — ->> luôn trả TEXT, so sánh với true (boolean) là lỗi kiểu. Phải so với chuỗi 'true' (có nháy)."
+          },
+          {
+            "id": "b",
+            "text": "<code>WHERE settings->>'notifications' = 'true'</code> — key có nháy, so sánh text",
+            "correct": true,
+            "explanation": "Đúng — key JSON phải nằm trong nháy đơn ('notifications'), và ->> trả TEXT nên vế phải cũng là chuỗi 'true'."
+          },
+          {
+            "id": "c",
+            "text": "<code>WHERE notifications = true</code> — cột thường",
+            "correct": false,
+            "explanation": "Sai — không có cột 'notifications' (chỉ có 'settings' JSONB). Phải dùng ->> để extract field."
+          },
+          {
+            "id": "d",
+            "text": "<code>WHERE settings LIKE '%notifications%'</code> — string match (chậm + sai)",
+            "correct": false,
+            "explanation": "Sai — LIKE chỉ match substring trong text representation. Không hiệu quả, sai ngữ nghĩa. Dùng ->>."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Nối toán tử JSON → công dụng",
+      "instruction": "Mỗi toán tử PostgreSQL JSON dùng để làm gì?",
+      "xp": 25,
+      "pairs": [
+        {
+          "left": "->",
+          "leftId": "o1",
+          "rightId": "r1",
+          "right": {
+            "id": "r1",
+            "label": "Lấy JSON element (trả về JSON)"
+          }
+        },
+        {
+          "left": "->>",
+          "leftId": "o2",
+          "rightId": "r2",
+          "right": {
+            "id": "r2",
+            "label": "Lấy JSON element (trả về TEXT)"
+          }
+        },
+        {
+          "left": "#>",
+          "leftId": "o3",
+          "rightId": "r3",
+          "right": {
+            "id": "r3",
+            "label": "Lấy nested path (trả về JSON)"
+          }
+        },
+        {
+          "left": "@>",
+          "leftId": "o4",
+          "rightId": "r4",
+          "right": {
+            "id": "r4",
+            "label": "Contains (kiểm tra chứa giá trị)"
+          }
+        }
+      ],
+      "solution": {
+        "o1": "r1",
+        "o2": "r2",
+        "o3": "r3",
+        "o4": "r4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Đếm <strong>số user theo từng theme</strong> từ JSONB — dùng <code>GROUP BY settings->>'theme'</code>, sắp xếp giảm dần.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "settings",
+        "slot": "col-1"
+      },
+      {
+        "type": "op",
+        "token": "->>'theme'",
+        "slot": "op-extract1"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "theme",
+        "slot": "col-alias1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as2"
+      },
+      {
+        "type": "col",
+        "token": "user_count",
+        "slot": "col-alias2"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "app_users",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "settings->>'theme'",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "user_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT settings->>'theme' AS theme, COUNT(*) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM app_users",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY settings->>'theme'",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT settings->>'theme' AS theme, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'theme' ORDER BY user_count DESC;",
+    "reveal_hints": {
+      "select-line": "<code>settings->>'theme'</code> trích xuất key từ JSON + <code>COUNT(*)</code> đếm user.",
+      "from-line": "Bảng <code>app_users</code> lưu settings dạng JSONB.",
+      "group-line": "<code>GROUP BY settings->>'theme'</code> — nhóm theo giá trị theme từ JSON.",
+      "order-line": "<code>ORDER BY user_count DESC</code> — theme nhiều user nhất lên đầu."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — trích key JSON KHÁC: <strong>đếm user theo <code>settings-&gt;&gt;'lang'</code></strong> (ngôn ngữ), sắp xếp nhiều → ít. Cùng kỹ thuật path expression, key khác.",
+    "context": {
+      "scenario": "GameHub v2.0 lưu tuỳ biến người chơi trong cột JSONB <code>settings</code> của <code>app_users</code>. Đội địa phương hoá cần quyết định dịch ngôn ngữ nào trước — họ hỏi: <strong>người chơi đang đặt <code>lang</code> gì nhiều nhất?</strong> Câu trả lời nằm TRONG cục JSON.",
+      "real_world": "<strong>Discord/Spotify</strong> đều lưu user preferences dạng JSON và thống kê bằng path expression: <code>-&gt;&gt;</code> rút giá trị ra thành text để GROUP BY như cột thường — linh hoạt schema mà vẫn truy vấn được.",
+      "steps": [
+        "Rút ngôn ngữ từ JSON: <code>settings->>'lang' AS lang</code>.",
+        "Gộp theo chính biểu thức đó: <code>GROUP BY settings->>'lang'</code>.",
+        "Đếm user mỗi nhóm: <code>COUNT(*) AS user_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY user_count DESC</code>."
+      ],
+      "hint_explore": "Xem cục JSON thật: <code>SELECT * FROM app_users</code> — để ý cột <code>settings</code> chứa gì.",
+      "expected": "Bảng vài dòng × 2 cột (<code>lang, user_count</code>): mỗi ngôn ngữ kèm số người dùng, giảm dần — dữ liệu cho quyết định địa phương hoá."
+    },
+    "starter": "-- Đếm user theo theme (extract từ JSONB)\n-- GROUP BY settings->>'theme' + ORDER BY count DESC\nSELECT settings->>'theme' AS , COUNT(*) AS \n  FROM app_users\n GROUP BY settings->>'theme'\n ORDER BY  DESC;\n",
+    "schema": {
+      "table_name": "app_users",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "VARCHAR",
+          "key": "PK",
+          "icon": "&#128273;"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "settings",
+          "type": "JSONB",
+          "key": "",
+          "icon": "&#123;...&#125;"
+        }
+      ],
+      "data": [
+        [
+          "U01",
+          "minh_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U02",
+          "yuki_dev",
+          "{\"theme\":\"light\",\"notifications\":false,\"lang\":\"en\"}"
+        ],
+        [
+          "U03",
+          "sara_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"en\"}"
+        ],
+        [
+          "U04",
+          "alex_dev",
+          "{\"theme\":\"auto\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U05",
+          "nam_dev",
+          "{\"theme\":\"dark\",\"notifications\":false,\"lang\":\"vi\"}"
+        ],
+        [
+          "U06",
+          "lan_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"en\"}"
+        ],
+        [
+          "U07",
+          "hung_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U08",
+          "mai_dev",
+          "{\"theme\":\"auto\",\"notifications\":false,\"lang\":\"en\"}"
+        ],
+        [
+          "U09",
+          "tu_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U10",
+          "linh_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U11",
+          "phuc_dev",
+          "{\"theme\":\"dark\",\"notifications\":false,\"lang\":\"en\"}"
+        ],
+        [
+          "U12",
+          "quan_dev",
+          "{\"theme\":\"auto\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U13",
+          "ha_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"en\"}"
+        ],
+        [
+          "U14",
+          "dat_dev",
+          "{\"theme\":\"light\",\"notifications\":false,\"lang\":\"vi\"}"
+        ],
+        [
+          "U15",
+          "vy_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U16",
+          "khoa_dev",
+          "{\"theme\":\"auto\",\"notifications\":true,\"lang\":\"en\"}"
+        ],
+        [
+          "U17",
+          "trang_dev",
+          "{\"theme\":\"dark\",\"notifications\":false,\"lang\":\"vi\"}"
+        ],
+        [
+          "U18",
+          "bao_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"en\"}"
+        ],
+        [
+          "U19",
+          "ngoc_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"vi\"}"
+        ],
+        [
+          "U20",
+          "son_dev",
+          "{\"theme\":\"auto\",\"notifications\":false,\"lang\":\"vi\"}"
+        ],
+        [
+          "U21",
+          "thao_dev",
+          "{\"theme\":\"dark\",\"notifications\":true,\"lang\":\"en\"}"
+        ],
+        [
+          "U22",
+          "duc_dev",
+          "{\"theme\":\"light\",\"notifications\":true,\"lang\":\"vi\"}"
+        ]
+      ]
+    },
+    "expected_sql": "SELECT settings->>'lang' AS lang, COUNT(*) AS user_count FROM app_users GROUP BY settings->>'lang' ORDER BY user_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn muốn <em>phân tích dữ liệu JSON linh hoạt</em> — trích xuất 1 key từ JSON, đếm số lượng theo từng giá trị của key đó, sắp xếp giảm dần. Hãy nghĩ: trích key = <code>-&gt;&gt;</code>, đếm = <code>COUNT</code>, nhóm = <code>GROUP BY</code>."
+      },
+      {
+        "level": 2,
+        "text": "<code>GROUP BY settings->>'theme'</code> — extract key từ JSON rồi GROUP như cột thường."
+      },
+      {
+        "level": 3,
+        "text": "<code>SELECT settings->>'theme' AS theme, COUNT(*)</code> — alias cho dễ đọc."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT settings-&gt;&gt;'lang' AS lang, COUNT(*) AS user_count FROM app_users GROUP BY settings-&gt;&gt;'lang' ORDER BY user_count DESC;</code>"
+      }
+    ],
+    "success_message": "JSONB + GROUP BY = phân tích dữ liệu linh hoạt. Không cần ALTER TABLE để thêm cột!",
+    "xp_reward": 60
+  }
+}

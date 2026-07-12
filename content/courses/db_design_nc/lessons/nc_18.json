@@ -1,0 +1,532 @@
+{
+  "id": "nc_18",
+  "index": 18,
+  "title": "MVCC — sổ không tẩy xóa, mỗi lần ghi là dán bản mới",
+  "subtitle": "Multiversion + Snapshot Isolation: reader cầm ảnh chụp lúc mình bắt đầu — không chờ ai, không bị ai chặn",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 22,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "versions của Kiếm Rồng #3001 — sổ không tẩy xóa",
+      "columns": [
+        "version",
+        "giá (gem)",
+        "tem commit"
+      ],
+      "dataRows": [
+        [
+          "v1",
+          "500",
+          "10"
+        ],
+        [
+          "v2",
+          "480",
+          "25"
+        ],
+        [
+          "v3",
+          "520",
+          "40"
+        ],
+        [
+          "(v4 nháp)",
+          "— chưa commit",
+          "chưa có tem"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #59",
+    "hook": "Báo cáo doanh thu cuối quý đọc <strong>toàn bộ sàn suốt 2 tiếng</strong>. Dưới chế độ khóa, 2 tiếng đó là 2 tiếng seller bị chặn ghi — sếp gọi đó là \"bảo trì\", seller gọi đó là mất tiền. Còn xé-nháp-làm-lại kiểu bài 17? Báo cáo chạy 2 tiếng mà rớt soát ở phút 119 thì khóc bằng tiếng Mán. Ticket #59 đòi một điều nghe như phép thuật: <em>người đọc không chờ ai, người ghi không chặn ai — cùng lúc</em>. Câu trả lời của mọi DBMS lớn: đừng tẩy xóa sổ nữa. Mỗi lần ghi, DÁN MỘT BẢN MỚI. 📚"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "MVCC (multiversion, sách 18.7): mỗi write(Q) tạo một VERSION mới của Q kèm tem — không đè bản cũ; read(Q) được trao đúng bản phù hợp; kết quả vàng: <strong>đọc không bao giờ fail, không bao giờ phải chờ</strong>",
+        "SNAPSHOT ISOLATION (18.8): giao dịch nhận ẢNH CHỤP database tại StartTS — chỉ gồm dữ liệu ĐÃ COMMIT; đọc = lấy bản có tem commit LỚN NHẤT còn ≤ StartTS; read-only chạy tới đâu cũng không chờ, không abort",
+        "Người GHI vẫn phải qua cửa soát trước commit: hai updater chồng lấn cùng sửa MỘT món → đứa validate sau thấy bản lạ dán trong khoảng chạy của mình → ABORT (first committer wins) — lost update bài 11 hết cửa"
+      ],
+      "intro": "Sổ kế toán thật KHÔNG BAO GIỜ tẩy xóa — sai thì ghi bút toán mới đè lên dòng mới, dòng cũ còn nguyên. Kiểm toán viên soát quý I cứ đọc các trang tính đến hết quý I, kệ phòng kế toán đang viết quý II ở trang sau: hai bên không ai chờ ai, mà con số quý I không bao giờ nhảy múa dưới mắt kiểm toán.",
+      "example": "Kiếm Rồng #3001 có 3 bản: 500 (tem 10) → 480 (tem 25) → 520 (tem 40). Reader StartTS = 30 đọc → bản tem lớn nhất ≤ 30 là tem 25 → thấy <strong>480</strong>. Writer dán bản 520 lúc nào kệ writer — reader không chờ một giây, và đọc lại lần nữa vẫn 480: ảnh chụp không suy suyển."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-camera",
+        "title": "Ảnh chụp — theo đúng sách",
+        "body": "Snapshot isolation trao cho giao dịch một \"snapshot\" của database <strong>tại thời điểm nó bắt đầu</strong>; nó làm việc trên ảnh chụp đó, cách ly hoàn toàn khỏi các giao dịch chạy song song. Ảnh chỉ gồm giá trị do các giao dịch <strong>ĐÃ COMMIT</strong> ghi. Cách ly kiểu này là lý tưởng cho read-only: <em>không bao giờ chờ, không bao giờ bị abort</em>. Còn update thì phải được soát (validate) trước khi cho commit — nháp giữ trong workspace riêng tới lúc đó.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.8 — Snapshot Isolation"
+      },
+      {
+        "icon": "fa-layer-group",
+        "title": "Hai con tem + một luật chọn bản",
+        "body": "Mỗi giao dịch mang <strong>StartTS</strong> (lúc bắt đầu) và <strong>CommitTS</strong> (lúc xin nộp — tem này dán lên mọi version nó tạo). Luật đọc gói trong một dòng: <em>trả về bản có tem ghi LỚN NHẤT còn ≤ StartTS(Ti)</em>. Luật soát của updater cũng một dòng: <em>trong khoảng (StartTS..CommitTS] mà món mình định ghi đã có bản lạ dán vào → abort</em>. Hai giao dịch gọi là CHỒNG LẤN khi khoảng sống của chúng giao nhau — chỉ đám đó mới cần soát lẫn nhau."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Oracle, PostgreSQL, SQL Server — cả ba đều chạy snapshot (sách nêu đích danh). Bạn từng gặp nó rồi: bảng Postgres <strong>phình to dù bạn DELETE ầm ầm</strong> — vì DELETE trong MVCC chỉ dán \"bản đánh dấu đã xóa\", xác bản cũ nằm chờ <code>VACUUM</code> tới dọn (đúng luật dọn version của sách: bản cũ hơn 2 bản mà mọi giao dịch sống đều không cần nữa thì được xóa). Thấy autovacuum chạy đêm — đó là cái giá thuê kho chứa lịch sử."
+      }
+    ],
+    "mvcc_visual": {
+      "eyebrow": "SỔ KHÔNG TẨY XÓA — KIẾM RỒNG #3001 · MỖI THẺ LÀ MỘT PHIÊN BẢN, TEM = CommitTS",
+      "caption": "Chạy CẢ HAI kịch bản: người đọc lướt qua writer không một giây chờ; hai người sửa cùng món thì luật first-committer-wins ra tay.",
+      "item_label": "⚔️ Kiếm Rồng #3001 — giá (gem)",
+      "versions": [
+        {
+          "id": "v1",
+          "val": 500,
+          "ts": 10
+        },
+        {
+          "id": "v2",
+          "val": 480,
+          "ts": 25
+        }
+      ],
+      "modes": [
+        {
+          "id": "reader",
+          "short": "READER KHÔNG CHỜ",
+          "ok": true,
+          "result": "không ai chờ ai",
+          "btn": "▶ Kịch bản NGƯỜI ĐỌC",
+          "steps": [
+            {
+              "text": "R1 (StartTS=15) đọc → tem lớn nhất ≤ 15 là tem 10 → thấy 500",
+              "pick": "v1",
+              "cls": "ok",
+              "note": "Ảnh chụp của R1 là thời điểm 15 — bản 480 (tem 25) với nó là chuyện tương lai."
+            },
+            {
+              "text": "R2 (StartTS=30) đọc → tem lớn nhất ≤ 30 là tem 25 → thấy 480",
+              "pick": "v2",
+              "cls": "ok"
+            },
+            {
+              "text": "Writer commit — KHÔNG đè: DÁN bản mới v3 = 520, tem 40",
+              "add": {
+                "id": "v3",
+                "val": 520,
+                "ts": 40
+              },
+              "cls": "warn",
+              "note": "Không ổ khóa nào được phát: writer dán thẻ mới vào đuôi, các thẻ cũ còn nguyên cho những ảnh chụp cũ."
+            },
+            {
+              "text": "R2 đọc LẠI → vẫn 480: ảnh chụp lúc 30, bản tem 40 nằm ngoài rìa",
+              "pick": "v2",
+              "cls": "ok",
+              "note": "Cùng giao dịch, hai lần đọc một con số — cả con ma bài 16 cũng hết cửa: dòng chèn sau StartTS mang tem sau StartTS, không lọt nổi vào ảnh chụp."
+            },
+            {
+              "text": "R3 (StartTS=45) đọc → 520: bản mới nhất giờ đã nằm trong quá khứ của nó",
+              "pick": "v3",
+              "cls": "ok"
+            }
+          ],
+          "verdict": "✓ \"Read request never fails and is never made to wait\" (sách 18.7) — reader với writer chạy hai đường không cắt nhau. Báo cáo 2 tiếng lướt êm giữa giờ cao điểm là nhờ đúng dòng này."
+        },
+        {
+          "id": "fcw",
+          "short": "FIRST COMMITTER WINS",
+          "ok": true,
+          "result": "T5 abort — lost update hết cửa",
+          "btn": "▶ Kịch bản 2 NGƯỜI SỬA",
+          "steps": [
+            {
+              "text": "T5 (StartTS=50) đọc snapshot → 480 · muốn hạ 30: nháp 450",
+              "pick": "v2"
+            },
+            {
+              "text": "T6 (StartTS=52) cũng đọc 480 · muốn hạ 60: nháp 420",
+              "pick": "v2",
+              "cls": "warn",
+              "note": "Hai giao dịch chồng lấn cùng nhắm một món — mỗi đứa một ảnh chụp, không đứa nào thấy nháp đứa nào. Nghe quen không? Đúng thế trận lost update bài 11."
+            },
+            {
+              "text": "T6 nộp trước (CommitTS=60) → soát (52..60]: không bản lạ nào → ✓ DÁN v3 = 420",
+              "add": {
+                "id": "v3",
+                "val": 420,
+                "ts": 60
+              },
+              "cls": "ok"
+            },
+            {
+              "text": "T5 nộp (CommitTS=65) → soát (50..65]: CÓ bản tem 60 dán vào đúng món mình định ghi",
+              "cls": "bad",
+              "note": "Nếu nhắm mắt cho T5 dán nốt: bản 420 của T6 bị đè bay màu không dấu vết — chính xác là LOST UPDATE."
+            },
+            {
+              "text": "⛔ T5 ABORT — first committer wins: ai dán trước người đó thắng, kẻ sau xé nháp làm lại",
+              "cls": "bad"
+            }
+          ],
+          "verdict": "✓ Snapshot không thả rông người ghi: update phải qua cửa soát — lost update hết cửa. Nhưng khoan vỗ tay: hai giao dịch KHÔNG đụng cùng món thì cái máy soát này… mù tịt. Chuyện đó để bài sau. 😈"
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "một version = content + tem + khoảng sống",
+        "columns": [
+          {
+            "name": "content",
+            "type": "giá trị của bản",
+            "key": "📦"
+          },
+          {
+            "name": "tem commit",
+            "type": "CommitTS của người dán",
+            "key": "🏷️"
+          },
+          {
+            "name": "khoảng sống",
+            "type": "[tem mình .. tem bản kế)",
+            "key": "⏳"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "v1 · 500 gem",
+          "tem 10",
+          "sống [10..25)",
+          ""
+        ],
+        [
+          "v2 · 480 gem",
+          "tem 25",
+          "sống [25..40)",
+          ""
+        ],
+        [
+          "v3 · 520 gem",
+          "tem 40",
+          "sống [40..∞)",
+          ""
+        ],
+        [
+          "reader StartTS=30",
+          "→ chọn v2",
+          "30 rơi vào [25..40)",
+          "✓ không chờ"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Reader StartTS = 30 đọc Kiếm Rồng HAI lần: trước và sau khi writer dán bản 520 (tem 40). Nó thấy gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cả hai lần đều 480 — luật là \"tem lớn nhất ≤ 30\", bản tem 40 vĩnh viễn nằm ngoài ảnh chụp của nó; không chờ, không abort",
+            "correct": true,
+            "explanation": "Đúng — snapshot cố định tại StartTS: thế giới có dán thêm bao nhiêu bản, ảnh chụp lúc 30 vẫn y nguyên. Repeatable read miễn phí kèm theo."
+          },
+          {
+            "id": "b",
+            "text": "Lần 1: 480, lần 2: 520 — dữ liệu committed mới nhất luôn thắng",
+            "correct": false,
+            "explanation": "Sai — \"mới nhất luôn thắng\" là thế giới KHÔNG version của bài 11 (và chính nó sinh ra đủ thứ quái). Snapshot chọn theo StartTS của reader, không theo đồng hồ lúc đọc."
+          },
+          {
+            "id": "c",
+            "text": "Lần 2 phải chờ writer nhả rồi mới đọc được 520",
+            "correct": false,
+            "explanation": "Sai — không có gì để \"nhả\": writer không cầm khóa chặn reader, nó chỉ dán thẻ mới. Reader không bao giờ xếp hàng trong MVCC."
+          },
+          {
+            "id": "d",
+            "text": "Reader bị abort vì dữ liệu đổi giữa chừng",
+            "correct": false,
+            "explanation": "Sai — abort là án dành cho UPDATER thua ván soát; read-only theo sách \"never waits and is never aborted\". Dữ liệu \"đổi\" ở đâu thì đổi, ảnh chụp không đổi."
+          }
+        ]
+      },
+      {
+        "question": "Đọc ảnh chụp riêng thì đâu ai đụng ai — vậy vì sao updater vẫn phải qua cửa SOÁT trước khi commit?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì hai updater chồng lấn cùng sửa MỘT món sẽ không thấy nháp của nhau — cho commit cả hai thì bản dán trước bị bản sau đè bay màu: lost update; nên đứa nộp sau phải abort (first committer wins)",
+            "correct": true,
+            "explanation": "Chuẩn — ảnh chụp cách ly phần ĐỌC, nhưng phần GHI mà thả rông là hai bản đè nhau. Cửa soát chính là chốt chặn lost update của snapshot."
+          },
+          {
+            "id": "b",
+            "text": "Vì phải kiểm tra cú pháp SQL lần cuối trước khi ghi đĩa",
+            "correct": false,
+            "explanation": "Sai — cú pháp sai thì chết từ lúc parse rồi; cửa soát ở đây xử VA CHẠM giữa các giao dịch, không xử chính tả."
+          },
+          {
+            "id": "c",
+            "text": "Vì mọi update phải xếp hàng lấy khóa X như bài 12",
+            "correct": false,
+            "explanation": "Sai — biến thể first-committer-wins trong sách soát bằng TEM (có bản lạ trong khoảng chạy không), không phát khóa X chặn từ đầu. (Biến thể first-updater-wins có dùng write lock — nhưng cũng không phải \"như bài 12\".)"
+          },
+          {
+            "id": "d",
+            "text": "Không cần soát thật — các DBMS làm cho có lệ để log đẹp",
+            "correct": false,
+            "explanation": "Sai — thiếu cửa soát này thì snapshot thua cả read committed ở khoản lost update; \"first committer wins / first updater wins\" là luật sống còn, sách dành nguyên mục 18.8.2."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Ai thấy 480?",
+      "instruction": "Chuỗi version: 500 (tem 10) → 480 (tem 25) → 520 (tem 40). Reader nào THẤY GIÁ 480?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "s1",
+          "label": "reader StartTS = 30"
+        },
+        {
+          "id": "s2",
+          "label": "reader StartTS = 25 (đúng biên)"
+        },
+        {
+          "id": "s3",
+          "label": "reader StartTS = 15"
+        },
+        {
+          "id": "s4",
+          "label": "reader StartTS = 41"
+        }
+      ],
+      "bins": [
+        {
+          "id": "thay",
+          "label": "THẤY 480 ✓"
+        },
+        {
+          "id": "khac",
+          "label": "THẤY GIÁ KHÁC"
+        }
+      ],
+      "solution": {
+        "s1": "thay",
+        "s2": "thay",
+        "s3": "khac",
+        "s4": "khac"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp bộ luật 4 điều của thế giới nhiều-phiên-bản — có MỘT khối bịa (nghe rất chi là \"tươi mới\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "KHAI SINH: giao dịch nhận StartTS — ảnh chụp của nó là sổ TÍNH ĐẾN thời điểm đó, chỉ gồm dữ liệu ĐÃ commit",
+        "slot": "mv-snap"
+      },
+      {
+        "type": "op",
+        "token": "ĐỌC: lấy bản có tem commit LỚN NHẤT còn ≤ StartTS — kệ mọi bản dán sau, kệ mọi nháp chưa commit",
+        "slot": "mv-read"
+      },
+      {
+        "type": "op",
+        "token": "Writer ghi ĐÈ thẳng chỗ cũ — reader nào đang đọc thì chờ một nhịp, đổi lại luôn được dữ liệu tươi mới nhất",
+        "slot": "mv-x"
+      },
+      {
+        "type": "op",
+        "token": "GHI: KHÔNG đè — dán version mới mang tem CommitTS; các bản cũ còn nguyên cho những ảnh chụp cũ",
+        "slot": "mv-write"
+      },
+      {
+        "type": "op",
+        "token": "NỘP BÀI (update): soát khoảng Start→Commit trên món mình ghi — có bản lạ dán vào là abort: first committer wins",
+        "slot": "mv-commit"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "mv-snap",
+        "placeholder": "Điều 1 — giao dịch mở mắt thấy gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📸",
+          "label": "Ảnh chụp",
+          "sub": "Điều 1",
+          "hint": "Thứ trao cho giao dịch lúc StartTS — và vì sao đồ CHƯA commit không bao giờ có mặt trong đó?"
+        }
+      },
+      {
+        "id": "mv-read",
+        "placeholder": "Điều 2 — giữa cả xấp bản, đọc chọn bản nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "👓",
+          "label": "Luật đọc",
+          "sub": "Điều 2",
+          "hint": "Một phép so tem duy nhất — StartTS = 30 mà chuỗi tem là 10 · 25 · 40 thì chọn ai?"
+        }
+      },
+      {
+        "id": "mv-write",
+        "placeholder": "Điều 3 — ghi thì làm gì với bản cũ?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🏷️",
+          "label": "Luật ghi",
+          "sub": "Điều 3",
+          "hint": "Chính điều này làm reader khỏi chờ: bản cũ phải CÒN đó cho ai? Bản mới mang tem gì?"
+        }
+      },
+      {
+        "id": "mv-commit",
+        "placeholder": "Điều 4 — updater muốn nộp thì qua cửa nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⚖️",
+          "label": "Cửa soát",
+          "sub": "Điều 4",
+          "hint": "Không có cửa này thì hai bản nháp cùng món đè nhau — bài 11 gọi tên thảm họa đó là gì?"
+        }
+      }
+    ],
+    "expected_sql": "KHAI SINH: giao dịch nhận StartTS — ảnh chụp của nó là sổ TÍNH ĐẾN thời điểm đó, chỉ gồm dữ liệu ĐÃ commit ĐỌC: lấy bản có tem commit LỚN NHẤT còn ≤ StartTS — kệ mọi bản dán sau, kệ mọi nháp chưa commit GHI: KHÔNG đè — dán version mới mang tem CommitTS; các bản cũ còn nguyên cho những ảnh chụp cũ NỘP BÀI (update): soát khoảng Start→Commit trên món mình ghi — có bản lạ dán vào là abort: first committer wins",
+    "expected_zones": {
+      "mv-snap": "KHAI SINH: giao dịch nhận StartTS — ảnh chụp của nó là sổ TÍNH ĐẾN thời điểm đó, chỉ gồm dữ liệu ĐÃ commit",
+      "mv-read": "ĐỌC: lấy bản có tem commit LỚN NHẤT còn ≤ StartTS — kệ mọi bản dán sau, kệ mọi nháp chưa commit",
+      "mv-write": "GHI: KHÔNG đè — dán version mới mang tem CommitTS; các bản cũ còn nguyên cho những ảnh chụp cũ",
+      "mv-commit": "NỘP BÀI (update): soát khoảng Start→Commit trên món mình ghi — có bản lạ dán vào là abort: first committer wins"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BỘ LUẬT 4 ĐIỀU KHẮC XONG: ảnh chụp → luật đọc theo tem → ghi là dán không đè → cửa soát first-committer-wins. Khối \"ghi đè + reader chờ cho tươi\" là BỊA — nó chính là thế giới CŨ mà cả bài này đập đi: một khi ghi đè, bản cũ chết, reader buộc phải chờ hoặc đọc bậy; \"tươi mới nhất\" nghe hay mà chính là thứ làm hai lần đọc ra hai số. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "mv-snap": "Điều 1 — khoảnh khắc StartTS, giao dịch được trao thứ gì? Đồ chưa commit có được vào không?",
+      "mv-read": "Điều 2 — cả xấp thẻ, một phép so: tem thế nào so với StartTS thì được chọn?",
+      "mv-write": "Điều 3 — vì sao reader khỏi chờ writer? Vì bản cũ KHÔNG chết. Vậy ghi phải làm gì thay vì đè?",
+      "mv-commit": "Điều 4 — hai nháp cùng món không thấy nhau; thiếu cửa nào thì thành lost update?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #59 — đọc sổ version:</strong> Kiếm Rồng #3001 có chuỗi bản: <code>500 (tem 10) → 480 (tem 25) → 520 (tem 40)</code>, và một writer đang cầm nháp v4 CHƯA commit. Reader <strong>StartTS = 30</strong> chạy <code>SELECT price</code>. Engine trả về gì?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "480 — bản có tem commit LỚN NHẤT còn ≤ 30; bản 520 (tem 40) lẫn nháp v4 đều ngoài ảnh chụp",
+        "correct": true
+      },
+      {
+        "text": "520 — bản committed MỚI NHẤT tại thời điểm đọc, dữ liệu tươi là trên hết",
+        "correct": false,
+        "explain": "\"Mới nhất tại lúc đọc\" là luật của thế giới không-version — chính nó làm hai lần đọc ra hai số. Snapshot neo theo StartTS CỦA READER: tem 40 > 30 → bản đó thuộc tương lai của nó."
+      },
+      {
+        "text": "500 — bản đầu tiên, an toàn nhất vì chắc chắn đã commit từ lâu",
+        "correct": false,
+        "explain": "An toàn kiểu viện bảo tàng — luật chọn là tem LỚN NHẤT còn ≤ StartTS, không phải tem nhỏ nhất: bản 480 (tem 25) commit xong xuôi trước mốc 30, không có lý gì trả đồ cổ hơn."
+      },
+      {
+        "text": "Chờ writer commit v4 xong rồi trả bản mới nhất cho chắc ăn",
+        "correct": false,
+        "explain": "Cả bài này sinh ra để KHỎI có câu đó: reader không bao giờ đợi writer. Và nháp chưa commit thì không bao giờ lọt vào snapshot của bất kỳ ai — kể cả khi nó commit xong, tem của nó vẫn > 30."
+      }
+    ],
+    "schema": {
+      "table_name": "sổ version #3001 — reader StartTS=30 soi vào",
+      "columns": [
+        {
+          "name": "version",
+          "type": "thẻ trong chuỗi",
+          "key": "🏷️"
+        },
+        {
+          "name": "giá",
+          "type": "gem",
+          "key": "💰"
+        },
+        {
+          "name": "tem ≤ 30?",
+          "type": "so với StartTS",
+          "key": "⚖️"
+        }
+      ],
+      "data": [
+        [
+          "v1 · tem 10",
+          "500",
+          "✓ (nhưng chưa lớn nhất)"
+        ],
+        [
+          "v2 · tem 25",
+          "480",
+          "✓ lớn nhất ≤ 30"
+        ],
+        [
+          "v3 · tem 40",
+          "520",
+          "✗ tương lai"
+        ],
+        [
+          "v4 · nháp",
+          "?",
+          "✗ chưa commit — vô hình"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Một phép so tem duy nhất gánh cả bài: lọc các bản có tem ≤ StartTS rồi lấy bản LỚN NHẤT trong đám đó. Hai cái bẫy của đề nằm ở hai chữ \"mới nhất\" (theo đồng hồ nào?) và \"chờ\" (MVCC không có khái niệm reader chờ).",
+      "real_world": "Đây chính là câu bạn chạy mỗi lần SELECT trong PostgreSQL/Oracle mặc định: engine lặng lẽ so tem (xmin/xmax trong Postgres) và trao đúng bản thuộc snapshot của bạn — cùng một dòng SELECT, hai session thấy hai giá khác nhau là chuyện bình thường như cân đường.",
+      "steps": [
+        "Liệt kê tem các bản đã commit: 10 · 25 · 40.",
+        "Giữ các tem ≤ StartTS(30): còn 10 và 25.",
+        "Lấy tem lớn nhất trong đám: 25 → bản 480.",
+        "Nháp chưa commit: vô hình với mọi snapshot — khỏi xét."
+      ],
+      "hint_explore": "Panel schema bên trái đã chấm sẵn cột \"tem ≤ 30?\" cho từng bản — đáp án lộ nguyên hình ở đó.",
+      "expected": "Chọn 480 — tem lớn nhất ≤ StartTS."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Reader không quan tâm \"bây giờ là mấy giờ\" — nó chỉ quan tâm MỘT con số của chính nó. Số nào?"
+      },
+      {
+        "level": 2,
+        "text": "Lọc trước: bản nào có tem ≤ 30? (Nháp chưa commit thì khỏi bàn — vô hình.)"
+      },
+      {
+        "level": 3,
+        "text": "Trong đám lọt lưới, lấy bản tem LỚN NHẤT — không phải bản cổ nhất cho \"an toàn\"."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: 480 — tem 25 là tem lớn nhất còn ≤ 30."
+      }
+    ],
+    "success_message": "TICKET #59 ĐÓNG — báo cáo 2 tiếng lướt êm giữa giờ cao điểm, seller ghi ầm ầm không ai chặn ai! 📚 Hồ sơ đọc thêm bên dưới: LOCK vs MVCC — trận chung kết hai trường phái của cả module. Nhưng nhớ cái nheo mắt ở sim: máy soát chỉ bắt hai kẻ đụng CÙNG món… hai giao dịch mỗi đứa sửa một món mà vẫn phá nát invariant thì sao? WRITE SKEW — con quái snapshot không tự bắt được, hẹn bài sau, kèm bùa FOR UPDATE. 😈",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_lock_vs_mvcc"
+  ]
+}

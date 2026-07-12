@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=9" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_detail.css') }}?v=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_detail.css') }}?v=2" />
 </head>
 <body>
 
@@ -245,6 +245,25 @@
           </div>
         </div>
 
+        <!-- Block 6: Quiz ôn tập (FE-06) -->
+        <div class="cd-block" id="review-quiz-block">
+          <div class="cd-block-hd">
+            <div class="cd-block-icon">🧠</div>
+            <h3>Quiz ôn tập</h3>
+          </div>
+          <div class="cd-block-body">
+            {% if enrollment and completed_lessons >= 5 %}
+              <div id="quiz-idle">
+                <p>Ôn lại kiến thức đã học bằng 5-10 câu random từ các bài bạn đã hoàn thành.</p>
+                <button type="button" class="quiz-btn primary" onclick="startReviewQuiz('{{ course.id }}')">Bắt đầu ôn tập</button>
+              </div>
+              <div id="quiz-runner" style="display:none;"></div>
+            {% else %}
+              <p class="cd-locked-note">🔒 Hoàn thành ít nhất 5 bài học để mở khóa quiz ôn tập.</p>
+            {% endif %}
+          </div>
+        </div>
+
       </div><!-- /cd-main-col -->
 
       <!-- Right sidebar card -->
@@ -320,6 +339,7 @@
   if (progFill) progFill.style.width = '{{ enrollment.progress if enrollment else 0 }}%';
 </script>
 <script src="{{ url_for('static', filename='js/course_detail.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='js/review_quiz.js') }}?v=1"></script>
 
 {% include 'chatbot.html' %}
 <script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8"></script>

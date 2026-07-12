@@ -1,0 +1,944 @@
+{
+  "course_id": "db_design_nc",
+  "course_title": "Bên trong Database Engine — GameHub Marketplace",
+  "concept_cards": [
+    {
+      "id": "nc_card_evaluation_primitive",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · GIỮA BÀI 1 VÀ BÀI 2",
+      "title": "Evaluation Primitive — phép toán đã gắn động cơ",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Cây phép toán nói <code>σ — lọc price&lt;100</code>: LÀM GÌ. Nhưng lọc BẰNG CÁCH NÀO — quét từng dòng, hay tra index? Phép toán + chú thích cách chạy = <strong>evaluation primitive</strong>. Execution plan bạn vừa nhận diện ở Ticket #42 chính là một CHUỖI primitive nối nhau.",
+      "sections": [
+        {
+          "icon": "fa-gears",
+          "heading": "Cùng một phép σ — hai động cơ",
+          "body": "<code>σ price&lt;100</code> + <em>\"quét tuần tự từng dòng\"</em> → primitive số 1. <code>σ price&lt;100</code> + <em>\"tra qua index trên price\"</em> → primitive số 2. Phép toán y hệt, động cơ khác — tốc độ khác nhau một trời."
+        }
+      ],
+      "quiz": {
+        "question": "Dòng chữ: «σ price<100 (listings) — DÙNG B+-TREE INDEX TRÊN price». Đây là gì?",
+        "options": [
+          {
+            "label": "Một evaluation primitive",
+            "correct": true,
+            "feedback": "✓ Chuẩn — phép toán (σ) + chú thích CÁCH CHẠY (qua index) = evaluation primitive, viên gạch xây nên execution plan."
+          },
+          {
+            "label": "Một câu SQL",
+            "correct": false,
+            "feedback": "✗ SQL là ngôn ngữ cho người viết YÊU CẦU — còn đây đã là phép toán nội bộ kèm cách chạy rồi."
+          },
+          {
+            "label": "Một cây phép toán thuần",
+            "correct": false,
+            "feedback": "✗ Suýt đúng — σ là phép toán, nhưng \"dùng B+-tree index\" là chú thích CÁCH CHẠY: có nó thì không còn \"thuần\" nữa, mà đã thành primitive."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.1 — evaluation primitive & query-execution plan · PART_6 Card A",
+      "cta": {
+        "label": "Vào Bài 2 — Vì sao query có giá?",
+        "href": "/lesson/db_design_nc?lesson=2"
+      }
+    },
+    {
+      "id": "nc_card_cpu_vs_io",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · GIỮA BÀI 2 VÀ BÀI 3",
+      "title": "CPU vs I/O — bảng giá đổi theo thời đại",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Bảng giá 4ms/0,1ms là của HDD — nơi cú nhảy là chuyển động CƠ HỌC. Trên SSD chẳng có gì phải di chuyển: một cú nhảy chỉ ~0,09ms, rẻ hơn ~44 lần. Khi I/O rẻ đi, khoản <strong>CPU/cache</strong> — trước nay lép vế — bắt đầu chiếm sóng hóa đơn.",
+      "sections": [
+        {
+          "icon": "fa-microchip",
+          "heading": "Ba thời đại, ba bảng giá",
+          "body": "<strong>HDD</strong>: seek 4ms — random là kẻ thù số một. <strong>SSD</strong>: seek ~0,09ms — random hết đáng sợ, nhưng vẫn đắt hơn liền mạch. <strong>RAM</strong>: ~0 — lúc này tiền CPU/cache mới là khoản phải đếm. Vì thế optimizer hiện đại không chỉ nhìn disk I/O."
+        }
+      ],
+      "quiz": {
+        "question": "Chuyển kho orders từ HDD sang SSD — con số nào trên hóa đơn TỤT sâu nhất?",
+        "options": [
+          {
+            "label": "Giá mỗi cú nhảy random (tiền seek)",
+            "correct": true,
+            "feedback": "✓ Chuẩn — tS từ 4ms còn ~0,09ms, rẻ ~44 lần. Còn số block PHẢI đọc thì không đổi: phần cứng đổi GIÁ VÉ, không đổi số vé."
+          },
+          {
+            "label": "Số block phải đọc từ đĩa",
+            "correct": false,
+            "feedback": "✗ Số block do PLAN quyết định, không do phần cứng — SSD không làm bảng ít block đi."
+          },
+          {
+            "label": "Tiền CPU so sánh từng dòng",
+            "correct": false,
+            "feedback": "✗ CPU không rẻ đi — ngược lại, khi I/O rẻ thì CPU chiếm TỈ TRỌNG lớn hơn trong hóa đơn."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.2 — tS/tT cho HDD, SSD, RAM (số 2018) · PART_6 Card B",
+      "cta": {
+        "label": "Vào Bài 3 — Full Scan vs Index Scan",
+        "href": "/lesson/db_design_nc?lesson=3"
+      }
+    },
+    {
+      "id": "nc_card_bitmap_scan",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 3",
+      "title": "Bitmap Index Scan — lối thứ ba giữa hai làn đạn",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Match nhiều thì index phản chủ, seq scan lại đọc thừa cả kho. Postgres có lối thứ ba: dùng index để <strong>ĐÁNH DẤU block nào chứa hàng</strong> — rồi quét những block được đánh dấu THEO THỨ TỰ, liền mạch được chừng nào hay chừng đó.",
+      "sections": [
+        {
+          "icon": "fa-map-location-dot",
+          "heading": "Đánh dấu rồi mới đi",
+          "body": "Bước 1: tra index, tô bitmap <em>\"block 3, 17, 18, 40… có hàng\"</em> — chưa đọc dòng nào. Bước 2: quét các block đã tô theo thứ tự tăng dần — mỗi block đọc ĐÚNG MỘT lần, hết cảnh nhảy random tới từng dòng. VIP 5.000 đơn nằm trong 800 block? 800 lượt đọc có trật tự thay vì 5.000 cú nhảy."
+        }
+      ],
+      "quiz": {
+        "question": "Khách có 800 đơn rải trong 400 block. Bitmap scan xử lý thế nào?",
+        "options": [
+          {
+            "label": "Tô dấu 400 block chứa hàng, rồi quét 400 block đó theo thứ tự — mỗi block đọc đúng 1 lần",
+            "correct": true,
+            "feedback": "✓ — 400 lượt đọc có trật tự thay vì 800 cú nhảy random: rẻ hơn hẳn, mà vẫn né được 600 block không có hàng."
+          },
+          {
+            "label": "Vẫn nhảy random 800 lần, chỉ là nhảy nhanh hơn",
+            "correct": false,
+            "feedback": "✗ — cái hay của bitmap là ĐỔI random lấy tuần tự, không phải nhảy nhanh hơn."
+          },
+          {
+            "label": "Quét luôn cả 1.000 block như seq scan cho lành",
+            "correct": false,
+            "feedback": "✗ — thế thì cần gì index; bitmap né được các block không chứa match, chỉ đọc 400/1.000."
+          }
+        ]
+      },
+      "source": "PART_6 Card C — bitmap index scan (Ch 15.3 note: cách PostgreSQL né random I/O khi match nhiều)",
+      "cta": {
+        "label": "Vào Bài 4 — Sắp xếp thứ to hơn RAM",
+        "href": "/lesson/db_design_nc?lesson=4"
+      }
+    },
+    {
+      "id": "nc_card_hash_skew",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 6",
+      "title": "Hash Join & Skew — khi một xô phình nổ",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Hàm hash chia ĐỀU các giá trị — nhưng DỮ LIỆU không hứa chia đều chính nó. Món hit <strong>Skin súng Neon</strong> chiếm 30.000/100.000 đơn: xô chứa listing_id 3004 ôm ~300 block, RAM chỉ 100. Bảng tra không vừa bộ nhớ = luật chơi hash join vỡ — sách gọi cảnh này là <strong>skew</strong>.",
+      "sections": [
+        {
+          "icon": "fa-scale-unbalanced",
+          "heading": "Ba đòn trị skew của sách",
+          "body": "<strong>①</strong> Chia dư xô từ đầu: tăng số xô thêm ~20% (<em>fudge factor</em>) cho mỗi xô nhỏ hơn RAM một khoảng an toàn. <strong>②</strong> <em>Overflow resolution</em>: build tới đâu thấy xô phình thì băm LẠI xô đó bằng một hàm hash KHÁC (cả bên orders lẫn listings). <strong>③</strong> <em>Overflow avoidance</em>: chia thật nhỏ từ đầu rồi gộp các xô bé lại sao cho vừa RAM."
+        },
+        {
+          "icon": "fa-hand-fist",
+          "heading": "Đòn cuối — khi băm lại cũng vô ích",
+          "body": "Xô phình vì 30.000 bản sao CÙNG MỘT giá trị 3004? Băm lại bằng hàm nào cũng thế: cùng giá trị → cùng hash → cùng xô. Cả ba đòn đều bó tay. Engine lúc này đổi chiến thuật cho RIÊNG xô đó: bỏ bảng tra, chơi <strong>block nested-loop</strong> — võ cũ của bài 5 quay lại cứu võ mới. Không thuật toán nào bị vứt đi cả."
+        }
+      ],
+      "quiz": {
+        "question": "Xô #2 phình 300 block vì 30.000 đơn cùng trỏ listing_id 3004 (món hit). Băm lại xô bằng hàm hash khác có cứu được không?",
+        "options": [
+          {
+            "label": "Không — cùng GIÁ TRỊ thì hash nào cũng ném về chung một xô; phải fallback BNLJ cho riêng xô đó",
+            "correct": true,
+            "feedback": "✓ Chuẩn — resolution/avoidance chỉ cứu skew do NHIỀU giá trị chen chúc; một giá trị khổng lồ thì đổi thuật toán cho xô đó là đòn cuối của sách."
+          },
+          {
+            "label": "Có — hàm hash mới sẽ rải đều 30.000 đơn ra các xô con",
+            "correct": false,
+            "feedback": "✗ 30.000 đơn này mang CÙNG một khóa 3004 — hàm mới tính trên cùng đầu vào thì ra cùng đầu ra: cả khối lại dồn về một xô con."
+          },
+          {
+            "label": "Có — miễn là tăng số xô lên gấp đôi từ đầu",
+            "correct": false,
+            "feedback": "✗ Tăng số xô (kể cả kèm fudge factor) chỉ cứu skew NHẸ do nhiều khóa chen nhau; khối 300 block cùng một khóa thì chia mấy cũng không tách được nó."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.5.5.3 — Handling of Overflows: skew, fudge factor, overflow resolution/avoidance · PART_6 Card E",
+      "cta": {
+        "label": "Vào Bài 7 — GROUP BY giá bằng một lần quét",
+        "href": "/lesson/db_design_nc?lesson=7"
+      }
+    },
+    {
+      "id": "nc_card_iterator",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 8 (1/2)",
+      "title": "Iterator Model — open(), next(), close()",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Dây chuyền pipeline ở Bài 8 vận hành bằng một giao ước 3 hàm mà MỌI toán tử phải tuân: <code>open()</code> · <code>next()</code> · <code>close()</code>. Nhờ nói chung một ngôn ngữ, scan, σ, sort hay join đều cắm nối vào nhau tùy ý — như ống nước cùng chuẩn ren.",
+      "sections": [
+        {
+          "icon": "fa-plug",
+          "heading": "Ba hàm, một giao ước",
+          "body": "<code>open()</code> — dọn chỗ: mở cuộc quét file, hoặc (với merge join) sort luôn input nếu chưa có trật tự. <code>next()</code> — \"cho tôi dòng KẾ\": toán tử tự nhớ mình đang đứng đâu giữa hai lần gọi, cần nguyên liệu thì tự gọi next() xuống input của nó. <code>close()</code> — hết cần rồi, dọn dẹp. Executor của PostgreSQL chạy đúng mô hình này (giới nghề gọi là kiểu Volcano)."
+        },
+        {
+          "icon": "fa-arrows-up-down",
+          "heading": "Kéo hay Đẩy?",
+          "body": "Chuỗi next() là <strong>demand-driven</strong> — dữ liệu bị KÉO từ đỉnh: root bị đòi kết quả mới hỏi xuống, tuple được tính một cách lười biếng, đúng lúc cần. Chiều ngược là <strong>producer-driven</strong>: các toán tử háo hức ĐẨY tuple lên qua buffer giữa các tầng — hệ song song và các engine compile-ra-machine-code chuộng kiểu đẩy vì ít lần gọi hàm hơn."
+        }
+      ],
+      "quiz": {
+        "question": "Trong demand-driven pipeline, ai KHỞI XƯỚNG mọi việc tính toán?",
+        "options": [
+          {
+            "label": "Toán tử ĐỈNH — root bị đòi kết quả thì gọi next() xuống dưới, dữ liệu bị KÉO lên từng dòng",
+            "correct": true,
+            "feedback": "✓ Chuẩn — không ai nhúc nhích cho đến khi bị hỏi; cú next() lan từ đỉnh xuống tận scan rồi tuple ngược dòng đi lên."
+          },
+          {
+            "label": "Scan ở đáy — đọc được dòng nào tự đẩy lên dòng đó",
+            "correct": false,
+            "feedback": "✗ Đó là producer-driven (kiểu ĐẨY) — demand-driven thì scan cũng lười như mọi người: bị hỏi mới đọc."
+          },
+          {
+            "label": "Optimizer — nó điều phối từng nhịp chạy của các toán tử",
+            "correct": false,
+            "feedback": "✗ Optimizer chọn xong plan là NGHỈ — lúc chạy là việc của executor với chuỗi next()."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2.1 — Implementation of Pipelining: iterator, demand-driven vs producer-driven · PART_6 Card F",
+      "cta": {
+        "label": "Đọc tiếp hồ sơ 2/2 — Blocking Operator",
+        "href": "/card/nc_card_blocking"
+      }
+    },
+    {
+      "id": "nc_card_blocking",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 8 (2/2)",
+      "title": "Blocking Operator — kẻ chặn giữa dòng chảy",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Có những toán tử KHÔNG THỂ nhả dòng nào khi chưa nhìn hết input — sort là điển hình: dòng bé nhất có thể nằm ở cuối kho. Bạn đã chạm mặt kẻ chặn này hai lần: external sort (Bài 4) và pha build của hash join (Bài 6).",
+      "sections": [
+        {
+          "icon": "fa-road-barrier",
+          "heading": "Chặn — nhưng chặn ở ĐÂU?",
+          "body": "Blocking KHÔNG có nghĩa \"materialize cả cây\". Sort-merge gồm 2 pha: pha TẠO-RUN vẫn nhận dòng chảy VÀO (pipeline với input), pha MERGE vẫn nhả dòng chảy RA (pipeline với output) — cú chặn chỉ nằm ở RANH GIỚI giữa hai pha. Plan vì thế chia thành các <em>pipeline stage</em>, engine chạy lần lượt từng stage."
+        },
+        {
+          "icon": "fa-list-check",
+          "heading": "Điểm danh kẻ chặn",
+          "body": "<strong>Sort</strong>: blocking bẩm sinh. <strong>Hash join</strong>: pha build chặn (phải nạp trọn bảng nhỏ), pha probe chảy ngon. <strong>Indexed NLJ</strong>: chảy theo outer, nhưng chặn phía index (index phải dựng xong đã). <strong>σ, π, scan</strong>: không bao giờ chặn — xử từng dòng một."
+        }
+      ],
+      "quiz": {
+        "question": "Cây plan có SORT nằm chính giữa — pipeline của CẢ CÂY có chết theo không?",
+        "options": [
+          {
+            "label": "Không — chặn chỉ nằm giữa 2 pha của sort: input vẫn chảy vào pha tạo-run, pha merge vẫn chảy tiếp lên trên",
+            "correct": true,
+            "feedback": "✓ Chuẩn — blocking là ranh giới cục bộ chia cây thành các stage, không phải án tử cho pipeline toàn cây."
+          },
+          {
+            "label": "Có — từ đáy tới đỉnh mọi tầng đều phải quay về ghi temp table",
+            "correct": false,
+            "feedback": "✗ Quá tay — các cạnh quanh sort vẫn pipeline bình thường; chỉ ranh giới tạo-run ‖ merge là phải chờ."
+          },
+          {
+            "label": "Không, vì sort chẳng bao giờ blocking — cứ nhả dòng tới đâu hay tới đó",
+            "correct": false,
+            "feedback": "✗ Nhả sớm là SAI kết quả: dòng bé nhất có thể nằm cuối kho — chưa nhìn hết input thì sort không dám hứa gì."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 15.7.2.2 — Evaluation Algorithms for Pipelining: blocking/pipelined edges, pipeline stages · PART_6 Card G",
+      "cta": {
+        "label": "Vào Bài 9 — Optimizer viết lại query",
+        "href": "/lesson/db_design_nc?lesson=9"
+      }
+    },
+    {
+      "id": "nc_card_histogram_analyze",
+      "eyebrow": "HỒ SƠ TỐT NGHIỆP MODULE 7 · 1/3",
+      "title": "Histograms & ANALYZE — cuốn sổ cũng biết nói dối",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Bài 10 trao cho optimizer cuốn sổ thống kê — nhưng có một sự thật chưa nói hết: sổ được lập bằng cách <strong>LẤY MẪU</strong> (đọc một phần bảng, suy ra toàn cục) và chỉ được làm mới <strong>ĐỊNH KỲ</strong>. Nghĩa là con số trong sổ có thể… cũ.",
+      "sections": [
+        {
+          "icon": "fa-clock-rotate-left",
+          "heading": "Sổ cũ = án oan",
+          "body": "Nửa đêm import 50.000 đơn khuyến mãi — sáng ra sổ VẪN ghi số của hôm qua: optimizer tưởng bảng bé, chọn plan cho bảng bé, và query ì ạch một cách \"bí ẩn\". Thuốc đặc trị một dòng: <code>ANALYZE orders;</code> — bắt engine lấy mẫu lại, dựng lại histogram. Postgres có autovacuum tự làm việc này, nhưng sau bulk load lớn thì dân chuyên vẫn ANALYZE bằng tay."
+        },
+        {
+          "icon": "fa-vial",
+          "heading": "Vì sao chỉ lấy mẫu?",
+          "body": "Đọc trọn 1.000 block chỉ để lập sổ thì bằng chạy không công một Seq Scan — nên engine đọc mẫu vài trăm dòng ngẫu nhiên rồi ngoại suy. Sổ vì thế là bản ƯỚC HỌA, không phải ảnh chụp: đủ đúng để chọn plan, đủ rẻ để làm thường xuyên. Debug plan vụng luôn bắt đầu bằng câu hỏi: \"sổ được ANALYZE lần cuối khi nào?\""
+        }
+      ],
+      "quiz": {
+        "question": "Import 50.000 đơn lúc 0h. 8h sáng, query trên orders bỗng chậm bất thường dù index còn nguyên. Nghi phạm số một?",
+        "options": [
+          {
+            "label": "Sổ thống kê chưa cập nhật — optimizer vẫn tưởng bảng như hôm qua, plan lỗi thời; chạy ANALYZE là tỉnh",
+            "correct": true,
+            "feedback": "✓ Chuẩn — dữ liệu đổi lớn mà sổ chưa kịp đổi là công thức kinh điển của \"query tự nhiên chậm\". ANALYZE xong, estimate đúng lại, plan đúng lại."
+          },
+          {
+            "label": "Index bị import làm hỏng, phải build lại",
+            "correct": false,
+            "feedback": "✗ Index vẫn được cập nhật theo từng dòng ghi — nó không \"hỏng\" vì import; thứ KHÔNG tự cập nhật theo từng dòng chính là cuốn sổ."
+          },
+          {
+            "label": "RAM buffer bị 50.000 đơn mới chiếm hết",
+            "correct": false,
+            "feedback": "✗ Buffer là chuyện thoáng qua (block cũ bị đẩy ra rồi nạp lại dần) — không giải thích nổi việc PLAN đổi hẳn sang kiểu vụng."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 16.3 — statistics maintenance & sampling · PART_6 Card H",
+      "cta": {
+        "label": "Hồ sơ 2/3 — Top-K Optimization",
+        "href": "/card/nc_card_topk"
+      }
+    },
+    {
+      "id": "nc_card_topk",
+      "eyebrow": "HỒ SƠ TỐT NGHIỆP MODULE 7 · 2/3",
+      "title": "Top-K — LIMIT 10 không đáng giá một cú sort toàn kho",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Trang chủ chợ hiện \"10 đơn lớn nhất hôm nay\": <code>ORDER BY total DESC LIMIT 10</code>. Sort là kẻ chặn (Bài 8) — chẳng lẽ vì 10 dòng mà external-sort cả 100.000 đơn? Optimizer có chiêu riêng cho những câu \"chỉ cần TOP\".",
+      "sections": [
+        {
+          "icon": "fa-ranking-star",
+          "heading": "Hai lối tắt của Top-K",
+          "body": "<strong>Lối 1 — heap top-10:</strong> quét kho một lượt, nuôi một danh sách 10 phần tử lớn nhất tính đến hiện tại — đọc đủ 100.000 nhưng KHÔNG sort 100.000; RAM chỉ tốn 10 chỗ. <strong>Lối 2 — có index trên total:</strong> đi ngược cây index từ đầu lớn, nhặt đúng 10 dòng rồi… dừng. Không sort, thậm chí không quét kho."
+        },
+        {
+          "icon": "fa-link",
+          "heading": "Nối lại các bài cũ",
+          "body": "Top-K là màn bắt tay của cả module: LIMIT làm root chỉ đòi 10 cú next() (Card F) — nếu plan không có kẻ chặn thì 10 dòng về là cả cây NGỦ luôn; sort-chặn (Card G) được thay bằng heap-gần-như-chảy; và để chọn giữa heap hay index, optimizer lại… mở sổ ra tra (Bài 10)."
+        }
+      ],
+      "quiz": {
+        "question": "\"10 đơn lớn nhất\": ORDER BY total DESC LIMIT 10 trên 100.000 đơn, index idx_total nằm sẵn. Plan giỏi nhất?",
+        "options": [
+          {
+            "label": "Đi NGƯỢC index từ đầu lớn, nhặt đúng 10 dòng rồi dừng — không sort, không quét kho",
+            "correct": true,
+            "feedback": "✓ Chuẩn — index vốn là dữ liệu ĐÃ có trật tự: 10 dòng đầu của chiều ngược chính là top-10; cả query tốn ~10 cú tra."
+          },
+          {
+            "label": "External sort trọn 100.000 đơn rồi cắt lấy 10 dòng đầu",
+            "correct": false,
+            "feedback": "✗ Trả tiền sort cả kho (≈3.000 block — Bài 4) cho 10 dòng — đây chính là plan mà Top-K sinh ra để thay thế."
+          },
+          {
+            "label": "Seq Scan rồi bỏ ORDER BY — có LIMIT thì thứ tự không quan trọng",
+            "correct": false,
+            "feedback": "✗ Sai nghĩa hoàn toàn: bỏ ORDER BY là trả 10 đơn TÙY HỨNG, không phải 10 đơn LỚN NHẤT — kết quả khác là không được phép (luật tương đương, Bài 9)."
+          }
+        ]
+      },
+      "source": "PART_6 Card I — Top-K optimization (Ch 16.4 note: LIMIT không nên sort toàn bộ nếu có cách tốt hơn)",
+      "cta": {
+        "label": "Hồ sơ 3/3 — Join Minimization & Shared Scan",
+        "href": "/card/nc_card_join_minimization"
+      }
+    },
+    {
+      "id": "nc_card_join_minimization",
+      "eyebrow": "HỒ SƠ TỐT NGHIỆP MODULE 7 · 3/3 — CUỐI MODULE",
+      "title": "Join Minimization & Shared Scan — hai ngón nghề cuối",
+      "accent": "#818CF8",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Trước khi đóng cửa Engine Room, hai chiêu ít người biết của optimizer: <strong>bỏ hẳn một cái join</strong> khi chứng minh được nó vô hại — và <strong>cho nhiều query đi chung một chuyến quét kho</strong>.",
+      "sections": [
+        {
+          "icon": "fa-scissors",
+          "heading": "Join minimization — cắt bảng khỏi plan",
+          "body": "Query JOIN listings \"cho chắc\" nhưng SELECT không đụng cột nào của listings? Nếu FK <code>orders.listing_id → listings</code> (NOT NULL, trỏ PK) đã ĐẢM BẢO mỗi đơn khớp đúng một món — join không thêm không bớt dòng nào — optimizer CẮT hẳn listings khỏi plan. Constraint từ khóa Cơ bản giờ thành công cụ tối ưu: schema sạch là quà tặng cho engine."
+        },
+        {
+          "icon": "fa-people-group",
+          "heading": "Shared scan — đi chung chuyến xe",
+          "body": "10 dashboard cùng quét orders 1.000 block vào 8h sáng? Thay vì 10 chuyến × 1.000 block, engine cho các query BÁM CHUNG một lượt quét đang chạy: một chuyến xe, nhiều hành khách — mỗi block đọc lên phục vụ tất cả. I/O từ 10.000 block về 1.000."
+        }
+      ],
+      "quiz": {
+        "question": "Query JOIN listings nhưng SELECT chỉ lấy cột của orders; FK orders.listing_id (NOT NULL) → PK listings. Optimizer làm gì?",
+        "options": [
+          {
+            "label": "Cắt hẳn listings khỏi plan — constraint đảm bảo join 1-1 nên kết quả không đổi, mà bớt được cả một bảng",
+            "correct": true,
+            "feedback": "✓ Chuẩn — join minimization: luật tương đương + constraint = giấy phép xóa join thừa. Một lý do nữa để khai FK/NOT NULL tử tế."
+          },
+          {
+            "label": "Vẫn phải join — dev đã viết thì engine phải chạy đúng từng chữ",
+            "correct": false,
+            "feedback": "✗ Bài 9 đã lật đổ tư duy này: SQL là khai báo — engine chỉ nợ bạn KẾT QUẢ, không nợ từng động tác."
+          },
+          {
+            "label": "Đổi sang tích Descartes cho đỡ tốn điều kiện nối",
+            "correct": false,
+            "feedback": "✗ Descartes là thứ optimizer NÉ bằng mọi giá (80 triệu dòng — Bài 9), không bao giờ là \"cho đỡ tốn\"."
+          }
+        ]
+      },
+      "source": "PART_6 Card J — join minimization & shared scan (Ch 16 Advanced Topics in Query Optimization)",
+      "cta": {
+        "label": "Hết Module 7 — Engine Room ✓ · Hẹn Module 8: Giao dịch & Concurrency",
+        "href": "/courses/db_design_nc"
+      }
+    },
+    {
+      "id": "nc_card_strict_rigorous",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 13",
+      "title": "Strict vs Rigorous 2PL — giữ đến commit thì mua được gì?",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "2PL cơ bản còn một khe hở chết người: nhả khóa X <em>trước khi commit</em> là kẻ khác đọc được dữ liệu CHƯA CHẮC SỐNG. Sách vá bằng hai phiên bản khắc nghiệt hơn — và chính chúng, chứ không phải bản cơ bản, mới là thứ chạy trong DBMS thương mại.",
+      "sections": [
+        {
+          "icon": "fa-house-crack",
+          "heading": "Vụ sập dây chuyền (Fig 18.8)",
+          "body": "T5 ghi vào A rồi nhả khóa X — đúng luật 2PL vì nó không xin thêm gì nữa. T6 chen vào đọc A, ghi tiếp, nhả; T7 lại đọc theo. Rồi T5… <strong>SẬP</strong> trước khi commit. Dữ liệu T5 ghi phải hủy — nhưng T6 đã tính toán trên con số ma đó, T7 tính trên số của T6: <strong>cascading rollback</strong>, sập cả dây chuyền ba mạng vì một khe nhả sớm."
+        },
+        {
+          "icon": "fa-shield-heart",
+          "heading": "Strict và Rigorous — hai mức găm khóa",
+          "body": "<strong>STRICT 2PL</strong>: mọi khóa <em>X</em> phải găm đến tận commit/abort — không ai đọc được dữ liệu chưa commit, cascading rollback chết từ trứng. <strong>RIGOROUS 2PL</strong>: găm <em>TẤT CẢ</em> khóa (cả S) đến commit — phần thưởng thêm: các giao dịch serialize đúng theo <strong>thứ tự commit</strong>, suy luận dễ như đọc log. Sách chốt: hai bản này \"được dùng rộng rãi trong các hệ thương mại\".",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.3 — strict & rigorous two-phase locking"
+        }
+      ],
+      "quiz": {
+        "question": "Vì sao STRICT 2PL (găm khóa X đến commit) giết được cascading rollback từ trong trứng?",
+        "options": [
+          {
+            "label": "Vì không ai ĐỌC được dữ liệu do giao dịch chưa commit ghi ra — T5 có sập cũng chẳng ai kịp tính toán trên con số ma của nó",
+            "correct": true,
+            "feedback": "✓ Chuẩn — khóa X còn găm nghĩa là bản ghi còn \"trong phòng kín\"; thế giới chỉ thấy dữ liệu đã chắc chắn sống."
+          },
+          {
+            "label": "Vì strict 2PL cấm luôn chuyện abort — giao dịch nào cũng phải commit",
+            "correct": false,
+            "feedback": "✗ Không ai cấm được abort (mất điện, lỗi logic…) — strict chỉ đảm bảo lúc abort, chưa ai kịp ĐỌC thứ sắp bị hủy."
+          },
+          {
+            "label": "Vì nó bắt các giao dịch chạy tuần tự tuyệt đối, hết đường chen",
+            "correct": false,
+            "feedback": "✗ Vẫn đồng thời như thường — chỉ dữ liệu ĐANG BỊ GHI dở là bị che; các item khác ai muốn đụng cứ đụng."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1.3 · PART_7 Card A — Strict vs Rigorous 2PL",
+      "cta": {
+        "label": "Vào bài 14 — Deadlock: vòng tròn chờ nhau đến vĩnh viễn",
+        "href": "/lesson/db_design_nc?lesson=14"
+      }
+    },
+    {
+      "id": "nc_card_waitdie_woundwait",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 14",
+      "title": "Wait-Die vs Wound-Wait — phân xử bằng tuổi, khỏi soi graph",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Bài 14 CHỮA deadlock bằng soi graph + tế victim. Trường phái PHÒNG làm khác: cấp cho mỗi giao dịch một <strong>timestamp</strong> lúc chào đời, và mọi cú \"xin đồ kẻ khác đang giữ\" được phân xử ngay tại quầy bằng tuổi — vòng chờ không bao giờ kịp khép.",
+      "sections": [
+        {
+          "icon": "fa-hourglass-half",
+          "heading": "Hai luật, cùng một nguyên tắc",
+          "body": "Lấy T14(ts=5) GIÀ, T15(ts=10), T16(ts=15) TRẺ. <strong>WAIT-DIE</strong> (không cướp): xin đồ của kẻ TRẺ hơn thì GIÀ được chờ — T14 xin của T15: chờ; TRẺ xin của già thì CHẾT — T16 xin của T15: rollback. <strong>WOUND-WAIT</strong> (có cướp): GIÀ xin của trẻ thì ĐÂM — T14 xin của T15: T15 bị rollback nhường đồ; trẻ xin của già thì ngoan ngoãn CHỜ — T16 xin của T15: chờ. Cả hai đều chặn mọi vòng chờ già-trẻ lẫn lộn — deadlock hết cửa khép vòng."
+        },
+        {
+          "icon": "fa-rotate-left",
+          "heading": "Điều khoản chống chết mãi — và cái giá",
+          "body": "Giao dịch bị rollback <strong>GIỮ NGUYÊN timestamp cũ</strong> khi chạy lại — nghĩa là mỗi lần tái sinh nó một \"già\" hơn tương đối, sớm muộn cũng đủ tuổi để thắng: không ai starvation. Cái giá của cả hai scheme: <strong>rollback oan</strong> — nhiều mạng bị tế dù vòng chờ thật ra chẳng bao giờ khép. Còn chiêu dân dã lock timeout (chờ quá hạn thì tự chết)? Sách lắc đầu: hạn ngắn thì chém oan, hạn dài thì kẹt lâu — \"khả dụng hạn chế\"."
+        }
+      ],
+      "quiz": {
+        "question": "Dưới WOUND-WAIT: T16 (trẻ, ts=15) đang giữ khóa ví; T14 (già, ts=5) xin đúng khóa đó. Chuyện gì xảy ra?",
+        "options": [
+          {
+            "label": "T16 bị ĐÂM — rollback nhường khóa cho T14; lúc chạy lại T16 giữ nguyên ts=15 nên không bị bắt nạt mãi",
+            "correct": true,
+            "feedback": "✓ Chuẩn — wound-wait là luật CÓ CƯỚP: già xin của trẻ là trẻ đổ máu; và timestamp giữ nguyên là bảo hiểm chống starvation."
+          },
+          {
+            "label": "T14 xếp hàng chờ T16 xong việc — già thì càng phải nhẫn nại",
+            "correct": false,
+            "feedback": "✗ Đó là wait-die (già CHỜ trẻ). Wound-wait ngược tính: già không chờ ai — nó đâm."
+          },
+          {
+            "label": "T14 bị rollback vì dám đụng khóa đang có chủ",
+            "correct": false,
+            "feedback": "✗ Ở cả hai scheme, kẻ GIÀ không bao giờ là bên bị tế khi đối đầu trẻ — nó hoặc chờ (wait-die) hoặc đâm (wound-wait)."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.2.1 — Deadlock Prevention: wait-die, wound-wait, lock timeouts · PART_7 Card B",
+      "cta": {
+        "label": "Vào bài 15 — Multiple Granularity & Intention Locks",
+        "href": "/lesson/db_design_nc?lesson=15"
+      }
+    },
+    {
+      "id": "nc_card_lock_escalation",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 15",
+      "title": "Lock Escalation — vạn khóa dòng đổi một khóa bảng",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Cây khóa cho phép khóa đúng cỡ — nhưng một giao dịch tham ăn vẫn có thể gom <em>hàng vạn khóa dòng</em>, và lock table (bảng ghi sổ của lock manager) thì sống trong RAM. Sổ phình quá là engine ra tay: <strong>đổi cả nắm khóa nhỏ lấy MỘT khóa to</strong>.",
+      "sections": [
+        {
+          "icon": "fa-arrow-up-wide-short",
+          "heading": "Ước lượng trước, leo thang sau",
+          "body": "Sách chỉ cách engine đoán trước số khóa từ kiểu scan: <strong>relation scan</strong> — khóa luôn CẤP BẢNG từ đầu (đằng nào cũng đụng mọi dòng); <strong>index scan ít dòng</strong> — intention lock cấp bảng + khóa thật từng tuple. Còn khi một giao dịch cứ gom mãi tuple lock tới mức lock table quá tải, lock manager thực hiện <strong>lock escalation</strong>: thay nhiều khóa cấp thấp bằng một khóa cấp cao hơn — một relation lock thế chỗ cả vạn tuple lock.",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.3 — lock escalation"
+        },
+        {
+          "icon": "fa-scale-unbalanced",
+          "heading": "Cái giá của cú đổi",
+          "body": "Escalation cứu RAM nhưng <strong>bán rẻ concurrency</strong>: khóa bảng vừa thế chỗ sẽ chặn mọi kẻ muốn ghi bất kỳ dòng nào — kể cả dòng giao dịch kia chưa hề đụng. Đời thực: SQL Server escalate quanh ngưỡng ~5.000 khóa/câu lệnh và là thủ phạm kinh điển của các vụ \"UPDATE nửa bảng xong cả app đơ\"; dân DBA né bằng cách <em>chia batch nhỏ</em> — mỗi batch dưới ngưỡng, sổ khóa không bao giờ phình tới mức engine phải ra tay."
+        }
+      ],
+      "quiz": {
+        "question": "Giao dịch T cập nhật dần 50.000 dòng listings và lock manager vừa escalate lên khóa X cấp bảng. Hệ quả tức thì là gì?",
+        "options": [
+          {
+            "label": "Lock table nhẹ hẳn — nhưng MỌI giao dịch muốn ghi bất kỳ dòng nào của listings giờ phải chờ T, kể cả dòng T chưa hề đụng",
+            "correct": true,
+            "feedback": "✓ Chuẩn — đổi vạn khóa lấy một là đổi RAM lấy concurrency: X cấp bảng khóa ngầm trọn subtree."
+          },
+          {
+            "label": "T bị rollback vì gom quá nhiều khóa — escalation là một hình phạt",
+            "correct": false,
+            "feedback": "✗ Không ai phạt T — escalation là cứu trợ cho LOCK TABLE, T vẫn chạy tiếp bình thường với một khóa to hơn."
+          },
+          {
+            "label": "Các khóa dòng cũ vẫn giữ nguyên, chỉ thêm một khóa bảng đè lên",
+            "correct": false,
+            "feedback": "✗ Điểm mấu chốt là THAY THẾ: vạn khóa dòng được nhả để sổ nhẹ đi — giữ cả hai thì escalate làm gì."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.3 · PART_7 Card C — Lock Escalation",
+      "cta": {
+        "label": "Vào bài 16 — Phantom: con ma lọt lưới khóa dòng",
+        "href": "/lesson/db_design_nc?lesson=16"
+      }
+    },
+    {
+      "id": "nc_card_predicate_locking",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 16",
+      "title": "Predicate Locking — chính xác tuyệt đối, đắt vô đối",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Index-locking bắt ma bằng cách khóa CÁI LÁ — xấp xỉ hơi thô (hai insert chung lá vẫn chặn nhau oan). Có một giải pháp chính xác đến hoàn hảo trên lý thuyết: khóa thẳng vào <strong>VỊ NGỮ</strong>. Và sách dành cho nó đúng một câu lạnh lùng: đắt, nên thực tế không dùng.",
+      "sections": [
+        {
+          "icon": "fa-crosshairs",
+          "heading": "Khóa cả những dòng chưa sinh ra",
+          "body": "Predicate lock trên <code>price &lt; 100</code> phủ MỌI tuple thỏa vị ngữ — kể cả tuple <em>chưa tồn tại</em>: chèn món 45 gem là đụng khóa ngay, dù chẳng có lá index nào chung. Không bắt oan ai (chèn món 510 gem đi qua tự do), không lọt con ma nào — độ chính xác mà index-locking chỉ biết mơ."
+        },
+        {
+          "icon": "fa-coins",
+          "heading": "Vì sao thực tế lắc đầu",
+          "body": "Muốn xét vênh, lock manager phải trả lời câu \"<em>hai vị ngữ này có GIAO nhau không?</em>\" — <code>price &lt; 100</code> vs <code>price BETWEEN 40 AND 60</code>? — tức là giải bài toán logic cho TỪNG CẶP yêu cầu, thay vì tra một ô ma trận. Sách chốt: predicate locking <strong>chi phí cài đặt cao, thực tế không được dùng</strong>; các DBMS chọn xấp xỉ rẻ — index-locking, next-key locking — hoặc rẽ hẳn sang thế giới snapshot (bài 18 sẽ tới).",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 — predicate locking"
+        }
+      ],
+      "quiz": {
+        "question": "T1 giữ predicate lock trên \"price < 100\". T2 muốn chèn Skin 790 gem, T3 muốn chèn Kiếm 45 gem. Ai qua, ai chờ?",
+        "options": [
+          {
+            "label": "T2 qua tự do (790 không thỏa vị ngữ) — T3 chờ (45 lọt vùng khóa, dù dòng đó chưa tồn tại)",
+            "correct": true,
+            "feedback": "✓ Chuẩn — khóa theo VỊ NGỮ xét bằng logic, không cần dòng hay lá nào có thật: chính xác tuyệt đối, và đắt cũng vì thế."
+          },
+          {
+            "label": "Cả hai chờ — predicate lock chặn mọi INSERT vào bảng cho chắc",
+            "correct": false,
+            "feedback": "✗ Thế thì nó là khóa bảng chứ báu gì — điểm ăn tiền của predicate lock là CHỈ chặn kẻ giao với vị ngữ."
+          },
+          {
+            "label": "Cả hai qua — khóa chỉ phủ các dòng đang tồn tại lúc xin khóa",
+            "correct": false,
+            "feedback": "✗ Đó là tuple-lock, đúng cái lỗ hổng phantom của bài 16. Predicate lock phủ cả tương lai của vị ngữ."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.4.3 · PART_7 Card D — Predicate Locking",
+      "cta": {
+        "label": "Bài 17 — Optimistic Concurrency: chạy nháp rồi soát",
+        "href": "/lesson/db_design_nc?lesson=17"
+      }
+    },
+    {
+      "id": "nc_card_thomas_write",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 17",
+      "title": "Thomas' Write Rule — bản ghi cũ rích thì lờ đi",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Optimistic soát MỘT LẦN lúc nộp bài. Người anh em của nó — <strong>timestamp ordering</strong> (Ch.18.5) — khó tính hơn: phát mỗi giao dịch một con tem rồi xử NGAY từng cú đọc/ghi lệch thứ tự. Và trong trường phái đó có một chiêu lì lợm mang tên riêng một con người: thay vì rollback, <em>lờ đi</em>.",
+      "sections": [
+        {
+          "icon": "fa-clock",
+          "heading": "Trường phái tem: già/trẻ, không ai chờ ai",
+          "body": "Tem nhỏ = giao dịch GIÀ. Luật chơi gói trong một câu: mọi cú đọc/ghi vênh nhau phải diễn ra <strong>theo thứ tự tem</strong> — đọc thứ đã bị \"tương lai\" đè, hay ghi đè thứ \"tương lai\" đã đọc → rollback ngay tại quầy, nhận tem MỚI, chạy lại. Không ai chờ ai bao giờ nên <strong>không bao giờ deadlock</strong>; đổi lại, giao dịch dài dễ bị đám trẻ tông rớt hoài — vẫn bài starvation quen mặt."
+        },
+        {
+          "icon": "fa-hand",
+          "heading": "Cú ghi không ai sẽ đọc — theo đúng sách",
+          "body": "T27 (già) đọc Q; T28 (trẻ) ghi Q; rồi T27 mới lò dò tới <strong>ghi Q</strong>. Protocol gốc: rollback T27 — ghi quá muộn. Nhưng khoan: bản T27 định ghi <em>không một ai sẽ đọc</em> — kẻ già hơn T28 mà đọc Q là tự rớt, kẻ trẻ hơn thì phải đọc bản của T28. Thomas' write rule: cú ghi lỗi thời (obsolete) ấy <strong>được LỜ ĐI</strong>, T27 sống tiếp. Kết quả y hệt như thể T27 đã ghi trước T28 thật.",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.5.3 — Thomas' Write Rule"
+        },
+        {
+          "icon": "fa-door-open",
+          "heading": "Cánh cửa view serializability",
+          "body": "Lịch chạy sau khi \"lờ\" không còn conflict-serializable — mà vẫn ĐÚNG. Sách gọi tầng đúng-đắn rộng hơn này là <strong>view serializable</strong>: ai đọc gì của ai và bản ghi CHỐT là của ai đều khớp với một lịch tuần tự. Nhân vật đặc trưng của tầng này: <em>blind write</em> — ghi mà chẳng thèm đọc trước. Cả 2PL, tree protocol lẫn timestamp gốc đều không với tới những lịch này; Thomas thì cứ thế bước qua."
+        }
+      ],
+      "quiz": {
+        "question": "TS(T27) < TS(T28). T28 đã ghi Q xong. Giờ T27 mới tới GHI Q (nó không hề đọc Q trước đó). Protocol gốc và Thomas' write rule mỗi bên xử sao?",
+        "options": [
+          {
+            "label": "Gốc: rollback T27 (ghi quá muộn). Thomas: LỜ cú ghi — giá trị đó không ai sẽ đọc; kết quả tương đương T27 ghi trước T28 thật",
+            "correct": true,
+            "feedback": "✓ Chuẩn — cùng một tình huống, một bên đập đi làm lại, một bên nhún vai cho qua; và cho qua mà vẫn đúng, nhờ đứng trên nền view serializability."
+          },
+          {
+            "label": "Cả hai đều rollback T27 — ghi đè lịch sử là trọng tội, không có ngoại lệ",
+            "correct": false,
+            "feedback": "✗ Protocol gốc thì đúng vậy, nhưng toàn bộ lý do Thomas tồn tại là ngoại lệ này: bản ghi KHÔNG AI SẼ ĐỌC thì rollback chỉ tốn công vô ích."
+          },
+          {
+            "label": "Thomas cho T27 ghi ĐÈ lên bản của T28 — ai tới sau người đó thắng",
+            "correct": false,
+            "feedback": "✗ Ngược đời — đè bản của T28 là để kẻ TRẺ đọc phải đồ của kẻ GIÀ, gãy luôn thứ tự tem. Thomas lờ cú ghi đi, không phải cho nó thắng."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.5.3 + Note 18.1 · PART_7 Card E — Thomas' Write Rule",
+      "cta": {
+        "label": "Bài 18 — MVCC & Snapshot: sổ không tẩy xóa",
+        "href": "/lesson/db_design_nc?lesson=18"
+      }
+    },
+    {
+      "id": "nc_card_lock_vs_mvcc",
+      "eyebrow": "HỒ SƠ TỔNG HỢP · SAU BÀI 18",
+      "title": "Lock vs MVCC — hai trường phái giữ trật tự một cái chợ",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Tám bài Trading Floor vừa đi qua HAI thế giới: nửa đầu là <strong>khóa</strong> — bi quan, chặn từ cửa; nửa sau là <strong>soát-và-version</strong> — lạc quan, chạy trước soát sau. Không phe nào \"thắng\": mỗi phe trả một loại giá, và DBMS thật thì… chơi cả hai.",
+      "sections": [
+        {
+          "icon": "fa-scale-balanced",
+          "heading": "Hai loại giá",
+          "body": "Phe khóa trả bằng <strong>CHỜ</strong>: xếp hàng, deadlock phải phá, reader kẹt sau writer (nỗi khổ của báo cáo 2 tiếng). Phe lạc quan/MVCC trả bằng <strong>LÀM LẠI</strong>: rớt soát là xé nháp chạy lại, cộng tiền thuê kho version + công dọn. Quy tắc chọn: va chạm DÀY → chờ rẻ hơn làm lại (khóa thắng); va chạm THƯA / read-heavy → làm lại hiếm khi xảy ra (lạc quan thắng đậm)."
+        },
+        {
+          "icon": "fa-blender",
+          "heading": "Thực tế: cả làng chơi snapshot — nhưng trộn khóa",
+          "body": "Oracle, PostgreSQL, SQL Server đều nhận snapshot isolation (sách 18.8 nêu đích danh). Nhưng soi vào ruột: biến thể <em>first updater wins</em> dùng <strong>write lock</strong> cho update; multiversion 2PL cho update chạy rigorous 2PL hẳn hoi — chỉ read-only là hưởng trọn \"không chờ không abort\". Tức là: <strong>reader đi đường MVCC, writer vẫn xài đồ nghề của phe khóa</strong>. Hai trường phái trộn vào nhau, không thay thế nhau."
+        },
+        {
+          "icon": "fa-broom",
+          "heading": "Cái giá ẩn: kho version phải có người quét",
+          "body": "Không đè nghĩa là không tự mất: mỗi UPDATE/DELETE để lại một xác bản cũ. Luật dọn của sách: bản đủ già, mọi giao dịch còn sống đều không cần nữa → xóa được. Postgres giao việc này cho <code>VACUUM</code> — bảng \"phình dù DELETE ầm ầm\" hay autovacuum cắn CPU lúc nửa đêm chính là hóa đơn thuê kho lịch sử được gửi tới tay bạn."
+        }
+      ],
+      "quiz": {
+        "question": "Sàn X: 98% giao dịch chỉ XEM hàng, update lác đác. Sàn Y: 500 bot suốt ngày tranh sửa giá đúng 10 món hot. Kê đơn trường phái cho từng sàn?",
+        "options": [
+          {
+            "label": "X → MVCC/optimistic: reader không chờ, cửa soát hiếm khi rớt. Y → khóa: va chạm dày, xé-nháp-làm-lại liên tục còn đắt hơn xếp hàng tử tế",
+            "correct": true,
+            "feedback": "✓ Chuẩn đơn — thước đo là TỈ LỆ VA CHẠM, không phải tổng lưu lượng: chờ rẻ khi đằng nào cũng phải nhường nhau, làm-lại rẻ khi gần như chẳng bao giờ thua."
+          },
+          {
+            "label": "Cả hai → MVCC: công nghệ mới hơn thì tốt hơn, khóa là đồ cổ",
+            "correct": false,
+            "feedback": "✗ MVCC không \"mới hơn\" mà là ĐÁNH ĐỔI khác: sàn Y với 500 bot đâm nhau trên 10 món sẽ abort xối xả — mỗi cú abort là toàn bộ công sức vứt đi, tệ hơn cả xếp hàng."
+          },
+          {
+            "label": "Cả hai → khóa: chắc chắn là trên hết, chậm còn hơn sai",
+            "correct": false,
+            "feedback": "✗ MVCC không hề \"sai\" hơn — read-only trên snapshot đọc nhất quán tuyệt đối. Bắt sàn X (98% xem hàng) xếp hàng sau vài cái khóa là đốt tiền vô ích, đúng cảnh Ticket #58."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.1 + 18.6-18.8 — tổng kết Module 8 nửa đầu",
+      "cta": {
+        "label": "Bài 19 — Write Skew & FOR UPDATE: con quái lọt lưới soát",
+        "href": "/lesson/db_design_nc?lesson=19"
+      }
+    },
+    {
+      "id": "nc_card_degree_two",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 20 — KHÉP MODULE 8",
+      "title": "Degree-Two & Cursor Stability — cố tình nới luật để thở",
+      "accent": "#FB7185",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Cả module bạn học cách GIỮ serializability. Hồ sơ chót này về điều ngược lại: thế giới thật đôi khi <strong>cố tình buông nó</strong> — nới luật khóa để đổi lấy tốc độ, và chấp nhận đọc trùng đọc lệch như một cái giá có tính toán.",
+      "sections": [
+        {
+          "icon": "fa-unlock",
+          "heading": "Degree-two: nhả S tùy thích, giữ X tới cùng",
+          "body": "Vẫn hai khóa S/X quen mặt, nhưng <strong>bỏ luật hai pha</strong>: khóa S nhả lúc nào cũng được, xin lúc nào cũng được — chỉ khóa X là phải giữ tới commit/abort. Giữ X tới cùng nghĩa là không ai đọc được đồ chưa commit → <strong>không cascading abort</strong>, và đây chính là một cách hiện thực mức <em>read committed</em>. Cái giá: đọc cùng một dòng hai lần có thể ra HAI giá trị (T32 đọc Q trước và sau khi T33 ghi — Fig 18.21). Serializability? Không hứa hẹn gì."
+        },
+        {
+          "icon": "fa-eye-slash",
+          "heading": "Cú quét index ma quái — theo đúng sách",
+          "body": "Dưới degree-two, một cú scan theo index có thể nhìn thấy <strong>HAI phiên bản của cùng một dòng</strong> — hoặc kỳ dị hơn: <strong>KHÔNG thấy phiên bản nào</strong>, dù dòng đó luôn tồn tại. Dòng bị update đổi khóa index từ v1 sang v2: scan ghé node v1 <em>sau khi</em> bản cũ bị xóa, rồi ghé node v2 <em>trước khi</em> bản mới được chèn → dòng bốc hơi khỏi kết quả. Chạy 2PL tử tế thì chuyện này không bao giờ xảy ra — đây là cái giá thật của việc nới luật, không phải chuyện lý thuyết dọa nhau.",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.1 — Degree-Two Consistency"
+        },
+        {
+          "icon": "fa-computer-mouse",
+          "heading": "Cursor stability — và lời khuyên chốt của sách",
+          "body": "Chương trình lướt từng dòng bằng con trỏ (cursor) thì khỏi khóa cả bảng: chỉ <strong>S trên đúng dòng đang xử</strong> (xử xong nhả liền), dòng nào SỬA thì X giữ tới commit. Dùng cho bảng nóng bị truy cập dày đặc — đổi máu lấy tốc độ, và app phải TỰ gánh phần đúng đắn. Nhưng sách chốt một câu đáng đóng khung: khi database có snapshot isolation, đó là <strong>lựa chọn tốt hơn cả degree-two lẫn cursor stability</strong> — concurrency ngang ngửa mà rủi ro thấp hơn hẳn."
+        }
+      ],
+      "quiz": {
+        "question": "Job báo cáo chạy degree-two consistency đọc ví DragonForge HAI lần trong cùng giao dịch: lần 1 ra 500, lần 2 ra 550. Có bug không?",
+        "options": [
+          {
+            "label": "Không bug — S nhả ngay sau mỗi cú đọc nên giữa hai lần đọc, giao dịch khác chen vào ghi 550 và commit là hợp lệ; nonrepeatable read là cái giá ĐÃ ĐƯỢC báo trước của mức này (read committed)",
+            "correct": true,
+            "feedback": "✓ Chuẩn — degree-two chỉ hứa \"không đọc đồ chưa commit\", không hứa hai lần đọc giống nhau. Muốn giống nhau: lên repeatable read/snapshot, hoặc quay về 2PL."
+          },
+          {
+            "label": "Bug của engine — khóa S lẽ ra phải chặn mọi cú ghi cho tới khi báo cáo xong",
+            "correct": false,
+            "feedback": "✗ Đó là mô tả của 2PL — degree-two SINH RA để không phải làm thế: S nhả tức thì sau cú đọc, writer chen vào là tính năng, không phải lỗi."
+          },
+          {
+            "label": "Bug của báo cáo — 550 là dữ liệu chưa commit, đọc phải ra 500",
+            "correct": false,
+            "feedback": "✗ Ngược rồi — X giữ tới commit nên 550 mà đọc được thì CHẮC CHẮN đã commit; đọc-bẩn chính là thứ duy nhất degree-two thề không phạm."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.9.1-18.9.2 · PART_7 Card F — Degree-Two / Cursor Stability",
+      "cta": {
+        "label": "Bài 21 — Máy sập thì mất gì? Mở Module 9: Recovery 💥",
+        "href": "/lesson/db_design_nc?lesson=21"
+      }
+    },
+    {
+      "id": "nc_card_shadow_paging",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 22",
+      "title": "Shadow Paging — phục hồi không cần log, và vì sao DB chê",
+      "accent": "#34D399",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Bài 22 dạy phục hồi bằng LOG — ghi từng cú sửa. Có một trường phái hoàn toàn khác, không log một dòng nào: <strong>chụp ảnh</strong> nguyên bản database, sửa trên bản mới, rồi tráo con trỏ. Đẹp, gọn, đúng đắn — và gần như không DB lớn nào dùng. Vì sao?",
+      "sections": [
+        {
+          "icon": "fa-clone",
+          "heading": "Shadow copy: đúng như text editor",
+          "body": "Giao dịch muốn sửa thì <strong>chép nguyên một bản database mới</strong>, mọi thay đổi làm trên bản mới, bản cũ (bản \"shadow\") giữ nguyên không đụng tới. Commit = tráo <code>db-pointer</code> sang bản mới (một cú ghi ATOMIC, vì đĩa đảm bảo ghi trọn một sector). Abort = xóa bản mới, con trỏ vẫn trỏ bản cũ. Bạn xài trường phái này mỗi ngày: <strong>text editor</strong> — \"Save\" là commit, \"thoát không lưu\" là abort, file gốc trên đĩa không đổi cho tới khi bạn Save.",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3 Note 19.1 — Shadow Copies and Shadow Paging"
+        },
+        {
+          "icon": "fa-file-lines",
+          "heading": "Shadow paging: chỉ chép trang bị sửa",
+          "body": "Chép nguyên database thì với DB lớn là <strong>đắt kinh khủng</strong>. Bản cải tiến — <strong>shadow paging</strong> — dùng một <em>page table</em> trỏ tới mọi trang: chỉ những trang BỊ SỬA (và bản thân page table) mới được chép sang chỗ mới; trang không đổi thì page table mới cứ trỏ về trang gốc. Commit = tráo con trỏ page table atomic. Ít copy hơn hẳn shadow copy nguyên khối."
+        },
+        {
+          "icon": "fa-ban",
+          "heading": "Vì sao database thật chê",
+          "body": "Sách chốt thẳng: shadow paging <strong>không chạy tốt với giao dịch đồng thời</strong> — nhiều transaction cùng tráo page table thì hỗn loạn — và <strong>không được dùng rộng trong database</strong>. Thêm nữa, tráo con trỏ liên tục làm các trang liên quan tản mát khắp đĩa (mất locality), và cần dọn rác trang cũ. Log-based recovery thắng vì: cho phép concurrency cao (chỉ ghi thêm bản ghi log tuần tự), không phải chép trang, và ghép mượt với 2PL/snapshot. Đó là lý do bài 22 dạy log, còn shadow paging chỉ nằm ở đây — một hồ sơ \"hay mà không dùng\"."
+        }
+      ],
+      "quiz": {
+        "question": "Shadow paging commit bằng cách tráo con trỏ page table atomic — nghe rất sạch. Vậy nhược điểm chí mạng khiến database lớn không dùng nó là gì?",
+        "options": [
+          {
+            "label": "Không chạy tốt với giao dịch ĐỒNG THỜI (nhiều txn cùng tráo page table thì loạn) — trong khi log chỉ ghi thêm bản ghi tuần tự nên concurrency cao",
+            "correct": true,
+            "feedback": "✓ Chuẩn — đúng câu chốt của sách. Concurrency là mạch máu của DB thật; shadow paging nghẽn ngay ở đó, còn logging thì không."
+          },
+          {
+            "label": "Không đảm bảo atomicity — tráo con trỏ có thể ghi dở nửa chừng",
+            "correct": false,
+            "feedback": "✗ Ngược lại: tráo db-pointer LÀ atomic (đĩa ghi trọn một sector), đó chính là điểm MẠNH của nó. Vấn đề nằm ở concurrency, không phải atomicity."
+          },
+          {
+            "label": "Không phục hồi được sau crash vì không có log",
+            "correct": false,
+            "feedback": "✗ Nó phục hồi tốt sau crash (con trỏ cũ vẫn trỏ bản nhất quán) — recovery không phải điểm yếu; concurrency mới là."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.3 Note 19.1 · PART_7 Card G — Shadow Copying / Shadow Paging",
+      "cta": {
+        "label": "Bài 23 — WAL, Checkpoint & Crash Recovery",
+        "href": "/lesson/db_design_nc?lesson=23"
+      }
+    },
+    {
+      "id": "nc_card_force_steal",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 23",
+      "title": "Force/Steal — hai cái nút quyết định database cần undo hay redo",
+      "accent": "#34D399",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Bài 23 nói database chuẩn dùng \"no-force + steal\". Nghe như biệt ngữ, nhưng đây là hai cái nút đơn giản quyết định buffer cư xử thế nào lúc ghi đĩa — và mỗi lựa chọn ép recovery phải biết undo, redo, hay cả hai.",
+      "sections": [
+        {
+          "icon": "fa-download",
+          "heading": "Force vs No-force — về REDO",
+          "body": "<strong>FORCE</strong>: lúc commit, ép MỌI block đã sửa của giao dịch xuống đĩa. Ưu: sau commit chắc chắn đã bền, khỏi cần redo. Nhược: commit CHẬM (phải chờ ghi đĩa) và tốn I/O. <strong>NO-FORCE</strong>: commit khỏi ép — block committed có thể còn trong buffer. Ưu: commit nhanh, nhiều cập nhật dồn trên một block trước khi ghi (giảm I/O). Nhược: sau crash, block committed chưa kịp xuống đĩa → <strong>cần REDO</strong> (áp lại giá mới từ log). Đa số DB chọn no-force."
+        },
+        {
+          "icon": "fa-upload",
+          "heading": "Steal vs No-steal — về UNDO",
+          "body": "<strong>NO-STEAL</strong>: không cho block của giao dịch CHƯA commit xuống đĩa. Ưu: sau crash, đĩa không dính giá chưa-commit → khỏi undo. Nhược: buffer dễ <em>kẹt cứng</em> — giao dịch sửa nhiều mà không được ghi ra thì hết chỗ, treo luôn. <strong>STEAL</strong>: cho phép đẩy block chưa-commit xuống đĩa để giải phóng buffer. Nhược: block chưa-commit lỡ lên đĩa → sau crash <strong>cần UNDO</strong> (khôi phục giá cũ từ log). Đa số DB chọn steal — và chính vì thế WAL bắt buộc (log giá cũ phải ra stable trước).",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.5.2 — Database Buffering"
+        },
+        {
+          "icon": "fa-table-cells-large",
+          "heading": "Ô \"no-force + steal\" — nhanh nhất, cần cả hai",
+          "body": "Ghép hai trục thành ma trận 2×2. Ô chuẩn công nghiệp là <strong>no-force + steal</strong>: commit nhanh, buffer không kẹt — cái giá là phải có CẢ redo (cho no-force) LẪN undo (cho steal), và cả hai chỉ chạy đúng khi tuân WAL. Ô đối lập <em>force + no-steal</em> thì recovery gần như chẳng cần làm gì sau crash — nhưng chậm và kẹt buffer tới mức không ai dùng cho hệ thật. Cổ điển: đổi một chút \"phức tạp lúc phục hồi\" lấy \"nhanh lúc chạy\"."
+        }
+      ],
+      "quiz": {
+        "question": "Một database chạy \"no-force + steal\". Sau crash, recovery của nó phải có khả năng gì?",
+        "options": [
+          {
+            "label": "CẢ redo LẪN undo — no-force nghĩa block committed có thể chưa xuống đĩa (cần redo), steal nghĩa block chưa-commit có thể đã xuống đĩa (cần undo)",
+            "correct": true,
+            "feedback": "✓ Chuẩn — đây là ô nhanh nhất nhưng \"nặng\" nhất về recovery, và là lý do WAL bắt buộc để cả hai an toàn."
+          },
+          {
+            "label": "Chỉ redo — vì steal đã lo phần undo tự động",
+            "correct": false,
+            "feedback": "✗ Ngược: steal là cái TẠO RA nhu cầu undo (block chưa-commit lên đĩa), không phải cái lo giùm. No-force tạo nhu cầu redo. Cần cả hai."
+          },
+          {
+            "label": "Không cần gì — no-force + steal là ô an toàn nhất",
+            "correct": false,
+            "feedback": "✗ Ô \"không cần gì\" là force + no-steal (chậm, kẹt buffer). No-force + steal nhanh nhất nhưng cần đủ cả redo lẫn undo."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.5.2 · PART_7 Card H — Force/No-force & Steal/No-steal",
+      "cta": {
+        "label": "Bài 24 — ARIES: LSN, DirtyPageTable & 3 pass",
+        "href": "/lesson/db_design_nc?lesson=24"
+      }
+    },
+    {
+      "id": "nc_card_dump_backup",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 23",
+      "title": "Dump & Remote Backup — khi mất cả cái đĩa thì sao?",
+      "accent": "#34D399",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Log cứu ta khỏi crash phần mềm (RAM bay, đĩa còn). Nhưng nếu chính cái ĐĨA chết — head crash, cháy phòng máy — thì log trên đĩa đó cũng đi luôn. Lúc này cần một tầng phòng thủ khác: bản sao lưu ngoài, và một site dự phòng.",
+      "sections": [
+        {
+          "icon": "fa-box-archive",
+          "heading": "Database dump — ảnh chụp toàn bộ ra nơi khác",
+          "body": "Định kỳ, hệ thống <strong>dump</strong> toàn bộ nội dung database ra một media khác (băng từ, đĩa ở site khác). Nếu mất non-volatile storage, phục hồi bằng: nạp lại từ <strong>dump gần nhất</strong>, rồi <strong>redo log</strong> các thay đổi kể từ thời điểm dump. Giống hệt tinh thần checkpoint, nhưng ở tầm \"mất cả đĩa\": dump là điểm mốc, log lấp phần sau. SQL dump (DDL + INSERT) cũng là một dạng — bạn dùng nó mỗi lần <code>pg_dump</code>/<code>mysqldump</code> để sao lưu hoặc di chuyển database.",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.6 — Failure with Loss of Non-Volatile Storage"
+        },
+        {
+          "icon": "fa-server",
+          "heading": "Remote backup — sống sót qua cả thảm họa site",
+          "body": "Muốn <strong>high availability</strong> (không chỉ recover mà còn phải luôn dùng được), ta chạy một <strong>remote backup</strong> (secondary site) nhận liên tục log records từ <strong>primary site</strong>. Primary chết → phát hiện lỗi → chuyển quyền (transfer of control) sang secondary → hệ thống chạy tiếp. Cấu hình <em>hot-spare</em> cho phép tiếp quản trong giây lát. Ngân hàng, booking, payment cần điều này: không chỉ \"phục hồi được\" mà \"gần như không bao giờ ngừng\"."
+        },
+        {
+          "icon": "fa-scale-balanced",
+          "heading": "One-safe, two-safe — đánh đổi durability vs độ trễ",
+          "body": "Commit trên primary có cần chờ secondary xác nhận không? <strong>One-safe</strong>: commit ngay khi log ghi ở primary (nhanh, nhưng nếu primary chết trước khi kịp gửi, mất giao dịch vừa commit). <strong>Two-very-safe</strong>: chờ CẢ hai site ghi (an toàn tuyệt đối, nhưng chậm và primary phải dừng nếu secondary chết). <strong>Two-safe</strong>: chờ cả hai nếu cả hai sống, không thì chỉ cần primary — dung hòa. Cùng một bài toán đánh đổi durability ↔ độ trễ ↔ tính sẵn sàng, không có lời giải \"đúng cho mọi nhà\"."
+        }
+      ],
+      "quiz": {
+        "question": "Mất toàn bộ đĩa chứa database (và log) do cháy phòng máy. Có database dump từ 02:00 và một bản sao log records được gửi liên tục sang site B. Phục hồi thế nào?",
+        "options": [
+          {
+            "label": "Nạp lại từ dump 02:00, rồi redo các log records (đã gửi sang site B) kể từ 02:00 tới lúc cháy — dump là mốc, log lấp phần sau",
+            "correct": true,
+            "feedback": "✓ Chuẩn — đúng nghi thức mất-non-volatile: dump gần nhất + redo log từ thời điểm dump. Site B giữ log nên phần sau 02:00 không mất."
+          },
+          {
+            "label": "Không cứu được — mất đĩa là mất hết, dump cũng vô dụng",
+            "correct": false,
+            "feedback": "✗ Đó chính là lý do dump PHẢI để ở nơi khác (site B/băng từ ngoài): mất đĩa chính không mất dump. Dump + log từ dump = phục hồi được."
+          },
+          {
+            "label": "Chỉ cần dump 02:00 là đủ, khỏi cần log",
+            "correct": false,
+            "feedback": "✗ Dump 02:00 bỏ sót mọi giao dịch từ 02:00 tới lúc cháy — phần đó nằm trong log. Thiếu log là mất trắng nửa ngày giao dịch."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.6-19.7 · PART_7 Card I — Database Dump & Remote Backup",
+      "cta": {
+        "label": "Về Hộp Đen — hẹn bài 24: ARIES Overview",
+        "href": "/lesson/db_design_nc?lesson=24"
+      }
+    },
+    {
+      "id": "nc_card_physical_logical_undo",
+      "eyebrow": "HỒ SƠ KỸ THUẬT · SAU BÀI 24 — KHÉP PHẦN DẠY M9",
+      "title": "Physical vs Logical Undo — hoàn tác bằng giá cũ, hay bằng thao tác ngược?",
+      "accent": "#34D399",
+      "back_href": "/courses/db_design_nc",
+      "intro": "Suốt phần Recovery, undo của ta luôn là \"ghi lại giá CŨ\" — đơn giản, chắc chắn. Nhưng các hệ tốc độ cao như ARIES đôi khi cần một kiểu undo tinh vi hơn để nhả khóa sớm, tăng concurrency. Hồ sơ chót phân biệt hai kiểu.",
+      "sections": [
+        {
+          "icon": "fa-rotate-left",
+          "heading": "Physical undo — chép lại giá cũ",
+          "body": "<strong>Physical undo</strong> là cái ta đã học: log record giữ giá CŨ (V1), undo = ghi V1 trở lại đúng vị trí đó. Đơn giản, luôn đúng, không phụ thuộc trạng thái hiện tại của dữ liệu. Nhược điểm: để undo an toàn, phải giữ khóa trên item tới tận cuối giao dịch (strict 2PL) — vì nếu nhả sớm, kẻ khác sửa item rồi mình undo về V1 sẽ đè mất thay đổi của họ. Khóa lâu = concurrency thấp."
+        },
+        {
+          "icon": "fa-rotate",
+          "heading": "Logical undo — làm thao tác ngược lại",
+          "body": "Thay vì \"đặt lại giá cũ\", <strong>logical undo</strong> ghi THAO TÁC và undo bằng thao tác NGƯỢC: cộng 100 ↔ undo bằng trừ 100; chèn record ↔ undo bằng xóa. Lợi ích lớn: cho phép <strong>nhả khóa SỚM</strong> (early lock release) — vừa cộng xong 100 là nhả khóa ngay, kẻ khác cộng tiếp 50 thoải mái; lúc undo chỉ cần trừ 100, kết quả vẫn đúng bất kể ai đã cộng gì vào giữa. Đây là chìa khóa để index (B+-tree) đạt concurrency cao mà vẫn phục hồi được.",
+          "variant": "quote",
+          "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.8 — Early Lock Release and Logical Undo"
+        },
+        {
+          "icon": "fa-file-shield",
+          "heading": "CLR — chỗ ARIES ghép hai thứ lại",
+          "body": "Nhớ <strong>CLR (compensation log record)</strong> ở bài ARIES? Mỗi cú undo (dù physical hay logical) ghi một CLR — bản redo-only ghi lại \"đã hoàn tác gì\". Nhờ CLR, nếu crash lần nữa GIỮA lúc đang undo, lần phục hồi sau không undo trùng — nó thấy CLR và biết cú đó đã hoàn tác rồi, nhảy tiếp (qua UndoNextLSN). CLR là thứ khiến undo của ARIES vừa nhanh vừa chịu được crash-chồng-crash — đúng tinh thần \"phục hồi phải sống sót được cả khi đang phục hồi\"."
+        }
+      ],
+      "quiz": {
+        "question": "Một hệ dùng logical undo để nhả khóa sớm trên biến đếm. T1 cộng 100 (rồi nhả khóa), T2 cộng 50. Giờ T1 phải rollback. Undo thế nào cho đúng?",
+        "options": [
+          {
+            "label": "Trừ 100 (thao tác ngược) — không phải \"đặt lại giá cũ\". Nhờ vậy phần cộng 50 của T2 được giữ nguyên, kết quả đúng dù T1, T2 đan xen",
+            "correct": true,
+            "feedback": "✓ Chuẩn — đó chính là sức mạnh của logical undo: undo bằng thao tác ngược cho phép nhả khóa sớm mà vẫn đúng khi có xen kẽ."
+          },
+          {
+            "label": "Đặt lại giá CŨ trước khi T1 cộng — physical undo cho chắc",
+            "correct": false,
+            "feedback": "✗ Physical undo ở đây SAI: đặt lại giá cũ sẽ đè mất cú cộng 50 của T2 (vì T1 đã nhả khóa, T2 chen vào giữa). Đó là lý do nhả-khóa-sớm cần logical undo."
+          },
+          {
+            "label": "Không undo được — đã nhả khóa thì không rollback được nữa",
+            "correct": false,
+            "feedback": "✗ Nhả khóa sớm KHÔNG chặn rollback — logical undo (trừ 100) xử lý được đúng tình huống này; đó là cả điểm của kỹ thuật."
+          }
+        ]
+      },
+      "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.8 · PART_7 Card J — Physical vs Logical Undo",
+      "cta": {
+        "label": "Vào BOSS BATTLE — Engine Under Fire 🔥",
+        "href": "?lesson=25"
+      }
+    }
+  ]
+}

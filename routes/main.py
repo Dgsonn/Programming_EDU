@@ -337,28 +337,30 @@ CURRICULA = {
         'instructor': 'Lê Minh Tuấn',
         'modules': [
             {'title': 'Module 1: ER Model & Mapping', 'lessons': [
-                'Entity, Attribute & Keys (PK, Super, Candidate, FK) (Bài 1)',
-                'Composite & Derived Attribute (Bài 2)',
-                'Foreign Key & Cardinalities (1:1, 1:N, M:N) (Bài 3)',
-                'M:N & Bảng trung gian (Junction Table) (Bài 4)',
-                'Weak Entity & Specialization/Generalization (Bài 5)',
-                'Mapping ER → Bảng quan hệ (Mapping Algorithm) (Bài 6)',
+                'Entity & Primary Key (Bài 1)',
+                'Composite + Multivalued + Derived (Bài 2)',
+                'Foreign Key & JOIN (Bài 3)',
+                'Foreign Key & 1:N (Bài 4)',
+                'M:N & Bảng trung gian (Bài 5)',
+                'Weak Entity & Khóa chính tổng hợp (Bài 6)',
+                'Mapping ER → Bảng quan hệ (Bài 7)',
             ]},
             {'title': 'Module 2: Phụ thuộc hàm & Chuẩn hóa (FD & Normal Forms)', 'lessons': [
-                'Redundancy & Functional Dependency (FD) (Bài 7)',
-                'Dạng chuẩn 1 (1NF) — Nguyên tử hóa (Bài 8)',
-                'Dạng chuẩn 2 (2NF) — Phụ thuộc hàm đầy đủ (Bài 9)',
-                'Dạng chuẩn BCNF + Thuật toán tách bảng (Bài 10)',
+                'Redundancy & Phụ thuộc hàm (FD) (Bài 8)',
+                'Dạng chuẩn 1 (1NF) — Nguyên tử hóa (Bài 9)',
+                'Dạng chuẩn 2 (2NF) — Phụ thuộc đầy đủ (Bài 10)',
                 'Dạng chuẩn 3 (3NF) — Phụ thuộc bắc cầu (Bài 11)',
-                'Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị (Bài 12)',
-                'Boss Battle — Siêu hệ thống chuẩn hóa (Bài 13)',
+                'Dạng chuẩn BCNF — Phân rã phi tổn thất (Bài 12)',
+                'Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị (Bài 13)',
+                'Boss Battle — Mạng Xã Hội Gamers (Bài 14)',
             ]},
             {'title': 'Module 3: Application Design', 'lessons': [
-                'JSON trong Relational DB (Path Expressions) (Bài 14)',
-                'Spatial Data & Truy vấn tọa độ (Bài 15)',
-                'ORM (Django) — Ánh xạ Lớp ↔ Bảng (Bài 16)',
-                'SQL Injection — Lỗ hổng chết người (Bài 17)',
-                'Password Security — Salt & Hashing (Bài 18)',
+                'JSON trong Relational DB (Path Expressions) (Bài 15)',
+                'Spatial Data & Truy vấn tọa độ (Bài 16)',
+                'ORM (Django) — Ánh xạ Lớp ↔ Bảng (Bài 17)',
+                'Web Services — REST/AJAX (Bài 18)',
+                'SQL Injection — Lỗ hổng chết người (Bài 19)',
+                'Password Security — Salt & Hashing (Bài 20)',
             ]},
         ],
     },
@@ -409,6 +411,11 @@ _LESSON_TEMPLATES = {
     'java':     'lesson_java.html',
     'htmlcss':  'lesson_htmlcss.html',
     'db_design': 'lesson_db_design.html',
+    # TC (GameHub Community) dùng CHUNG template/renderer với Basic — chỉ khác data file
+    # (docs/TC_NC_IMPLEMENTATION_PLAN_2026-07-04.md §1)
+    'db_design_tc': 'lesson_db_design.html',
+    # NC (GameHub Marketplace) — cùng cơ chế (docs/NC_SHELL_NC01_SPEC_2026-07-05.md)
+    'db_design_nc': 'lesson_db_design.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
@@ -432,7 +439,17 @@ def lesson_view(course_id):
     template = _LESSON_TEMPLATES.get(course_id)
     if not template:
         return redirect(_LESSON_URLS.get(course_id, f'/courses/{course_id}'))
-    return render_template(template, lesson_idx=lesson_idx, **_user_stats())
+    return render_template(template, lesson_idx=lesson_idx, course_id=course_id, **_user_stats())
+
+
+@main_bp.route('/card/<card_id>')
+@login_required
+def concept_card(card_id):
+    # TRẢ-NỢ 2026-07-05 (recommendation §5 Hybrid): concept card Option-2 — trang card riêng
+    # chen giữa 2 bài. Data nằm trong lesson_content_*.js (course.concept_cards[]); template
+    # hydrate client-side theo card_id. Stateless — không progress riêng (scope cut có chủ đích,
+    # NC cần 22 cards sẽ nối progress sau).
+    return render_template('concept_card.html', card_id=card_id, **_user_stats())
 
 
 @main_bp.route('/courses/<course_id>')
@@ -441,14 +458,17 @@ def course_detail(course_id):
     uid = current_user_id()
     conn = get_db()
 
-    if course_id == 'db_design':
+    # 2026-07-04: DB Design = 3 khóa riêng (Cơ bản / Trung cấp / Nâng cao) — dùng CHUNG
+    # trang chi tiết course_db_design.html; JS đọc data-course để render roadmap đúng khóa.
+    if course_id in ('db_design', 'db_design_tc', 'db_design_nc'):
         user = conn.execute('SELECT name, streak FROM users WHERE id=%s', (uid,)).fetchone()
         enrollment = conn.execute(
-            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, 'db_design')
+            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, course_id)
         ).fetchone()
         conn.close()
         user = dict(user) if user else {}
         return render_template('course_db_design.html',
+            course_id=course_id,
             user_name=user.get('name', ''),
             streak=user.get('streak', 0),
             enrollment=dict(enrollment) if enrollment else None)

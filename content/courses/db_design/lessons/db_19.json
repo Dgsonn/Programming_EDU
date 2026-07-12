@@ -1,0 +1,743 @@
+{
+  "id": "db_19",
+  "index": 5,
+  "title": "Mối quan hệ M:N & Bảng trung gian",
+  "subtitle": "Nhiều-nhiều — tách bảng trung gian (junction) nối 2 thực thể",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 22,
+  "xp_reward": 60,
+  "project_piece": "🧩 Xây \"Thư viện game\" của người chơi",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #05",
+    "hook": "Cây cầu ở Ticket #04 chạy tốt tới mức sếp muốn <strong>chuẩn hoá nó thành mô hình chính thức</strong>. Quan hệ \"nhiều người ↔ nhiều game\" có tên riêng: <em>M:N</em> — và bảng nối của nó cần một khoá chính <strong>ghép từ 2 cột</strong>. Ticket còn kèm đơn đặt hàng từ team Gamification: đếm <strong>mỗi người sở hữu bao nhiêu game</strong> để trao huy hiệu \"Nhà sưu tầm\". Dữ liệu đã có đủ — chỉ chờ truy vấn của bạn."
+  },
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "library",
+      "columns": [
+        "player_id",
+        "game_id",
+        "acquired_date"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "101",
+          "2025-01-10"
+        ],
+        [
+          "7",
+          "103",
+          "2025-02-02"
+        ],
+        [
+          "9",
+          "101",
+          "2025-01-15"
+        ],
+        [
+          "9",
+          "105",
+          "2025-03-01"
+        ],
+        [
+          "8",
+          "102",
+          "2024-11-20"
+        ],
+        [
+          "8",
+          "107",
+          "2024-12-05"
+        ],
+        [
+          "10",
+          "101",
+          "2025-01-22"
+        ],
+        [
+          "10",
+          "109",
+          "2025-02-14"
+        ],
+        [
+          "11",
+          "104",
+          "2024-10-30"
+        ],
+        [
+          "11",
+          "111",
+          "2025-03-18"
+        ],
+        [
+          "12",
+          "103",
+          "2025-01-05"
+        ],
+        [
+          "12",
+          "108",
+          "2024-12-25"
+        ],
+        [
+          "13",
+          "110",
+          "2025-02-09"
+        ],
+        [
+          "13",
+          "102",
+          "2025-03-22"
+        ],
+        [
+          "14",
+          "106",
+          "2024-11-11"
+        ],
+        [
+          "14",
+          "112",
+          "2025-01-30"
+        ],
+        [
+          "15",
+          "102",
+          "2025-02-28"
+        ],
+        [
+          "15",
+          "105",
+          "2024-12-12"
+        ],
+        [
+          "9",
+          "107",
+          "2025-03-10"
+        ],
+        [
+          "10",
+          "103",
+          "2025-02-20"
+        ],
+        [
+          "11",
+          "102",
+          "2025-01-08"
+        ],
+        [
+          "12",
+          "109",
+          "2025-03-05"
+        ],
+        [
+          "8",
+          "110",
+          "2024-10-15"
+        ],
+        [
+          "13",
+          "108",
+          "2025-04-01"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Bậc thầy M:N",
+    "desc": "nối nhiều-nhiều qua bảng trung gian"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "M:N = 1 người chơi sở hữu NHIỀU game, 1 game thuộc NHIỀU người chơi",
+        "DB quan hệ KHÔNG nối M:N trực tiếp 2 bảng → tách BẢNG TRUNG GIAN chứa 2 FK",
+        "Khóa chính bảng trung gian = (player_id, game_id) ghép lại"
+      ],
+      "intro": "1 người chơi sở hữu nhiều game; 1 game được nhiều người chơi sở hữu — quan hệ <strong>nhiều-nhiều (M:N)</strong>. DB quan hệ không biểu diễn M:N trực tiếp. Giải pháp: bảng <strong>trung gian</strong> <code>library</code> gồm 2 khóa ngoại <code>player_id</code> + <code>game_id</code>; mỗi dòng = 1 cặp \"ai sở hữu game nào\".",
+      "example": "Bảng <code>library(player_id, game_id, acquired_date)</code>: khóa chính là CẶP <code>(player_id, game_id)</code>. Tìm game của người chơi 7: <code>SELECT game_id FROM library WHERE player_id = 7</code>."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-arrows-left-right",
+        "title": "M:N — vì sao cần bảng thứ 3",
+        "body": "Không thể nhét \"danh sách game\" vào 1 ô của bảng player (vi phạm 1NF). Cũng không nhét list player vào bảng game. Giải: 1 bảng RIÊNG <code>library</code>, mỗi dòng 1 cặp (player, game)."
+      },
+      {
+        "icon": "fa-code-branch",
+        "title": "Junction = 2× (1:N)",
+        "body": "Bảng trung gian biến 1 quan hệ M:N thành HAI quan hệ 1:N: player 1:N library, game 1:N library. Mỗi FK trỏ về 1 phía."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay",
+        "body": "Nhiều người ↔ nhiều game: đừng nhét danh sách game vào cột của player (hỏng 1NF). Bảng trung gian <code>library</code> — mỗi dòng = 1 cặp (player, game). Đếm số dòng theo player = số game người đó sở hữu."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "library",
+        "columns": [
+          {
+            "name": "player_id",
+            "type": "INT",
+            "key": "PK+FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "game_id",
+            "type": "INT",
+            "key": "PK+FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "acquired_date",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "7",
+          "101",
+          "2025-01-10"
+        ],
+        [
+          "7",
+          "103",
+          "2025-02-02"
+        ],
+        [
+          "9",
+          "101",
+          "2025-01-15"
+        ],
+        [
+          "9",
+          "105",
+          "2025-03-01"
+        ],
+        [
+          "8",
+          "102",
+          "2024-11-20"
+        ],
+        [
+          "8",
+          "107",
+          "2024-12-05"
+        ],
+        [
+          "10",
+          "101",
+          "2025-01-22"
+        ],
+        [
+          "10",
+          "109",
+          "2025-02-14"
+        ],
+        [
+          "11",
+          "104",
+          "2024-10-30"
+        ],
+        [
+          "11",
+          "111",
+          "2025-03-18"
+        ],
+        [
+          "12",
+          "103",
+          "2025-01-05"
+        ],
+        [
+          "12",
+          "108",
+          "2024-12-25"
+        ],
+        [
+          "13",
+          "110",
+          "2025-02-09"
+        ],
+        [
+          "13",
+          "102",
+          "2025-03-22"
+        ],
+        [
+          "14",
+          "106",
+          "2024-11-11"
+        ],
+        [
+          "14",
+          "112",
+          "2025-01-30"
+        ],
+        [
+          "15",
+          "102",
+          "2025-02-28"
+        ],
+        [
+          "15",
+          "105",
+          "2024-12-12"
+        ],
+        [
+          "9",
+          "107",
+          "2025-03-10"
+        ],
+        [
+          "10",
+          "103",
+          "2025-02-20"
+        ],
+        [
+          "11",
+          "102",
+          "2025-01-08"
+        ],
+        [
+          "12",
+          "109",
+          "2025-03-05"
+        ],
+        [
+          "8",
+          "110",
+          "2024-10-15"
+        ],
+        [
+          "13",
+          "108",
+          "2025-04-01"
+        ]
+      ],
+      "diagram": {
+        "type": "er",
+        "width": 600,
+        "height": 280,
+        "entities": [
+          {
+            "name": "player",
+            "columns": [
+              {
+                "name": "p_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "username",
+                "type": "VARCHAR"
+              }
+            ]
+          },
+          {
+            "name": "library",
+            "columns": [
+              {
+                "name": "player_id",
+                "type": "INT",
+                "key": "FK,PK"
+              },
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "FK,PK"
+              }
+            ]
+          },
+          {
+            "name": "game",
+            "columns": [
+              {
+                "name": "game_id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "title",
+                "type": "VARCHAR"
+              }
+            ]
+          }
+        ],
+        "connectors": [
+          {
+            "from": "player",
+            "to": "library",
+            "label": "sở hữu",
+            "fromCard": "1",
+            "toCard": "N"
+          },
+          {
+            "from": "game",
+            "to": "library",
+            "label": "được sở hữu",
+            "fromCard": "1",
+            "toCard": "N"
+          }
+        ],
+        "note": "M:N giải bằng bảng trung gian library — PK ghép (player_id, game_id)"
+      }
+    },
+    "mission": "Tìm các <code>game_id</code> mà người chơi id 7 sở hữu — kéo thả truy vấn bảng trung gian."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao quan hệ M:N (nhiều-nhiều) cần BẢNG TRUNG GIAN?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì 2 bảng gốc quá lớn",
+            "correct": false,
+            "explanation": "Sai — không liên quan kích thước. Vấn đề là KHÔNG thể nhét nhiều giá trị vào 1 ô."
+          },
+          {
+            "id": "b",
+            "text": "Vì không thể nhét nhiều giá trị vào 1 ô; cần 1 bảng riêng chứa từng cặp (player, game)",
+            "correct": true,
+            "explanation": "Đúng — M:N → bảng trung gian, mỗi dòng 1 cặp khóa ngoại."
+          },
+          {
+            "id": "c",
+            "text": "Vì SQL không hỗ trợ JOIN",
+            "correct": false,
+            "explanation": "Sai — SQL hỗ trợ JOIN; bảng trung gian là về MÔ HÌNH dữ liệu, không phải giới hạn SQL."
+          },
+          {
+            "id": "d",
+            "text": "Để tăng tốc truy vấn",
+            "correct": false,
+            "explanation": "Sai — mục đích là biểu diễn đúng M:N, không phải tối ưu tốc độ."
+          }
+        ]
+      },
+      {
+        "question": "Khóa chính của bảng <code>library(player_id, game_id, acquired_date)</code> là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chỉ player_id",
+            "correct": false,
+            "explanation": "Sai — 1 player có nhiều dòng (nhiều game). Không unique."
+          },
+          {
+            "id": "b",
+            "text": "Chỉ game_id",
+            "correct": false,
+            "explanation": "Sai — 1 game thuộc nhiều player. Không unique."
+          },
+          {
+            "id": "c",
+            "text": "(player_id, game_id) — cặp khóa ghép",
+            "correct": true,
+            "explanation": "Đúng — mỗi cặp (player, game) là duy nhất: 1 người chỉ sở hữu 1 game 1 lần."
+          },
+          {
+            "id": "d",
+            "text": "acquired_date",
+            "correct": false,
+            "explanation": "Sai — ngày mua có thể trùng giữa nhiều cặp; không định danh."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Tìm lỗi bảng trung gian",
+      "xp": 25,
+      "code": "CREATE TABLE library (\n  lib_id INT PRIMARY KEY,\n  player_id INT,\n  game_id INT\n);",
+      "bugType": "logic",
+      "bugs": [
+        {
+          "line": 2,
+          "description": "Bảng trung gian M:N KHÔNG cần khóa nhân tạo lib_id. PK đúng = composite (player_id, game_id) + 2 FOREIGN KEY trỏ player(p_id) và game(game_id)."
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "game_id",
+        "slot": "col-1"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "library",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "player_id",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "7",
+        "slot": "val-1"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT game_id FROM library WHERE player_id = 7;",
+    "reveal_hints": {
+      "select-line": "SELECT 1 cột: <strong>game_id</strong>.",
+      "from-line": "FROM <strong>library</strong> (bảng trung gian).",
+      "where-line": "WHERE lọc theo người chơi: <strong>player_id = 7</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — dùng bảng trung gian để <strong>đếm mỗi người chơi sở hữu bao nhiêu game</strong> (<code>GROUP BY player_id</code> + <code>COUNT</code>), sắp xếp nhiều → ít.",
+    "starter": "-- Đếm mỗi người chơi sở hữu bao nhiêu game\n-- Gợi ý: GROUP BY player_id + COUNT(*)\nSELECT ____, ____\n  FROM library\n GROUP BY ____\n ORDER BY ____ DESC;",
+    "schema": {
+      "table_name": "library",
+      "columns": [
+        {
+          "name": "player_id",
+          "type": "INT",
+          "key": "PK+FK"
+        },
+        {
+          "name": "game_id",
+          "type": "INT",
+          "key": "PK+FK"
+        },
+        {
+          "name": "acquired_date",
+          "type": "DATE",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "7",
+          "101",
+          "2025-01-10"
+        ],
+        [
+          "7",
+          "103",
+          "2025-02-02"
+        ],
+        [
+          "9",
+          "101",
+          "2025-01-15"
+        ],
+        [
+          "9",
+          "105",
+          "2025-03-01"
+        ],
+        [
+          "8",
+          "102",
+          "2024-11-20"
+        ],
+        [
+          "8",
+          "107",
+          "2024-12-05"
+        ],
+        [
+          "10",
+          "101",
+          "2025-01-22"
+        ],
+        [
+          "10",
+          "109",
+          "2025-02-14"
+        ],
+        [
+          "11",
+          "104",
+          "2024-10-30"
+        ],
+        [
+          "11",
+          "111",
+          "2025-03-18"
+        ],
+        [
+          "12",
+          "103",
+          "2025-01-05"
+        ],
+        [
+          "12",
+          "108",
+          "2024-12-25"
+        ],
+        [
+          "13",
+          "110",
+          "2025-02-09"
+        ],
+        [
+          "13",
+          "102",
+          "2025-03-22"
+        ],
+        [
+          "14",
+          "106",
+          "2024-11-11"
+        ],
+        [
+          "14",
+          "112",
+          "2025-01-30"
+        ],
+        [
+          "15",
+          "102",
+          "2025-02-28"
+        ],
+        [
+          "15",
+          "105",
+          "2024-12-12"
+        ],
+        [
+          "9",
+          "107",
+          "2025-03-10"
+        ],
+        [
+          "10",
+          "103",
+          "2025-02-20"
+        ],
+        [
+          "11",
+          "102",
+          "2025-01-08"
+        ],
+        [
+          "12",
+          "109",
+          "2025-03-05"
+        ],
+        [
+          "8",
+          "110",
+          "2024-10-15"
+        ],
+        [
+          "13",
+          "108",
+          "2025-04-01"
+        ]
+      ]
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần <em>2 cột</em>: <code>player_id</code> và số game của họ — đếm bằng <code>COUNT(*)</code>."
+      },
+      {
+        "level": 2,
+        "text": "Gộp theo người chơi: <code>GROUP BY player_id</code> (mỗi nhóm gộp mọi dòng cùng 1 player). <code>COUNT(*)</code> đếm số dòng trong nhóm = số game."
+      },
+      {
+        "level": 3,
+        "text": "Đặt tên cột đếm bằng <code>AS</code>: <code>COUNT(*) AS game_count</code>, rồi sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT player_id, COUNT(*) AS game_count FROM library GROUP BY player_id ORDER BY game_count DESC;</code>"
+      }
+    ],
+    "context": {
+      "scenario": "Bảng trung gian <code>library</code> ghi mỗi dòng = 1 cặp (player, game) — \"ai sở hữu game nào\". Sếp muốn biết <strong>mỗi người chơi đang sở hữu bao nhiêu game</strong> để trao huy hiệu 'Nhà sưu tầm'.",
+      "real_world": "<strong>Steam</strong>, <strong>Epic Games</strong> đếm số game mỗi tài khoản đúng kiểu này — <strong>không</strong> lưu sẵn con số 'tổng game' (thêm/xoá 1 game là sai ngay), mà <strong>đếm động</strong> từ bảng sở hữu bằng <code>GROUP BY</code> + <code>COUNT</code>. Truy vấn tổng hợp này chạy hàng triệu lần mỗi ngày.",
+      "steps": [
+        "Gộp các dòng cùng 1 người chơi: <code>GROUP BY player_id</code> — mỗi nhóm = 1 người.",
+        "Đếm số dòng trong mỗi nhóm = số game người đó sở hữu: <code>COUNT(*) AS game_count</code>.",
+        "Chọn 2 cột hiển thị: <code>player_id</code>, <code>game_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY game_count DESC</code>. Run → bảng xếp hạng người chơi theo số game."
+      ],
+      "hint_explore": "Chưa rõ bảng có gì? Gõ <code>SELECT * FROM library</code> rồi <strong>Run</strong> để xem toàn bộ các cặp (player, game).",
+      "expected": "Bảng nhiều dòng × 2 cột (<code>player_id, game_count</code>): mỗi người chơi kèm số game đang sở hữu, xếp từ nhiều → ít. Người đầu bảng là 'nhà sưu tầm' lớn nhất."
+    },
+    "expected_sql": "SELECT player_id, COUNT(*) AS game_count FROM library GROUP BY player_id ORDER BY game_count DESC;",
+    "success_message": "Hoàn thành M:N & bảng trung gian! Bài 6 (Weak Entity) tiếp theo — thực thể yếu cũng dùng khóa ghép nhưng theo cách khác.",
+    "xp_reward": 50
+  }
+}

@@ -1,0 +1,832 @@
+{
+  "id": "db_17",
+  "index": 19,
+  "story": {
+    "tag": "🎫 GameHub · Ticket #19 — KHẨN 🚨",
+    "hook": "API vừa mở, <strong>báo động đỏ</strong>: log ghi nhận ai đó gõ <code>' OR '1'='1</code> vào ô đăng nhập — và <em>lọt qua</em>. Toàn bộ <code>user_accounts</code> có nguy cơ phơi ra ánh sáng. Đây là <strong>SQL Injection</strong> — lỗ hổng đã đánh gục cả những công ty tỷ đô. Ticket khẩn: hiểu cú lừa từ gốc, rồi vá bằng <strong>Prepared Statement</strong> để input không bao giờ biến thành code."
+  },
+  "title": "SQL Injection — Lỗ hổng chết người",
+  "subtitle": "Tấn công bằng input độc hại và phòng chống",
+  "module": 3,
+  "module_title": "Application Design",
+  "icon": "&#128128;",
+  "color": "#EF4444",
+  "estimated_minutes": 18,
+  "xp_reward": 60,
+  "drag_type": "bug_spot",
+  "challenge_type": "full_ide",
+  "achievement": {
+    "name": "Lá chắn Injection",
+    "desc": "chống SQL Injection"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "SQL Injection = chèn SQL code vào input để thay đổi logic query",
+        "Payload kinh điển: ' OR '1'='1' -- biến WHERE thành always-true",
+        "Phòng chống: Prepared Statement (%s placeholder) — input không bao giờ chạy như code"
+      ],
+      "intro": "Login form dùng <strong>string concatenation</strong>: <code>f\"SELECT * FROM user_accounts WHERE username = '{input}' AND password = '{pw}'\"</code>. Attacker nhập <code>' OR '1'='1' --</code> vào username. Query trở thành <code>SELECT * FROM user_accounts WHERE username = '' OR '1'='1' --' AND ...</code> → trả về <strong>TẤT CẢ user</strong> — đăng nhập không cần password!",
+      "example": "<code>' OR '1'='1' --</code> đóng chuỗi ('), thêm điều kiện luôn đúng ('1'='1'), comment out phần còn lại (--). Prepared Statement ngăn điều này: <code>WHERE username = %s</code> — giá trị được gửi riêng, không chạy như SQL."
+    },
+    "intro": "Thử tưởng tượng app của bạn bị hack. Attacker gõ 1 dòng vào ô login → lấy được toàn bộ database user, bao gồm admin. Mất 2 tuần fix + tổn thất 500 triệu + mất trust khách hàng. Lỗ hổng này có từ 1998, vẫn còn trong 30% app mới deploy 2026. Tên nó: <strong>SQL Injection</strong>. Bài này dạy cách phòng.",
+    "concept_cards": [
+      {
+        "icon": "fa-skull-crossbones",
+        "title": "SQL Injection — Thử hack thử nào",
+        "body": "Thử thách: nhập <code>' OR '1'='1' --</code> vào ô login username. <strong>Bạn có thể bypass login không?</strong> (Gợi ý: đọc tiếp card 2 để tìm cách phòng chống)",
+        "extra": "Query biến thành <code>WHERE username='' OR '1'='1'</code> → luôn TRUE → bypass login hoàn toàn. 90% web app mới deploy có lỗ hổng này — bug này đã từng làm sập cả hệ thống Yahoo, Sony, và hàng trăm site lớn.",
+        "variant": "interactive"
+      },
+      {
+        "icon": "fa-shield-virus",
+        "title": "Prepared Statement — Khiên chắn",
+        "body": "Phòng chống: <code>SELECT * FROM users WHERE username = %s AND password = %s</code> với params gửi <strong>riêng</strong>. DB engine biết đó là literal, escape tự động, attacker chèn thêm dấu nháy cũng vô dụng. <strong>NGUYÊN TẮC</strong>: input KHÔNG BAO GIỜ ghép chuỗi thành SQL."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "' OR '1'='1' -- đóng chuỗi ('), thêm điều kiện luôn đúng ('1'='1'), comment out phần còn lại (--)."
+      }
+    ],
+    "visual": {
+      "diagram_legacy_4": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — 1 bảng tổng (BAD)",
+          "columns": [
+            "user_id",
+            "username",
+            "post_id",
+            "post_text",
+            "game_name",
+            "genre"
+          ],
+          "rows": [
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "RPG"
+            ],
+            [
+              "U1",
+              "alice",
+              "P1",
+              "My first post",
+              "Elden Ring",
+              "Action"
+            ],
+            [
+              "U2",
+              "bob",
+              "P2",
+              "Check this",
+              "Hades",
+              "Rogue"
+            ]
+          ],
+          "violations": {
+            "0-5": true,
+            "0-4": true,
+            "1-5": true,
+            "1-4": true
+          }
+        },
+        "after": {
+          "title": "SAU — 5 bảng + 2 junction",
+          "columns": [
+            "user_id",
+            "post_id",
+            "game_id",
+            "genre_id",
+            "platform_id"
+          ],
+          "rows": [
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_RPG",
+              "PC"
+            ],
+            [
+              "U1",
+              "P1",
+              "G1",
+              "G_Act",
+              "PC"
+            ],
+            [
+              "U2",
+              "P2",
+              "G2",
+              "G_Rog",
+              "PS5"
+            ]
+          ]
+        },
+        "note": "7 bảng: users, posts, games, genres, platforms + post_game (junction), post_genre (junction)."
+      },
+      "diagram_legacy_3": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user",
+            "title": "Web App / Form",
+            "sub": "User thay đổi setting (theme: dark)",
+            "payload": "POST /api/settings"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Python / Django ORM",
+            "sub": "Validate + serialize sang JSONB",
+            "payload": "settings = {'theme': 'dark'}"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Lưu JSONB vào cột settings",
+            "payload": "INSERT INTO app_users (..., settings) VALUES (...)"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python dict",
+            "sub": "Đọc lại: settings->>theme = \"dark\"",
+            "payload": "SELECT settings->>'theme' FROM app_users"
+          },
+          {
+            "icon": "fa-display",
+            "title": "HTML Response",
+            "sub": "Render UI với theme mới",
+            "payload": "<html data-theme=\"dark\">"
+          }
+        ]
+      },
+      "diagram_legacy_2": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-map-pin",
+            "title": "User location",
+            "sub": "Browser geolocation API",
+            "payload": "(106.7, 10.78)"
+          },
+          {
+            "icon": "fa-mobile",
+            "title": "Mobile App",
+            "sub": "POST /api/nearest?lat=10.78&lon=106.7",
+            "payload": "GET /nearest"
+          },
+          {
+            "icon": "fa-code",
+            "title": "Django + GeoDjango",
+            "sub": "Build query PostGIS",
+            "payload": "ST_DWithin(geo, point, 5000)"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL + PostGIS",
+            "sub": "Spatial index (GIST)",
+            "payload": "shop_branches WHERE ST_DWithin(...)"
+          },
+          {
+            "icon": "fa-list",
+            "title": "Sorted by distance",
+            "sub": "ST_Distance ORDER BY",
+            "payload": "ORDER BY dist ASC LIMIT 5"
+          }
+        ]
+      },
+      "diagram_legacy_1": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-code",
+            "title": "Python code (ORM)",
+            "sub": "LogEvent.objects.filter(...)",
+            "payload": "Event.objects.all()[:20]"
+          },
+          {
+            "icon": "fa-cogs",
+            "title": "Django ORM Layer",
+            "sub": "Build SQL từ queryset",
+            "payload": "SELECT * FROM log_events LIMIT 20"
+          },
+          {
+            "icon": "fa-server",
+            "title": "PostgreSQL",
+            "sub": "Execute SQL",
+            "payload": "20 rows"
+          },
+          {
+            "icon": "fa-arrow-rotate-left",
+            "title": "ORM → Python list",
+            "sub": "Map row → LogEvent object",
+            "payload": "events = [LogEvent(...), ...]"
+          },
+          {
+            "icon": "fa-display",
+            "title": "Template render",
+            "sub": "events truyền vào template",
+            "payload": "{% for e in events %}"
+          }
+        ]
+      },
+      "diagram": {
+        "type": "flow",
+        "steps": [
+          {
+            "icon": "fa-user-secret",
+            "title": "Attacker input",
+            "sub": "username = ' OR '1'='1' --",
+            "payload": "MALICIOUS_PAYLOAD"
+          },
+          {
+            "icon": "fa-bug",
+            "title": "App build SQL (NGUY HIỂM)",
+            "sub": "f\"SELECT * FROM users WHERE name='{input}'\"",
+            "payload": "VULNERABLE"
+          },
+          {
+            "icon": "fa-server",
+            "title": "DB execute",
+            "sub": "Trả về TẤT CẢ users (không cần password!)",
+            "payload": "ALL_ROWS_RETURNED"
+          },
+          {
+            "icon": "fa-shield-halved",
+            "title": "FIX: Prepared Statement",
+            "sub": "WHERE username = %s + params",
+            "payload": "SAFE"
+          },
+          {
+            "icon": "fa-check",
+            "title": "DB execute (SAFE)",
+            "sub": "Input là literal, escape tự động",
+            "payload": "NORMAL_QUERY"
+          }
+        ]
+      },
+      "schema": {
+        "table_name": "user_accounts",
+        "columns": [
+          {
+            "name": "user_id",
+            "type": "VARCHAR",
+            "key": "PK",
+            "icon": "&#128273;"
+          },
+          {
+            "name": "username",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "password_hash",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "&#128272;"
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "role",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "U01",
+          "minh_admin",
+          "hashed_abc",
+          "minh@x.com",
+          "admin"
+        ],
+        [
+          "U02",
+          "yuki_user",
+          "hashed_xyz",
+          "yuki@x.com",
+          "user"
+        ],
+        [
+          "U03",
+          "sara_mod",
+          "hashed_123",
+          "sara@x.com",
+          "moderator"
+        ],
+        [
+          "U04",
+          "alex_guest",
+          "hashed_456",
+          "alex@x.com",
+          "guest"
+        ],
+        [
+          "U05",
+          "nam_user",
+          "hashed_789",
+          "nam@x.com",
+          "user"
+        ],
+        [
+          "U06",
+          "lan_user",
+          "hashed_aaa",
+          "lan@x.com",
+          "user"
+        ],
+        [
+          "U07",
+          "hung_mod",
+          "hashed_bbb",
+          "hung@x.com",
+          "moderator"
+        ],
+        [
+          "U08",
+          "mai_user",
+          "hashed_ccc",
+          "mai@x.com",
+          "user"
+        ],
+        [
+          "U09",
+          "tu_admin",
+          "hashed_ddd",
+          "tu@x.com",
+          "admin"
+        ],
+        [
+          "U10",
+          "linh_user",
+          "hashed_eee",
+          "linh@x.com",
+          "user"
+        ],
+        [
+          "U11",
+          "phuc_guest",
+          "hashed_fff",
+          "phuc@x.com",
+          "guest"
+        ],
+        [
+          "U12",
+          "quan_user",
+          "hashed_ggg",
+          "quan@x.com",
+          "user"
+        ],
+        [
+          "U13",
+          "ha_mod",
+          "hashed_hhh",
+          "ha@x.com",
+          "moderator"
+        ],
+        [
+          "U14",
+          "dat_user",
+          "hashed_iii",
+          "dat@x.com",
+          "user"
+        ],
+        [
+          "U15",
+          "vy_user",
+          "hashed_jjj",
+          "vy@x.com",
+          "user"
+        ],
+        [
+          "U16",
+          "khoa_guest",
+          "hashed_kkk",
+          "khoa@x.com",
+          "guest"
+        ],
+        [
+          "U17",
+          "trang_user",
+          "hashed_lll",
+          "trang@x.com",
+          "user"
+        ],
+        [
+          "U18",
+          "bao_admin",
+          "hashed_mmm",
+          "bao@x.com",
+          "admin"
+        ],
+        [
+          "U19",
+          "ngoc_user",
+          "hashed_nnn",
+          "ngoc@x.com",
+          "user"
+        ],
+        [
+          "U20",
+          "son_user",
+          "hashed_ooo",
+          "son@x.com",
+          "user"
+        ],
+        [
+          "U21",
+          "thao_mod",
+          "hashed_ppp",
+          "thao@x.com",
+          "moderator"
+        ],
+        [
+          "U22",
+          "duc_user",
+          "hashed_qqq",
+          "duc@x.com",
+          "user"
+        ]
+      ]
+    },
+    "mission": "Phân rã <strong>query bị SQL Injection</strong>. Kéo thả khối để xem query thực sự chạy gì ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Input nào là <strong>SQL Injection</strong> trong trường username?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>minh_admin</code> — username hợp lệ",
+            "correct": false,
+            "explanation": "Sai — đây là username hợp lệ, không chứa ký tự SQL đặc biệt. An toàn."
+          },
+          {
+            "id": "b",
+            "text": "<code>' OR '1'='1' --</code> — đóng chuỗi, thêm điều kiện đúng, comment out",
+            "correct": true,
+            "explanation": "Đúng — đóng chuỗi ('), thêm điều kiện luôn đúng (OR '1'='1'), comment phần password (--). Đây là SQL Injection classic."
+          },
+          {
+            "id": "c",
+            "text": "<code>minh' --</code> — chỉ comment out phần sau, vẫn cần password đúng",
+            "correct": false,
+            "explanation": "Sai — chỉ comment out phần password check. Nhưng vẫn cần username đúng. Nếu username không tồn tại → trả về 0 rows. Không phải full bypass."
+          },
+          {
+            "id": "d",
+            "text": "<code>minh_admin; DROP TABLE users;</code> — chỉ là chuỗi dài, không phải injection nếu escape đúng",
+            "correct": false,
+            "explanation": "Sai — chuỗi này chỉ nguy hiểm nếu APP build SQL bằng f-string không escape. Nếu dùng Prepared Statement, DB xem như literal string, không execute DROP."
+          }
+        ]
+      },
+      {
+        "question": "Cách nào phòng chống SQL Injection hiệu quả nhất?",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>f\"WHERE username = '{input}'\"</code> — dùng f-string",
+            "correct": false,
+            "explanation": "Sai — f-string nội suy input trực tiếp vào SQL = chính là nguyên nhân gây SQL Injection. Không phải cách phòng chống."
+          },
+          {
+            "id": "b",
+            "text": "<code>WHERE username = %s</code> — Prepared Statement (parameterized query)",
+            "correct": true,
+            "explanation": "Đúng — Prepared Statement dùng placeholder (%s, ?, $1) + bind param riêng. DB engine phân biệt code vs data, escape tự động. Cách chuẩn nhất."
+          },
+          {
+            "id": "c",
+            "text": "<code>WHERE username = input.replace(\"'\", \"''\")</code> — escape thủ công",
+            "correct": false,
+            "explanation": "Sai — escape thủ công dễ sai (thiếu edge case). Chuẩn industry là Prepared Statement. Đừng tự roll security."
+          },
+          {
+            "id": "d",
+            "text": "Thêm CAPTCHA — chỉ giảm bot, không ngăn SQLi",
+            "correct": false,
+            "explanation": "Sai — CAPTCHA giảm bot nhưng attacker vẫn submit thủ công. Không ngăn SQLi. CAPTCHA bổ sung, không thay thế Prepared Statement."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Tìm lỗi SQL Injection",
+      "instruction": "Click vào DÒNG có lỗ hổng SQL Injection. (Dòng build query bằng f-string).",
+      "code": "def login(username, password):\n    query = f\"SELECT * FROM users WHERE name='{username}' AND pass='{password}'\"\n    cursor.execute(query)\n    return cursor.fetchone()\n\ndef safe_login(username, password):\n    cursor.execute(\"SELECT * FROM users WHERE name=%s AND pass=%s\", (username, password))\n    return cursor.fetchone()",
+      "bugType": "security",
+      "bugs": [
+        {
+          "line": 2,
+          "description": "Dùng f-string nội suy user input trực tiếp vào SQL — cho phép SQL Injection. Fix: dùng %s placeholder."
+        }
+      ],
+      "xp": 25
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "op",
+        "token": "*",
+        "slot": "op-star"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "user_accounts",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "username",
+        "slot": "col-user"
+      },
+      {
+        "type": "op",
+        "token": "= '' OR '1'='1'",
+        "slot": "op-inject"
+      },
+      {
+        "type": "kw",
+        "token": "--",
+        "slot": "op-comment"
+      },
+      {
+        "type": "op",
+        "token": " AND password_hash = '_ignored'",
+        "slot": "op-ignore"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-zone",
+        "placeholder": "SELECT * FROM user_accounts WHERE username = ''",
+        "accepts": [
+          "kw",
+          "op",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "inject-zone",
+        "placeholder": "OR '1'='1' --' AND password_hash = '_ignored'",
+        "accepts": [
+          "kw",
+          "op"
+        ],
+        "acceptedKeywords": [
+          "--",
+          "OR",
+          "1=1"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT * FROM user_accounts WHERE username = '' OR '1'='1' -- AND password_hash = '_ignored'",
+    "expected_zones": {
+      "select-zone": "SELECT * FROM user_accounts WHERE username",
+      "inject-zone": "= '' OR '1'='1' -- AND password_hash = '_ignored'"
+    },
+    "reveal_hints": {
+      "select-zone": "<strong>Query ban đầu:</strong> SELECT * FROM user_accounts WHERE username — phần app viết sẵn.",
+      "inject-zone": "<strong>Phần inject:</strong> <code>OR '1'='1'</code> thêm điều kiện luôn đúng. <code>--</code> comment out phần password. Query cuối = <code>SELECT * FROM user_accounts</code> — trả TẤT CẢ!"
+    }
+  },
+  "step_4": {
+    "prompt": "Viết lại login query bằng <strong>Prepared Statement</strong> với <code>%s</code> placeholder. Sau đó viết query đếm <strong>số user theo role</strong> (aggregation an toàn, không có input).",
+    "context": {
+      "scenario": "Ticket KHẨN: kẻ tấn công đã thử <code>' OR '1'='1</code> vào form đăng nhập GameHub. Nhiệm vụ 2 phần: (1) <strong>vá lỗ hổng</strong> — viết lại login query bằng Prepared Statement để input vĩnh viễn chỉ là DỮ LIỆU; (2) <strong>đánh giá thiệt hại</strong> — đếm <code>user_accounts</code> theo <code>role</code> xem bao nhiêu tài khoản admin nằm trong vùng nguy hiểm.",
+      "real_world": "SQL Injection đứng nhiều năm trong <strong>OWASP Top 10</strong> — các vụ rò dữ liệu Sony, TalkTalk đều từ chuỗi nối SQL. Chuẩn ngành: KHÔNG BAO GIỜ nối input vào câu lệnh — driver gửi câu lệnh và tham số <em>tách kênh</em> qua <code>%s</code>/<code>?</code>.",
+      "steps": [
+        "Login an toàn: <code>SELECT * FROM user_accounts WHERE username = %s AND password_hash = %s;</code> — 2 placeholder, không nối chuỗi.",
+        "Xuống dòng, viết câu audit: đếm theo vai trò <code>GROUP BY role</code>.",
+        "<code>COUNT(user_id) AS user_count</code> + <code>ORDER BY user_count DESC</code>.",
+        "Run → câu 1 là khiên chắn, câu 2 là bảng thiệt hại tiềm năng."
+      ],
+      "hint_explore": "Xem danh sách tài khoản đang bảo vệ: <code>SELECT * FROM user_accounts</code> — chú ý cột <code>role</code>.",
+      "expected": "Prepared Statement chuẩn với <code>%s</code> + bảng vài dòng (<code>role, user_count</code>) giảm dần. Input của hacker từ giờ chỉ còn là chuỗi ký tự vô hại."
+    },
+    "starter": "-- Query 1: Login an toàn (Prepared Statement)\n-- WHERE username = %s AND password_hash = %s\n\n-- Query 2: Đếm user theo role\n-- SELECT role, COUNT(*) ... GROUP BY role ORDER BY count DESC\nSELECT , COUNT() AS \n  FROM user_accounts\n GROUP BY \n ORDER BY  DESC;\n",
+    "schema": {
+      "table_name": "user_accounts",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "VARCHAR",
+          "key": "PK",
+          "icon": "&#128273;"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        }
+      ],
+      "data": [
+        [
+          "U01",
+          "minh_admin",
+          "minh@x.com",
+          "admin"
+        ],
+        [
+          "U02",
+          "yuki_user",
+          "yuki@x.com",
+          "user"
+        ],
+        [
+          "U03",
+          "sara_mod",
+          "sara@x.com",
+          "moderator"
+        ],
+        [
+          "U04",
+          "alex_guest",
+          "alex@x.com",
+          "guest"
+        ],
+        [
+          "U05",
+          "nam_user",
+          "nam@x.com",
+          "user"
+        ],
+        [
+          "U06",
+          "lan_user",
+          "lan@x.com",
+          "user"
+        ],
+        [
+          "U07",
+          "hung_mod",
+          "hung@x.com",
+          "moderator"
+        ],
+        [
+          "U08",
+          "mai_user",
+          "mai@x.com",
+          "user"
+        ],
+        [
+          "U09",
+          "tu_admin",
+          "tu@x.com",
+          "admin"
+        ],
+        [
+          "U10",
+          "linh_user",
+          "linh@x.com",
+          "user"
+        ],
+        [
+          "U11",
+          "phuc_guest",
+          "phuc@x.com",
+          "guest"
+        ],
+        [
+          "U12",
+          "quan_user",
+          "quan@x.com",
+          "user"
+        ],
+        [
+          "U13",
+          "ha_mod",
+          "ha@x.com",
+          "moderator"
+        ],
+        [
+          "U14",
+          "dat_user",
+          "dat@x.com",
+          "user"
+        ],
+        [
+          "U15",
+          "vy_user",
+          "vy@x.com",
+          "user"
+        ],
+        [
+          "U16",
+          "khoa_guest",
+          "khoa@x.com",
+          "guest"
+        ],
+        [
+          "U17",
+          "trang_user",
+          "trang@x.com",
+          "user"
+        ],
+        [
+          "U18",
+          "bao_admin",
+          "bao@x.com",
+          "admin"
+        ],
+        [
+          "U19",
+          "ngoc_user",
+          "ngoc@x.com",
+          "user"
+        ],
+        [
+          "U20",
+          "son_user",
+          "son@x.com",
+          "user"
+        ],
+        [
+          "U21",
+          "thao_mod",
+          "thao@x.com",
+          "moderator"
+        ],
+        [
+          "U22",
+          "duc_user",
+          "duc@x.com",
+          "user"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
+    "expected_sql": "SELECT * FROM user_accounts WHERE username = %s AND password_hash = %s; SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>phòng chống SQL Injection</em> (Prepared Statement) + <em>đếm user theo role</em> (aggregation). Hãy nghĩ: <code>%s</code> placeholder cho input, GROUP BY role cho aggregation."
+      },
+      {
+        "level": 2,
+        "text": "Prepared Statement: <code>WHERE username = %s AND password_hash = %s</code> — params gửi riêng."
+      },
+      {
+        "level": 3,
+        "text": "<code>SELECT role, COUNT(user_id) AS user_count</code> — đếm theo role."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT role, COUNT(user_id) AS user_count FROM user_accounts GROUP BY role ORDER BY user_count DESC;</code>"
+      }
+    ],
+    "success_message": "Prepared Statement là lá chắn! Input luôn là literal, không bao giờ chạy như SQL. Bài 20 sẽ học cách lưu password đúng cách.",
+    "xp_reward": 60
+  }
+}

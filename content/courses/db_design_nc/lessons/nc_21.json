@@ -1,0 +1,498 @@
+{
+  "id": "nc_21",
+  "index": 21,
+  "title": "Máy sập lúc 23:47 — dữ liệu mới đang nằm ở đâu?",
+  "subtitle": "Volatile / non-volatile / stable: \"đã write\" chưa phải \"đã an toàn\" — chỉ stable storage mới chắc chắn",
+  "module": 9,
+  "module_title": "Hộp Đen — Sự cố & Phục hồi",
+  "estimated_minutes": 18,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "wallets — ví gem trên đĩa (mẫu 4)",
+      "columns": [
+        "wallet_id",
+        "owner",
+        "balance"
+      ],
+      "dataRows": [
+        [
+          "A",
+          "Quỹ Sàn GameHub",
+          "1000"
+        ],
+        [
+          "B",
+          "DragonForge",
+          "2000"
+        ],
+        [
+          "C",
+          "NightRaven",
+          "700"
+        ],
+        [
+          "D",
+          "MythicSlayer88",
+          "450"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #62",
+    "hook": "23:47, đỉnh điểm flash-sale — <strong>RẦM</strong>. Mất điện cả khu data center, server tắt phụt. 90 giây sau máy khởi động lại, và câu hỏi đầu tiên của cả team trực đêm: <em>giao dịch đang chạy dở lúc đó — mất cái gì, còn cái gì?</em> Ví Quỹ Sàn vừa trừ 50 gem: con số mới đã kịp xuống đĩa chưa, hay còn kẹt đâu đó trong RAM và vừa bốc hơi theo dòng điện? Ticket #62 mở Module 9 — <strong>Hộp Đen</strong>: trước khi biết cách phục hồi, phải biết một cú sập cướp đi chính xác những gì. 💥"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "BA TẦNG LƯU TRỮ theo độ bền: VOLATILE (RAM/buffer — mất sạch khi cúp điện/crash) · NON-VOLATILE (đĩa — sống qua crash phần mềm, nhưng chết nếu đầu đọc cào hỏng/đĩa hư) · STABLE (2+ bản sao trên media độc lập — sống cả hỏa hoạn, lụt; chỉ là XẤP XỈ, không tuyệt đối)",
+        "write(X) ≠ output(B): write(X) chỉ đổ giá trị mới vào BUFFER trong RAM; phải có output(B) thì block đó mới thực sự xuống đĩa. Crash SAU write mà TRƯỚC output → giá trị mới nằm trong RAM, bay theo RAM; đĩa vẫn giá cũ",
+        "FAIL-STOP assumption: lỗi phần cứng/phần mềm làm hệ thống DỪNG (halt) chứ không làm HỎNG nội dung non-volatile — nhờ giả định hợp lý này, recovery mới có cái đĩa lành để dựa vào; disk failure (head crash) là loại lỗi RIÊNG, phải cậy stable storage/backup"
+      ],
+      "intro": "Bạn viết dở lá thư trên máy tính: chữ đã gõ hiện trên màn hình (RAM), nhưng chưa bấm Lưu (chưa xuống ổ cứng). Mất điện → mở lại, file trên ổ cứng vẫn là bản cũ, đoạn vừa gõ biến mất không dấu vết. Database y hệt: <strong>write() là \"đã gõ\", output() mới là \"đã bấm Lưu\"</strong>. Và như lá thư — nhìn vào file cũ, bạn chẳng thể biết mình vừa gõ thêm những gì. Đó là lý do cần một cuốn nhật ký ghi lại từng nét (bài sau).",
+      "example": "Ví Quỹ Sàn A trên đĩa = 1000. Giao dịch trừ 50: read(A) nạp 1000 lên buffer → tính 950 trong buffer (đĩa vẫn 1000) → write(A) đặt 950 vào buffer block. <strong>Crash ngay đây</strong>: RAM bay → khởi động lại đọc đĩa = <strong>1000</strong>, con số 950 bốc hơi. Chỉ khi output(A) chạy xong, đĩa mới thành 950 và sống được qua crash."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-triangle-exclamation",
+        "title": "Ba loại sự cố — theo đúng sách",
+        "body": "Sách chia rõ ba kiểu hỏng, mỗi kiểu chữa khác nhau: <strong>Transaction failure</strong> (logical error: input sai/tràn/hết quota · system error: kẹt deadlock — có thể chạy lại sau); <strong>System crash</strong> (phần cứng trục trặc hoặc bug OS/DB làm mất sạch VOLATILE, nhưng non-volatile <em>còn nguyên</em> — đây là <strong>fail-stop assumption</strong>); <strong>Disk failure</strong> (head crash/lỗi lúc truyền — block mất nội dung, phải cậy bản sao đĩa khác hoặc backup băng từ). Recovery algorithm gồm 2 phần: việc làm LÚC bình thường (để có đủ thông tin) + việc làm SAU sự cố (để khôi phục).",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 19.1 — Failure Classification"
+      },
+      {
+        "icon": "fa-layer-group",
+        "title": "Stable storage — cách gần đúng một \"kho bất tử\"",
+        "body": "Không tầng nào bất tử tuyệt đối; stable storage là <strong>xấp xỉ</strong> bằng cách nhân bản lên nhiều media <em>độc lập-lỗi</em>: RAID mirror (2 bản trên 2 đĩa) chống hỏng 1 đĩa, remote copy (ghi qua mạng sang site xa) chống cả hỏa hoạn/lụt. Bí quyết chống crash-giữa-lúc-ghi: ghi <strong>tuần tự bản 1 rồi bản 2</strong>, chỉ coi là xong khi bản 2 hoàn tất → hai bản chênh nhau thì phục hồi bằng bản lành (checksum dò lỗi). Kết quả: ghi vào stable storage <em>hoặc trọn vẹn, hoặc coi như chưa ghi</em> — không bao giờ dở dang."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Cái bạn gặp mỗi ngày: <code>fsync()</code> — lệnh ép OS đẩy buffer xuống đĩa THẬT (Postgres gọi ở mỗi commit). Redis mặc định giữ data trong RAM, phải bật AOF/RDB mới bền qua restart. Ổ SSD có \"power-loss protection\" chính là tụ điện gồng nốt cú ghi buffer khi mất điện. Lần tới thấy cảnh báo \"dữ liệu chưa lưu sẽ mất\" — đó đúng là ranh giới volatile/non-volatile mà bài này vẽ ra."
+      }
+    ],
+    "storage_visual": {
+      "eyebrow": "BA TẦNG LƯU TRỮ — VÍ QUỸ SÀN (A) TRỪ 50 GEM · CRASH SỚM vs CRASH MUỘN",
+      "caption": "Chạy CẢ HAI kịch bản: crash trước output thì giá trị mới bay theo RAM; crash sau output thì đĩa đã kịp giữ — cùng một giao dịch, hai số phận.",
+      "item_label": "💰 Ví Quỹ Sàn (A) — giao dịch: 1000 − 50 = 950",
+      "modes": [
+        {
+          "id": "early",
+          "short": "CRASH SỚM",
+          "ok": false,
+          "result": "950 bay mất",
+          "btn": "▶ Kịch bản CRASH TRƯỚC output",
+          "steps": [
+            {
+              "text": "read(A): nạp 1000 từ đĩa lên RAM buffer",
+              "ram": 1000,
+              "disk": 1000,
+              "note": "Giờ giá trị nằm cả ba tầng: 1000."
+            },
+            {
+              "text": "tính A − 50 = 950 trong buffer (chưa đụng đĩa)",
+              "ram": 950,
+              "note": "RAM đã 950 nhưng ĐĨA vẫn trơ trơ 1000 — buffer đi trước một mình."
+            },
+            {
+              "text": "write(A): đặt 950 vào buffer block — output(B) CHƯA chạy",
+              "ram": 950,
+              "note": "Đây là bẫy chí mạng: \"đã write\" nghe như xong, nhưng đĩa chưa hề biết tới con 950."
+            },
+            {
+              "text": "💥 CRASH — mất điện, RAM trắng xóa",
+              "crash": true,
+              "cls": "bad",
+              "note": ""
+            }
+          ],
+          "verdict": "❌ Giá trị mới 950 sống trong RAM buffer, chết theo RAM. Khởi động lại đọc đĩa = 1000 — giao dịch như chưa từng xảy ra, và tệ hơn: nhìn database không tài nào biết nó ĐÃ chạy dở."
+        },
+        {
+          "id": "late",
+          "short": "CRASH MUỘN",
+          "ok": true,
+          "result": "950 sống",
+          "btn": "▶ Kịch bản CRASH SAU output",
+          "steps": [
+            {
+              "text": "read(A) → tính 950 → write(A) vào buffer",
+              "ram": 950,
+              "disk": 1000,
+              "note": "Y hệt kịch bản kia cho tới đây."
+            },
+            {
+              "text": "output(A): buffer 950 được đẩy XUỐNG đĩa",
+              "ram": 950,
+              "disk": 950,
+              "cls": "ok",
+              "note": "Khoảnh khắc quyết định: giờ đĩa (non-volatile) đã mang 950. Stable cũng theo đó."
+            },
+            {
+              "text": "💥 CRASH — mất điện, RAM trắng xóa",
+              "crash": true,
+              "note": ""
+            }
+          ],
+          "verdict": "✓ RAM vẫn bay như thường, nhưng đĩa đã kịp giữ 950 — khởi động lại đọc đĩa = 950. Cùng một giao dịch, khác nhau đúng một cú output đã-hay-chưa."
+        }
+      ]
+    },
+    "visual": {
+      "schema": {
+        "table_name": "ba tầng — thứ gì sống sót qua cái gì?",
+        "columns": [
+          {
+            "name": "tầng",
+            "type": "nơi dữ liệu nằm",
+            "key": "📍"
+          },
+          {
+            "name": "crash phần mềm",
+            "type": "mất điện / bug OS",
+            "key": "💥"
+          },
+          {
+            "name": "thảm họa",
+            "type": "hỏa hoạn / lụt",
+            "key": "🔥"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "RAM buffer (volatile)",
+          "❌ mất sạch",
+          "❌ mất",
+          ""
+        ],
+        [
+          "Đĩa (non-volatile)",
+          "✓ sống (fail-stop)",
+          "❌ mất",
+          ""
+        ],
+        [
+          "Stable (2 bản mirror)",
+          "✓ sống",
+          "⚠️ mirror mất, remote sống",
+          ""
+        ],
+        [
+          "Stable (+ remote copy)",
+          "✓ sống",
+          "✓ sống",
+          ""
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Server sập đúng sau khi write(A) đặt 950 vào buffer, nhưng TRƯỚC output(A). Khởi động lại, ví A trên database hiện bao nhiêu?",
+        "options": [
+          {
+            "id": "a",
+            "text": "1000 — con số 950 mới chỉ nằm trong RAM buffer, chưa kịp output xuống đĩa; RAM bay theo crash nên đĩa còn nguyên giá cũ",
+            "correct": true,
+            "explanation": "Đúng — đây là ranh giới write-vào-buffer vs output-xuống-đĩa. Chưa output thì đĩa chưa biết gì; và vì fail-stop, đĩa không hề bị hỏng, chỉ đơn giản là còn giá trị cũ."
+          },
+          {
+            "id": "b",
+            "text": "950 — lệnh write() đã chạy nghĩa là dữ liệu chắc chắn đã ghi xuống đĩa",
+            "correct": false,
+            "explanation": "Sai ở đúng cái bẫy trung tâm của bài: write(X) chỉ sửa BUFFER trong RAM. Phải có output(B) riêng thì block mới xuống đĩa — và ở đây output chưa hề chạy."
+          },
+          {
+            "id": "c",
+            "text": "0 — crash làm mất sạch mọi thứ, cả đĩa lẫn RAM",
+            "correct": false,
+            "explanation": "Sai — fail-stop assumption: crash phần mềm/mất điện làm mất VOLATILE (RAM) nhưng KHÔNG làm hỏng non-volatile (đĩa). Đĩa vẫn giữ nguyên 1000."
+          },
+          {
+            "id": "d",
+            "text": "Không xác định — phải hỏi lại người mua xem giao dịch có chạy không",
+            "correct": false,
+            "explanation": "Về mặt database thì rất xác định: đĩa = 1000. (Đúng là nhìn database KHÔNG biết giao dịch đã chạy dở — nhưng đó chính là lý do cần LOG ở bài sau, không phải đi hỏi người dùng.)"
+          }
+        ]
+      },
+      {
+        "question": "Vì sao đĩa thường (non-volatile) vẫn CHƯA đủ, phải thêm tầng \"stable storage\"?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì non-volatile sống qua crash phần mềm nhưng vẫn CHẾT nếu chính cái đĩa hỏng (head crash, cháy, lụt); stable = nhân bản lên nhiều media độc lập-lỗi (mirror + remote) để một thảm họa không cuốn sạch mọi bản",
+            "correct": true,
+            "explanation": "Đúng — mỗi tầng chống một loại sự cố. Đĩa chống mất-điện, stable chống mất-đĩa. Và stable cũng chỉ là XẤP XỈ \"bất tử\", không tuyệt đối."
+          },
+          {
+            "id": "b",
+            "text": "Vì đĩa chậm, stable storage nhanh hơn",
+            "correct": false,
+            "explanation": "Sai — stable storage (nhân bản, ghi remote qua mạng) thường CHẬM hơn, không nhanh hơn; ta trả giá tốc độ để đổi lấy độ bền."
+          },
+          {
+            "id": "c",
+            "text": "Vì stable storage không bao giờ hỏng, tuyệt đối bất tử",
+            "correct": false,
+            "explanation": "Sai — sách nói rõ stable storage chỉ là \"xấp xỉ\": xác suất mất cực thấp nhờ nhiều bản, nhưng không phải zero tuyệt đối."
+          },
+          {
+            "id": "d",
+            "text": "Vì luật quy định database phải có 3 bản sao",
+            "correct": false,
+            "explanation": "Sai — không có \"luật 3 bản\"; số bản là đánh đổi kỹ thuật (2 bản thường là đủ hợp lý theo sách), không phải quy định pháp lý."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Cái gì sống sót?",
+      "instruction": "Một cú MẤT ĐIỆN (crash phần mềm, fail-stop) ập tới. Dữ liệu ở tầng nào SỐNG, tầng nào CHẾT?",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "c1",
+          "label": "Giá trị mới vừa write() vào RAM buffer"
+        },
+        {
+          "id": "c2",
+          "label": "Block đã output() xuống đĩa"
+        },
+        {
+          "id": "c3",
+          "label": "Biến cục bộ trong private work area của txn"
+        },
+        {
+          "id": "c4",
+          "label": "Bản sao trên stable storage (mirror)"
+        }
+      ],
+      "bins": [
+        {
+          "id": "song",
+          "label": "SỐNG ✓"
+        },
+        {
+          "id": "chet",
+          "label": "CHẾT (bay theo RAM) ✗"
+        }
+      ],
+      "solution": {
+        "c1": "chet",
+        "c2": "song",
+        "c3": "chet",
+        "c4": "song"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp bản đồ \"dữ liệu ở đâu, sống hay chết\" 4 bước — có MỘT khối bịa (nghe rất chi là \"chắc rồi\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "PHÂN TẦNG: volatile (RAM/buffer — mất khi cúp điện) · non-volatile (đĩa — sống crash phần mềm) · stable (2+ bản, sống cả thảm họa)",
+        "slot": "st-tier"
+      },
+      {
+        "type": "op",
+        "token": "write(X) chỉ đổ giá trị mới vào BUFFER trong RAM — chưa hề chạm đĩa; output(B) mới là cú đẩy block xuống đĩa",
+        "slot": "st-write"
+      },
+      {
+        "type": "op",
+        "token": "write(X) chạy xong là dữ liệu chắc chắn đã nằm an toàn trên đĩa, khỏi lo crash",
+        "slot": "st-x"
+      },
+      {
+        "type": "op",
+        "token": "CRASH giữa write và output: giá trị mới kẹt trong RAM → bay theo RAM; đĩa còn giá cũ (fail-stop: non-volatile không hỏng)",
+        "slot": "st-crash"
+      },
+      {
+        "type": "op",
+        "token": "HỆ QUẢ: nhìn riêng database KHÔNG biết giao dịch đã chạy dở hay chưa — cần một cuốn nhật ký ghi trước mỗi cú sửa",
+        "slot": "st-need"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "st-tier",
+        "placeholder": "Bước 1 — dữ liệu có thể nằm ở mấy nơi?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📚",
+          "label": "Ba tầng",
+          "sub": "Bước 1",
+          "hint": "Xếp theo độ bền: cái gì mất khi cúp điện, cái gì sống, cái gì sống cả khi cháy nhà?"
+        }
+      },
+      {
+        "id": "st-write",
+        "placeholder": "Bước 2 — write() đưa dữ liệu tới đâu?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "✍️",
+          "label": "write ≠ output",
+          "sub": "Bước 2",
+          "hint": "Có HAI động tác khác nhau: một cái sửa RAM, một cái đẩy xuống đĩa. write() là cái nào?"
+        }
+      },
+      {
+        "id": "st-crash",
+        "placeholder": "Bước 3 — crash đúng lúc giữa hai bước thì sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "💥",
+          "label": "Khoảnh khắc sập",
+          "sub": "Bước 3",
+          "hint": "Giá trị mới đang ở RAM, đĩa còn giá cũ. Mất điện → RAM ra sao, đĩa ra sao?"
+        }
+      },
+      {
+        "id": "st-need",
+        "placeholder": "Bước 4 — vậy ta thiếu cái gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📓",
+          "label": "Vì sao cần log",
+          "sub": "Bước 4",
+          "hint": "Nhìn con số trên đĩa, có đoán được giao dịch vừa chạy dở không? Nếu không thì phải ghi lại ở đâu đó chứ?"
+        }
+      }
+    ],
+    "expected_sql": "PHÂN TẦNG: volatile (RAM/buffer — mất khi cúp điện) · non-volatile (đĩa — sống crash phần mềm) · stable (2+ bản, sống cả thảm họa) write(X) chỉ đổ giá trị mới vào BUFFER trong RAM — chưa hề chạm đĩa; output(B) mới là cú đẩy block xuống đĩa CRASH giữa write và output: giá trị mới kẹt trong RAM → bay theo RAM; đĩa còn giá cũ (fail-stop: non-volatile không hỏng) HỆ QUẢ: nhìn riêng database KHÔNG biết giao dịch đã chạy dở hay chưa — cần một cuốn nhật ký ghi trước mỗi cú sửa",
+    "expected_zones": {
+      "st-tier": "PHÂN TẦNG: volatile (RAM/buffer — mất khi cúp điện) · non-volatile (đĩa — sống crash phần mềm) · stable (2+ bản, sống cả thảm họa)",
+      "st-write": "write(X) chỉ đổ giá trị mới vào BUFFER trong RAM — chưa hề chạm đĩa; output(B) mới là cú đẩy block xuống đĩa",
+      "st-crash": "CRASH giữa write và output: giá trị mới kẹt trong RAM → bay theo RAM; đĩa còn giá cũ (fail-stop: non-volatile không hỏng)",
+      "st-need": "HỆ QUẢ: nhìn riêng database KHÔNG biết giao dịch đã chạy dở hay chưa — cần một cuốn nhật ký ghi trước mỗi cú sửa"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BẢN ĐỒ DỰNG XONG: ba tầng → write chỉ vào buffer → crash làm bay RAM → nên cần log. Khối \"write() xong là chắc chắn trên đĩa\" là BỊA — và bịa đúng chỗ chí mạng: write(X) chỉ sửa buffer RAM, phải có output(B) riêng mới xuống đĩa; tin nhầm điều này là mất data mà không hiểu vì sao. Đó cũng là lý do bài sau có \"Hộp Đen\" — cuốn log ghi TRƯỚC mỗi cú sửa. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "st-tier": "Bước 1 — ba nơi dữ liệu có thể nằm, xếp theo \"chịu được cú sốc tới đâu\".",
+      "st-write": "Bước 2 — đừng lẫn write() với output(). Một cái chạm RAM, một cái chạm đĩa.",
+      "st-crash": "Bước 3 — giá trị mới đang kẹt ở RAM lúc mất điện. RAM là tầng nào trong ba tầng?",
+      "st-need": "Bước 4 — con số trên đĩa im lặng không kể gì. Muốn biết chuyện đã xảy ra, phải có ai đó GHI LẠI trước."
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #62 — dựng lại hiện trường:</strong> lúc server sập, ví Quỹ Sàn A vừa được <code>write(A)</code> đặt giá trị mới 950 vào buffer, nhưng <code>output(A)</code> CHƯA chạy. Trong 4 chẩn đoán dưới, cái nào ĐÚNG cho trạng thái ví A sau khi khởi động lại?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "A = 1000 — giá trị mới 950 mới chỉ nằm trong RAM buffer; chưa output() xuống đĩa nên bay theo RAM lúc mất điện, đĩa còn nguyên giá cũ",
+        "correct": true
+      },
+      {
+        "text": "A = 950 — đã gọi write(A) thì dữ liệu chắc chắn nằm trên đĩa rồi",
+        "correct": false,
+        "explain": "Đây là hiểu lầm nguy hiểm nhất của cả bài: write(A) chỉ sửa BUFFER trong RAM. Không có output(A) thì đĩa không hề biết tới con 950 — và output ở đây chưa chạy."
+      },
+      {
+        "text": "A = 0 — mất điện xóa sạch cả RAM lẫn đĩa",
+        "correct": false,
+        "explain": "Fail-stop assumption: crash làm mất VOLATILE (RAM) nhưng KHÔNG làm hỏng non-volatile (đĩa). Đĩa giữ nguyên giá trị cũ 1000, không về 0."
+      },
+      {
+        "text": "A = 950 trên đĩa nhưng 1000 trong RAM — hai tầng lệch nhau vĩnh viễn",
+        "correct": false,
+        "explain": "Ngược hoàn toàn: RAM (nơi có 950) mới là thứ bay mất; đĩa giữ 1000. Sau khởi động RAM trống trơn, chỉ đọc được đĩa = 1000. Không có chuyện \"đĩa 950\"."
+      }
+    ],
+    "schema": {
+      "table_name": "wallets — hiện trường lúc 23:47:03",
+      "columns": [
+        {
+          "name": "tầng",
+          "type": "nơi giá trị A nằm",
+          "key": "📍"
+        },
+        {
+          "name": "giá trị A",
+          "type": "ngay trước crash",
+          "key": "💰"
+        },
+        {
+          "name": "sau crash?",
+          "type": "còn hay mất",
+          "key": "💥"
+        }
+      ],
+      "data": [
+        [
+          "RAM buffer",
+          "950 (vừa write)",
+          "✗ bay theo RAM"
+        ],
+        [
+          "Đĩa (non-volatile)",
+          "1000 (chưa output)",
+          "✓ còn nguyên"
+        ],
+        [
+          "→ đọc lại được",
+          "❓",
+          "chỉ còn đĩa"
+        ],
+        [
+          "(fail-stop: đĩa không hỏng)",
+          "",
+          ""
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Một phép phân biệt duy nhất gánh cả bài: write() sửa buffer RAM, output() mới đẩy xuống đĩa. Crash rơi vào đúng khe giữa hai động tác đó — nên giá trị mới chỉ tồn tại ở tầng bay-hơi.",
+      "real_world": "Đây là lý do mọi database gọi fsync() ở commit (ép buffer xuống đĩa THẬT), vì sao \"đã lưu\" trên UI khác \"đã flush\" dưới engine, và vì sao mất điện đúng lúc ghi là ác mộng kinh điển. Bài sau sẽ thấy LOG cứu tình huống này thế nào.",
+      "steps": [
+        "Xác định giá trị mới 950 đang ở tầng nào → RAM buffer (vì output chưa chạy).",
+        "Mất điện = crash phần mềm → tầng volatile (RAM) mất sạch.",
+        "Fail-stop: non-volatile (đĩa) không hỏng, giữ giá trị cũ 1000.",
+        "Khởi động lại chỉ đọc được đĩa → A = 1000."
+      ],
+      "hint_explore": "Panel schema bên trái đã dựng sẵn hiện trường ba tầng — cột \"sau crash?\" chỉ thẳng đáp án.",
+      "expected": "Chọn A = 1000 — giá trị mới kẹt trong RAM chưa kịp xuống đĩa."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Giá trị mới 950 đang nằm ở tầng nào? write() đẩy nó tới RAM buffer hay xuống đĩa?"
+      },
+      {
+        "level": 2,
+        "text": "Mất điện làm mất tầng VOLATILE. RAM là volatile — nên 950 ra sao?"
+      },
+      {
+        "level": 3,
+        "text": "Fail-stop: đĩa (non-volatile) không hỏng, giữ nguyên giá trị CŨ. Giá cũ của A là bao nhiêu?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: A = 1000 — đĩa giữ giá cũ, 950 bay theo RAM."
+      }
+    ],
+    "success_message": "TICKET #62 ĐÓNG — bạn đã biết một cú sập cướp đi CHÍNH XÁC cái gì! 💥 Nhưng câu hỏi nhức nhối vẫn đó: nhìn con số 1000 trên đĩa, làm sao biết giao dịch trừ-50 đã chạy dở? Không thể — trừ khi có ai đó GHI LẠI trước mỗi cú sửa. Bài sau mở nắp Hộp Đen: cuốn LOG ghi &lt;giao dịch, món, giá-CŨ, giá-MỚI&gt; TRƯỚC khi động vào database — và từ đó, máy tự biết cái gì cần UNDO, cái gì cần REDO. 📜",
+    "xp_reward": 120
+  },
+  "concept_cards_after": []
+}

@@ -1,0 +1,675 @@
+{
+  "id": "db_01",
+  "index": 1,
+  "title": "Entity Set & Primary Key",
+  "subtitle": "Khóa chính — định danh duy nhất cho mỗi thực thể",
+  "module": 1,
+  "module_title": "Giới thiệu & Nền tảng Database",
+  "estimated_minutes": 18,
+  "xp_reward": 50,
+  "project_piece": "🗝️ Mở khóa \"Huy hiệu Lập trình viên Cơ sở\"",
+  "story": {
+    "tag": "🎫 GameHub · Ticket #01",
+    "hook": "Bạn vừa nhận việc: <strong>kỹ sư dữ liệu đầu tiên của GameHub</strong> — cửa hàng game sắp khai trương. Và ticket đầu tiên đã nằm trên bàn: kho có <em>2 bản \"Elden Ring\"</em> (bản thường & bản Deluxe), khách bấm mua bản 60$… hệ thống trừ tiền <strong>bản kia</strong>. Khiếu nại đầu tiên trong lịch sử công ty. Yêu cầu trong ticket: tìm cách chốt <strong>chính xác 1 dòng</strong> — dù tên có trùng."
+  },
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "achievement": {
+    "name": "Khóa chính — Khởi đầu",
+    "desc": "bài đầu về Primary Key"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Entity Set = Table",
+        "Primary Key (PK) = cột định danh duy nhất",
+        "Dùng PK trong WHERE để lấy chính xác 1 record"
+      ],
+      "intro": "",
+      "example": "🔍 <strong>Nhìn bảng SAMPLE DATA bên dưới:</strong> ngay trong vài dòng đầu, <strong>Elden Ring</strong> đã xuất hiện 2 lần — dòng <code class=\"code\">101</code> và <code class=\"code\">104</code>. Nếu bạn chỉ nói với DB \"tôi muốn Elden Ring\", nó biết lấy dòng nào? Giữ câu hỏi này khi sang Bước 2 👇"
+    },
+    "intro": "Bạn vừa nhận việc ở 1 shop game online. Sếp bảo: <em>\"Tổ chức lại kho 5000 game cho gọn gàng\"</em>. Bước đầu tiên? Tạo 1 <strong>bảng</strong> (table) — nơi mỗi game là 1 dòng, mỗi thuộc tính (tên, giá, thể loại) là 1 cột. Đây chính là <strong>Entity Set</strong> trong database design.",
+    "concept_cards": [
+      {
+        "icon": "fa-cube",
+        "title": "Entity Set (Tập thực thể)",
+        "body": "Bạn có 1000 game trong shop. Lưu vào đâu? Mỗi <strong>Entity Set</strong> = 1 bảng chứa mọi thứ cùng loại. Bảng <code>game_catalog</code> = nơi 1000 game đó sống — mỗi dòng là 1 game, mỗi cột là 1 thuộc tính."
+      },
+      {
+        "icon": "fa-key",
+        "title": "Primary Key (Khóa chính)",
+        "body": "Hai game đều tên \"Elden Ring\" — làm sao DB biết bạn muốn game nào? <strong>Primary Key</strong> giải quyết: mỗi dòng có 1 số ID riêng, không ai giống ai. <code>WHERE id = 101</code> → chính xác 1 dòng, không bao giờ nhầm."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Lý thuyết là để <strong>phá</strong>. Ở Bước 3 &amp; 4 bạn sẽ tự gõ: <code>WHERE name = 'Elden Ring'</code> → ra <strong>2 dòng</strong> (sai!), còn <code>WHERE id = 101</code> → đúng <strong>1 dòng</strong>. Tự sai rồi sửa — đó là cách nhớ Primary Key lâu nhất."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "er",
+        "width": 600,
+        "height": 220,
+        "entities": [
+          {
+            "name": "game_catalog",
+            "columns": [
+              {
+                "name": "id",
+                "type": "INT",
+                "key": "PK"
+              },
+              {
+                "name": "name",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "genre",
+                "type": "VARCHAR"
+              },
+              {
+                "name": "price",
+                "type": "INT"
+              }
+            ]
+          }
+        ],
+        "note": "Bài 1: 1 entity đơn. Bài 3+ sẽ thêm connector giữa các entity."
+      },
+      "schema": {
+        "table_name": "game_catalog",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "genre",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": ""
+          },
+          {
+            "name": "price",
+            "type": "INT",
+            "key": "",
+            "icon": ""
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "101",
+          "Elden Ring",
+          "Action RPG",
+          "60"
+        ],
+        [
+          "102",
+          "God of War",
+          "Action",
+          "50"
+        ],
+        [
+          "103",
+          "Hades",
+          "Roguelike",
+          "25"
+        ],
+        [
+          "104",
+          "Elden Ring",
+          "Card Game",
+          "15"
+        ],
+        [
+          "105",
+          "Stardew Valley",
+          "Simulation",
+          "18"
+        ],
+        [
+          "106",
+          "Hollow Knight",
+          "Metroidvania",
+          "15"
+        ],
+        [
+          "107",
+          "The Witcher 3",
+          "Action RPG",
+          "40"
+        ],
+        [
+          "108",
+          "Celeste",
+          "Platformer",
+          "20"
+        ],
+        [
+          "109",
+          "Cyberpunk 2077",
+          "Action RPG",
+          "45"
+        ],
+        [
+          "110",
+          "Disco Elysium",
+          "RPG",
+          "35"
+        ],
+        [
+          "111",
+          "Slay the Spire",
+          "Card Game",
+          "23"
+        ],
+        [
+          "112",
+          "Dark Souls III",
+          "Action RPG",
+          "40"
+        ],
+        [
+          "113",
+          "Baldur's Gate 3",
+          "RPG",
+          "60"
+        ],
+        [
+          "114",
+          "Hollow Knight",
+          "Card Game",
+          "12"
+        ],
+        [
+          "115",
+          "Cuphead",
+          "Run & Gun",
+          "20"
+        ],
+        [
+          "116",
+          "Sekiro",
+          "Action RPG",
+          "50"
+        ],
+        [
+          "117",
+          "Doom Eternal",
+          "Shooter",
+          "40"
+        ],
+        [
+          "118",
+          "Portal 2",
+          "Puzzle",
+          "10"
+        ],
+        [
+          "119",
+          "Red Dead 2",
+          "Action",
+          "60"
+        ],
+        [
+          "120",
+          "Terraria",
+          "Sandbox",
+          "10"
+        ],
+        [
+          "121",
+          "Cult of the Lamb",
+          "Roguelike",
+          "25"
+        ],
+        [
+          "122",
+          "Outer Wilds",
+          "Adventure",
+          "25"
+        ],
+        [
+          "123",
+          "Vampire Survivors",
+          "Roguelite",
+          "5"
+        ],
+        [
+          "124",
+          "Hollow Knight: Silksong",
+          "Metroidvania",
+          "30"
+        ]
+      ]
+    },
+    "mission": "Tìm <code class=\"code\">name</code> và <code class=\"code\">price</code> của game Elden Ring có <code class=\"code\">id = 101</code> — kéo thả khối lệnh xuống dưới ↓"
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Tại sao cần Primary Key trong một table?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Để format bảng đẹp hơn trên giao diện web",
+            "correct": false,
+            "explanation": "PK không liên quan đến hiển thị web. PK là ràng buộc ở database layer để đảm bảo tính duy nhất."
+          },
+          {
+            "id": "b",
+            "text": "Để đảm bảo mỗi record có định danh duy nhất, không trùng lặp",
+            "correct": true,
+            "explanation": "Đúng — PK guarantee giá trị DUY NHẤT, không NULL, không trùng. Cho phép WHERE chốt đúng 1 record."
+          },
+          {
+            "id": "c",
+            "text": "Để tăng tốc độ hiển thị bảng trên browser",
+            "correct": false,
+            "explanation": "Tốc độ hiển thị phụ thuộc frontend rendering, không phải PK. PK là database constraint."
+          },
+          {
+            "id": "d",
+            "text": "Để giảm dung lượng lưu trữ database",
+            "correct": false,
+            "explanation": "PK không ảnh hưởng dung lượng đáng kể (chỉ thêm index). Mục đích chính là uniqueness + identity."
+          }
+        ]
+      },
+      {
+        "question": "Bảng <code>game_catalog</code> có 2 dòng <strong>CÙNG TÊN</strong> \"Elden Ring\" (id 101 &amp; 104). Muốn chốt <strong>CHÍNH XÁC</strong> bản id 101 (không lẫn bản kia) một cách <strong>đáng tin cậy nhất</strong>, bạn dùng:",
+        "options": [
+          {
+            "id": "a",
+            "text": "<code>WHERE name = 'Elden Ring'</code>",
+            "correct": false,
+            "explanation": "name KHÔNG unique — có 2 dòng trùng tên \"Elden Ring\". WHERE name sẽ trả về CẢ 2 dòng, không chốt được đúng 1."
+          },
+          {
+            "id": "b",
+            "text": "<code>WHERE id = 101</code>",
+            "correct": true,
+            "explanation": "Chính xác — id là Primary Key nên KHÔNG BAO GIỜ trùng. WHERE id = 101 luôn chốt đúng 1 record duy nhất."
+          },
+          {
+            "id": "c",
+            "text": "<code>WHERE price = 60</code>",
+            "correct": false,
+            "explanation": "price CÓ THỂ trùng — nhiều game khác cũng giá 60$ (Baldur's Gate 3, Red Dead 2…). WHERE price = 60 trả về nhiều dòng, không đáng tin để chốt 1 record."
+          },
+          {
+            "id": "d",
+            "text": "<code>WHERE genre = 'Action RPG'</code>",
+            "correct": false,
+            "explanation": "genre cũng KHÔNG unique — nhiều game cùng thể loại Action RPG. Chỉ có Primary Key (id) mới đảm bảo đúng 1 dòng."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "title": "Phân loại: cột nào là Primary Key?",
+      "instruction": "Trong bảng <code>game_catalog</code>, mỗi thẻ dưới đây là 1 cột. Kéo vào ô <strong style=\"color:var(--success)\">Đây là PK</strong> hoặc <strong style=\"color:var(--danger)\">Không phải PK</strong>.",
+      "chips": [
+        {
+          "id": "c-id",
+          "label": "id"
+        },
+        {
+          "id": "c-name",
+          "label": "name"
+        },
+        {
+          "id": "c-genre",
+          "label": "genre"
+        },
+        {
+          "id": "c-price",
+          "label": "price"
+        }
+      ],
+      "bins": [
+        {
+          "id": "pk",
+          "label": "Đây là PK",
+          "correct": "true"
+        },
+        {
+          "id": "not",
+          "label": "Không phải PK",
+          "correct": "false"
+        }
+      ],
+      "solution": {
+        "c-id": "pk",
+        "c-name": "not",
+        "c-genre": "not",
+        "c-price": "not"
+      }
+    }
+  },
+  "step_3": {
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "name",
+        "slot": "col-1"
+      },
+      {
+        "type": "col",
+        "token": "price",
+        "slot": "col-2"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "game_catalog",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "id",
+        "slot": "wcol"
+      },
+      {
+        "type": "op",
+        "token": "=",
+        "slot": "op"
+      },
+      {
+        "type": "val",
+        "token": "101",
+        "slot": "val"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "SELECT"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ ____ ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT name, price FROM game_catalog WHERE id = 101;",
+    "reveal_hints": {
+      "select-line": "Bắt đầu bằng <strong>SELECT</strong>, kéo 2 cột: <strong>name</strong> và <strong>price</strong>.",
+      "from-line": "Tiếp: <strong>FROM</strong> + tên bảng <strong>game_catalog</strong>.",
+      "where-line": "Cuối: <strong>WHERE</strong> lọc đúng 1 dòng bằng PK: <strong>id = 101</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Kho có <strong>hai</strong> game cùng tên \"Elden Ring\" (id 101 và 104). Khách vừa bấm vào <strong>bản thứ hai</strong>. Tự viết query lấy <strong>name</strong> và <strong>genre</strong> của game có <code>id = 104</code>.",
+    "context": {
+      "scenario": "Bảng <code>game_catalog</code> có 2 dòng cùng tên \"Elden Ring\" (id 101 & 104). Khách hỏi về đúng bản thứ hai. Nhờ Primary Key <code>id</code>, bạn lấy chính xác 1 dòng — dù tên bị trùng.",
+      "real_world": "Đây chính là điều xảy ra khi bạn bấm vào <strong>đúng một</strong> sản phẩm trên <strong>Steam</strong>/<strong>Shopee</strong>: link <code>/product/104</code> → hệ thống chạy <code>WHERE id = 104</code> lấy ĐÚNG mục đó trong vài mili-giây — <strong>kể cả khi có sản phẩm khác trùng tên</strong>. Không có Primary Key, app không phân biệt nổi 2 bản Elden Ring.",
+      "steps": [
+        "Chọn cột cần lấy trong <code>SELECT</code> — lần này là <code>name</code> và <code>genre</code>.",
+        "Bảng nguồn sau <code>FROM</code> — <code>game_catalog</code>.",
+        "Lọc đúng bản thứ hai bằng PK: <code>WHERE id = 104</code> — <strong>đừng</strong> lọc theo name vì tên trùng!",
+        "Run — kết quả phải đúng 1 dòng: <code>(Elden Ring, Card Game)</code>."
+      ],
+      "hint_explore": "Chưa nhớ bảng có cột gì? Gõ <code>SELECT * FROM game_catalog</code> rồi <strong>Run</strong> để xem toàn bộ 4 cột + dữ liệu mẫu (chú ý 2 dòng \"Elden Ring\").",
+      "example": {
+        "question": "Ví dụ tương tự — tra <code>name</code> + <code>genre</code> của <strong>Celeste</strong> (id = 108):",
+        "sql": "SELECT name, genre FROM game_catalog WHERE id = 108;",
+        "sample_output": "→ 1 dòng × 2 cột: <code>(Celeste, Platformer)</code>"
+      },
+      "expected": "Bảng kết quả 1 dòng × 2 cột: <code>(Elden Ring, Card Game)</code> — <strong>trùng tên</strong> với id=101 nhưng PK chốt đúng bản id=104. Đó là sức mạnh của khóa chính."
+    },
+    "schema": {
+      "table_name": "game_catalog",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "genre",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": ""
+        },
+        {
+          "name": "price",
+          "type": "INT",
+          "key": "",
+          "icon": ""
+        }
+      ],
+      "data": [
+        [
+          "101",
+          "Elden Ring",
+          "Action RPG",
+          "60"
+        ],
+        [
+          "102",
+          "God of War",
+          "Action",
+          "50"
+        ],
+        [
+          "103",
+          "Hades",
+          "Roguelike",
+          "25"
+        ],
+        [
+          "104",
+          "Elden Ring",
+          "Card Game",
+          "15"
+        ],
+        [
+          "105",
+          "Stardew Valley",
+          "Simulation",
+          "18"
+        ],
+        [
+          "106",
+          "Hollow Knight",
+          "Metroidvania",
+          "15"
+        ],
+        [
+          "107",
+          "The Witcher 3",
+          "Action RPG",
+          "40"
+        ],
+        [
+          "108",
+          "Celeste",
+          "Platformer",
+          "20"
+        ],
+        [
+          "109",
+          "Cyberpunk 2077",
+          "Action RPG",
+          "45"
+        ],
+        [
+          "110",
+          "Disco Elysium",
+          "RPG",
+          "35"
+        ],
+        [
+          "111",
+          "Slay the Spire",
+          "Card Game",
+          "23"
+        ],
+        [
+          "112",
+          "Dark Souls III",
+          "Action RPG",
+          "40"
+        ],
+        [
+          "113",
+          "Baldur's Gate 3",
+          "RPG",
+          "60"
+        ],
+        [
+          "114",
+          "Hollow Knight",
+          "Card Game",
+          "12"
+        ],
+        [
+          "115",
+          "Cuphead",
+          "Run & Gun",
+          "20"
+        ],
+        [
+          "116",
+          "Sekiro",
+          "Action RPG",
+          "50"
+        ],
+        [
+          "117",
+          "Doom Eternal",
+          "Shooter",
+          "40"
+        ],
+        [
+          "118",
+          "Portal 2",
+          "Puzzle",
+          "10"
+        ],
+        [
+          "119",
+          "Red Dead 2",
+          "Action",
+          "60"
+        ],
+        [
+          "120",
+          "Terraria",
+          "Sandbox",
+          "10"
+        ],
+        [
+          "121",
+          "Cult of the Lamb",
+          "Roguelike",
+          "25"
+        ],
+        [
+          "122",
+          "Outer Wilds",
+          "Adventure",
+          "25"
+        ],
+        [
+          "123",
+          "Vampire Survivors",
+          "Roguelite",
+          "5"
+        ],
+        [
+          "124",
+          "Hollow Knight: Silksong",
+          "Metroidvania",
+          "30"
+        ]
+      ]
+    },
+    "starter": "-- Lấy name + genre của bản Elden Ring thứ hai (id = 104)\n-- Gợi ý: SELECT <cột>, <cột> FROM <bảng> WHERE <pk> = <giá trị>;\n",
+    "expected_sql": "SELECT name, genre FROM game_catalog WHERE id = 104;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Cần lấy 2 cột: <code>name</code> và <code>genre</code>."
+      },
+      {
+        "level": 2,
+        "text": "Đừng lọc theo tên (2 game trùng tên!). Dùng PK: <code>WHERE id = 104</code>."
+      },
+      {
+        "level": 3,
+        "text": "Cú pháp: <code>SELECT col1, col2 FROM table WHERE pk = value;</code>"
+      },
+      {
+        "level": 4,
+        "text": "<code>SELECT name, genre FROM game_catalog WHERE id = 104;</code>"
+      }
+    ],
+    "success_message": "Xuất sắc! Bạn vừa dùng Primary Key để chốt đúng 1 trong 2 game TRÙNG TÊN — đúng bản chất của khóa chính. Bài 2 sẽ học tách cột phức hợp (địa chỉ) và tính cột dẫn xuất (tuổi từ năm sinh).",
+    "xp_reward": 30
+  }
+}

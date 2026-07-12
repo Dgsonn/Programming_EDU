@@ -1,0 +1,414 @@
+{
+  "id": "tc_16",
+  "index": 16,
+  "title": "Index — mục lục cho 2 triệu dòng",
+  "subtitle": "Tra email trúng ngay khỏi lật cả sổ — nhưng mỗi mục lục là một món nợ khi ghi",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "users (2.000.000 dòng — mẫu 6)",
+      "columns": [
+        "user_id",
+        "username",
+        "email",
+        "country"
+      ],
+      "dataRows": [
+        [
+          "7",
+          "minhkiller",
+          "minh@ghub.vn",
+          "VN"
+        ],
+        [
+          "9",
+          "yuki_sama",
+          "yuki@ghub.jp",
+          "JP"
+        ],
+        [
+          "12",
+          "toxic_lord",
+          "toxic@ghub.vn",
+          "VN"
+        ],
+        [
+          "15",
+          "sara_gg",
+          "sara@ghub.us",
+          "US"
+        ],
+        [
+          "21",
+          "mai_speed",
+          "mai@ghub.vn",
+          "VN"
+        ],
+        [
+          "24",
+          "bob_afk",
+          "bob@ghub.us",
+          "US"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #36",
+    "hook": "CSKH than trời: khách đọc email qua điện thoại, gõ vào ô tra cứu — và ĐỢI <strong>9 GIÂY</strong>. Đằng sau ô đó là <code>WHERE email = ?</code> quét tuần tự 2 triệu dòng × 25.000 trang, đúng kiểu \"lật sổ từ bìa\" của Ticket #32. Ticket #36: xây <em>MỤC LỤC</em> — index. Chọn <strong>search key</strong> là email, mục lục tự xếp thứ tự, mỗi mục trỏ thẳng (trang, slot). Nhưng khoan rải index khắp nơi: mỗi cuốn mục lục là một món nợ phải trả ở MỌI lần ghi."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Index = cấu trúc PHỤ xếp theo search key, mỗi mục trỏ về chỗ dòng nằm — RID (trang, slot)",
+        "Tra điểm (point query) đi qua mục lục: vài trang thay vì cả bảng",
+        "Cái giá: INSERT/UPDATE phải cập nhật sổ chính + MỌI index — index thừa = thuế ghi vô ích"
+      ],
+      "intro": "Cuốn giáo trình 1.200 trang không ai đọc từ bìa để tìm chữ \"trigger\" — người ta mở MỤC LỤC: từ khóa xếp ABC, kèm số trang. Index của database y hệt: một cấu trúc <strong>tách riêng</strong>, xếp thứ tự theo <strong>search key</strong> (cột bạn hay tra), mỗi mục là cặp <code>khóa → RID (trang, slot)</code> — địa chỉ nhà của dòng, đúng RID bạn gặp ở Ticket #34. Tra <code>mai@ghub.vn</code>: lần vài bước trong mục lục, lấy RID, nhảy thẳng tới trang 8112 slot 4. Hết chuyện lật 25.000 trang.",
+      "example": "users 2M dòng ≈ 25.000 trang: seq scan đọc 25.000 trang (~9s) · qua index email: ~3 trang mục lục + 1 trang dữ liệu (~0,04s) — nhanh hơn nghìn lần cho MỘT dòng cần tìm."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-book-open",
+        "title": "Search key — cột nào làm mục lục?",
+        "body": "Một index gắn với MỘT search key. Mục trong index là cặp <code>(giá trị khóa, con trỏ)</code> — khóa xếp thứ tự nên tìm nhanh, con trỏ dẫn về dòng thật. Tra cột nào nhiều thì đánh mục lục cột đó: <code>users.email</code> (đăng nhập, CSKH), <code>posts.user_id</code> (mở tường nhà).",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — Indexing: search key & index entry"
+      },
+      {
+        "icon": "fa-file-invoice-dollar",
+        "title": "Món nợ của mục lục",
+        "body": "User mới đăng ký → ghi 1 dòng vào sổ chính VÀ chèn 1 mục vào ĐÚNG CHỖ của từng index. 5 index = 6 lần ghi cho 1 INSERT. Index không ai tra = trả thuế ghi vô ích + tốn chỗ. Nguyên tắc: đánh index theo QUERY thật, không đánh \"cho chắc\"."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Soi GameHub: <code>email</code> — tra hoài, đáng. <code>user_id</code> trong posts — mở tường nhà ai cũng cần, đáng. <code>bio</code> — đời nào lọc theo bio, khỏi. Còn \"đếm cả 2M dòng theo country\"? Đằng nào cũng đụng gần cả bảng — mục lục không cứu được seq scan chính đáng (Ticket #32)."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "idx_users_email — mục lục xếp theo email",
+        "columns": [
+          {
+            "name": "search key",
+            "type": "email (xếp ABC)",
+            "key": "🔑",
+            "icon": "📖"
+          },
+          {
+            "name": "con trỏ",
+            "type": "RID (trang, slot)",
+            "key": "→",
+            "icon": "🎯"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "bob@ghub.us",
+          "→ (trang 00019, slot 3)"
+        ],
+        [
+          "mai@ghub.vn",
+          "→ (trang 08112, slot 4) ← tra 1 phát trúng"
+        ],
+        [
+          "minh@ghub.vn",
+          "→ (trang 00007, slot 1)"
+        ],
+        [
+          "ghi 1 user mới",
+          "= sổ chính + chèn đúng chỗ MỌI mục lục 💸"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Tra <code>WHERE email = 'mai@ghub.vn'</code> KHÔNG có index — vì sao phải đọc tới ~25.000 trang dù dòng cần tìm chỉ có MỘT?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Máy không biết dòng đó nằm đâu — heap file không có trật tự, đành lật tuần tự đến khi gặp (xui thì trang cuối)",
+            "correct": true,
+            "explanation": "Đúng — bài học Ticket #34: heap không trật tự → full scan. Index chính là \"trật tự gắn ngoài\" để khỏi lật."
+          },
+          {
+            "id": "b",
+            "text": "Vì email là kiểu chữ, so sánh chữ chậm hơn so sánh số",
+            "correct": false,
+            "explanation": "Sai — so sánh chữ chậm hơn chút nhưng không phải lý do; vấn đề là SỐ TRANG phải khiêng."
+          },
+          {
+            "id": "c",
+            "text": "Vì RAM không đủ chứa 2 triệu dòng",
+            "correct": false,
+            "explanation": "Sai — buffer (Ticket #33) xử lý chuyện đó; kể cả đủ RAM vẫn phải đọc từng trang lần đầu."
+          },
+          {
+            "id": "d",
+            "text": "Vì database chỉ đọc được 1 dòng mỗi lần",
+            "correct": false,
+            "explanation": "Sai — đọc theo TRANG (Ticket #31); vấn đề là phải đọc GẦN HẾT các trang."
+          }
+        ]
+      },
+      {
+        "question": "Index email cứu CSKH ngoạn mục — vậy sao không đánh index cho MỌI cột của users luôn \"cho chắc\"?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mỗi INSERT/UPDATE phải cập nhật sổ chính + TỪNG index — index thừa là thuế ghi trả mãi cho thứ không ai tra",
+            "correct": true,
+            "explanation": "Đúng — index là món nợ khi ghi. Đánh theo query thật sự chạy, không theo cảm giác an toàn."
+          },
+          {
+            "id": "b",
+            "text": "Vì mỗi bảng chỉ được phép có tối đa 2 index",
+            "correct": false,
+            "explanation": "Sai — không có giới hạn kiểu đó; giới hạn là chi phí."
+          },
+          {
+            "id": "c",
+            "text": "Vì index làm chậm cả việc ĐỌC những cột khác",
+            "correct": false,
+            "explanation": "Sai — đọc không bị chậm đi vì có thêm index; chỉ GHI mới gánh."
+          },
+          {
+            "id": "d",
+            "text": "Không sao cả — index miễn phí, đánh hết là đúng bài",
+            "correct": false,
+            "explanation": "Sai — \"miễn phí\" là cái bẫy; hãy nhớ 1 INSERT phải chèn vào đúng chỗ của từng mục lục."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Index email cứu được query nào?",
+      "instruction": "Kéo từng query vào đúng giỏ — mục lục email chỉ cứu được người tra THEO EMAIL, và chỉ khi lấy ÍT dòng.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "q1",
+          "label": "WHERE email = 'mai@ghub.vn' (CSKH tra 1 khách)"
+        },
+        {
+          "id": "q2",
+          "label": "WHERE user_id = 735 (mở hồ sơ theo id)"
+        },
+        {
+          "id": "q3",
+          "label": "WHERE email = 'bob@ghub.us' (đăng nhập)"
+        },
+        {
+          "id": "q4",
+          "label": "Gom đếm CẢ 2 triệu dòng theo country"
+        }
+      ],
+      "bins": [
+        {
+          "id": "saved",
+          "label": "Index email CỨU 📖"
+        },
+        {
+          "id": "nosave",
+          "label": "Index email BÓ TAY 🐢"
+        }
+      ],
+      "solution": {
+        "q1": "saved",
+        "q3": "saved",
+        "q2": "nosave",
+        "q4": "nosave"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Xếp hai con đường tra \"mai@ghub.vn\" — không mục lục và có mục lục. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Nhảy thẳng tới trang 8112, slot 4 — đọc đúng MỘT trang dữ liệu",
+        "slot": "path-jump"
+      },
+      {
+        "type": "op",
+        "token": "Không index: lật tuần tự trang 1 → 2 → 3… đến khi gặp mai@ghub.vn — xui thì gần 25.000 trang",
+        "slot": "path-seq"
+      },
+      {
+        "type": "op",
+        "token": "Index nhanh vì toàn bộ 2 triệu dòng đã được chép sẵn vào RAM từ lúc tạo",
+        "slot": "path-x"
+      },
+      {
+        "type": "op",
+        "token": "Có index: lần theo mục lục xếp ABC — vài bước ra mục \"mai@ghub.vn → (8112, 4)\"",
+        "slot": "path-idx"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "path-seq",
+        "placeholder": "Con đường KHÔNG mục lục",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🐢",
+          "label": "Quét tuần tự",
+          "sub": "Lật từ bìa",
+          "hint": "Heap không trật tự (Ticket #34) — không biết dòng ở đâu thì phải lật đến khi gặp."
+        }
+      },
+      {
+        "id": "path-idx",
+        "placeholder": "Có mục lục — bước 1: tra ở đâu?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📖",
+          "label": "Tra mục lục",
+          "sub": "Theo search key",
+          "hint": "Mục lục XẾP THỨ TỰ theo email — tìm trong đống đã xếp chỉ vài bước."
+        }
+      },
+      {
+        "id": "path-jump",
+        "placeholder": "Có mục lục — bước 2: rồi làm gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Nhảy đúng chỗ",
+          "sub": "Theo RID",
+          "hint": "Mục lục trả về RID (trang, slot) — nhảy thẳng, đọc đúng 1 trang."
+        }
+      }
+    ],
+    "expected_sql": "Không index: lật tuần tự trang 1 → 2 → 3… đến khi gặp mai@ghub.vn — xui thì gần 25.000 trang Có index: lần theo mục lục xếp ABC — vài bước ra mục \"mai@ghub.vn → (8112, 4)\" Nhảy thẳng tới trang 8112, slot 4 — đọc đúng MỘT trang dữ liệu",
+    "expected_zones": {
+      "path-seq": "Không index: lật tuần tự trang 1 → 2 → 3… đến khi gặp mai@ghub.vn — xui thì gần 25.000 trang",
+      "path-idx": "Có index: lần theo mục lục xếp ABC — vài bước ra mục \"mai@ghub.vn → (8112, 4)\"",
+      "path-jump": "Nhảy thẳng tới trang 8112, slot 4 — đọc đúng MỘT trang dữ liệu"
+    },
+    "reveal_hints": {
+      "path-seq": "Không mục lục = <strong>lật tuần tự từng trang</strong> — chính là seq scan 9 giây của CSKH.",
+      "path-idx": "Bước 1 của con đường index: <strong>tra mục lục theo email</strong>. Khối \"chép sẵn vào RAM\" là bịa — index nằm trên đĩa như mọi thứ khác, cũng đọc theo trang.",
+      "path-jump": "Bước 2: cầm RID <strong>nhảy thẳng tới (trang, slot)</strong> — một cú random access đáng giá."
+    }
+  },
+  "step_4": {
+    "prompt": "Đóng Ticket #36 bằng chính tay bạn: tạo mục lục email cho CSKH. Cú pháp: <code>CREATE INDEX tên_index ON bảng(cột);</code> — đặt tên <code>idx_users_email</code> theo chuẩn đặt tên của đội.",
+    "schema": {
+      "table_name": "users",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "PK"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "key": ""
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "key": "🔑 sắp làm search key"
+        },
+        {
+          "name": "country",
+          "type": "CHAR(2)",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "7",
+          "minhkiller",
+          "minh@ghub.vn",
+          "VN"
+        ],
+        [
+          "9",
+          "yuki_sama",
+          "yuki@ghub.jp",
+          "JP"
+        ],
+        [
+          "12",
+          "toxic_lord",
+          "toxic@ghub.vn",
+          "VN"
+        ],
+        [
+          "15",
+          "sara_gg",
+          "sara@ghub.us",
+          "US"
+        ],
+        [
+          "21",
+          "mai_speed",
+          "mai@ghub.vn",
+          "VN"
+        ],
+        [
+          "24",
+          "bob_afk",
+          "bob@ghub.us",
+          "US"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT user_id, email FROM users WHERE email = 'mai@ghub.vn';",
+    "context": {
+      "scenario": "Lệnh này bảo database: xây mục lục xếp theo <code>email</code> cho bảng <code>users</code>, tự cập nhật mãi mãi về sau. Chạy xong, ô tra cứu của CSKH từ 9 giây còn ~0,04 giây — không sửa một dòng code app nào.",
+      "real_world": "Đây là câu lệnh tăng tốc phổ biến nhất nghề backend. Postgres còn có <code>CREATE INDEX CONCURRENTLY</code> để xây mục lục trên bảng đang chạy thật mà không khóa ghi.",
+      "steps": [
+        "Từ khóa mở đầu: <code>CREATE INDEX</code>.",
+        "Tên index: <code>idx_users_email</code> — chuẩn đặt tên idx_bảng_cột.",
+        "Gắn vào đâu: <code>ON users(email)</code> — bảng users, search key là email.",
+        "Khung kết quả minh họa: tra mai@ghub.vn trúng ngay 1 dòng — engine demo không chạy DDL, đáp án chấm khi Run/Submit."
+      ],
+      "hint_explore": "Xem lại bảng minh họa Step 1: mục lục chính là cặp email → (trang, slot). Lệnh của bạn ra lệnh XÂY cái bảng đó.",
+      "expected": "Khung kết quả minh họa tra email qua index: 1 dòng (user 21, mai@ghub.vn)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khung: <code>CREATE INDEX tên ON bảng(cột);</code> — ba chỗ trống: tên, bảng, cột."
+      },
+      {
+        "level": 2,
+        "text": "Tên theo chuẩn đội: <code>idx_users_email</code>. Bảng: <code>users</code>."
+      },
+      {
+        "level": 3,
+        "text": "Search key là cột CSKH tra: <code>(email)</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">CREATE INDEX idx_users_email ON users(email);</code>"
+      }
+    ],
+    "expected_sql": "CREATE INDEX idx_users_email ON users(email);",
+    "success_message": "Ticket #36 đóng — CSKH gửi hẳn trà sữa cảm ơn! Nhưng khoan: đội thấy sướng tay đòi đánh index MỌI THỨ. Ticket #37: học phân loại mục lục trước khi rải — dense hay sparse, sổ chính hay mục lục phụ.",
+    "xp_reward": 120
+  }
+}

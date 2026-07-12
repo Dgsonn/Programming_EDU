@@ -1,0 +1,377 @@
+{
+  "id": "tc_14",
+  "index": 14,
+  "title": "Record Layout & Heap File — dòng nằm trên trang thế nào",
+  "subtitle": "Slotted page: con trỏ mọc xuôi, dữ liệu mọc ngược — và chuyện dòng phình không vừa chỗ cũ",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 18,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "page_042 (một trang 8KB của bảng profiles)",
+      "columns": [
+        "slot",
+        "trỏ_tới",
+        "record"
+      ],
+      "dataRows": [
+        [
+          "#1",
+          "offset 8000",
+          "minhkiller · bio 40B"
+        ],
+        [
+          "#2",
+          "offset 7710",
+          "yuki_sama · bio 250B"
+        ],
+        [
+          "#3",
+          "offset 7680",
+          "toxic_lord · bio 28B"
+        ],
+        [
+          "#4",
+          "(trống)",
+          "— free space —"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #34",
+    "hook": "yuki_sama trổ tài viết lại bio dài gấp ba — <code>UPDATE profiles SET bio = …</code> chạy ngon, nhưng bên dưới là một vụ dọn nhà: <strong>dòng mới không còn vừa chỗ cũ</strong> trên trang 8KB. Ticket #34: mở một trang ra xem — dòng nằm thế nào, <em>slotted page</em> xoay xở ra sao khi dòng phình, và vì sao bảng kiểu \"túi trang\" (heap file) tìm gì cũng phải quét."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Trang 8KB có sơ đồ: header → slot directory (con trỏ, mọc XUÔI) → free space giữa → records (mọc NGƯỢC từ đáy)",
+        "Slot directory = lớp gián tiếp: dòng dời chỗ TRONG trang thì chỉ sửa con trỏ, địa chỉ dòng (RID) không đổi",
+        "Heap file = túi các trang, chèn đâu trống đó — ghi nhanh, nhưng TÌM thì phải quét (động lực cho index)"
+      ],
+      "intro": "Phóng to một trang 8KB của bảng profiles: đầu trang là <strong>header</strong>, kế đó là <strong>slot directory</strong> — mảng con trỏ đánh số, mọc xuôi; dữ liệu thật (records) mọc NGƯỢC từ đáy trang lên; khoảng giữa là <strong>free space</strong>. Hai đầu ăn dần vào giữa — gặp nhau là trang đầy. Kiến trúc \"con trỏ một đằng, dữ liệu một nẻo\" nghe vòng vèo nhưng chính nó cho phép dòng co giãn, dời chỗ trong trang mà cả thế giới bên ngoài vẫn gọi đúng địa chỉ cũ.",
+      "example": "RID của một dòng = (số trang, số slot) — ví dụ (page_042, #2). Dòng #2 dời offset trong trang? Chỉ con trỏ ở slot #2 đổi, RID giữ nguyên."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-table-cells-large",
+        "title": "Slotted page — căn hộ có sổ địa chỉ",
+        "body": "Records dài ngắn khác nhau (bio 28B vs 250B) nên không chia ô cứng được. <strong>Slot directory</strong> giải quyết: mỗi dòng một con trỏ (offset + độ dài). Xóa dòng? Dồn dữ liệu cho liền, sửa con trỏ — slot khác không suy suyển.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 13 — Data Storage Structures / Slotted-Page Structure"
+      },
+      {
+        "icon": "fa-person-walking-luggage",
+        "title": "Dòng phình — vụ dọn nhà có báo trước",
+        "body": "Bio 40B thành 500B, chỗ cũ không đủ: dòng CHUYỂN sang trang khác còn chỗ, chỗ cũ để lại <strong>forwarding pointer</strong> trỏ tới nhà mới. Ai cầm RID cũ vẫn tìm được — chỉ tốn thêm một bước nhảy. Nhiều forwarding = đọc chậm dần → đó là việc VACUUM của Postgres dọn dẹp."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Heap file chèn dòng mới vào TRANG NÀO CÒN CHỖ — ghi cực nhanh, nhưng \"tìm profile của yuki_sama\" nghĩa là mở TỪNG trang ra soi (full scan — vé sequential của #32, nhưng phải đọc hết). Muốn nhảy thẳng tới đúng trang? Đó là INDEX — Ticket #36 mở màn đợt sau."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "page_042 (slotted page)",
+        "columns": [
+          {
+            "name": "slot",
+            "type": "PTR",
+            "key": "mọc xuôi ⤵",
+            "icon": "📌"
+          },
+          {
+            "name": "trỏ_tới",
+            "type": "OFFSET",
+            "key": "",
+            "icon": "🎯"
+          },
+          {
+            "name": "record",
+            "type": "BYTES",
+            "key": "mọc ngược ⤴",
+            "icon": "📦"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "#1",
+          "offset 8000",
+          "minhkiller · bio 40B"
+        ],
+        [
+          "#2",
+          "offset 7710",
+          "yuki_sama · bio 250B"
+        ],
+        [
+          "#3",
+          "offset 7680",
+          "toxic_lord · bio 28B"
+        ],
+        [
+          "#4",
+          "(trống)",
+          "— free space —"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Vì sao trang không chia ô CỨNG bằng nhau cho các dòng, mà phải bày ra slot directory?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì record dài ngắn khác nhau (bio 28B vs 250B) — ô cứng sẽ lãng phí hoặc không vừa; con trỏ cho phép xếp sát nhau và co giãn",
+            "correct": true,
+            "explanation": "Đúng — variable-length record là lý do tồn tại của slotted page: dữ liệu nằm sát, con trỏ lo địa chỉ."
+          },
+          {
+            "id": "b",
+            "text": "Vì chia ô cứng là bất hợp pháp trong chuẩn SQL",
+            "correct": false,
+            "explanation": "Sai — SQL không quy định tầng vật lý; đây là bài toán kỹ thuật thuần túy."
+          },
+          {
+            "id": "c",
+            "text": "Vì con trỏ đọc nhanh hơn dữ liệu",
+            "correct": false,
+            "explanation": "Sai — con trỏ không \"nhanh hơn\"; nó thêm MỘT bước gián tiếp, đổi lấy sự linh hoạt."
+          },
+          {
+            "id": "d",
+            "text": "Để mã hóa dữ liệu người dùng",
+            "correct": false,
+            "explanation": "Sai — slot directory là sơ đồ địa chỉ, không liên quan mã hóa."
+          }
+        ]
+      },
+      {
+        "question": "Dòng bio của yuki_sama phình từ 250B lên 900B, trang hết chỗ. Chuyện gì xảy ra với RID cũ (page_042, #2)?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vẫn dùng được — chỗ cũ để lại forwarding pointer trỏ sang nhà mới; ai giữ RID cũ đi thêm đúng một bước nhảy",
+            "correct": true,
+            "explanation": "Đúng — hợp đồng \"RID không đổi\" được giữ bằng con trỏ chuyển tiếp; giá phải trả là +1 lần đọc."
+          },
+          {
+            "id": "b",
+            "text": "RID cũ bị hủy, mọi nơi tham chiếu phải cập nhật ngay lập tức",
+            "correct": false,
+            "explanation": "Sai — cập-nhật-mọi-nơi là thảm họa (index, transaction đang chạy…); forwarding tồn tại để né đúng việc này."
+          },
+          {
+            "id": "c",
+            "text": "UPDATE bị từ chối vì trang đầy",
+            "correct": false,
+            "explanation": "Sai — database không từ chối vì một trang đầy; nó dọn nhà cho dòng."
+          },
+          {
+            "id": "d",
+            "text": "Trang tự nở từ 8KB lên 16KB",
+            "correct": false,
+            "explanation": "Sai — kích thước trang là hằng số của hệ thống (đơn vị vận chuyển đĩa↔RAM, Ticket #31)."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "order",
+      "title": "Vụ dọn nhà của một dòng phình",
+      "instruction": "Xếp đúng trình tự những gì xảy ra khi UPDATE làm dòng dài hơn chỗ cũ.",
+      "xp": 20,
+      "items": [
+        {
+          "id": "u1",
+          "label": "UPDATE bio — bản mới dài hơn bản cũ"
+        },
+        {
+          "id": "u2",
+          "label": "Thử ghi lại chỗ cũ trong trang → không vừa, free space không cứu nổi"
+        },
+        {
+          "id": "u3",
+          "label": "Chuyển record sang trang khác còn chỗ"
+        },
+        {
+          "id": "u4",
+          "label": "Chỗ cũ để lại forwarding pointer trỏ tới nhà mới"
+        },
+        {
+          "id": "u5",
+          "label": "RID cũ vẫn hoạt động — người giữ địa chỉ cũ đi thêm 1 bước nhảy"
+        }
+      ],
+      "solution": {
+        "u1": 1,
+        "u2": 2,
+        "u3": 3,
+        "u4": 4,
+        "u5": 5
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp SƠ ĐỒ một trang 8KB theo đúng vị trí từ ĐẦU trang xuống ĐÁY trang. Có một khối mô tả sai kiến trúc.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Records: dữ liệu thật, mọc NGƯỢC từ đáy trang lên",
+        "slot": "pg-recs"
+      },
+      {
+        "type": "op",
+        "token": "Header: metadata của trang (số slot, con trỏ free space…)",
+        "slot": "pg-header"
+      },
+      {
+        "type": "op",
+        "token": "Records xếp xuôi ngay sau header, không cần con trỏ gì cả",
+        "slot": "pg-x"
+      },
+      {
+        "type": "op",
+        "token": "Slot directory: mảng con trỏ đánh số, mọc XUÔI ngay sau header",
+        "slot": "pg-slots"
+      },
+      {
+        "type": "op",
+        "token": "Free space: khoảng trống ở GIỮA — hai đầu ăn dần vào đây",
+        "slot": "pg-free"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "pg-header",
+        "placeholder": "Đầu trang — ai đứng đây?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🏷️",
+          "label": "Header",
+          "sub": "Đầu trang",
+          "hint": "Metadata đi trước: trang này có mấy slot, free space bắt đầu từ đâu."
+        }
+      },
+      {
+        "id": "pg-slots",
+        "placeholder": "Ngay sau header — sổ địa chỉ",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📌",
+          "label": "Slots",
+          "sub": "Sổ địa chỉ",
+          "hint": "Mảng con trỏ đánh số — lớp gián tiếp cho phép dòng dời chỗ mà RID không đổi."
+        }
+      },
+      {
+        "id": "pg-free",
+        "placeholder": "Khoảng giữa trang",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "⬜",
+          "label": "Free",
+          "sub": "Đất dự trữ",
+          "hint": "Nằm giữa để CẢ HAI phía cùng mọc vào — slot thêm từ trên, record thêm từ dưới."
+        }
+      },
+      {
+        "id": "pg-recs",
+        "placeholder": "Đáy trang — dữ liệu thật",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "📦",
+          "label": "Records",
+          "sub": "Đáy trang",
+          "hint": "Dữ liệu thật xếp sát nhau, mọc ngược lên — dài ngắn tùy dòng."
+        }
+      }
+    ],
+    "expected_sql": "Header: metadata của trang (số slot, con trỏ free space…) Slot directory: mảng con trỏ đánh số, mọc XUÔI ngay sau header Free space: khoảng trống ở GIỮA — hai đầu ăn dần vào đây Records: dữ liệu thật, mọc NGƯỢC từ đáy trang lên",
+    "expected_zones": {
+      "pg-header": "Header: metadata của trang (số slot, con trỏ free space…)",
+      "pg-slots": "Slot directory: mảng con trỏ đánh số, mọc XUÔI ngay sau header",
+      "pg-free": "Free space: khoảng trống ở GIỮA — hai đầu ăn dần vào đây",
+      "pg-recs": "Records: dữ liệu thật, mọc NGƯỢC từ đáy trang lên"
+    },
+    "reveal_hints": {
+      "pg-header": "Metadata luôn mở màn: <strong>Header</strong>.",
+      "pg-slots": "Sổ địa chỉ kế ngay sau: <strong>slot directory mọc xuôi</strong>. Khối \"records xếp xuôi không cần con trỏ\" là sai kiến trúc — dòng co giãn thì ai giữ địa chỉ?",
+      "pg-free": "Ở giữa là <strong>free space</strong> — vùng đệm cho cả hai phía cùng mọc.",
+      "pg-recs": "Đáy trang: <strong>records mọc ngược lên</strong>."
+    }
+  },
+  "step_4": {
+    "prompt": "Điền 3 từ khóa chốt hạ tầng vật lý của một bảng — nghĩ về sổ địa chỉ, vụ dọn nhà, và cái giá của heap file.",
+    "challenge_type": "fill_blank",
+    "template": "# Dòng dời chỗ TRONG trang: chỉ sửa con trỏ trong slot ____\n#   → RID (trang, slot) giữ nguyên với cả thế giới bên ngoài\n\n# Dòng phình KHÔNG vừa trang: chuyển trang khác,\n#   chỗ cũ để lại ____ pointer trỏ tới nhà mới\n\n# Heap file không có trật tự: tìm 1 dòng khi chưa có index\n#   → đành full-____ mọi trang của bảng",
+    "blanks": [
+      {
+        "id": "p1",
+        "hint": "sổ địa chỉ của trang",
+        "expected": "directory"
+      },
+      {
+        "id": "p2",
+        "hint": "con trỏ chuyển tiếp",
+        "expected": "forwarding"
+      },
+      {
+        "id": "p3",
+        "hint": "quét (tiếng Anh)",
+        "expected": "scan"
+      }
+    ],
+    "context": {
+      "scenario": "Ba từ này là ba mảnh ghép của tầng vật lý: gián tiếp trong trang (directory), gián tiếp giữa các trang (forwarding), và cái giá khi không có lối tắt (scan).",
+      "real_world": "Postgres gọi record là tuple, forwarding chồng chất là lý do bảng \"phình\" (bloat) và VACUUM tồn tại; \"Seq Scan\" bạn sẽ gặp trong EXPLAIN ở Capstone chính là full-scan này.",
+      "steps": [
+        "Trong trang: slot ____ đổi con trỏ, RID bất biến.",
+        "Giữa các trang: ____ pointer giữ lời hứa RID.",
+        "Chưa có index: full-____ là lựa chọn duy nhất của heap file.",
+        "Ticket #36 (đợt sau) sẽ xây LỐI TẮT để khỏi scan — index."
+      ],
+      "hint_explore": "Nhìn lại bảng page_042 ở Step 1: cột slot chính là \"sổ địa chỉ\" đang nói tới.",
+      "expected": "Điền đúng 3/3: directory · forwarding · scan. Bài pseudo-code — chấm theo ô điền."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Ba khái niệm đến từ 3 concept card của Step 1 — mỗi card một từ."
+      },
+      {
+        "level": 2,
+        "text": "Ô 1: mảng con trỏ trong trang tên đầy đủ là slot <code>directory</code>."
+      },
+      {
+        "level": 3,
+        "text": "Ô 2: con trỏ CHUYỂN TIẾP = <code>forwarding</code>. Ô 3: quét toàn bộ = <code>scan</code>."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: <code>directory</code> · <code>forwarding</code> · <code>scan</code>."
+      }
+    ],
+    "success_message": "Ticket #34 đóng! Bạn vừa đọc được sơ đồ căn hộ của dữ liệu. Ticket #35 (chốt đợt này): dashboard kho chỉ cần 2 cột trong 12 — mà row-store bắt khiêng cả dòng. Đến lúc xoay dọc kho dữ liệu.",
+    "xp_reward": 120
+  }
+}

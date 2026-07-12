@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 import psycopg2
 import psycopg2.extras
 from contextlib import contextmanager
@@ -28,14 +29,28 @@ _CONN_KWARGS = dict(
 
 
 def _get_pool():
-    """Lazy-init và trả về ThreadedConnectionPool."""
+    """Lazy-init và trả về ThreadedConnectionPool.
+
+    Retry với backoff khi init: Neon ở xa + mạng chập chờn thì lần connect
+    đầu tiên (mở minconn connection) rất dễ timeout; fail luôn ở đây đồng
+    nghĩa app không khởi động được dù mạng chỉ gián đoạn vài giây.
+    """
     global _pool
     if _pool is None:
         if not _DATABASE_URL:
             raise RuntimeError('DATABASE_URL chưa được cấu hình trong .env')
-        _pool = ThreadedConnectionPool(
-            minconn=2, maxconn=10, dsn=_DATABASE_URL, **_CONN_KWARGS
-        )
+        last_err = None
+        for attempt in range(3):
+            try:
+                _pool = ThreadedConnectionPool(
+                    minconn=2, maxconn=10, dsn=_DATABASE_URL, **_CONN_KWARGS
+                )
+                break
+            except psycopg2.OperationalError as e:
+                last_err = e
+                time.sleep(2 * (attempt + 1))  # 2s, 4s rồi bỏ cuộc
+        else:
+            raise last_err
     return _pool
 
 
@@ -118,6 +133,7 @@ class _ConnWrapper:
     """Bọc psycopg2 connection để expose API conn.execute() giống sqlite3."""
     def __init__(self, conn):
         self._conn = conn
+        self._returned = False
 
     def execute(self, sql, params=()):
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -128,14 +144,46 @@ class _ConnWrapper:
         self._conn.commit()
 
     def close(self):
+        # Idempotent: teardown_appcontext gọi close() lần nữa cho connection
+        # đã đóng là no-op — putconn 2 lần sẽ phá pool.
+        if self._returned:
+            return
+        self._returned = True
         _get_pool().putconn(self._conn)
+
 
 def get_db():
     """Backward-compatible: trả về _ConnWrapper, close() sẽ trả conn về pool.
 
     Connection được health-check 1 lần lúc checkout (xem _checkout_healthy_conn).
+    Nếu đang trong Flask app context, wrapper được ghi nhận vào g để
+    register_teardown() trả về pool những connection route quên close
+    (vd: exception trước conn.close() ở route không có try/finally) —
+    pool maxconn=10, rò vài connection là toàn app treo.
     """
-    return _ConnWrapper(_checkout_healthy_conn())
+    wrapper = _ConnWrapper(_checkout_healthy_conn())
+    try:
+        from flask import g, has_app_context
+        if has_app_context():
+            if not hasattr(g, '_db_conn_wrappers'):
+                g._db_conn_wrappers = []
+            g._db_conn_wrappers.append(wrapper)
+    except Exception:
+        pass  # ngoài Flask (script/CLI): caller tự close như trước
+    return wrapper
+
+
+def register_teardown(app):
+    """Đăng ký teardown trả mọi connection get_db() chưa close về pool."""
+    from flask import g
+
+    @app.teardown_appcontext
+    def _return_leaked_db_conns(exc):
+        for w in getattr(g, '_db_conn_wrappers', ()):
+            try:
+                w.close()
+            except Exception:
+                pass
 
 
 @contextmanager

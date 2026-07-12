@@ -1,0 +1,1131 @@
+{
+  "id": "db_10",
+  "index": 12,
+  "title": "Dạng chuẩn BCNF & Phân rã Phi tổn thất",
+  "subtitle": "Chia bảng không mất dữ liệu nhờ khóa ngoại đúng vị trí",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 25,
+  "xp_reward": 80,
+  "project_piece": "🛰️ Thu thập \"Máy Cưa Không Gian\"",
+  "story": {
+    "tag": "🎫 GameHub Consulting · Ticket #12",
+    "hook": "Ca khó nhất từ đầu mùa tư vấn: <strong>phòng khám thể thao điện tử</strong> — nơi trị mỏi cổ tay cho game thủ chuyên nghiệp. Hồ sơ trị liệu của họ <em>chép chuyên khoa bác sĩ vào từng ca</em>: bác sĩ đổi chuyên khoa là dữ liệu cũ mâu thuẫn dữ liệu mới. Ticket: phân rã <strong>phi tổn thất</strong> về <strong>BCNF</strong> (<code>doctors</code>/<code>patients</code>/<code>treatments</code>), rồi thống kê số ca theo chuyên khoa để chứng minh không mất gì."
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "treatments",
+      "col": 0,
+      "row": 5,
+      "width": 4,
+      "height": 1,
+      "columns": [
+        "patient_id",
+        "doctor_id",
+        "treatment",
+        "treatment_date"
+      ],
+      "dataRows": [
+        [
+          "P01",
+          "D01",
+          "Khám tổng quát",
+          "2024-03-01"
+        ],
+        [
+          "P02",
+          "D02",
+          "Phẫu thuật ruột thừa",
+          "2024-03-05"
+        ],
+        [
+          "P01",
+          "D03",
+          "Xét nghiệm máu",
+          "2024-03-10"
+        ],
+        [
+          "P03",
+          "D01",
+          "Khám tim mạch",
+          "2024-03-12"
+        ],
+        [
+          "P04",
+          "D01",
+          "Khám tổng quát",
+          "2024-03-13"
+        ],
+        [
+          "P05",
+          "D03",
+          "Điện tim",
+          "2024-03-14"
+        ],
+        [
+          "P06",
+          "D02",
+          "Nội soi",
+          "2024-03-15"
+        ],
+        [
+          "P07",
+          "D04",
+          "Khám nhi",
+          "2024-03-16"
+        ],
+        [
+          "P08",
+          "D01",
+          "Tư vấn dinh dưỡng",
+          "2024-03-17"
+        ],
+        [
+          "P09",
+          "D05",
+          "Khám da",
+          "2024-03-18"
+        ],
+        [
+          "P10",
+          "D03",
+          "Siêu âm tim",
+          "2024-03-19"
+        ],
+        [
+          "P11",
+          "D01",
+          "Khám tổng quát",
+          "2024-03-20"
+        ],
+        [
+          "P12",
+          "D06",
+          "Khám thần kinh",
+          "2024-03-21"
+        ],
+        [
+          "P13",
+          "D02",
+          "Phẫu thuật",
+          "2024-03-22"
+        ],
+        [
+          "P14",
+          "D03",
+          "Khám tim",
+          "2024-03-23"
+        ],
+        [
+          "P15",
+          "D01",
+          "Xét nghiệm",
+          "2024-03-24"
+        ],
+        [
+          "P16",
+          "D04",
+          "Tiêm chủng",
+          "2024-03-25"
+        ],
+        [
+          "P17",
+          "D03",
+          "Holter",
+          "2024-03-26"
+        ],
+        [
+          "P18",
+          "D05",
+          "Sinh thiết",
+          "2024-03-27"
+        ],
+        [
+          "P19",
+          "D01",
+          "Tái khám",
+          "2024-03-28"
+        ],
+        [
+          "P20",
+          "D02",
+          "Nội soi",
+          "2024-03-29"
+        ],
+        [
+          "P21",
+          "D03",
+          "Khám tim",
+          "2024-03-30"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Phân rã phi tổn thất",
+    "desc": "BCNF không mất dữ liệu"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "BCNF = phiên bản \"nghiêm ngặt\" của 3NF",
+        "Mọi phụ thuộc hàm X → Y phải có X là siêu khóa (superkey)",
+        "Nếu một cột non-superkey quyết định cột khác → vi phạm BCNF, phải tách"
+      ],
+      "intro": "Bạn quản lý <strong>hồ sơ bệnh viện</strong>. Bảng <code class=\"code\">treatments</code> ghi lại: bệnh nhân nào, do bác sĩ nào, điều trị gì, ngày nào. Nhưng bạn cũng muốn biết <em>chuyên khoa</em> của bác sĩ. Vấn đề: <code class=\"code\">doctor_id</code> quyết định <code class=\"code\">doctor_specialty</code> (mỗi bác sĩ chỉ có 1 chuyên khoa), nhưng <code class=\"code\">doctor_id</code> <em>không phải</em> siêu khóa của bảng treatments → <strong>vi phạm BCNF</strong>.",
+      "example": "Cập nhật chuyên khoa bác sĩ D01 từ \"Tim mạch\" → \"Nội tiết\" → phải sửa nhiều dòng. Nếu 1 dòng bị sót → dữ liệu mâu thuẫn (inconsistency). Tách <code class=\"code\">doctors</code> ra bảng riêng: sửa 1 chỗ, dữ liệu luôn nhất quán."
+    },
+    "intro": "Năm 2018, hệ thống đăng ký môn học của 1 trường ĐH Việt Nam bị sập 4 giờ. Nguyên nhân: bảng <code>teaches</code> có 50K dòng, query join mất 45 giây. Dev trưởng mở schema lên — thấy ngay vi phạm <strong>BCNF</strong>: 1 prof dạy 1 dept, dept lặp ở mỗi môn. Tách 1 bảng → query còn 0.5 giây. Bài này dạy <strong>BCNF decomposition</strong>.",
+    "concept_cards": [
+      {
+        "icon": "fa-shield-halved",
+        "title": "BCNF — Câu chuyện ông Prof Smith",
+        "body": "Prof Smith dạy 2 môn (Database, Networks), ở dept CS. Bảng <code>teaches(prof, course, dept)</code> có 4 dòng. Smith chuyển dept → UPDATE 2 dòng. Nhưng nếu Smith dạy 3 môn = UPDATE 3 dòng. Quên 1? <strong>Dữ liệu sai</strong>. BCNF bắt buộc mọi FD vế trái phải là superkey."
+      },
+      {
+        "icon": "fa-code-branch",
+        "title": "BCNF vi phạm & cách tách",
+        "body": "FD: <code>prof → dept</code>. Nhưng <code>{prof, course}</code> mới là PK → <code>prof</code> không phải superkey → vi phạm BCNF. Tách: <code>prof_dept(prof, dept)</code> + <code>teaches(prof, course)</code>. Giờ Smith chuyển dept = UPDATE 1 dòng, không phụ thuộc số môn dạy.",
+        "variant": "quote",
+        "source": "BCNF Theorem — Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 7.5"
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Cập nhật chuyên khoa bác sĩ D01 từ \"Tim mạch\" → \"Nội tiết\" → phải sửa nhiều dòng."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — vi phạm BCNF",
+          "columns": [
+            "patient_id",
+            "doctor_id",
+            "treatment",
+            "doctor_specialty"
+          ],
+          "rows": [
+            [
+              "P01",
+              "D01",
+              "Khám tổng quát",
+              "Tim mạch"
+            ],
+            [
+              "P01",
+              "D01",
+              "Tái khám",
+              "Tim mạch"
+            ],
+            [
+              "P02",
+              "D02",
+              "Phẫu thuật",
+              "Ngoại khoa"
+            ]
+          ],
+          "violations": {
+            "0-3": true,
+            "1-3": true
+          }
+        },
+        "after": {
+          "title": "SAU — đã BCNF (tách doctors)",
+          "columns": [
+            "patient_id",
+            "doctor_id",
+            "treatment"
+          ],
+          "rows": [
+            [
+              "P01",
+              "D01",
+              "Khám tổng quát"
+            ],
+            [
+              "P01",
+              "D01",
+              "Tái khám"
+            ],
+            [
+              "P02",
+              "D02",
+              "Phẫu thuật"
+            ]
+          ]
+        },
+        "note": "Tách doctors(doctor_id, specialty) riêng. doctor_specialty lưu 1 lần."
+      },
+      "schema": {
+        "table_name": "treatments",
+        "columns": [
+          {
+            "name": "patient_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "doctor_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "treatment",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "💊"
+          },
+          {
+            "name": "treatment_date",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "P01",
+          "D01",
+          "Khám tổng quát",
+          "2024-03-01"
+        ],
+        [
+          "P02",
+          "D02",
+          "Phẫu thuật ruột thừa",
+          "2024-03-05"
+        ],
+        [
+          "P01",
+          "D03",
+          "Xét nghiệm máu",
+          "2024-03-10"
+        ],
+        [
+          "P03",
+          "D01",
+          "Khám tim mạch",
+          "2024-03-12"
+        ],
+        [
+          "P04",
+          "D01",
+          "Khám tổng quát",
+          "2024-03-13"
+        ],
+        [
+          "P05",
+          "D03",
+          "Điện tim",
+          "2024-03-14"
+        ],
+        [
+          "P06",
+          "D02",
+          "Nội soi",
+          "2024-03-15"
+        ],
+        [
+          "P07",
+          "D04",
+          "Khám nhi",
+          "2024-03-16"
+        ],
+        [
+          "P08",
+          "D01",
+          "Tư vấn dinh dưỡng",
+          "2024-03-17"
+        ],
+        [
+          "P09",
+          "D05",
+          "Khám da",
+          "2024-03-18"
+        ],
+        [
+          "P10",
+          "D03",
+          "Siêu âm tim",
+          "2024-03-19"
+        ],
+        [
+          "P11",
+          "D01",
+          "Khám tổng quát",
+          "2024-03-20"
+        ],
+        [
+          "P12",
+          "D06",
+          "Khám thần kinh",
+          "2024-03-21"
+        ],
+        [
+          "P13",
+          "D02",
+          "Phẫu thuật",
+          "2024-03-22"
+        ],
+        [
+          "P14",
+          "D03",
+          "Khám tim",
+          "2024-03-23"
+        ],
+        [
+          "P15",
+          "D01",
+          "Xét nghiệm",
+          "2024-03-24"
+        ],
+        [
+          "P16",
+          "D04",
+          "Tiêm chủng",
+          "2024-03-25"
+        ],
+        [
+          "P17",
+          "D03",
+          "Holter",
+          "2024-03-26"
+        ],
+        [
+          "P18",
+          "D05",
+          "Sinh thiết",
+          "2024-03-27"
+        ],
+        [
+          "P19",
+          "D01",
+          "Tái khám",
+          "2024-03-28"
+        ],
+        [
+          "P20",
+          "D02",
+          "Nội soi",
+          "2024-03-29"
+        ],
+        [
+          "P21",
+          "D03",
+          "Khám tim",
+          "2024-03-30"
+        ]
+      ]
+    },
+    "mission": "Hoàn thành game kéo-thả để tách <code class=\"code\">treatments</code> thành <code class=\"code\">doctors</code>, <code class=\"code\">patients</code>, và <code class=\"code\">treatments</code>."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "BCNF yêu cầu điều gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Mọi FD X → Y phải có X là superkey",
+            "correct": true,
+            "explanation": "Đúng — BCNF strict hơn 3NF. Với MỌI FD X → Y trong bảng, X (bên trái) phải là superkey. Nếu X không phải superkey → vi phạm BCNF."
+          },
+          {
+            "id": "b",
+            "text": "Mọi cột phải có giá trị duy nhất",
+            "correct": false,
+            "explanation": "Sai — BCNF không yêu cầu unique. Mỗi cell = atomic (1NF) là khái niệm khác. UNIQUE là constraint riêng."
+          },
+          {
+            "id": "c",
+            "text": "Bảng phải có composite key",
+            "correct": false,
+            "explanation": "Sai — BCNF áp dụng cho MỌI bảng, không cần composite PK. Bảng 1-column PK vẫn phải đạt BCNF."
+          },
+          {
+            "id": "d",
+            "text": "Không có cột NULL",
+            "correct": false,
+            "explanation": "Sai — BCNF cho phép NULL. NULL chỉ bị cấm bởi NOT NULL constraint. NF tập trung vào FD, không vào NULL."
+          }
+        ]
+      },
+      {
+        "question": "Bảng <code>teaches(prof, course, dept)</code> có 2 FD: <code>prof → dept</code> và <code>(course, dept) → prof</code> (mỗi prof thuộc 1 dept; mỗi cặp course+dept do đúng 1 prof phụ trách). Bảng vi phạm chuẩn CAO NHẤT nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "1NF — vì có redundancy trong dept",
+            "correct": false,
+            "explanation": "Sai — 1NF chỉ về atomic values. Redundancy là vấn đề normalization khác (2NF/3NF/BCNF), không phải 1NF."
+          },
+          {
+            "id": "b",
+            "text": "BCNF — tách thành 2 bảng",
+            "correct": true,
+            "format": "diagram",
+            "diagram": "┌──────┬─────────┬──────┐     ┌──────┬──────┐\n│ prof │ course  │ dept │  →  │ prof │ dept │\n├──────┼─────────┼──────┤     ├──────┼──────┤\n│ An   │ DB101   │ CS   │     │ An   │ CS   │\n│ An   │ AI201   │ CS   │     │ Bình │ Math │\n│ Bình │ DB101   │ Math │     └──────┴──────┘\n└──────┴─────────┴──────┘     ┌──────┬─────────┐\n                             │ prof │ course  │\n (dept lặp ở mỗi dòng)       ├──────┼─────────┤\n  ← VI PHẠM BCNF             │ An   │ DB101   │\n                             │ An   │ AI201   │\n                             │ Bình │ DB101   │\n                             └──────┴─────────┘",
+            "explanation": "Đúng — prof → dept, nhưng prof KHÔNG phải superkey (1 prof dạy N courses, không unique). Theo định nghĩa BCNF, X bên trái FD phải là superkey → vi phạm. Tách thành 2 bảng: profs(prof, dept) + teaches(prof, course) → không còn redundancy."
+          },
+          {
+            "id": "c",
+            "text": "Không vi phạm gì cả",
+            "correct": false,
+            "explanation": "Sai — bảng có redundant dept (cùng prof luôn cùng dept). Phải tách thành profs(prof_id, dept) + teaches(prof, course) để tránh dư thừa."
+          },
+          {
+            "id": "d",
+            "text": "2NF — dept phụ thuộc 1 phần khóa",
+            "correct": false,
+            "explanation": "Bẫy hay! Nhờ FD (course, dept) → prof, bảng có khóa dự tuyển thứ 2 là (course, dept) → dept là thuộc tính PRIME (thuộc 1 khóa dự tuyển) → 2NF và 3NF đều ĐẠT. Đây chính là ca kinh điển '3NF ok nhưng BCNF fail' (Silberschatz Ch 7.5)."
+          }
+        ]
+      }
+    ],
+    "decomp_game": {
+      "rule_label": "BCNF — Siêu khóa là \"thánh\"",
+      "rule": "Trong bảng treatments, doctor_id quyết định doctor_specialty, nhưng doctor_id KHÔNG PHẢI siêu khóa. Vi phạm BCNF! Tách doctors ra bảng riêng.",
+      "mission": "Kéo các cột từ bảng <code>treatments</code> vào 3 bảng mục tiêu. Cột <em>doctor_specialty</em> chỉ phụ thuộc doctor_id → không được ở lại treatments.",
+      "source_table": {
+        "name": "treatments",
+        "columns": [
+          {
+            "name": "patient_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "doctor_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "treatment",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "💊"
+          },
+          {
+            "name": "treatment_date",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          },
+          {
+            "name": "doctor_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚠️"
+          },
+          {
+            "name": "doctor_specialty",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚠️"
+          },
+          {
+            "name": "patient_id",
+            "type": "INT",
+            "key": "",
+            "icon": "🔗"
+          },
+          {
+            "name": "doctor_id",
+            "type": "INT",
+            "key": "",
+            "icon": "🔗"
+          }
+        ],
+        "data": [
+          [
+            "P01",
+            "D01",
+            "Khám tổng quát",
+            "2024-03-01",
+            "BS. Hà",
+            "Tim mạch"
+          ],
+          [
+            "P02",
+            "D02",
+            "Phẫu thuật ruột thừa",
+            "2024-03-05",
+            "BS. Linh",
+            "Ngoại khoa"
+          ],
+          [
+            "P01",
+            "D03",
+            "Xét nghiệm máu",
+            "2024-03-10",
+            "BS. Khải",
+            "Huyết học"
+          ],
+          [
+            "P03",
+            "D01",
+            "Khám tim mạch",
+            "2024-03-12",
+            "BS. Hà",
+            "Tim mạch"
+          ],
+          [
+            "P02",
+            "D01",
+            "Tái khám",
+            "2024-03-15",
+            "BS. Hà",
+            "Tim mạch"
+          ],
+          [
+            "P04",
+            "D02",
+            "Phẫu thuật dạ dày",
+            "2024-03-18",
+            "BS. Linh",
+            "Ngoại khoa"
+          ]
+        ]
+      },
+      "target_tables": [
+        {
+          "name": "doctors",
+          "icon": "👨‍⚕️",
+          "description": "Bảng bác sĩ (mỗi dòng = 1 bác sĩ, có chuyên khoa)"
+        },
+        {
+          "name": "patients",
+          "icon": "🧑‍⚕️",
+          "description": "Bảng bệnh nhân"
+        },
+        {
+          "name": "treatments",
+          "icon": "💊",
+          "description": "Bảng điều trị (chỉ FK + hành động + ngày)"
+        }
+      ],
+      "solution": {
+        "doctors": [
+          "doctor_id",
+          "doctor_name",
+          "doctor_specialty"
+        ],
+        "patients": [
+          "patient_id"
+        ],
+        "treatments": [
+          "patient_id",
+          "doctor_id",
+          "treatment",
+          "treatment_date"
+        ]
+      },
+      "hint": "Câu hỏi BCNF: \"Cột X có phải siêu khóa không?\" Nếu X quyết định Y mà X không phải siêu khóa → vi phạm → tách X-Y ra bảng riêng. Ở đây doctor_id quyết định doctor_specialty mà doctor_id không phải superkey."
+    },
+    "mini_game": {
+      "type": "match",
+      "title": "FD nào vi phạm dạng chuẩn nào?",
+      "instruction": "Mỗi phụ thuộc hàm vi phạm dạng chuẩn nào? Click nối từng cặp.",
+      "xp": 30,
+      "pairs": [
+        {
+          "left": "PK(A,B) và A → C",
+          "leftId": "f1",
+          "rightId": "n1",
+          "right": {
+            "id": "n1",
+            "label": "Vi phạm 2NF (partial dep)"
+          }
+        },
+        {
+          "left": "A → B → C (transitive)",
+          "leftId": "f2",
+          "rightId": "n2",
+          "right": {
+            "id": "n2",
+            "label": "Vi phạm 3NF"
+          }
+        },
+        {
+          "left": "X → Y nhưng X không SK",
+          "leftId": "f3",
+          "rightId": "n3",
+          "right": {
+            "id": "n3",
+            "label": "Vi phạm BCNF"
+          }
+        },
+        {
+          "left": "X →→ Y (multivalued)",
+          "leftId": "f4",
+          "rightId": "n4",
+          "right": {
+            "id": "n4",
+            "label": "Vi phạm 4NF"
+          }
+        }
+      ],
+      "solution": {
+        "f1": "n1",
+        "f2": "n2",
+        "f3": "n3",
+        "f4": "n4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Tìm <strong>top 3 chuyên khoa có nhiều ca điều trị nhất</strong> — JOIN <code>treatments</code> ↔ <code>doctors</code>, đếm + sắp xếp giảm dần.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "d.doctor_specialty",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "treatment_count",
+        "slot": "col-alias"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "treatments t",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join"
+      },
+      {
+        "type": "tbl",
+        "token": "doctors d",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on"
+      },
+      {
+        "type": "col",
+        "token": "t.doctor_id = d.doctor_id",
+        "slot": "col-on"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "d.doctor_specialty",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "treatment_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      },
+      {
+        "type": "kw",
+        "token": "LIMIT",
+        "slot": "kw-limit"
+      },
+      {
+        "type": "val",
+        "token": "3",
+        "slot": "val-limit"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , COUNT(*) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ____ ON ____",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC LIMIT ____",
+        "accepts": [
+          "kw",
+          "col",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC",
+          "LIMIT"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;",
+    "reveal_hints": {
+      "select-line": "SELECT <strong>d.doctor_specialty</strong> + <strong>COUNT(*) AS treatment_count</strong> — đếm số ca điều trị.",
+      "from-line": "FROM <strong>treatments t</strong> JOIN <strong>doctors d</strong> ON <strong>t.doctor_id = d.doctor_id</strong> — nối 2 bảng qua FK.",
+      "group-line": "GROUP BY <strong>d.doctor_specialty</strong> — gom theo chuyên khoa.",
+      "order-line": "ORDER BY <strong>treatment_count DESC</strong> + <strong>LIMIT 3</strong> — top 3 chuyên khoa nhiều ca nhất."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — thống kê <strong>chi tiết theo từng BÁC SĨ</strong> (tên + chuyên khoa + số ca), lấy <strong>top 3 bác sĩ</strong> nhiều ca nhất — mịn hơn mức 'theo chuyên khoa'.",
+    "context": {
+      "scenario": "Bệnh viện X sau khi áp dụng BCNF đã tách bảng <code>treatments</code> cũ thành 3 bảng chuẩn hóa: <code>doctors</code> (chuyên khoa), <code>patients</code>, <code>treatments</code> (ghi nhận ca điều trị). Ban giám đốc muốn biết <strong>top 3 chuyên khoa</strong> đang \"hot\" nhất để điều phối nhân lực.",
+      "steps": [
+        "Xác định cột cần thống kê: <code>doctor_specialty</code> + <code>COUNT(*)</code> đặt alias là <code>treatment_count</code>.",
+        "Từ bảng <code>treatments</code>, JOIN sang <code>doctors</code> qua FK <code>treatments.doctor_id = doctors.doctor_id</code>.",
+        "<code>GROUP BY doctor_specialty</code> để gom nhóm theo chuyên khoa.",
+        "<code>ORDER BY treatment_count DESC</code> + <code>LIMIT 3</code> để lấy top 3."
+      ],
+      "hint_explore": "Cần biết schema 3 bảng: gõ <code>SELECT * FROM treatments</code> trước để thấy cột <code>doctor_id</code> (FK), rồi <code>SELECT * FROM doctors</code> để thấy cột <code>doctor_specialty</code>.",
+      "example": {
+        "question": "Ví dụ tương tự — lấy <strong>top 2 bác sĩ có nhiều ca nhất</strong> (thay vì chuyên khoa):",
+        "sql": "SELECT d.doctor_name, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name ORDER BY treatment_count DESC LIMIT 2;",
+        "sample_output": "→ 2 dòng × 2 cột: vd <code>(BS. Hà, 3)</code>, <code>(BS. Linh, 2)</code>"
+      },
+      "expected": "Bảng kết quả 3 dòng × 3 cột (<code>doctor_name, doctor_specialty, treatment_count</code>): top 3 bác sĩ nhiều ca nhất — mịn hơn mức 'theo chuyên khoa' của Bước 3."
+    },
+    "starter": "-- Top 3 chuyên khoa có nhiều ca điều trị nhất\n-- JOIN treatments ↔ doctors + GROUP BY + ORDER BY DESC + LIMIT 3\nSELECT d., COUNT(*) AS \n  FROM treatments t\n  JOIN doctors d ON t. = d.\n GROUP BY d.\n ORDER BY  DESC\n LIMIT 3;\n",
+    "schema": {
+      "table_name": "doctors",
+      "columns": [
+        {
+          "name": "doctor_id",
+          "type": "INT",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "doctor_name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "👨‍⚕️"
+        },
+        {
+          "name": "doctor_specialty",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "⚕️"
+        }
+      ],
+      "data": [
+        [
+          "D01",
+          "BS. Hà",
+          "Nội tổng quát"
+        ],
+        [
+          "D02",
+          "BS. Linh",
+          "Ngoại tiêu hóa"
+        ],
+        [
+          "D03",
+          "BS. Khải",
+          "Tim mạch"
+        ],
+        [
+          "D04",
+          "BS. Mai",
+          "Nhi"
+        ],
+        [
+          "D05",
+          "BS. Nam",
+          "Da liễu"
+        ],
+        [
+          "D06",
+          "BS. Lan",
+          "Thần kinh"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "patients",
+        "columns": [
+          {
+            "name": "patient_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "P01",
+            "Minh"
+          ],
+          [
+            "P02",
+            "Yuki"
+          ],
+          [
+            "P03",
+            "Sara"
+          ]
+        ]
+      },
+      {
+        "table_name": "treatments",
+        "columns": [
+          {
+            "name": "patient_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "doctor_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "treatment",
+            "type": "VARCHAR",
+            "key": ""
+          },
+          {
+            "name": "treatment_date",
+            "type": "DATE",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "P01",
+            "D01",
+            "Khám tổng quát",
+            "2024-03-01"
+          ],
+          [
+            "P02",
+            "D02",
+            "Phẫu thuật ruột thừa",
+            "2024-03-05"
+          ],
+          [
+            "P01",
+            "D03",
+            "Xét nghiệm máu",
+            "2024-03-10"
+          ],
+          [
+            "P03",
+            "D01",
+            "Khám tim mạch",
+            "2024-03-12"
+          ],
+          [
+            "P04",
+            "D01",
+            "Khám tổng quát",
+            "2024-03-13"
+          ],
+          [
+            "P05",
+            "D03",
+            "Điện tim",
+            "2024-03-14"
+          ],
+          [
+            "P06",
+            "D02",
+            "Nội soi",
+            "2024-03-15"
+          ],
+          [
+            "P07",
+            "D04",
+            "Khám nhi",
+            "2024-03-16"
+          ],
+          [
+            "P08",
+            "D01",
+            "Tư vấn dinh dưỡng",
+            "2024-03-17"
+          ],
+          [
+            "P09",
+            "D05",
+            "Khám da",
+            "2024-03-18"
+          ],
+          [
+            "P10",
+            "D03",
+            "Siêu âm tim",
+            "2024-03-19"
+          ],
+          [
+            "P11",
+            "D01",
+            "Khám tổng quát",
+            "2024-03-20"
+          ],
+          [
+            "P12",
+            "D06",
+            "Khám thần kinh",
+            "2024-03-21"
+          ],
+          [
+            "P13",
+            "D02",
+            "Phẫu thuật",
+            "2024-03-22"
+          ],
+          [
+            "P14",
+            "D03",
+            "Khám tim",
+            "2024-03-23"
+          ],
+          [
+            "P15",
+            "D01",
+            "Xét nghiệm",
+            "2024-03-24"
+          ],
+          [
+            "P16",
+            "D04",
+            "Tiêm chủng",
+            "2024-03-25"
+          ],
+          [
+            "P17",
+            "D03",
+            "Holter",
+            "2024-03-26"
+          ],
+          [
+            "P18",
+            "D05",
+            "Sinh thiết",
+            "2024-03-27"
+          ],
+          [
+            "P19",
+            "D01",
+            "Tái khám",
+            "2024-03-28"
+          ],
+          [
+            "P20",
+            "D02",
+            "Nội soi",
+            "2024-03-29"
+          ],
+          [
+            "P21",
+            "D03",
+            "Khám tim",
+            "2024-03-30"
+          ]
+        ]
+      }
+    ],
+    "expected_sql": "SELECT d.doctor_name, d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name, d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>JOIN 2 bảng</em> (treatments + doctors) qua <code>doctor_id</code>, <strong>GROUP BY</strong> chuyên khoa, <strong>COUNT</strong>, <strong>ORDER BY DESC</strong> + <strong>LIMIT 3</strong>."
+      },
+      {
+        "level": 2,
+        "text": "JOIN: <code>treatments t JOIN doctors d ON t.doctor_id = d.doctor_id</code>."
+      },
+      {
+        "level": 3,
+        "text": "GROUP BY <code>d.doctor_specialty</code>. COUNT(*) đếm số treatment. ORDER BY DESC + LIMIT 3 lấy top 3."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT d.doctor_name, d.doctor_specialty, COUNT(*) AS treatment_count FROM treatments t JOIN doctors d ON t.doctor_id = d.doctor_id GROUP BY d.doctor_id, d.doctor_name, d.doctor_specialty ORDER BY treatment_count DESC LIMIT 3;</code>"
+      }
+    ],
+    "success_message": "Hoàn thành BCNF nâng cao! Bạn đã JOIN treatments + doctors + GROUP BY chuyên khoa. Bác sĩ và chuyên khoa đã được cô lập — cập nhật 1 chỗ, dữ liệu luôn nhất quán.",
+    "xp_reward": 80
+  }
+}

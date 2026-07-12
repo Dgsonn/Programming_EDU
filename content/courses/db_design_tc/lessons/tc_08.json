@@ -1,0 +1,418 @@
+{
+  "id": "tc_08",
+  "index": 8,
+  "title": "JSON Document Store — mỗi hồ sơ một document",
+  "subtitle": "Khi mỗi user một kiểu hồ sơ: schemaless + find() thay vì ALTER TABLE",
+  "module": 5,
+  "module_title": "Big Data & Analytics",
+  "estimated_minutes": 18,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "profiles (collection)",
+      "columns": [
+        "username",
+        "country",
+        "bio",
+        "badges"
+      ],
+      "dataRows": [
+        [
+          "minhkiller",
+          "VN",
+          "(chưa viết)",
+          "Ship Community v1.0"
+        ],
+        [
+          "yuki_sama",
+          "JP",
+          "Collector 100%",
+          "Nhà sưu tầm"
+        ],
+        [
+          "toxic_lord",
+          "VN",
+          "Rank cao nhất server",
+          "(chưa có)"
+        ],
+        [
+          "sara_gg",
+          "US",
+          "(chưa viết)",
+          "GG-Clan Founder"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #28",
+    "hook": "Hồ sơ người dùng bùng nổ: người khoe badge, người gắn link stream, người viết bio 3 dòng — <strong>mỗi người một kiểu</strong>, bảng users mọc cột mới toàn NULL. Ticket #28: thử <em>document store</em> — mỗi hồ sơ là MỘT document JSON tự do (cột settings JSONB hồi Ticket #15 giờ lớn thành cả cửa hàng), truy vấn bằng <code>find()</code> thay vì SELECT."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Document store lưu mỗi bản ghi = 1 document JSON — field khác nhau giữa các document là BÌNH THƯỜNG",
+        "find(điều_kiện, projection) là SELECT + WHERE của thế giới document",
+        "Embed (nhét vào trong) vs Reference (trỏ sang) — quyết định thiết kế lớn nhất của document model"
+      ],
+      "intro": "Bảng quan hệ ép mọi dòng cùng khuôn — hồ sơ đa hình làm khuôn rách: thêm 1 tính năng là <code>ALTER TABLE</code> + NULL tràn lan. <strong>Document store</strong> (MongoDB là đại diện) lật ngược: mỗi hồ sơ là một JSON tự do trong collection <code>profiles</code>, ai có field gì lưu field đó. Truy vấn không viết SELECT mà gọi <code>db.profiles.find({ điều_kiện }, { field_muốn_lấy: 1 })</code>. Tự do có giá của nó — không JOIN chuẩn, không ràng buộc FK — nên phải biết CHỌN trận địa.",
+      "example": "<code>db.profiles.find({ country: 'VN' }, { username: 1, bio: 1 })</code> ≈ <code>SELECT username, bio FROM profiles WHERE country = 'VN'</code>"
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-file-code",
+        "title": "Schemaless — khuôn nằm trong app",
+        "body": "Document store KHÔNG bắt document cùng field — <code>yuki_sama</code> có mảng <code>badges</code>, <code>minhkiller</code> thì không, chẳng ai phải NULL. Đổi lại: DATABASE không còn gác cổng cấu trúc, app phải tự kỷ luật (bài học Ticket #05 về ràng buộc vẫn đúng).",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 10 — Big Data Storage Systems / Document Stores"
+      },
+      {
+        "icon": "fa-box-open",
+        "title": "Embed hay Reference?",
+        "body": "<strong>Embed</strong>: nhét badges THẲNG vào document hồ sơ — đọc 1 phát ra đủ, nhưng dữ liệu lặp nếu nhiều nơi cùng dùng. <strong>Reference</strong>: lưu id trỏ sang collection khác — như FK, nhưng phải tự \"join tay\". Quy tắc ngón cái: cái gì đọc-cùng-nhau thì embed."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Khác db_14 (JSONB là MỘT CỘT trong bảng quan hệ — vẫn có PK/FK gác cổng), ở đây CẢ BẢN GHI là JSON. Cột settings của Ticket #15 là bước đệm; document store là đi hẳn sang thế giới bên kia. Feed/likes vẫn ở lại Postgres — hồ sơ đa hình mới là đất của document."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "profiles (collection — bảng phẳng minh họa)",
+        "columns": [
+          {
+            "name": "username",
+            "type": "TEXT",
+            "key": "_id",
+            "icon": "👤"
+          },
+          {
+            "name": "country",
+            "type": "TEXT",
+            "key": "",
+            "icon": "🌍"
+          },
+          {
+            "name": "bio",
+            "type": "TEXT",
+            "key": "tùy có",
+            "icon": "📝"
+          },
+          {
+            "name": "badges",
+            "type": "ARRAY",
+            "key": "tùy có",
+            "icon": "🏅"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "minhkiller",
+          "VN",
+          "(chưa viết)",
+          "Ship Community v1.0"
+        ],
+        [
+          "yuki_sama",
+          "JP",
+          "Collector 100%",
+          "Nhà sưu tầm"
+        ],
+        [
+          "toxic_lord",
+          "VN",
+          "Rank cao nhất server",
+          "(chưa có)"
+        ],
+        [
+          "sara_gg",
+          "US",
+          "(chưa viết)",
+          "GG-Clan Founder"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Điểm khác CỐT LÕI giữa document store và cột JSONB của Ticket #15?",
+        "options": [
+          {
+            "id": "a",
+            "text": "JSONB là MỘT CỘT trong bảng quan hệ (vẫn có PK/FK gác cổng); document store thì CẢ BẢN GHI là JSON, schema do app tự giữ",
+            "correct": true,
+            "explanation": "Đúng — một bên là \"góc tự do trong nhà kỷ luật\", một bên là chuyển hẳn sang mô hình dữ liệu khác."
+          },
+          {
+            "id": "b",
+            "text": "JSONB không lưu được mảng, document store thì có",
+            "correct": false,
+            "explanation": "Sai — JSONB lưu mảng thoải mái (đã làm ở Ticket #15)."
+          },
+          {
+            "id": "c",
+            "text": "Document store nhanh hơn trong mọi truy vấn",
+            "correct": false,
+            "explanation": "Sai — JOIN/giao dịch phức tạp thì mô hình quan hệ vẫn thắng; document thắng ở hồ sơ đa hình đọc-nguyên-khối."
+          },
+          {
+            "id": "d",
+            "text": "Chỉ khác cú pháp, mô hình y hệt nhau",
+            "correct": false,
+            "explanation": "Sai — khác cả mô hình: ràng buộc, JOIN, cách nghĩ về cấu trúc đều đổi."
+          }
+        ]
+      },
+      {
+        "question": "Hồ sơ hiển thị luôn cần <code>badges</code> đi kèm username — nên EMBED hay REFERENCE?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Embed — cái gì đọc-cùng-nhau thì nhét vào cùng document, một lần đọc ra đủ trang hồ sơ",
+            "correct": true,
+            "explanation": "Đúng — quy tắc ngón cái của document model: tối ưu cho đường đọc chính."
+          },
+          {
+            "id": "b",
+            "text": "Reference — vì badge là dữ liệu quan trọng",
+            "correct": false,
+            "explanation": "Sai — quan trọng hay không không phải tiêu chí; TẦN SUẤT ĐỌC CÙNG NHAU mới là tiêu chí."
+          },
+          {
+            "id": "c",
+            "text": "Cả hai như nhau, tùy thích",
+            "correct": false,
+            "explanation": "Sai — reference bắt bạn query lần 2 (join tay) cho MỌI lượt xem hồ sơ; khác biệt hiệu năng rõ rệt."
+          },
+          {
+            "id": "d",
+            "text": "Không lưu badges trong document store được",
+            "correct": false,
+            "explanation": "Sai — mảng badges nhét vào document là trường hợp mẫu giáo khoa của embed."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Dịch SQL → Mongo",
+      "instruction": "Mỗi mảnh SQL quen thuộc ứng với mảnh nào trong thế giới document? Click nối từng cặp.",
+      "xp": 20,
+      "pairs": [
+        {
+          "left": "SELECT username, bio",
+          "leftId": "q1",
+          "rightId": "w1",
+          "right": {
+            "id": "w1",
+            "label": "{ username: 1, bio: 1 } — projection (tham số 2 của find)"
+          }
+        },
+        {
+          "left": "WHERE country = 'VN'",
+          "leftId": "q2",
+          "rightId": "w2",
+          "right": {
+            "id": "w2",
+            "label": "{ country: 'VN' } — document điều kiện (tham số 1)"
+          }
+        },
+        {
+          "left": "ORDER BY joined_at DESC",
+          "leftId": "q3",
+          "rightId": "w3",
+          "right": {
+            "id": "w3",
+            "label": ".sort({ joined_at: -1 })"
+          }
+        },
+        {
+          "left": "FROM profiles",
+          "leftId": "q4",
+          "rightId": "w4",
+          "right": {
+            "id": "w4",
+            "label": "db.profiles — chọn collection"
+          }
+        }
+      ],
+      "solution": {
+        "q1": "w1",
+        "q2": "w2",
+        "q3": "w3",
+        "q4": "w4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Trang khám phá cần: <strong>hồ sơ gamer VN, chỉ lấy username + bio, mới tham gia trước</strong> — lắp câu find() hoàn chỉnh. Có khối mồi nhử trộn SQL vào Mongo.",
+    "blocks": [
+      {
+        "type": "tbl",
+        "token": "db.profiles",
+        "slot": "doc-coll"
+      },
+      {
+        "type": "op",
+        "token": ".find({ country: 'VN' },",
+        "slot": "doc-filter"
+      },
+      {
+        "type": "op",
+        "token": ".find(SELECT * FROM profiles WHERE country = 'VN')",
+        "slot": "doc-filter-x"
+      },
+      {
+        "type": "op",
+        "token": "{ username: 1, bio: 1 })",
+        "slot": "doc-project"
+      },
+      {
+        "type": "kw",
+        "token": ".sort({ joined_at: -1 })",
+        "slot": "doc-sort"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "doc-coll",
+        "placeholder": "chọn collection nào?",
+        "accepts": [
+          "tbl"
+        ],
+        "multi": false
+      },
+      {
+        "id": "doc-filter",
+        "placeholder": "điều kiện lọc — là MỘT document",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "doc-project",
+        "placeholder": "projection — lấy field nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false
+      },
+      {
+        "id": "doc-sort",
+        "placeholder": "sắp xếp mới → cũ",
+        "accepts": [
+          "kw"
+        ],
+        "multi": false
+      }
+    ],
+    "expected_sql": "db.profiles .find({ country: 'VN' }, { username: 1, bio: 1 }) .sort({ joined_at: -1 })",
+    "expected_zones": {
+      "doc-coll": "db.profiles",
+      "doc-filter": ".find({ country: 'VN' },",
+      "doc-project": "{ username: 1, bio: 1 })",
+      "doc-sort": ".sort({ joined_at: -1 })"
+    },
+    "reveal_hints": {
+      "doc-coll": "Bắt đầu từ kho: <strong>db.profiles</strong> (như FROM).",
+      "doc-filter": "Điều kiện Mongo là MỘT DOCUMENT: <strong>.find({ country: 'VN' },</strong> — khối có chữ SELECT là mồi nhử trộn hai thế giới.",
+      "doc-project": "Tham số 2 = chọn field: <strong>{ username: 1, bio: 1 })</strong>.",
+      "doc-sort": "Mới trước: <strong>.sort({ joined_at: -1 })</strong> — -1 là DESC."
+    }
+  },
+  "step_4": {
+    "prompt": "Ban tổ chức sự kiện cần danh sách <strong>chủ nhân huy hiệu \"Nhà sưu tầm\"</strong> (mảng <code>badges</code> CHỨA giá trị đó — Mongo tự hiểu khi so mảng với 1 giá trị), chỉ lấy <code>username</code> và GIẤU <code>_id</code> (<code>_id: 0</code>).",
+    "starter": "// Tim chu nhan huy hieu 'Nha suu tam'\n// - dieu kien: badges chua 'Nhà sưu tầm' (so mang voi 1 gia tri)\n// - projection: chi username, giau _id\ndb.profiles.find(____, ____)\n",
+    "schema": {
+      "table_name": "profiles",
+      "columns": [
+        {
+          "name": "username",
+          "type": "TEXT",
+          "key": "_id"
+        },
+        {
+          "name": "country",
+          "type": "TEXT",
+          "key": ""
+        },
+        {
+          "name": "bio",
+          "type": "TEXT",
+          "key": ""
+        },
+        {
+          "name": "badges",
+          "type": "ARRAY",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "minhkiller",
+          "VN",
+          "(chưa viết)",
+          "Ship Community v1.0"
+        ],
+        [
+          "yuki_sama",
+          "JP",
+          "Collector 100%",
+          "Nhà sưu tầm"
+        ],
+        [
+          "toxic_lord",
+          "VN",
+          "Rank cao nhất server",
+          "(chưa có)"
+        ],
+        [
+          "sara_gg",
+          "US",
+          "(chưa viết)",
+          "GG-Clan Founder"
+        ]
+      ]
+    },
+    "equiv_sql": "SELECT username FROM profiles WHERE badges = 'Nhà sưu tầm';",
+    "context": {
+      "scenario": "Query này chạy thẳng trên collection hồ sơ — không ALTER, không migration, dù mai kia hồ sơ mọc thêm field mới nào đi nữa. Đó là lời hứa (và cạm bẫy) của schemaless.",
+      "real_world": "MongoDB so <code>badges: giá_trị</code> với mảng theo kiểu CHỨA-LÀ-KHỚP — idiom hồ sơ/tag phổ biến bậc nhất; Discord, các hệ profile game đều lưu showcase kiểu này.",
+      "steps": [
+        "Điều kiện là document: <code>{ badges: 'Nhà sưu tầm' }</code> — so 1 giá trị với mảng = \"chứa\".",
+        "Projection lấy username: <code>{ username: 1 }</code>.",
+        "Mongo mặc định trả _id — giấu đi: thêm <code>_id: 0</code> vào projection.",
+        "Ráp: <code>db.profiles.find(điều_kiện, projection)</code> — không SELECT, không FROM."
+      ],
+      "hint_explore": "Xem bảng phẳng minh họa: <code>SELECT * FROM profiles</code> rồi Run — ai đang giữ huy hiệu?",
+      "expected": "Khung kết quả minh họa bản SQL tương đương: 1 dòng — yuki_sama. Đáp án Mongo của bạn chấm khi Run/Submit."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Khung: <code>db.profiles.find({ điều_kiện }, { projection })</code> — hai tham số, đều là document."
+      },
+      {
+        "level": 2,
+        "text": "Điều kiện chứa-trong-mảng viết y như so bằng: <code>{ badges: 'Nhà sưu tầm' }</code>."
+      },
+      {
+        "level": 3,
+        "text": "Projection vừa lấy vừa giấu: <code>{ username: 1, _id: 0 }</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">db.profiles.find({ badges: 'Nhà sưu tầm' }, { username: 1, _id: 0 })</code>"
+      }
+    ],
+    "expected_sql": "db.profiles.find({ badges: 'Nhà sưu tầm' }, { username: 1, _id: 0 })",
+    "success_message": "Ticket #28 đóng! Hồ sơ đa hình có nhà mới — còn feed/likes vẫn ở lại Postgres, đúng trận địa của mỗi bên. Ticket #29: PM hỏi dồn dập — đến lúc học 4 thao tác xoay khối OLAP.",
+    "xp_reward": 120
+  }
+}

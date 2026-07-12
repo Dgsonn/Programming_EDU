@@ -1,0 +1,361 @@
+{
+  "id": "tc_17",
+  "index": 17,
+  "title": "Dense vs Sparse · Clustering vs Secondary — bốn kiểu mục lục",
+  "subtitle": "Mục lục từng dòng hay từng trang; sổ xếp theo khóa hay mục lục phụ trỏ về",
+  "module": 6,
+  "module_title": "Storage, Indexing & Performance",
+  "estimated_minutes": 15,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "users — sổ chính XẾP THEO user_id (mẫu 3 trang)",
+      "columns": [
+        "trang",
+        "chứa các user_id",
+        "ghi chú"
+      ],
+      "dataRows": [
+        [
+          "trang 1",
+          "7, 9",
+          "dòng nằm đúng thứ tự khóa"
+        ],
+        [
+          "trang 2",
+          "12, 15",
+          "→ tra user_id: mỗi trang chỉ cần 1 mục"
+        ],
+        [
+          "trang 3",
+          "21, 24",
+          "→ tra email: khóa rải khắp 3 trang"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Community · Ticket #37",
+    "hook": "Sau cú ăn tiền của idx_users_email, cả đội hăng máu: \"index hết mọi cột đi!\". Khoan — Ticket #37 là buổi REVIEW trước khi rải. Mục lục có <strong>bốn kiểu tính cách</strong>: <em>dense</em> ghi đủ từng dòng, <em>sparse</em> tí hon mỗi trang một mục nhưng ĐÒI sổ đã xếp; <em>clustering</em> là chính cuốn sổ nằm theo khóa (mỗi bảng chỉ được MỘT), <em>secondary</em> là mục lục phụ trỏ RID. Chọn sai kiểu = xây mục lục vô dụng."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Dense index: MỖI DÒNG một mục — to hơn, tra thẳng từng khóa",
+        "Sparse index: MỖI TRANG một mục — tí hon, nhưng CHỈ sống trên sổ đã xếp theo khóa đó",
+        "Clustering = chính sổ xếp theo khóa (1 bảng 1 cái) · Secondary = mục lục phụ trỏ RID, bắt buộc dense"
+      ],
+      "intro": "Nhìn bảng users bên cạnh: sổ chính đang NẰM THEO user_id — 7, 9 ở trang 1; 12, 15 ở trang 2. Tra user_id chỉ cần mục lục ghi \"user 7 → từ trang 1, user 12 → từ trang 2\": mỗi TRANG một mục — đó là <strong>sparse</strong>, tí hon mà đủ dùng, vì tới trang là lần ra dòng (trang đã xếp!). Nhưng tra <code>email</code>? Email rải lung tung khắp các trang — mục lục email phải ghi đủ TỪNG email kèm RID: đó là <strong>dense</strong>, và vì nó là mục lục PHỤ trên sổ xếp-theo-thứ-khác, người ta gọi nó là <strong>secondary index</strong>. Còn cái quyền \"sổ chính nằm theo khóa nào\" — <strong>clustering index</strong> — mỗi bảng chỉ trao cho MỘT khóa duy nhất.",
+      "example": "users 2M dòng: sparse theo user_id ≈ 25.000 mục (mỗi trang 1) · dense theo email = đủ 2.000.000 mục. Chênh 80 lần — nhưng dense là lựa chọn DUY NHẤT cho khóa phụ."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-layer-group",
+        "title": "Dense vs Sparse — ghi từng dòng hay từng trang",
+        "body": "Dense: mục lục có mục cho MỌI giá trị khóa. Sparse: chỉ một mục cho mỗi trang/khối, tra tới trang rồi lần trong trang. Sparse nhỏ hơn hàng chục lần — nhưng chỉ dùng được khi dữ liệu NẰM SẴN theo thứ tự khóa đó.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 14 — Dense & Sparse Indices"
+      },
+      {
+        "icon": "fa-crown",
+        "title": "Clustering — ngai vàng chỉ có một",
+        "body": "Dữ liệu vật lý chỉ nằm được theo MỘT thứ tự (Ticket #35 đã dạy: \"ai nằm cạnh ai\" là quyết định lớn nhất). Chọn khóa nào cho sổ chính = trao ngai clustering cho khóa đó. Mọi khóa khác muốn có mục lục đành làm secondary — trỏ RID về, và phải dense."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "GameHub: bảng users nằm theo <code>user_id</code> → clustering thuộc về user_id, tra id dùng sparse là đủ. <code>idx_users_email</code> hôm qua bạn tạo? Nó là secondary + dense — đúng kiểu duy nhất có thể. Đòi \"sparse theo email cho nhẹ\" là đòi điều không tồn tại."
+      }
+    ],
+    "visual": {
+      "schema": {
+        "table_name": "hai mục lục trên cùng bảng users (xếp theo user_id)",
+        "columns": [
+          {
+            "name": "sparse · user_id",
+            "type": "mỗi trang 1 mục",
+            "key": "🪶",
+            "icon": "📖"
+          },
+          {
+            "name": "dense · email",
+            "type": "mỗi dòng 1 mục",
+            "key": "🔖",
+            "icon": "📚"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "7 → trang 1",
+          "bob@ghub.us → RID(3,2)"
+        ],
+        [
+          "12 → trang 2",
+          "mai@ghub.vn → RID(3,1)"
+        ],
+        [
+          "21 → trang 3",
+          "minh@ghub.vn → RID(1,1)"
+        ],
+        [
+          "3 mục cho 6 dòng 🪶",
+          "6 mục cho 6 dòng — không được thiếu ai"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Sparse index tí hon so với dense — vậy sao KHÔNG dùng sparse cho mục lục email của Ticket #36?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Sparse chỉ sống trên dữ liệu ĐÃ XẾP theo khóa đó — users nằm theo user_id, email rải lung tung nên \"mỗi trang 1 mục email\" chẳng dẫn tới đâu",
+            "correct": true,
+            "explanation": "Đúng — sparse ghi \"từ trang này trở đi là khóa ≥ X\", chỉ có nghĩa khi trang thật sự xếp theo X."
+          },
+          {
+            "id": "b",
+            "text": "Vì email dài quá, không nhét vừa mục lục sparse",
+            "correct": false,
+            "explanation": "Sai — độ dài khóa không phải vấn đề; THỨ TỰ nằm của dữ liệu mới là vấn đề."
+          },
+          {
+            "id": "c",
+            "text": "Vì sparse chỉ dùng được cho khóa kiểu số",
+            "correct": false,
+            "explanation": "Sai — khóa chữ hay số đều được, miễn dữ liệu xếp theo nó."
+          },
+          {
+            "id": "d",
+            "text": "Dùng được, chỉ là tra chậm hơn dense một chút",
+            "correct": false,
+            "explanation": "Sai — không phải \"chậm hơn chút\" mà là VÔ NGHĨA: tới trang rồi cũng không biết email cần tìm có ở đó không."
+          }
+        ]
+      },
+      {
+        "question": "Vì sao mỗi bảng chỉ có được MỘT clustering index?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Vì dữ liệu vật lý trên đĩa chỉ nằm được theo MỘT thứ tự — muốn thứ tự thứ hai phải chép cả bảng lần nữa",
+            "correct": true,
+            "explanation": "Đúng — bài học Ticket #35: \"ai nằm cạnh ai\" chỉ chọn được một lần. Các khóa khác đành làm secondary."
+          },
+          {
+            "id": "b",
+            "text": "Vì Postgres thu phí theo số clustering index",
+            "correct": false,
+            "explanation": "Sai — đây là giới hạn vật lý, không phải giấy phép."
+          },
+          {
+            "id": "c",
+            "text": "Vì clustering index chiếm trọn RAM buffer",
+            "correct": false,
+            "explanation": "Sai — buffer không liên quan; vấn đề là chỗ nằm trên đĩa."
+          },
+          {
+            "id": "d",
+            "text": "Không đúng — cứ tạo bao nhiêu clustering cũng được",
+            "correct": false,
+            "explanation": "Sai — tạo nhiều INDEX thì được, nhưng chỉ một cái được quyền quyết định thứ tự nằm của sổ chính."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "match",
+      "title": "Bốn kiểu mục lục — ai là ai?",
+      "instruction": "Nối mỗi mô tả với đúng tên gọi của nó.",
+      "xp": 20,
+      "pairs": [
+        {
+          "left": "Mục lục ghi đủ TỪNG giá trị khóa",
+          "leftId": "k1",
+          "rightId": "v1",
+          "right": {
+            "id": "v1",
+            "label": "Dense index"
+          }
+        },
+        {
+          "left": "Mỗi TRANG một mục — đòi sổ đã xếp theo khóa",
+          "leftId": "k2",
+          "rightId": "v2",
+          "right": {
+            "id": "v2",
+            "label": "Sparse index"
+          }
+        },
+        {
+          "left": "Chính sổ chính nằm theo thứ tự khóa này",
+          "leftId": "k3",
+          "rightId": "v3",
+          "right": {
+            "id": "v3",
+            "label": "Clustering index"
+          }
+        },
+        {
+          "left": "Mục lục phụ trên khóa khác, trỏ RID về sổ",
+          "leftId": "k4",
+          "rightId": "v4",
+          "right": {
+            "id": "v4",
+            "label": "Secondary index"
+          }
+        }
+      ],
+      "solution": {
+        "k1": "v1",
+        "k2": "v2",
+        "k3": "v3",
+        "k4": "v4"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Đội đề xuất 4 phương án index cho bảng users (đang nằm theo user_id) — xếp mỗi phương án vào đúng ga. Có một khối bịa.",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Mục lục email ghi đủ TỪNG email kèm RID — vì email rải khắp sổ, không được thiếu ai",
+        "slot": "ix-secondary"
+      },
+      {
+        "type": "op",
+        "token": "Chọn user_id làm khóa xếp sổ chính — cả bảng nằm trên đĩa theo thứ tự nó",
+        "slot": "ix-cluster"
+      },
+      {
+        "type": "op",
+        "token": "Tra act_count kiểu lười: mỗi trang ghi 1 mục theo act_count, kệ chuyện sổ đang xếp theo user_id",
+        "slot": "ix-x"
+      },
+      {
+        "type": "op",
+        "token": "Tra user_id chỉ cần mỗi trang 1 mục \"7 → trang 1, 12 → trang 2…\" — sổ đã xếp, tới trang là lần ra",
+        "slot": "ix-sparse"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "ix-cluster",
+        "placeholder": "Ngai vàng — thứ tự nằm của sổ chính",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "👑",
+          "label": "Clustering",
+          "sub": "Mỗi bảng một ngai",
+          "hint": "Ai quyết định \"dòng nào nằm cạnh dòng nào\"? Khóa được trao ngai đó."
+        }
+      },
+      {
+        "id": "ix-sparse",
+        "placeholder": "Mục lục tí hon trên khóa của ngai",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🪶",
+          "label": "Sparse",
+          "sub": "Mỗi trang 1 mục",
+          "hint": "Chỉ sống trên sổ ĐÃ XẾP theo khóa — tới trang là lần ra dòng."
+        }
+      },
+      {
+        "id": "ix-secondary",
+        "placeholder": "Mục lục phụ cho khóa rải rác",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔖",
+          "label": "Secondary",
+          "sub": "Dense + RID",
+          "hint": "Khóa phụ rải khắp sổ → phải ghi đủ từng dòng, trỏ RID về."
+        }
+      }
+    ],
+    "expected_sql": "Chọn user_id làm khóa xếp sổ chính — cả bảng nằm trên đĩa theo thứ tự nó Tra user_id chỉ cần mỗi trang 1 mục \"7 → trang 1, 12 → trang 2…\" — sổ đã xếp, tới trang là lần ra Mục lục email ghi đủ TỪNG email kèm RID — vì email rải khắp sổ, không được thiếu ai",
+    "expected_zones": {
+      "ix-cluster": "Chọn user_id làm khóa xếp sổ chính — cả bảng nằm trên đĩa theo thứ tự nó",
+      "ix-sparse": "Tra user_id chỉ cần mỗi trang 1 mục \"7 → trang 1, 12 → trang 2…\" — sổ đã xếp, tới trang là lần ra",
+      "ix-secondary": "Mục lục email ghi đủ TỪNG email kèm RID — vì email rải khắp sổ, không được thiếu ai"
+    },
+    "reveal_hints": {
+      "ix-cluster": "Ngai vàng = <strong>quyền quyết định thứ tự nằm</strong> — user_id đang giữ nó.",
+      "ix-sparse": "Sparse = <strong>mỗi trang 1 mục</strong>, chỉ có nghĩa trên khóa của ngai. Khối \"act_count kiểu lười\" là bịa — sparse trên cột không xếp là mục lục dẫn vào hư không.",
+      "ix-secondary": "Khóa phụ rải rác = <strong>dense + trỏ RID</strong> — chính là idx_users_email của Ticket #36."
+    }
+  },
+  "step_4": {
+    "prompt": "Điền hồ sơ index cho bảng users — 4 ô, toàn thuật ngữ vừa học (gõ tiếng Anh).",
+    "challenge_type": "fill_blank",
+    "template": "-- HỒ SƠ INDEX · bảng users (sổ chính nằm theo user_id)\n\n-- Quyền quyết định thứ tự nằm của sổ thuộc về user_id\n--   → user_id đang giữ index kiểu: ____\n\n-- Mục lục tra user_id: mỗi TRANG chỉ cần 1 mục\n--   → kiểu mục lục: ____\n\n-- Mục lục email: phải ghi đủ TỪNG email, không thiếu ai\n--   → kiểu mục lục: ____\n\n-- Vị thế của mục lục email so với sổ chính: ____",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "ngai vàng",
+        "expected": "CLUSTERING"
+      },
+      {
+        "id": "b2",
+        "hint": "tí hon, mỗi trang 1 mục",
+        "expected": "SPARSE"
+      },
+      {
+        "id": "b3",
+        "hint": "đủ từng dòng",
+        "expected": "DENSE"
+      },
+      {
+        "id": "b4",
+        "hint": "mục lục phụ",
+        "expected": "SECONDARY"
+      }
+    ],
+    "context": {
+      "scenario": "Đây chính là 4 quyết định bạn sẽ điền (trong đầu) mỗi lần định gõ CREATE INDEX ở công ty: sổ đang xếp theo gì, mục lục mới thưa hay dày, chính hay phụ.",
+      "real_world": "Trong Postgres: PRIMARY KEY thường kiêm luôn vai clustering (InnoDB/MySQL thì bắt buộc); mọi CREATE INDEX thêm vào đều là secondary. Lệnh <code>CLUSTER</code> của Postgres cho phép xếp lại sổ theo một index — đúng nghĩa trao lại ngai.",
+      "steps": [
+        "Ô 1: ai quyết định thứ tự nằm? — kiểu index của user_id.",
+        "Ô 2: sổ đã xếp theo user_id → mục lục user_id được phép thưa.",
+        "Ô 3: email rải khắp sổ → mục lục email phải ghi đủ.",
+        "Ô 4: mục lục email đứng ở vị thế nào so với sổ chính?"
+      ],
+      "hint_explore": "Nhìn lại bảng 3 trang ở Step 3: user_id 7, 9 nằm trang 1 theo đúng thứ tự — còn email thì nhảy loạn giữa các trang.",
+      "expected": "Điền đúng 4/4: clustering · sparse · dense · secondary. Bài pseudo-code — chấm theo ô điền."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bốn thuật ngữ của bài: dense, sparse, clustering, secondary — mỗi ô một cái, không lặp."
+      },
+      {
+        "level": 2,
+        "text": "Ô 1 hỏi về NGAI VÀNG (thứ tự nằm) — không phải về độ dày mục lục."
+      },
+      {
+        "level": 3,
+        "text": "Cặp ô 2-3: sổ đã xếp thì mục lục được THƯA; khóa rải rác thì mục lục phải DÀY."
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: <code>clustering</code> · <code>sparse</code> · <code>dense</code> · <code>secondary</code>."
+      }
+    ],
+    "success_message": "Ticket #37 đóng — đội hết dám rải index bừa! Nhưng có người hỏi xoáy: \"mục lục email tự nó cũng 2 triệu mục — tra trong MỤC LỤC kiểu gì cho nhanh?\". Câu hỏi trúng tim: Ticket #38 mở nắp capo — bên trong mọi index xịn là một CÁI CÂY.",
+    "xp_reward": 120
+  }
+}

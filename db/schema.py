@@ -108,6 +108,61 @@ def init_db():
             except Exception:
                 conn.rollback()
 
+        # ERD v2.2 (FE-06): cấu hình hiển thị cấp khóa học
+        for col, definition in (
+            ('content_meta', 'JSONB'),
+        ):
+            try:
+                c.execute(f'ALTER TABLE courses ADD COLUMN IF NOT EXISTS {col} {definition}')
+            except Exception:
+                conn.rollback()
+
+        # ERD v2.2 (FE-06): nội dung tương tác thật + khóa ổn định cho lessons
+        for col, definition in (
+            ('lesson_code',       'TEXT'),
+            ('content_json',      'JSONB'),
+            ('subtitle',          'TEXT'),
+            ('estimated_minutes', 'INTEGER'),
+            ('updated_at',        'TIMESTAMPTZ DEFAULT now()'),
+        ):
+            try:
+                c.execute(f'ALTER TABLE lessons ADD COLUMN IF NOT EXISTS {col} {definition}')
+            except Exception:
+                conn.rollback()
+
+        c.execute('CREATE UNIQUE INDEX IF NOT EXISTS uq_lessons_code ON lessons(course_id, lesson_code)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_lessons_content_gin ON lessons USING gin(content_json)')
+
+        # ERD v2.2 (FE-06): quiz ôn tập cấp khóa — questions_json là SNAPSHOT
+        # tại thời điểm sinh (kèm đáp án đúng, chỉ backend đọc)
+        c.execute('''CREATE TABLE IF NOT EXISTS quizzes (
+            id             SERIAL PRIMARY KEY,
+            user_id        INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+            course_id      TEXT    NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+            status         TEXT    DEFAULT 'generated',
+            questions_json JSONB   NOT NULL,
+            created_at     TIMESTAMPTZ DEFAULT now()
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_quizzes_user_course ON quizzes(user_id, course_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_quizzes_status ON quizzes(status)')
+
+        c.execute('''CREATE TABLE IF NOT EXISTS review_quiz_results (
+            id            SERIAL PRIMARY KEY,
+            quiz_id       INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+            user_id       INTEGER NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+            score         INTEGER NOT NULL,
+            total         INTEGER NOT NULL,
+            answers_json  JSONB   NOT NULL,
+            submitted_at  TIMESTAMPTZ DEFAULT now()
+        )''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_review_quiz_results_user ON review_quiz_results(user_id)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_review_quiz_results_quiz ON review_quiz_results(quiz_id)')
+
+        # Commit ngay: các try/except phía dưới có conn.rollback() sẽ hủy MỌI DDL
+        # chưa commit trong cùng transaction — không commit ở đây thì block v2.2
+        # bị rollback oan mỗi lần một migration phía sau ném lỗi.
+        conn.commit()
+
         c.execute('CREATE EXTENSION IF NOT EXISTS pg_trgm')
         c.execute('CREATE INDEX IF NOT EXISTS idx_courses_level ON courses(level)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_courses_title_trgm ON courses USING gin(title gin_trgm_ops)')
@@ -158,15 +213,47 @@ def init_db():
             created_at TEXT,
             PRIMARY KEY (user_id, course_id)
         )''')
-        # ERD v2.1: ràng buộc điểm 1-5 (ADD CONSTRAINT không có IF NOT EXISTS -> try/except)
-        try:
-            c.execute('ALTER TABLE course_ratings ADD CONSTRAINT chk_rating_range '
-                      'CHECK (rating BETWEEN 1 AND 5)')
-        except Exception:
-            conn.rollback()  # đã tồn tại
+        # ERD v2.1: ràng buộc điểm 1-5. Guard bằng pg_constraint thay vì try/except:
+        # ADD CONSTRAINT trùng sẽ ném lỗi MỖI startup -> rollback -> hủy oan mọi
+        # DDL chưa commit phía trên trong cùng transaction.
+        c.execute('''DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_rating_range') THEN
+            ALTER TABLE course_ratings ADD CONSTRAINT chk_rating_range
+              CHECK (rating BETWEEN 1 AND 5);
+          END IF;
+        END $$;''')
 
         c.execute('CREATE INDEX IF NOT EXISTS idx_course_ratings_course_id ON course_ratings(course_id)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_course_ratings_user_id ON course_ratings(user_id)')
+
+        # 2026-07-11 (PLAN B1): FK cho enrollments/course_ratings — trước đó thiếu
+        # ràng buộc nên xóa user/course để lại rows mồ côi (test suite từng leak 2 rows).
+        # Dọn orphan TRƯỚC khi ADD CONSTRAINT trong cùng transaction, guard bằng
+        # pg_constraint để không ném lỗi mỗi startup (xem chk_rating_range ở trên).
+        c.execute('''DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_enrollments_user') THEN
+            DELETE FROM enrollments e WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = e.user_id);
+            ALTER TABLE enrollments ADD CONSTRAINT fk_enrollments_user
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_enrollments_course') THEN
+            DELETE FROM enrollments e WHERE NOT EXISTS (SELECT 1 FROM courses c2 WHERE c2.id = e.course_id);
+            ALTER TABLE enrollments ADD CONSTRAINT fk_enrollments_course
+              FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ratings_user') THEN
+            DELETE FROM course_ratings r WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.id = r.user_id);
+            ALTER TABLE course_ratings ADD CONSTRAINT fk_ratings_user
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_ratings_course') THEN
+            DELETE FROM course_ratings r WHERE NOT EXISTS (SELECT 1 FROM courses c2 WHERE c2.id = r.course_id);
+            ALTER TABLE course_ratings ADD CONSTRAINT fk_ratings_course
+              FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE;
+          END IF;
+        END $$;''')
 
         c.execute('''CREATE TABLE IF NOT EXISTS missions (
             id                SERIAL PRIMARY KEY,
@@ -661,6 +748,79 @@ def init_db():
                      'Trang bị toàn bộ kiến thức để thiết kế và quản lý cơ sở dữ liệu quan hệ. Từ sơ đồ E-R, chuẩn hóa dữ liệu đến viết SQL truy vấn phức tạp và tối ưu hóa hiệu năng.',
                      'static/images/db_design.svg', 'Phù hợp người mới', '40 giờ', '0', 4.9, 60, '#06B6D4', '#0E7490', 'DATABASE & BACKEND')
                 )
+
+        # Migration 2026-07-04: tách DB Design thành 3 KHÓA riêng (saga GameHub 3 phần).
+        # Idempotent: UPDATE đổi row cũ thành khóa Cơ bản (id giữ nguyên → enrollment/tiến độ
+        # hiện có không mất); 2 khóa mới chỉ INSERT khi chưa tồn tại.
+        c.execute(
+            '''UPDATE courses SET title=%s, subtitle=%s, description=%s, level=%s,
+               duration=%s, lessons=%s WHERE id=%s AND title=%s''',
+            ('Database Design Cơ bản', 'Phần 1 — Xây nền tảng GameHub',
+             'Từ thực thể đầu tiên đến hệ CSDL hoàn chỉnh: ER Diagram, khóa chính/ngoại, '
+             'chuẩn hóa 1NF→4NF và SQL ứng dụng thực tế — bạn là kỹ sư dữ liệu đầu tiên của GameHub.',
+             'Cơ bản', '14 giờ', 20, 'db_design', 'Database Design')
+        )
+        _db3_new_courses = [
+            ('db_design_tc', 'Database Design Trung cấp', 'Phần 2 — GameHub Community',
+             'Advanced SQL (Trigger, Procedure, Recursive CTE), Big Data & Analytics, Storage & Indexing — '
+             'xây mạng cộng đồng gamers của GameHub. Nên học sau khóa Cơ bản.',
+             'static/images/db_design.svg', 'Trung cấp', '18 giờ', '0', 4.9, 21,
+             '#0C4A6E', '#38BDF8', 'DATABASE & BACKEND'),
+            ('db_design_nc', 'Database Design Nâng cao', 'Phần 3 — GameHub Marketplace',
+             'Query Processing & Optimization, Concurrency Control, Crash Recovery — vận hành chợ giao dịch '
+             'triệu người dùng của GameHub. Dành cho ai đã vững 2 phần trước.',
+             'static/images/db_design.svg', 'Nâng cao', '22 giờ', '0', 4.9, 25,
+             '#7C2D12', '#FB923C', 'DATABASE & BACKEND'),
+        ]
+        for _row in _db3_new_courses:
+            c.execute('SELECT 1 FROM courses WHERE id = %s', (_row[0],))
+            if not c.fetchone():
+                c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', _row)
+
+        # Sync 2026-07-04b (user chốt): tiêu đề ỨNG DỤNG (badge đã nói cấp độ, title không lặp)
+        # + duration TRÒN GIỜ đồng bộ với tổng phút giáo trình (1 nguồn chân lý).
+        # Idempotent: set cùng giá trị mỗi lần start.
+        # + subtitle theo LĨNH VỰC chủ đạo (recommendation §4: TC = social network,
+        #   NC = e-commerce; GameHub chỉ là cầu nối) + ảnh card riêng từng khóa (không chữ).
+        for _cid, _title, _dur, _sub, _img in [
+            ('db_design',    'Thiết kế CSDL: Từ ý tưởng đến hệ dữ liệu hoàn chỉnh', '~6 giờ',
+             'Nền tảng thiết kế CSDL — dự án GameHub', 'static/images/db_design.svg'),
+            ('db_design_tc', 'SQL nâng cao, Dữ liệu lớn & Hiệu năng',               '~7 giờ',
+             'GameHub Community — mạng xã hội của gamers', 'static/images/db_design_tc.svg'),
+            ('db_design_nc', 'Bên trong Database Engine: Tối ưu, Giao dịch & Phục hồi', '~9 giờ',
+             'GameHub Marketplace — sàn giao dịch vật phẩm', 'static/images/db_design_nc.svg'),
+        ]:
+            c.execute('UPDATE courses SET title=%s, duration=%s, subtitle=%s, image=%s WHERE id=%s',
+                      (_title, _dur, _sub, _img, _cid))
+
+        # Seed metadata 66 bài DB Design vào bảng lessons (nguồn cho trang Kỹ năng):
+        # upsert theo (course_id, sort_order) — giữ id cũ để lesson_progress không mất FK,
+        # chỉ đồng bộ title/module từ lesson_content_*.js (qua db/lessons_seed.py).
+        from db.lessons_seed import DB_DESIGN_LESSONS
+        for _cid, _order, _code, _title, _module in DB_DESIGN_LESSONS:
+            c.execute('SELECT id FROM lessons WHERE course_id=%s AND sort_order=%s LIMIT 1',
+                      (_cid, _order))
+            _row = c.fetchone()
+            if _row:
+                c.execute('UPDATE lessons SET title=%s, module=%s WHERE id=%s',
+                          (_title, _module, _row['id'] if isinstance(_row, dict) else _row[0]))
+            else:
+                c.execute('INSERT INTO lessons (course_id, title, module, sort_order) '
+                          'VALUES (%s,%s,%s,%s)', (_cid, _title, _module, _order))
+
+        # ERD v2.2: sync content_json từ static/js/lesson_content*.js (nguồn cho
+        # quiz ôn tập FE-06 đọc step_2). Sync theo hash — chỉ ghi khi file đổi.
+        # Không được làm gãy startup nếu thiếu py_mini_racer hay parse lỗi.
+        # Commit trước để rollback bên trong (nếu có) không hủy các migration trên.
+        conn.commit()
+        try:
+            from db.seed_lesson_content import sync_lesson_content
+            _synced = sync_lesson_content(conn, c)
+            for _cid, _n in _synced.items():
+                print(f'[DB] content_json synced: {_cid} ({_n} bài)')
+        except Exception as _e:
+            conn.rollback()
+            print(f'[DB] WARN: bỏ qua sync content_json ({_e})')
 
         # Seed missions sau courses vì có FK: course_id REFERENCES courses(id)
         c.execute('SELECT 1 FROM missions LIMIT 1')

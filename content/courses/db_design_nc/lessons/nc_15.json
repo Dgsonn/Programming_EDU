@@ -1,0 +1,560 @@
+{
+  "id": "nc_15",
+  "index": 15,
+  "title": "Multiple Granularity — khóa cả bảng, hay từng dòng?",
+  "subtitle": "Cây khóa SÀN → bảng → dòng + biển báo intention: đụng nhau là biết ngay từ tầng trên, khỏi soi 40.000 lá",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "mcq_code",
+  "drag_map": {
+    "table": {
+      "name": "ma trận tương thích 5 mode (Fig 18.16)",
+      "columns": [
+        "đang giữ →",
+        "IS",
+        "IX",
+        "S",
+        "SIX",
+        "X"
+      ],
+      "dataRows": [
+        [
+          "xin IS",
+          "✓",
+          "✓",
+          "✓",
+          "✓",
+          "⏳"
+        ],
+        [
+          "xin IX",
+          "✓",
+          "✓",
+          "⏳",
+          "⏳",
+          "⏳"
+        ],
+        [
+          "xin S",
+          "✓",
+          "⏳",
+          "✓",
+          "⏳",
+          "⏳"
+        ],
+        [
+          "xin SIX",
+          "✓",
+          "⏳",
+          "⏳",
+          "⏳",
+          "⏳"
+        ],
+        [
+          "xin X",
+          "⏳",
+          "⏳",
+          "⏳",
+          "⏳",
+          "⏳"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #56",
+    "hook": "Nửa đêm, bot backup xin đọc <strong>TRỌN bảng listings</strong> đúng lúc 500 giao dịch đang sửa từng dòng lẻ. Khóa kiểu bài 12 là toang cả hai đường: bắt bot xin <strong>40.000 khóa dòng</strong> thì lock table phình nổ; cho nó khóa <strong>nguyên bảng</strong> thì 500 giao dịch kia đứng nghỉ. Mà kiểm tra vênh kiểu gì — chẳng lẽ so bot với từng dòng một? Ticket #56: dựng <strong>CÂY KHÓA</strong> nhiều tầng, và phát minh ăn tiền nhất chương: <strong>tấm biển báo intention</strong> cắm dọc đường."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Data item có NHIỀU CỠ: cả sàn → bảng → dòng, lồng nhau thành cây — khóa node nào là khóa NGẦM trọn subtree dưới nó: bot backup chỉ cần 1 khóa S ở node bảng thay vì 40.000 khóa dòng (sách 18.3)",
+        "INTENTION LOCK = biển báo cắm từ root xuống: IS \"bên dưới có người sắp ĐỌC\", IX \"bên dưới có người sắp GHI\" — ai xin khóa to ở tầng trên chỉ việc nhìn biển tại node đó, KHỎI quét từng lá; và IX+IX sống chung vô tư (xung đột thật nếu có sẽ lộ ở dưới lá)",
+        "5 luật đi cây: khóa ROOT trước · muốn S/IS phải có cha IS|IX · muốn X/SIX/IX phải có cha IX|SIX · vẫn phải 2-phase (bài 13) · nhả NGƯỢC chiều lá→gốc — cắm biển đi xuống, nhổ biển đi lên"
+      ],
+      "intro": "Khách sạn nghìn phòng: muốn sửa ống nước phòng 304, thợ không khóa cả khách sạn — anh ta treo biển \"đang thi công tầng 3\" ở sảnh (IX), treo tiếp ở cầu thang tầng 3 (IX), rồi khóa đúng phòng 304 (X). Đoàn khách muốn thuê NGUYÊN tầng 3 chỉ cần liếc tấm biển ở cầu thang là biết phải chờ — không phải gõ cửa thử 100 phòng. Biển báo rẻ, cắm nhanh, mà cứu cả hệ thống khỏi đi soi từng cánh cửa.",
+      "example": "T1 sửa giá dòng <code>#3001</code>: cắm <strong>IX(SÀN) → IX(listings) → X(#3001)</strong>. Bot T2 xin đọc trọn bảng: <strong>IS(SÀN) → S(listings)</strong> — tới node bảng đụng biển IX của T1: <strong>vênh, xếp hàng</strong>, tổng cộng nhìn đúng 1 node. T3 đọc dòng <code>#3002</code>: IS → IS → S(#3002) — IS với IX <strong>sống chung</strong>, chẳng ai chờ ai."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-sitemap",
+        "title": "Intention lock — theo đúng sách",
+        "body": "Node khóa ở <strong>intention mode</strong> nghĩa là việc khóa tường minh đang diễn ra ở TẦNG THẤP HƠN của subtree. Muốn khóa node Q, giao dịch phải đi từ ROOT xuống Q, cắm intention lock lên từng node dọc đường. <strong>IS</strong> — bên dưới sẽ có khóa đọc; <strong>IX</strong> — bên dưới sẽ có khóa ghi; <strong>SIX</strong> — đọc trọn subtree này (S) VÀ sẽ ghi lác đác vài chỗ dưới (IX). Nhờ biển báo, hệ thống khỏi search toàn bộ cây khi xét vênh.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.3 — Multiple Granularity, Fig 18.15-18.16"
+      },
+      {
+        "icon": "fa-handshake",
+        "title": "Vì sao IX + IX sống chung?",
+        "body": "Hai biển \"đang thi công đâu đó bên dưới\" không cãi nhau — T1 sửa dòng #3001, T5 sửa dòng #3007: cả hai cắm IX lên cùng node bảng, và <strong>ma trận nói ✓</strong>. Nếu họ đụng CÙNG một dòng thì xung đột lộ ra ở tầng lá (X vs X) — đúng nơi nó thuộc về. Biển báo chỉ cảnh giới với khóa THẬT cỡ to: S cả bảng nhìn thấy IX là phải chờ, vì \"đọc trọn bảng\" đụng mọi thứ bên dưới."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Postgres: <code>UPDATE listings SET price=99 WHERE listing_id=3001</code> lấy <strong>RowExclusiveLock trên bảng</strong> (họ hàng của IX) + khóa X trên đúng tuple; còn <code>pg_dump</code> lấy AccessShareLock cấp bảng. Soi <code>pg_locks</code> sẽ thấy cả cây biển báo này nằm sờ sờ — giờ bạn đọc được nó là ai đang định làm gì ở tầng nào."
+      }
+    ],
+    "lock_tree_visual": {
+      "eyebrow": "CÂY KHÓA GAMEHUB — T1 SỬA DÒNG · T2 BACKUP CẢ BẢNG · T3 ĐỌC DÒNG KHÁC",
+      "caption": "Bấm từng nhịp: T1 cắm biển IX xuống tận dòng; T2 xin S cả bảng — đụng biển ngay node listings, khỏi soi 40.000 lá; T3 cắm IS đọc dòng khác — sống chung vui vẻ.",
+      "nodes": [
+        {
+          "id": "root",
+          "label": "🏛️ SÀN GAMEHUB",
+          "x": 320,
+          "y": 34,
+          "sub": "root — khóa đầu tiên"
+        },
+        {
+          "id": "listings",
+          "label": "📦 listings",
+          "x": 180,
+          "y": 108,
+          "parent": "root",
+          "sub": "40.000 dòng"
+        },
+        {
+          "id": "orders",
+          "label": "🧾 orders",
+          "x": 480,
+          "y": 108,
+          "parent": "root",
+          "sub": "100.000 dòng"
+        },
+        {
+          "id": "r3001",
+          "label": "#3001",
+          "x": 90,
+          "y": 186,
+          "parent": "listings",
+          "sub": "Kiếm gỗ · 45"
+        },
+        {
+          "id": "r3002",
+          "label": "#3002",
+          "x": 270,
+          "y": 186,
+          "parent": "listings",
+          "sub": "Giáp rồng · 12.500"
+        }
+      ],
+      "steps": [
+        {
+          "node": "root",
+          "txn": "T1",
+          "mode": "IX",
+          "result": "grant",
+          "note": "T1 muốn sửa giá dòng #3001 — luật 1: khóa ROOT trước. Cắm biển IX: \"bên dưới sắp có người ghi\"."
+        },
+        {
+          "node": "listings",
+          "txn": "T1",
+          "mode": "IX",
+          "result": "grant",
+          "note": "Xuống một tầng, cắm tiếp IX lên bảng listings — dọc đường đi đâu cắm biển đó."
+        },
+        {
+          "node": "r3001",
+          "txn": "T1",
+          "mode": "X",
+          "result": "grant",
+          "note": "Tới đích: khóa X THẬT lên đúng dòng #3001. Cả cây giờ biết: có người ghi ở nhánh này."
+        },
+        {
+          "node": "root",
+          "txn": "T2",
+          "mode": "IS",
+          "result": "grant",
+          "note": "Bot backup vào — xin đọc TRỌN bảng listings. Cắm IS lên root: IS với IX của T1 sống chung ✓."
+        },
+        {
+          "node": "listings",
+          "txn": "T2",
+          "mode": "S",
+          "result": "wait",
+          "note": "⏳ T2 xin S NGUYÊN BẢNG — nhưng node này có biển IX của T1: S vênh IX → XẾP HÀNG. Để ý: hệ thống nhìn đúng MỘT node, không soi dòng nào cả."
+        },
+        {
+          "node": "root",
+          "txn": "T3",
+          "mode": "IS",
+          "result": "grant",
+          "note": "T3 chỉ đọc MỘT dòng #3002 — cắm IS lên root, vẫn êm."
+        },
+        {
+          "node": "listings",
+          "txn": "T3",
+          "mode": "IS",
+          "result": "grant",
+          "note": "IS lên bảng: IS + IX (T1) sống chung ✓ — biển báo không cãi biển báo."
+        },
+        {
+          "node": "r3002",
+          "txn": "T3",
+          "mode": "S",
+          "result": "grant",
+          "note": "S lên đúng dòng #3002 — khác dòng của T1: chẳng ai đợi ai. Khóa đúng CỠ là concurrency sống."
+        }
+      ],
+      "verdict": "✓ Toàn cảnh: T1 ghi 1 dòng, T3 đọc 1 dòng — chạy song song; chỉ T2 (đòi TRỌN bảng) phải chờ, và nó biết điều đó sau đúng MỘT cú nhìn biển. Khi T1 xong: nhả NGƯỢC lá→gốc (X(#3001) → IX(listings) → IX(SÀN)) — T2 được đánh thức."
+    },
+    "visual": {
+      "schema": {
+        "table_name": "5 mode — ai vênh ai (Fig 18.16)",
+        "columns": [
+          {
+            "name": "IS — dưới có người đọc",
+            "type": "sống chung IS/IX/S/SIX",
+            "key": "🪧"
+          },
+          {
+            "name": "IX — dưới có người ghi",
+            "type": "sống chung IS/IX",
+            "key": "🪧"
+          },
+          {
+            "name": "SIX = S + IX",
+            "type": "đọc trọn + ghi lác đác",
+            "key": "🔀"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "IX + IX",
+          "cùng node bảng",
+          "sống chung — đụng thật thì lộ ở lá",
+          "✓"
+        ],
+        [
+          "S + IX",
+          "bot backup vs người sửa dòng",
+          "vênh — đọc trọn đụng mọi thứ dưới",
+          "⏳"
+        ],
+        [
+          "sửa 1 dòng",
+          "IX(SÀN) → IX(bảng) → X(dòng)",
+          "bộ khóa chuẩn giáo khoa",
+          "⭐"
+        ],
+        [
+          "nhả khóa",
+          "NGƯỢC chiều: lá → gốc",
+          "con sạch mới được nhả cha",
+          "↩️"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Bot T2 xin S nguyên bảng listings (40.000 dòng). Nhờ đâu hệ thống biết NGAY nó phải chờ — mà không soi một dòng nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nhờ biển IX mà T1 đã cắm TẠI node bảng trên đường đi xuống — S vênh IX ngay tại đó: một cú nhìn, một kết luận",
+            "correct": true,
+            "explanation": "Đúng — đó là toàn bộ lý do intention lock tồn tại: dồn thông tin \"bên dưới đang có gì\" lên các node tổ tiên, để khóa cỡ to xét vênh trong O(1) thay vì quét subtree."
+          },
+          {
+            "id": "b",
+            "text": "Nhờ hệ thống quét nhanh 40.000 dòng bằng index nên tưởng như tức thì",
+            "correct": false,
+            "explanation": "Sai — không quét gì cả; nếu phải quét thì lock table đã nổ trước khi kịp \"nhanh\". Biển báo sinh ra để KHỎI quét."
+          },
+          {
+            "id": "c",
+            "text": "Nhờ T1 đăng ký trước lịch sửa dòng vào một bảng lịch chung",
+            "correct": false,
+            "explanation": "Sai — không có \"bảng lịch\" nào; chính chuỗi biển IS/IX cắm dọc đường LÀ bản đăng ký, nằm ngay trên cây khóa."
+          },
+          {
+            "id": "d",
+            "text": "Vì S cả bảng luôn phải chờ mọi giao dịch khác xong hết",
+            "correct": false,
+            "explanation": "Sai — nếu bên dưới chỉ toàn người ĐỌC (biển IS), S cả bảng được grant ngay: S sống chung IS. Nó chỉ chờ khi có biển IX/SIX/X."
+          }
+        ]
+      },
+      {
+        "question": "T1 đang giữ IX(SÀN) → IX(listings) → X(#3001). Nó xong việc — theo luật cây, nhả khóa theo chiều nào, và vì sao không được nhả IX(listings) trước?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nhả NGƯỢC lá→gốc: X(#3001) trước, rồi IX(listings), rồi IX(SÀN) — nhổ biển ở tầng trên khi lá còn khóa là biển nói dối: kẻ khác tưởng nhánh sạch mà xông vào",
+            "correct": true,
+            "explanation": "Đúng — luật \"chỉ được nhả node khi không còn giữ con nào của nó\": biển báo phải sống lâu hơn thứ nó đang báo."
+          },
+          {
+            "id": "b",
+            "text": "Nhả xuôi gốc→lá cho giải phóng tầng to trước, concurrency hồi nhanh hơn",
+            "correct": false,
+            "explanation": "Sai và nguy hiểm — IX(listings) biến mất trong khi X(#3001) còn đó: bot xin S cả bảng thấy node bảng \"sạch biển\", được grant, và đọc xuyên qua dòng đang bị ghi dở."
+          },
+          {
+            "id": "c",
+            "text": "Nhả theo thứ tự nào cũng được, miễn tuân 2PL",
+            "correct": false,
+            "explanation": "Sai — 2PL quản CHUYỆN KHI NÀO (hết gom mới nhả), còn luật cây quản THỨ TỰ giữa các tầng: cả hai cùng lúc."
+          },
+          {
+            "id": "d",
+            "text": "Không cần nhả — commit là mọi khóa tự bốc hơi cùng lúc",
+            "correct": false,
+            "explanation": "Nửa đúng nửa lười: strict/rigorous giữ ĐẾN commit thật, nhưng lúc tháo, hệ thống vẫn tháo theo trật tự lá→gốc — trật tự đó là của luật cây, không phải của commit."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Cùng một node bảng — sống chung hay chờ?",
+      "instruction": "Tra ma trận Fig 18.16 cho từng cặp (đang giữ + xin mới) trên node listings.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "p1",
+          "label": "Đang IS (sắp đọc vài dòng) — xin IX"
+        },
+        {
+          "id": "p2",
+          "label": "Đang IX (sắp ghi vài dòng) — xin IX"
+        },
+        {
+          "id": "p3",
+          "label": "Đang IX — xin S nguyên bảng"
+        },
+        {
+          "id": "p4",
+          "label": "Đang SIX — xin IX"
+        }
+      ],
+      "bins": [
+        {
+          "id": "g",
+          "label": "SỐNG CHUNG ✓"
+        },
+        {
+          "id": "w",
+          "label": "XẾP HÀNG ⏳"
+        }
+      ],
+      "solution": {
+        "p1": "g",
+        "p2": "g",
+        "p3": "w",
+        "p4": "w"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp 4 luật đi cây của multiple granularity — có MỘT khối bịa (nghe cực kỳ \"cho nhanh\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Cắm biển INTENTION (IS/IX) lên từng node dọc đường từ gốc xuống — báo trước cho tầng trên",
+        "slot": "gr-intent"
+      },
+      {
+        "type": "op",
+        "token": "Khóa ROOT của cây trước tiên — chưa qua cổng sàn thì chưa được xuống bất kỳ tầng nào",
+        "slot": "gr-root"
+      },
+      {
+        "type": "op",
+        "token": "Xin thẳng khóa X tại đúng dòng cần sửa — khỏi phiền các tầng trên cho nhanh",
+        "slot": "gr-x"
+      },
+      {
+        "type": "op",
+        "token": "Nhả khóa NGƯỢC chiều lá→gốc — con còn khóa thì cha chưa được nhổ biển",
+        "slot": "gr-unlock"
+      },
+      {
+        "type": "op",
+        "token": "Tới node đích mới hạ khóa THẬT (S để đọc / X để ghi) — đúng cỡ việc định làm",
+        "slot": "gr-leaf"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "gr-root",
+        "placeholder": "Luật 1 — hành trình bắt đầu ở đâu?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🏛️",
+          "label": "Cổng sàn",
+          "sub": "Luật 1",
+          "hint": "Cây có đúng một lối vào — sách cho khóa root ở mode nào cũng được."
+        }
+      },
+      {
+        "id": "gr-intent",
+        "placeholder": "Luật 2 — dọc đường xuống làm gì?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🪧",
+          "label": "Cắm biển",
+          "sub": "Luật 2",
+          "hint": "Muốn con X/IX phải có cha IX|SIX; muốn con S/IS phải có cha IS|IX — tức là dọc đường phải để lại gì đó."
+        }
+      },
+      {
+        "id": "gr-leaf",
+        "placeholder": "Luật 3 — tới đích thì sao?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🎯",
+          "label": "Khóa thật",
+          "sub": "Luật 3",
+          "hint": "Biển báo chỉ là báo — việc đọc/ghi cần thứ khóa \"xịn\" đúng cỡ."
+        }
+      },
+      {
+        "id": "gr-unlock",
+        "placeholder": "Luật 4 — rút quân chiều nào?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "↩️",
+          "label": "Nhổ biển",
+          "sub": "Luật 4",
+          "hint": "Biển phải sống lâu hơn thứ nó đang báo — suy ra chiều tháo."
+        }
+      }
+    ],
+    "expected_sql": "Khóa ROOT của cây trước tiên — chưa qua cổng sàn thì chưa được xuống bất kỳ tầng nào Cắm biển INTENTION (IS/IX) lên từng node dọc đường từ gốc xuống — báo trước cho tầng trên Tới node đích mới hạ khóa THẬT (S để đọc / X để ghi) — đúng cỡ việc định làm Nhả khóa NGƯỢC chiều lá→gốc — con còn khóa thì cha chưa được nhổ biển",
+    "expected_zones": {
+      "gr-root": "Khóa ROOT của cây trước tiên — chưa qua cổng sàn thì chưa được xuống bất kỳ tầng nào",
+      "gr-intent": "Cắm biển INTENTION (IS/IX) lên từng node dọc đường từ gốc xuống — báo trước cho tầng trên",
+      "gr-leaf": "Tới node đích mới hạ khóa THẬT (S để đọc / X để ghi) — đúng cỡ việc định làm",
+      "gr-unlock": "Nhả khóa NGƯỢC chiều lá→gốc — con còn khóa thì cha chưa được nhổ biển"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 BỐN LUẬT ĐÃ VÀO CÂY: qua cổng root → cắm biển dọc đường → khóa thật tại đích → rút quân lá-về-gốc. Khối \"xin thẳng X tại dòng, khỏi phiền tầng trên\" là BỊA — thiếu biển IX dọc đường thì bot xin S cả bảng sẽ thấy node listings SẠCH, được grant, và đọc xuyên dòng bạn đang ghi dở: chính cái thảm họa mà biển báo sinh ra để chặn. Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "gr-root": "Luật 1 — cây có một lối vào duy nhất. Node nào phải khóa TRƯỚC TIÊN, bất kể bạn định xuống đâu?",
+      "gr-intent": "Qua cổng rồi — giờ đi xuống. Luật cha-con (cha IX|SIX mới được con X…) ép bạn làm gì ở TỪNG node dọc đường?",
+      "gr-leaf": "Biển cắm đủ rồi — tới node đích. Biển là \"sắp làm\"; còn LÀM thật thì hạ khóa gì?",
+      "gr-unlock": "Xong việc. Nhớ: biển ở tầng trên đang BÁO cho khóa ở tầng dưới — vậy được nhổ thứ nào trước?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #56 — vé đi cây:</strong> T1 cần <em>sửa giá đúng MỘT dòng #3001</em> trong listings. Bốn bộ khóa được đề xuất — bộ nào ĐÚNG LUẬT cây mà vẫn giữ concurrency cao nhất?",
+    "challenge_type": "mcq_code",
+    "options": [
+      {
+        "text": "IX(SÀN) → IX(listings) → X(#3001)",
+        "correct": true
+      },
+      {
+        "text": "IS(SÀN) → IS(listings) → X(#3001)",
+        "correct": false,
+        "explain": "Gãy luật cha-con — muốn X ở dòng thì cha phải IX hoặc SIX; IS chỉ báo \"sắp ĐỌC bên dưới\", cắm IS rồi xuống GHI là biển nói dối: bot xin S cả bảng sẽ tưởng nhánh này chỉ có người đọc."
+      },
+      {
+        "text": "X(SÀN) — một khóa duy nhất, chắc cú tuyệt đối",
+        "correct": false,
+        "explain": "Đúng luật (root khóa mode nào cũng được) nhưng trật mục tiêu thảm hại: X ở root khóa NGẦM toàn bộ sàn — 500 giao dịch khác đứng nghỉ vì một dòng giá. Multiple granularity sinh ra để tránh đúng cảnh này."
+      },
+      {
+        "text": "IX(listings) → X(#3001) — khỏi đụng tới SÀN cho gọn",
+        "correct": false,
+        "explain": "Thiếu cổng — luật 1 bắt khóa ROOT trước tiên. Bỏ qua root thì giao dịch khác khóa X(SÀN) sẽ không hề biết bên dưới có bạn: hai người cùng tưởng mình độc quyền."
+      }
+    ],
+    "schema": {
+      "table_name": "cây khóa — đường đi của T1",
+      "columns": [
+        {
+          "name": "tầng",
+          "type": "node trên cây",
+          "key": "🌲"
+        },
+        {
+          "name": "khóa cần",
+          "type": "theo luật cha-con",
+          "key": "🔒"
+        },
+        {
+          "name": "vì sao",
+          "type": "",
+          "key": ""
+        }
+      ],
+      "data": [
+        [
+          "SÀN (root)",
+          "❓",
+          "luật 1: qua cổng trước"
+        ],
+        [
+          "bảng listings",
+          "❓",
+          "cha của dòng phải IX|SIX"
+        ],
+        [
+          "dòng #3001",
+          "❓",
+          "việc thật: GHI giá mới"
+        ],
+        [
+          "(nhả)",
+          "lá → gốc",
+          "biển sống lâu hơn thứ nó báo"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây chính là ví dụ T22 trong sách (sửa 1 record trong file Fa) đổi tên GameHub: bộ ba IX-IX-X là \"chữ ký\" kinh điển của mọi cú UPDATE một dòng trong DBMS thật.",
+      "real_world": "Chạy UPDATE 1 dòng trong Postgres rồi soi pg_locks: bạn sẽ thấy RowExclusiveLock (vai IX) trên bảng + khóa tuple — đúng bộ này. Còn ai đó lỡ tay LOCK TABLE ... IN ACCESS EXCLUSIVE MODE (vai X cả bảng) giờ cao điểm thì Slack của team sẽ đỏ rực.",
+      "steps": [
+        "Việc thật là GHI 1 dòng → tại dòng cần X.",
+        "Cha của X phải là IX hoặc SIX → bảng listings: IX.",
+        "Luật 1: root khóa trước → SÀN: IX (cũng vì cha của IX phải IX|SIX).",
+        "So 4 bộ: chỉ bộ 1 vừa đúng luật vừa để 500 giao dịch kia sống."
+      ],
+      "hint_explore": "Chạy lại sim Step 1 ba nhịp đầu — đường T1 cắm xuống #3001 chính là đáp án nằm sẵn.",
+      "expected": "Chọn bộ IX(SÀN) → IX(listings) → X(#3001)."
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Đi ngược từ ĐÍCH: sửa giá = GHI một dòng → dòng #3001 cần khóa gì?"
+      },
+      {
+        "level": 2,
+        "text": "Luật cha-con: muốn con X, cha phải IX hoặc SIX. Vậy bảng listings cắm gì?"
+      },
+      {
+        "level": 3,
+        "text": "Bộ X(SÀN) không sai luật — nó sai ở CHỖ KHÁC. Câu hỏi đòi thêm điều gì ngoài \"đúng luật\"?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: IX(SÀN) → IX(listings) → X(#3001) — chữ ký chuẩn của UPDATE một dòng."
+      }
+    ],
+    "success_message": "TICKET #56 ĐÓNG — cây khóa dựng xong, biển báo cắm đủ, bot backup hết phá đêm! 🌲 Hồ sơ đọc thêm bên dưới: LOCK ESCALATION — khi lock table phình nổ vì vạn khóa dòng, engine đổi cả nắm lấy MỘT khóa bảng. Nhưng đừng tưởng khóa dòng + khóa bảng là đã kín: bài sau có CON MA — giao dịch đếm hai lần ra hai số khác nhau mà không dòng nào bị đụng. PHANTOM. 👻",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_lock_escalation"
+  ]
+}

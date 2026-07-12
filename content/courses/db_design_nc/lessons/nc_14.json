@@ -1,0 +1,531 @@
+{
+  "id": "nc_14",
+  "index": 14,
+  "title": "Deadlock — vòng tròn chờ nhau đến vĩnh viễn",
+  "subtitle": "Wait-for graph: cạnh là \"đang chờ\", vòng là deadlock — và ai đó phải làm victim",
+  "module": 8,
+  "module_title": "Trading Floor — Giao dịch & Concurrency",
+  "estimated_minutes": 20,
+  "xp_reward": 120,
+  "drag_type": "chip",
+  "challenge_type": "fill_blank",
+  "drag_map": {
+    "table": {
+      "name": "lock table lúc 03:14 — ai giữ gì, ai xin gì",
+      "columns": [
+        "transaction",
+        "đang GIỮ",
+        "đang XIN",
+        "chờ ai"
+      ],
+      "dataRows": [
+        [
+          "T1 · báo cáo tuần",
+          "—",
+          "S(ví DF), S(kho listing)",
+          "T2, T3"
+        ],
+        [
+          "T2 · thanh toán",
+          "X(ví DF)",
+          "X(đơn #9012)",
+          "T4"
+        ],
+        [
+          "T3 · nhập kho",
+          "X(kho listing)",
+          "X(ví DF)",
+          "T2"
+        ],
+        [
+          "T4 · đổi trả",
+          "X(đơn #9012)",
+          "X(kho listing)",
+          "T3"
+        ]
+      ]
+    }
+  },
+  "story": {
+    "tag": "🎫 GameHub Marketplace · Ticket #55",
+    "hook": "03:14 sáng — bốn giao dịch của DragonForge <strong>đứng hình</strong>. Không lỗi, không chậm, CPU ngồi chơi: thanh toán ôm ví chờ đơn, đổi trả ôm đơn chờ kho, nhập kho ôm kho chờ ví… Đúng cảnh sách cảnh báo ở bài 2PL: ai cũng tuân luật, và <em>chính vì thế</em> ai cũng ôm khư khư thứ kẻ khác cần. Ticket #55: vẽ tấm bản đồ <strong>WAIT-FOR GRAPH</strong> soi ra vòng tròn tử thần — rồi lạnh lùng chọn một kẻ phải chết cho cả hàng thông."
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "DEADLOCK = tồn tại một TẬP giao dịch chờ vòng tròn: T0 chờ thứ T1 giữ, T1 chờ T2… và Tn chờ lại T0 — không ai nhúc nhích được, và KHÔNG tự tan: hệ thống phải can thiệp bằng rollback (sách 18.2)",
+        "WAIT-FOR GRAPH: node = giao dịch, cạnh Ti→Tj = \"Ti đang chờ Tj nhả đồ\" — định lý gọn lỏn: có CYCLE ⟺ có deadlock; chờ dài cỡ nào mà không khép vòng thì vẫn chỉ là… chờ",
+        "Hai trường phái: PHÒNG (gom khóa theo thứ tự thống nhất, hoặc phân xử theo tuổi — hồ sơ wait-die/wound-wait sau bài) vs CHỮA (định kỳ soi graph, thấy vòng thì chọn VICTIM rẻ nhất mà rollback — kèm luật chống tế mãi một mạng)"
+      ],
+      "intro": "Ngã tư kẹt cứng: xe A chờ xe B tiến, B chờ C, C chờ D, còn D… chờ đúng xe A. Không xe nào sai luật — nhưng cả ngã tư chết đứng, và sẽ chết đứng ĐẾN MAI nếu không ai chịu lùi. Cảnh sát giao thông của DBMS làm hai việc: vẽ sơ đồ \"ai chờ ai\" để tìm vòng, và chỉ mặt một xe bắt LÙI — chọn xe nào cho rẻ nhất là cả một cuốn sổ cost.",
+      "example": "Lock table 03:14 (panel dữ liệu): T2 giữ ví chờ đơn, T4 giữ đơn chờ kho, T3 giữ kho chờ… ví của T2. Vẽ cạnh: <code>T2→T4→T3→T2</code> — <strong>vòng khép: deadlock</strong>. Còn T1 chờ cả T2 lẫn T3 nhưng KHÔNG ai chờ T1 — nó chỉ xếp hàng VÀO vòng chứ không nằm TRONG vòng: rollback T1 là tế oan mạng vô tội mà vòng vẫn nguyên."
+    },
+    "concept_cards": [
+      {
+        "icon": "fa-diagram-project",
+        "title": "Wait-for graph — theo đúng sách",
+        "body": "Đồ thị có hướng G = (V, E): V là toàn bộ giao dịch, cạnh <strong>Ti → Tj</strong> nghĩa là Ti đang chờ Tj nhả một data item nó cần; cạnh được thêm khi Ti xin thứ Tj giữ, và chỉ được gỡ khi Tj hết giữ thứ Ti cần. <strong>Hệ thống deadlock KHI VÀ CHỈ KHI graph chứa cycle</strong> — mọi giao dịch trong cycle đều bị kẹt. Muốn phát hiện, hệ thống định kỳ chạy thuật toán tìm vòng trên graph này.",
+        "variant": "quote",
+        "source": "Silberschatz et al., Database System Concepts (7th ed., 2019), Ch 18.2.2.1 — Deadlock Detection, Fig 18.13-18.14"
+      },
+      {
+        "icon": "fa-scale-balanced",
+        "title": "Chọn victim — cuốn sổ cost của đao phủ",
+        "body": "Thấy vòng rồi thì rollback ai? Sách kê 4 khoản để chọn kẻ RẺ NHẤT: đã tính toán bao lâu & còn bao lâu nữa xong · đã dùng bao nhiêu data item · còn cần thêm bao nhiêu · kéo theo bao nhiêu giao dịch khác phải rollback cùng. Kèm điều khoản nhân đạo: cộng SỐ LẦN ĐÃ BỊ TẾ vào cost — kẻo một giao dịch đen đủ đường bị chọn làm victim mãi mãi (starvation)."
+      },
+      {
+        "icon": "fa-arrows-turn-to-dots",
+        "title": "Thử ngay (Apply)",
+        "body": "Dòng <code>ERROR: deadlock detected</code> trong log Postgres chính là bạn vừa chứng kiến một cú tế victim: engine soi graph định kỳ, thấy vòng, chọn một transaction ném lỗi cho app — các giao dịch còn lại chạy tiếp như chưa có gì. Vì thế mọi cẩm nang backend đều dặn: bọc transaction trong <strong>retry</strong> — victim chết đi sống lại là chuyện thường ngày ở Trading Floor."
+      }
+    ],
+    "wfg_visual": {
+      "eyebrow": "WAIT-FOR GRAPH BUILDER — LOCK TABLE 03:14, THÊM TỪNG CẠNH MÀ SOI VÒNG",
+      "caption": "Bốn cạnh đầu chờ chằng chịt mà CHƯA chết — cạnh thứ 5 khép vòng T2→T4→T3→T2 mới là deadlock. Chọn victim: bấm thẳng vào một giao dịch (sổ cost khuyên kẻ rẻ nhất).",
+      "nodes": [
+        {
+          "id": "T1",
+          "x": 92,
+          "y": 118,
+          "sub": "báo cáo tuần · chỉ đọc"
+        },
+        {
+          "id": "T2",
+          "x": 318,
+          "y": 52,
+          "sub": "thanh toán · giữ X(ví)"
+        },
+        {
+          "id": "T3",
+          "x": 318,
+          "y": 184,
+          "sub": "nhập kho · giữ X(kho)"
+        },
+        {
+          "id": "T4",
+          "x": 548,
+          "y": 118,
+          "sub": "đổi trả · giữ X(đơn)"
+        }
+      ],
+      "edges": [
+        {
+          "from": "T1",
+          "to": "T2",
+          "label": "T1 xin S(ví DF) — T2 đang giữ X",
+          "note": "T1 muốn ĐỌC ví cho báo cáo — ví đang bị T2 khóa X: thêm cạnh T1→T2. Mới là chờ thường."
+        },
+        {
+          "from": "T1",
+          "to": "T3",
+          "label": "T1 xin S(kho listing) — T3 giữ X",
+          "note": "Báo cáo cần cả kho — T3 đang giữ: thêm T1→T3. T1 chờ 2 người mà vẫn chưa ai chết."
+        },
+        {
+          "from": "T3",
+          "to": "T2",
+          "label": "T3 xin X(ví DF) — T2 đang giữ",
+          "note": "Nhập kho xong phải trừ tiền ví — ví trong tay T2: thêm T3→T2. Graph rối dần… vẫn KHÔNG có vòng."
+        },
+        {
+          "from": "T2",
+          "to": "T4",
+          "label": "T2 xin X(đơn #9012) — T4 đang giữ",
+          "note": "Thanh toán đụng đơn đổi trả — T4 giữ: thêm T2→T4. Bốn cạnh, chờ dài — nhưng thử lần theo mũi tên: chưa quay về được điểm xuất phát."
+        },
+        {
+          "from": "T4",
+          "to": "T3",
+          "label": "T4 xin X(kho listing) — T3 đang giữ",
+          "closes": true,
+          "note": ""
+        }
+      ],
+      "cycle": [
+        "T2",
+        "T4",
+        "T3"
+      ],
+      "deadlock_note": "🔴 CẠNH THỨ 5 KHÉP VÒNG: T2 → T4 → T3 → T2 — ba giao dịch kẹt vĩnh viễn, CPU ngồi chơi. T1 chờ VÀO vòng nhưng không nằm TRONG vòng. Giờ mở sổ cost: bấm vào giao dịch bạn muốn tế.",
+      "victims": {
+        "T1": {
+          "outside": true,
+          "note": "⚠️ T1 không nằm TRONG vòng — nó chỉ xếp hàng chờ vào. Tế T1 là oan mạng vô tội mà vòng T2→T4→T3 vẫn nguyên si. Chọn lại trong vòng đỏ."
+        },
+        "T2": {
+          "ok": false,
+          "note": "Vòng TAN — nhưng sổ cost nhăn mặt: T2 đã chạy 40 phút thanh toán, giữ ví, kéo theo hoàn tiền dở dang. Phá được, mà là bản án ĐẮT NHẤT. Sách khuyên: chọn kẻ rẻ nhất."
+        },
+        "T3": {
+          "ok": false,
+          "note": "Vòng TAN — nhưng T3 đang nhập nửa kho hàng, giữ nhiều item nhất hội: hoàn tác cả núi việc. Phá được vòng, trả giá không rẻ. Có mạng nào non việc hơn không?"
+        },
+        "T4": {
+          "ok": true,
+          "note": "✓ CHUẨN SỔ COST: T4 mới chạy 2 giây, giữ đúng 1 khóa, chưa ghi gì mấy — rollback rẻ nhất hội. Khóa X(đơn #9012) được thả → T2 chạy tiếp → T3 → cả T1 thông theo. Victim sẽ tự retry, mất vài giây."
+        }
+      }
+    },
+    "visual": {
+      "schema": {
+        "table_name": "Đọc wait-for graph trong 3 giây",
+        "columns": [
+          {
+            "name": "cạnh Ti → Tj",
+            "type": "Ti đang CHỜ Tj nhả đồ",
+            "key": "→"
+          },
+          {
+            "name": "có cycle",
+            "type": "= deadlock, không tự tan",
+            "key": "🔴"
+          },
+          {
+            "name": "không cycle",
+            "type": "= chỉ là chờ thường",
+            "key": "🟡"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "T2→T4→T3→T2",
+          "vòng khép",
+          "DEADLOCK — phải tế 1 mạng",
+          "🔴"
+        ],
+        [
+          "T1→T2, T1→T3",
+          "không ai chờ T1",
+          "chờ thường — sẽ thông",
+          "🟡"
+        ],
+        [
+          "victim chuẩn",
+          "rẻ nhất: non việc, ít khóa",
+          "T4 (2 giây, 1 khóa)",
+          "🗡️"
+        ],
+        [
+          "tế T1?",
+          "ngoài vòng",
+          "oan mạng — vòng vẫn nguyên",
+          "⚠️"
+        ]
+      ]
+    }
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Graph lúc 03:13 (TRƯỚC cạnh cuối): T1→T2, T1→T3, T3→T2, T2→T4 — bốn cạnh chờ chằng chịt. Hệ thống đã deadlock chưa?",
+        "options": [
+          {
+            "id": "a",
+            "text": "CHƯA — chờ nhiều cỡ nào mà không khép VÒNG thì vẫn chỉ là chờ: T4 còn chạy, xong sẽ nhả đơn, cả chuỗi thông dần",
+            "correct": true,
+            "explanation": "Đúng — định lý sách: deadlock ⟺ graph có cycle. Bốn cạnh này lần theo mũi tên không quay về được điểm nào — Fig 18.13 của sách chính là cảnh \"rối mà chưa chết\" này."
+          },
+          {
+            "id": "b",
+            "text": "Rồi — 4 giao dịch cùng chờ là quá ngưỡng deadlock",
+            "correct": false,
+            "explanation": "Sai — không có \"ngưỡng số lượng\" nào cả; một trăm cạnh không vòng vẫn là chờ thường, hai cạnh khép vòng (T5→T6→T5) đã là deadlock."
+          },
+          {
+            "id": "c",
+            "text": "Rồi — T1 chờ tận 2 giao dịch nghĩa là nó đã kẹt cứng",
+            "correct": false,
+            "explanation": "Sai — T1 kẹt hay không phụ thuộc T2/T3 có THOÁT được không, tức là phụ thuộc chuyện có vòng hay không; bản thân \"chờ 2 người\" chưa nói lên điều gì."
+          },
+          {
+            "id": "d",
+            "text": "Chưa — vì deadlock chỉ xảy ra khi có ít nhất một khóa S dính vào",
+            "correct": false,
+            "explanation": "Sai — S hay X không quan trọng, quan trọng là quan hệ CHỜ khép vòng; toàn khóa X vẫn deadlock như thường (chính vụ 03:14)."
+          }
+        ]
+      },
+      {
+        "question": "Vòng T2→T4→T3→T2 đã hiện. Vì sao sổ cost trỏ vào T4 (2 giây, 1 khóa, chưa ghi) thay vì T2 (40 phút thanh toán) — và vì sao còn phải ĐẾM số lần một giao dịch bị tế?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Rollback T4 hoàn tác ít việc nhất, kéo theo ít nạn nhân nhất; còn đếm-số-lần-bị-tế để cộng vào cost — kẻo một giao dịch bị chọn làm victim mãi, không bao giờ xong việc",
+            "correct": true,
+            "explanation": "Đúng cả hai vế — 4 tiêu chí cost + điều khoản chống starvation, đủ nguyên văn mục 18.2.2.2. Đao phủ của DBMS lạnh lùng nhưng có sổ sách."
+          },
+          {
+            "id": "b",
+            "text": "Vì T4 vào hệ thống sau cùng — luật là ai đến sau chết trước",
+            "correct": false,
+            "explanation": "Sai — \"đến sau chết trước\" không phải luật của detection & recovery; trẻ già chỉ là MỘT tín hiệu gián tiếp của \"ít việc phải hoàn\". (Phân xử thuần theo tuổi là chuyện wait-die/wound-wait — hồ sơ sau bài.)"
+          },
+          {
+            "id": "c",
+            "text": "Vì T4 giữ khóa X — victim bắt buộc phải là kẻ giữ X",
+            "correct": false,
+            "explanation": "Sai — cả T2 lẫn T3 cũng giữ X; kiểu khóa không phải tiêu chí. Tiêu chí là CHI PHÍ hoàn tác."
+          },
+          {
+            "id": "d",
+            "text": "Không cần chọn — rollback cả 3 cho chắc, sạch vòng tuyệt đối",
+            "correct": false,
+            "explanation": "Sai — tế 1 mạng rẻ nhất là đủ phá vòng; giết cả 3 là đốt 40 phút của T2 + nửa kho của T3 vô nghĩa. Đao phủ giỏi chém đúng một nhát."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "classify",
+      "title": "Deadlock — hay chỉ là chờ?",
+      "instruction": "Lần theo mũi tên: khép được vòng mới là án tử.",
+      "xp": 20,
+      "chips": [
+        {
+          "id": "g1",
+          "label": "T2→T4 · T4→T3 · T3→T2"
+        },
+        {
+          "id": "g2",
+          "label": "T1→T2 · T1→T3 (không ai chờ T1)"
+        },
+        {
+          "id": "g3",
+          "label": "T5→T6 · T6→T5"
+        },
+        {
+          "id": "g4",
+          "label": "10 giao dịch cùng chờ 1 giao dịch đang chạy nốt"
+        }
+      ],
+      "bins": [
+        {
+          "id": "dl",
+          "label": "DEADLOCK 🔴"
+        },
+        {
+          "id": "wt",
+          "label": "CHỈ LÀ CHỜ 🟡"
+        }
+      ],
+      "solution": {
+        "g1": "dl",
+        "g2": "wt",
+        "g3": "dl",
+        "g4": "wt"
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Lắp quy trình 4 bước của đội xử deadlock ca đêm — có MỘT khối bịa (nghe rất chi là \"để yên rồi đâu vào đấy\").",
+    "blocks": [
+      {
+        "type": "op",
+        "token": "Soi VÒNG trên graph: có cycle ⟺ có deadlock — chờ chằng chịt mấy cũng chưa phải án",
+        "slot": "wf-cycle"
+      },
+      {
+        "type": "op",
+        "token": "Vẽ wait-for graph từ lock table: mỗi yêu cầu đang treo = một cạnh \"ai chờ ai\"",
+        "slot": "wf-draw"
+      },
+      {
+        "type": "op",
+        "token": "Deadlock để lâu sẽ tự tan — các giao dịch chờ đủ lâu rồi cũng lần lượt tự bỏ cuộc",
+        "slot": "wf-x"
+      },
+      {
+        "type": "op",
+        "token": "Rollback victim: khóa nó giữ được thả → vòng đứt → cả hàng thông, victim retry lại từ đầu",
+        "slot": "wf-roll"
+      },
+      {
+        "type": "op",
+        "token": "Mở sổ cost chọn VICTIM rẻ nhất trong vòng — cộng cả số lần đã bị tế để không ai chết mãi",
+        "slot": "wf-victim"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "wf-draw",
+        "placeholder": "Bước 1 — lấy đâu ra tấm bản đồ?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🗺️",
+          "label": "Vẽ graph",
+          "sub": "Bước 1",
+          "hint": "Nguyên liệu nằm sẵn trong lock table: ai GIỮ gì, ai đang XIN gì."
+        }
+      },
+      {
+        "id": "wf-cycle",
+        "placeholder": "Bước 2 — nhìn gì trên bản đồ để kết án?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🔴",
+          "label": "Soi vòng",
+          "sub": "Bước 2",
+          "hint": "Định lý một dòng của sách: deadlock khi và chỉ khi… gì?"
+        }
+      },
+      {
+        "id": "wf-victim",
+        "placeholder": "Bước 3 — án tử trao cho ai?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "🗡️",
+          "label": "Chọn victim",
+          "sub": "Bước 3",
+          "hint": "Đao phủ có sổ: 4 khoản chi phí + một điều khoản nhân đạo."
+        }
+      },
+      {
+        "id": "wf-roll",
+        "placeholder": "Bước 4 — chém xong thì chuyện gì xảy ra?",
+        "accepts": [
+          "op"
+        ],
+        "multi": false,
+        "station": {
+          "icon": "♻️",
+          "label": "Rollback & thông",
+          "sub": "Bước 4",
+          "hint": "Khóa của victim đi đâu, hàng chờ được gì, và victim có chết hẳn không?"
+        }
+      }
+    ],
+    "expected_sql": "Vẽ wait-for graph từ lock table: mỗi yêu cầu đang treo = một cạnh \"ai chờ ai\" Soi VÒNG trên graph: có cycle ⟺ có deadlock — chờ chằng chịt mấy cũng chưa phải án Mở sổ cost chọn VICTIM rẻ nhất trong vòng — cộng cả số lần đã bị tế để không ai chết mãi Rollback victim: khóa nó giữ được thả → vòng đứt → cả hàng thông, victim retry lại từ đầu",
+    "expected_zones": {
+      "wf-draw": "Vẽ wait-for graph từ lock table: mỗi yêu cầu đang treo = một cạnh \"ai chờ ai\"",
+      "wf-cycle": "Soi VÒNG trên graph: có cycle ⟺ có deadlock — chờ chằng chịt mấy cũng chưa phải án",
+      "wf-victim": "Mở sổ cost chọn VICTIM rẻ nhất trong vòng — cộng cả số lần đã bị tế để không ai chết mãi",
+      "wf-roll": "Rollback victim: khóa nó giữ được thả → vòng đứt → cả hàng thông, victim retry lại từ đầu"
+    },
+    "reveal_strip": true,
+    "reveal_complete": "💡 ĐỘI XỬ ĐÊM ĐÃ VÀO CA: vẽ graph → soi vòng → mở sổ chọn victim → chém & thông hàng. Khối \"để lâu tự tan\" là BỊA trắng trợn — deadlock KHÔNG tự tan: không ai trong vòng nhúc nhích được để mà \"bỏ cuộc\". (Có scheme timeout thật, nhưng phải CÀI đặt hạn chờ, và sách chê: ngắn thì chém oan, dài thì kẹt lâu — hồ sơ sau bài nhắc tiếp.) Bấm <strong>Chạy Query</strong>.",
+    "reveal_hints": {
+      "wf-draw": "Bước 1 — muốn xử án phải có bản đồ. Dữ liệu \"ai giữ gì, ai xin gì\" nằm sẵn ở đâu, và biến nó thành graph kiểu gì?",
+      "wf-cycle": "Bản đồ vẽ xong: cạnh chờ chằng chịt. Định lý một dòng nào tách \"rối mà sống\" khỏi \"án tử\"?",
+      "wf-victim": "Vòng đã hiện — ai đó phải chết cho cả hàng thông. Đao phủ chọn bằng cảm tính hay bằng sổ? Sổ ghi những khoản nào?",
+      "wf-roll": "Án đã tuyên. Cú rollback làm gì với đống khóa của victim — và số phận victim sau đó ra sao?"
+    }
+  },
+  "step_4": {
+    "prompt": "<strong>Ticket #55 — biên bản 03:14:</strong> điền nốt hồ sơ vụ deadlock từ wait-for graph (lock table nằm ở panel trái).",
+    "challenge_type": "fill_blank",
+    "template": "-- WAIT-FOR GRAPH luc 03:14 (canh = dang cho):\n--   T1 -> T2   ·   T1 -> T3   ·   T3 -> T2\n--   T2 -> T4   ·   T4 -> T3\n-- Lan theo mui ten: T2 -> T4 -> T3 -> quay ve T2\n\n-- So giao dich nam TRONG vong deadlock: ____\n\n-- So cost (tuoi viec / so khoa / da ghi bao nhieu):\n--   T2: 40 phut · T3: nua kho · T4: 2 giay, 1 khoa\n--   Victim re nhat: ____\n\n-- T1 cho vao vong nhung co nam TRONG vong khong (CO/KHONG): ____",
+    "blanks": [
+      {
+        "id": "b1",
+        "hint": "? giao dịch",
+        "expected": "3"
+      },
+      {
+        "id": "b2",
+        "hint": "T?",
+        "expected": "T4"
+      },
+      {
+        "id": "b3",
+        "hint": "CO / KHONG",
+        "expected": "KHONG"
+      }
+    ],
+    "schema": {
+      "table_name": "lock table 03:14 — tang vật",
+      "columns": [
+        {
+          "name": "transaction",
+          "type": "ai",
+          "key": ""
+        },
+        {
+          "name": "đang GIỮ",
+          "type": "khóa trong tay",
+          "key": "🔒"
+        },
+        {
+          "name": "đang XIN",
+          "type": "thứ đang chờ",
+          "key": "⏳"
+        },
+        {
+          "name": "chờ ai",
+          "type": "cạnh trên graph",
+          "key": "→"
+        }
+      ],
+      "data": [
+        [
+          "T1 · báo cáo",
+          "—",
+          "S(ví), S(kho)",
+          "T2, T3"
+        ],
+        [
+          "T2 · thanh toán",
+          "X(ví DF)",
+          "X(đơn #9012)",
+          "T4"
+        ],
+        [
+          "T3 · nhập kho",
+          "X(kho listing)",
+          "X(ví DF)",
+          "T2"
+        ],
+        [
+          "T4 · đổi trả",
+          "X(đơn #9012)",
+          "X(kho listing)",
+          "T3"
+        ]
+      ]
+    },
+    "context": {
+      "scenario": "Đây là đúng tờ biên bản mà thuật toán detection điền mỗi lần chạy: đếm mạng trong vòng, mở sổ cost, khoanh victim. Điền được 3 ô này là bạn đọc wait-for graph nhanh hơn khối DBA thâm niên.",
+      "real_world": "Postgres chạy detection sau mỗi deadlock_timeout (mặc định 1 giây treo); victim nhận \"ERROR: deadlock detected\" kèm chi tiết ai giữ gì — nội dung y hệt lock table tang vật bên trái. App tử tế bọc retry là người dùng không bao giờ biết đã có một vụ hành quyết.",
+      "steps": [
+        "Lần mũi tên từ T2: T2→T4→T3→ quay về T2 — vòng gồm đúng 3 mạng.",
+        "T1 có 2 cạnh đi RA nhưng không cạnh nào đi VÀO nó — ngoài vòng.",
+        "Sổ cost: T2 40 phút, T3 nửa kho, T4 mới 2 giây 1 khóa — rẻ nhất lộ mặt.",
+        "Ba ô: 3 · T4 · KHONG."
+      ],
+      "hint_explore": "Chạy lại sim Step 1 tới cạnh thứ 5 — vòng đỏ nhấp nháy khoanh đúng 3 node, còn T1 đứng ngoài tái mặt.",
+      "expected": "3 · T4 · KHONG"
+    },
+    "hints": [
+      {
+        "level": 1,
+        "text": "Ô 1: xuất phát từ T2, lần theo mũi tên tới khi quay về T2 — đi qua mấy giao dịch (kể cả T2)?"
+      },
+      {
+        "level": 2,
+        "text": "Ô 2: trong 3 mạng của vòng, sổ cost so tuổi việc + số khóa + lượng đã ghi — ai non việc nhất?"
+      },
+      {
+        "level": 3,
+        "text": "Ô 3: muốn \"trong vòng\" phải có đường quay VỀ mình. Có mũi tên nào trỏ vào T1 không?"
+      },
+      {
+        "level": 4,
+        "text": "Đáp án: 3 · T4 · KHONG — tế đúng kẻ rẻ nhất, tha đúng kẻ ngoài vòng."
+      }
+    ],
+    "success_message": "TICKET #55 ĐÓNG — vòng tử thần bị chém đúng một nhát, cả hàng thông lúc 03:15! 🗡️ Hồ sơ đọc thêm bên dưới: WAIT-DIE vs WOUND-WAIT — trường phái PHÒNG bệnh phân xử bằng tuổi, khỏi cần soi graph. Bài sau leo lên tầng nhìn mới: khóa cả BẢNG hay khóa từng DÒNG? MULTIPLE GRANULARITY & INTENTION LOCKS — vì sao lock manager không điên khi một giao dịch đòi quét cả kho. 🌲",
+    "xp_reward": 120
+  },
+  "concept_cards_after": [
+    "nc_card_waitdie_woundwait"
+  ]
+}

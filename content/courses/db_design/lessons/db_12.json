@@ -1,0 +1,749 @@
+{
+  "id": "db_12",
+  "index": 13,
+  "title": "Dạng chuẩn 4 (4NF) — Phụ thuộc đa trị",
+  "subtitle": "Loại bỏ phụ thuộc đa trị độc lập — tránh lặp tổ hợp Cartesian",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 22,
+  "xp_reward": 75,
+  "project_piece": "🧬 Mở khóa \"Máy Tách Tập Độc Lập\"",
+  "story": {
+    "tag": "🎫 GameHub Consulting · Ticket #13",
+    "hook": "Trung tâm đào tạo game dev gửi ticket lạ: 1 khoá học có <em>nhiều giáo trình</em> VÀ <em>nhiều giảng viên</em> — hai danh sách <strong>độc lập</strong> nhưng bị nhét chung 1 bảng, thế là mỗi cặp (giáo trình × giảng viên) đẻ ra 1 dòng: 3 giáo trình × 4 giảng viên = <strong>12 dòng rác tổ hợp</strong>. Ticket: tách <code>course_textbook</code> / <code>course_instructor</code> (<strong>4NF</strong>) và đếm lại từng chiều cho sạch."
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "course_offering_raw",
+      "columns": [
+        "course_id",
+        "textbook",
+        "instructor"
+      ],
+      "dataRows": [
+        [
+          "CS101",
+          "Database Concepts",
+          "Dr. Trần"
+        ],
+        [
+          "CS101",
+          "SQL Performance",
+          "Dr. Trần"
+        ],
+        [
+          "CS101",
+          "Database Concepts",
+          "Dr. Lê"
+        ],
+        [
+          "CS101",
+          "SQL Performance",
+          "Dr. Lê"
+        ],
+        [
+          "CS102",
+          "Clean Code",
+          "Dr. Phạm"
+        ],
+        [
+          "CS102",
+          "Design Patterns",
+          "Dr. Phạm"
+        ],
+        [
+          "CS102",
+          "Clean Code",
+          "Dr. Hoàng"
+        ],
+        [
+          "CS102",
+          "Design Patterns",
+          "Dr. Hoàng"
+        ],
+        [
+          "CS103",
+          "Algorithms",
+          "Dr. Vũ"
+        ],
+        [
+          "CS103",
+          "Data Structures",
+          "Dr. Vũ"
+        ],
+        [
+          "CS103",
+          "Discrete Math",
+          "Dr. Vũ"
+        ],
+        [
+          "CS103",
+          "Algorithms",
+          "Dr. Đặng"
+        ],
+        [
+          "CS103",
+          "Data Structures",
+          "Dr. Đặng"
+        ],
+        [
+          "CS103",
+          "Discrete Math",
+          "Dr. Đặng"
+        ],
+        [
+          "CS104",
+          "Networks",
+          "Dr. Bùi"
+        ],
+        [
+          "CS104",
+          "Security",
+          "Dr. Bùi"
+        ],
+        [
+          "CS104",
+          "Networks",
+          "Dr. Ngô"
+        ],
+        [
+          "CS104",
+          "Security",
+          "Dr. Ngô"
+        ],
+        [
+          "CS104",
+          "Networks",
+          "Dr. Dương"
+        ],
+        [
+          "CS104",
+          "Security",
+          "Dr. Dương"
+        ],
+        [
+          "CS105",
+          "OS Internals",
+          "Dr. Lý"
+        ],
+        [
+          "CS105",
+          "Compilers",
+          "Dr. Lý"
+        ],
+        [
+          "CS105",
+          "OS Internals",
+          "Dr. Mai"
+        ],
+        [
+          "CS105",
+          "Compilers",
+          "Dr. Mai"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Diệt đa trị",
+    "desc": "4NF"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "Phụ thuộc đa trị (MVD): X →→ Y — X quyết định NHIỀU giá trị Y độc lập",
+        "Vi phạm 4NF: bảng chứa ≥ 2 MVD độc lập từ cùng 1 khóa → tổ hợp Cartesian lặp",
+        "Sửa: tách thành 2 bảng, mỗi bảng chứa 1 MVD"
+      ],
+      "intro": "Trong <strong>hệ thống khóa học</strong>, một khóa học <code>CS101</code> có NHIỀU giáo trình (Database Concepts, SQL Performance) VÀ NHIỀU giảng viên (Dr. Trần, Dr. Lê). Hai tập này <em>độc lập</em> với nhau — nhưng khi nhét vào 1 bảng, ta buộc phải lặp tổ hợp Cartesian: 2 textbook × 2 instructor = 4 dòng, dù thực tế chỉ cần 2 + 2 = 4 dòng tách biệt.",
+      "example": "Bảng <code>course_offering_raw</code> có MVD: <code>course_id →→ textbook</code> và <code>course_id →→ instructor</code>. Hai MVD này độc lập → vi phạm 4NF. Sửa: tách thành <code>course_textbook(course_id, textbook)</code> và <code>course_instructor(course_id, instructor)</code>. Mỗi bảng chỉ chứa 1 MVD → không còn lặp Cartesian."
+    },
+    "intro": "<strong>Trước</strong>: bảng <code>prof_skill</code> có 12 dòng cho 1 prof (4 course × 3 hobby). Insert 1 hobby mới = 4 dòng duplicate. <strong>Sau</strong>: 2 bảng <code>prof_course</code> (4 dòng) + <code>prof_hobby</code> (3 dòng). Insert 1 hobby = 1 dòng. Storage giảm 42%. Đây là <strong>4NF</strong> xử lý multivalued dependency.",
+    "concept_cards": [
+      {
+        "icon": "fa-cubes-stacked",
+        "title": "4NF — Trước vs Sau khi tách",
+        "body": "<strong>Trước</strong>: bảng <code>prof_skill(prof, course, hobby)</code> có 1 prof dạy 4 course + 3 hobby = <strong>12 dòng</strong> (Cartesian product). <strong>Sau</strong>: 2 bảng <code>prof_course(prof, course)</code> + <code>prof_hobby(prof, hobby)</code> = <strong>4 + 3 = 7 dòng</strong>. Tiết kiệm 42% storage."
+      },
+      {
+        "icon": "fa-explosion",
+        "title": "Multivalued Dependency (MVD)",
+        "body": "Khi 1 khóa X quyết định NHIỀU giá trị Y <em>độc lập</em> với cột khác → <code>X →→ Y</code>. <strong>Quy tắc</strong>: nếu có 2+ MVD cùng vế trái, tách thành 2 bảng. MVD khác FD ở chỗ Y là <em>tập giá trị</em> chứ không phải 1 giá trị. Bài này dạy cách phát hiện."
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "1 khóa có nhiều textbook VÀ nhiều instructor. Nhồi chung 1 bảng → mỗi textbook bị nhân với mỗi instructor (bùng nổ dòng thừa, vô nghĩa). Tách thành 2 bảng ĐỘC LẬP — đó là 4NF."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — vi phạm 4NF",
+          "columns": [
+            "prof",
+            "course",
+            "hobby"
+          ],
+          "rows": [
+            [
+              "Dr. Lee",
+              "DB",
+              "Chess"
+            ],
+            [
+              "Dr. Lee",
+              "DB",
+              "Music"
+            ],
+            [
+              "Dr. Lee",
+              "AI",
+              "Chess"
+            ],
+            [
+              "Dr. Lee",
+              "AI",
+              "Music"
+            ]
+          ],
+          "violations": {
+            "0-2": true,
+            "0-1": true
+          }
+        },
+        "after": {
+          "title": "SAU — đã 4NF (tách 2 bảng)",
+          "columns": [
+            "prof",
+            "course"
+          ],
+          "rows": [
+            [
+              "Dr. Lee",
+              "DB"
+            ],
+            [
+              "Dr. Lee",
+              "AI"
+            ]
+          ]
+        },
+        "note": "Tách thành 2 bảng: prof_course + prof_hobby. Mỗi MVD 1 bảng riêng."
+      },
+      "schema": {
+        "table_name": "course_offering_raw",
+        "columns": [
+          {
+            "name": "course_id",
+            "type": "VARCHAR",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "textbook",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "📚"
+          },
+          {
+            "name": "instructor",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "👨‍🏫"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "CS101",
+          "Database Concepts",
+          "Dr. Trần"
+        ],
+        [
+          "CS101",
+          "SQL Performance",
+          "Dr. Trần"
+        ],
+        [
+          "CS101",
+          "Database Concepts",
+          "Dr. Lê"
+        ],
+        [
+          "CS101",
+          "SQL Performance",
+          "Dr. Lê"
+        ],
+        [
+          "CS102",
+          "Clean Code",
+          "Dr. Phạm"
+        ],
+        [
+          "CS102",
+          "Design Patterns",
+          "Dr. Phạm"
+        ],
+        [
+          "CS102",
+          "Clean Code",
+          "Dr. Hoàng"
+        ],
+        [
+          "CS102",
+          "Design Patterns",
+          "Dr. Hoàng"
+        ],
+        [
+          "CS103",
+          "Algorithms",
+          "Dr. Vũ"
+        ],
+        [
+          "CS103",
+          "Data Structures",
+          "Dr. Vũ"
+        ],
+        [
+          "CS103",
+          "Discrete Math",
+          "Dr. Vũ"
+        ],
+        [
+          "CS103",
+          "Algorithms",
+          "Dr. Đặng"
+        ],
+        [
+          "CS103",
+          "Data Structures",
+          "Dr. Đặng"
+        ],
+        [
+          "CS103",
+          "Discrete Math",
+          "Dr. Đặng"
+        ],
+        [
+          "CS104",
+          "Networks",
+          "Dr. Bùi"
+        ],
+        [
+          "CS104",
+          "Security",
+          "Dr. Bùi"
+        ],
+        [
+          "CS104",
+          "Networks",
+          "Dr. Ngô"
+        ],
+        [
+          "CS104",
+          "Security",
+          "Dr. Ngô"
+        ],
+        [
+          "CS104",
+          "Networks",
+          "Dr. Dương"
+        ],
+        [
+          "CS104",
+          "Security",
+          "Dr. Dương"
+        ],
+        [
+          "CS105",
+          "OS Internals",
+          "Dr. Lý"
+        ],
+        [
+          "CS105",
+          "Compilers",
+          "Dr. Lý"
+        ],
+        [
+          "CS105",
+          "OS Internals",
+          "Dr. Mai"
+        ],
+        [
+          "CS105",
+          "Compilers",
+          "Dr. Mai"
+        ]
+      ]
+    },
+    "mission": "Quan sát: CS101 có 2 textbook × 2 instructor = 4 dòng lặp tổ hợp. Nếu thêm 1 instructor nữa → thêm 2 dòng mới (mỗi textbook). Đó là dấu hiệu vi phạm 4NF."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "Phụ thuộc đa trị (Multivalued Dependency) X →→ Y nghĩa là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "X quyết định đúng 1 giá trị Y",
+            "correct": false,
+            "explanation": "Sai — đó là FD thường (functional dependency, ký hiệu X → Y). MVD (multivalued, ký hiệu X →→ Y với 2 mũi tên) cho phép NHIỀU giá trị Y."
+          },
+          {
+            "id": "b",
+            "text": "X quyết định NHIỀU giá trị Y, và tập Y độc lập với các cột khác",
+            "correct": true,
+            "explanation": "Đúng — MVD: 1 giá trị X có thể kết hợp với NHIỀU giá trị Y, và tập Y độc lập với các cột khác. VD: prof P01 dạy {Database, Networks} + có hobby {Chess, Piano}, course và hobby độc lập nhau."
+          },
+          {
+            "id": "c",
+            "text": "Y quyết định X",
+            "correct": false,
+            "explanation": "Sai — MVD chỉ định hướng X →→ Y. Y →→ X là MVD NGƯỢC (nếu tồn tại). Mỗi chiều là 1 MVD riêng."
+          },
+          {
+            "id": "d",
+            "text": "X và Y là cùng 1 cột",
+            "correct": false,
+            "explanation": "Sai — MVD phân biệt X (determinant) và Y (dependent). Nếu X = Y → trivial MVD (luôn đúng về mặt logic nhưng không có ý nghĩa thực tế)."
+          }
+        ]
+      },
+      {
+        "question": "Khi nào một bảng VI PHẠM 4NF?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Khi bảng có khóa chính tổng hợp",
+            "correct": false,
+            "explanation": "Sai — composite PK không tự động vi phạm 4NF. Nhiều bảng có composite PK vẫn đạt 4NF nếu không có MVD độc lập."
+          },
+          {
+            "id": "b",
+            "text": "Khi bảng có ≥ 2 MVD độc lập từ cùng 1 khóa → sinh tổ hợp Cartesian lặp",
+            "correct": true,
+            "explanation": "Đúng — 4NF vi phạm khi có ít nhất 2 MVD độc lập từ cùng 1 X. VD: prof →→ course và prof →→ hobby → 1 prof × m courses × n hobbies = m*n rows (Cartesian explosion)."
+          },
+          {
+            "id": "c",
+            "text": "Khi bảng có cột JSON",
+            "correct": false,
+            "explanation": "Sai — JSON column là về storage type (PostgreSQL JSONB). Không liên quan MVD hay 4NF. JSONB có thể chứa array → có thể vi phạm 1NF nhưng không phải 4NF."
+          },
+          {
+            "id": "d",
+            "text": "Khi bảng có hơn 3 cột",
+            "correct": false,
+            "explanation": "Sai — số cột không liên quan 4NF. Bảng 2 cột vẫn có thể vi phạm 4NF (nếu có MVD). Bảng 20 cột vẫn đạt 4NF (nếu không có MVD độc lập)."
+          }
+        ]
+      }
+    ],
+    "mini_game": {
+      "type": "bug_spot",
+      "title": "Tìm Multivalued Dependency violation",
+      "instruction": "Bảng này có Cartesian explosion — đâu là dòng \"gây bão\"?",
+      "xp": 30,
+      "code": "prof_id | course     | hobby\nP01     | Database   | Chess\nP01     | Database   | Piano\nP01     | Networks   | Chess\nP01     | Networks   | Piano",
+      "bugType": "logic",
+      "bugs": [
+        {
+          "line": 2,
+          "description": "Dòng 2-5 là Cartesian product! prof →→ course và prof →→ hobby INDEPENDENT → tách thành 2 bảng: prof_course(prof_id, course) + prof_hobby(prof_id, hobby). 12 dòng → 7 dòng."
+        }
+      ]
+    }
+  },
+  "step_3": {
+    "mission": "Tìm <strong>top khóa học có nhiều textbook nhất</strong> — đếm textbook theo <code>course_id</code>, sắp xếp giảm dần.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "course_id",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "COUNT(*)",
+        "slot": "fn-count"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "textbook_count",
+        "slot": "col-alias"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "course_textbook",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "course_id",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "textbook_count",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , COUNT(*) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____",
+        "accepts": [
+          "kw",
+          "tbl"
+        ],
+        "acceptedKeywords": [
+          "FROM"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT course_id, COUNT(*) AS textbook_count FROM course_textbook GROUP BY course_id ORDER BY textbook_count DESC;",
+    "reveal_hints": {
+      "select-line": "SELECT <strong>course_id</strong> + <strong>COUNT(*) AS textbook_count</strong> — đếm số textbook.",
+      "from-line": "FROM bảng đã tách 4NF: <strong>course_textbook</strong>.",
+      "group-line": "GROUP BY <strong>course_id</strong> — gom theo khóa học.",
+      "order-line": "ORDER BY <strong>textbook_count DESC</strong> — khóa nào nhiều textbook nhất lên đầu."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — sang chiều còn lại của 4NF: <strong>đếm số GIẢNG VIÊN mỗi khóa</strong> (bảng <code>course_instructor</code>), sắp xếp nhiều → ít. (Textbook &amp; instructor là 2 chiều đa trị ĐỘC LẬP.)",
+    "context": {
+      "scenario": "Trung tâm đào tạo game dev đã tách xong 2 bảng <code>course_textbook</code> / <code>course_instructor</code> (4NF) — hết cảnh 3 giáo trình × 4 giảng viên đẻ 12 dòng tổ hợp. Nghiệm thu nốt chiều thứ hai: <strong>mỗi khóa có bao nhiêu giảng viên?</strong>",
+      "real_world": "<strong>Coursera/Udemy</strong> lưu giáo trình và giảng viên của 1 khóa ở 2 bảng riêng đúng kiểu này — 2 danh sách độc lập thì tách riêng, thêm 1 giảng viên không đụng gì tới giáo trình. Đếm mỗi chiều = 1 truy vấn GROUP BY đơn giản trên đúng bảng của nó.",
+      "steps": [
+        "Chỉ cần 1 bảng cho chiều này: <code>FROM course_instructor</code>.",
+        "Gộp theo khóa: <code>GROUP BY course_id</code>.",
+        "Đếm giảng viên: <code>COUNT(*) AS instructor_count</code>.",
+        "Sắp xếp nhiều → ít: <code>ORDER BY instructor_count DESC</code>."
+      ],
+      "hint_explore": "So sánh 2 chiều: <code>SELECT * FROM course_textbook</code> và <code>SELECT * FROM course_instructor</code> — mỗi bảng 1 quan hệ đa trị độc lập.",
+      "expected": "Bảng vài dòng × 2 cột (<code>course_id, instructor_count</code>): số giảng viên mỗi khóa, giảm dần — đối xứng với bài đếm textbook ở Bước 3."
+    },
+    "starter": "-- Top khóa học có nhiều textbook nhất\n-- GROUP BY course_id + COUNT + ORDER BY DESC\nSELECT , COUNT(*) AS \n  FROM course_textbook\n GROUP BY \n ORDER BY  DESC;\n",
+    "schema": {
+      "table_name": "course_textbook",
+      "columns": [
+        {
+          "name": "course_id",
+          "type": "VARCHAR",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "textbook",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "📚"
+        }
+      ],
+      "data": [
+        [
+          "CS101",
+          "Database Concepts"
+        ],
+        [
+          "CS101",
+          "SQL Performance"
+        ],
+        [
+          "CS102",
+          "Clean Code"
+        ],
+        [
+          "CS102",
+          "Design Patterns"
+        ],
+        [
+          "CS103",
+          "Algorithms"
+        ],
+        [
+          "CS103",
+          "Data Structures"
+        ],
+        [
+          "CS103",
+          "Discrete Math"
+        ],
+        [
+          "CS104",
+          "Networks"
+        ],
+        [
+          "CS104",
+          "Security"
+        ],
+        [
+          "CS105",
+          "OS Internals"
+        ],
+        [
+          "CS105",
+          "Compilers"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "course_instructor",
+        "columns": [
+          {
+            "name": "course_id",
+            "type": "VARCHAR",
+            "key": "PK"
+          },
+          {
+            "name": "instructor",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "CS101",
+            "Dr. Trần"
+          ],
+          [
+            "CS101",
+            "Dr. Lê"
+          ],
+          [
+            "CS102",
+            "Dr. Phạm"
+          ],
+          [
+            "CS102",
+            "Dr. Hoàng"
+          ],
+          [
+            "CS103",
+            "Dr. Vũ"
+          ],
+          [
+            "CS103",
+            "Dr. Đặng"
+          ],
+          [
+            "CS104",
+            "Dr. Bùi"
+          ],
+          [
+            "CS104",
+            "Dr. Ngô"
+          ],
+          [
+            "CS104",
+            "Dr. Dương"
+          ],
+          [
+            "CS105",
+            "Dr. Lý"
+          ],
+          [
+            "CS105",
+            "Dr. Mai"
+          ]
+        ]
+      }
+    ],
+    "expected_sql": "SELECT course_id, COUNT(*) AS instructor_count FROM course_instructor GROUP BY course_id ORDER BY instructor_count DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>đếm số textbook theo từng course</em>, lấy <strong>top 5</strong>. Hãy nghĩ: <strong>GROUP BY course_id</strong> + <strong>COUNT(*)</strong> + <strong>ORDER BY DESC</strong> + <strong>LIMIT 5</strong>."
+      },
+      {
+        "level": 2,
+        "text": "SELECT 2 cột: <code>course_id</code> và <code>COUNT(*) AS textbook_count</code>."
+      },
+      {
+        "level": 3,
+        "text": "GROUP BY <code>course_id</code> gom nhóm theo khóa học. COUNT(*) đếm số textbook. ORDER BY DESC sắp xếp giảm dần. LIMIT 5 lấy top 5."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT course_id, COUNT(*) AS instructor_count FROM course_instructor GROUP BY course_id ORDER BY instructor_count DESC;</code>"
+      }
+    ],
+    "success_message": "Hoàn thành 4NF nâng cao! Phụ thuộc đa trị đã được tách — textbook và instructor là 2 chiều độc lập. Bài 14 sẽ là BOSS BATTLE — tổng hợp mọi dạng chuẩn trên hệ thống Diễn đàn GuildBoard.",
+    "xp_reward": 75
+  }
+}

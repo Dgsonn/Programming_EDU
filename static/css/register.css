@@ -13,6 +13,8 @@
     --blue-dark: #0D47A1;
     --red: #C62828;
     --red-light: #EF5350;
+    --red-mid: #D32F2F;
+    --red-dark: #B71C1C;
     --white: #FFFFFF;
 }
 
@@ -379,19 +381,19 @@ body {
 }
 
 .btn-bg {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 50%, var(--blue-dark) 100%);
-    transition: opacity 0.3s;
-}
+     position: absolute;
+     inset: 0;
+     background: linear-gradient(135deg, var(--red) 0%, var(--red-mid, #D32F2F) 50%, var(--red-dark, #B71C1C) 100%);
+     transition: opacity 0.3s;
+ }
 
-.btn-bg-hover {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--blue-mid), var(--blue-light));
-    opacity: 0;
-    transition: opacity 0.3s;
-}
+ .btn-bg-hover {
+     position: absolute;
+     inset: 0;
+     background: linear-gradient(135deg, var(--red-mid, #D32F2F), var(--red-light, #EF5350));
+     opacity: 0;
+     transition: opacity 0.3s;
+ }
 
 .btn-main:hover .btn-bg-hover {
     opacity: 1;
@@ -399,7 +401,7 @@ body {
 
 .btn-main:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(21, 101, 192, 0.45);
+    box-shadow: 0 8px 28px rgba(198, 40, 40, 0.45);
 }
 
 .btn-main:active {
@@ -638,4 +640,163 @@ body {
 .field.has-error input {
     border-color: #EF5350;
     background: rgba(239, 83, 80, 0.08);
+}
+/* ── AUTH SPLIT LAYOUT (2026-07-09) ─────────────────────────────────────────
+   HTML login/register đã chuyển sang layout 2 cột (.auth-split: form trái,
+   brand canvas phải) nhưng CSS chưa được viết — card bung full-width và
+   nội dung brand rớt xuống dưới dạng text thô. Block này dùng CHUNG cho
+   login.css và register.css (giữ 2 bản đồng bộ). */
+
+.auth-split {
+    width: 100%;
+    max-width: 1180px;
+    display: grid;
+    grid-template-columns: minmax(0, 500px) minmax(0, 1fr);
+    gap: 3rem;
+    align-items: center;
+}
+
+.auth-form-side {
+    min-width: 0;
+}
+
+.auth-form-side .card {
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.auth-brand-side {
+    min-width: 0;
+}
+
+.brand-canvas {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(10, 14, 30, 0.55);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    padding: 3.2rem 3rem;
+    min-height: 540px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    animation: cardAppear 0.7s cubic-bezier(0.23, 1, 0.32, 1) 0.12s both;
+}
+
+.brand-glow {
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.32;
+    pointer-events: none;
+}
+
+.brand-glow--amber   { top: -80px;  right: -60px; background: #f59e0b; }
+.brand-glow--indigo  { bottom: -100px; left: -80px; background: #6366f1; }
+.brand-glow--emerald { top: 40%; left: 55%; background: #10b981; opacity: 0.2; }
+
+.brand-canvas-content {
+    position: relative;
+    z-index: 1;
+}
+
+.brand-canvas-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.30);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 1.4rem;
+}
+
+.brand-canvas-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 10px #4ade80;
+    animation: brandDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes brandDotPulse {
+    50% { opacity: 0.35; }
+}
+
+.brand-canvas-title {
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    line-height: 1.15;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0 0 1rem;
+}
+
+.brand-canvas-grad {
+    background: linear-gradient(90deg, #60a5fa, #c084fc, #f472b6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.brand-canvas-sub {
+    color: rgba(226, 232, 240, 0.75);
+    font-size: 0.98rem;
+    line-height: 1.65;
+    max-width: 46ch;
+    margin: 0 0 2.2rem;
+}
+
+.brand-canvas-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem 2.4rem;
+    margin-bottom: 2.2rem;
+}
+
+.brand-stat-num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.brand-stat-lbl {
+    font-size: 0.8rem;
+    color: rgba(226, 232, 240, 0.6);
+    margin-top: 2px;
+}
+
+.brand-canvas-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.brand-pill {
+    font-size: 0.8rem;
+    color: rgba(241, 245, 249, 0.85);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+/* Tablet/mobile: ẩn brand canvas, form về 1 cột giữa màn hình */
+@media (max-width: 1023px) {
+    .auth-split {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 520px;
+    }
+    .auth-brand-side {
+        display: none;
+    }
 }

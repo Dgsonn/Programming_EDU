@@ -26,6 +26,30 @@
     'slice-zone':   { icon: '✂️', label: 'Slice',    sub: 'Giới hạn',     hint: 'Giới hạn số kết quả: <code>[:10]</code> = LIMIT 10.' },
     'select-zone':  { icon: '📤', label: 'SELECT',   sub: 'Chọn cột',     hint: 'Chọn cột cần xuất.' },
     'inject-zone':  { icon: '💉', label: 'Inject',   sub: 'Chèn SQL',     hint: 'Phần SQL bị inject — quan sát cách attacker phá logic query.' },
+    /* M4-TC 2026-07-04: ga cho bài DDL khóa Trung cấp (procedure / trigger / recursive CTE).
+       Hint KHÔNG tiết lộ đáp án (bảng nào ở bước nào) — chỉ nhắc luật chung. */
+    'proc-head':    { icon: '📜', label: 'CREATE',   sub: 'Khai báo',     hint: 'Khai báo procedure: <code>CREATE PROCEDURE tên(tham_số) LANGUAGE SQL AS $$</code>' },
+    'del-1':        { icon: '🧹', label: 'Xóa ①',    sub: 'Dọn trước',    hint: 'Luật FK: bảng KHÔNG bị ai trỏ vào được xóa trước tiên.' },
+    'del-2':        { icon: '🧹', label: 'Xóa ②',    sub: 'Dọn tiếp',     hint: 'Xóa xong bảng trỏ vào nó thì bảng này mới được xóa.' },
+    'del-3':        { icon: '🧹', label: 'Xóa ③',    sub: 'Gốc cuối cùng', hint: 'Bảng cha bị mọi bảng khác trỏ vào — chỉ xóa được khi các bảng con đã sạch.' },
+    'proc-end':     { icon: '✅', label: 'Đóng',     sub: 'Kết thúc thân', hint: 'Đóng thân procedure: <code>$$;</code>' },
+    'trig-name':    { icon: '⚡', label: 'TRIGGER',  sub: 'Đặt tên',      hint: 'Khai báo: <code>CREATE TRIGGER tên_trigger</code>' },
+    'trig-event':   { icon: '📡', label: 'Sự kiện',  sub: 'Khi nào chạy', hint: 'Thời điểm + sự kiện + bảng: <code>AFTER INSERT ON bảng</code>' },
+    'trig-scope':   { icon: '🎯', label: 'Phạm vi',  sub: 'Mỗi dòng',     hint: '<code>FOR EACH ROW</code> — chạy 1 lần cho MỖI dòng bị chèn.' },
+    'trig-action':  { icon: '🔧', label: 'Hành động', sub: 'Làm gì',       hint: 'Việc trigger làm: <code>EXECUTE FUNCTION tên_hàm()</code>' },
+    'cte-head':     { icon: '🌀', label: 'CTE',      sub: 'Khai báo đệ quy', hint: 'Mở CTE đệ quy: <code>WITH RECURSIVE tên AS (</code>' },
+    'cte-anchor':   { icon: '🌱', label: 'Anchor',   sub: 'Hàng khởi đầu', hint: 'Anchor = hàng bắt đầu của cây (comment gốc), có depth khởi điểm.' },
+    'cte-union':    { icon: '➕', label: 'UNION ALL', sub: 'Nối kết quả',  hint: '<code>UNION ALL</code> nối anchor với các vòng lặp — giữ mọi dòng.' },
+    'cte-step':     { icon: '🔁', label: 'Đệ quy',   sub: 'Tự tham chiếu', hint: 'Phần lặp: JOIN bảng gốc với CHÍNH CTE để lấy tầng con tiếp theo.' },
+    'cte-final':    { icon: '📤', label: 'SELECT cuối', sub: 'Đọc CTE',   hint: 'Đóng CTE rồi <code>SELECT ... FROM tên_cte</code> để đọc kết quả.' },
+    /* M5-TC 2026-07-04: ga cho bài Big Data (MapReduce tc_07, Document Store tc_08). */
+    'mr-map':       { icon: '🗺️', label: 'MAP',      sub: 'Phát cặp',     hint: 'Mỗi máy đọc phần dữ liệu của mình, phát cặp <code>(khóa, 1)</code>.' },
+    'mr-shuffle':   { icon: '🔀', label: 'SHUFFLE',  sub: 'Gom theo khóa', hint: 'Hệ thống tự gom mọi cặp CÙNG KHÓA về một máy.' },
+    'mr-reduce':    { icon: '➕', label: 'REDUCE',   sub: 'Cộng dồn',     hint: 'Mỗi khóa nhận danh sách giá trị — cộng dồn ra kết quả cuối.' },
+    'doc-coll':     { icon: '🗃️', label: 'Collection', sub: 'Kho document', hint: 'Chọn collection: <code>db.tên_collection</code>' },
+    'doc-filter':   { icon: '🔍', label: 'Filter',   sub: 'Điều kiện',    hint: 'Điều kiện lọc là MỘT document: <code>.find({ field: giá_trị })</code>' },
+    'doc-project':  { icon: '📤', label: 'Projection', sub: 'Chọn field',  hint: 'Tham số 2 của find: <code>{ field: 1 }</code> = chỉ lấy field đó.' },
+    'doc-sort':     { icon: '📈', label: 'Sort',     sub: 'Sắp xếp',      hint: '<code>.sort({ field: -1 })</code> — -1 = giảm dần (như DESC).' },
   };
 
   /* Default schema — Bài 1: Primary Key on game_catalog */
@@ -44,11 +68,35 @@
   let mountEl = null;
   let trackEl = null;
   let truckEl = null;
+  let routeEl = null;       /* STAGE 2c: SVG path for getPointAtLength */
+  let manifestEl = null;    /* STAGE 2c: clipboard panel */
+  let manifestTtlEl = null;
+  let manifestBodyEl = null;
+  let manifestSubEl = null;
   let stationEls = {};
   let statusEl = null;
   let lastProgress = 0;
   let lastIsComplete = false;
   let activeStations = [];
+  let runBtnEl = null;
+  /* STAGE 2c: current truck position as fraction (0..1) along path */
+  let currentTruckF = 0;
+  /* Option A (vertical flow): fMap from the current computed route — keeps packet stops aligned to cards. */
+  let currentFMap = {};
+  /* Phase A (Fix 4 v5) state */
+  let isRunning = false;
+  let currentZoneFills = {};
+  let currentZoneCorrect = {};  /* v4: per-clause correctness (từ lesson_db_design) */
+  let currentWrongLines = [];   /* v5: số dòng sai (1-based) — chỉ SỐ, không nội dung */
+  let currentIsComplete = false;
+  /* FIX 2g-A4: expected + userBuilt dùng cho chẩn đoán khi feedback sai */
+  let lastExpected = '';
+  let lastUserBuilt = '';
+  let lastDiag = '';  /* v4: chẩn đoán per-clause (từ lesson_db_design) */
+  /* F6 (PHASE 3.8): in-memory fail counter + cancellation token.
+     Reset 0 khi: celebrate (đúng) · reset (handleDragReset) · đổi bài (page reload).
+     KHÔNG localStorage (persist = trừng phạt user, vô nghĩa). */
+  var failState = window.__dragFailState = window.__dragFailState || { count: 0, token: null, cancelHandler: null };
 
   /* ═════ SOUND ═════ */
   let soundEnabled = (() => {
@@ -95,7 +143,14 @@
     isOn: () => soundEnabled,
   };
 
-  /* ═════ Build stations from drop_zones ═════ */
+  /* ═════ Build stations from drop_zones ═════
+   * v43 STAGE 2b §0 PREREQUISITE: RANK map cho EXECUTION order.
+   * Bài 1 [select,from,where] → sort → [from,where,select] → Kho→FROM→WHERE→SELECT.
+   * Zone KHÔNG có trong RANK (setup/chain/join...) → giữ thứ tự gốc, xếp CUỐI.
+   * Q1=B adaptive — CHỈ render station cho drop_zones CÓ THẬT (KHÔNG ghost 5-station).
+   */
+  const EXEC_RANK = { 'from-line':1, 'where-line':2, 'group-line':3, 'having-line':4, 'select-line':5, 'order-line':6 };
+
   function buildStations(dropZones) {
     const start = { id: 'start', icon: '🏠', label: 'Kho', sub: 'Bắt đầu', zone: null };
 
@@ -108,9 +163,25 @@
       ];
     }
 
-    const zoneStations = dropZones.map(z => {
-      const cfg = ZONE_CONFIG[z.id] || { icon: '📋', label: z.id, sub: '' };
-      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, zone: z.id };
+    /* Stable sort by RANK; unknown zones go cuối với original order */
+    const sortedZones = dropZones
+      .map((z, idx) => ({ z, idx }))
+      .sort((a, b) => {
+        const ra = EXEC_RANK[a.z.id];
+        const rb = EXEC_RANK[b.z.id];
+        if (ra !== undefined && rb !== undefined) return ra - rb;
+        if (ra !== undefined) return -1;  /* ranked trước unknown */
+        if (rb !== undefined) return 1;
+        return a.idx - b.idx;  /* both unknown → giữ thứ tự gốc */
+      })
+      .map(({ z }) => z);
+
+    const zoneStations = sortedZones.map(z => {
+      /* M6-TC 2026-07-05: drop_zone tự khai meta ga qua z.station {icon,label,sub,hint} —
+         khỏi phình ZONE_CONFIG mỗi lần thêm bài khái niệm (M6 storage, NC engine).
+         ZONE_CONFIG giữ vai trò meta chung cho zone chuẩn/tái dùng. */
+      const cfg = z.station || ZONE_CONFIG[z.id] || { icon: '📋', label: z.id, sub: '' };
+      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, hint: cfg.hint, zone: z.id };
     });
 
     return [start, ...zoneStations];
@@ -139,54 +210,351 @@
     const stationCount = activeStations.length;
     trackEl.style.setProperty('--station-count', stationCount);
 
-    trackEl.innerHTML = `
-      <div class="pipeline-truck-row">
-        <div class="pipeline-rail">
-          ${activeStations.slice(1).map((_, i) => `
-            <div class="rail-segment" data-rail="${i}">
-              <div class="rail-line"></div>
-              <div class="rail-flow"></div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="pipeline-truck" data-truck>
-          <div class="truck-glow"></div>
-          <div class="truck-trail"></div>
-          <div class="truck-smoke"><span></span><span></span><span></span></div>
-          <div class="truck-cargo"></div>
-          <div class="truck-body">
-            <div class="truck-cab">🚚</div>
-            <div class="truck-wheel truck-wheel-front"></div>
-            <div class="truck-wheel truck-wheel-rear"></div>
-          </div>
-        </div>
-      </div>
+    /* ═════ STAGE 2g — Build QUERY LINE MAP HTML (replaces town map) ═════
+     * KEEP engine: SVG route path + getPointAtLength + station positions + truck motion via rotate.
+     * RE-SKIN theo mockup v2 (`docs/step3_queryline_mockup.html`):
+     *   Nền: navy radial + lưới blueprint mờ + node-dữ liệu mờ.
+     *   Ga: silhouette nhà → node lục giác + glyph + chip số thứ tự.
+     *   Landmark: tháp PE → origin hub 2 vòng cyan + text PE + sub nguồn dữ liệu.
+     *   Vehicle: top-down truck → capsule data-packet + đuôi glow + badge N dòng.
+     */
+  /* FIX 2g-B: thứ tự thực thi cho mỗi zone (chip số cạnh ga — dạy "viết ≠ chạy") */
+  var EXEC_ORDER = ['from-line', 'where-line', 'group-line', 'having-line', 'select-line', 'order-line'];
+  var ZONE_STROKE = {
+    'from-line':'#FBBF24','where-line':'#34D399',
+    'group-line':'#A78BFA','having-line':'#FB923C',
+    'select-line':'#22D3EE','order-line':'#F472B6',
+  };
 
-      <div class="pipeline-stations">
-        ${activeStations.map(s => `
-          <div class="pipeline-station" data-station="${s.id}">
-            <div class="station-glow"></div>
-            <div class="station-head">
-              <span class="station-icon">${s.icon}</span>
-              <span class="station-title">${s.label}</span>
-            </div>
-            <span class="station-sub">${s.sub}</span>
-            <div class="station-data" data-station-data="${s.id}">
-              ${renderStationDataPlaceholder(s.id, table)}
-            </div>
-            <div class="station-tag" data-station-tag="${s.id}"></div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+  /* PHASE 3.8-F5: sinh route CONG hữu cơ từ container W×H + station count.
+     - KHO fixed bottom-left, padding đáy chừa chỗ cho PE hub + sublabel "nguồn dữ liệu" (110px).
+     - Stations distributed theo execution order.
+     - X theo sine (cosine đối xứng, waves=n/2, amp start 0.30) → uốn lượn hữu cơ, KHÔNG răng cưa 2-cột.
+     - Auto-bump amp (max 0.45) + nudge Y range (nếu minGap < target) → đảm bảo spacing tối đa khả thi.
+     - Smooth spline bằng Catmull-Rom centripetal (α=0.5, tension=0.5) → path QUA TẤT CẢ điểm KHO + stations.
+     - ViewBox = actual W×H 1:1, path px = station px tự align KHÔNG distort.
+     - Returns {pathD, fMap, khoPos, positions} để regenerate trên resize.
+     - Backward compat: fMap giữ (i+1)/n để driveTruckTo không đổi.
+     - Giữ cap ≤640px từ F1 (P2.3.7-AUDIT-FIX) + hybrid map↔bảng từ F7 (P2.3.8). */
+
+  /* Catmull-Rom centripetal (α=0.5) → cubic Bezier segments.
+     - points: [kho, pos[0], pos[1], ..., pos[n-1]]  (n+1 points)
+     - Phantom endpoints (duplicate first/last) → smooth tangent tại KHO + station cuối.
+     - Returns: array of {from, c1, c2, to} segments. */
+  function catmullRomToBezier(points, alpha, tension) {
+    alpha = (alpha == null) ? 0.5 : alpha;
+    tension = (tension == null) ? 0.5 : tension;
+    var np = points.length;
+    if (np < 2) return [];
+    var ext = [points[0]].concat(points).concat([points[np - 1]]);
+    // ext has np + 2 points: [phantom_start, p0, p1, ..., pn-1, phantom_end]
+    var segments = [];
+    for (var i = 1; i < ext.length - 2; i++) {
+      var p0 = ext[i - 1];
+      var p1 = ext[i];
+      var p2 = ext[i + 1];
+      var p3 = ext[i + 2];
+      var dx01 = p1.x - p0.x, dy01 = p1.y - p0.y;
+      var dx12 = p2.x - p1.x, dy12 = p2.y - p1.y;
+      var dx23 = p3.x - p2.x, dy23 = p3.y - p2.y;
+      var d01 = Math.pow(Math.sqrt(dx01*dx01 + dy01*dy01), alpha);
+      var d12 = Math.pow(Math.sqrt(dx12*dx12 + dy12*dy12), alpha);
+      var d23 = Math.pow(Math.sqrt(dx23*dx23 + dy23*dy23), alpha);
+      if (d12 < 1e-6) d12 = 1e-6;  // avoid div0
+      if (d01 + d12 < 1e-6) d01 = 1e-6;
+      if (d12 + d23 < 1e-6) d23 = 1e-6;
+      // Tangent at p1 (from p0 to p2)
+      var t1x = ((p2.x - p0.x) / (d01 + d12)) * d12 * tension;
+      var t1y = ((p2.y - p0.y) / (d01 + d12)) * d12 * tension;
+      // Tangent at p2 (from p1 to p3)
+      var t2x = ((p3.x - p1.x) / (d12 + d23)) * d12 * tension;
+      var t2y = ((p3.y - p1.y) / (d12 + d23)) * d12 * tension;
+      // Bezier control points
+      var c1 = { x: p1.x + t1x, y: p1.y + t1y };
+      var c2 = { x: p2.x - t2x, y: p2.y - t2y };
+      segments.push({ from: p1, c1: c1, c2: c2, to: p2 });
+    }
+    return segments;
+  }
+
+  function computeSerpentineRoute(stations, W, H) {
+    /* Option A v2 — "DÒNG CHẢY": đường CONG hữu cơ (không thẳng đơ) trong khung .qflow.
+       Nguồn ở ĐỈNH (f=0) → các mệnh đề UỐN LƯỢN xuống theo execution order → cuối ở ĐÁY (f=1).
+       Spline Catmull-Rom → getPointAtLength bám đường cong → thể hiện "logic không đi thẳng".
+       Engine packet/fail GIỮ NGUYÊN (vẫn getPointAtLength). */
+    var padTop = 46, padBottom = 30;
+    var exec = (stations || []).filter(function(s){ return s.id !== 'start' && s.zone; })
+      .sort(function(a, b){ return EXEC_ORDER.indexOf(a.zone) - EXEC_ORDER.indexOf(b.zone); });
+    var n = exec.length;
+    var cx = W / 2;
+    var yTop = padTop, yBottom = Math.max(yTop + 70, H - padBottom);
+    /* biên độ uốn — co giãn theo CẢ W và chiều cao khả dụng (tránh cong gắt khi khung thấp-rộng) */
+    var amp = Math.min(W * 0.16, (yBottom - yTop) * 0.42, 118);
+    var khoPos = { x: cx, y: yTop };
+    var fMap = { 'start': 0 };
+    var positions = [];
+    if (n === 0) {
+      return { pathD: 'M ' + cx + ' ' + yTop, fMap: fMap, khoPos: khoPos, positions: [] };
+    }
+    for (var i = 0; i < n; i++) {
+      var t = (i + 1) / n;
+      var y = yTop + t * (yBottom - yTop);
+      var side = (i % 2 === 0) ? 1 : -1;               /* xen kẽ 2 bên */
+      var env = 0.72 + 0.28 * Math.sin(Math.PI * t);   /* envelope 0.72..1.0 (đầu/cuối co lại, giữa phình) */
+      positions.push({ x: cx + side * amp * env, y: y });
+      fMap[exec[i].zone] = t;
+    }
+    var allPoints = [khoPos].concat(positions);
+    var segments = catmullRomToBezier(allPoints, 0.5, 0.5);
+    var path = ['M ' + khoPos.x + ' ' + khoPos.y];
+    segments.forEach(function(seg) {
+      path.push('C ' + seg.c1.x + ' ' + seg.c1.y + ', ' + seg.c2.x + ' ' + seg.c2.y + ', ' + seg.to.x + ' ' + seg.to.y);
+    });
+    /* D4 2026-07-05: trả thêm zones (đúng thứ tự positions) để regenerateRoute hiệu chỉnh
+     * fMap theo arc-length thật — t tuyến tính ≠ tỉ lệ arc trên đường cong. */
+    return { pathD: path.join(' '), fMap: fMap, khoPos: khoPos, positions: positions,
+             zones: exec.map(function(s){ return s.zone; }) };
+  }
+
+  /* PHASE 3.6-R-B: regenerate route + positions on container resize (and initial mount).
+     - Đo mapEl W×H
+     - Set SVG viewBox = "0 0 W H" (1:1, no stretch)
+     - Compute pathD via serpentine, update 3 path elements
+     - Update bgDots positions proportionally (decorative)
+     - Re-place stations + truck via getPointAtLength on new path (px = viewBox unit)
+     - Re-position PE hub overlay HTML at khoPos */
+  function regenerateRoute() {
+    var mapEl = trackEl && trackEl.querySelector('.town-map');
+    if (!mapEl) return;
+    /* Option A v2: đo khung .qflow (cột trái) — route/cards nằm trong đó, panel dữ liệu ở cột phải. */
+    var flowEl = mapEl.querySelector('[data-qflow]') || mapEl;
+    var r = flowEl.getBoundingClientRect();
+    /* D4 fix 2026-07-05 (Mavis backlog): ở viewport thấp, chuỗi wrapper overflow:hidden
+     * phía trên (đo thật db_11: wrapper cắt ở đáy 428 trong khi town-map lòi tới 612)
+     * CẮT phần dưới của .qflow → ga CUỐI bị vẽ vào vùng vô hình, elementFromPoint trúng
+     * data-preview bên dưới. → tìm ĐÁY-THẤY-ĐƯỢC thật bằng cách đi ngược tổ tiên, clamp
+     * tại mọi ancestor overflow hidden; layout ga theo phần thấy được đó. */
+    var visBottom = r.bottom;
+    var anc = flowEl.parentElement;
+    while (anc && anc !== document.body) {
+      var ost = getComputedStyle(anc);
+      if ((ost.overflow + ' ' + ost.overflowY).indexOf('hidden') >= 0) {
+        visBottom = Math.min(visBottom, anc.getBoundingClientRect().bottom);
+      }
+      anc = anc.parentElement;
+    }
+    var W = r.width, H = Math.max(140, visBottom - 6 - r.top);
+    if (W < 50) return; // too small / not measured yet
+
+    /* D4 2026-07-05: nhiều node + khung thấp → thẻ chuẩn (~70px) chồng nhau (đo thật
+     * db_11/db_13: 4 cặp chồng) → bật skin nén khi 6+ node HOẶC bước dọc < 74px. */
+    var nGaps = Math.max(1, (activeStations || []).length - 1);
+    mapEl.classList.toggle('town-map--dense',
+      (activeStations || []).length >= 6 || (H - 76) / nGaps < 74);
+
+    var computed = computeSerpentineRoute(activeStations, W, H);
+    currentFMap = computed.fMap;   /* keep packet stops aligned to cards (Option A) */
+
+    // 1. SVG viewBox = actual W×H (1:1, no distortion)
+    var svgEl = mapEl.querySelector('.town-svg');
+    if (svgEl) svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+    // 2. Update 3 path elements (shadow, route, flow) with new pathD
+    var paths = mapEl.querySelectorAll('.town-route-shadow, .town-route, .town-route-flow');
+    paths.forEach(function(p) { p.setAttribute('d', computed.pathD); });
+
+    // 3. Update bgDots positions proportionally (decorative, kept at 600-based ratios)
+    var bgDots = mapEl.querySelectorAll('.bgnode');
+    var dotsOrig = [[92,180],[510,150],[120,470],[500,430],[470,540],[70,330],[380,60],[220,75]];
+    bgDots.forEach(function(c, i) {
+      if (!dotsOrig[i]) return;
+      c.setAttribute('cx', dotsOrig[i][0] / 600 * W);
+      c.setAttribute('cy', dotsOrig[i][1] / 600 * H);
+    });
+
+    // 4. Update PE hub overlay position (px relative to mapEl)
+    var peHubEl = mapEl.querySelector('[data-pe-hub]');
+    if (peHubEl) {
+      peHubEl.style.left = computed.khoPos.x + 'px';
+      peHubEl.style.top = computed.khoPos.y + 'px';
+    }
+
+    // 5. Re-place stations (fMap từ computed) via getPointAtLength
+    var route = mapEl.querySelector('.town-route');
+    /* D4 2026-07-05: fMap t tuyến tính ≠ tỉ lệ ARC-LENGTH trên spline (đoạn giữa uốn
+     * rộng nên dài hơn) → bước dọc giữa các thẻ co giãn, thẻ giữa dính nhau (đo thật
+     * db_11: group×select). Hiệu chỉnh f của từng ga = arc-fraction của điểm neo even-y
+     * mà spline ĐI QUA (positions) — thẻ lẫn điểm dừng packet (currentFMap) cùng khớp. */
+    if (route && computed.positions && computed.positions.length) {
+      var totalArc = route.getTotalLength();
+      var S = 260, samples = [];
+      for (var si = 0; si <= S; si++) samples.push(route.getPointAtLength(totalArc * si / S));
+      (computed.zones || []).forEach(function(z, zi) {
+        var p0 = computed.positions[zi];
+        if (!p0) return;
+        var bf = computed.fMap[z], bd = Infinity;
+        for (var sj = 0; sj <= S; sj++) {
+          var dx = samples[sj].x - p0.x, dy = samples[sj].y - p0.y, d = dx * dx + dy * dy;
+          if (d < bd) { bd = d; bf = sj / S; }
+        }
+        computed.fMap[z] = bf;
+      });
+      currentFMap = computed.fMap;
+    }
+    if (route) {
+      var total = route.getTotalLength();
+      activeStations.forEach(function(s) {
+        var el = mapEl.querySelector('[data-town-station="' + s.id + '"]');
+        if (!el) return;
+        var f = (s.id === 'start') ? 0 : computed.fMap[s.zone || s.id];
+        if (f === undefined) f = activeStations.indexOf(s) / Math.max(1, activeStations.length - 1);
+        var p = route.getPointAtLength(Math.max(0, Math.min(1, f)) * total);
+        el.style.left = p.x + 'px';
+        el.style.top = p.y + 'px';
+      });
+    }
+
+    // 6. Re-position truck at f=0 (KHO)
+    var truckElLocal = mapEl.querySelector('[data-town-truck]');
+    if (truckElLocal && route) {
+      var startP = route.getPointAtLength(0);
+      truckElLocal.style.left = startP.x + 'px';
+      truckElLocal.style.top = startP.y + 'px';
+      currentTruckF = 0;
+    }
+  }
+
+  function buildTownMapHTML(activeStations, table) {
+    /* Option A — "DÒNG CHẢY TRUY VẤN": vertical high-contrast flow (thay bản đồ neon murky).
+       Route = đường thẳng đứng (regenerateRoute set lại theo W×H thật). Các ga = thẻ mệnh đề
+       xếp DỌC, tương phản cao; gói dữ liệu trượt xuống; số dòng biến đổi hiện ở manifest. */
+    var routeD = 'M 300 54 L 300 566';
+    var ZONE_GLYPH = {
+      'from-line':'▤','where-line':'▽','select-line':'☰',
+      'group-line':'⊞','having-line':'⊟','order-line':'↕'
+    };
+    var peHub = '<div class="pe-hub-overlay" data-pe-hub></div>';   /* hidden — giữ ref cho regenerateRoute */
+
+    /* FIX 2g-B: ord số dựa trên thứ tự THỰC TẾ trong bài (contiguous 1..n) */
+    var presentZones = activeStations.map(function(s){return s.zone;}).filter(function(z){return z && EXEC_ORDER.indexOf(z) >= 0;}).sort(function(a,b){return EXEC_ORDER.indexOf(a) - EXEC_ORDER.indexOf(b);});
+
+    function cardInner(s, ord) {
+      var z = s.zone || '', stroke = ZONE_STROKE[z] || '#94a3b8';
+      if (s.id === 'start') {
+        return '<span class="qcard-glyph src">🗄</span>'
+          + '<span class="qcard-main"><span class="qcard-label mono">' + escapeHtml(table.name) + '</span>'
+          + '<span class="qcard-sub">bảng nguồn · ' + table.dataRows.length + ' dòng</span></span>';
+      }
+      var glyph = ZONE_GLYPH[z] || '▸';
+      return (ord > 0 ? '<span class="qcard-ord">' + ord + '</span>' : '')
+        + '<span class="qcard-glyph" style="color:' + stroke + '">' + glyph + '</span>'
+        + '<span class="qcard-main"><span class="qcard-label">' + escapeHtml(s.label) + '</span>'
+        + '<span class="qcard-sub">' + escapeHtml(s.sub || '') + '</span></span>'
+        + '<span class="qcard-count" data-qcard-count></span>'
+        + '<span class="qcard-check">✓</span>';
+    }
+
+    var lastIdx = activeStations.length - 1;
+    var stationsHTML = activeStations.map(function(s, i) {
+      var ord = (s.zone && presentZones.indexOf(s.zone) >= 0) ? presentZones.indexOf(s.zone) + 1 : 0;
+      var stroke = ZONE_STROKE[s.zone] || '#94a3b8';
+      return '<div class="town-station qcard' + (s.id === 'start' ? ' qcard-source' : '') + (i === lastIdx ? ' qcard-last' : '') + '"'
+        + ' data-town-station="' + s.id + '"' + (s.zone ? ' data-zone="' + s.zone + '"' : '') + ' style="--zc:' + stroke + '">'
+        + '<div class="qcard-inner">' + cardInner(s, ord) + '</div></div>';
+    }).join('');
+
+    var truck = '<div class="town-truck packet" data-town-truck><div class="pk-rot"><div class="pk-trail"></div><div class="pk-body"></div></div><div class="pk-badge town-truck-badge" data-town-truck-badge>'+table.dataRows.length+' dòng</div></div>';
+    /* Panel dữ liệu (phải): bảng "nhìn theo" + số liệu sống (Brilliant-style) — luôn hiện, cập nhật theo packet. */
+    var manifest = '<div class="town-manifest" data-town-manifest><div class="town-manifest-ttl" data-town-manifest-ttl>DỮ LIỆU</div><div class="town-manifest-body" data-town-manifest-body></div><div class="town-manifest-sub" data-town-manifest-sub></div></div>';
+    var brand = '<div class="town-brand"><span class="town-brand-dot"></span><b>PE_TEST</b> · DÒNG CHẢY TRUY VẤN</div>';
+    var flow = '<div class="qflow" data-qflow>'
+      + '<svg class="town-svg" viewBox="0 0 600 600" preserveAspectRatio="none"><path class="town-route-shadow" d="'+routeD+'"/><path class="town-route" d="'+routeD+'"/><path class="town-route-flow" d="'+routeD+'"/></svg>'
+      + '<div class="town-stations">'+stationsHTML+'</div>' + peHub + truck
+      + '</div>';
+    var dataCol = '<div class="qdata" data-qdata>' + manifest + '</div>';
+    return '<div class="town-map" data-town-map>' + brand + flow + dataCol + '</div>';
+  }
+
+  /* FIX 2g-B: SVG defs cho blueprint grid + vignette mask (inject 1 lần) */
+  (function injectQlineDefs() {
+    if (typeof document === 'undefined' || document.getElementById('qline-defs')) return;
+    var d = document.createElement('div'); d.id = 'qline-defs';
+    d.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+    d.innerHTML = '<svg width="0" height="0"><defs><pattern id="qline-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(148,163,184,.045)" stroke-width="1"/></pattern><mask id="qline-mask"><rect width="600" height="600" fill="url(#qline-vignette)"/></mask><radialGradient id="qline-vignette" cx="50%" cy="42%" r="50%"><stop offset="50%" stop-color="white" stop-opacity="1"/><stop offset="92%" stop-color="white" stop-opacity="0"/></radialGradient></defs></svg>';
+    document.body.appendChild(d);
+  })();
+
+
+  /* placeStationsOnPath — uses getPointAtLength on .town-route to position each station.
+   * §B: Stations sit ON the route, ordered by f (Kho=0, FROM=.30, WHERE=.62, SELECT=1). */
+  function placeStationsOnPath() {
+    var route = trackEl.querySelector('.town-route');
+    if (!route) return;
+    var total = route.getTotalLength();
+    var fMap = { 'start': 0.05, 'from-line': 0.30, 'where-line': 0.62, 'group-line': 0.45,
+                 'having-line': 0.75, 'select-line': 1.0, 'order-line': 0.88, 'join-line': 0.18,
+                 'setup-zone': 0.10, 'chain-zone': 0.50, 'slice-zone': 0.92,
+                 'select-zone': 1.0, 'inject-zone': 0.55 };
+    activeStations.forEach(function(s) {
+      var el = trackEl.querySelector('[data-town-station="' + s.id + '"]');
+      if (!el) return;
+      var f = fMap[s.id === 'start' ? 'start' : (s.zone || s.id)];
+      if (f === undefined) f = activeStations.indexOf(s) / Math.max(1, activeStations.length - 1);
+      var p = route.getPointAtLength(Math.max(0, Math.min(1, f)) * total);
+      /* PHASE 3.6-R-B: viewBox = "0 0 W H" (dynamic, 1:1 với container px) → p.x/p.y từ getPointAtLength
+         = viewBox units = container px trực tiếp. KHÔNG cần convert % nữa. */
+      el.style.left = p.x + 'px';
+      el.style.top = p.y + 'px';
+    });
+  }
+
+  /* v6.3 STAGE 2c init() — town map replaces vertical pipeline */
+    var townHTML = buildTownMapHTML(activeStations, table);
+    trackEl.innerHTML = townHTML;
+    trackEl.className = 'town-map-track';  /* container for the map */
 
     root.appendChild(trackEl);
 
+    /* FIX 2g-B1: ResizeObserver — ép map VUÔNG theo min(parent_w, parent_h, 600).
+       Lý do: CSS aspect-ratio:1/1 + max-height:100% KHÔNG ép width khi max-height cap (browser chỉ cap height).
+       → dùng JS set pixel size = min(600, parent_w, parent_h) để map vuông + fit container @ mọi viewport. */
+    var mapEl = trackEl.querySelector('.town-map');
+    /* PHASE 3.5b-B1: bỏ ép VUÔNG — map fill 100% container (CSS đã width/height:100%). ResizeObserver chỉ cần
+       re-trigger placeStationsOnPath khi container resize để station % vẫn align với route đã stretch.
+       KHÔNG set pixel size ở đây — để CSS lo (width/height:100% trên .town-map). */
+    var sizeMapToParent = function() {
+      if (!mapEl) return;
+      /* PHASE 3.6-R-B: regenerate route + positions on resize (thay vì chỉ re-place stations).
+         Đo mapEl W×H → compute serpentine pathD + fMap → set viewBox, paths, bgDots, peHub, stations, truck. */
+      if (typeof regenerateRoute === 'function') regenerateRoute();
+    };
+    sizeMapToParent();
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(sizeMapToParent);
+      ro.observe(mountEl);
+      ro.observe(trackEl);
+    } else {
+      window.addEventListener('resize', sizeMapToParent);
+    }
+    window.__peMapSizer = sizeMapToParent;  /* expose for probe/reset */
+
+    /* Position stations ON the path (must happen AFTER innerHTML insert + path in DOM) */
+    regenerateRoute();
+
+    /* stationEls keyed by station id */
     stationEls = {};
     activeStations.forEach(s => {
-      stationEls[s.id] = trackEl.querySelector(`[data-station="${s.id}"]`);
+      stationEls[s.id] = trackEl.querySelector('[data-town-station="' + s.id + '"]');
     });
-    truckEl = trackEl.querySelector('[data-truck]');
+    /* Town truck ref */
+    truckEl = trackEl.querySelector('[data-town-truck]');
+    /* Route path ref (for getPointAtLength in driveTruckTo) */
+    routeEl = trackEl.querySelector('.town-route');
+    /* Manifest refs */
+    manifestEl = trackEl.querySelector('[data-town-manifest]');
+    manifestTtlEl = trackEl.querySelector('[data-town-manifest-ttl]');
+    manifestBodyEl = trackEl.querySelector('[data-town-manifest-body]');
+    manifestSubEl = trackEl.querySelector('[data-town-manifest-sub]');
 
     activeStations.forEach(s => {
       if (stationEls[s.id]) {
@@ -194,14 +562,15 @@
       }
     });
 
-    statusEl = document.createElement('div');
-    statusEl.className = 'pipeline-status';
-    statusEl.innerHTML = `
-      <span class="status-dot"></span>
-      <span class="status-text">Sẵn sàng. Kéo khối lệnh vào drop-zone để bắt đầu truy vấn.</span>
-    `;
-    root.appendChild(statusEl);
+    /* Phase A (Fix 4 v5) — Run Query button */
+    runBtnEl = document.createElement('button');
+    runBtnEl.className = 'run-query-btn';
+    runBtnEl.innerHTML = '▶ Chạy Query';
+    runBtnEl.disabled = true;
+    runBtnEl.addEventListener('click', function() { window.runQuery(); });
+    root.appendChild(runBtnEl);
 
+    /* v6.2 STEP 2a FIX-3: Sound toggle → MOVE to .step3-topbar (Q1=B) */
     const soundBtn = document.createElement('button');
     soundBtn.className = 'pipeline-sound-toggle';
     if (!soundEnabled) soundBtn.classList.add('muted');
@@ -213,115 +582,108 @@
       soundBtn.innerHTML = on ? '🔊' : '🔇';
       soundBtn.title = on ? 'Tắt âm thanh' : 'Bật âm thanh';
     });
-    root.appendChild(soundBtn);
+    const topbar = document.querySelector('.step3-topbar');
+    if (topbar) topbar.appendChild(soundBtn);
+    else root.appendChild(soundBtn);
 
-    if (truckEl) {
-      truckEl.classList.add('driving');
-      requestAnimationFrame(() => {
-        const startLeft = -80;
-        truckEl.style.setProperty('--tx', startLeft + 'px');
-        requestAnimationFrame(() => moveTruckTo(0, false));
-        setTimeout(() => truckEl.classList.remove('driving'), 900);
-        setTimeout(() => sfxEngine(), 200);
-        setTimeout(() => sfxChime(), 1000);
-      });
+    /* v6.3 STAGE 2c: Init — place truck ở Kho (f=0), instantiate vị trí, sau đó play arrival chime */
+    if (truckEl && routeEl) {
+      var total = routeEl.getTotalLength();
+      var startP = routeEl.getPointAtLength(0);
+      /* PHASE 3.6-R-B: viewBox = actual W×H 1:1, startP.x/.y = container px trực tiếp */
+      truckEl.style.left = startP.x + 'px';
+      truckEl.style.top = startP.y + 'px';
+      truckEl.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+      currentTruckF = 0;
+      sfxEngine();
+      setTimeout(() => sfxChime(), 600);
     }
     lastProgress = 0;
     lastIsComplete = false;
 
-    window.__pipeline = { stations: stationEls, table, activeStations };
+    window.__pipeline = { stations: stationEls, table, activeStations, route: routeEl };
+
+    /* Option A v2: panel dữ liệu hiện NGAY từ đầu (bảng nguồn) để người học "nhìn theo". */
+    showManifestRest();
   }
 
-  function renderStationDataPlaceholder(stationId, table) {
-    return `<div class="data-empty">
-      <span class="data-empty-dot"></span>
-      <span class="data-empty-text">${stationId === 'start' ? '—' : 'chờ dữ liệu'}</span>
-    </div>`;
+  /* showManifestRest — panel dữ liệu ở trạng thái nghỉ: bảng nguồn đầy đủ + đếm dòng. */
+  function showManifestRest() {
+    if (!manifestEl) return;
+    var table = (window.__pipeline && window.__pipeline.table) || DEFAULT_TABLE;
+    if (manifestTtlEl) { manifestTtlEl.textContent = '⛁ Nguồn · ' + table.name; manifestTtlEl.style.color = ''; }
+    if (manifestBodyEl) {
+      manifestBodyEl.innerHTML = renderStationMiniTable({ rows: table.dataRows, columns: table.columns }, {}, table);
+      var rows = manifestBodyEl.querySelectorAll('.station-mini-table tbody tr');
+      rows.forEach(function(tr, idx) { tr.style.setProperty('--i', idx); });
+    }
+    if (manifestSubEl) manifestSubEl.textContent = table.dataRows.length + ' dòng · ▶ chạy để xem lọc';
+    manifestEl.classList.add('show');
   }
 
-  function renderMiniTable(table, opts) {
-    opts = opts || {};
-    const cols = table.columns;
-    const rows = table.dataRows;
-    const hasColFilter = opts.selectedCols && opts.selectedCols.length;
-    const hasRowFilter = opts.matchedRows && opts.matchedRows.length !== undefined;
+  /* renderStationDataPlaceholder + renderMiniTable — REMOVED in STAGE 2c.
+   * Town map dùng renderStationMiniTable + manifest panel riêng. */
 
-    const headersHTML = cols.map(c => {
-      const isSelected = !hasColFilter || opts.selectedCols.includes(c);
-      return `<span class="mini-th ${isSelected ? 'selected' : 'dimmed'}">${escapeHtml(c)}</span>`;
-    }).join('');
-
-    const rowsHTML = rows.map((row, i) => {
-      const matched = !hasRowFilter || opts.matchedRows.includes(i);
-      const dim = !matched;
-      const cells = cols.map(c => {
-        const colIdx = cols.indexOf(c);
-        const isSelected = !hasColFilter || opts.selectedCols.includes(c);
-        const cellClass = dim ? 'dimmed' : (!isSelected ? 'col-dimmed' : '');
-        return `<span class="mini-td ${cellClass}">${escapeHtml(row[colIdx])}</span>`;
-      }).join('');
-      return `<div class="mini-row ${dim ? 'dimmed' : 'matched'}">${cells}</div>`;
-    }).join('');
-
-    return `
-      <div class="mini-table" data-state="${opts.state || 'default'}">
-        <div class="mini-thead">${headersHTML}</div>
-        <div class="mini-tbody">${rowsHTML}</div>
-      </div>
-    `;
-  }
-
-  function moveTruckTo(stationIdx, instant) {
-    if (!trackEl) return;
-    if (!truckEl) truckEl = trackEl.querySelector('[data-truck]');
-    if (!truckEl) return;
-
-    const stationDomEls = trackEl.querySelectorAll('.pipeline-station');
-    const target = stationDomEls[stationIdx];
-    if (!target) return;
-
-    const trackRect = trackEl.getBoundingClientRect();
-    const stationRect = target.getBoundingClientRect();
-    const targetX = stationRect.left + stationRect.width / 2 - trackRect.left;
-
+  /* v6.3 STAGE 2c — driveTruckTo(f, instant, duration).
+   * Spec §C: SVG path route → getPointAtLength + rAF đặt xe + atan2 xoay đầu xe theo heading.
+   * • instant=true: skip animation, đặt vị trí ngay (cho reset/init).
+   * • instant=false: rAF animation duration (default 550ms) với ease-in-out cubic.
+   * • Truck bám đường, xoay theo heading tại mỗi frame. */
+  function driveTruckTo(f, instant, duration) {
+    if (!truckEl || !routeEl) return Promise.resolve();
+    if (typeof f !== 'number') f = 0;
+    f = Math.max(0, Math.min(1, f));
     if (instant) {
-      truckEl.style.transition = 'none';
-      truckEl.style.setProperty('--tx', targetX + 'px');
-      requestAnimationFrame(() => { truckEl.style.transition = ''; });
-      return;
+      currentTruckF = f;
+      setTruckAtF(f);
+      return Promise.resolve();
     }
-
-    truckEl.classList.add('driving');
-
-    if (stationIdx > 0) {
-      const rail = trackEl.querySelector(`[data-rail="${stationIdx - 1}"]`);
-      if (rail) {
-        rail.classList.remove('flowing');
-        void rail.offsetWidth;
-        rail.classList.add('flowing');
-        setTimeout(() => rail.classList.remove('flowing'), 900);
+    duration = duration || 1200;
+    var fromF = currentTruckF;
+    var t0 = performance.now();
+    /* A2: add is-driving class to enable wheel spin + exhaust puff + headlight scan */
+    if (truckEl) truckEl.classList.add('is-driving');
+    return new Promise(function(resolve) {
+      function fr(now) {
+        /* F6-fix (3.8-fix): ABORT — check failState cancellation. Nếu user click cancel mid-flight,
+           snap về vị trí HIỆN TẠI (currentTruckF = partially-driven) + remove classes + resolve. */
+        if (failState && failState.token && failState.token.cancelled) {
+          if (truckEl) {
+            truckEl.classList.remove('is-driving', 'truck-anticipating', 'truck-arriving', 'celebrate', 'shake');
+            setTruckAtF(currentTruckF);  // snap to last position
+          }
+          resolve();
+          return;
+        }
+        var k = Math.min(1, (now - t0) / duration);
+        /* ease-in-out cubic */
+        k = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        var curF = fromF + (f - fromF) * k;
+        currentTruckF = curF;
+        setTruckAtF(curF);
+        if (k < 1) requestAnimationFrame(fr);
+        else {
+          if (truckEl) truckEl.classList.remove('is-driving');
+          resolve();
+        }
       }
-    }
-
-    truckEl.style.setProperty('--tx', targetX + 'px');
-    sfxEngine();
-
-    const onArrival = (e) => {
-      if (e.propertyName !== 'transform') return;
-      truckEl.classList.remove('driving');
-      truckEl.classList.add('arriving');
-      target.classList.add('arriving');
-      sfxChime();
-      setTimeout(() => {
-        truckEl.classList.remove('arriving');
-        target.classList.remove('arriving');
-      }, 700);
-      truckEl.removeEventListener('transitionend', onArrival);
-    };
-    truckEl.addEventListener('transitionend', onArrival);
+      requestAnimationFrame(fr);
+    });
   }
 
-  /* ═════ UPDATE — dynamic zone-based progress ═════ */
+  /* setTruckAtF — set truck position + rotation at fraction f along route.
+   * Uses getPointAtLength for (x,y) and atan2 between (f, f+0.004) for heading. */
+  function setTruckAtF(f) {
+    if (!truckEl || !routeEl) return;
+    var total = routeEl.getTotalLength();
+    var p = routeEl.getPointAtLength(f * total);
+    /* Option A: round data-orb → no heading rotation (keeps the "N dòng" badge upright). */
+    truckEl.style.left = p.x + 'px';
+      truckEl.style.top = p.y + 'px';
+      truckEl.style.transform = 'translate(-50%, -50%)';
+  }
+
+  /* ═════ UPDATE — Phase A behavior (no auto-truck-movement) ═════ */
   function update(state) {
     state = state || {};
     if (!trackEl) return;
@@ -329,7 +691,7 @@
     const table = (window.__pipeline && window.__pipeline.table) || DEFAULT_TABLE;
     const zoneFills = state.zoneFills || {};
 
-    /* ── 1. Compute progress: count consecutive filled zones (skip 'start') ── */
+    /* ── 1. Compute progress for narration (count consecutive filled zones) ── */
     let progress = 0;
     for (let i = 1; i < activeStations.length; i++) {
       const zoneId = activeStations[i].zone;
@@ -340,142 +702,838 @@
       }
     }
 
-    /* ── 2. Reset visual states ── */
-    activeStations.forEach(s => {
-      if (stationEls[s.id]) stationEls[s.id].classList.remove('active', 'completed', 'error', 'arriving');
-    });
-
-    /* ── 3. Apply station states ── */
+    /* ── 2. Phase A: track drops + flash acknowledge (NO truck move, NO data viz yet) ── */
+    let hasAnyInput = false;
     activeStations.forEach((s, i) => {
       if (!stationEls[s.id]) return;
-      if (i <= progress) stationEls[s.id].classList.add('active');
-      if (s.zone && zoneFills[s.zone]) stationEls[s.id].classList.add('completed');
-    });
-
-    /* ── 4. Data visualizations (FROM, WHERE, SELECT get special treatment) ── */
-    updateStationData('start', table, { state: 'empty' });
-
-    activeStations.forEach(s => {
-      if (s.id === 'start') return;
-      if (!zoneFills[s.zone]) {
-        updateStationData(s.id, table, { state: 'empty' });
-        return;
-      }
-
-      const tag = zoneFills[s.zone];
-      if (s.zone === 'from-line') {
-        updateStationData(s.id, table, { state: 'loaded', selectedCols: null, matchedRows: null });
-      } else if (s.zone === 'where-line') {
-        const matchedIdx = parseWhereRows(tag, table);
-        updateStationData(s.id, table, { state: 'filtered', selectedCols: null, matchedRows: matchedIdx || [] });
-      } else if (s.zone === 'select-line') {
-        const cols = (typeof tag === 'string') ? tag.split(',').map(c => c.trim()) : [];
-        const whereTag = zoneFills['where-line'];
-        const matchedIdx = whereTag ? parseWhereRows(whereTag, table) : null;
-        updateStationData(s.id, table, { state: 'projected', selectedCols: cols, matchedRows: matchedIdx });
+      const filled = !!(s.zone && zoneFills[s.zone]);
+      if (filled) {
+        hasAnyInput = true;
+        stationEls[s.id].classList.add('has-input');
+        /* Flash acknowledge when newly filled (transition from not-filled → filled) */
+        if (!stationEls[s.id].classList.contains('flash')) {
+          stationEls[s.id].classList.add('flash');
+          setTimeout(() => {
+            if (stationEls[s.id]) stationEls[s.id].classList.remove('flash');
+          }, 400);
+        }
       } else {
-        updateStationDataSimple(s.id, s.label, tag);
+        stationEls[s.id].classList.remove('has-input');
       }
     });
 
-    /* ── 5. Cargo tags ── */
-    updateStationTag('start', null);
-    activeStations.forEach(s => {
-      if (s.id === 'start') return;
-      updateStationTag(s.id, zoneFills[s.zone] || null);
-    });
-
-    /* ── 6. Move truck ── */
-    if (progress !== lastProgress) {
-      moveTruckTo(progress, false);
-      lastProgress = progress;
+    /* ── 3. Phase A: Enable/disable Run button ── */
+    if (runBtnEl) {
+      runBtnEl.disabled = !hasAnyInput || isRunning;
     }
 
-    /* ── 7. Narration ── */
+    /* ── 4. Phase A: Store state for runQuery() ── */
+    currentZoneFills = zoneFills;
+    currentZoneCorrect = state.zoneCorrect || {};
+    currentWrongLines = state.wrongLines || [];  /* v5: số dòng sai cho feedback */
+    currentIsComplete = !!state.isComplete;
+    /* FIX 2g-A4: lưu expected SQL + user-built để showFeedback chẩn đoán khi sai */
+    lastExpected = (state.expected || '').toUpperCase();
+    lastUserBuilt = (state.userBuilt || '').toUpperCase();
+    lastDiag = state.diag || '';
+
+    /* ── 5. Narration ── */
     updateNarration(state, progress);
 
-    /* ── 8. Completion celebration ── */
-    if (state.isComplete && !lastIsComplete) {
-      celebrate();
-    }
+    /* ── 6. Phase A: NO auto-celebrate, NO auto-state-complete (runQuery handles those) ── */
     lastIsComplete = !!state.isComplete;
   }
 
-  function updateStationData(stationId, table, opts) {
-    const el = stationEls[stationId];
-    if (!el) return;
-    const slot = el.querySelector(`[data-station-data="${stationId}"]`);
-    if (!slot) return;
+  /* updateStationData + updateStationDataSimple + updateStationTag + updateTruckCargo
+   * — REMOVED in STAGE 2c. Town map uses SVG mechanism + manifest panel. */
 
-    if (opts.state === 'empty') {
-      slot.innerHTML = `<div class="data-empty">
-        <span class="data-empty-dot"></span>
-        <span class="data-empty-text">chờ dữ liệu</span>
-      </div>`;
-      slot.classList.remove('has-data');
-      return;
+  /* §A2/§B6: Apply/clear container state classes for correct feedback.
+     is-correct = one-time pulse + sparkle (§A2), state-correct = persistent green border (§B6). */
+  function setContainerComplete(isComplete) {
+    var container = document.querySelector('.step3-exercise');
+    if (!container) return;
+    container.classList.remove('is-correct', 'state-correct', 'is-incorrect', 'state-incorrect');
+    if (isComplete) {
+      container.classList.add('is-correct', 'state-correct');
     }
+  }
 
-    let matchedRows = null;
-    if (opts.matchedRows !== null && opts.matchedRows !== undefined) {
-      matchedRows = opts.matchedRows;
-    }
+  /* ═════ Phase A (Fix 4 v5) — Execution Engine ═════ */
 
-    slot.innerHTML = renderMiniTable(table, {
-      state: opts.state,
-      selectedCols: opts.selectedCols,
-      matchedRows: matchedRows
+  /* resetExecutionVisuals — clear .executing/.completed/.error from stations, clear feedback UI */
+  function resetExecutionVisuals() {
+    activeStations.forEach(s => {
+      if (stationEls[s.id]) {
+        stationEls[s.id].classList.remove('executing', 'error');
+      }
     });
-    slot.classList.add('has-data');
+    var old = document.querySelector('.query-feedback');
+    if (old) old.remove();
+    var oldExp = document.querySelector('.query-explanation');
+    if (oldExp) oldExp.remove();
   }
 
-  function updateStationDataSimple(stationId, label, text) {
-    const el = stationEls[stationId];
-    if (!el) return;
-    const slot = el.querySelector(`[data-station-data="${stationId}"]`);
-    if (!slot) return;
-    slot.innerHTML = `<div class="data-simple">
-      <span class="data-simple-icon">✓</span>
-      <span class="data-simple-text">${escapeHtml(String(text).substring(0, 60))}</span>
-    </div>`;
-    slot.classList.add('has-data');
+  /* showStationResult — REMOVED in STAGE 2c. runQuery now writes directly to manifest + station mechanism. */
+
+  /* executeStation — per-clause SQL transformer.
+     Input: text (zone's filled content). Output: { data, display, matchedRows, selectedCols, error } */
+  function executeStation(station, input, currentData, sourceTable) {
+    var zone = station.zone;
+    var text = String(input || '').trim();
+
+    if (zone === 'from-line') {
+      return {
+        data: { rows: sourceTable.dataRows.slice(), columns: sourceTable.columns.slice() },
+        display: 'loaded', error: false
+      };
+    }
+
+    if (zone === 'where-line') {
+      var matched = parseWhereRows(text, sourceTable);
+      if (matched === null) {
+        return { error: true, display: 'error' };
+      }
+      if (matched.length === 0) {
+        return { error: true, display: 'error' };
+      }
+      var filtered = currentData.rows.filter(function(_, i) { return matched.indexOf(i) >= 0; });
+      return {
+        data: { rows: filtered, columns: currentData.columns },
+        display: 'filtered', matchedRows: matched, error: false
+      };
+    }
+
+    if (zone === 'select-line') {
+      var cols = text.split(',').map(function(c) { return c.trim(); }).filter(Boolean);
+      if (cols.length === 0) {
+        return { error: true, display: 'error' };
+      }
+      return {
+        data: { rows: currentData.rows, columns: cols },
+        display: 'projected', selectedCols: cols, error: false
+      };
+    }
+
+    /* GROUP BY, ORDER BY, etc. — pass through */
+    return { data: currentData, display: 'simple', error: false };
   }
 
-  function updateStationTag(stationId, text) {
-    const el = stationEls[stationId];
-    if (!el) return;
-    const tag = el.querySelector(`[data-station-tag="${stationId}"]`);
-    if (!tag) return;
-    if (text) {
-      tag.innerHTML = `<span class="cargo-pill">${escapeHtml(String(text).substring(0, 50))}</span>`;
-      tag.classList.add('has-text');
-    } else {
-      tag.innerHTML = '';
-      tag.classList.remove('has-text');
+  /* ═════ v6.1 Helpers ═════ */
+
+  /* v6.2 STAGE 2b §3: moveTruckToStation — anticipation 120ms + travel 550ms + arrival 150ms.
+   * Spec §6: "anticipation 120ms trước travel: scaleY(0.85) + lùi nhẹ.
+   *          arrival: overshoot translateY(+4px) → settle 150ms."
+   * Travel dùng CSS transition transform cubic-bezier(0.65,0,0.35,1) 550ms.
+   * Anticipation + arrival qua keyframe animations (.truck-anticipating / .truck-arriving).
+   * Total ~820ms per movement.
+   */
+  /* v6.3 STAGE 2c — driveTruckToStation(stationId).
+   * Anticipation 120ms (scaleY .85) → driveTruckTo f (550ms ease-in-out, rAF) → arrival 150ms (scaleY 1.05 → 1).
+   * Returns a Promise resolved when arrival settles. */
+  function driveTruckToStation(stationId) {
+    if (!truckEl || !routeEl) return Promise.resolve();
+    var station = activeStations.find(function(s) { return s.id === stationId; });
+    if (!station) return Promise.resolve();
+    /* Option A: prefer the LIVE fMap from the vertical route (packet lands exactly on cards). */
+    var key = station.id === 'start' ? 'start' : (station.zone || station.id);
+    var f = (currentFMap && currentFMap[key] !== undefined) ? currentFMap[key] : undefined;
+    if (f === undefined) f = activeStations.indexOf(station) / Math.max(1, activeStations.length - 1);
+
+    /* 1. ANTICIPATION 120ms — scaleY 0.85 + retreat (CSS keyframe) */
+    truckEl.classList.add('truck-anticipating');
+    return new Promise(function(resolve) {
+      setTimeout(function() {
+        /* F6-fix (3.8-fix): ABORT — check cancellation TRƯỚC khi start travel phase. */
+        if (failState && failState.token && failState.token.cancelled) {
+          truckEl.classList.remove('truck-anticipating');
+          resolve();
+          return;
+        }
+        truckEl.classList.remove('truck-anticipating');
+        /* 2. TRAVEL 1200ms ease-in-out cubic, rAF (with abort check inside) */
+        driveTruckTo(f, false, 1200).then(function() {
+          /* F6-fix: also check after travel */
+          if (failState && failState.token && failState.token.cancelled) {
+            resolve();
+            return;
+          }
+          /* 3. ARRIVAL overshoot → settle 150ms */
+          truckEl.classList.add('truck-arriving');
+          setTimeout(function() {
+            truckEl.classList.remove('truck-arriving');
+            resolve();
+          }, 150);
+        });
+      }, 120);
+    });
+  }
+
+  /* v6.2 STAGE 2b §4: updateTruckBadge — Q2=A digit-bounce + flash module-accent.
+   * Số cũ: scale(1→0) + fade 120ms. Số mới: scale(0→1.2→1) 160ms + 1 nhịp flash module-accent.
+   * Flash dùng --module-accent, KHÔNG dùng màu zone (tránh nhiễu/spoiler).
+   * Total ~280ms. Skip nếu count không đổi.
+   */
+  function updateTruckBadge(newCount) {
+    if (!truckEl) return;
+    var badge = truckEl.querySelector('[data-town-truck-badge]');
+    if (!badge) return;
+    var oldText = badge.textContent.trim();
+    var newText = String(newCount);
+    if (oldText === newText) return;
+
+    /* Build digit-bounce DOM: old (out) + new (in) */
+    badge.innerHTML = '';
+    var oldDigit = document.createElement('span');
+    oldDigit.className = 'badge-digit badge-digit-out';
+    oldDigit.textContent = oldText;
+    var newDigit = document.createElement('span');
+    newDigit.className = 'badge-digit badge-digit-in';
+    newDigit.textContent = newText;
+    badge.appendChild(oldDigit);
+    badge.appendChild(newDigit);
+
+    /* 1 nhịp flash module-accent trên badge container */
+    badge.classList.remove('flash');
+    void badge.offsetWidth;
+    badge.classList.add('flash');
+
+    /* Cleanup sau 280ms → reset về plain text */
+    setTimeout(function() {
+      badge.classList.remove('flash');
+      badge.innerHTML = '';
+      badge.textContent = newText;
+    }, 280);
+  }
+
+  /* renderStationMiniTable — render with .filtered-out/.col-hidden classes (v6.1) */
+  function renderStationMiniTable(inputData, result, sourceTable) {
+    var cols = sourceTable.columns;
+    var rows = inputData.rows;
+
+    var headerHTML = cols.map(function(c) {
+      var hidden = result.selectedCols && result.selectedCols.indexOf(c) === -1
+                   && result.selectedCols.indexOf('*') === -1;
+      return '<th class="' + (hidden ? 'col-hidden' : '') + '">' + escapeHtml(c) + '</th>';
+    }).join('');
+
+    var rowsHTML = rows.map(function(row, i) {
+      var filteredOut = result.matchedRows && result.matchedRows.indexOf(i) === -1;
+      var cls = filteredOut ? 'filtered-out' : 'filtered-in';
+      var cells = cols.map(function(c, ci) {
+        var hidden = result.selectedCols && result.selectedCols.indexOf(c) === -1
+                     && result.selectedCols.indexOf('*') === -1;
+        return '<td class="' + (hidden ? 'col-hidden' : '') + '">' + escapeHtml(row[ci]) + '</td>';
+      }).join('');
+      return '<tr class="' + cls + '">' + cells + '</tr>';
+    }).join('');
+
+    return '<table class="station-mini-table">' +
+           '<thead><tr>' + headerHTML + '</tr></thead>' +
+           '<tbody>' + rowsHTML + '</tbody></table>';
+  }
+
+  /* getStepLogText — Vietnamese text per station result */
+  function getStepLogText(station, result, data) {
+    if (result.error) return '⚠ Lỗi xử lý';
+    var zone = station.zone;
+    if (zone === 'from-line') return '📦 Tải ' + data.rows.length + ' dòng';
+    if (zone === 'where-line') {
+      var matched = result.matchedRows ? result.matchedRows.length : 0;
+      return '🚧 Lọc: ' + matched + '/' + data.rows.length + ' dòng khớp';
+    }
+    if (zone === 'select-line') {
+      var cols = result.selectedCols ? result.selectedCols.length : 0;
+      return '📤 Chọn ' + cols + ' cột';
+    }
+    if (zone === 'group-line') return '📊 Gom nhóm: ' + data.rows.length + ' nhóm';
+    if (zone === 'order-line') return '📈 Sắp xếp: ' + data.rows.length + ' dòng';
+    if (zone === 'having-line') return '🔍 Lọc nhóm: ' + data.rows.length + ' nhóm';
+    return '✓ Xong';
+  }
+
+  /* ═════ v6.1 runQuery — sequential execution with station expansion + data viz ═════ */
+  function runQuery() {
+    if (isRunning) return;
+    if (!currentZoneFills || Object.keys(currentZoneFills).length === 0) return;
+    runQueryAsync();
+  }
+
+  function runQueryAsync() {
+    isRunning = true;
+    if (runBtnEl) { runBtnEl.disabled = true; runBtnEl.innerHTML = '⏳ Đang chạy...'; }
+    /* FIX 2g-A1: gate route-flow — turn ON chỉ khi xe đi (user: "xe đứng thì đường chạy như rắn").
+       gate CSS: `.town-map.is-running .town-route-flow { animation-play-state: running }` */
+    if (trackEl) {
+      var townMap = trackEl.querySelector('.town-map');
+      if (townMap) townMap.classList.add('is-running');
+    }
+
+    /* Reset town-map state: clear station classes + manifest + mechanism visuals */
+    activeStations.forEach(function(s) {
+      var el = stationEls[s.id];
+      if (el) {
+        el.classList.remove('active', 'done', 'error', 'executing', 'has-input');
+        var c = el.querySelector('[data-qcard-count]');
+        if (c) c.textContent = '';
+      }
+    });
+    /* Option A v2: panel dữ liệu về lại BẢNG NGUỒN (không ẩn/không để trống). */
+    showManifestRest();
+    if (trackEl) {
+      trackEl.querySelectorAll('.sil-box').forEach(function(b) {
+        b.style.opacity = '0';
+        b.style.transform = '';
+        b.classList.remove('kept', 'dropped');
+      });
+      trackEl.querySelectorAll('.sil-barrier').forEach(function(b) {
+        b.style.transform = 'translateX(0)';
+      });
+    }
+    /* Clear all truck indicators .driving */
+    document.querySelectorAll('.pipeline-truck-indicator').forEach(function(t) {
+      t.classList.remove('driving');
+    });
+
+    var table = (window.__pipeline && window.__pipeline.table) || DEFAULT_TABLE;
+
+    /* Remove orphan pipeline-truck-indicator if any (v6.2 cleanup) */
+    document.querySelectorAll('.pipeline-truck-indicator').forEach(function(t) {
+      t.classList.remove('driving');
+    });
+
+    /* SQL semantic order (RANK từ 2b) */
+    var semanticOrder = ['from-line', 'where-line', 'group-line', 'having-line', 'select-line', 'order-line'];
+    var filledStations = [];
+    semanticOrder.forEach(function(zoneId) {
+      if (currentZoneFills[zoneId]) {
+        var station = activeStations.find(function(s) { return s.zone === zoneId; });
+        if (station) filledStations.push({ station: station, input: currentZoneFills[zoneId] });
+      }
+    });
+    activeStations.forEach(function(s) {
+      if (s.zone && s.id !== 'start' && currentZoneFills[s.zone]) {
+        var exists = filledStations.some(function(f) { return f.station.zone === s.zone; });
+        if (!exists) filledStations.push({ station: s, input: currentZoneFills[s.zone] });
+      }
+    });
+
+    var currentData = { rows: table.dataRows.slice(), columns: table.columns.slice() };
+
+    /* Async sequence — §F pacing ~1s/station (Q4=B) */
+    (async function() {
+      for (var i = 0; i < filledStations.length; i++) {
+        var entry = filledStations[i];
+        var stationEl = stationEls[entry.station.id];
+        if (!stationEl) continue;
+
+        /* 1. Truck drive → station (anticipation 120 + travel 550 + arrival 150 = 820ms) */
+        sfxEngine();
+        await driveTruckToStation(entry.station.id);
+
+        /* 2. Mark station active (glow) */
+        stationEl.classList.add('active');
+
+        /* 3. Execute SQL clause */
+        var result = executeStation(entry.station, entry.input, currentData, table);
+
+        /* AUDIT-FIX 2026-07-04 (tính SỚM, trước khi vẽ manifest): mệnh đề đúng đáp án
+           nhưng engine demo không mô phỏng nổi → coi là pass-mềm, KHÔNG vẽ "⚠ Lỗi xử lý"
+           đỏ (trước đây manifest in lỗi đỏ rồi trạm lại ✓ xanh — mâu thuẫn thị giác). */
+        var engineOnlyFail = result.error && currentZoneCorrect[entry.station.zone] === true;
+
+        /* 4. Update manifest (replaces old station-data-area) */
+        if (engineOnlyFail) {
+          showManifestRest();
+          var softBadge = stationEl.querySelector('[data-qcard-count]');
+          if (softBadge) softBadge.textContent = '✓';
+        } else {
+          updateManifest(entry.station, result, currentData, table);
+        }
+
+        /* 5. Per-zone mechanism animation (§B.3) */
+        if (!result.error) {
+          await runStationMechanism(entry.station, result, currentData, table);
+        }
+
+        /* 6. Update truck badge — Q2=A digit-bounce */
+        if (!result.error) {
+          updateTruckBadge(result.data.rows.length);
+        }
+
+        /* 7. Wait for badge animation + let user READ manifest (~1.5s pause) */
+        await wait(1500);
+
+        /* 8. Mark done / error.
+           v4 FIX: ga chỉ ✓ khi (a) chạy được VÀ (b) nội dung mệnh đề ĐÚNG (zoneCorrect).
+           Trước đây FROM luôn ✓ vì "nạp bảng" luôn chạy được, dù zone chứa rác. */
+        stationEl.classList.remove('active');
+        /* AUDIT-FIX 2026-07-04: mệnh đề đúng đáp án nhưng engine demo không mô phỏng nổi
+           (JOIN nhiều bảng / EXTRACT / subquery / ->>) → engineOnlyFail (tính ở bước 3)
+           → trạm vẫn QUA, chỉ không cập nhật data. Trước đây: lắp đúng 100% vẫn
+           "✗ Chưa đúng" ở 6 bài (db_02/03/06/08/11/14) — dead-end oan. */
+        var clauseWrong = currentZoneCorrect[entry.station.zone] === false;
+        if (clauseWrong || (result.error && !engineOnlyFail)) {
+          /* F6 (3.8): parse error / sai nội dung → fail animation (xe lượn về KHO). */
+          stationEl.classList.add('error');
+          shakeTruck();
+          runFailAnimation(entry.station, filledStations, i);
+          return;
+        }
+        stationEl.classList.add('done');
+        sfxChime();
+        if (!engineOnlyFail) currentData = result.data;   /* pass-mềm: giữ data hiện có */
+        await wait(80);
+      }
+      /* F6 (3.8): sau loop, kiểm tra currentIsComplete. Nếu sai (wrong SQL nhưng parse OK) → fail.
+         Cũ: gọi finishExecution() mặc định dùng currentIsComplete để show feedback.
+         Mới: dùng last filled station làm "wrongStation" fallback (vì đã chạy hết, không có station cụ thể sai). */
+      if (!currentIsComplete && filledStations.length > 0) {
+        var lastEntry = filledStations[filledStations.length - 1];
+        runFailAnimation(lastEntry.station, filledStations, filledStations.length - 1);
+        return;
+      }
+      finishExecution();
+    })();
+  }
+
+  /* wait — Promise-based delay */
+  function wait(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+  /* ═════ F6 (PHASE 3.8): Fail animation — xe lượn về KHO (Brilliant-style) ═════
+     - Lần 1: 1500ms full (drive → veer → return).
+     - Lần 2: 800ms rút gọn (drive shorter → veer short → return fast).
+     - Lần 3+: 400ms snap (rung + flash + snap KHO, không animate lùi).
+     - Pill + diagnoseDiff + "Thử lại" LUÔN đầy đủ mọi lần (chỉ rút gọn xe).
+     - Cancellation: click bất kỳ (ngoài .query-feedback) → cancel + snap KHO + reset.
+     - Reset failCount: celebrate (đúng) · reset() (handleDragReset) · đổi bài (page reload). */
+
+  /* F6: snap truck về KHO instant (f=0) — dùng cho cancel + lần 3+ snap. */
+  function snapToKho() {
+    if (!truckEl || !routeEl) return;
+    var p = routeEl.getPointAtLength(0);
+    truckEl.style.left = p.x + 'px';
+    truckEl.style.top = p.y + 'px';
+    truckEl.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+    currentTruckF = 0;
+    if (truckEl) {
+      truckEl.classList.remove('is-driving', 'truck-anticipating', 'truck-arriving', 'celebrate', 'shake');
     }
   }
+
+  /* F6: truck "lượn" off-path small loop quanh vị trí hiện tại.
+     Offset tròn (sin/cos) quanh path, radius thu nhỏ dần về 0. */
+  function veerOffPath(durationMs) {
+    if (!truckEl || !routeEl) return Promise.resolve();
+    var t0 = performance.now();
+    return new Promise(function(resolve) {
+      function fr(now) {
+        if (failState.token && failState.token.cancelled) { resolve(); return; }
+        var k = Math.min(1, (now - t0) / durationMs);
+        var total = routeEl.getTotalLength();
+        var curF = currentTruckF;
+        var offsetR = 30 * (1 - k);  // shrink về 0 cuối loop
+        var phase = k * Math.PI * 2;
+        var p = routeEl.getPointAtLength(curF * total);
+        var offsetX = Math.sin(phase) * offsetR;
+        var offsetY = -Math.abs(Math.cos(phase)) * offsetR * 0.6;
+        truckEl.style.left = (p.x + offsetX) + 'px';
+        truckEl.style.top = (p.y + offsetY) + 'px';
+        truckEl.style.transform = 'translate(-50%, -50%) rotate(' + (k * 90) + 'deg)';
+        if (k < 1) requestAnimationFrame(fr);
+        else resolve();
+      }
+      requestAnimationFrame(fr);
+    });
+  }
+
+  /* F6: cancel fail animation (bấm bất kỳ lúc xe đang lượn). */
+  function cancelFailAnimation() {
+    if (failState.token) {
+      failState.token.cancelled = true;
+      failState.token = null;
+    }
+    if (failState.cancelHandler) {
+      document.removeEventListener('click', failState.cancelHandler, true);
+      failState.cancelHandler = null;
+    }
+    snapToKho();
+    // Clear station error/active/done states
+    activeStations.forEach(function(s) {
+      var el = stationEls[s.id];
+      if (el) el.classList.remove('error', 'active', 'done', 'arriving');
+    });
+    // Restore run button
+    if (trackEl) {
+      var townMap = trackEl.querySelector('.town-map');
+      if (townMap) townMap.classList.remove('is-running');
+    }
+    isRunning = false;
+    if (runBtnEl) {
+      runBtnEl.disabled = false;
+      runBtnEl.innerHTML = '▶ Thử lại';
+    }
+  }
+
+  /* F6: main fail animation orchestrator.
+     wrongStation: station sai đầu tiên (hoặc last filled nếu no-error wrong data).
+     filledStations: danh sách station đã fill (cho future-station grayed).
+     wrongIndex: index của wrongStation trong filledStations. */
+  async function runFailAnimation(wrongStation, filledStations, wrongIndex) {
+    // Cancel any prior animation
+    if (failState.token) failState.token.cancelled = true;
+    var token = { cancelled: false };
+    failState.token = token;
+    // Global click handler: any click cancels (trừ .query-feedback)
+    failState.cancelHandler = function(e) {
+      if (e.target.closest && e.target.closest('.query-feedback')) return;
+      cancelFailAnimation();
+    };
+    document.addEventListener('click', failState.cancelHandler, true);
+    // Increment fail count + determine timing
+    failState.count++;
+    var totalMs;
+    if (failState.count >= 3) totalMs = 400;
+    else if (failState.count === 2) totalMs = 800;
+    else totalMs = 1500;
+    // Mark wrong station + future stations as error (visual: future path grayed)
+    if (stationEls[wrongStation.id]) stationEls[wrongStation.id].classList.add('error');
+    for (var fi = wrongIndex + 1; fi < filledStations.length; fi++) {
+      var futureEl = stationEls[filledStations[fi].station.id];
+      if (futureEl) futureEl.classList.add('error');
+    }
+    // Animation phases
+    try {
+      if (totalMs >= 1500) {
+        // Full: drive → veer → return
+        await driveTruckToStation(wrongStation.id);
+        if (token.cancelled) return;
+        await wait(80);
+        await veerOffPath(280);
+        if (token.cancelled) return;
+        await driveTruckTo(0, false, 550);
+      } else if (totalMs >= 800) {
+        // Rút gọn: drive shorter → veer ngắn → return nhanh
+        await driveTruckToStation(wrongStation.id);
+        if (token.cancelled) return;
+        await veerOffPath(150);
+        if (token.cancelled) return;
+        await driveTruckTo(0, false, 350);
+      } else {
+        // Snap: shake + flash + immediate KHO (no lùi animation)
+        shakeTruck();
+        await wait(200);
+        snapToKho();
+      }
+    } catch (e) { /* ignore */ }
+    // If cancelled mid-flight, don't show feedback (cancelFailAnimation already cleaned up)
+    if (token.cancelled) return;
+    // Cleanup cancel handler before showing feedback
+    if (failState.cancelHandler) {
+      document.removeEventListener('click', failState.cancelHandler, true);
+      failState.cancelHandler = null;
+    }
+    failState.token = null;
+    // Show feedback (pill + diagnoseDiff + retry)
+    finishExecution(false);
+  }
+
+  /* updateManifest — fill manifest panel (§D: 280px, font 12.5px) */
+  function updateManifest(station, result, data, table) {
+    if (!manifestEl || !manifestBodyEl) return;
+    if (manifestTtlEl) {
+      var titles = {
+        'from-line': '📦 FROM — tải bảng',
+        'where-line': '🚧 WHERE — lọc',
+        'group-line': '📊 GROUP BY — gom nhóm',
+        'having-line': '🔍 HAVING — lọc nhóm',
+        'select-line': '📤 SELECT — chọn cột',
+        'order-line': '📈 ORDER BY — sắp xếp'
+      };
+      manifestTtlEl.textContent = titles[station.zone] || ('📋 ' + station.label);
+      manifestTtlEl.style.color = result.error ? '#EF4444' : '';
+    }
+    if (result.error) {
+      manifestBodyEl.innerHTML = '<div class="manifest-error">⚠ Lỗi xử lý</div>';
+    } else {
+      manifestBodyEl.innerHTML = renderStationMiniTable(data, result, table);
+      var rows = manifestBodyEl.querySelectorAll('.station-mini-table tbody tr');
+      rows.forEach(function(tr, idx) { tr.style.setProperty('--i', idx); });
+    }
+    if (manifestSubEl) {
+      manifestSubEl.textContent = getStepLogText(station, result, data);
+    }
+    manifestEl.classList.add('show');
+
+    /* Option A: mirror the row-count transform INLINE on the clause card (manifest panel is hidden). */
+    var cardEl = stationEls[station.id];
+    if (cardEl) {
+      var cntEl = cardEl.querySelector('[data-qcard-count]');
+      if (cntEl) {
+        if (result.error) {
+          cntEl.textContent = '⚠ lỗi';
+        } else if (station.zone === 'where-line') {
+          var kept = result.matchedRows ? result.matchedRows.length : (result.data ? result.data.rows.length : data.rows.length);
+          cntEl.textContent = kept + '/' + data.rows.length + ' dòng';
+        } else if (station.zone === 'select-line') {
+          var nc = result.selectedCols ? result.selectedCols.length : (result.data ? result.data.columns.length : 0);
+          cntEl.textContent = nc + ' cột';
+        } else {
+          cntEl.textContent = (result.data ? result.data.rows.length : data.rows.length) + ' dòng';
+        }
+      }
+    }
+  }
+
+  /* runStationMechanism — per-zone visual (§B.3 CƠ CHẾ nhìn thấy) */
+  function runStationMechanism(station, result, data, table) {
+    var zone = station.zone;
+    if (zone === 'from-line') return mechFrom(result);
+    if (zone === 'where-line') return mechWhere(result);
+    if (zone === 'select-line') return mechSelect(result);
+    return wait(150);
+  }
+
+  /* FROM — 4 cargo boxes fade in (stagger 80ms) */
+  function mechFrom() {
+    var boxes = trackEl.querySelectorAll('.silhouette-from .sil-box');
+    if (!boxes.length) return wait(200);
+    var promises = [];
+    boxes.forEach(function(b, i) {
+      promises.push(new Promise(function(resolve) {
+        setTimeout(function() {
+          b.style.transition = 'opacity 220ms ease-out';
+          b.style.opacity = '1';
+          resolve();
+        }, i * 80);
+      }));
+    });
+    return Promise.all(promises).then(function() { return wait(150); });
+  }
+
+  /* WHERE — gate filter: matched highlight xanh, unmatched fade+drop. Barrier lift. */
+  function mechWhere(result) {
+    var boxes = trackEl.querySelectorAll('.silhouette-from .sil-box');
+    if (!boxes.length) return wait(200);
+    var matched = result.matchedRows || [];
+    var promises = [];
+    boxes.forEach(function(b, i) {
+      promises.push(new Promise(function(resolve) {
+        setTimeout(function() {
+          b.style.transition = 'opacity 250ms, transform 350ms cubic-bezier(0.5, 0, 0.5, 1)';
+          if (matched.indexOf(i) >= 0) {
+            b.style.transform = 'translateY(-3px)';
+            b.classList.add('kept');
+          } else {
+            b.style.opacity = '0.15';
+            b.style.transform = 'translateY(8px)';
+            b.classList.add('dropped');
+          }
+          resolve();
+        }, i * 90);
+      }));
+    });
+    var barriers = trackEl.querySelectorAll('.silhouette-where .sil-barrier');
+    if (barriers.length) {
+      barriers.forEach(function(b) { b.style.transition = 'transform 300ms ease-out'; });
+      barriers[0].style.transform = 'translateY(-4px)';
+      if (barriers[1]) barriers[1].style.transform = 'translateY(-4px)';
+    }
+    return Promise.all(promises).then(function() { return wait(250); });
+  }
+
+  /* SELECT — dock windows highlight cyan */
+  function mechSelect(result) {
+    var headers = trackEl.querySelectorAll('.silhouette-select .sil-window');
+    if (!headers.length) return wait(200);
+    var promises = [];
+    headers.forEach(function(h, i) {
+      promises.push(new Promise(function(resolve) {
+        setTimeout(function() {
+          h.style.transition = 'fill 200ms, opacity 200ms';
+          h.setAttribute('fill', '#22D3EE');
+          h.style.opacity = '1';
+          resolve();
+        }, i * 60);
+      }));
+    });
+    return Promise.all(promises).then(function() { return wait(150); });
+  }
+
+    function finishExecution(success) {
+      if (success === undefined) success = currentIsComplete;
+      if (success) {
+        celebrate();
+        setContainerComplete(true);
+        showFeedback('correct');
+      } else {
+        setContainerComplete(false);
+        showFeedback('incorrect');
+      }
+      isRunning = false;
+      /* FIX 2g-A1: gate OFF sau khi xong — đường chảy tắt khi xe dừng (đúng tinh thần route = dữ liệu di chuyển) */
+      if (trackEl) {
+        var townMap = trackEl.querySelector('.town-map');
+        if (townMap) townMap.classList.remove('is-running');
+      }
+      if (runBtnEl) {
+        runBtnEl.disabled = false;
+        runBtnEl.innerHTML = success ? '↻ Chạy lại' : '▶ Thử lại';
+      }
+    }
+
+  /* FIX 2g-A4: chẩn đoán sai ở đâu (thay vì generic "✗ Chưa đúng") */
+  function diagnoseDiff(userSQL, expectedSQL) {
+    if (!userSQL || !expectedSQL) return '';
+    var norm = function(s) {
+      return (s || '').replace(/;$/, '').replace(/\s+/g, ' ').replace(/\s*([,()])\s*/g, '$1').trim().toUpperCase();
+    };
+    var u = norm(userSQL), e = norm(expectedSQL);
+    if (u === e) return '';
+    /* Parse clause-by-clause */
+    var uParts = {
+      select: (u.match(/SELECT\s+(.+?)\s+FROM/) || [])[1],
+      from:   (u.match(/FROM\s+([\w_]+)/) || [])[1],
+      where:  (u.match(/WHERE\s+(.+)$/) || [])[1],
+    };
+    var eParts = {
+      select: (e.match(/SELECT\s+(.+?)\s+FROM/) || [])[1],
+      from:   (e.match(/FROM\s+([\w_]+)/) || [])[1],
+      where:  (e.match(/WHERE\s+(.+)$/) || [])[1],
+    };
+    var tips = [];
+    /* Missing clause */
+    if (!uParts.from && eParts.from) tips.push('Thiếu FROM — máy không biết truy vấn bảng nào.');
+    else if (uParts.from && eParts.from && uParts.from !== eParts.from) tips.push('FROM khác: bạn dùng "' + uParts.from + '" nhưng đáp án là "' + eParts.from + '".');
+    if (!uParts.select && eParts.select) tips.push('Thiếu SELECT.');
+    else if (uParts.select && eParts.select && uParts.select !== eParts.select) tips.push('SELECT khác: bạn "' + uParts.select + '" — đáp án "' + eParts.select + '".');
+    if (eParts.where && !uParts.where) tips.push('Thiếu WHERE — cần lọc để ra đúng 1 dòng.');
+    else if (uParts.where && eParts.where && uParts.where !== eParts.where) tips.push('WHERE khác: bạn "' + uParts.where + '" — đáp án "' + eParts.where + '".');
+    if (tips.length === 0) {
+      /* Clauses match but exact string differs (extra spaces, semicolons, ordering) */
+      tips.push('Cú pháp gần đúng — kiểm tra khoảng trắng, dấu phẩy, thứ tự.');
+    }
+    return tips.slice(0, 3).join(' ');
+  }
+
+  /* Brilliant-style feedback pill + action buttons */
+  function showFeedback(type) {
+    var old = document.querySelector('.query-feedback');
+    if (old) old.remove();
+
+    /* Append to .step-pane (NOT .step3-exercise which has overflow:hidden) */
+    var container = document.querySelector('.step-pane[data-step="3"]') ||
+                    document.querySelector('.step3-exercise') || mountEl;
+    var fb = document.createElement('div');
+    fb.className = 'query-feedback ' + type;
+
+    if (type === 'correct') {
+      /* UX fix (user 2026-07-04): BỎ nút "Tiếp tục" trong bar — trùng với footer "Tiếp theo"
+         ngay bên dưới (2 CTA chồng nhau ở góc phải). Footer là CTA duy nhất, cho nó pulse. */
+      fb.innerHTML =
+        '<span class="feedback-pill correct">✓ Chính xác!</span>' +
+        '<div class="feedback-actions">' +
+          '<button class="feedback-btn outlined" data-action="explain">Tại sao?</button>' +
+        '</div>';
+      var footNext = document.getElementById('nav-next');
+      if (footNext) footNext.classList.add('cta-pulse');
+    } else {
+      /* v5: KHÔNG giải thích / KHÔNG lộ đáp án (user chốt) — nhưng CHỈ SỐ DÒNG sai
+         để người học biết nhìn vào đâu mà tự động não (user: "sai ở line 1 line 2 line 3 thôi").
+         Ga sai vẫn tô ĐỎ trên bản đồ; "Xem gợi ý" cho ai chủ động muốn hint. */
+      var lineTxt = '';
+      if (currentWrongLines && currentWrongLines.length) {
+        lineTxt = ' Xem lại dòng ' + currentWrongLines.join(', ') + '.';
+      }
+      fb.innerHTML =
+        '<span class="feedback-pill incorrect">✗ Chưa đúng.' + lineTxt + '</span>' +
+        '<div class="feedback-actions">' +
+          '<button class="feedback-btn outlined" data-action="hint">Xem gợi ý</button>' +
+          '<button class="feedback-btn filled incorrect" data-action="retry">Thử lại</button>' +
+        '</div>';
+    }
+    container.appendChild(fb);
+
+    /* Event delegation for action buttons */
+    fb.addEventListener('click', function(e) {
+      var btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      var action = btn.dataset.action;
+      if (action === 'explain') {
+        window.showQueryExplanation();
+      } else if (action === 'continue') {
+        if (typeof window.goToStep === 'function') window.goToStep(4);
+      } else if (action === 'hint') {
+        var firstFilled = filledStations[0];
+        if (firstFilled) window.showStationHint(firstFilled.station);
+      } else if (action === 'retry') {
+        window.runQuery();
+      }
+    });
+  }
+
+  /* showQueryExplanation — minimal new (per user instruction):
+     Display step-by-step explanation by calling showStationHint for each filled station in sequence.
+     User sees hints appear in the status bar one after another. */
+  function showQueryExplanation() {
+    var filledList = [];
+    for (var i = 1; i < activeStations.length; i++) {
+      var s = activeStations[i];
+      if (s.zone && currentZoneFills[s.zone]) {
+        filledList.push(s);
+      }
+    }
+    if (filledList.length === 0) return;
+
+    /* Show each hint sequentially with 1.5s gap (status bar updates) */
+    filledList.forEach(function(station, idx) {
+      setTimeout(function() {
+        showStationHint(station);
+      }, idx * 1500);
+    });
+  }
+
+  /* Expose Phase A functions to global scope for inline onclick handlers */
+  window.runQuery = runQuery;
+  window.showQueryExplanation = showQueryExplanation;
+  /* activeStations read-only access (for showStationHint button etc.) */
+  Object.defineProperty(window, 'activeStations', {
+    get: function() { return activeStations; }
+  });
 
   function parseWhereRows(filter, table) {
     if (!filter) return null;
-    const m = /(\w+)\s*=\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(true|false))/i.exec(filter);
-    if (!m) return null;
-    const colName = m[1];
-    const val = m[2] !== undefined ? m[2] :
-                m[3] !== undefined ? m[3] :
-                m[4] !== undefined ? m[4] : m[5];
-    const colIdx = table.columns.indexOf(colName);
-    if (colIdx < 0) return null;
+    // PHASE 3.5a-fix-A7: split WHERE theo AND, mỗi điều kiện match TẤT CẢ (giao/intersection).
+    // Backward-safe: 1 điều kiện = y như cũ. Test bắt buộc: Bài 6 `dlc_no=2 AND ref_game_id=300` → đúng 1 dòng (Blood and Wine).
+    // Chưa hỗ trợ OR / `>` / `<` / LIKE — nếu gặp, regex không match → return null (parse fail, an toàn).
+    const conds = filter.split(/\s+AND\s+/i).map(s => s.trim()).filter(Boolean);
+    const parsed = conds.map(cond => {
+      const m = /(\w+)\s*=\s*(?:'([^']*)'|"([^"]*)"|(\d+)|(true|false))/i.exec(cond);
+      if (!m) return null;
+      const colName = m[1];
+      const val = m[2] !== undefined ? m[2] :
+                  m[3] !== undefined ? m[3] :
+                  m[4] !== undefined ? m[4] : m[5];
+      const colIdx = table.columns.indexOf(colName);
+      if (colIdx < 0) return null;
+      return { colIdx, val };
+    });
+    if (parsed.some(p => p === null)) return null;
     const matches = [];
     table.dataRows.forEach((row, i) => {
-      if (String(row[colIdx]) === val) matches.push(i);
+      if (parsed.every(p => String(row[p.colIdx]) === p.val)) matches.push(i);
     });
     return matches;
   }
 
+  /* A4: Expose parseWhereRows + executeStation cho helper PE_runSQL (dùng chung step 3 + step 4) */
+  window.PE_parseWhereRows = parseWhereRows;
+  window.PE_executeStation = executeStation;
+
   function showStationHint(station) {
     if (!statusEl) return;
     const text = statusEl.querySelector('.status-text');
-    const cfg = ZONE_CONFIG[station.zone || station.id];
+    /* M6-TC 2026-07-05: ưu tiên hint tự khai trên station (từ drop_zone.station) */
+    const cfg = station.hint ? station : ZONE_CONFIG[station.zone || station.id];
     if (cfg && cfg.hint) {
       text.innerHTML = `💡 ${cfg.hint}`;
     } else if (station.id === 'start') {
@@ -507,7 +1565,7 @@
   }
 
   function shakeTruck() {
-    if (!truckEl) truckEl = trackEl.querySelector('[data-truck]');
+    if (!truckEl) truckEl = trackEl.querySelector('[data-town-truck]');
     if (!truckEl) return;
     truckEl.classList.remove('shake');
     void truckEl.offsetWidth;
@@ -549,24 +1607,58 @@
   }
 
   function reset() {
+    /* F6 (3.8): cancel any running fail animation + reset fail counter on drag reset.
+       handleDragReset (lesson_db_design.js) calls DragGame.reset() khi user bấm "Reset" → quay về KHO + animation kết thúc. */
+    if (failState.token) {
+      failState.token.cancelled = true;
+      failState.token = null;
+    }
+    if (failState.cancelHandler) {
+      document.removeEventListener('click', failState.cancelHandler, true);
+      failState.cancelHandler = null;
+    }
+    failState.count = 0;
+    /* STAGE 2c reset: clear town-station states + manifest + mechanism visuals + truck */
     activeStations.forEach(s => {
-      if (stationEls[s.id]) stationEls[s.id].classList.remove('active', 'completed', 'error', 'arriving');
+      if (stationEls[s.id]) {
+        stationEls[s.id].classList.remove('active', 'done', 'error', 'has-input', 'flash', 'executing', 'arriving');
+      }
     });
     if (trackEl) {
-      trackEl.querySelectorAll('.rail-segment').forEach(r => r.classList.remove('activated', 'flowing'));
-      trackEl.querySelectorAll('[data-station-data]').forEach(slot => {
-        slot.innerHTML = `<div class="data-empty">
-          <span class="data-empty-dot"></span>
-          <span class="data-empty-text">chờ dữ liệu</span>
-        </div>`;
-        slot.classList.remove('has-data');
+      trackEl.querySelectorAll('.sil-box').forEach(b => {
+        b.style.opacity = '0';
+        b.style.transform = '';
+        b.classList.remove('kept', 'dropped');
       });
-      trackEl.querySelectorAll('[data-station-tag]').forEach(t => {
-        t.innerHTML = '';
-        t.classList.remove('has-text');
+      trackEl.querySelectorAll('.sil-barrier').forEach(b => { b.style.transform = 'translateX(0)'; });
+      trackEl.querySelectorAll('.silhouette-select .sil-window').forEach(w => {
+        w.setAttribute('fill', '#FCD34D');
       });
     }
-    moveTruckTo(0, true);
+    /* Option A v2: panel dữ liệu về lại BẢNG NGUỒN (không ẩn/không để trống). */
+    showManifestRest();
+    /* Truck instant về Kho (f=0) */
+    driveTruckTo(0, true);
+    /* Truck badge về initial row count */
+    if (truckEl) {
+      var badge = truckEl.querySelector('[data-town-truck-badge]');
+      var initTable = (window.__pipeline && window.__pipeline.table) || DEFAULT_TABLE;
+      if (badge) {
+        badge.classList.remove('flash');
+        badge.innerHTML = '';
+        badge.textContent = String(initTable.dataRows.length);
+      }
+    }
+    /* Container state */
+    setContainerComplete(false);
+    resetExecutionVisuals();
+    isRunning = false;
+    currentZoneFills = {};
+    currentIsComplete = false;
+    if (runBtnEl) {
+      runBtnEl.disabled = true;
+      runBtnEl.innerHTML = '▶ Chạy Query';
+    }
     if (statusEl) {
       statusEl.classList.remove('warn', 'ok');
       statusEl.querySelector('.status-text').innerHTML =
@@ -577,6 +1669,8 @@
   }
 
   function celebrate() {
+    /* F6 (3.8): reset fail counter on correct (đúng → failCount về 0, fail sau là lần 1 mới). */
+    failState.count = 0;
     if (typeof window.confetti === 'function') {
       window.confetti({
         particleCount: 90, spread: 70, origin: { y: 0.5 },

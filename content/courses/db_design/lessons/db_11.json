@@ -1,0 +1,1141 @@
+{
+  "id": "db_11",
+  "index": 11,
+  "title": "Dạng chuẩn 3 (3NF) & Sự thỏa hiệp",
+  "subtitle": "Khi nào chấp nhận dư thừa nhỏ để tăng tốc độ truy vấn",
+  "module": 2,
+  "module_title": "Chuẩn hóa dữ liệu (Normal Forms)",
+  "estimated_minutes": 25,
+  "xp_reward": 80,
+  "project_piece": "🛡️ Phân hệ \"Đặc vụ Guild tối ưu hệ thống\"",
+  "story": {
+    "tag": "🎫 GameHub Consulting · Ticket #11",
+    "hook": "Chuỗi cyber-café <strong>GamerBrew</strong> gõ cửa: sếp họ cần <em>doanh thu theo ngành hàng</em> (đồ uống, snack, giờ chơi, phụ kiện) nhưng bảng <code>products</code> nhét lẫn thông tin category — phụ thuộc <strong>bắc cầu</strong> (product → category → mô tả ngành) khiến sửa 1 ngành hàng là rung cả bảng. Ticket: dọn về <strong>3NF</strong>, rồi trả lời câu sếp hỏi bằng JOIN 3 bảng + <code>SUM(qty × price)</code>."
+  },
+  "drag_type": "box",
+  "challenge_type": "full_ide",
+  "drag_map": {
+    "table": {
+      "name": "orders",
+      "col": 0,
+      "row": 5,
+      "width": 4,
+      "height": 1,
+      "columns": [
+        "order_id",
+        "product_id",
+        "qty",
+        "total"
+      ],
+      "dataRows": [
+        [
+          "1001",
+          "P01",
+          "2",
+          "60.00"
+        ],
+        [
+          "1002",
+          "P02",
+          "1",
+          "45.00"
+        ],
+        [
+          "1003",
+          "P03",
+          "3",
+          "90.00"
+        ],
+        [
+          "1004",
+          "P01",
+          "1",
+          "60.00"
+        ]
+      ]
+    }
+  },
+  "achievement": {
+    "name": "Cân bằng 3NF",
+    "desc": "3NF"
+  },
+  "step_1": {
+    "primer": {
+      "goal": [
+        "3NF cấm phụ thuộc bắc cầu (transitive dependency): A → B → C",
+        "Cột non-key không được quyết định cột non-key khác",
+        "3NF linh hoạt hơn BCNF — cho phép một số dư thừa nếu phụ thuộc bảo toàn"
+      ],
+      "intro": "Bạn quản lý <strong>cửa hàng trực tuyến</strong>. Bảng <code class=\"code\">orders</code> ghi: ai mua, mua gì, số lượng, giá, tổng. Bạn cũng muốn biết <em>quản lý</em> của <em>danh mục</em> sản phẩm. Vấn đề: <code class=\"code\">order_id</code> → <code class=\"code\">product_id</code> → <code class=\"code\">category</code> → <code class=\"code\">category_manager</code>. Cột <code class=\"code\">category_manager</code> phụ thuộc BẮC CẦU vào <code class=\"code\">order_id</code> qua trung gian <code class=\"code\">category</code> → <strong>vi phạm 3NF</strong>.",
+      "example": "3NF khác BCNF ở chỗ: 3NF chấp nhận dư thừa nếu cột phụ thuộc là <em>khóa của bảng khác</em>. Ví dụ: trong bảng orders, cột <code class=\"code\">product_name</code> phụ thuộc <code class=\"code\">product_id</code> (khóa của bảng products) — vẫn OK theo 3NF, dù không lý tưởng. Đó là sự \"thỏa hiệp\" giữa tính chuẩn và tốc độ truy vấn."
+    },
+    "intro": "Thử tưởng tượng bạn là data engineer cho 1 ngân hàng. Schema có 200 bảng. Sếp bảo: <em>\"Review lại toàn bộ, đảm bảo 3NF\"</em>. Bạn check từng bảng... 2 tuần vẫn chưa xong. Trong khi bạn có thể check trong 2 ngày nếu biết <strong>3NF = transitive dependency check</strong>. Bài này tiết kiệm cho bạn 12 ngày.",
+    "concept_cards": [
+      {
+        "icon": "fa-link",
+        "title": "3NF — Cho phép vi phạm BCNF (đôi khi)",
+        "body": "Thử thách: bạn có FD <code>course → dept</code> và <code>dept → head</code>. <code>course</code> là PK. <code>head</code> chỉ phụ thuộc <code>dept</code> (transitive). 3NF bắt buộc: hoặc <code>dept</code> là superkey, hoặc <code>head</code> là prime attribute. 3NF <strong>cho phép</strong> FD non-superkey nếu vế phải là key — khác BCNF!"
+      },
+      {
+        "icon": "fa-scale-balanced",
+        "title": "BCNF vs 3NF — Sự thỏa hiệp",
+        "body": "<strong>BCNF</strong> nghiêm hơn 3NF: nếu đã BCNF → chắc chắn 3NF. Ngược lại, bảng có thể 3NF mà vẫn vi phạm BCNF (vd: 2+ candidate key overlap, vd ở B10). Thực tế: BCNF thường tốt hơn, nhưng đôi khi 3NF + giữ redundancy chấp nhận được. Bạn chọn cái nào?"
+      },
+      {
+        "icon": "fa-hand-pointer",
+        "title": "Thử ngay (Apply)",
+        "body": "Trong bảng gộp, <code>category</code> kéo theo <code>category_manager</code> (phụ thuộc bắc cầu). Thử đổi manager của \"Gear\" → phải sửa MỌI dòng Gear, sót 1 dòng là sai. Tách bảng <code>categories</code> riêng → sửa đúng 1 chỗ."
+      }
+    ],
+    "visual": {
+      "diagram": {
+        "type": "nf",
+        "before": {
+          "title": "TRƯỚC — vi phạm 3NF",
+          "columns": [
+            "order_id",
+            "product_id",
+            "category",
+            "category_manager"
+          ],
+          "rows": [
+            [
+              "1001",
+              "P01",
+              "Game",
+              "An"
+            ],
+            [
+              "1002",
+              "P02",
+              "Game",
+              "An"
+            ],
+            [
+              "1003",
+              "P03",
+              "Gear",
+              "Bình"
+            ]
+          ],
+          "violations": {
+            "0-3": true,
+            "1-3": true
+          }
+        },
+        "after": {
+          "title": "SAU — đã 3NF (tách categories)",
+          "columns": [
+            "order_id",
+            "product_id",
+            "category"
+          ],
+          "rows": [
+            [
+              "1001",
+              "P01",
+              "Game"
+            ],
+            [
+              "1002",
+              "P02",
+              "Game"
+            ],
+            [
+              "1003",
+              "P03",
+              "Gear"
+            ]
+          ]
+        },
+        "note": "Tách categories(category, manager) riêng. category_manager lưu 1 lần / category."
+      },
+      "schema": {
+        "table_name": "orders",
+        "columns": [
+          {
+            "name": "order_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "product_id",
+            "type": "INT",
+            "key": "FK",
+            "icon": "🔗"
+          },
+          {
+            "name": "qty",
+            "type": "INT",
+            "key": "",
+            "icon": "#️⃣"
+          },
+          {
+            "name": "price",
+            "type": "DECIMAL",
+            "key": "",
+            "icon": "💰"
+          },
+          {
+            "name": "order_date",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          }
+        ]
+      },
+      "data_preview": [
+        [
+          "1001",
+          "P01",
+          "2",
+          "60.00",
+          "2024-04-01"
+        ],
+        [
+          "1002",
+          "P02",
+          "1",
+          "45.00",
+          "2024-04-03"
+        ],
+        [
+          "1003",
+          "P03",
+          "3",
+          "90.00",
+          "2024-04-05"
+        ],
+        [
+          "1004",
+          "P01",
+          "1",
+          "60.00",
+          "2024-04-06"
+        ],
+        [
+          "1005",
+          "P04",
+          "2",
+          "30.00",
+          "2024-04-07"
+        ],
+        [
+          "1006",
+          "P02",
+          "4",
+          "45.00",
+          "2024-04-08"
+        ],
+        [
+          "1007",
+          "P05",
+          "1",
+          "120.00",
+          "2024-04-10"
+        ],
+        [
+          "1008",
+          "P03",
+          "2",
+          "90.00",
+          "2024-04-11"
+        ],
+        [
+          "1009",
+          "P01",
+          "5",
+          "60.00",
+          "2024-04-12"
+        ],
+        [
+          "1010",
+          "P06",
+          "1",
+          "25.00",
+          "2024-04-13"
+        ],
+        [
+          "1011",
+          "P04",
+          "3",
+          "30.00",
+          "2024-04-14"
+        ],
+        [
+          "1012",
+          "P05",
+          "2",
+          "120.00",
+          "2024-04-15"
+        ],
+        [
+          "1013",
+          "P02",
+          "1",
+          "45.00",
+          "2024-04-16"
+        ],
+        [
+          "1014",
+          "P07",
+          "2",
+          "80.00",
+          "2024-04-17"
+        ],
+        [
+          "1015",
+          "P03",
+          "1",
+          "90.00",
+          "2024-04-18"
+        ],
+        [
+          "1016",
+          "P01",
+          "2",
+          "60.00",
+          "2024-04-19"
+        ],
+        [
+          "1017",
+          "P06",
+          "4",
+          "25.00",
+          "2024-04-20"
+        ],
+        [
+          "1018",
+          "P08",
+          "1",
+          "55.00",
+          "2024-04-21"
+        ],
+        [
+          "1019",
+          "P04",
+          "2",
+          "30.00",
+          "2024-04-22"
+        ],
+        [
+          "1020",
+          "P07",
+          "1",
+          "80.00",
+          "2024-04-23"
+        ],
+        [
+          "1021",
+          "P05",
+          "1",
+          "120.00",
+          "2024-04-24"
+        ],
+        [
+          "1022",
+          "P02",
+          "3",
+          "45.00",
+          "2024-04-25"
+        ]
+      ]
+    },
+    "mission": "Hoàn thành game kéo-thả để tách <code class=\"code\">orders</code> thành <code class=\"code\">categories</code>, <code class=\"code\">products</code>, và <code class=\"code\">orders</code>."
+  },
+  "step_2": {
+    "mcq": [
+      {
+        "question": "3NF phân biệt với BCNF ở điểm nào?",
+        "options": [
+          {
+            "id": "a",
+            "text": "3NF cho phép FD non-superkey, BCNF không",
+            "correct": true,
+            "explanation": "Đúng — 3NF cho phép FD X → Y trong 1 trường hợp: Y là prime attribute (thuộc candidate key). BCNF cấm MỌI FD có X không phải superkey, không có ngoại lệ."
+          },
+          {
+            "id": "b",
+            "text": "BCNF chỉ áp dụng cho bảng > 5 cột",
+            "correct": false,
+            "explanation": "Sai — BCNF áp dụng cho mọi bảng, không phụ thuộc số cột. Bảng 3 cột vẫn phải check BCNF."
+          },
+          {
+            "id": "c",
+            "text": "3NF nghiêm hơn BCNF",
+            "correct": false,
+            "explanation": "Sai — BCNF nghiêm hơn 3NF. Mọi bảng BCNF đều đạt 3NF, nhưng ngược lại thì không. BCNF là tier cao hơn trong normalization hierarchy."
+          },
+          {
+            "id": "d",
+            "text": "BCNF là tên khác của 3NF",
+            "correct": false,
+            "explanation": "Sai — BCNF (Boyce-Codd Normal Form) là chuẩn RIÊNG, do Boyce & Codd đề xuất sau 3NF để fix các edge cases mà 3NF chưa xử lý."
+          }
+        ]
+      },
+      {
+        "question": "Transitive dependency là gì?",
+        "options": [
+          {
+            "id": "a",
+            "text": "FD X → Y → Z (Y quyết định Z, X quyết định Y)",
+            "correct": true,
+            "explanation": "Đúng — transitive: A → B và B → C thì A → C (transitively). VD: order_id → product_id → category → category_manager. category_manager bị phụ thuộc BẮC CẦU qua product_id → vi phạm 3NF."
+          },
+          {
+            "id": "b",
+            "text": "FD ngược Y → X",
+            "correct": false,
+            "explanation": "Sai — đó là reverse FD (Y → X), không phải transitive. Reverse là đảo chiều, transitive là nối tiếp qua trung gian."
+          },
+          {
+            "id": "c",
+            "text": "Mọi cột đều phụ thuộc PK",
+            "correct": false,
+            "explanation": "Sai — đó là full functional dependency (FF) hoặc 2NF. Mọi cột phụ thuộc TOÀN BỘ PK là điều kiện của 2NF, không phải transitive."
+          },
+          {
+            "id": "d",
+            "text": "Có 2 khóa chính",
+            "correct": false,
+            "explanation": "Sai — 1 bảng chỉ có 1 PRIMARY KEY (có thể composite nhiều cột). Bảng có thể có nhiều candidate keys nhưng chỉ chọn 1 làm PK."
+          }
+        ]
+      }
+    ],
+    "decomp_game": {
+      "rule_label": "3NF — Không phụ thuộc bắc cầu",
+      "rule": "Trong bảng orders, order_id → product_id → category → category_manager. Cột category_manager bị phụ thuộc BẮC CẦU. Tách categories ra bảng riêng.",
+      "mission": "Kéo các cột từ bảng <code>orders</code> vào 3 bảng mục tiêu. Cột <em>category_manager</em> bị phụ thuộc bắc cầu → phải đi về categories.",
+      "source_table": {
+        "name": "orders",
+        "columns": [
+          {
+            "name": "order_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "product_id",
+            "type": "INT",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "product_name",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "📦"
+          },
+          {
+            "name": "category",
+            "type": "VARCHAR",
+            "key": "PK",
+            "icon": "🔑"
+          },
+          {
+            "name": "category_manager",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "⚠️"
+          },
+          {
+            "name": "qty",
+            "type": "INT",
+            "key": "",
+            "icon": "#️⃣"
+          },
+          {
+            "name": "price",
+            "type": "DECIMAL",
+            "key": "",
+            "icon": "💰"
+          },
+          {
+            "name": "order_date",
+            "type": "DATE",
+            "key": "",
+            "icon": "📅"
+          },
+          {
+            "name": "product_id",
+            "type": "INT",
+            "key": "",
+            "icon": "🔗"
+          },
+          {
+            "name": "category",
+            "type": "VARCHAR",
+            "key": "",
+            "icon": "🔗"
+          }
+        ],
+        "data": [
+          [
+            "1001",
+            "P01",
+            "Elden Ring",
+            "Game",
+            "An",
+            "2",
+            "30.00",
+            "2024-04-01"
+          ],
+          [
+            "1002",
+            "P02",
+            "Hades",
+            "Game",
+            "An",
+            "1",
+            "25.00",
+            "2024-04-03"
+          ],
+          [
+            "1003",
+            "P03",
+            "Bàn phím cơ",
+            "Gear",
+            "Bình",
+            "3",
+            "120.00",
+            "2024-04-05"
+          ],
+          [
+            "1004",
+            "P01",
+            "Elden Ring",
+            "Game",
+            "An",
+            "1",
+            "30.00",
+            "2024-04-08"
+          ],
+          [
+            "1005",
+            "P04",
+            "Chuột gaming",
+            "Gear",
+            "Bình",
+            "2",
+            "50.00",
+            "2024-04-10"
+          ],
+          [
+            "1006",
+            "P05",
+            "Màn hình 27\"",
+            "Gear",
+            "Bình",
+            "1",
+            "450.00",
+            "2024-04-12"
+          ]
+        ]
+      },
+      "target_tables": [
+        {
+          "name": "categories",
+          "icon": "🗂️",
+          "description": "Bảng danh mục (mỗi danh mục có 1 quản lý)"
+        },
+        {
+          "name": "products",
+          "icon": "📦",
+          "description": "Bảng sản phẩm (FK category + name + price)"
+        },
+        {
+          "name": "orders",
+          "icon": "🛒",
+          "description": "Bảng đơn hàng (FK product + qty + ngày)"
+        }
+      ],
+      "solution": {
+        "categories": [
+          "category",
+          "category_manager"
+        ],
+        "products": [
+          "product_id",
+          "product_name",
+          "category",
+          "price"
+        ],
+        "orders": [
+          "order_id",
+          "product_id",
+          "qty",
+          "order_date"
+        ]
+      },
+      "hint": "Phụ thuộc bắc cầu: order_id → product_id → category → category_manager. category_manager chỉ cần category để xác định → tách ra. products giữ category vì nó là \"khóa ngoại\" tự nhiên."
+    },
+    "mini_game": {
+      "type": "order",
+      "title": "Sắp xếp thứ tự NF",
+      "instruction": "Kéo thả để xếp theo thứ tự từ <strong>lỏng nhất → nghiêm nhất</strong>.",
+      "items": [
+        {
+          "id": "1nf",
+          "label": "1NF — atomic domains"
+        },
+        {
+          "id": "2nf",
+          "label": "2NF — no partial dep"
+        },
+        {
+          "id": "3nf",
+          "label": "3NF — no transitive dep"
+        },
+        {
+          "id": "bcnf",
+          "label": "BCNF — every FD has superkey on LHS"
+        }
+      ],
+      "solution": {
+        "1nf": 1,
+        "2nf": 2,
+        "3nf": 3,
+        "bcnf": 4
+      }
+    }
+  },
+  "step_3": {
+    "mission": "Tính <strong>tổng doanh thu theo từng category</strong> từ ngày <code>2024-04-05</code> — JOIN 3 bảng <code>orders</code> ↔ <code>products</code> ↔ <code>categories</code>.",
+    "blocks": [
+      {
+        "type": "kw",
+        "token": "SELECT",
+        "slot": "kw-select"
+      },
+      {
+        "type": "col",
+        "token": "c.category",
+        "slot": "col-1"
+      },
+      {
+        "type": "fn",
+        "token": "SUM(o.qty * p.price)",
+        "slot": "fn-sum"
+      },
+      {
+        "type": "kw",
+        "token": "AS",
+        "slot": "kw-as"
+      },
+      {
+        "type": "col",
+        "token": "total_revenue",
+        "slot": "col-alias"
+      },
+      {
+        "type": "kw",
+        "token": "FROM",
+        "slot": "kw-from"
+      },
+      {
+        "type": "tbl",
+        "token": "orders o",
+        "slot": "tbl"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join1"
+      },
+      {
+        "type": "tbl",
+        "token": "products p",
+        "slot": "tbl2"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on1"
+      },
+      {
+        "type": "col",
+        "token": "o.product_id = p.product_id",
+        "slot": "col-on1"
+      },
+      {
+        "type": "kw",
+        "token": "JOIN",
+        "slot": "kw-join2"
+      },
+      {
+        "type": "tbl",
+        "token": "categories c",
+        "slot": "tbl3"
+      },
+      {
+        "type": "kw",
+        "token": "ON",
+        "slot": "kw-on2"
+      },
+      {
+        "type": "col",
+        "token": "p.category = c.category",
+        "slot": "col-on2"
+      },
+      {
+        "type": "kw",
+        "token": "WHERE",
+        "slot": "kw-where"
+      },
+      {
+        "type": "col",
+        "token": "o.order_date",
+        "slot": "wcol-1"
+      },
+      {
+        "type": "op",
+        "token": ">=",
+        "slot": "op-1"
+      },
+      {
+        "type": "val",
+        "token": "'2024-04-05'",
+        "slot": "val-1"
+      },
+      {
+        "type": "kw",
+        "token": "GROUP BY",
+        "slot": "kw-group"
+      },
+      {
+        "type": "col",
+        "token": "c.category",
+        "slot": "col-group"
+      },
+      {
+        "type": "kw",
+        "token": "ORDER BY",
+        "slot": "kw-order"
+      },
+      {
+        "type": "col",
+        "token": "total_revenue",
+        "slot": "col-order"
+      },
+      {
+        "type": "kw",
+        "token": "DESC",
+        "slot": "kw-desc"
+      }
+    ],
+    "drop_zones": [
+      {
+        "id": "select-line",
+        "placeholder": "SELECT ____ , SUM(...) AS ____",
+        "accepts": [
+          "kw",
+          "col",
+          "fn"
+        ],
+        "acceptedKeywords": [
+          "SELECT",
+          "AS"
+        ],
+        "multi": true
+      },
+      {
+        "id": "from-line",
+        "placeholder": "FROM ____ JOIN ... ON ... JOIN ... ON ...",
+        "accepts": [
+          "kw",
+          "tbl",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "FROM",
+          "JOIN",
+          "ON"
+        ],
+        "multi": true
+      },
+      {
+        "id": "where-line",
+        "placeholder": "WHERE ____ >= ____",
+        "accepts": [
+          "kw",
+          "col",
+          "op",
+          "val"
+        ],
+        "acceptedKeywords": [
+          "WHERE",
+          "AND",
+          "OR",
+          "IN"
+        ],
+        "multi": true
+      },
+      {
+        "id": "group-line",
+        "placeholder": "GROUP BY ____",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "GROUP BY"
+        ],
+        "multi": true
+      },
+      {
+        "id": "order-line",
+        "placeholder": "ORDER BY ____ DESC",
+        "accepts": [
+          "kw",
+          "col"
+        ],
+        "acceptedKeywords": [
+          "ORDER BY",
+          "DESC"
+        ],
+        "multi": true
+      }
+    ],
+    "expected_sql": "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-05' GROUP BY c.category ORDER BY total_revenue DESC;",
+    "reveal_hints": {
+      "select-line": "SELECT <strong>c.category</strong> + <strong>SUM(o.qty * p.price) AS total_revenue</strong> — tính tổng doanh thu.",
+      "from-line": "FROM <strong>orders o</strong> + 2 khối JOIN...ON — chain 3 bảng qua FK.",
+      "where-line": "WHERE <strong>o.order_date >= '2024-04-05'</strong> — lọc theo ngày.",
+      "group-line": "GROUP BY <strong>c.category</strong> — gom theo danh mục.",
+      "order-line": "ORDER BY <strong>total_revenue DESC</strong> — doanh thu cao nhất lên đầu."
+    }
+  },
+  "step_4": {
+    "prompt": "Nâng độ khó — tính doanh thu theo category nhưng chỉ cho đơn <strong>trong khoảng 2024-04-10 → 2024-04-20</strong> (thêm 2 điều kiện <code>AND</code> ngày), sắp xếp giảm dần.",
+    "context": {
+      "scenario": "GamerBrew đã về 3NF: <code>products</code> / <code>orders</code> / <code>categories</code> tách bạch. Sếp chuỗi cyber-café muốn số liệu cho đợt khuyến mãi giữa tháng 4: <strong>doanh thu từng ngành hàng trong khung 10→20/04</strong> — cột mô tả ngành giờ chỉ nằm ở <code>categories</code>, không sợ bắc cầu kéo sai.",
+      "real_world": "Báo cáo campaign của <strong>Shopee/Tiki</strong> đúng khuôn này: JOIN đơn hàng ↔ sản phẩm ↔ ngành hàng, chặn 2 đầu ngày, SUM(số lượng × đơn giá). Doanh thu là cột DẪN XUẤT — không lưu sẵn, tính lúc truy vấn.",
+      "steps": [
+        "JOIN 3 bảng: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ...</code>.",
+        "Chặn 2 đầu kỳ: <code>WHERE o.order_date >= '2024-04-10' AND o.order_date <= '2024-04-20'</code>.",
+        "Tính tiền: <code>SUM(o.qty * p.price) AS total_revenue</code>, gộp <code>GROUP BY c.category</code>.",
+        "Sắp xếp: <code>ORDER BY total_revenue DESC</code>."
+      ],
+      "hint_explore": "Xem từng bảng: <code>SELECT * FROM orders</code> / <code>products</code> / <code>categories</code> — chú ý cột nối giữa chúng.",
+      "expected": "Bảng vài dòng × 2 cột (<code>category, total_revenue</code>): doanh thu mỗi ngành hàng TRONG khung 10→20/04, giảm dần."
+    },
+    "starter": "-- Tổng doanh thu theo category từ 2024-04-05\n-- JOIN orders ↔ products ↔ categories + GROUP BY + SUM + ORDER BY\nSELECT c., SUM(o.qty * p.) AS \n  FROM orders o\n  JOIN products p ON o. = p.\n  JOIN categories c ON p. = c.\n WHERE o. >= '2024-04-05'\n GROUP BY c.\n ORDER BY  DESC;\n",
+    "schema": {
+      "table_name": "products",
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "INT",
+          "key": "PK",
+          "icon": "🔑"
+        },
+        {
+          "name": "product_name",
+          "type": "VARCHAR",
+          "key": "",
+          "icon": "📦"
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR",
+          "key": "FK",
+          "icon": "🏷️"
+        },
+        {
+          "name": "price",
+          "type": "DECIMAL",
+          "key": "",
+          "icon": "💰"
+        }
+      ],
+      "data": [
+        [
+          "P01",
+          "Elden Ring",
+          "Game",
+          "60.00"
+        ],
+        [
+          "P02",
+          "Hades",
+          "Game",
+          "45.00"
+        ],
+        [
+          "P03",
+          "Bàn phím cơ",
+          "Gear",
+          "90.00"
+        ],
+        [
+          "P04",
+          "Chuột gaming",
+          "Gear",
+          "30.00"
+        ],
+        [
+          "P05",
+          "Màn hình 27\"",
+          "Gear",
+          "120.00"
+        ],
+        [
+          "P06",
+          "Tai nghe",
+          "Game",
+          "25.00"
+        ],
+        [
+          "P07",
+          "Bàn phím TKL",
+          "Gear",
+          "80.00"
+        ],
+        [
+          "P08",
+          "Webcam",
+          "Game",
+          "55.00"
+        ]
+      ]
+    },
+    "related_schemas": [
+      {
+        "table_name": "orders",
+        "columns": [
+          {
+            "name": "order_id",
+            "type": "INT",
+            "key": "PK"
+          },
+          {
+            "name": "product_id",
+            "type": "INT",
+            "key": "FK"
+          },
+          {
+            "name": "qty",
+            "type": "INT",
+            "key": ""
+          },
+          {
+            "name": "price",
+            "type": "DECIMAL",
+            "key": ""
+          },
+          {
+            "name": "order_date",
+            "type": "DATE",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "1001",
+            "P01",
+            "2",
+            "60.00",
+            "2024-04-01"
+          ],
+          [
+            "1002",
+            "P02",
+            "1",
+            "45.00",
+            "2024-04-03"
+          ],
+          [
+            "1003",
+            "P03",
+            "3",
+            "90.00",
+            "2024-04-05"
+          ],
+          [
+            "1004",
+            "P01",
+            "1",
+            "60.00",
+            "2024-04-06"
+          ],
+          [
+            "1005",
+            "P04",
+            "2",
+            "30.00",
+            "2024-04-07"
+          ],
+          [
+            "1006",
+            "P02",
+            "4",
+            "45.00",
+            "2024-04-08"
+          ],
+          [
+            "1007",
+            "P05",
+            "1",
+            "120.00",
+            "2024-04-10"
+          ],
+          [
+            "1008",
+            "P03",
+            "2",
+            "90.00",
+            "2024-04-11"
+          ],
+          [
+            "1009",
+            "P01",
+            "5",
+            "60.00",
+            "2024-04-12"
+          ],
+          [
+            "1010",
+            "P06",
+            "1",
+            "25.00",
+            "2024-04-13"
+          ],
+          [
+            "1011",
+            "P04",
+            "3",
+            "30.00",
+            "2024-04-14"
+          ],
+          [
+            "1012",
+            "P05",
+            "2",
+            "120.00",
+            "2024-04-15"
+          ],
+          [
+            "1013",
+            "P02",
+            "1",
+            "45.00",
+            "2024-04-16"
+          ],
+          [
+            "1014",
+            "P07",
+            "2",
+            "80.00",
+            "2024-04-17"
+          ],
+          [
+            "1015",
+            "P03",
+            "1",
+            "90.00",
+            "2024-04-18"
+          ],
+          [
+            "1016",
+            "P01",
+            "2",
+            "60.00",
+            "2024-04-19"
+          ],
+          [
+            "1017",
+            "P06",
+            "4",
+            "25.00",
+            "2024-04-20"
+          ],
+          [
+            "1018",
+            "P08",
+            "1",
+            "55.00",
+            "2024-04-21"
+          ],
+          [
+            "1019",
+            "P04",
+            "2",
+            "30.00",
+            "2024-04-22"
+          ],
+          [
+            "1020",
+            "P07",
+            "1",
+            "80.00",
+            "2024-04-23"
+          ],
+          [
+            "1021",
+            "P05",
+            "1",
+            "120.00",
+            "2024-04-24"
+          ],
+          [
+            "1022",
+            "P02",
+            "3",
+            "45.00",
+            "2024-04-25"
+          ]
+        ]
+      },
+      {
+        "table_name": "categories",
+        "columns": [
+          {
+            "name": "category",
+            "type": "VARCHAR",
+            "key": "PK"
+          },
+          {
+            "name": "category_manager",
+            "type": "VARCHAR",
+            "key": ""
+          }
+        ],
+        "data": [
+          [
+            "Game",
+            "An"
+          ],
+          [
+            "Gear",
+            "Bình"
+          ]
+        ]
+      }
+    ],
+    "expected_sql": "SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-10' AND o.order_date <= '2024-04-20' GROUP BY c.category ORDER BY total_revenue DESC;",
+    "hints": [
+      {
+        "level": 1,
+        "text": "Bạn cần <em>JOIN 3 bảng</em> (orders ↔ products ↔ categories), tính <code>SUM(qty * price)</code> cho mỗi category, lọc theo ngày, GROUP BY + ORDER BY DESC."
+      },
+      {
+        "level": 2,
+        "text": "JOIN chain: <code>orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category</code>."
+      },
+      {
+        "level": 3,
+        "text": "<code>SUM(o.qty * p.price) AS total_revenue</code> — nhân số lượng với giá. WHERE <code>order_date >= '2024-04-05'</code>."
+      },
+      {
+        "level": 4,
+        "text": "<code class=\"code\">SELECT c.category, SUM(o.qty * p.price) AS total_revenue FROM orders o JOIN products p ON o.product_id = p.product_id JOIN categories c ON p.category = c.category WHERE o.order_date >= '2024-04-10' AND o.order_date <= '2024-04-20' GROUP BY c.category ORDER BY total_revenue DESC;</code>"
+      }
+    ],
+    "success_message": "Hoàn thành 3NF nâng cao! Phụ thuộc bắc cầu đã được loại bỏ. Bạn đã tính tổng doanh thu qua 3 bảng — đây là pattern quan trọng trong business intelligence.",
+    "xp_reward": 90
+  }
+}
