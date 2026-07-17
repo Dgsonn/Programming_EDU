@@ -106,6 +106,13 @@ body.ml-focus-mode { --module-accent: var(--ml-accent); --module-accent-soft: va
 .ml-lens-hl-cell { background:rgba(245,158,11,.22) !important; outline:1.5px solid #F59E0B; }
 .ml-lens-note { margin-top:12px; padding:10px 14px; background:rgba(255,255,255,.03); border-left:3px solid var(--ml-accent); border-radius:8px; font-size:13px; }
 
+/* ── issue_hunt (Bài 5 Step 1) ── */
+.ml-lens-th-static { text-align:right; color:var(--ml-accent); cursor:default; }
+.ml-lens-static { cursor:default; }
+.ml-issue-cell { cursor:pointer; background:rgba(245,158,11,.10); outline:1.5px dashed rgba(245,158,11,.55); outline-offset:-1.5px; }
+.ml-issue-cell:hover { background:rgba(245,158,11,.22); }
+.ml-issue-found { background:rgba(16,185,129,.14) !important; outline-color:rgba(16,185,129,.6); }
+
 /* ── role_rounds (Bài 3 Step 2) ── */
 .ml-role-round { background:rgba(255,255,255,.03); border:1px solid var(--border-default); border-radius:12px; padding:16px; margin:14px 0; }
 .ml-role-title { font-weight:700; font-size:14px; margin-bottom:6px; }

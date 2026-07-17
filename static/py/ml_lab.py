@@ -166,3 +166,121 @@ def load_student_dataframe(shuffle_seed=None):
     if shuffle_seed is not None:
         df = df.sample(frac=1.0, random_state=shuffle_seed).reset_index(drop=True)
     return df
+
+
+# ── Bài 4 — Storage dtype vs semantic type ───────────────────────────────────
+def load_student_profile(shuffle_seed=None):
+    """DataFrame 200 dòng × 6 cột minh họa 'cùng int64 nhưng nghĩa khác nhau':
+    student_id (định danh), study_hours (liên tục), missed_classes (đếm rời rạc),
+    major (nominal), scholarship (binary 0/1), pass_fail (target)."""
+    rng = np.random.RandomState(1401)
+    n = 200
+    study_hours = np.round(rng.uniform(0.5, 10.0, n), 1)
+    missed_classes = rng.poisson(3, n).clip(0, 12)
+    major = np.array(['ICT', 'DS', 'Space'])[rng.randint(0, 3, n)]
+    scholarship = (rng.uniform(0, 1, n) < 0.3).astype(int)
+    score = 6.0 * study_hours - 1.5 * missed_classes + 3.0 * scholarship + rng.normal(0, 8, n) + 25
+    pass_fail = (score >= 50).astype(int)
+    df = pd.DataFrame({
+        'student_id': np.arange(20520001, 20520001 + n),
+        'study_hours': study_hours,
+        'missed_classes': missed_classes,
+        'major': major,
+        'scholarship': scholarship,
+        'pass_fail': pass_fail,
+    })
+    if shuffle_seed is not None:
+        df = df.sample(frac=1.0, random_state=shuffle_seed).reset_index(drop=True)
+    return df
+
+
+# ── Bài 5 — Dữ liệu bẩn có kiểm soát ─────────────────────────────────────────
+def load_dirty_student_profile(variant=None):
+    """DataFrame 204 dòng chứa đúng các lỗi có kiểm soát: 4 dòng trùng 100%,
+    NaN rải ở 3 cột số, attendance/quiz_score vượt thang 0-10, major sai chính tả
+    ('ITC'), và 2 outlier study_hours (60, 45) — bất thường nhưng CÓ THỂ thật.
+    variant (grader dùng): đổi VỊ TRÍ lỗi để bắt code hard-code theo vị trí."""
+    rng = np.random.RandomState(1501)
+    n = 200
+    study_hours = np.round(rng.uniform(0.5, 12.0, n), 1)
+    attendance = np.round(rng.uniform(2.0, 10.0, n), 1)
+    quiz_score = np.round(rng.uniform(1.0, 10.0, n), 1)
+    major = np.array(['ICT', 'DS', 'Space'])[rng.randint(0, 3, n)]
+    pass_fail = ((4.0 * study_hours + 3.0 * attendance + 3.5 * quiz_score) >= 60).astype(int)
+    df = pd.DataFrame({
+        'student_id': np.arange(20520001, 20520001 + n),
+        'study_hours': study_hours.astype(object),
+        'attendance': attendance.astype(object),
+        'quiz_score': quiz_score.astype(object),
+        'major': major,
+        'pass_fail': pass_fail,
+    })
+    pos = np.random.RandomState(variant if variant is not None else 1502)
+    # NaN: 3 cột số, mỗi cột 3 ô — đặt ở các dòng KHÔNG bị nhân bản
+    for col in ['study_hours', 'attendance', 'quiz_score']:
+        for i in pos.choice(np.arange(10, 190), size=3, replace=False):
+            df.at[int(i), col] = np.nan
+    # Invalid range (thang 0-10): attendance=12, quiz_score=15
+    df.at[int(pos.choice(np.arange(10, 190))), 'attendance'] = 12.0
+    df.at[int(pos.choice(np.arange(10, 190))), 'quiz_score'] = 15.0
+    # Category sai chính tả
+    for i in pos.choice(np.arange(10, 190), size=2, replace=False):
+        df.at[int(i), 'major'] = 'ITC'
+    # Outlier nghi ngờ nhưng có thể thật — KHÔNG được xóa, chỉ flag
+    i1, i2 = pos.choice(np.arange(10, 190), size=2, replace=False)
+    df.at[int(i1), 'study_hours'] = 60.0
+    df.at[int(i2), 'study_hours'] = 45.0
+    # 4 dòng trùng 100% (copy 4 dòng đầu xuống cuối) → 204 dòng
+    df = pd.concat([df, df.iloc[[0, 1, 2, 3]]], ignore_index=True)
+    for col in ['study_hours', 'attendance', 'quiz_score']:
+        df[col] = pd.to_numeric(df[col])
+    return df
+
+
+# ── Bài 6 — Scale mismatch ───────────────────────────────────────────────────
+def load_scaling_dataset(variant=None):
+    """DataFrame 200 dòng: 3 feature số với range chênh nhau hàng trăm lần
+    (study_hours 0-10, attendance_rate 0-100, activity_count 0-2000) + ID,
+    category và target — để bài học 'đơn vị to át tiếng' và StandardScaler."""
+    rng = np.random.RandomState(variant if variant is not None else 1601)
+    n = 200
+    study_hours = np.round(rng.uniform(0.5, 10.0, n), 1)
+    attendance_rate = np.round(rng.uniform(40, 100, n), 0)
+    activity_count = np.round(rng.uniform(0, 2000, n), 0)
+    major = np.array(['ICT', 'DS', 'Space'])[rng.randint(0, 3, n)]
+    pass_fail = ((5.0 * study_hours + 0.3 * attendance_rate + rng.normal(0, 8, n)) >= 55).astype(int)
+    return pd.DataFrame({
+        'student_id': np.arange(20520001, 20520001 + n),
+        'study_hours': study_hours,
+        'attendance_rate': attendance_rate,
+        'activity_count': activity_count,
+        'major': major,
+        'pass_fail': pass_fail,
+    })
+
+
+# ── Bài 7 — Thống kê mô tả & quan hệ tuyến tính ─────────────────────────────
+def load_statistics_dataset(shuffle_seed=None):
+    """DataFrame 200 dòng: 5 cột phân tích + ID. Tương quan được DỰNG CÓ CHỦ ĐÍCH:
+    quiz_score & study_hours quan hệ mạnh với final_score, missed_classes ngược
+    chiều, student_id vô nghĩa — corr bất biến khi xáo dòng."""
+    rng = np.random.RandomState(1701)
+    n = 200
+    study_hours = np.round(rng.uniform(0.5, 10.0, n), 1)
+    attendance = np.round(np.clip(4.0 + 0.35 * study_hours + rng.normal(0, 1.8, n), 0, 10), 1)
+    missed_classes = np.clip(np.round(9 - 0.7 * study_hours + rng.normal(0, 1.6, n)), 0, 12).astype(int)
+    quiz_score = np.round(np.clip(1.0 + 0.85 * study_hours + rng.normal(0, 1.0, n), 0, 10), 1)
+    final_score = np.round(np.clip(
+        0.8 + 0.42 * study_hours + 0.18 * attendance + 0.45 * quiz_score
+        - 0.12 * missed_classes + rng.normal(0, 0.7, n), 0, 10), 1)
+    df = pd.DataFrame({
+        'student_id': np.arange(20520001, 20520001 + n),
+        'study_hours': study_hours,
+        'attendance': attendance,
+        'missed_classes': missed_classes,
+        'quiz_score': quiz_score,
+        'final_score': final_score,
+    })
+    if shuffle_seed is not None:
+        df = df.sample(frac=1.0, random_state=shuffle_seed).reset_index(drop=True)
+    return df

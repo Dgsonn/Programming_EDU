@@ -210,6 +210,7 @@
     banner.innerHTML = lesson.step_1.intro_html;
     const mount = document.getElementById('ml-s1-mount');
     if (lesson.step_1.type === 'table_lens') renderTableLens(mount);
+    else if (lesson.step_1.type === 'issue_hunt') renderIssueHunt(mount);
     else renderStoryRounds(mount);
   }
 
@@ -299,6 +300,52 @@
     });
     mount.querySelectorAll('.ml-lens-cell').forEach((el) => {
       el.addEventListener('click', () => hit('cell', noteOf('cell'), () => el.classList.add('ml-lens-hl-cell')));
+    });
+  }
+
+  /* issue_hunt — bảng có các ô lỗi được đánh dấu; bấm từng ô để nhận diện loại lỗi */
+  function renderIssueHunt(mount) {
+    const s1 = lesson.step_1;
+    const cols = s1.table.columns;
+    const issueAt = {};
+    s1.issues.forEach((iss, k) => { issueAt[(iss.col === null ? 'r' : 'c') + iss.row + '_' + iss.col] = k; });
+
+    let html = '<div class="ml-lens-tasks">' + s1.issues.map((iss, k) =>
+      `<div class="ml-lens-task" data-issue="${k}"><span class="ml-lens-task-dot"></span>${iss.label}</div>`
+    ).join('') + '</div>';
+    html += '<div class="ml-lens-wrap"><table class="ml-lens-table"><thead><tr><th class="ml-lens-idx">#</th>';
+    cols.forEach((c) => { html += `<th class="ml-lens-th-static">${c.label}<span class="ml-lens-unit">${c.unit}</span></th>`; });
+    html += '</tr></thead><tbody>';
+    s1.table.rows.forEach((row, ri) => {
+      const rowIssue = issueAt['r' + ri + '_null'];
+      html += `<tr><td class="ml-lens-idx ${rowIssue !== undefined ? 'ml-issue-cell' : ''}" ${rowIssue !== undefined ? `data-issue="${rowIssue}"` : ''}>${ri + 1}</td>`;
+      row.forEach((v, ci) => {
+        const k = issueAt['c' + ri + '_' + ci];
+        html += `<td class="${k !== undefined ? 'ml-issue-cell' : 'ml-lens-static'}" ${k !== undefined ? `data-issue="${k}"` : ''}>${v}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += `</tbody></table><div class="ml-lens-more">${s1.table.footnote || ''}</div></div>`;
+    html += '<div class="ml-lens-note" id="ml-issue-note" hidden></div>';
+    html += '<div class="ml-microcheck" id="ml-s1-check" hidden></div>';
+    mount.innerHTML = html;
+
+    const found = new Set();
+    mount.querySelectorAll('.ml-issue-cell').forEach((el) => {
+      el.addEventListener('click', () => {
+        const k = Number(el.dataset.issue);
+        const iss = s1.issues[k];
+        el.classList.add('ml-issue-found');
+        const note = document.getElementById('ml-issue-note');
+        note.hidden = false;
+        note.innerHTML = `<b>${iss.label}</b> — ${iss.note}`;
+        found.add(k);
+        const chip = mount.querySelector(`.ml-lens-task[data-issue="${k}"]`);
+        if (chip) chip.classList.add('ml-lens-task-done');
+        if (found.size === s1.issues.length) {
+          renderMicroCheck(document.getElementById('ml-s1-check'), s1.micro_check, completeStep1);
+        }
+      });
     });
   }
 
@@ -587,14 +634,18 @@
 
     function renderXyRound(rIdx) {
       const round = s3.rounds[rIdx];
+      // Bài 4 dùng zones/columns RIÊNG từng round (2 cột × 2 vùng, không ngợp 6 vùng)
+      const zones = round.zones || s3.zones;
+      const columns = round.columns || s3.columns;
       const holder = document.getElementById('ml-xy-rounds');
       const div = document.createElement('div');
       div.className = 'ml-xy-round';
       div.innerHTML = `<div class="ml-role-title">${round.title}</div>
+        ${round.task_html ? `<div class="ml-role-task">${round.task_html}</div>` : ''}
         <div class="ml-tep-board">
-          <div class="ml-tep-cards">${s3.columns.map((c) =>
+          <div class="ml-tep-cards">${columns.map((c) =>
             `<div class="ml-tep-card ml-xy-card" data-col="${c.key}" tabindex="0">${c.label}</div>`).join('')}</div>
-          <div class="ml-tep-bins">${s3.zones.map((z) =>
+          <div class="ml-tep-bins">${zones.map((z) =>
             `<div class="ml-tep-bin ml-xy-zone" data-zone="${z.key}"><div class="ml-tep-bin-label">${z.label}</div><div class="ml-tep-bin-drop"></div></div>`).join('')}</div>
         </div>
         <div class="ml-tep-feedback ml-xy-warn" hidden></div>
@@ -624,9 +675,10 @@
           if (!correct) {
             loseHeart();
             warn.hidden = false;
-            warn.textContent = (zoneKey === 'feature' && round.leak_warnings && round.leak_warnings[colKey])
-              ? round.leak_warnings[colKey]
-              : `${colKey} không thuộc vùng này trong bài toán "${round.title}". Nghĩ theo: model được phép NHÌN gì lúc dự đoán?`;
+            // leak_warnings lồng theo zone: {zoneKey: {colKey: message}}
+            const lw = round.leak_warnings && round.leak_warnings[zoneKey] && round.leak_warnings[zoneKey][colKey];
+            warn.textContent = lw ||
+              `${colKey} không thuộc vùng này trong "${round.title}". Nghĩ theo: model được phép NHÌN gì lúc dự đoán?`;
             selected.classList.remove('ml-tep-selected');
             selected = null;
             return;
@@ -640,7 +692,7 @@
           selected.style.visibility = 'hidden';
           placed[colKey] = zoneKey;
           selected = null;
-          if (Object.keys(placed).length === s3.columns.length) {
+          if (Object.keys(placed).length === columns.length) {
             const rev = div.querySelector('.ml-xy-reveal');
             rev.hidden = false;
             rev.querySelector('.ml-code-preview').textContent = round.code;

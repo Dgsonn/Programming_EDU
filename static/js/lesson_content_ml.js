@@ -369,8 +369,10 @@ window.LESSON_CONTENT_ML = {
             title: 'Round 1 — Cảnh báo sớm pass_fail (tuần 3)',
             roles: { study_hours: 'feature', attendance: 'feature', quiz_score: 'feature', final_score: 'not_used', pass_fail: 'target' },
             leak_warnings: {
-              final_score: '⚠ final_score vào X = leak thông tin TƯƠNG LAI — tuần 3 chưa có điểm cuối kỳ!',
-              pass_fail: '⚠ pass_fail vào X = model nhìn thấy chính đáp án!'
+              feature: {
+                final_score: '⚠ final_score vào X = leak thông tin TƯƠNG LAI — tuần 3 chưa có điểm cuối kỳ!',
+                pass_fail: '⚠ pass_fail vào X = model nhìn thấy chính đáp án!'
+              }
             },
             code: 'X = df[["study_hours", "attendance", "quiz_score"]]\ny = df["pass_fail"]',
             reveal: 'X: (200, 3) — y: (200,) int'
@@ -379,7 +381,9 @@ window.LESSON_CONTENT_ML = {
             title: 'Round 2 — Dự đoán final_score',
             roles: { study_hours: 'feature', attendance: 'feature', quiz_score: 'feature', final_score: 'target', pass_fail: 'not_used' },
             leak_warnings: {
-              pass_fail: '⚠ pass_fail suy trực tiếp từ final_score — cho vào X là leak đáp án dạng nén!'
+              feature: {
+                pass_fail: '⚠ pass_fail suy trực tiếp từ final_score — cho vào X là leak đáp án dạng nén!'
+              }
             },
             code: 'X = df[["study_hours", "attendance", "quiz_score"]]\ny = df["final_score"]',
             reveal: 'X: (200, 3) — y: (200,) float (dtype đổi theo task!)'
@@ -410,6 +414,604 @@ window.LESSON_CONTENT_ML = {
           'Tuần 3 CHƯA có final_score — cho nó vào X thì shape vẫn (200, 3) nhưng tầng Risk sẽ bắt leak thông tin tương lai.'
         ],
         success_message: 'Bạn vừa ký "hợp đồng dữ liệu" đầu tiên: X (200×3) toàn thông tin tuần 3, y = pass_fail, không leakage. Mọi model phía sau đều đứng trên hợp đồng này.'
+      }
+    },
+
+    /* ═══════════════ BÀI 4 — Hiểu kiểu dữ liệu trước khi train ═══════════════ */
+    {
+      id: 'c1_l4', index: 4,
+      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
+      title: 'Hiểu kiểu dữ liệu trước khi train',
+      subtitle: 'Cách lưu (dtype) không phải là nghĩa (semantic type)',
+      xp_reward: 20, badge: 'Data Preparation Scout',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Cùng là int64 — nghĩa khác hẳn nhau',
+        intro_html: 'Bảng hồ sơ StudyLab mới có 4 cột trông đều "là số". Nhưng dtype chỉ nói CÁCH LƯU — ' +
+          'muốn biết cột đó LÀ GÌ với model, phải hỏi <em>ý nghĩa ngoài đời</em> của nó. Mở từng cột để soi.',
+        rounds: [
+          {
+            id: 'col-study-hours',
+            label: 'study_hours — float64',
+            flow: ['Giá trị: 7.5, 3.2, 9.1…', 'Đo được, có phần thập phân CÓ NGHĨA', '→ SỐ LIÊN TỤC (continuous)'],
+            note: 'Hành động mặc định: dùng thẳng làm feature số.'
+          },
+          {
+            id: 'col-missed',
+            label: 'missed_classes — int64',
+            flow: ['Giá trị: 0, 1, 2, 3…', 'ĐẾM số buổi nghỉ — 2.5 buổi là vô nghĩa', '→ SỐ ĐẾM RỜI RẠC (discrete)'],
+            note: 'Vẫn là số thật: 4 buổi nghỉ nhiều gấp đôi 2 buổi.'
+          },
+          {
+            id: 'col-scholarship',
+            label: 'scholarship — int64',
+            flow: ['Giá trị: chỉ có 0 và 1', '0/1 là TÊN 2 nhóm (không/có học bổng)', '→ PHÂN LOẠI NHỊ PHÂN (binary)'],
+            note: 'Cộng trừ 0/1 ở đây vô nghĩa — "trung bình học bổng = 0.3" không phải một lượng.'
+          },
+          {
+            id: 'col-id',
+            label: 'student_id — int64',
+            flow: ['Giá trị: 20520001, 20520002…', 'Chỉ là MÃ HỒ SƠ, không mang thông tin học tập', '→ ĐỊNH DANH (identifier)'],
+            note: 'Hành động mặc định: LOẠI khỏi X — model học theo ID là học vẹt.'
+          }
+        ],
+        micro_check: {
+          question: 'Ba cột missed_classes, scholarship, student_id đều lưu int64 — cột nào là SỐ ĐẾM thật sự?',
+          options: [
+            { text: 'missed_classes — đếm số buổi nghỉ, gấp đôi = nghỉ nhiều gấp đôi', correct: true },
+            { text: 'student_id — vì giá trị của nó lớn nhất', correct: false }
+          ],
+          feedback_correct: 'Chuẩn! Cùng int64 nhưng: missed_classes = lượng đếm được, scholarship = tên nhóm, student_id = mã định danh.',
+          feedback_wrong: 'Chưa đúng — ID to hay nhỏ không mang nghĩa số lượng. Chỉ missed_classes là đếm thật: gấp đôi = nghỉ nhiều gấp đôi.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Phân loại theo NGHĨA, không theo dtype: kéo 5 thẻ vào đúng ngăn ngữ nghĩa.',
+        bins: [
+          { key: 'continuous', label: 'LIÊN TỤC — ĐO ĐƯỢC' },
+          { key: 'discrete', label: 'RỜI RẠC — ĐẾM ĐƯỢC' },
+          { key: 'categorical', label: 'PHÂN LOẠI — TÊN NHÓM' },
+          { key: 'identifier', label: 'ĐỊNH DANH — LOẠI KHỎI X' }
+        ],
+        cards: [
+          { text: 'gpa = 3.25 — đo được, thập phân có nghĩa', role: 'continuous' },
+          { text: 'missed_classes = 3 — đếm nguyên', role: 'discrete' },
+          { text: 'scholarship ∈ {0, 1} — hai nhóm', role: 'categorical' },
+          { text: 'student_id = 20521001', role: 'identifier' },
+          { text: 'study_hours = 7.5 giờ/tuần', role: 'continuous' }
+        ],
+        wrong_feedback: 'Đừng nhìn dtype — hỏi: giá trị này ĐO được, ĐẾM được, là TÊN nhóm, hay chỉ là MÃ hồ sơ?',
+        scenario_intro: 'Soi kỹ hơn nhóm PHÂN LOẠI: có thứ tự hay không? (nominal vs ordinal)',
+        scenario_options: [
+          { key: 'nominal', label: 'Nominal — không thứ tự' },
+          { key: 'ordinal', label: 'Ordinal — có thứ tự' },
+          { key: 'count', label: 'Số đếm thật' }
+        ],
+        scenarios: [
+          { text: 'major ∈ {ICT, DS, Space} — các ngành học', answer: 'nominal', explain: 'Không có ngành nào "lớn hơn" ngành nào → nominal. Chỉ so sánh bằng/khác.' },
+          { text: 'satisfaction ∈ {Thấp, Vừa, Cao} — mức hài lòng khảo sát', answer: 'ordinal', explain: 'CÓ thứ tự (Thấp < Vừa < Cao) nhưng khoảng cách giữa các mức KHÔNG đo được — vẫn không phải số. Đây là ordinal: so sánh </> được, cộng trừ thì không.' },
+          { text: 'scholarship ∈ {0, 1} — có/không học bổng', answer: 'nominal', explain: '0/1 là tên 2 nhóm không thứ bậc — binary là nominal đặc biệt với đúng 2 giá trị.' },
+          { text: 'missed_classes ∈ {0, 1, 2, …} — số buổi nghỉ', answer: 'count', explain: 'Đếm thật: 4 buổi = gấp đôi 2 buổi. Cộng trừ nhân chia đều có nghĩa.' }
+        ]
+      },
+
+      step_3: {
+        type: 'xy_builder',
+        mission: 'Dựng feature schema qua 3 vòng — mỗi vòng chỉ 2 cột × 2 vùng, không bị ngợp 6 vùng cùng lúc.',
+        zones: [], columns: [],
+        rounds: [
+          {
+            title: 'Round 1 — Chốt vai trò: Target vs Loại bỏ',
+            task_html: 'Bài toán: dự đoán <code>pass_fail</code>. Hai cột này đứng đâu?',
+            columns: [
+              { key: 'pass_fail', label: 'pass_fail' },
+              { key: 'student_id', label: 'student_id' }
+            ],
+            zones: [
+              { key: 'target', label: 'TARGET (y)' },
+              { key: 'exclude', label: 'LOẠI KHỎI X' }
+            ],
+            roles: { pass_fail: 'target', student_id: 'exclude' },
+            leak_warnings: {
+              target: { student_id: '⚠ student_id làm target? Không ai cần "dự đoán mã hồ sơ".' },
+              exclude: { pass_fail: '⚠ pass_fail là thứ ta CẦN dự đoán — nó là target, không phải cột bỏ đi.' }
+            },
+            code: 'y = df["pass_fail"]\n# student_id: loại khỏi X (định danh)',
+            reveal: 'Target chốt xong — định danh đứng ngoài mọi nhóm feature.'
+          },
+          {
+            title: 'Round 2 — Nhóm số: Liên tục vs Đếm rời rạc',
+            task_html: 'Cả hai đều là feature số hợp lệ — nhưng thuộc 2 tiểu loại khác nhau.',
+            columns: [
+              { key: 'study_hours', label: 'study_hours' },
+              { key: 'missed_classes', label: 'missed_classes' }
+            ],
+            zones: [
+              { key: 'continuous', label: 'LIÊN TỤC (đo)' },
+              { key: 'discrete', label: 'RỜI RẠC (đếm)' }
+            ],
+            roles: { study_hours: 'continuous', missed_classes: 'discrete' },
+            code: 'continuous_cols = ["study_hours"]\ndiscrete_cols = ["missed_classes"]',
+            reveal: '7.5 giờ có nghĩa (đo được) — 2.5 buổi nghỉ thì không (đếm nguyên).'
+          },
+          {
+            title: 'Round 3 — Nhóm phân loại: Nominal vs Binary',
+            task_html: 'Cột chữ và cột 0/1 — cả hai đều là TÊN NHÓM.',
+            columns: [
+              { key: 'major', label: 'major (ICT/DS/Space)' },
+              { key: 'scholarship', label: 'scholarship (0/1)' }
+            ],
+            zones: [
+              { key: 'categorical', label: 'CATEGORICAL (chữ)' },
+              { key: 'binary', label: 'BINARY (0/1)' }
+            ],
+            roles: { major: 'categorical', scholarship: 'binary' },
+            code: 'categorical_cols = ["major"]\nbinary_cols = ["scholarship"]',
+            reveal: '⚠ major là CHỮ — model số chưa "ăn" được, cần ENCODING (đánh dấu, chưa làm vội ở bài này).'
+          }
+        ],
+        completion_note: 'Readiness card: 4 feature ∈ 4 tiểu loại ngữ nghĩa, major cần encoding, ID + target đứng ngoài X. dtype nói cách LƯU — schema này mới nói cách HIỂU.'
+      },
+
+      step_4: {
+        prompt_html: 'Soi dtype/unique thật của bảng, rồi xếp 4 feature vào đúng 4 nhóm ngữ nghĩa: ' +
+          '<code>continuous_cols</code>, <code>discrete_cols</code>, <code>categorical_cols</code>, <code>binary_cols</code>.',
+        starter_code:
+          'from ml_lab import load_student_profile\n\n' +
+          '# 1. Nạp hồ sơ 200 học viên và soi kiểu dữ liệu\n' +
+          'df = load_student_profile()\n' +
+          'print(df.dtypes)\n' +
+          'print(df["major"].unique())\n' +
+          'print(df["scholarship"].unique())\n\n' +
+          '# 2. Xếp 4 feature vào đúng nhóm NGỮ NGHĨA (TODO)\n' +
+          'continuous_cols = []\n' +
+          'discrete_cols = []\n' +
+          'categorical_cols = []\n' +
+          'binary_cols = []\n\n' +
+          '# 3. Ghép schema + tạo X/y (giữ nguyên)\n' +
+          'feature_cols = continuous_cols + discrete_cols + categorical_cols + binary_cols\n' +
+          'X = df[feature_cols]\n' +
+          'y = df["pass_fail"]\n' +
+          'print(X.shape)',
+        grader_fn: 'grade_lesson4',
+        hints: [
+          'dtype chỉ nói CÁCH LƯU — int64 có thể là đếm (missed_classes), tên nhóm (scholarship) hay mã số (student_id).',
+          'scholarship ∈ {0,1} là TÊN 2 nhóm → binary_cols. Xếp nó vào nhóm số: code vẫn chạy, nhưng tầng Risk sẽ bắt.',
+          'student_id và pass_fail không được nằm trong bất kỳ nhóm feature nào.'
+        ],
+        success_message: 'Schema ngữ nghĩa hoàn chỉnh: 4 feature phân đúng tiểu loại, major chờ encoding, ID/target đứng ngoài. Từ giờ, câu hỏi đầu tiên trước mọi cột dữ liệu là "nó NGHĨA là gì?", không phải "nó lưu kiểu gì?".'
+      }
+    },
+
+    /* ═══════════════ BÀI 5 — Làm sạch dữ liệu bẩn ═══════════════ */
+    {
+      id: 'c1_l5', index: 5,
+      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
+      title: 'Làm sạch dữ liệu bẩn',
+      subtitle: 'Missing, trùng lặp, sai thang đo và giá trị đáng ngờ — 4 loại lỗi, 4 cách xử',
+      xp_reward: 20, badge: 'Data Preparation Scout',
+
+      step_1: {
+        type: 'issue_hunt',
+        topic_tag: 'Bảng này bị gì? — soi 5 vết bẩn',
+        intro_html: 'Đội StudyLab đổ dữ liệu từ 2 nguồn vào 1 bảng và… <b>204 dòng thay vì 200</b>. ' +
+          'Trước khi làm sạch phải GỌI TÊN đúng từng loại lỗi — vì mỗi loại có cách xử khác nhau. ' +
+          'Bấm vào 5 ô/dòng được khoanh để nhận diện.',
+        table: {
+          columns: [
+            { key: 'student_id', label: 'student_id', unit: 'mã hồ sơ' },
+            { key: 'study_hours', label: 'study_hours', unit: 'giờ/tuần' },
+            { key: 'attendance', label: 'attendance', unit: 'thang 0–10' },
+            { key: 'quiz_score', label: 'quiz_score', unit: 'thang 0–10' },
+            { key: 'major', label: 'major', unit: 'ICT · DS · Space' }
+          ],
+          rows: [
+            [20520001, 7.2, 8.4, 7.9, 'ICT'],
+            [20520002, 2.1, 'NaN', 3.4, 'DS'],
+            [20520003, 60.0, 6.1, 5.5, 'DS'],
+            [20520004, 5.4, 12.0, 6.6, 'Space'],
+            [20520005, 8.9, 9.7, 9.0, 'ITC'],
+            [20520001, 7.2, 8.4, 7.9, 'ICT'],
+            [20520006, 3.5, 6.2, 4.5, 'ICT']
+          ],
+          footnote: '… còn 197 dòng nữa (tổng 204 dòng — lẽ ra chỉ có 200 học viên)'
+        },
+        issues: [
+          { row: 1, col: 2, label: 'MISSING', note: 'Ô trống (NaN) = KHÔNG BIẾT — tuyệt đối không phải 0. Học viên thiếu dữ liệu điểm danh không có nghĩa là nghỉ hết.' },
+          { row: 3, col: 2, label: 'INVALID (thang đo)', note: 'attendance = 12 trên thang 0–10 — CHẮC CHẮN sai. Đủ bằng chứng → chuyển thành NaN rồi xử lý như missing.' },
+          { row: 4, col: 4, label: 'INVALID (chính tả)', note: '"ITC" không nằm trong {ICT, DS, Space} — lỗi gõ phím. Map về nhóm hợp lệ hoặc "Unknown".' },
+          { row: 2, col: 1, label: 'SUSPICIOUS', note: 'study_hours = 60 — cực đoan nhưng CÓ THỂ thật (ôn thi nước rút?). Bằng chứng CHƯA đủ để xóa → giữ lại + cắm cờ review.' },
+          { row: 5, col: null, label: 'DUPLICATE', note: 'Dòng #6 giống 100% dòng #1 (kể cả student_id) — bản ghi bị nhân đôi khi ghép nguồn → drop bản thừa.' }
+        ],
+        micro_check: {
+          question: 'study_hours = 60 (bất thường nhưng có thể thật) — xử lý thế nào?',
+          options: [
+            { text: 'GIỮ LẠI + cắm cờ study_hours_outlier để review — bất thường chưa chắc là sai', correct: true },
+            { text: 'Xóa dòng ngay — số to thế này chắc chắn là lỗi nhập liệu', correct: false }
+          ],
+          feedback_correct: 'Chuẩn nguyên tắc BẢO THỦ: chỉ sửa khi CHẮC CHẮN sai (12 trên thang 0-10); nghi ngờ thì giữ + flag.',
+          feedback_wrong: 'Xóa vội = có thể vứt một học viên thật. attendance=12 mới là chắc chắn sai (vượt thang); còn 60 giờ/tuần chỉ ĐÁNG NGỜ → flag.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Gọi tên 5 ca lỗi vào đúng ngăn — rồi chọn hành động xử lý CÓ BẰNG CHỨNG cho từng ca.',
+        bins: [
+          { key: 'missing', label: 'MISSING — TRỐNG' },
+          { key: 'duplicate', label: 'DUPLICATE — TRÙNG 100%' },
+          { key: 'invalid', label: 'INVALID — CHẮC CHẮN SAI' },
+          { key: 'suspicious', label: 'SUSPICIOUS — ĐÁNG NGỜ' }
+        ],
+        cards: [
+          { text: 'Ô attendance trống (NaN)', role: 'missing' },
+          { text: '2 dòng giống nhau tuyệt đối, kể cả student_id', role: 'duplicate' },
+          { text: 'quiz_score = 15 trên thang 0–10', role: 'invalid' },
+          { text: 'major = "ITC" ngoài danh mục {ICT, DS, Space}', role: 'invalid' },
+          { text: 'study_hours = 60 — cực đoan nhưng khả dĩ', role: 'suspicious' }
+        ],
+        wrong_feedback: 'Phân biệt theo BẰNG CHỨNG: vượt thang/ngoài danh mục = chắc chắn sai; chỉ "to bất thường" = mới đáng ngờ.',
+        scenario_intro: 'Chọn hành động xử lý cho 3 ca',
+        scenario_options: [
+          { key: 'drop', label: 'Drop (xóa)' },
+          { key: 'to_nan', label: 'Sửa → NaN → impute' },
+          { key: 'flag', label: 'Giữ + Flag' }
+        ],
+        scenarios: [
+          { text: 'Dòng trùng 100% (kể cả student_id) do ghép 2 nguồn dữ liệu', answer: 'drop', explain: 'Bản ghi nhân đôi không mang thêm thông tin — drop bản thừa. Lưu ý: CÙNG ID nhưng KHÁC giá trị thì KHÔNG phải exact duplicate — phải review chứ không drop.' },
+          { text: 'quiz_score = 15 trên thang 0–10', answer: 'to_nan', explain: 'Chắc chắn sai (vượt thang) → chuyển NaN rồi impute bằng median. Số missing TĂNG lên một cách CÓ CHỦ ĐÍCH — đó là điều đúng.' },
+          { text: 'study_hours = 60 — bất thường nhưng có thể thật', answer: 'flag', explain: 'Không đủ bằng chứng sai → giữ lại + cột cờ study_hours_outlier. Xóa mọi outlier là xóa luôn học viên thật.' }
+        ]
+      },
+
+      step_3: {
+        type: 'experiment_rounds',
+        mission: 'Chạy recipe làm sạch 4 phase theo ĐÚNG THỨ TỰ — xem số dòng/số lỗi đổi sau từng phase.',
+        choose_options: [
+          { key: 'dedup', label: 'Drop trùng 100%' },
+          { key: 'invalid_nan', label: 'Invalid → NaN' },
+          { key: 'impute', label: 'Median + Unknown' },
+          { key: 'flag', label: 'Cắm cờ outlier' }
+        ],
+        rounds: [
+          {
+            title: 'Phase 1 — Bảng đang 204 dòng (thừa 4)',
+            fixed: [
+              { label: 'Hiện trạng', value: '204 dòng · 4 trùng 100% · 9 NaN · 2 invalid · 2 outlier' },
+              { label: 'Nguyên tắc', value: 'Xử cái CHẮC CHẮN nhất trước' }
+            ],
+            choose: { label: 'Phase 1 làm gì?', answer: 'dedup' },
+            output: '204 → 200 dòng  (4 bản ghi nhân đôi biến mất)',
+            code: 'clean_df = df.drop_duplicates().copy()',
+            note: 'Luôn giữ df gốc — làm sạch trên clean_df.'
+          },
+          {
+            title: 'Phase 2 — Còn 2 giá trị vượt thang 0–10',
+            fixed: [
+              { label: 'Hiện trạng', value: '200 dòng · attendance=12, quiz_score=15' },
+              { label: 'Bằng chứng', value: 'Vượt thang đo = CHẮC CHẮN sai' }
+            ],
+            choose: { label: 'Phase 2 làm gì?', answer: 'invalid_nan' },
+            output: 'invalid: 2 → 0   |   NaN: 9 → 11  (tăng CÓ CHỦ ĐÍCH)',
+            code: 'for col in ["attendance", "quiz_score"]:\n    clean_df.loc[~clean_df[col].between(0, 10), col] = np.nan',
+            note: 'Sai chắc chắn thì KHÔNG đoán bừa giá trị — chuyển thành "không biết" rồi xử lý chung với missing.'
+          },
+          {
+            title: 'Phase 3 — 11 ô NaN + 2 major lạ',
+            fixed: [
+              { label: 'Hiện trạng', value: '200 dòng · 11 NaN số · major="ITC" ×2' },
+              { label: 'Nguyên tắc', value: 'Missing = không biết ≠ 0' }
+            ],
+            choose: { label: 'Phase 3 làm gì?', answer: 'impute' },
+            output: 'NaN: 11 → 0  ·  major lạ → "Unknown"  ·  vẫn đủ 200 dòng',
+            code: 'for col in ["study_hours", "attendance", "quiz_score"]:\n    clean_df[col] = clean_df[col].fillna(clean_df[col].median())\nclean_df.loc[~clean_df["major"].isin(["ICT", "DS", "Space"]), "major"] = "Unknown"',
+            note: 'Median bền với outlier hơn mean — và không dòng nào bị vứt.'
+          },
+          {
+            title: 'Phase 4 — 2 outlier study_hours (60, 45)',
+            fixed: [
+              { label: 'Hiện trạng', value: '200 dòng sạch · 2 giá trị đáng ngờ còn nguyên' },
+              { label: 'Bằng chứng', value: 'Chưa đủ để kết luận sai' }
+            ],
+            choose: { label: 'Phase 4 làm gì?', answer: 'flag' },
+            output: 'validate ✓ — 200 dòng, 0 NaN, 0 invalid, 2 dòng CẮM CỜ chờ review',
+            code: 'clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40',
+            note: 'Recipe bảo thủ hoàn chỉnh: inspect → dedup → invalid → missing → flag → validate.'
+          }
+        ],
+        completion_note: 'Số missing TĂNG ở phase 2 rồi mới về 0 ở phase 3 — làm sạch đúng đôi khi trông "tệ đi" trước khi tốt lên. Thứ tự phase là một phần của recipe.'
+      },
+
+      step_4: {
+        prompt_html: 'Tự tay chạy recipe: dedup → invalid→NaN → median + Unknown → cắm cờ outlier. ' +
+          'Bảng sạch phải đủ 200 dòng và 2 outlier PHẢI còn sống (có cờ).',
+        starter_code:
+          'import numpy as np\n' +
+          'from ml_lab import load_dirty_student_profile\n\n' +
+          '# 1. Nạp bảng bẩn 204 dòng — giữ df gốc, làm sạch trên clean_df\n' +
+          'df = load_dirty_student_profile()\n' +
+          'clean_df = df.drop_duplicates().copy()\n\n' +
+          '# 2. Giá trị vượt thang 0-10 (attendance, quiz_score) -> NaN (TODO)\n\n\n' +
+          '# 3. Điền NaN 3 cột số bằng MEDIAN + map major lạ về "Unknown" (TODO)\n\n\n' +
+          '# 4. Cắm cờ outlier: study_hours > 40 — GIỮ LẠI, chỉ đánh dấu (TODO)\n' +
+          '# clean_df["study_hours_outlier"] = ...\n\n' +
+          'print(len(df), "->", len(clean_df))',
+        grader_fn: 'grade_lesson5',
+        hints: [
+          'clean_df.loc[~clean_df[col].between(0, 10), col] = np.nan — cho attendance và quiz_score (KHÔNG áp cho study_hours: giờ/tuần không có trần 10).',
+          'clean_df[col] = clean_df[col].fillna(clean_df[col].median()) cho 3 cột số — median, tuyệt đối không phải 0.',
+          'valid = ["ICT", "DS", "Space"]; clean_df.loc[~clean_df["major"].isin(valid), "major"] = "Unknown".',
+          'Outlier: clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40 — nếu bạn XÓA outlier, tầng Risk sẽ bắt.'
+        ],
+        success_message: 'Recipe bảo thủ chạy chuẩn: 200 dòng, 0 trùng, 0 invalid, 0 NaN — và 2 học viên "đáng ngờ" vẫn sống, có cờ chờ review. Ghi nhớ cho Course 2: median để impute phải học từ TRAIN split.'
+      }
+    },
+
+    /* ═══════════════ BÀI 6 — Scale feature ═══════════════ */
+    {
+      id: 'c1_l6', index: 6,
+      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
+      title: 'Scale feature — không để một đơn vị lấn át',
+      subtitle: 'Min-Max, Standardization và khoảng cách công bằng giữa các feature',
+      xp_reward: 20, badge: 'Data Preparation Scout',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Feature nào đang NÓI TO nhất?',
+        intro_html: 'StudyLab muốn tìm "học viên giống nhau" để gợi ý nhóm học. Nhưng 3 feature có thang đo lệch nhau ' +
+          'hàng trăm lần: <code>study_hours</code> 0–10, <code>attendance_rate</code> 0–100, <code>activity_count</code> 0–2000. ' +
+          'So sánh 2 học viên bằng khoảng cách thô xem chuyện gì xảy ra.',
+        rounds: [
+          {
+            id: 'raw-distance',
+            label: 'Khoảng cách THÔ giữa học viên A và B',
+            flow: ['Δ study_hours = 2  (thang 0–10)', 'Δ attendance_rate = 5  (thang 0–100)', 'Δ activity_count = 900  (thang 0–2000)', '→ activity_count chiếm ~99.99% khoảng cách'],
+            note: 'Hai học viên "khác nhau" gần như CHỈ vì activity_count — 2 feature còn lại thành người câm.'
+          },
+          {
+            id: 'scaled-distance',
+            label: 'CÙNG cặp học viên — sau standardization',
+            flow: ['Mỗi feature: x → (x − mean) / std', 'Δ ≈ 0.7 vs 0.5 vs 0.9 (cùng đơn vị "độ lệch chuẩn")', '→ ba feature đóng góp cùng bậc'],
+            note: 'Scale không đổi THÔNG TIN — nó đổi ÂM LƯỢNG để mọi feature được nghe thấy.'
+          }
+        ],
+        micro_check: {
+          question: 'Vì sao activity_count áp đảo khoảng cách TRƯỚC khi scale?',
+          options: [
+            { text: 'Vì range 0–2000 lớn gấp hàng trăm lần — đơn vị to át tiếng, KHÔNG phải vì nó quan trọng hơn', correct: true },
+            { text: 'Vì activity_count là feature quan trọng nhất với kết quả học tập', correct: false }
+          ],
+          feedback_correct: 'Chuẩn! Range lớn ≠ quan trọng. Đó chỉ là hệ quả của đơn vị đo — và là lý do phải scale.',
+          feedback_wrong: 'Chưa đúng — dữ liệu chưa hề nói activity_count quan trọng hơn. Nó áp đảo chỉ vì THANG ĐO 0–2000 to hơn hàng trăm lần.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Hai phép scale kinh điển — kéo từng đặc điểm vào đúng ngăn.',
+        bins: [
+          { key: 'minmax', label: 'MIN-MAX — ÉP VỀ [0, 1]' },
+          { key: 'standard', label: 'STANDARDIZATION — MEAN 0, STD 1' }
+        ],
+        cards: [
+          { text: "x' = (x − min) / (max − min)", role: 'minmax' },
+          { text: "x' = (x − mean) / std", role: 'standard' },
+          { text: 'Kết quả LUÔN nằm trong [0, 1]', role: 'minmax' },
+          { text: 'Kết quả có thể ÂM (dưới trung bình)', role: 'standard' },
+          { text: 'Bị outlier kéo méo nhiều nhất (min/max nhạy cảm)', role: 'minmax' }
+        ],
+        wrong_feedback: 'Nhớ 2 chữ ký: Min-Max ép vào [0,1] và sống chết theo min/max; Standardization đo "cách trung bình mấy std" nên có thể âm.',
+        scenario_intro: 'Đúng hay sai?',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'Sau standardization, một giá trị chuẩn hóa có thể là số ÂM', answer: 'true', explain: 'Âm nghĩa là "dưới trung bình" — hoàn toàn bình thường. z = -1.5 tức thấp hơn mean 1.5 độ lệch chuẩn.' },
+          { text: 'Scaling giúp LOẠI BỎ outlier khỏi dữ liệu', answer: 'false', explain: 'Outlier vẫn nguyên đó — chỉ đổi thang. Học viên 60 giờ/tuần sau scale vẫn là điểm xa nhất.' },
+          { text: 'Cột có range lớn hơn thì quan trọng hơn với model', answer: 'false', explain: 'Range là hệ quả của ĐƠN VỊ đo, không phải bằng chứng tầm quan trọng — chính là lý do phải scale.' }
+        ]
+      },
+
+      step_3: {
+        type: 'xy_builder',
+        mission: 'Chọn đúng cột đưa vào StandardScaler — ID, cột chữ và target phải đứng ngoài.',
+        zones: [], columns: [],
+        rounds: [
+          {
+            title: 'Round duy nhất — Cột nào vào scaler?',
+            task_html: 'Bảng có 6 cột. Scaler chỉ nhận feature SỐ có nghĩa — chọn nơi đứng cho từng cột.',
+            columns: [
+              { key: 'study_hours', label: 'study_hours (0–10)' },
+              { key: 'attendance_rate', label: 'attendance_rate (0–100)' },
+              { key: 'activity_count', label: 'activity_count (0–2000)' },
+              { key: 'student_id', label: 'student_id' },
+              { key: 'major', label: 'major (chữ)' },
+              { key: 'pass_fail', label: 'pass_fail (target)' }
+            ],
+            zones: [
+              { key: 'scale', label: 'ĐƯA VÀO SCALER' },
+              { key: 'keep_out', label: 'GIỮ NGOÀI' }
+            ],
+            roles: { study_hours: 'scale', attendance_rate: 'scale', activity_count: 'scale', student_id: 'keep_out', major: 'keep_out', pass_fail: 'keep_out' },
+            leak_warnings: {
+              scale: {
+                student_id: '⚠ Scale một MÃ SỐ chỉ tạo ra số vô nghĩa trông-như-feature.',
+                major: '⚠ major là CHỮ — không trừ mean được. Nó cần encoding, không phải scaling.',
+                pass_fail: '⚠ pass_fail là TARGET — không phải input, càng không phải thứ đem chuẩn hóa.'
+              }
+            },
+            code: 'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(df[numeric_cols])',
+            reveal: 'fit: scaler HỌC mean/std của 3 cột → transform: mean ≈ [0, 0, 0], std ≈ [1, 1, 1]'
+          }
+        ],
+        completion_note: 'Ba feature giờ nói cùng âm lượng — khoảng cách giữa học viên phản ánh CẢ 3 chiều, không riêng activity_count.'
+      },
+
+      step_4: {
+        prompt_html: 'In range thô của 3 cột số, chuẩn hóa bằng <code>StandardScaler</code>, rồi tự kiểm chứng mean ≈ 0, std ≈ 1.',
+        starter_code:
+          'from sklearn.preprocessing import StandardScaler\n' +
+          'from ml_lab import load_scaling_dataset\n\n' +
+          '# 1. Nạp bảng + soi range 3 cột số (lệch nhau hàng trăm lần)\n' +
+          'df = load_scaling_dataset()\n' +
+          'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]\n' +
+          'X = df[numeric_cols]\n' +
+          'print(X.min())\n' +
+          'print(X.max())\n\n' +
+          '# 2. Chuẩn hóa: tạo X_scaled bằng StandardScaler (TODO)\n' +
+          'X_scaled = None\n\n' +
+          '# 3. Kiểm chứng phép biến đổi\n' +
+          'print(X_scaled.mean(axis=0))\n' +
+          'print(X_scaled.std(axis=0))',
+        grader_fn: 'grade_lesson6',
+        hints: [
+          'scaler = StandardScaler() rồi X_scaled = scaler.fit_transform(X).',
+          'Chỉ scale 3 cột số — thêm student_id hay pass_fail vào numeric_cols: code chạy, moments vẫn đẹp, nhưng tầng Risk bắt.',
+          'mean sau scale ≈ 0 (cỡ 1e-16 là do số học dấu phẩy động — chính là 0).'
+        ],
+        success_message: 'X_scaled (200×3): mean ≈ 0, std ≈ 1 — ba feature cùng âm lượng. Ghi nhớ cho Course 2: fit scaler trên TRAIN split trước, rồi mới transform validation/test.'
+      }
+    },
+
+    /* ═══════════════ BÀI 7 — Đọc dữ liệu bằng thống kê ═══════════════ */
+    {
+      id: 'c1_l7', index: 7,
+      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
+      title: 'Đọc dữ liệu bằng thống kê cơ bản',
+      subtitle: 'Mean, variance, covariance, correlation — chọn đúng thước đo cho đúng câu hỏi',
+      xp_reward: 20, badge: 'Data Preparation Scout',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Cùng mean — khác thế giới',
+        intro_html: 'Hai lớp StudyLab cùng có điểm quiz trung bình <b>6.2</b>. Trưởng bộ môn kết luận: "hai lớp học đều như nhau". ' +
+          'Mở dữ liệu từng lớp xem kết luận đó đứng vững không.',
+        rounds: [
+          {
+            id: 'group-a',
+            label: 'Lớp A — mean 6.2',
+            flow: ['Điểm: 5.8 · 6.0 · 6.2 · 6.3 · 6.5 · 6.4', 'Chụm sát quanh 6.2', '→ variance NHỎ (~0.06)'],
+            note: 'Cả lớp đều đều — dạy một nhịp là vừa cho tất cả.'
+          },
+          {
+            id: 'group-b',
+            label: 'Lớp B — CÙNG mean 6.2',
+            flow: ['Điểm: 2.0 · 4.1 · 6.3 · 8.0 · 9.9 · 6.9', 'Trải từ 2 đến 10', '→ variance LỚN (~7.6)'],
+            note: 'Nửa lớp đuối, nửa lớp vượt — "trung bình 6.2" giấu sạch chuyện đó.'
+          }
+        ],
+        micro_check: {
+          question: 'Hai lớp cùng mean 6.2 — điều gì được ĐẢM BẢO giống nhau?',
+          options: [
+            { text: 'Chỉ TÂM (center) của phân phối — độ phân tán có thể khác nhau một trời một vực', correct: true },
+            { text: 'Phân phối điểm của 2 lớp là như nhau', correct: false }
+          ],
+          feedback_correct: 'Chuẩn! Mean chỉ nói tâm. Muốn biết dữ liệu túm tụm hay tản mát phải hỏi variance/std.',
+          feedback_wrong: 'Chưa đúng — lớp A chụm quanh 6.2, lớp B trải 2→10. Cùng mean nhưng variance khác nhau 100 lần.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Đọc quan hệ giữa 2 biến từ mô tả scatter/giá trị — kéo vào đúng ngăn chiều quan hệ.',
+        bins: [
+          { key: 'positive', label: 'TƯƠNG QUAN DƯƠNG' },
+          { key: 'negative', label: 'TƯƠNG QUAN ÂM' },
+          { key: 'zero', label: 'GẦN 0 — KHÔNG TUYẾN TÍNH' }
+        ],
+        cards: [
+          { text: 'study_hours tăng → final_score tăng, điểm chụm quanh đường đi lên', role: 'positive' },
+          { text: 'missed_classes tăng → final_score giảm', role: 'negative' },
+          { text: 'student_id vs final_score — mây điểm tròn vô hướng', role: 'zero' },
+          { text: 'r = +0.85', role: 'positive' },
+          { text: 'r = −0.60', role: 'negative' }
+        ],
+        wrong_feedback: 'Nhìn CHIỀU của đám mây điểm: dốc lên = dương, dốc xuống = âm, tròn vô hướng = gần 0.',
+        scenario_intro: 'Đúng hay sai? — 3 phát biểu hay gặp',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'r(study_hours, final_score) = 0.85 ⇒ học nhiều giờ GÂY RA điểm cao', answer: 'false', explain: 'Tương quan ≠ nhân quả. Có thể động lực học cao gây ra CẢ HAI. Kết luận nhân quả cần thí nghiệm can thiệp, không phải một con số r.' },
+          { text: 'r ≈ 0 ⇒ chắc chắn 2 biến không liên quan gì đến nhau', answer: 'false', explain: 'r chỉ đo quan hệ TUYẾN TÍNH. Quan hệ hình chữ U hoàn hảo vẫn cho r ≈ 0.' },
+          { text: 'Covariance âm cho biết 2 biến ngược chiều, nhưng ĐỘ LỚN của nó phụ thuộc đơn vị đo', answer: 'true', explain: 'Đúng — vì thế mới cần correlation: covariance chuẩn hóa về [-1, 1], so sánh được giữa các cặp biến.' }
+        ]
+      },
+
+      step_3: {
+        type: 'experiment_rounds',
+        mission: 'Mỗi round là 1 CÂU HỎI thật của đội StudyLab — chọn đúng thước đo rồi chạy để xem kết quả.',
+        choose_options: [
+          { key: 'mean', label: 'Mean' },
+          { key: 'variance', label: 'Variance' },
+          { key: 'covariance', label: 'Covariance' },
+          { key: 'correlation', label: 'Correlation' }
+        ],
+        rounds: [
+          {
+            title: 'Round 1 — "Điểm quiz ĐIỂN HÌNH của khóa là bao nhiêu?"',
+            fixed: [{ label: 'Câu hỏi về', value: 'TÂM của một phân phối' }],
+            choose: { label: 'Thước đo nào?', answer: 'mean' },
+            output: 'numeric_df["quiz_score"].mean() → 5.79',
+            code: 'print(numeric_df["quiz_score"].mean())',
+            note: 'Một con số đại diện cho tâm — nhưng nhớ bài học lớp A/B: mean chưa kể hết chuyện.'
+          },
+          {
+            title: 'Round 2 — "Điểm quiz hay điểm final phân hóa mạnh hơn?"',
+            fixed: [{ label: 'Câu hỏi về', value: 'ĐỘ PHÂN TÁN quanh tâm' }],
+            choose: { label: 'Thước đo nào?', answer: 'variance' },
+            output: 'var(quiz_score) = 6.47   <   var(final_score) = 7.15 → final phân hóa hơn',
+            code: 'print(numeric_df.var())',
+            note: 'Variance = trung bình bình phương độ lệch khỏi mean — đơn vị bị bình phương theo.'
+          },
+          {
+            title: 'Round 3 — "Nghỉ học nhiều đi cùng điểm thấp hay cao?"',
+            fixed: [{ label: 'Câu hỏi về', value: 'CHIỀU đồng biến của MỘT CẶP biến' }],
+            choose: { label: 'Thước đo nào?', answer: 'covariance' },
+            output: 'cov(missed_classes, final_score) = −5.0  → NGƯỢC chiều (nhưng −5.0 "buổi×điểm" khó so sánh)',
+            code: 'print(numeric_df.cov())',
+            note: 'Dấu đọc được (âm = ngược chiều) — độ lớn thì dính đơn vị, chưa so sánh được giữa các cặp.'
+          },
+          {
+            title: 'Round 4 — "Feature nào quan hệ TUYẾN TÍNH mạnh nhất với final_score?"',
+            fixed: [{ label: 'Câu hỏi về', value: 'SO SÁNH độ mạnh quan hệ giữa NHIỀU cặp' }],
+            choose: { label: 'Thước đo nào?', answer: 'correlation' },
+            output: 'study_hours 0.95 › quiz_score 0.93 › attendance 0.60 › missed_classes −0.75',
+            code: 'print(corr_matrix["final_score"].drop("final_score")\n      .sort_values(ascending=False))',
+            note: 'Correlation = covariance đã chuẩn hóa về [−1, 1] — giờ mới so sánh được các cặp với nhau.'
+          }
+        ],
+        completion_note: 'Bốn câu hỏi — bốn thước đo. Chọn thống kê là chọn theo CÂU HỎI, không phải tính hết mọi thứ rồi ngồi ngắm.'
+      },
+
+      step_4: {
+        prompt_html: 'Dựng bảng phân tích <code>numeric_df</code> (KHÔNG có student_id), tính mean/var, ' +
+          'rồi tạo <code>cov_matrix</code> và <code>corr_matrix</code> và xếp hạng tương quan với final_score.',
+        starter_code:
+          'from ml_lab import load_statistics_dataset\n\n' +
+          'df = load_statistics_dataset()\n\n' +
+          '# 1. Bảng phân tích: 5 cột số, KHÔNG có student_id (TODO)\n' +
+          'numeric_df = None\n\n' +
+          '# 2. Tâm và độ phân tán\n' +
+          'print(numeric_df.mean())\n' +
+          'print(numeric_df.var())\n\n' +
+          '# 3. Quan hệ tuyến tính (TODO: tạo 2 ma trận)\n' +
+          'cov_matrix = None\n' +
+          'corr_matrix = None\n\n' +
+          '# 4. Feature nào quan hệ mạnh nhất với final_score?\n' +
+          'print(corr_matrix["final_score"].drop("final_score").sort_values(ascending=False))',
+        grader_fn: 'grade_lesson7',
+        hints: [
+          'numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]].',
+          'cov_matrix = numeric_df.cov() và corr_matrix = numeric_df.corr() — đường chéo corr luôn = 1.',
+          'Cho student_id vào bảng phân tích: mọi con số vẫn tính ra — nhưng "tương quan của mã số" là nhiễu vô nghĩa, tầng Risk sẽ bắt.'
+        ],
+        success_message: 'Hồ sơ thống kê hoàn chỉnh: tâm, phân tán, chiều quan hệ và xếp hạng tương quan. Cảnh giới cuối cùng: r = 0.9 vẫn KHÔNG chứng minh nhân quả — và đó là ranh giới giữa người đọc số và người hiểu số.'
       }
     }
   ]
