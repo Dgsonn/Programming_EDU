@@ -252,6 +252,10 @@
     (cfg.points || []).forEach(([px, py]) => {
       s += `<circle cx="${X(px)}" cy="${Y(py)}" r="4" class="ml-plot-dot"/>`;
     });
+    // điểm tập 2 (vd. held-out/check — màu khác)
+    (cfg.points2 || []).forEach(([px, py]) => {
+      s += `<circle cx="${X(px)}" cy="${Y(py)}" r="4" class="ml-plot-dot2"/>`;
+    });
     // trace x → ŷ
     if (cfg.trace && cfg.line) {
       const tx = cfg.trace.x, ty = cfg.line.w * tx + cfg.line.b;
@@ -299,7 +303,59 @@
     if (lesson.step_1.type === 'table_lens') renderTableLens(mount);
     else if (lesson.step_1.type === 'issue_hunt') renderIssueHunt(mount);
     else if (lesson.step_1.type === 'line_reveal') renderLineReveal(mount);
+    else if (lesson.step_1.type === 'curve_compare') renderCurveCompare(mount);
     else renderStoryRounds(mount);
+  }
+
+  /* curve_compare — 3 model cùng nhìn 1 bộ dữ liệu → mở 20 điểm CHƯA THẤY */
+  function renderCurveCompare(mount) {
+    const s1 = lesson.step_1;
+    const st = { seen: new Set(), active: null, revealed: false };
+    mount.innerHTML = `<div class="ml-lt-presets">${s1.curves.map((c, i) =>
+        `<button class="ml-btn ml-btn-ghost ml-cc-btn" data-idx="${i}">${c.label}</button>`).join('')}
+      </div>
+      <div class="ml-plot-wrap" id="ml-cc-plot"></div>
+      <div class="ml-lens-note" id="ml-cc-note" hidden></div>
+      <button class="ml-btn ml-btn-primary" id="ml-cc-reveal" hidden>${s1.reveal.btn}</button>
+      <div class="ml-cc-results" id="ml-cc-results" hidden></div>
+      <div class="ml-microcheck" id="ml-s1-check" hidden></div>`;
+
+    function draw() {
+      const cfg = { points: s1.plot.train_pts, xmax: s1.plot.xmax, ymax: s1.plot.ymax };
+      if (st.active !== null) cfg.curvePts = s1.curves[st.active].pts;
+      if (st.revealed) cfg.points2 = s1.reveal.check_pts;
+      document.getElementById('ml-cc-plot').innerHTML = mlSvgPlot(cfg);
+    }
+    mount.querySelectorAll('.ml-cc-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        st.active = Number(btn.dataset.idx);
+        st.seen.add(st.active);
+        mount.querySelectorAll('.ml-cc-btn').forEach((b) => b.classList.remove('ml-role-opt-sel'));
+        btn.classList.add('ml-role-opt-sel');
+        const note = document.getElementById('ml-cc-note');
+        note.hidden = false;
+        const c = s1.curves[st.active];
+        note.innerHTML = `<b>${c.label}</b> — Train MSE: <b>${c.train_mse}</b> · ${c.note}`;
+        draw();
+        if (st.seen.size === s1.curves.length && !st.revealed) {
+          document.getElementById('ml-cc-reveal').hidden = false;
+        }
+      });
+    });
+    document.getElementById('ml-cc-reveal').addEventListener('click', () => {
+      st.revealed = true;
+      document.getElementById('ml-cc-reveal').disabled = true;
+      draw();
+      const res = document.getElementById('ml-cc-results');
+      res.hidden = false;
+      res.innerHTML = `<div class="ml-panel-head">${s1.reveal.title}</div>` +
+        '<table class="ml-cc-table"><tr><th>Model</th><th>Train MSE</th><th>Check MSE (20 điểm mới)</th><th>Chẩn đoán</th></tr>' +
+        s1.curves.map((c) =>
+          `<tr class="${c.verdict_cls || ''}"><td>${c.label}</td><td>${c.train_mse}</td><td>${c.check_mse}</td><td>${c.verdict}</td></tr>`).join('') +
+        '</table>' + `<div class="ml-round-note">${s1.reveal.note}</div>`;
+      renderMicroCheck(document.getElementById('ml-s1-check'), s1.micro_check, completeStep1);
+    });
+    draw();
   }
 
   /* line_reveal — scatter → hiện đường dự đoán → dò 1 điểm x → micro-check */
@@ -641,7 +697,98 @@
     else if (t === 'gd_console') renderGdConsole(mount);
     else if (t === 'sigmoid_tuner') renderSigmoidTuner(mount);
     else if (t === 'boundary_tuner') renderBoundaryTuner(mount);
+    else if (t === 'flex_tuner') renderFlexTuner(mount);
     else renderSpecBuilder(mount);
+  }
+
+  /* flex_tuner — 5 mức linh hoạt; train MSE lộ ngay, check MSE giấu đến khi mở */
+  function renderFlexTuner(mount) {
+    const s3 = lesson.step_3;
+    const st = { tried: new Set(), active: 0, revealed: false, picked: false };
+    const goalsDone = new Set();
+
+    mount.innerHTML = `<p class="ml-step-instr">${s3.mission}</p>
+      <div class="ml-lt-presets">${s3.levels.map((lv, i) =>
+        `<button class="ml-btn ml-btn-ghost ml-fx-level" data-idx="${i}">${lv.label}</button>`).join('')}</div>
+      <div class="ml-lt-grid">
+        <div class="ml-plot-wrap" id="ml-fx-plot"></div>
+        <div class="ml-lt-side">
+          <div class="ml-gd-readout" id="ml-fx-readout"></div>
+          <button class="ml-btn ml-btn-primary" id="ml-fx-reveal" disabled>${s3.reveal_btn}</button>
+          <div id="ml-fx-table" hidden></div>
+          <div class="ml-fx-pick" id="ml-fx-pick" hidden>
+            <span class="ml-exp-choose-label">${s3.pick_label}</span>
+            ${s3.levels.map((lv, i) => `<button class="ml-btn ml-btn-ghost ml-fx-pickbtn" data-idx="${i}">${lv.short}</button>`).join('')}
+          </div>
+          <div class="ml-lt-goals">${s3.goals.map((g) =>
+            `<div class="ml-lens-task" data-goal="${g.id}"><span class="ml-lens-task-dot"></span>${g.label}</div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="ml-s3-note" id="ml-s3-note" hidden>${s3.completion_note}</div>`;
+
+    function markGoal(id) {
+      if (goalsDone.has(id)) return;
+      goalsDone.add(id);
+      const chip = mount.querySelector(`.ml-lens-task[data-goal="${id}"]`);
+      if (chip) chip.classList.add('ml-lens-task-done');
+      if (goalsDone.size === s3.goals.length) {
+        document.getElementById('ml-s3-note').hidden = false;
+        completeStep3();
+      }
+    }
+
+    function draw() {
+      const lv = s3.levels[st.active];
+      const cfg = { points: s3.plot.train_pts, xmax: s3.plot.xmax, ymax: s3.plot.ymax, curvePts: lv.pts };
+      if (st.revealed) cfg.points2 = s3.plot.check_pts;
+      document.getElementById('ml-fx-plot').innerHTML = mlSvgPlot(cfg);
+      document.getElementById('ml-fx-readout').innerHTML =
+        `${lv.label}: Train MSE = <b>${lv.train_mse}</b>` +
+        (st.revealed ? ` · Check MSE = <b>${lv.check_mse}</b>` : ' · Check MSE = <b>🔒 ẩn</b>');
+    }
+
+    mount.querySelectorAll('.ml-fx-level').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        st.active = Number(btn.dataset.idx);
+        st.tried.add(st.active);
+        mount.querySelectorAll('.ml-fx-level').forEach((b) => b.classList.remove('ml-role-opt-sel'));
+        btn.classList.add('ml-role-opt-sel');
+        draw();
+        if (st.tried.size === s3.levels.length) {
+          markGoal('try_all');
+          document.getElementById('ml-fx-reveal').disabled = false;
+        }
+      });
+    });
+    document.getElementById('ml-fx-reveal').addEventListener('click', () => {
+      st.revealed = true;
+      document.getElementById('ml-fx-reveal').disabled = true;
+      markGoal('reveal');
+      draw();
+      const tbl = document.getElementById('ml-fx-table');
+      tbl.hidden = false;
+      tbl.innerHTML = '<table class="ml-cc-table"><tr><th>Mức</th><th>Train</th><th>Check</th></tr>' +
+        s3.levels.map((lv) => `<tr><td>${lv.short}</td><td>${lv.train_mse}</td><td>${lv.check_mse}</td></tr>`).join('') + '</table>';
+      document.getElementById('ml-fx-pick').hidden = false;
+    });
+    mount.querySelectorAll('.ml-fx-pickbtn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (st.picked) return;
+        const idx = Number(btn.dataset.idx);
+        const best = s3.levels.reduce((bi, lv, i) => (lv.check_mse < s3.levels[bi].check_mse ? i : bi), 0);
+        if (idx === best) {
+          st.picked = true;
+          btn.classList.add('ml-mc-correct');
+          mount.querySelectorAll('.ml-fx-pickbtn').forEach((b) => (b.disabled = true));
+          markGoal('pick');
+        } else {
+          btn.classList.add('ml-mc-wrong');
+          btn.disabled = true;
+          loseHeart();
+        }
+      });
+    });
+    draw();
   }
 
   const sigmoidFn = (z) => 1 / (1 + Math.exp(-z));

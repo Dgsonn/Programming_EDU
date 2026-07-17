@@ -251,6 +251,66 @@ def load_boundary_data():
     return X, weights.copy(), float(bias)
 
 
+# ── Bài 14 — Underfit / Good fit / Overfit (đa thức bậc 1/3/12) ──────────────
+class _PolyModel:
+    """Model đa thức đã fit — hợp đồng .predict(X) như mọi model khác."""
+
+    def __init__(self, coeffs):
+        self._p = np.poly1d(coeffs)
+
+    def predict(self, X):
+        return self._p(np.asarray(X, dtype=float))
+
+
+def load_complexity_demo(variant=None):
+    """X_train (24,), y_train, X_check (20,), y_check.
+    Mặc định: đường thật BẬC 3 → bậc 3 thắng theo check MSE.
+    variant (grader dùng): đường thật TUYẾN TÍNH → bậc tốt nhất ĐỔI thành 1 —
+    bắt bài hard-code best_degree."""
+    rng = np.random.RandomState(1400 if variant is None else variant)
+    X_train = np.round(np.sort(rng.uniform(0, 10, 24)), 2)
+    X_check = None
+    if variant is None:
+        truth = lambda x: 0.15 * (x - 2) * (x - 6) * (x - 9) + 40
+    else:
+        truth = lambda x: 5.0 * x + 20.0
+    y_train = np.round(truth(X_train) + rng.normal(0, 3, 24), 1)
+    X_check = np.round(np.sort(rng.uniform(0, 10, 20)), 2)
+    y_check = np.round(truth(X_check) + rng.normal(0, 3, 20), 1)
+    return X_train, y_train, X_check, y_check
+
+
+def fit_polynomial_model(X_train, y_train, degree):
+    """Fit đa thức bậc `degree` (np.polyfit) — trả model có .predict()."""
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        coeffs = np.polyfit(np.asarray(X_train, dtype=float),
+                            np.asarray(y_train, dtype=float), int(degree))
+    return _PolyModel(coeffs)
+
+
+def mean_squared_error(actual, predictions):
+    """Alias MSE (đúng tên hàm học viên tự viết ở Bài 9)."""
+    return compute_mse(actual, predictions)
+
+
+# ── Bài 15 — Train / Validation / Test split ─────────────────────────────────
+def load_split_dataset():
+    """DataFrame X (1000, 3) + Series y nhị phân 70/30. Index 0..999 là row-id
+    ổn định — grader dùng để kiểm tra 3 tập không giẫm chân nhau."""
+    rng = np.random.RandomState(1500)
+    n = 1000
+    X = pd.DataFrame({
+        'study_hours': np.round(rng.uniform(0.5, 10.0, n), 1),
+        'attendance': np.round(rng.uniform(0, 10, n), 1),
+        'quiz_score': np.round(rng.uniform(0, 10, n), 1),
+    })
+    y = pd.Series(np.zeros(n, dtype=int), name='pass_fail')
+    y.iloc[rng.choice(n, 700, replace=False)] = 1
+    return X, y
+
+
 # ── Bài 4 — Storage dtype vs semantic type ───────────────────────────────────
 def load_student_profile(shuffle_seed=None):
     """DataFrame 200 dòng × 6 cột minh họa 'cùng int64 nhưng nghĩa khác nhau':

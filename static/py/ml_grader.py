@@ -1235,6 +1235,213 @@ def grade_lesson13(user_code):
     return result
 
 
+def grade_lesson14(user_code):
+    """Bài 14 — chọn độ phức tạp theo CHECK MSE. Unsafe-but-correct: chọn bậc 12
+    vì train MSE nhỏ nhất — tính đúng hết nhưng luật chọn cổ vũ overfit."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    if not _uses_call(tree, 'load_complexity_demo') or not _uses_call(tree, 'fit_polynomial_model'):
+        result['code_msg'] = 'Cần load_complexity_demo() và fit_polynomial_model() cho từng bậc.'
+        return result
+    if not any(isinstance(n, (ast.For, ast.While)) for n in ast.walk(tree)):
+        result['code_msg'] = 'Hãy lặp qua các bậc [1, 3, 12] thay vì chép tay 3 lần.'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'Vòng lặp fit đủ các bậc qua helper chuẩn.'
+
+    # ── Gián điệp fit: bắt fit trên dữ liệu CHECK (leakage) ──
+    Xt, yt, Xc, yc = ml_lab.load_complexity_demo()
+    orig_fit = ml_lab.fit_polynomial_model
+    leak = {'hit': False}
+
+    def spy_fit(X_train, y_train, degree):
+        try:
+            arr = np.asarray(y_train, dtype=float)
+            if arr.shape == yc.shape and np.allclose(arr, yc):
+                leak['hit'] = True
+            if arr.shape[0] == yt.shape[0] + yc.shape[0]:
+                leak['hit'] = True
+        except Exception:
+            pass
+        return orig_fit(X_train, y_train, degree)
+
+    ml_lab.fit_polynomial_model = spy_fit
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    finally:
+        ml_lab.fit_polynomial_model = orig_fit
+    result['stdout'] = out
+
+    # Tham chiếu
+    ref = {}
+    for d in (1, 3, 12):
+        m = orig_fit(Xt, yt, d)
+        ref[d] = (ml_lab.compute_mse(yt, m.predict(Xt)), ml_lab.compute_mse(yc, m.predict(Xc)))
+    ref_best = min(ref, key=lambda d: ref[d][1])
+
+    results_var = ns.get('results')
+    best = ns.get('best_degree')
+    out_ok = False
+    if isinstance(results_var, list) and len(results_var) >= 3:
+        try:
+            by_deg = {int(r['degree']): (float(r['train_mse']), float(r['check_mse'])) for r in results_var}
+            out_ok = all(d in by_deg and abs(by_deg[d][0] - ref[d][0]) < 1e-3
+                         and abs(by_deg[d][1] - ref[d][1]) < 1e-3 for d in (1, 3, 12)) \
+                and best == ref_best
+        except Exception:
+            out_ok = False
+    if out_ok:
+        result['output_ok'] = True
+        result['output_msg'] = ('Đủ 3 cặp train/check MSE đúng tham chiếu; best_degree = %d theo '
+                                'CHECK MSE (bậc 12 train chỉ 5.4 nhưng check nổ tung).' % ref_best)
+    else:
+        result['output_msg'] = ('Cần results đủ 3 bậc với train_mse/check_mse đúng, và best_degree '
+                                'chọn theo CHECK MSE nhỏ nhất.')
+
+    # ── Risk: leakage fit-trên-check / chọn theo train MSE ──
+    train_best = min(ref, key=lambda d: ref[d][0])
+    if leak['hit']:
+        result['risk_msg'] = ('fit đang chạm vào dữ liệu CHECK — 20 điểm đó phải là "tương lai chưa thấy". '
+                              'Fit trên nó là leakage: điểm số đẹp nhưng vô nghĩa.')
+    elif best is not None and best == train_best and best != ref_best:
+        result['risk_msg'] = ('best_degree = %d vì train MSE nhỏ nhất — phép tính ĐÚNG nhưng luật chọn SAI: '
+                              'thưởng cho học thuộc lòng. Chọn theo CHECK MSE.' % train_best)
+    else:
+        result['risk_ok'] = True
+        result['risk_msg'] = 'Fit chỉ trên train, chọn model theo dữ liệu CHƯA THẤY — đúng tinh thần generalization.'
+
+    # ── Behavior: dataset ẨN có đường thật TUYẾN TÍNH — best phải ĐỔI theo ──
+    orig_load = ml_lab.load_complexity_demo
+
+    def hidden_load(variant=None):
+        return orig_load(variant=777)
+
+    ml_lab.load_complexity_demo = hidden_load
+    try:
+        Xt2, yt2, Xc2, yc2 = orig_load(variant=777)
+        ref2 = {d: ml_lab.compute_mse(yc2, orig_fit(Xt2, yt2, d).predict(Xc2)) for d in (1, 3, 12)}
+        ref2_best = min(ref2, key=ref2.get)
+        ns2, _ = _exec_capture(tree, '<user_code_hidden>')
+        if ns2.get('best_degree') == ref2_best:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = ('Dataset ẩn có đường thật TUYẾN TÍNH: best_degree tự đổi thành %d — '
+                                      'luật chọn thật sự nhìn dữ liệu, không hard-code.' % ref2_best)
+        else:
+            result['behavior_msg'] = ('Dataset ẩn (đường thật tuyến tính) có bậc tốt nhất = %d, nhưng '
+                                      'best_degree của bạn không đổi theo — đang hard-code kết quả.' % ref2_best)
+    except Exception as e:
+        result['behavior_msg'] = 'Chạy lại trên dataset ẩn bị lỗi: ' + str(e)
+    finally:
+        ml_lab.load_complexity_demo = orig_load
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
+def grade_lesson15(user_code):
+    """Bài 15 — split 60/20/20 stratified, tái lập được, test niêm phong.
+    Unsafe-but-correct: fit scaler trên TOÀN bảng rồi mới split — shape vẫn đẹp
+    nhưng thống kê đánh giá đã rò vào training."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    # ── Code/AST: 2 lần train_test_split, đủ random_state + stratify ──
+    split_calls = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            f = node.func
+            name = f.id if isinstance(f, ast.Name) else (f.attr if isinstance(f, ast.Attribute) else '')
+            if name == 'train_test_split':
+                split_calls.append(node)
+    if len(split_calls) < 2:
+        result['code_msg'] = 'Cần ĐÚNG 2 lần train_test_split: tách test trước, rồi tách validation từ phần còn lại.'
+        return result
+    kw_ok = all(
+        {'random_state', 'stratify'} <= {k.arg for k in c.keywords if k.arg}
+        for c in split_calls[:2]
+    )
+    if not kw_ok:
+        result['code_msg'] = 'Cả 2 lần split đều cần random_state (tái lập) và stratify (giữ tỉ lệ lớp).'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = '2 lần split, đủ random_state + stratify.'
+
+    # Risk-AST: preprocessing HỌC THỐNG KÊ trước khi split
+    first_split_line = min(c.lineno for c in split_calls)
+    pre_split_fit = any(
+        isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+        and n.func.attr in ('fit', 'fit_transform') and n.lineno < first_split_line
+        for n in ast.walk(tree)
+    )
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+
+    Xtr, Xv, Xte = ns.get('X_train'), ns.get('X_val'), ns.get('X_test')
+    ytr, yv, yte = ns.get('y_train'), ns.get('y_val'), ns.get('y_test')
+
+    sizes_ok = all(v is not None and hasattr(v, '__len__') for v in (Xtr, Xv, Xte, ytr, yv, yte)) \
+        and len(Xtr) == 600 and len(Xv) == 200 and len(Xte) == 200 \
+        and len(ytr) == 600 and len(yv) == 200 and len(yte) == 200
+    partition_ok = False
+    if sizes_ok and all(hasattr(v, 'index') for v in (Xtr, Xv, Xte)):
+        s1, s2, s3 = set(Xtr.index), set(Xv.index), set(Xte.index)
+        partition_ok = len(s1 | s2 | s3) == 1000 and not (s1 & s2) and not (s1 & s3) and not (s2 & s3)
+    balance_ok = sizes_ok and all(
+        abs(float(np.asarray(v, dtype=float).mean()) - 0.7) <= 0.03 for v in (ytr, yv, yte)
+    )
+    if sizes_ok and partition_ok and balance_ok:
+        result['output_ok'] = True
+        result['output_msg'] = ('600/200/200, ba tập KHÔNG giẫm nhau (đủ 1000 row-id), tỉ lệ Đậu ≈ 0.70 '
+                                'ở cả ba — split chuẩn.')
+    elif sizes_ok and not partition_ok:
+        result['output_msg'] = 'Kích thước đúng nhưng 3 tập chồng lấn/thiếu row-id — kiểm tra lại nguồn của lần split thứ 2 (phải là X_temp, không phải X).'
+    else:
+        result['output_msg'] = ('Cần X_train/X_val/X_test = 600/200/200 dòng (0.20 rồi 0.25 — lấy 20% của '
+                                '80% chỉ ra 16%) và y tương ứng.')
+
+    # ── Risk ──
+    if pre_split_fit:
+        result['risk_msg'] = ('Scaler đang fit trên TOÀN BỘ 1000 dòng TRƯỚC khi split — shape vẫn đẹp '
+                              'nhưng mean/std của validation/test đã rò vào training. Đây chính là '
+                              'leakage bài 5-6 cảnh báo: split TRƯỚC, học thống kê SAU (trên train).')
+    else:
+        result['risk_ok'] = True
+        result['risk_msg'] = ('Không preprocessing nào học từ dữ liệu trước khi split; test tách sớm và '
+                              'chỉ dùng để báo cáo — Test Vault đúng nghĩa niêm phong.')
+
+    # ── Behavior: chạy lại — split phải TÁI LẬP y hệt (random_state) ──
+    try:
+        ns2, _ = _exec_capture(tree, '<user_code_rerun>')
+        Xtr2 = ns2.get('X_train')
+        same = Xtr2 is not None and hasattr(Xtr, 'index') and hasattr(Xtr2, 'index') \
+            and list(Xtr.index) == list(Xtr2.index)
+        if same:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = 'Chạy lại lần 2: 600 row-id train Y HỆT — random_state làm split tái lập được.'
+        else:
+            result['behavior_msg'] = 'Chạy lại lần 2 ra split KHÁC — thiếu random_state, thí nghiệm không tái lập được.'
+    except Exception as e:
+        result['behavior_msg'] = 'Chạy lại lần 2 bị lỗi: ' + str(e)
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
 def grade_lesson3(user_code):
     """Bài 3 — Raw DataFrame vs X/y. Học viên tạo X = 3 feature hợp lệ, y = pass_fail.
     Unsafe-but-correct: X đủ shape (200, 3) nhưng chứa final_score → leak thông tin

@@ -1715,6 +1715,287 @@ window.LESSON_CONTENT_ML = {
         ],
         success_message: 'Luồng suy luận logistic khép kín: X @ w + b → sigmoid → threshold → nhãn. Course 1 phần "não" phân loại đã xong — M5 sẽ dạy điều cuối cùng và quan trọng nhất: đừng tự dối mình khi ĐÁNH GIÁ nó.'
       }
+    },
+
+    /* ═══════════════ BÀI 14 — Underfit, Good Fit, Overfit ═══════════════ */
+    {
+      id: 'c1_l14', index: 14,
+      course: 'Course 1 — ML Foundations', module: 'M5 — Generalization & Honest Evaluation',
+      title: 'Underfit, Good Fit và Overfit',
+      subtitle: 'Độ phức tạp model, học vs học vẹt — và tên thật của 2 chế độ hỏng: bias & variance',
+      xp_reward: 20, badge: 'Generalization Guardian',
+
+      step_1: {
+        type: 'curve_compare',
+        topic_tag: 'Ba model cùng nhìn một bộ dữ liệu',
+        intro_html: 'StudyLab có 24 điểm dữ liệu (giờ học → điểm). Ba "ứng viên model" cùng fit lên đó: ' +
+          'một đường phẳng lì, một đường cong mượt, một đường ngoằn ngoèo xuyên đúng từng điểm. ' +
+          '<b>Nếu chỉ nhìn Train MSE — bạn sẽ chọn nhầm.</b> Xem từng ứng viên rồi mở 20 điểm CHƯA THẤY.',
+        plot: {
+          xmax: 10, ymax: 60,
+          train_pts: [[0.43, 29.0], [0.61, 27.8], [1.24, 36.7], [1.3, 38.4], [1.35, 44.2], [1.71, 42.3], [1.91, 38.2], [2.49, 38.8], [2.74, 40.3], [3.15, 46.1], [3.3, 45.4], [3.36, 42.1], [3.53, 41.5], [3.78, 42.1], [4.53, 35.5], [4.66, 37.0], [4.68, 42.5], [4.7, 49.8], [4.82, 46.3], [5.45, 40.0], [6.34, 39.9], [7.41, 37.6], [9.5, 41.0], [9.57, 41.5]]
+        },
+        curves: [
+          { label: 'Model A — bậc 1 (phẳng)', pts: [[0.0,37.8],[0.2,38.0],[0.4,38.1],[0.6,38.2],[0.8,38.3],[1.0,38.4],[1.2,38.6],[1.4,38.7],[1.6,38.8],[1.8,38.9],[2.0,39.0],[2.2,39.2],[2.4,39.3],[2.6,39.4],[2.8,39.5],[3.0,39.7],[3.2,39.8],[3.4,39.9],[3.6,40.0],[3.8,40.1],[4.0,40.3],[4.2,40.4],[4.4,40.5],[4.6,40.6],[4.8,40.7],[5.0,40.9],[5.2,41.0],[5.4,41.1],[5.6,41.2],[5.8,41.3],[6.0,41.5],[6.2,41.6],[6.4,41.7],[6.6,41.8],[6.8,41.9],[7.0,42.1],[7.2,42.2],[7.4,42.3],[7.6,42.4],[7.8,42.5],[8.0,42.7],[8.2,42.8],[8.4,42.9],[8.6,43.0],[8.8,43.1],[9.0,43.3],[9.2,43.4],[9.4,43.5],[9.6,43.6],[9.8,43.8],[10.0,43.9]], train_mse: 21.5, check_mse: 25.2,
+            note: 'Quá CỨNG: bỏ qua mọi khúc cong của dữ liệu — sai ngay cả trên tập train.',
+            verdict: 'UNDERFIT', verdict_cls: '' },
+          { label: 'Model B — bậc 3 (cong mượt)', pts: [[0.0,25.0],[0.2,27.4],[0.4,29.5],[0.6,31.5],[0.8,33.3],[1.0,34.9],[1.2,36.4],[1.4,37.7],[1.6,38.8],[1.8,39.8],[2.0,40.7],[2.2,41.4],[2.4,42.0],[2.6,42.4],[2.8,42.8],[3.0,43.1],[3.2,43.2],[3.4,43.3],[3.6,43.3],[3.8,43.2],[4.0,43.1],[4.2,42.9],[4.4,42.6],[4.6,42.3],[4.8,42.0],[5.0,41.6],[5.2,41.2],[5.4,40.8],[5.6,40.4],[5.8,40.0],[6.0,39.5],[6.2,39.2],[6.4,38.8],[6.6,38.4],[6.8,38.1],[7.0,37.9],[7.2,37.6],[7.4,37.5],[7.6,37.4],[7.8,37.4],[8.0,37.4],[8.2,37.6],[8.4,37.8],[8.6,38.2],[8.8,38.6],[9.0,39.2],[9.2,39.9],[9.4,40.8],[9.6,41.7],[9.8,42.8],[10.0,44.1]], train_mse: 11.1, check_mse: 8.2,
+            note: 'Bám được hình dạng chính, bỏ qua nhiễu vụn.',
+            verdict: 'GOOD FIT ✓', verdict_cls: 'ml-cc-best' },
+          { label: 'Model C — bậc 12 (ngoằn ngoèo)', pts: [[0.0,0.0],[0.2,0.0],[0.4,26.9],[0.6,28.0],[0.8,24.2],[1.0,28.4],[1.2,36.3],[1.4,42.2],[1.6,43.5],[1.8,41.2],[2.0,37.9],[2.2,35.8],[2.4,36.1],[2.6,38.6],[2.8,42.0],[3.0,44.7],[3.2,45.6],[3.4,44.3],[3.6,41.3],[3.8,37.9],[4.0,35.5],[4.2,35.1],[4.4,37.1],[4.6,40.8],[4.8,44.8],[5.0,47.2],[5.2,46.5],[5.4,42.0],[5.6,34.9],[5.8,27.6],[6.0,24.4],[6.2,29.6],[6.4,46.0],[6.6,70.0],[6.8,70.0],[7.0,70.0],[7.2,70.0],[7.4,43.2],[7.6,0.0],[7.8,0.0],[8.0,0.0],[8.2,0.0],[8.4,0.0],[8.6,0.0],[8.8,0.0],[9.0,0.0],[9.2,0.0],[9.4,0.0],[9.6,0.0],[9.8,0.0],[10.0,0.0]], train_mse: 5.4, check_mse: 248525.5,
+            note: 'Train MSE THẤP NHẤT — uốn éo chiều lòng từng điểm train, kể cả nhiễu.',
+            verdict: 'OVERFIT 💥', verdict_cls: 'ml-cc-overfit' }
+        ],
+        reveal: {
+          btn: 'Mở 20 điểm CHƯA THẤY (held-out)',
+          title: 'Sự thật lộ ra trên dữ liệu mới',
+          check_pts: [[0.01, 26.7], [0.6, 34.7], [1.83, 42.0], [1.94, 47.6], [2.23, 43.3], [2.33, 43.4], [3.2, 42.0], [3.41, 44.4], [3.49, 44.3], [4.12, 42.3], [4.15, 42.1], [4.72, 43.1], [4.86, 42.8], [4.89, 47.5], [5.37, 42.8], [6.02, 35.1], [6.33, 43.8], [7.22, 37.7], [7.81, 36.0], [8.8, 37.4]],
+          note: 'Model C: train 5.4 → check 248 525. Nó không HỌC — nó HỌC VẸT. Generalization = hành xử trên dữ liệu KHÔNG dùng để fit.'
+        },
+        micro_check: {
+          question: 'Một model có train error gần 0 nhưng held-out error khổng lồ — chẩn đoán?',
+          options: [
+            { text: 'OVERFIT — model học thuộc lòng tập train (kể cả nhiễu), gãy trên dữ liệu mới', correct: true },
+            { text: 'Model tốt — train error gần 0 là bằng chứng nó đã học xong', correct: false }
+          ],
+          feedback_correct: 'Chuẩn chẩn đoán! Train error thấp chỉ chứng minh trí nhớ tốt — generalization mới là điều ta cần.',
+          feedback_wrong: 'Train error gần 0 + held-out error cao là chữ ký kinh điển của OVERFIT — trí nhớ tốt không phải trí tuệ.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Chẩn đoán bằng CẶP số (Train MSE, Check MSE) — kéo từng hồ sơ bệnh án vào đúng ngăn.',
+        bins: [
+          { key: 'underfit', label: 'UNDERFIT — QUÁ CỨNG' },
+          { key: 'good', label: 'GOOD FIT' },
+          { key: 'overfit', label: 'OVERFIT — HỌC VẸT' }
+        ],
+        cards: [
+          { text: 'Train 95 · Check 98 — cả hai đều CAO', role: 'underfit' },
+          { text: 'Train 9 · Check 12 — thấp và sát nhau', role: 'good' },
+          { text: 'Train 0.3 · Check 74 — train gần 0, check bùng nổ', role: 'overfit' },
+          { text: 'Đường phẳng lì bỏ qua mọi khúc cong của dữ liệu', role: 'underfit' },
+          { text: 'Đường ngoằn ngoèo xuyên đúng TỪNG điểm train', role: 'overfit' }
+        ],
+        wrong_feedback: 'Đọc CẶP số: cả hai cao = cứng quá; cả hai thấp + sát nhau = vừa; train ≈ 0 nhưng check cao = học vẹt.',
+        scenario_intro: 'Đúng hay sai? — gọi đúng TÊN của 2 chế độ hỏng',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'Model có train error thấp nhất luôn là model tốt nhất', answer: 'false', explain: 'Train error thưởng cho trí nhớ. Bậc 12 có train MSE thấp nhất (5.4) và check MSE tệ nhất (248 525) — chọn theo train là chọn kẻ học vẹt.' },
+          { text: 'Hai chế độ hỏng này có tên: model quá CỨNG sai theo CÙNG MỘT KIỂU bất kể bộ train nào — lỗi hệ thống đó gọi là BIAS cao (underfit); model quá MỀM đổi hình dạng theo TỪNG bộ train — độ dao động đó gọi là VARIANCE cao (overfit)', answer: 'true', explain: 'Đây là khung bias–variance (ISLR §2.2.2 — "chủ đề quan trọng bậc nhất của cả cuốn sách"): lỗi kỳ vọng = bias² + variance + noise. Tăng độ phức tạp là ĐỔI bias LẤY variance — "trade-off" nằm đúng chỗ đó, và điểm ngọt là nơi tổng hai thứ nhỏ nhất.' },
+          { text: 'Khoảng cách train–check nhỏ là đủ để kết luận model tốt', answer: 'false', explain: 'Gap nhỏ nhưng CẢ HAI cùng cao (95 vs 98) vẫn là underfit — bias cao. Phải nhìn cả mức tuyệt đối lẫn khoảng cách.' }
+        ]
+      },
+
+      step_3: {
+        type: 'flex_tuner',
+        mission: 'Kéo qua 5 mức linh hoạt. Train MSE lộ ngay — Check MSE bị GIẤU. Thử hết, mở khóa, rồi chọn mức tốt nhất.',
+        plot: {
+          xmax: 10, ymax: 60,
+          train_pts: [[0.43, 29.0], [0.61, 27.8], [1.24, 36.7], [1.3, 38.4], [1.35, 44.2], [1.71, 42.3], [1.91, 38.2], [2.49, 38.8], [2.74, 40.3], [3.15, 46.1], [3.3, 45.4], [3.36, 42.1], [3.53, 41.5], [3.78, 42.1], [4.53, 35.5], [4.66, 37.0], [4.68, 42.5], [4.7, 49.8], [4.82, 46.3], [5.45, 40.0], [6.34, 39.9], [7.41, 37.6], [9.5, 41.0], [9.57, 41.5]],
+          check_pts: [[0.01, 26.7], [0.6, 34.7], [1.83, 42.0], [1.94, 47.6], [2.23, 43.3], [2.33, 43.4], [3.2, 42.0], [3.41, 44.4], [3.49, 44.3], [4.12, 42.3], [4.15, 42.1], [4.72, 43.1], [4.86, 42.8], [4.89, 47.5], [5.37, 42.8], [6.02, 35.1], [6.33, 43.8], [7.22, 37.7], [7.81, 36.0], [8.8, 37.4]]
+        },
+        levels: [
+          { short: 'Bậc 1', label: 'Mức 1 — bậc 1', pts: [[0.0,37.8],[0.2,38.0],[0.4,38.1],[0.6,38.2],[0.8,38.3],[1.0,38.4],[1.2,38.6],[1.4,38.7],[1.6,38.8],[1.8,38.9],[2.0,39.0],[2.2,39.2],[2.4,39.3],[2.6,39.4],[2.8,39.5],[3.0,39.7],[3.2,39.8],[3.4,39.9],[3.6,40.0],[3.8,40.1],[4.0,40.3],[4.2,40.4],[4.4,40.5],[4.6,40.6],[4.8,40.7],[5.0,40.9],[5.2,41.0],[5.4,41.1],[5.6,41.2],[5.8,41.3],[6.0,41.5],[6.2,41.6],[6.4,41.7],[6.6,41.8],[6.8,41.9],[7.0,42.1],[7.2,42.2],[7.4,42.3],[7.6,42.4],[7.8,42.5],[8.0,42.7],[8.2,42.8],[8.4,42.9],[8.6,43.0],[8.8,43.1],[9.0,43.3],[9.2,43.4],[9.4,43.5],[9.6,43.6],[9.8,43.8],[10.0,43.9]], train_mse: 21.5, check_mse: 25.2 },
+          { short: 'Bậc 2', label: 'Mức 2 — bậc 2', pts: [[0.0,32.7],[0.2,33.4],[0.4,34.1],[0.6,34.8],[0.8,35.4],[1.0,36.0],[1.2,36.6],[1.4,37.2],[1.6,37.7],[1.8,38.2],[2.0,38.7],[2.2,39.2],[2.4,39.6],[2.6,40.0],[2.8,40.4],[3.0,40.7],[3.2,41.1],[3.4,41.4],[3.6,41.7],[3.8,42.0],[4.0,42.2],[4.2,42.4],[4.4,42.6],[4.6,42.8],[4.8,42.9],[5.0,43.0],[5.2,43.1],[5.4,43.2],[5.6,43.2],[5.8,43.2],[6.0,43.2],[6.2,43.2],[6.4,43.1],[6.6,43.0],[6.8,42.9],[7.0,42.8],[7.2,42.6],[7.4,42.5],[7.6,42.3],[7.8,42.0],[8.0,41.8],[8.2,41.5],[8.4,41.2],[8.6,40.8],[8.8,40.5],[9.0,40.1],[9.2,39.7],[9.4,39.3],[9.6,38.8],[9.8,38.3],[10.0,37.8]], train_mse: 16.4, check_mse: 17.0 },
+          { short: 'Bậc 3', label: 'Mức 3 — bậc 3', pts: [[0.0,25.0],[0.2,27.4],[0.4,29.5],[0.6,31.5],[0.8,33.3],[1.0,34.9],[1.2,36.4],[1.4,37.7],[1.6,38.8],[1.8,39.8],[2.0,40.7],[2.2,41.4],[2.4,42.0],[2.6,42.4],[2.8,42.8],[3.0,43.1],[3.2,43.2],[3.4,43.3],[3.6,43.3],[3.8,43.2],[4.0,43.1],[4.2,42.9],[4.4,42.6],[4.6,42.3],[4.8,42.0],[5.0,41.6],[5.2,41.2],[5.4,40.8],[5.6,40.4],[5.8,40.0],[6.0,39.5],[6.2,39.2],[6.4,38.8],[6.6,38.4],[6.8,38.1],[7.0,37.9],[7.2,37.6],[7.4,37.5],[7.6,37.4],[7.8,37.4],[8.0,37.4],[8.2,37.6],[8.4,37.8],[8.6,38.2],[8.8,38.6],[9.0,39.2],[9.2,39.9],[9.4,40.8],[9.6,41.7],[9.8,42.8],[10.0,44.1]], train_mse: 11.1, check_mse: 8.2 },
+          { short: 'Bậc 6', label: 'Mức 4 — bậc 6', pts: [[0.0,14.1],[0.2,21.0],[0.4,26.5],[0.6,30.7],[0.8,33.9],[1.0,36.3],[1.2,38.1],[1.4,39.3],[1.6,40.2],[1.8,40.9],[2.0,41.3],[2.2,41.6],[2.4,41.8],[2.6,41.9],[2.8,42.0],[3.0,42.1],[3.2,42.2],[3.4,42.3],[3.6,42.4],[3.8,42.4],[4.0,42.5],[4.2,42.5],[4.4,42.4],[4.6,42.4],[4.8,42.2],[5.0,42.0],[5.2,41.8],[5.4,41.5],[5.6,41.1],[5.8,40.7],[6.0,40.3],[6.2,39.9],[6.4,39.4],[6.6,38.9],[6.8,38.5],[7.0,38.2],[7.2,37.9],[7.4,37.6],[7.6,37.5],[7.8,37.5],[8.0,37.7],[8.2,37.9],[8.4,38.3],[8.6,38.8],[8.8,39.4],[9.0,40.0],[9.2,40.5],[9.4,41.0],[9.6,41.3],[9.8,41.4],[10.0,40.9]], train_mse: 10.1, check_mse: 15.2 },
+          { short: 'Bậc 12', label: 'Mức 5 — bậc 12', pts: [[0.0,0.0],[0.2,0.0],[0.4,26.9],[0.6,28.0],[0.8,24.2],[1.0,28.4],[1.2,36.3],[1.4,42.2],[1.6,43.5],[1.8,41.2],[2.0,37.9],[2.2,35.8],[2.4,36.1],[2.6,38.6],[2.8,42.0],[3.0,44.7],[3.2,45.6],[3.4,44.3],[3.6,41.3],[3.8,37.9],[4.0,35.5],[4.2,35.1],[4.4,37.1],[4.6,40.8],[4.8,44.8],[5.0,47.2],[5.2,46.5],[5.4,42.0],[5.6,34.9],[5.8,27.6],[6.0,24.4],[6.2,29.6],[6.4,46.0],[6.6,70.0],[6.8,70.0],[7.0,70.0],[7.2,70.0],[7.4,43.2],[7.6,0.0],[7.8,0.0],[8.0,0.0],[8.2,0.0],[8.4,0.0],[8.6,0.0],[8.8,0.0],[9.0,0.0],[9.2,0.0],[9.4,0.0],[9.6,0.0],[9.8,0.0],[10.0,0.0]], train_mse: 5.4, check_mse: 248525.5 }
+        ],
+        reveal_btn: '🔓 Mở Check MSE (20 điểm giấu)',
+        pick_label: 'Chọn mức TỐT NHẤT:',
+        goals: [
+          { id: 'try_all', label: 'Thử đủ 5 mức linh hoạt' },
+          { id: 'reveal', label: 'Mở khóa Check MSE' },
+          { id: 'pick', label: 'Chọn mức có CHECK MSE thấp nhất' }
+        ],
+        completion_note: 'Train MSE giảm ĐỀU theo độ phức tạp (21.5 → 5.4) — nó không bao giờ mách bạn dừng lại. Check MSE vẽ hình chữ U (25.2 → 8.2 → 248 525): đáy chữ U là điểm ngọt bias–variance.'
+      },
+
+      step_4: {
+        prompt_html: 'Fit đa thức bậc 1, 3, 12 trên TRAIN; tính train_mse + check_mse cho từng bậc; ' +
+          'chọn <code>best_degree</code> theo <b>check MSE nhỏ nhất</b>. 20 điểm check KHÔNG được vào fit.',
+        starter_code:
+          'from ml_lab import load_complexity_demo, fit_polynomial_model, mean_squared_error\n\n' +
+          '# 24 điểm train + 20 điểm check (dữ liệu "tương lai" — cấm fit)\n' +
+          'X_train, y_train, X_check, y_check = load_complexity_demo()\n\n' +
+          'results = []\n' +
+          '# TODO: với mỗi bậc — fit trên TRAIN, tính train_mse và check_mse, append dict\n' +
+          'for degree in [1, 3, 12]:\n' +
+          '    pass\n\n' +
+          '# TODO: chọn bậc có CHECK MSE nhỏ nhất\n' +
+          'best_degree = None\n\n' +
+          'for r in results:\n' +
+          '    print(r)\n' +
+          'print("Best degree:", best_degree)',
+        grader_fn: 'grade_lesson14',
+        hints: [
+          'model = fit_polynomial_model(X_train, y_train, degree=degree) — TRAIN only; rồi model.predict() cho cả 2 tập.',
+          'results.append({"degree": degree, "train_mse": ..., "check_mse": ...}).',
+          'best_degree = min(results, key=lambda r: r["check_mse"])["degree"] — chọn theo train_mse là trap; gõ cứng best_degree = 3 cũng là trap: dataset ẨN của grader có đường thật TUYẾN TÍNH, bậc tốt nhất ở đó là 1.'
+        ],
+        success_message: 'Bậc 3 thắng bằng check MSE 8.2 — trong khi bậc 12 khoe train MSE 5.4 rồi nổ 248 525 trên dữ liệu mới. Chọn model bằng dữ liệu CHƯA THẤY: nguyên tắc sống còn mà mọi bài từ nay trở đi đều đứng trên nó.'
+      }
+    },
+
+    /* ═══════════════ BÀI 15 — Train / Validation / Test ═══════════════ */
+    {
+      id: 'c1_l15', index: 15,
+      course: 'Course 1 — ML Foundations', module: 'M5 — Generalization & Honest Evaluation',
+      title: 'Chia dữ liệu: Train, Validation và Test',
+      subtitle: 'Đánh giá trung thực, split tái lập được và két sắt Test niêm phong',
+      xp_reward: 20, badge: 'Generalization Guardian',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Ba căn phòng, ba nhiệm vụ',
+        intro_html: 'Bài 14 dùng "20 điểm giấu" — nhưng ai giấu, giấu thế nào cho đúng? Chuẩn công nghiệp: ' +
+          'chia 1.000 hồ sơ StudyLab thành <b>3 căn phòng</b> với 3 quyền hạn khác hẳn nhau — 600 / 200 / 200.',
+        rounds: [
+          {
+            id: 'train-room',
+            label: '🏋️ Training Room — 600 hồ sơ',
+            flow: ['Model VÀO đây học weights', 'fit() chỉ được nhìn 600 dòng này', 'Học thuộc lòng? Cũng chỉ thuộc được phòng này'],
+            note: 'Tập DUY NHẤT mà tham số model được học từ đó.'
+          },
+          {
+            id: 'val-room',
+            label: '🔍 Validation Room — 200 hồ sơ',
+            flow: ['So sánh các LỰA CHỌN: bậc nào, ngưỡng nào, model nào', 'Được nhìn NHIỀU LẦN trong lúc phát triển', 'Nhưng không bao giờ được vào fit()'],
+            note: 'Chính là "20 điểm giấu" của bài 14 — trọng tài cho mọi quyết định thiết kế.'
+          },
+          {
+            id: 'test-vault',
+            label: '🔒 Test Vault — 200 hồ sơ NIÊM PHONG',
+            flow: ['Khóa từ đầu đến phút CHÓT', 'Mở đúng MỘT lần → con số đem đi báo cáo', 'Đụng vào sớm = con số báo cáo thành tự dối mình'],
+            note: 'Vì validation bị nhìn nhiều lần nên chính nó cũng "mòn" — cần một tập chưa ai đụng để nói sự thật cuối cùng.'
+          }
+        ],
+        micro_check: {
+          question: 'Tập nào là tập DUY NHẤT được dùng để học weights (vào fit)?',
+          options: [
+            { text: 'Train — 600 hồ sơ trong Training Room', correct: true },
+            { text: 'Train + Validation — càng nhiều dữ liệu học càng tốt', correct: false }
+          ],
+          feedback_correct: 'Chuẩn phân quyền! Validation chỉ để SO SÁNH lựa chọn, Test chỉ để báo cáo — fit() chỉ ăn Train.',
+          feedback_wrong: 'Cho Validation vào fit() thì lấy gì làm trọng tài? Model sẽ "thuộc bài" cả tập so sánh — fit chỉ được ăn Train.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Kiểm tra quy trình: kéo từng workflow vào ngăn AN TOÀN hay LEAKAGE.',
+        bins: [
+          { key: 'safe', label: 'AN TOÀN ✓' },
+          { key: 'leak', label: 'LEAKAGE ✗' }
+        ],
+        cards: [
+          { text: 'Scaler học mean/std từ TRAIN, rồi transform validation/test', role: 'safe' },
+          { text: 'fit_transform scaler trên TOÀN BỘ 1000 dòng, sau đó mới split', role: 'leak' },
+          { text: 'Chọn ngưỡng phân lớp bằng VALIDATION', role: 'safe' },
+          { text: 'Thử 10 model, chọn cái có điểm TEST cao nhất', role: 'leak' },
+          { text: 'Mở Test Vault đúng 1 lần cuối cùng để lấy số báo cáo', role: 'safe' }
+        ],
+        wrong_feedback: 'Hỏi 1 câu: thông tin từ dữ liệu ĐÁNH GIÁ có chảy ngược vào quá trình học/chọn không? Có = leakage, dù shape vẫn đẹp.',
+        scenario_intro: 'Toán chia tỉ lệ 60/20/20 — chỗ mọi người hay ngã',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'Muốn 60/20/20: bước 1 tách 20% test; bước 2 lấy 25% của phần 80% còn lại làm validation — vì 0.25 × 0.8 = 0.20', answer: 'true', explain: 'Đúng phép nhân tỉ lệ: lần split thứ hai tính phần trăm trên TẬP TẠM 800 dòng, không phải trên 1000 dòng gốc.' },
+          { text: 'Lấy 20% của phần 80% làm validation cũng ra 20% toàn cục', answer: 'false', explain: '0.20 × 0.8 = 0.16 — validation chỉ còn 16% (160 dòng). Sai số tưởng nhỏ này làm mọi so sánh nghiêng lệch.' },
+          { text: 'stratify=y giữ tỉ lệ Đậu/Rớt ≈ 70/30 giống nhau ở CẢ 3 tập, và random_state làm split tái lập được y hệt mỗi lần chạy', answer: 'true', explain: 'Không stratify, một tập có thể ngẫu nhiên lệch 78/22 — mọi phép đo trên đó méo theo. Không random_state, thí nghiệm hôm nay không lặp lại được ngày mai.' }
+        ]
+      },
+
+      step_3: {
+        type: 'experiment_rounds',
+        mission: 'Khóa Test Vault từng bước: Raw 1000 → tách test → tách validation → chốt stratify + random_state.',
+        choose_options: [],
+        rounds: [
+          {
+            title: 'Bước 1 — 1000 hồ sơ thô đang đứng trước cửa',
+            fixed: [
+              { label: 'Raw', value: '1000 dòng · Đậu/Rớt = 70/30' },
+              { label: 'Nguyên tắc', value: 'Chưa ai được HỌC gì từ dữ liệu trước khi chia phòng' }
+            ],
+            choose: {
+              label: 'Làm gì trước tiên?',
+              options: [
+                { key: 'scale_first', label: 'Scale toàn bộ cho tiện rồi split' },
+                { key: 'split_first', label: 'Tách NGAY 20% test và khóa lại' }
+              ],
+              answer: 'split_first'
+            },
+            output: 'temp: 800 dòng  ·  test: 200 dòng 🔒  (chưa thống kê nào được học từ 200 dòng này)',
+            code: 'X_temp, X_test, y_temp, y_test = train_test_split(\n    X, y, test_size=0.20, ...)',
+            note: 'Scale-trước-split là leakage kinh điển: mean/std của test đã lộ vào training. Split TRƯỚC — mọi thứ khác SAU.'
+          },
+          {
+            title: 'Bước 2 — Cắt validation từ tập tạm 800 dòng',
+            fixed: [
+              { label: 'Còn lại', value: 'temp = 800 dòng' },
+              { label: 'Mục tiêu', value: 'validation = 200 dòng (20% TOÀN CỤC)' }
+            ],
+            choose: {
+              label: 'test_size cho lần split thứ 2?',
+              options: [
+                { key: 'p20', label: '0.20 — cứ 20% là 20%' },
+                { key: 'p25', label: '0.25 — vì 0.25 × 800 = 200' }
+              ],
+              answer: 'p25'
+            },
+            output: 'train: 600  ·  validation: 200  ·  test: 200 🔒  — đúng 60/20/20',
+            code: 'X_train, X_val, y_train, y_val = train_test_split(\n    X_temp, y_temp, test_size=0.25, ...)',
+            note: '0.20 × 800 chỉ ra 160 dòng (16% toàn cục) — phần trăm lần 2 tính trên tập TẠM, không phải tập gốc.'
+          },
+          {
+            title: 'Bước 3 — Chốt 2 tham số cuối cho cả 2 lần split',
+            fixed: [
+              { label: 'Rủi ro 1', value: 'Một phòng ngẫu nhiên lệch tỉ lệ Đậu/Rớt' },
+              { label: 'Rủi ro 2', value: 'Ngày mai chạy lại ra split KHÁC — không ai kiểm chứng được' }
+            ],
+            choose: {
+              label: 'Thêm gì vào cả 2 lệnh split?',
+              options: [
+                { key: 'nothing', label: 'Không cần gì thêm' },
+                { key: 'both', label: 'random_state=42 + stratify=y' }
+              ],
+              answer: 'both'
+            },
+            output: 'Tỉ lệ Đậu: train 0.70 · val 0.70 · test 0.70  ·  chạy lại 100 lần vẫn Y HỆT  —  TEST VAULT LOCKED 🔒',
+            code: 'train_test_split(..., random_state=42, stratify=y)\ntrain_test_split(..., random_state=42, stratify=y_temp)',
+            note: 'stratify giữ cân tỉ lệ lớp ở cả 3 phòng; random_state biến split thành thí nghiệm tái lập được.'
+          }
+        ],
+        completion_note: 'Từ đây về sau — Course 2, Course 3, và mọi dự án thật — quy trình LUÔN mở màn bằng nghi thức này: chia phòng trước, học sau, Test Vault mở đúng một lần.'
+      },
+
+      step_4: {
+        prompt_html: 'Tự tay tạo split 60/20/20 stratified, tái lập được, bằng ĐÚNG 2 lần <code>train_test_split</code>. ' +
+          'In shapes + tỉ lệ Đậu của cả 3 tập.',
+        starter_code:
+          'from sklearn.model_selection import train_test_split\n' +
+          'from ml_lab import load_split_dataset\n\n' +
+          '# 1000 hồ sơ, nhãn Đậu/Rớt 70/30\n' +
+          'X, y = load_split_dataset()\n\n' +
+          '# TODO: lần 1 — tách 20% test (nhớ random_state + stratify)\n\n\n' +
+          '# TODO: lần 2 — tách validation từ phần còn lại sao cho ra 200 dòng\n\n\n' +
+          'print(X_train.shape, X_val.shape, X_test.shape)\n' +
+          'print(y_train.mean(), y_val.mean(), y_test.mean())',
+        grader_fn: 'grade_lesson15',
+        hints: [
+          'Lần 1: X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y).',
+          'Lần 2: test_size=0.25 trên X_temp/y_temp (0.25 × 800 = 200) với stratify=y_temp — dùng 0.20 chỉ ra 160 dòng.',
+          'Grader kiểm 1000 row-id không giẫm nhau, chạy lại lần 2 phải Y HỆT (random_state), và bắt scaler fit trước split.'
+        ],
+        success_message: 'Split 600/200/200 stratified, tái lập được, Test Vault niêm phong — Course 1 khép lại bằng nghi thức trung thực quan trọng nhất của nghề. 🎓 Course 2 sẽ mở màn bằng chính split này để huấn luyện pipeline thật.'
+      }
     }
   ]
 };
