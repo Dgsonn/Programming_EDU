@@ -688,6 +688,282 @@ def grade_lesson7(user_code):
     return result
 
 
+def _contains_name(node, name):
+    return any(isinstance(n, ast.Name) and n.id == name for n in ast.walk(node))
+
+
+def _find_funcdef(tree, name):
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    return None
+
+
+def grade_lesson8(user_code):
+    """Bài 8 — hàm dự đoán tuyến tính vectorized w*x + b.
+    Unsafe-but-correct: gõ tay 3 output đúng — test ẩn đổi tham số sẽ lộ."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    fn_def = _find_funcdef(tree, 'predict_score')
+    if fn_def is None or len(fn_def.args.args) != 3:
+        result['code_msg'] = 'Cần hàm predict_score(x, weight, bias) đủ 3 tham số.'
+        return result
+    if not any(isinstance(n, ast.Return) for n in ast.walk(fn_def)):
+        result['code_msg'] = 'predict_score chưa return gì.'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'Hàm predict_score(x, weight, bias) có return.'
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+    fn = ns.get('predict_score')
+
+    # ── Output: dự đoán hiển thị đúng w*x+b trên [2, 5, 8] ──
+    try:
+        vis = np.asarray(fn(np.array([2.0, 5.0, 8.0]), 8.0, 20.0), dtype=float)
+        if vis.shape == (3,) and np.allclose(vis, [36.0, 60.0, 84.0]):
+            result['output_ok'] = True
+            result['output_msg'] = 'predict_score([2,5,8], 8, 20) → [36, 60, 84] — đúng công thức.'
+        else:
+            result['output_msg'] = 'Với x=[2,5,8], w=8, b=20 phải ra [36, 60, 84] — hiện ra %s.' % vis
+    except Exception as e:
+        result['output_msg'] = 'Gọi predict_score bị lỗi: ' + str(e)
+        return result
+
+    # ── Risk: bỏ quên bias / hard-code hằng số ──
+    try:
+        xt = np.array([2.0, 5.0])
+        r0 = np.asarray(fn(xt, 8.0, 0.0), dtype=float)
+        r55 = np.asarray(fn(xt, 8.0, 55.0), dtype=float)
+        odd = np.asarray(fn(np.array([1.0, 2.0, 3.0]), 8.0, 20.0), dtype=float)
+        if odd.shape == (3,) and np.allclose(odd, [36.0, 60.0, 84.0]):
+            result['risk_msg'] = ('Ba con số [36, 60, 84] đang bị GÕ TAY — đổi x thành [1,2,3] mà output '
+                                  'y hệt. Hàm phải TÍNH từ công thức, không chép đáp án.')
+        elif np.allclose(r0, r55):
+            result['risk_msg'] = 'Đổi bias từ 0 lên 55 mà dự đoán KHÔNG đổi — bias đang bị bỏ quên (thiếu "+ bias").'
+        else:
+            result['risk_ok'] = True
+            result['risk_msg'] = 'Không hard-code, không rơi bias — hàm tính thật từ tham số.'
+    except Exception as e:
+        result['risk_msg'] = 'Test risk bị lỗi: ' + str(e)
+
+    # ── Behavior: bộ (x, w, b) ẨN — kể cả w âm ──
+    try:
+        ok = True
+        for arr, w, b in [(np.array([1.5, 9.3, 4.4]), -2.5, 7.0),
+                          (np.array([0.0, 3.3]), 4.0, -6.0)]:
+            got = np.asarray(fn(arr, w, b), dtype=float)
+            if got.shape != arr.shape or not np.allclose(got, w * arr + b):
+                ok = False
+                break
+        if ok:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = 'Bộ (x, w, b) ẩn — kể cả w ÂM — đều đúng, output shape khớp input.'
+        else:
+            result['behavior_msg'] = 'Bộ tham số ẩn cho kết quả sai — hàm chưa đúng w*x + b tổng quát.'
+    except Exception as e:
+        result['behavior_msg'] = 'Test ẩn bị lỗi: ' + str(e)
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
+def grade_lesson9(user_code):
+    """Bài 9 — hàm MSE. Unsafe-but-correct: trả về MAE (metric hợp lệ nhưng KHÁC)."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    fn_def = _find_funcdef(tree, 'mean_squared_error')
+    if fn_def is None or len(fn_def.args.args) != 2:
+        result['code_msg'] = 'Cần hàm mean_squared_error(actual, predictions) đủ 2 tham số.'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'Hàm mean_squared_error(actual, predictions) tồn tại.'
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+    fn = ns.get('mean_squared_error')
+
+    actual, pred_a, pred_b = ml_lab.load_mse_demo()
+    ref_a = float(((pred_a - actual) ** 2).mean())
+    ref_b = float(((pred_b - actual) ** 2).mean())
+
+    # ── Risk TRƯỚC: nhận diện metric bằng bộ thử bất đối xứng ──
+    act_t = np.array([0.0, 0.0, 0.0])
+    pred_t = np.array([3.0, -1.0, 2.0])
+    try:
+        got = float(fn(act_t, pred_t))
+        if abs(got - 14.0 / 3.0) < 1e-6:
+            result['risk_ok'] = True
+            result['risk_msg'] = 'Đúng MSE: bình phương diệt dấu và phạt nặng lỗi lớn.'
+        elif abs(got - 2.0) < 1e-6:
+            result['risk_msg'] = ('Hàm đang trả MAE (trung bình |lỗi|) — một metric HỢP LỆ nhưng KHÁC. '
+                                  'Bài này cần MSE: bình phương phạt lỗi lớn mạnh hơn hẳn.')
+        elif abs(got - 4.0 / 3.0) < 1e-6:
+            result['risk_msg'] = ('Hàm đang lấy trung bình lỗi CÓ DẤU — các lỗi trái dấu tự triệt tiêu, '
+                                  'model sai vẫn được điểm đẹp. Phải bình phương trước khi trung bình.')
+        else:
+            result['risk_msg'] = 'Kết quả không khớp MSE chuẩn (kỳ vọng 14/3 ≈ 4.667, nhận %s).' % round(got, 3)
+    except Exception as e:
+        result['risk_msg'] = 'Gọi hàm bị lỗi: ' + str(e)
+        return result
+
+    # ── Output: so sánh 2 model trên dữ liệu bài ──
+    try:
+        got_a, got_b = float(fn(actual, pred_a)), float(fn(actual, pred_b))
+        if abs(got_a - ref_a) < 1e-6 and abs(got_b - ref_b) < 1e-6:
+            result['output_ok'] = True
+            result['output_msg'] = ('MSE(A) = %.1f < MSE(B) = %.1f — đường A rẻ hơn, đúng tham chiếu.'
+                                    % (got_a, got_b))
+        else:
+            result['output_msg'] = ('MSE trên dữ liệu bài chưa khớp (kỳ vọng A=%.1f, B=%.1f).'
+                                    % (ref_a, ref_b))
+    except Exception as e:
+        result['output_msg'] = 'Tính MSE trên dữ liệu bài bị lỗi: ' + str(e)
+
+    # ── Behavior: mảng ẩn nhiều độ dài / nhiều dấu ──
+    try:
+        rng = np.random.RandomState(42)
+        ok = True
+        for n in (5, 17):
+            a = rng.normal(0, 10, n)
+            p = a + rng.normal(0, 5, n)
+            if abs(float(fn(a, p)) - float(((p - a) ** 2).mean())) > 1e-6:
+                ok = False
+                break
+        if ok:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = 'Mảng ẩn độ dài 5 và 17 (lỗi âm lẫn dương) đều khớp MSE tham chiếu.'
+        else:
+            result['behavior_msg'] = 'Mảng ẩn cho kết quả lệch tham chiếu — hàm chưa tổng quát.'
+    except Exception as e:
+        result['behavior_msg'] = 'Test ẩn bị lỗi: ' + str(e)
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
+def grade_lesson10(user_code):
+    """Bài 10 — vòng lặp Gradient Descent. Trap: sai dấu update, hard-code loss."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    # ── Code/AST: có vòng lặp, dùng compute_gradients, update TRỪ learning_rate ──
+    has_loop = any(isinstance(n, (ast.For, ast.While)) for n in ast.walk(tree))
+    uses_grad = _uses_call(tree, 'compute_gradients')
+    minus_ok, plus_bad = False, False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.AugAssign) and _contains_name(node.value, 'learning_rate'):
+            if isinstance(node.op, ast.Sub):
+                minus_ok = True
+            elif isinstance(node.op, ast.Add):
+                plus_bad = True
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.BinOp) \
+                and _contains_name(node.value.right, 'learning_rate'):
+            if isinstance(node.value.op, ast.Sub):
+                minus_ok = True
+            elif isinstance(node.value.op, ast.Add):
+                plus_bad = True
+    if not has_loop or not uses_grad:
+        result['code_msg'] = 'Cần vòng lặp gọi compute_gradients(x, y, weight, bias) mỗi bước.'
+        return result
+    if plus_bad and not minus_ok:
+        result['code_msg'] = ('Update đang CỘNG learning_rate × gradient — đi CÙNG chiều dốc lên. '
+                              'Phải TRỪ: parameter -= learning_rate * gradient.')
+        return result
+    if not minus_ok:
+        result['code_msg'] = 'Chưa thấy phép update parameter -= learning_rate * gradient.'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'Vòng lặp GD đúng dạng: gradient → trừ lr×grad → ghi loss.'
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+
+    hist = ns.get('loss_history')
+    steps = ns.get('steps')
+    w, b = ns.get('weight'), ns.get('bias')
+
+    hist_ok = isinstance(hist, list) and isinstance(steps, int) and len(hist) == steps and steps > 0
+    conv_ok = False
+    if hist_ok:
+        try:
+            first, last = float(hist[0]), float(hist[-1])
+            conv_ok = np.isfinite(last) and last < first * 0.5
+        except Exception:
+            conv_ok = False
+    if hist_ok and conv_ok:
+        result['output_ok'] = True
+        result['output_msg'] = ('loss_history đủ %d bước: %.1f → %.1f — MSE giảm thật, không phân kỳ.'
+                                % (steps, float(hist[0]), float(hist[-1])))
+    elif not hist_ok:
+        result['output_msg'] = 'loss_history phải là list đủ đúng `steps` phần tử (mỗi bước 1 giá trị MSE).'
+    else:
+        result['output_msg'] = 'Loss cuối chưa giảm rõ so với bước đầu (hoặc phân kỳ) — kiểm tra dấu update/learning rate.'
+
+    # ── Risk: tham số phải THẬT SỰ được update + loss cuối khớp tham số cuối ──
+    try:
+        x, y = ml_lab.load_gradient_data()
+        if w is None or b is None or (float(w) == 0.0 and float(b) == 0.0):
+            result['risk_msg'] = 'weight/bias vẫn ở 0.0 — tham số chưa hề được update, loss đẹp đến đâu cũng vô nghĩa.'
+        elif hist_ok and abs(float(hist[-1]) - ml_lab.compute_mse(y, float(w) * x + float(b))) > 1e-3:
+            result['risk_msg'] = ('loss_history[-1] KHÔNG khớp MSE tính từ weight/bias cuối — '
+                                  'giá trị loss đang bị gõ tay thay vì tính từ model.')
+        else:
+            result['risk_ok'] = True
+            result['risk_msg'] = 'Tham số update thật; loss cuối khớp đúng MSE của (weight, bias) cuối.'
+    except Exception as e:
+        result['risk_msg'] = 'Test risk bị lỗi: ' + str(e)
+
+    # ── Behavior: dataset ẨN (tham số thật khác) — loop phải vẫn hội tụ ──
+    orig_load = ml_lab.load_gradient_data
+
+    def hidden_load(variant=None):
+        return orig_load(variant=777)
+
+    ml_lab.load_gradient_data = hidden_load
+    try:
+        ns2, _ = _exec_capture(tree, '<user_code_hidden>')
+        h2 = ns2.get('loss_history')
+        ok = isinstance(h2, list) and len(h2) > 0 and np.isfinite(float(h2[-1])) \
+            and float(h2[-1]) < float(h2[0]) * 0.5
+        if ok:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = ('Dataset ẨN (đường thật khác hẳn): loop vẫn hội tụ %.1f → %.1f — '
+                                      'model HỌC thật, không thuộc lòng đáp án.' % (float(h2[0]), float(h2[-1])))
+        else:
+            result['behavior_msg'] = 'Trên dataset ẩn, loss không giảm — vòng lặp chưa thực sự học từ dữ liệu.'
+    except Exception as e:
+        result['behavior_msg'] = 'Chạy lại trên dataset ẩn bị lỗi: ' + str(e)
+    finally:
+        ml_lab.load_gradient_data = orig_load
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
 def grade_lesson3(user_code):
     """Bài 3 — Raw DataFrame vs X/y. Học viên tạo X = 3 feature hợp lệ, y = pass_fail.
     Unsafe-but-correct: X đủ shape (200, 3) nhưng chứa final_score → leak thông tin

@@ -168,6 +168,57 @@ def load_student_dataframe(shuffle_seed=None):
     return df
 
 
+# ── Bài 8 — Đường dự đoán tuyến tính đầu tiên ────────────────────────────────
+# 12 điểm quanh y = 7x + 25 (noise σ=3) — TRÙNG KHỚP scatter hiển thị ở Step 1/3.
+_LINEAR_X = np.array([1.3, 1.5, 2.0, 2.7, 2.8, 3.3, 3.4, 4.6, 4.9, 5.9, 6.7, 8.7])
+_LINEAR_Y = np.array([34.0, 30.0, 38.0, 45.0, 47.0, 43.0, 50.0, 56.0, 66.0, 63.0, 69.0, 80.0])
+
+
+def load_linear_intro_data():
+    """Trả về x (study_hours), y (final_score) — 12 học viên, 1 feature."""
+    return _LINEAR_X.copy(), _LINEAR_Y.copy()
+
+
+# ── Bài 9 — MSE demo ─────────────────────────────────────────────────────────
+def load_mse_demo():
+    """Trả về actual, predictions_a (ŷ = 8x + 20), predictions_b (ŷ = 4x + 45)
+    trên cùng 12 học viên — A tốt hơn B rõ rệt theo MSE."""
+    actual = _LINEAR_Y.copy()
+    pred_a = np.round(8.0 * _LINEAR_X + 20.0, 1)
+    pred_b = np.round(4.0 * _LINEAR_X + 45.0, 1)
+    return actual, pred_a, pred_b
+
+
+# ── Bài 10 — Gradient Descent ────────────────────────────────────────────────
+def load_gradient_data(variant=None):
+    """40 điểm (x, y) quanh y = 8x + 20 (noise σ=4). variant (grader dùng):
+    dataset ẨN với tham số thật khác — bắt bài hard-code kết quả."""
+    if variant is None:
+        rng = np.random.RandomState(1901)
+        x = np.round(rng.uniform(0.5, 9.5, 40), 1)
+        y = np.round(8.0 * x + 20.0 + rng.normal(0, 4, 40), 1)
+    else:
+        rng = np.random.RandomState(variant)
+        x = np.round(rng.uniform(0.5, 9.5, 40), 1)
+        y = np.round(5.0 * x + 30.0 + rng.normal(0, 4, 40), 1)
+    return x, y
+
+
+def compute_mse(actual, predictions):
+    """MSE = trung bình bình phương lỗi."""
+    actual = np.asarray(actual, dtype=float)
+    predictions = np.asarray(predictions, dtype=float)
+    return float(((predictions - actual) ** 2).mean())
+
+
+def compute_gradients(x, y, weight, bias):
+    """Trả về (grad_w, grad_b) của MSE với ŷ = weight*x + bias."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    err = weight * x + bias - y
+    return float(2.0 * (err * x).mean()), float(2.0 * err.mean())
+
+
 # ── Bài 4 — Storage dtype vs semantic type ───────────────────────────────────
 def load_student_profile(shuffle_seed=None):
     """DataFrame 200 dòng × 6 cột minh họa 'cùng int64 nhưng nghĩa khác nhau':

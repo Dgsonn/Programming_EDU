@@ -201,6 +201,80 @@
     updateNavFooter();
   }
 
+  // ── SVG plot helper (scatter + đường thẳng + trace) — dùng cho M3 ──────────
+  function mlSvgPlot(cfg) {
+    const W = 460, H = 290, mL = 40, mB = 28, mT = 12, mR = 14;
+    const pw = W - mL - mR, ph = H - mT - mB;
+    const xmax = cfg.xmax || 10, ymax = cfg.ymax || 100;
+    const X = (v) => mL + (v / xmax) * pw;
+    const Y = (v) => mT + ph - (v / ymax) * ph;
+    const cid = 'clip' + Math.floor(Math.random() * 1e9);
+    let s = `<svg viewBox="0 0 ${W} ${H}" class="ml-plot" role="img">`;
+    s += `<defs><clipPath id="${cid}"><rect x="${mL}" y="${mT}" width="${pw}" height="${ph}"/></clipPath></defs>`;
+    // lưới + trục
+    for (let gy = 0; gy <= ymax; gy += ymax / 5) {
+      s += `<line x1="${mL}" y1="${Y(gy)}" x2="${W - mR}" y2="${Y(gy)}" class="ml-plot-grid"/>`;
+      s += `<text x="${mL - 6}" y="${Y(gy) + 4}" class="ml-plot-tick" text-anchor="end">${Math.round(gy)}</text>`;
+    }
+    for (let gx = 0; gx <= xmax; gx += xmax / 5) {
+      s += `<text x="${X(gx)}" y="${H - 8}" class="ml-plot-tick" text-anchor="middle">${Math.round(gx)}</text>`;
+    }
+    s += `<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + ph}" class="ml-plot-axis"/>`;
+    s += `<line x1="${mL}" y1="${mT + ph}" x2="${W - mR}" y2="${mT + ph}" class="ml-plot-axis"/>`;
+    // residual segments (nếu yêu cầu, cần line)
+    if (cfg.residuals && cfg.line) {
+      (cfg.points || []).forEach(([px, py]) => {
+        const yh = cfg.line.w * px + cfg.line.b;
+        s += `<line x1="${X(px)}" y1="${Y(Math.max(0, Math.min(ymax, py)))}" x2="${X(px)}" y2="${Y(Math.max(0, Math.min(ymax, yh)))}" class="ml-plot-residual" clip-path="url(#${cid})"/>`;
+      });
+    }
+    // đường thẳng
+    const drawLine = (ln, cls) => {
+      if (!ln) return;
+      s += `<line x1="${X(0)}" y1="${Y(ln.b)}" x2="${X(xmax)}" y2="${Y(ln.w * xmax + ln.b)}" class="${cls}" clip-path="url(#${cid})"/>`;
+    };
+    drawLine(cfg.line2, 'ml-plot-line2');
+    drawLine(cfg.line, 'ml-plot-line');
+    // điểm dữ liệu
+    (cfg.points || []).forEach(([px, py]) => {
+      s += `<circle cx="${X(px)}" cy="${Y(py)}" r="4" class="ml-plot-dot"/>`;
+    });
+    // trace x → ŷ
+    if (cfg.trace && cfg.line) {
+      const tx = cfg.trace.x, ty = cfg.line.w * tx + cfg.line.b;
+      s += `<line x1="${X(tx)}" y1="${Y(0)}" x2="${X(tx)}" y2="${Y(ty)}" class="ml-plot-trace" clip-path="url(#${cid})"/>`;
+      s += `<line x1="${X(0)}" y1="${Y(ty)}" x2="${X(tx)}" y2="${Y(ty)}" class="ml-plot-trace" clip-path="url(#${cid})"/>`;
+      s += `<circle cx="${X(tx)}" cy="${Y(ty)}" r="5.5" class="ml-plot-trace-dot"/>`;
+    }
+    return s + '</svg>';
+  }
+
+  function mlSvgLossCurve(hist) {
+    const W = 460, H = 180, mL = 46, mB = 22, mT = 10, mR = 12;
+    const pw = W - mL - mR, ph = H - mT - mB;
+    const n = hist.length;
+    const safe = hist.map((v) => (isFinite(v) && v > 0 ? Math.log10(v) : 12));
+    const lo = Math.min.apply(null, safe), hi = Math.max.apply(null, safe);
+    const span = Math.max(hi - lo, 0.4);
+    const X = (i) => mL + (i / Math.max(n - 1, 1)) * pw;
+    const Y = (v) => mT + ph - ((v - lo) / span) * ph;
+    let s = `<svg viewBox="0 0 ${W} ${H}" class="ml-plot" role="img">`;
+    s += `<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + ph}" class="ml-plot-axis"/>`;
+    s += `<line x1="${mL}" y1="${mT + ph}" x2="${W - mR}" y2="${mT + ph}" class="ml-plot-axis"/>`;
+    s += `<text x="${mL - 4}" y="${mT + 8}" class="ml-plot-tick" text-anchor="end">MSE↓(log)</text>`;
+    s += `<text x="${W - mR}" y="${H - 6}" class="ml-plot-tick" text-anchor="end">bước ${n}</text>`;
+    let d = '';
+    safe.forEach((v, i) => { d += (i === 0 ? 'M' : 'L') + X(i).toFixed(1) + ',' + Y(v).toFixed(1); });
+    s += `<path d="${d}" class="ml-plot-loss"/>`;
+    return s + '</svg>';
+  }
+
+  function mseOf(points, w, b) {
+    let sum = 0;
+    points.forEach(([x, y]) => { const e = w * x + b - y; sum += e * e; });
+    return sum / points.length;
+  }
+
   // ══════════════════════ STEP 1 ══════════════════════
   function renderStep1() {
     document.getElementById('lesson-title').textContent = 'Bài ' + lesson.index + ' — ' + lesson.title;
@@ -211,7 +285,40 @@
     const mount = document.getElementById('ml-s1-mount');
     if (lesson.step_1.type === 'table_lens') renderTableLens(mount);
     else if (lesson.step_1.type === 'issue_hunt') renderIssueHunt(mount);
+    else if (lesson.step_1.type === 'line_reveal') renderLineReveal(mount);
     else renderStoryRounds(mount);
+  }
+
+  /* line_reveal — scatter → hiện đường dự đoán → dò 1 điểm x → micro-check */
+  function renderLineReveal(mount) {
+    const s1 = lesson.step_1;
+    mount.innerHTML = `<div class="ml-plot-wrap" id="ml-lr-plot"></div>
+      <div class="ml-lr-formula" id="ml-lr-formula" hidden></div>
+      <div class="ml-lens-note" id="ml-lr-note" hidden></div>
+      <div class="ml-lr-actions">
+        <button class="ml-btn ml-btn-primary" id="ml-lr-btn1">${s1.reveal_btn}</button>
+        <button class="ml-btn ml-btn-ghost" id="ml-lr-btn2" hidden>${s1.trace_btn}</button>
+      </div>
+      <div class="ml-microcheck" id="ml-s1-check" hidden></div>`;
+    const plotEl = document.getElementById('ml-lr-plot');
+    plotEl.innerHTML = mlSvgPlot({ points: s1.plot.points, xmax: s1.plot.xmax, ymax: s1.plot.ymax });
+
+    document.getElementById('ml-lr-btn1').addEventListener('click', () => {
+      plotEl.innerHTML = mlSvgPlot({ points: s1.plot.points, xmax: s1.plot.xmax, ymax: s1.plot.ymax, line: s1.line });
+      const f = document.getElementById('ml-lr-formula');
+      f.hidden = false;
+      f.innerHTML = s1.formula_html;
+      document.getElementById('ml-lr-btn1').disabled = true;
+      document.getElementById('ml-lr-btn2').hidden = false;
+    });
+    document.getElementById('ml-lr-btn2').addEventListener('click', () => {
+      plotEl.innerHTML = mlSvgPlot({ points: s1.plot.points, xmax: s1.plot.xmax, ymax: s1.plot.ymax, line: s1.line, trace: { x: s1.trace.x } });
+      const note = document.getElementById('ml-lr-note');
+      note.hidden = false;
+      note.innerHTML = s1.trace.note;
+      document.getElementById('ml-lr-btn2').disabled = true;
+      renderMicroCheck(document.getElementById('ml-s1-check'), s1.micro_check, completeStep1);
+    });
   }
 
   /* story_rounds — mở từng luồng flow, xong hết → micro-check */
@@ -517,7 +624,193 @@
     const t = lesson.step_3.type;
     if (t === 'experiment_rounds') renderExperimentRounds(mount);
     else if (t === 'xy_builder') renderXyBuilder(mount);
+    else if (t === 'line_tuner') renderLineTuner(mount);
+    else if (t === 'gd_console') renderGdConsole(mount);
     else renderSpecBuilder(mount);
+  }
+
+  /* line_tuner — slider w/b chỉnh đường thẳng trực tiếp; goals + (tùy chọn) MSE meter */
+  function renderLineTuner(mount) {
+    const s3 = lesson.step_3;
+    const st = { w: s3.sliders.w.init, b: s3.sliders.b.init, seenPresets: new Set(), chosen: null, shiftBase: null };
+    const goalsDone = new Set();
+
+    let presetsHtml = '';
+    if (s3.presets) {
+      presetsHtml = '<div class="ml-lt-presets">' + s3.presets.map((p, i) =>
+        `<button class="ml-btn ml-btn-ghost ml-lt-preset" data-idx="${i}">${p.label}</button>`).join('') +
+        '<span class="ml-lt-choose" id="ml-lt-choose" hidden>Đường nào RẺ hơn? ' +
+        s3.presets.map((p, i) => `<button class="ml-btn ml-btn-ghost ml-lt-pick" data-idx="${i}">${p.short}</button>`).join('') +
+        '</span></div>';
+    }
+    mount.innerHTML = `<p class="ml-step-instr">${s3.mission}</p>
+      ${presetsHtml}
+      <div class="ml-lt-grid">
+        <div class="ml-plot-wrap" id="ml-lt-plot"></div>
+        <div class="ml-lt-side">
+          <div class="ml-lt-formula" id="ml-lt-formula"></div>
+          ${s3.show_mse ? '<div class="ml-lt-mse" id="ml-lt-mse"></div>' : ''}
+          <label class="ml-lt-slider">weight (w) <input type="range" id="ml-lt-w" min="${s3.sliders.w.min}" max="${s3.sliders.w.max}" step="${s3.sliders.w.step}" value="${s3.sliders.w.init}"><span id="ml-lt-wv"></span></label>
+          <label class="ml-lt-slider">bias (b) <input type="range" id="ml-lt-b" min="${s3.sliders.b.min}" max="${s3.sliders.b.max}" step="${s3.sliders.b.step}" value="${s3.sliders.b.init}"><span id="ml-lt-bv"></span></label>
+          <div class="ml-lt-goals">${s3.goals.map((g) =>
+            `<div class="ml-lens-task" data-goal="${g.id}"><span class="ml-lens-task-dot"></span>${g.label}</div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="ml-s3-note" id="ml-s3-note" hidden>${s3.completion_note}</div>`;
+
+    const wIn = document.getElementById('ml-lt-w');
+    const bIn = document.getElementById('ml-lt-b');
+
+    function markGoal(id) {
+      if (goalsDone.has(id)) return;
+      goalsDone.add(id);
+      const chip = mount.querySelector(`.ml-lens-task[data-goal="${id}"]`);
+      if (chip) chip.classList.add('ml-lens-task-done');
+      if (goalsDone.size === s3.goals.length) {
+        document.getElementById('ml-s3-note').hidden = false;
+        completeStep3();
+      }
+    }
+
+    function evalGoals() {
+      s3.goals.forEach((g) => {
+        if (goalsDone.has(g.id)) return;
+        if (g.check === 'hit_target' && Math.abs((st.w * g.x + st.b) - g.y) <= g.tol) markGoal(g.id);
+        if (g.check === 'w_neg' && st.w < 0) markGoal(g.id);
+        if (g.check === 'mse_below' && mseOf(s3.plot.points, st.w, st.b) < g.value) markGoal(g.id);
+        if (g.check === 'bias_shift') {
+          if (!st.shiftBase || st.shiftBase.w !== st.w) st.shiftBase = { w: st.w, b: st.b };
+          else if (st.b - st.shiftBase.b >= g.delta) markGoal(g.id);
+        }
+      });
+    }
+
+    function update() {
+      st.w = parseFloat(wIn.value);
+      st.b = parseFloat(bIn.value);
+      document.getElementById('ml-lt-wv').textContent = st.w;
+      document.getElementById('ml-lt-bv').textContent = st.b;
+      document.getElementById('ml-lt-plot').innerHTML = mlSvgPlot({
+        points: s3.plot.points, xmax: s3.plot.xmax, ymax: s3.plot.ymax,
+        line: { w: st.w, b: st.b }, residuals: !!s3.show_mse,
+      });
+      document.getElementById('ml-lt-formula').innerHTML =
+        `ŷ = <b>${st.w}</b> × x + <b>${st.b}</b>`;
+      if (s3.show_mse) {
+        const m = mseOf(s3.plot.points, st.w, st.b);
+        document.getElementById('ml-lt-mse').innerHTML = `Cost Meter — MSE: <b>${m.toFixed(1)}</b>`;
+      }
+      evalGoals();
+    }
+    wIn.addEventListener('input', update);
+    bIn.addEventListener('input', update);
+
+    if (s3.presets) {
+      mount.querySelectorAll('.ml-lt-preset').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const p = s3.presets[Number(btn.dataset.idx)];
+          wIn.value = p.w; bIn.value = p.b;
+          st.seenPresets.add(Number(btn.dataset.idx));
+          update();
+          if (st.seenPresets.size === s3.presets.length) {
+            document.getElementById('ml-lt-choose').hidden = false;
+          }
+        });
+      });
+      mount.querySelectorAll('.ml-lt-pick').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.idx);
+          const mses = s3.presets.map((p) => mseOf(s3.plot.points, p.w, p.b));
+          const best = mses.indexOf(Math.min.apply(null, mses));
+          if (idx === best) {
+            btn.classList.add('ml-mc-correct');
+            mount.querySelectorAll('.ml-lt-pick').forEach((b) => (b.disabled = true));
+            markGoal('choose_lower');
+          } else {
+            btn.classList.add('ml-mc-wrong');
+            btn.disabled = true;
+            loseHeart();
+          }
+        });
+      });
+    }
+    update();
+  }
+
+  /* gd_console — chọn learning rate, chạy GD từng cụm bước, xem line + loss curve thật */
+  function renderGdConsole(mount) {
+    const s3 = lesson.step_3;
+    const pts = s3.data.x.map((x, i) => [x, s3.data.y[i]]);
+    const st = { w: 0, b: 0, alpha: null, hist: [] };
+
+    mount.innerHTML = `<p class="ml-step-instr">${s3.mission}</p>
+      <div class="ml-gd-controls">
+        <span class="ml-exp-choose-label">Learning rate:</span>
+        ${s3.alphas.map((a) => `<button class="ml-btn ml-btn-ghost ml-gd-alpha" data-key="${a.key}">${a.label}</button>`).join('')}
+        <button class="ml-btn ml-btn-primary" id="ml-gd-run" disabled><i class="fa-solid fa-play"></i> Chạy ${s3.run_steps} bước</button>
+        <button class="ml-btn ml-btn-ghost" id="ml-gd-reset">Reset</button>
+      </div>
+      <div class="ml-gd-readout" id="ml-gd-readout"></div>
+      <div class="ml-tep-feedback" id="ml-gd-warn" hidden></div>
+      <div class="ml-lt-grid">
+        <div class="ml-plot-wrap" id="ml-gd-plot"></div>
+        <div class="ml-plot-wrap" id="ml-gd-loss"><div class="ml-gd-loss-hint">Loss curve hiện sau ≥ 5 bước</div></div>
+      </div>
+      <div class="ml-lens-task" data-goal="target" id="ml-gd-goal"><span class="ml-lens-task-dot"></span>Mục tiêu: MSE hữu hạn &lt; ${s3.target_mse}</div>
+      <div class="ml-s3-note" id="ml-s3-note" hidden>${s3.completion_note}</div>`;
+
+    function draw() {
+      const m = mseOf(pts, st.w, st.b);
+      document.getElementById('ml-gd-plot').innerHTML = mlSvgPlot({
+        points: pts, xmax: s3.data.xmax, ymax: s3.data.ymax,
+        line: st.hist.length ? { w: st.w, b: st.b } : null,
+      });
+      document.getElementById('ml-gd-readout').innerHTML =
+        `w = <b>${st.w.toFixed(2)}</b> · b = <b>${st.b.toFixed(2)}</b> · bước = <b>${st.hist.length}</b> · MSE = <b>${isFinite(m) ? m.toFixed(1) : '∞'}</b>`;
+      const lossEl = document.getElementById('ml-gd-loss');
+      if (st.hist.length >= 5) lossEl.innerHTML = mlSvgLossCurve(st.hist);
+      const warn = document.getElementById('ml-gd-warn');
+      if (!isFinite(m) || m > 1e7) {
+        warn.hidden = false;
+        warn.textContent = '💥 BÙNG NỔ — learning rate quá lớn: mỗi bước nhảy QUA đáy và văng xa hơn. Reset rồi thử α nhỏ hơn.';
+      } else {
+        warn.hidden = true;
+      }
+      if (isFinite(m) && m < s3.target_mse && st.hist.length >= 5) {
+        document.getElementById('ml-gd-goal').classList.add('ml-lens-task-done');
+        document.getElementById('ml-s3-note').hidden = false;
+        completeStep3();
+      }
+    }
+
+    mount.querySelectorAll('.ml-gd-alpha').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        mount.querySelectorAll('.ml-gd-alpha').forEach((b) => b.classList.remove('ml-role-opt-sel'));
+        btn.classList.add('ml-role-opt-sel');
+        st.alpha = s3.alpha_values[btn.dataset.key];
+        document.getElementById('ml-gd-run').disabled = false;
+      });
+    });
+    document.getElementById('ml-gd-run').addEventListener('click', () => {
+      if (st.alpha === null) return;
+      const n = pts.length;
+      for (let k = 0; k < s3.run_steps; k++) {
+        let gw = 0, gb = 0;
+        pts.forEach(([x, y]) => { const e = st.w * x + st.b - y; gw += 2 * e * x; gb += 2 * e; });
+        gw /= n; gb /= n;
+        st.w -= st.alpha * gw;
+        st.b -= st.alpha * gb;
+        st.hist.push(mseOf(pts, st.w, st.b));
+        if (!isFinite(st.hist[st.hist.length - 1])) break;
+      }
+      draw();
+    });
+    document.getElementById('ml-gd-reset').addEventListener('click', () => {
+      st.w = 0; st.b = 0; st.hist = [];
+      document.getElementById('ml-gd-loss').innerHTML = '<div class="ml-gd-loss-hint">Loss curve hiện sau ≥ 5 bước</div>';
+      draw();
+    });
+    draw();
   }
 
   /* spec_builder — điền dần ExperimentSpec (Bài 1) */

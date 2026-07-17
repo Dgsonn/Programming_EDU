@@ -148,6 +148,39 @@ body.ml-focus-mode { --module-accent: var(--ml-accent); --module-accent-soft: va
 .ml-xy-warn { color:#EF4444; }
 .ml-xy-reveal { margin-top:10px; }
 
+/* ── SVG plots (M3: line_reveal / line_tuner / gd_console) ── */
+.ml-plot-wrap { background:rgba(255,255,255,.03); border:1px solid var(--border-default); border-radius:12px; padding:10px; }
+.ml-plot { width:100%; height:auto; display:block; }
+.ml-plot-grid { stroke:rgba(255,255,255,.06); stroke-width:1; }
+.ml-plot-axis { stroke:#5C6370; stroke-width:1.5; }
+.ml-plot-tick { fill:#5C6370; font-size:10px; font-family:'JetBrains Mono',monospace; }
+.ml-plot-dot { fill:#C4B5FD; opacity:.9; }
+.ml-plot-line { stroke:var(--ml-accent); stroke-width:2.5; stroke-linecap:round; }
+.ml-plot-line2 { stroke:#F59E0B; stroke-width:2; stroke-dasharray:6 4; }
+.ml-plot-trace { stroke:#10B981; stroke-width:1.5; stroke-dasharray:4 4; }
+.ml-plot-trace-dot { fill:#10B981; }
+.ml-plot-residual { stroke:#EF4444; stroke-width:1.5; opacity:.65; }
+.ml-plot-loss { fill:none; stroke:#F59E0B; stroke-width:2; }
+.ml-lr-formula { margin:12px 0 4px; font-family:'JetBrains Mono',monospace; font-size:15px; padding:10px 14px; background:var(--ml-accent-soft); border-left:3px solid var(--ml-accent); border-radius:8px; }
+.ml-lr-actions { display:flex; gap:10px; margin:12px 0; }
+
+.ml-lt-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:14px; margin:12px 0; align-items:start; }
+@media (max-width:900px){ .ml-lt-grid{ grid-template-columns:1fr; } }
+.ml-lt-side { display:flex; flex-direction:column; gap:10px; }
+.ml-lt-formula { font-family:'JetBrains Mono',monospace; font-size:14.5px; padding:8px 12px; background:var(--ml-accent-soft); border-radius:8px; }
+.ml-lt-mse { font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 12px; background:rgba(245,158,11,.08); border:1px dashed rgba(245,158,11,.4); border-radius:8px; }
+.ml-lt-slider { display:flex; align-items:center; gap:10px; font-size:13px; }
+.ml-lt-slider input[type=range] { flex:1; accent-color:var(--ml-accent); }
+.ml-lt-slider span { font-family:'JetBrains Mono',monospace; min-width:42px; text-align:right; }
+.ml-lt-goals { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+.ml-lt-presets { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.ml-lt-choose { font-size:13px; display:inline-flex; align-items:center; gap:8px; }
+
+.ml-gd-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.ml-gd-readout { font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 12px; background:rgba(255,255,255,.03); border:1px solid var(--border-default); border-radius:8px; margin-bottom:10px; }
+.ml-gd-loss-hint { color:#5C6370; font-size:12.5px; text-align:center; padding:40px 10px; }
+#ml-gd-goal { margin-top:10px; }
+
 /* ── success overlay actions + trang bài chưa build ── */
 .success-actions { display:flex; gap:10px; justify-content:center; margin-top:6px; }
 .success-actions a.ml-btn { text-decoration:none; }

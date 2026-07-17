@@ -1013,6 +1013,336 @@ window.LESSON_CONTENT_ML = {
         ],
         success_message: 'Hồ sơ thống kê hoàn chỉnh: tâm, phân tán, chiều quan hệ và xếp hạng tương quan. Cảnh giới cuối cùng: r = 0.9 vẫn KHÔNG chứng minh nhân quả — và đó là ranh giới giữa người đọc số và người hiểu số.'
       }
+    },
+
+    /* ═══════════════ BÀI 8 — Vẽ đường dự đoán đầu tiên ═══════════════ */
+    {
+      id: 'c1_l8', index: 8,
+      course: 'Course 1 — ML Foundations', module: 'M3 — Linear Regression Foundations',
+      title: 'Vẽ đường dự đoán đầu tiên',
+      subtitle: 'Weight, bias và hàm dự đoán tuyến tính vectorized',
+      xp_reward: 20, badge: 'Regression Tuner',
+
+      step_1: {
+        type: 'line_reveal',
+        topic_tag: 'Từ giờ học đến điểm dự đoán',
+        intro_html: 'Sau Module 2, dữ liệu đã sạch và đọc được. Giờ StudyLab cần model ĐẦU TIÊN thật sự: ' +
+          'nhìn <code>study_hours</code>, đoán <code>final_score</code>. Model đơn giản nhất là một ĐƯỜNG THẲNG: ' +
+          '<code>ŷ = weight × x + bias</code>.',
+        plot: {
+          points: [[1.3, 34], [1.5, 30], [2.0, 38], [2.7, 45], [2.8, 47], [3.3, 43], [3.4, 50], [4.6, 56], [4.9, 66], [5.9, 63], [6.7, 69], [8.7, 80]],
+          xmax: 10, ymax: 100
+        },
+        line: { w: 8, b: 20 },
+        reveal_btn: 'Vẽ đường dự đoán',
+        formula_html: 'ŷ = <b style="color:#A78BFA">8</b> × study_hours + <b style="color:#10B981">20</b> &nbsp;·&nbsp; <span style="color:#9CA8C4">weight = độ dốc · bias = điểm chặn</span>',
+        trace_btn: 'Dò thử x = 5',
+        trace: {
+          x: 5,
+          note: 'Dò x = 5: đi thẳng lên gặp đường tại ŷ = 8×5 + 20 = <b>60</b>. Mỗi dự đoán chỉ là một phép "tra đường thẳng".'
+        },
+        micro_check: {
+          question: 'Với học viên học x = 7 giờ/tuần, đường ŷ = 8x + 20 dự đoán bao nhiêu điểm?',
+          options: [
+            { text: '76 — vì 8×7 + 20 = 76', correct: true },
+            { text: '56 — vì 8×7 = 56', correct: false }
+          ],
+          feedback_correct: 'Chuẩn! weight nhân với x rồi CỘNG bias — thiếu bias là mất 20 điểm.',
+          feedback_wrong: 'Thiếu bias! ŷ = 8×7 + 20 = 76. bias là phần "gốc" mà mọi dự đoán đều cộng thêm.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Hai tham số — hai vai trò hình học khác hẳn nhau. Kéo từng mô tả vào đúng ngăn.',
+        bins: [
+          { key: 'weight', label: 'WEIGHT (w) — ĐỘ DỐC' },
+          { key: 'bias', label: 'BIAS (b) — TỊNH TIẾN DỌC' }
+        ],
+        cards: [
+          { text: 'w = 8: mỗi giờ học thêm → dự đoán tăng 8 điểm', role: 'weight' },
+          { text: 'Đổi w từ 8 thành −3: đường quay sang DỐC XUỐNG', role: 'weight' },
+          { text: 'b = 20: đường cắt trục tung tại 20 (dự đoán khi x = 0)', role: 'bias' },
+          { text: 'Tăng b thêm 10: cả đường NÂNG lên 10, độ dốc giữ nguyên', role: 'bias' },
+          { text: 'w = 0: đường nằm ngang — x không còn ảnh hưởng gì', role: 'weight' }
+        ],
+        wrong_feedback: 'w điều khiển ĐỘ NGHIÊNG (đổi 1 đơn vị x thì ŷ đổi bao nhiêu); b chỉ NÂNG/HẠ cả đường.',
+        scenario_intro: 'Đúng hay sai?',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'bias là "sai số" (error term) của model', answer: 'false', explain: 'bias là THAM SỐ điểm chặn — giá trị dự đoán khi x = 0. Sai số (residual) là chuyện khác hẳn: khoảng cách giữa dự đoán và thực tế.' },
+          { text: 'Với ŷ = 8x + 20: học 0 giờ vẫn được dự đoán 20 điểm', answer: 'true', explain: 'Đúng — đó chính là nghĩa hình học của bias: nơi đường thẳng bắt đầu trên trục tung.' },
+          { text: 'Đường thẳng không bị chặn — với x đủ lớn, model có thể dự đoán quá 100 điểm', answer: 'true', explain: 'Đúng: 8×11+20 = 108 > 100. Đường thẳng "không biết" thang điểm có trần — hạn chế này sẽ dẫn tới sigmoid ở Module 4.' }
+        ]
+      },
+
+      step_3: {
+        type: 'line_tuner',
+        mission: 'Cầm 2 slider chỉnh đường thẳng THẬT — hoàn thành cả 3 mục tiêu để cảm được tay lái của w và b.',
+        plot: {
+          points: [[1.3, 34], [1.5, 30], [2.0, 38], [2.7, 45], [2.8, 47], [3.3, 43], [3.4, 50], [4.6, 56], [4.9, 66], [5.9, 63], [6.7, 69], [8.7, 80]],
+          xmax: 10, ymax: 100
+        },
+        sliders: {
+          w: { min: -5, max: 15, step: 0.5, init: 2 },
+          b: { min: -20, max: 60, step: 5, init: 0 }
+        },
+        show_mse: false,
+        goals: [
+          { id: 'hit', label: 'Chỉnh để ŷ(5) rơi vào 57–63', check: 'hit_target', x: 5, y: 60, tol: 3 },
+          { id: 'down', label: 'Làm đường DỐC XUỐNG (w < 0)', check: 'w_neg' },
+          { id: 'shift', label: 'Giữ nguyên w, chỉ nâng b thêm ≥ 10', check: 'bias_shift', delta: 10 }
+        ],
+        completion_note: 'w xoay đường quanh điểm chặn, b nâng hạ cả đường — hai tay lái độc lập. Bài sau: để DỮ LIỆU tự chấm xem đường nào tốt (MSE).'
+      },
+
+      step_4: {
+        prompt_html: 'Hoàn thành hàm <code>predict_score(x, weight, bias)</code> — phải chạy VECTORIZED: ' +
+          'nhận cả mảng NumPy, trả về một dự đoán cho mỗi phần tử.',
+        starter_code:
+          'import numpy as np\n\n' +
+          '# 3 học viên với số giờ học khác nhau\n' +
+          'study_hours = np.array([2, 5, 8], dtype=float)\n\n' +
+          '# TODO: hoàn thành hàm dự đoán tuyến tính (1 dòng công thức)\n' +
+          'def predict_score(x, weight, bias):\n' +
+          '    return None\n\n' +
+          'predictions = predict_score(study_hours, 8.0, 20.0)\n' +
+          'print(predictions)',
+        grader_fn: 'grade_lesson8',
+        hints: [
+          'Công thức: weight * x + bias — NumPy tự nhân/cộng cho cả mảng (vectorization).',
+          'Đừng quên "+ bias": grader sẽ đổi bias từ 0 lên 55 để kiểm tra bạn có dùng nó thật không.',
+          'Đừng gõ tay [36, 60, 84] — test ẩn sẽ đổi cả x lẫn tham số (kể cả w âm).'
+        ],
+        success_message: 'Hàm dự đoán tuyến tính đầu tiên: 1 dòng công thức, chạy cho mọi mảng, mọi tham số. Model chỉ là công thức + tham số — bài sau ta đo xem tham số nào TỐT.'
+      }
+    },
+
+    /* ═══════════════ BÀI 9 — Đo lỗi model bằng MSE ═══════════════ */
+    {
+      id: 'c1_l9', index: 9,
+      course: 'Course 1 — ML Foundations', module: 'M3 — Linear Regression Foundations',
+      title: 'Đo lỗi model bằng Mean Squared Error',
+      subtitle: 'Residual, bình phương lỗi và chi phí trung bình — kèm R² để đọc cho người thường',
+      xp_reward: 20, badge: 'Regression Tuner',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Đường thẳng cách thực tế bao xa?',
+        intro_html: 'Bài trước bạn chỉnh đường bằng MẮT. Nhưng StudyLab cần một CON SỐ để nói "đường này tốt hơn đường kia". ' +
+          'Thử thước đo ngây thơ nhất — cộng hết các lỗi lại — và xem nó gãy ở đâu.',
+        rounds: [
+          {
+            id: 'cancel',
+            label: 'Thước đo ngây thơ: cộng lỗi CÓ DẤU',
+            flow: ['Học viên 1: ŷ = 68, thực tế 76 → lỗi = −8', 'Học viên 2: ŷ = 66, thực tế 58 → lỗi = +8', 'Tổng lỗi = −8 + 8 = 0 ???'],
+            note: 'Cả 2 dự đoán đều sai 8 điểm mà "tổng lỗi = 0" — lỗi trái dấu TRIỆT TIÊU nhau. Thước đo này khen nhầm model tồi.'
+          },
+          {
+            id: 'squared',
+            label: 'Sửa: BÌNH PHƯƠNG trước, trung bình sau',
+            flow: ['(−8)² = 64  ·  (+8)² = 64', 'MSE = (64 + 64) / 2 = 64', 'Không gì triệt tiêu được nữa'],
+            note: 'Bình phương diệt dấu VÀ phạt nặng lỗi lớn: lỗi 10 → 100, lỗi 2 → chỉ 4. Model bị ép ưu tiên sửa lỗi to nhất.'
+          }
+        ],
+        micro_check: {
+          question: 'Học viên mới: ŷ = 55, thực tế = 63. Residual (= predictions − actual) là bao nhiêu?',
+          options: [
+            { text: '−8 — dự đoán THẤP hơn thực tế 8 điểm', correct: true },
+            { text: '+8 — cứ lấy số lớn trừ số nhỏ', correct: false }
+          ],
+          feedback_correct: 'Chuẩn quy ước: predictions − actual = 55 − 63 = −8. Dấu âm nghĩa là đoán THẤP.',
+          feedback_wrong: 'Sai quy ước — residual = predictions − actual = 55 − 63 = −8. Dấu mang thông tin: âm = đoán thấp, dương = đoán cao.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Bước 1 của MSE: bình phương từng residual. Kéo mỗi residual vào đúng ngăn giá trị bình phương.',
+        bins: [
+          { key: 'sq64', label: 'BÌNH PHƯƠNG = 64' },
+          { key: 'sq4', label: 'BÌNH PHƯƠNG = 4' },
+          { key: 'sq0', label: 'BÌNH PHƯƠNG = 0' }
+        ],
+        cards: [
+          { text: 'residual = −8', role: 'sq64' },
+          { text: 'residual = +8', role: 'sq64' },
+          { text: 'residual = −2', role: 'sq4' },
+          { text: 'residual = +2', role: 'sq4' },
+          { text: 'residual = 0 (đoán trúng phóc)', role: 'sq0' }
+        ],
+        wrong_feedback: 'Bình phương xóa dấu: (−8)² và (+8)² đều là 64. Chỉ độ LỚN của lỗi sống sót.',
+        scenario_intro: 'Đúng hay sai? — gồm cả thước đo chuẩn hóa R²',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'MSE của 3 residual [3, −1, 2] là (9 + 1 + 4) / 3 ≈ 4.67', answer: 'true', explain: 'Đúng quy trình: bình phương từng lỗi → trung bình. Không phải (3−1+2)/3.' },
+          { text: 'MSE = 25 nghĩa là model lệch trung bình 25 điểm', answer: 'false', explain: 'MSE ở đơn vị BÌNH PHƯƠNG (điểm²). Độ lệch điển hình ≈ √25 = 5 điểm. Đây là cái giá của việc bình phương.' },
+          { text: 'Model có MSE = 16, còn "đoán mọi người = mean" có MSE = 64 → R² = 1 − 16/64 = 0.75, tức model giải thích 75% biến thiên của điểm', answer: 'true', explain: 'Đây là R² — thước đo CHUẨN HÓA đọc được ngay: 0 = không hơn gì đoán mean, 1 = hoàn hảo. Mẫu số 64 chính là variance của y mà bạn học ở Bài 7 — MSE của "model ngây thơ nhất".' }
+        ]
+      },
+
+      step_3: {
+        type: 'line_tuner',
+        mission: 'Cost Meter đã bật. Việc 1: so 2 đường ứng viên bằng MSE. Việc 2: tự chỉnh slider hạ MSE xuống dưới 20.',
+        plot: {
+          points: [[1.3, 34], [1.5, 30], [2.0, 38], [2.7, 45], [2.8, 47], [3.3, 43], [3.4, 50], [4.6, 56], [4.9, 66], [5.9, 63], [6.7, 69], [8.7, 80]],
+          xmax: 10, ymax: 100
+        },
+        presets: [
+          { label: 'Đường A: ŷ = 8x + 20', short: 'A', w: 8, b: 20 },
+          { label: 'Đường B: ŷ = 4x + 45', short: 'B', w: 4, b: 45 }
+        ],
+        sliders: {
+          w: { min: -5, max: 15, step: 0.5, init: 8 },
+          b: { min: -20, max: 60, step: 5, init: 20 }
+        },
+        show_mse: true,
+        goals: [
+          { id: 'choose_lower', label: 'Xem MSE cả 2 đường rồi chọn đường RẺ hơn', check: 'choose_lower' },
+          { id: 'tune', label: 'Tinh chỉnh w/b để MSE < 20', check: 'mse_below', value: 20 }
+        ],
+        completion_note: 'Các đoạn đỏ là residual — MSE chính là "tổng diện tích bình phương" của chúng. Đường tối ưu quanh w ≈ 6.5, b ≈ 25 cho MSE ≈ 12: dữ liệu có noise nên MSE = 0 là ẢO TƯỞNG.'
+      },
+
+      step_4: {
+        prompt_html: 'Viết hàm <code>mean_squared_error(actual, predictions)</code> dùng chung cho mọi mảng, ' +
+          'rồi dùng nó phân xử: đường A (8x+20) hay đường B (4x+45) rẻ hơn trên 12 học viên thật?',
+        starter_code:
+          'import numpy as np\n' +
+          'from ml_lab import load_mse_demo\n\n' +
+          '# 12 học viên: điểm thật + dự đoán của 2 đường ứng viên\n' +
+          'actual, pred_a, pred_b = load_mse_demo()\n\n' +
+          '# TODO: residual -> bình phương -> trung bình (vectorized, không vòng lặp)\n' +
+          'def mean_squared_error(actual, predictions):\n' +
+          '    return None\n\n' +
+          'print("MSE A:", mean_squared_error(actual, pred_a))\n' +
+          'print("MSE B:", mean_squared_error(actual, pred_b))',
+        grader_fn: 'grade_lesson9',
+        hints: [
+          'errors = predictions - actual, rồi (errors ** 2).mean().',
+          'Trả về np.abs(errors).mean() là MAE — metric hợp lệ nhưng KHÁC; tầng Risk sẽ chỉ ra.',
+          'Trả về errors.mean() (giữ dấu) thì các lỗi trái dấu triệt tiêu — chính cái bẫy ở Step 1.'
+        ],
+        success_message: 'MSE(A) ≈ 20.9 < MSE(B) ≈ 127.6 — dữ liệu đã phân xử thay cho mắt. Và khi cần nói cho người thường: đổi sang R² = 1 − MSE/variance(y), thang 0→1, "model giải thích bao nhiêu % biến thiên".'
+      }
+    },
+
+    /* ═══════════════ BÀI 10 — Gradient Descent ═══════════════ */
+    {
+      id: 'c1_l10', index: 10,
+      course: 'Course 1 — ML Foundations', module: 'M3 — Linear Regression Foundations',
+      title: 'Gradient Descent — để model tự chỉnh đường',
+      subtitle: 'Hướng gradient, learning rate, luật update và hội tụ',
+      xp_reward: 20, badge: 'Regression Tuner',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Quả bóng trên đồi chi phí',
+        intro_html: 'Bài 9 bạn tự xoay slider hạ MSE. Nhưng model thật có hàng nghìn tham số — không ai xoay tay nổi. ' +
+          'Cần một luật để tham số TỰ đi xuống đáy đồi chi phí: <b>Gradient Descent</b>. ' +
+          'Hãy tưởng tượng MSE(w) là một thung lũng hình chữ U và w hiện tại là quả bóng đứng trên sườn.',
+        rounds: [
+          {
+            id: 'direction',
+            label: 'Gradient nói gì?',
+            flow: ['Bóng đang ở w = 2', 'gradient = +14 → đi sang PHẢI thì cost TĂNG', 'Muốn xuống đáy: đi NGƯỢC gradient (sang trái)'],
+            note: 'Gradient là "độ dốc tại chỗ đứng". Dấu CỘNG = dốc lên phía phải → phải đi lùi. Luật: luôn đi NGƯỢC dấu gradient.'
+          },
+          {
+            id: 'update',
+            label: 'Một bước update bằng số',
+            flow: ['w = 2, gradient = +14, learning rate α = 0.1', 'w mới = 2 − 0.1 × 14 = 0.6', 'MSE: 210 → 96 — thấp hơn thật'],
+            note: 'Dấu TRỪ trong "w −= α × grad" chính là "đi ngược gradient". α quyết định bước đi dài hay ngắn.'
+          }
+        ],
+        micro_check: {
+          question: 'Gradient tại w hiện tại là +14. Để GIẢM cost, w phải thay đổi thế nào?',
+          options: [
+            { text: 'GIẢM — đi ngược dấu gradient, đúng luật w −= α × grad', correct: true },
+            { text: 'TĂNG — đi cùng chiều gradient cho nhanh', correct: false }
+          ],
+          feedback_correct: 'Chuẩn! Gradient dương = dốc lên phía trước → lùi lại. Đó là toàn bộ linh hồn của Gradient DESCENT.',
+          feedback_wrong: 'Đi CÙNG chiều gradient là leo dốc — cost tăng. Muốn xuống đáy phải đi ngược: w −= α × grad.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Learning rate là con dao hai lưỡi. Đọc 5 mô tả loss curve và xếp vào đúng chẩn đoán.',
+        bins: [
+          { key: 'small', label: 'α QUÁ NHỎ — BÒ' },
+          { key: 'good', label: 'α PHÙ HỢP — HỘI TỤ' },
+          { key: 'big', label: 'α QUÁ LỚN — VĂNG' }
+        ],
+        cards: [
+          { text: 'Loss giảm đều rồi phẳng dần sau ~50 bước', role: 'good' },
+          { text: 'Loss bò xuống chậm rì — 200 bước vẫn chưa gần đáy', role: 'small' },
+          { text: 'Loss nhảy lên nhảy xuống rồi BÙNG NỔ ra vô cực', role: 'big' },
+          { text: 'Mỗi bước loss chỉ nhích 0.0001', role: 'small' },
+          { text: 'Sau 3 bước, loss dao động qua lại giữa 2 giá trị ngày càng lớn', role: 'big' }
+        ],
+        wrong_feedback: 'Nhìn nhịp của đường loss: bò mãi không tới = α nhỏ; xuống rồi phẳng = vừa; văng khỏi đồi = α lớn.',
+        scenario_intro: 'Tự tính một bước update — gồm cả gradient ÂM',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'w = 5, grad_w = −4, α = 0.5 → w mới = 5 − 0.5×(−4) = 7', answer: 'true', explain: 'Trừ một số âm là CỘNG: gradient âm nghĩa là "dốc xuống phía phải" → w tiến lên là đúng hướng giảm cost.' },
+          { text: 'Gradient chọn HƯỚNG đi, learning rate chọn ĐỘ DÀI mỗi bước', answer: 'true', explain: 'Đúng vai trò từng thành phần trong α × grad — nhầm 2 vai trò này là nguồn gốc của nửa số bug training.' },
+          { text: 'Nếu loss đang TĂNG dần theo từng bước, cứ kiên nhẫn chạy thêm là sẽ hội tụ', answer: 'false', explain: 'Loss tăng dần theo bước = đang phân kỳ (α quá lớn) — chạy thêm chỉ văng xa hơn. Phải GIẢM α, không phải tăng kiên nhẫn.' }
+        ]
+      },
+
+      step_3: {
+        type: 'gd_console',
+        mission: 'Console GD thật: chọn learning rate, chạy từng cụm bước, nhìn đường thẳng tự bò về dữ liệu. Thử CẢ 3 mức α — kể cả mức làm nổ tung.',
+        data: {
+          x: [4.4, 7.5, 1.6, 6.2, 4.7, 3.3, 8.2, 2.5, 5.4, 5.7, 0.8, 9.4, 8.6, 3.9, 1.1, 6.9, 2.1, 7.8, 9.1, 3.0],
+          y: [55.9, 82.1, 34.2, 68.9, 59.1, 44.7, 88.0, 41.3, 62.4, 66.8, 25.2, 96.7, 87.3, 52.9, 27.8, 74.5, 38.6, 84.2, 91.9, 45.1],
+          xmax: 10, ymax: 110
+        },
+        alphas: [
+          { key: 'small', label: 'α = 0.0005' },
+          { key: 'good', label: 'α = 0.02' },
+          { key: 'big', label: 'α = 0.08' }
+        ],
+        alpha_values: { small: 0.0005, good: 0.02, big: 0.08 },
+        run_steps: 50,
+        target_mse: 25,
+        completion_note: 'α = 0.0005 bò cả trăm bước chưa tới; α = 0.08 văng khỏi đồi; α = 0.02 xuống đáy êm. Cùng MỘT luật update — chỉ khác độ dài bước chân.'
+      },
+
+      step_4: {
+        prompt_html: 'Hoàn thành vòng lặp Gradient Descent: mỗi bước gọi <code>compute_gradients</code>, ' +
+          'update <code>weight</code>/<code>bias</code> (nhớ DẤU TRỪ), rồi ghi MSE vào <code>loss_history</code>.',
+        starter_code:
+          'from ml_lab import load_gradient_data, compute_mse, compute_gradients\n\n' +
+          '# 40 học viên, 1 feature — model khởi đầu mù tịt (0, 0)\n' +
+          'x, y = load_gradient_data()\n' +
+          'weight, bias = 0.0, 0.0\n' +
+          'learning_rate, steps = 0.01, 200\n' +
+          'loss_history = []\n\n' +
+          '# TODO: vòng lặp GD — gradient -> update (dấu trừ!) -> predictions -> ghi loss\n' +
+          'for step in range(steps):\n' +
+          '    pass\n\n' +
+          'print("MSE:", loss_history[0], "->", loss_history[-1])\n' +
+          'print("w =", weight, "| b =", bias)',
+        grader_fn: 'grade_lesson10',
+        hints: [
+          'grad_w, grad_b = compute_gradients(x, y, weight, bias) — helper tính sẵn gradient cho bạn.',
+          'weight -= learning_rate * grad_w (và tương tự cho bias). Dùng dấu CỘNG là leo đồi — grader bắt ngay.',
+          'Mỗi bước: predictions = weight * x + bias rồi loss_history.append(compute_mse(y, predictions)).',
+          'Đừng gõ tay loss đẹp: grader đối chiếu loss_history[-1] với MSE tính từ (weight, bias) cuối, và chạy lại trên dataset ẨN có đường thật khác hẳn.'
+        ],
+        success_message: 'MSE 887 → 26 sau 200 bước — model TỰ tìm đường mà không ai xoay slider. Đây chính là trái tim của "học" trong machine learning: lặp lại một luật update nhỏ, đủ nhiều lần.'
+      }
     }
   ]
 };
