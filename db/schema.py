@@ -497,6 +497,19 @@ def init_db():
             if not c.fetchone():
                 c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', _row)
 
+        # Migration 2026-07-18: khóa Machine Learning Cơ bản (Course 1 — ML Foundations,
+        # dự án USTH StudyLab; Python thật trong trình duyệt qua Pyodide).
+        # Idempotent: chỉ INSERT khi chưa tồn tại.
+        c.execute('SELECT 1 FROM courses WHERE id = %s', ('ml',))
+        if not c.fetchone():
+            c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (
+                'ml', 'Machine Learning Cơ bản', 'ML Foundations — dự án USTH StudyLab',
+                'Nhập môn Machine Learning bằng Python thật chạy ngay trong trình duyệt: '
+                'định nghĩa bài toán, chuẩn bị dữ liệu, hồi quy tuyến tính, phân loại logistic '
+                'và đánh giá trung thực — qua dự án StudyLab dự đoán sớm nguy cơ rớt môn.',
+                'static/images/ml.svg', 'Cơ bản', '~5 giờ', '0', 4.9, 15,
+                '#4C1D95', '#A78BFA', 'AI & DATA SCIENCE'))
+
         # Sync 2026-07-04b (user chốt): tiêu đề ỨNG DỤNG (badge đã nói cấp độ, title không lặp)
         # + duration TRÒN GIỜ đồng bộ với tổng phút giáo trình (1 nguồn chân lý).
         # Idempotent: set cùng giá trị mỗi lần start.

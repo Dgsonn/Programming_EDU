@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <title>Machine Learning — Bài {{ (lesson_idx or 0) + 1 }}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=3" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_ml.css') }}?v=2" />
+</head>
+<body class="lesson-focus-mode ml-focus-mode" data-course="{{ course_id or 'ml' }}">
+
+  <div class="scroll-progress" id="scroll-progress"></div>
+
+  <header class="lesson-header">
+    <button class="exit-btn" onclick="window.location='/courses/ml'" title="Thoát bài học">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="header-center">
+      <div class="progress-track" id="progress-track">
+        <div class="progress-step" data-step="1"><span class="step-num">1</span><span class="step-label-tiny">Model Story</span><span class="step-check"><i class="fa-solid fa-check"></i></span></div>
+        <div class="progress-connector"></div>
+        <div class="progress-step" data-step="2"><span class="step-num">2</span><span class="step-label-tiny">Concept Check</span><span class="step-check"><i class="fa-solid fa-check"></i></span></div>
+        <div class="progress-connector"></div>
+        <div class="progress-step" data-step="3"><span class="step-num">3</span><span class="step-label-tiny">Experiment Builder</span><span class="step-check"><i class="fa-solid fa-check"></i></span></div>
+        <div class="progress-connector"></div>
+        <div class="progress-step" data-step="4"><span class="step-num">4</span><span class="step-label-tiny">Python IDE</span><span class="step-check"><i class="fa-solid fa-check"></i></span></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="hearts" id="hearts-display" title="Mạng — mất 1 khi sai">
+        <i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i>
+      </div>
+      <div class="xp-badge" id="xp-display"><i class="fa-solid fa-bolt"></i> <span id="xp-count">0</span></div>
+      <div class="ml-runtime-pill" id="ml-runtime-pill" title="Trạng thái Python runtime">
+        <span class="ml-runtime-dot" id="ml-runtime-dot"></span>
+        <span id="ml-runtime-label">Đang khởi động Python…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="lesson-stage">
+    <!-- ═══ STEP 1 — MODEL STORY ═══ -->
+    <section class="step-pane active" data-step="1">
+      <article class="step-1-content">
+        <div class="eyebrow-row"><span class="step-pill">Bước 1 / 4</span><span class="topic-tag" id="s1-topic-tag">Model Story</span></div>
+        <h2 id="lesson-title"></h2>
+        <div class="ml-story-banner" id="ml-story-banner" hidden></div>
+        <div id="ml-s1-mount"></div>
+      </article>
+    </section>
+
+    <!-- ═══ STEP 2 — CONCEPT & PREDICTION CHECKS ═══ -->
+    <section class="step-pane" data-step="2">
+      <article class="step-2-content">
+        <div class="eyebrow-row"><span class="step-pill">Bước 2 / 4</span><span class="topic-tag">Concept &amp; Prediction Checks</span></div>
+        <div id="ml-s2-mount"></div>
+      </article>
+    </section>
+
+    <!-- ═══ STEP 3 — ML EXPERIMENT BUILDER ═══ -->
+    <section class="step-pane" data-step="3">
+      <article class="step-3-content">
+        <div class="eyebrow-row"><span class="step-pill">Bước 3 / 4</span><span class="topic-tag">ML Experiment Builder</span></div>
+        <div id="ml-s3-mount"></div>
+      </article>
+    </section>
+
+    <!-- ═══ STEP 4 — FULL PYTHON IDE ═══ -->
+    <section class="step-pane" data-step="4">
+      <article class="step-4-content">
+        <div class="eyebrow-row"><span class="step-pill">Bước 4 / 4</span><span class="topic-tag">Full Python IDE</span></div>
+        <div id="ml-s4-instructions"></div>
+        <div class="ml-ide-grid">
+          <div class="ml-ide-editor-col">
+            <div class="ml-ide-toolbar">
+              <span class="ml-ide-filename"><i class="fa-brands fa-python"></i> solution.py</span>
+              <button class="ml-btn ml-btn-ghost" id="ml-btn-run"><i class="fa-solid fa-play"></i> Run</button>
+              <button class="ml-btn ml-btn-primary" id="ml-btn-submit"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+            </div>
+            <div id="ml-monaco-host" class="ml-monaco-host"></div>
+          </div>
+          <div class="ml-ide-results-col">
+            <div class="ml-panel" id="ml-panel-stdout"><div class="ml-panel-head">Console</div><pre id="ml-stdout"></pre></div>
+            <div class="ml-panel" id="ml-panel-grading">
+              <div class="ml-panel-head">Checks</div>
+              <div class="ml-grade-layers" id="ml-grade-layers">
+                <div class="ml-grade-row" data-layer="output"><span class="ml-grade-icon">○</span><span class="ml-grade-name">Output</span><span class="ml-grade-msg"></span></div>
+                <div class="ml-grade-row" data-layer="code"><span class="ml-grade-icon">○</span><span class="ml-grade-name">Code / AST</span><span class="ml-grade-msg"></span></div>
+                <div class="ml-grade-row" data-layer="behavior"><span class="ml-grade-icon">○</span><span class="ml-grade-name">Model behavior</span><span class="ml-grade-msg"></span></div>
+                <div class="ml-grade-row" data-layer="risk"><span class="ml-grade-icon">○</span><span class="ml-grade-name">Risk</span><span class="ml-grade-msg"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="lesson-footer">
+    <button class="nav-btn-footer" id="nav-back" onclick="window.MLLesson.prevStep()"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+    <button class="nav-btn-footer primary" id="nav-next" onclick="window.MLLesson.nextStep()">Tiếp theo <i class="fa-solid fa-arrow-right"></i></button>
+  </footer>
+
+  <div class="success-overlay" id="success-overlay" hidden>
+    <div class="success-card">
+      <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <h2 id="success-title">Hoàn thành!</h2>
+      <p id="success-message"></p>
+      <div class="success-actions">
+        <button class="ml-btn ml-btn-ghost" onclick="document.getElementById('success-overlay').hidden=true">Đóng</button>
+        <a class="ml-btn ml-btn-primary" id="success-next" hidden>Bài tiếp theo →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>window.LESSON_IDX = {{ lesson_idx or 0 }}; window.COURSE_ID = {{ (course_id or 'ml')|tojson }};</script>
+  <script src="{{ url_for('static', filename='js/lesson_content_ml.js') }}?v=2"></script>
+  <script>
+    // Monaco AMD loader — tải xong mới init lesson_ml.js (tránh race condition).
+    window.MONACO_LOADER_URL = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
+  <script src="{{ url_for('static', filename='js/lesson_ml.js') }}?v=2"></script>
+</body>
+</html>

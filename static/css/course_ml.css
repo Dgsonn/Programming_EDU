@@ -1,0 +1,28 @@
+/* course_ml.css — override riêng cho trang khóa Machine Learning.
+ * Kế thừa toàn bộ bố cục cd-* từ course_db_design.css; file này chỉ:
+ * 1) đổi hero sang tông tím ML (--ml-accent #A78BFA — màu chưa khóa nào dùng)
+ * 2) bổ sung màu module 4 & 5 (trang DB chỉ định nghĩa module 1-3)          */
+
+body[data-course="ml"] .cd-hero {
+  background: linear-gradient(120deg, #1e1b4b 0%, #4c1d95 55%, #6d28d9 100%);
+}
+body[data-course="ml"] .cd-tag {
+  background: rgba(167, 139, 250, .18);
+  color: #c4b5fd;
+  border: 1px solid rgba(167, 139, 250, .45);
+}
+body[data-course="ml"] .cd-card-image {
+  background: linear-gradient(120deg, #1e1b4b, #4c1d95);
+}
+
+/* Màu module cho roadmap + thành tựu — 5 module (M4/M5 mới) */
+body[data-course="ml"] .cd-roadmap-module[data-module="1"],
+body[data-course="ml"] .cd-skill-item[data-module="1"] { --module-color: #F59E0B; --module-color-rgb: 245, 158, 11; }
+body[data-course="ml"] .cd-roadmap-module[data-module="2"],
+body[data-course="ml"] .cd-skill-item[data-module="2"] { --module-color: #10B981; --module-color-rgb: 16, 185, 129; }
+body[data-course="ml"] .cd-roadmap-module[data-module="3"],
+body[data-course="ml"] .cd-skill-item[data-module="3"] { --module-color: #38BDF8; --module-color-rgb: 56, 189, 248; }
+body[data-course="ml"] .cd-roadmap-module[data-module="4"],
+body[data-course="ml"] .cd-skill-item[data-module="4"] { --module-color: #FB7185; --module-color-rgb: 251, 113, 133; }
+body[data-course="ml"] .cd-roadmap-module[data-module="5"],
+body[data-course="ml"] .cd-skill-item[data-module="5"] { --module-color: #A78BFA; --module-color-rgb: 167, 139, 250; }

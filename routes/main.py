@@ -416,6 +416,9 @@ _LESSON_TEMPLATES = {
     'db_design_tc': 'lesson_db_design.html',
     # NC (GameHub Marketplace) — cùng cơ chế (docs/NC_SHELL_NC01_SPEC_2026-07-05.md)
     'db_design_nc': 'lesson_db_design.html',
+    # Machine Learning — pilot C1 Bài 1 (docs/ML_TECHNICAL_ARCHITECTURE_2026-07-08.md).
+    # Route/template RIÊNG, không đụng lesson_db_design — stack khác hẳn (Pyodide/Monaco).
+    'ml': 'lesson_ml.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
@@ -425,6 +428,7 @@ _LESSON_URLS = {
     'htmlcss':  '/lesson/htmlcss',
     'cpp':      '/interface',
     'db_design': '/lesson/db_design',
+    'ml':       '/lesson/ml',
 }
 
 @main_bp.route('/lesson/<course_id>')
@@ -457,6 +461,21 @@ def concept_card(card_id):
 def course_detail(course_id):
     uid = current_user_id()
     conn = get_db()
+
+    # 2026-07-18: khóa Machine Learning — trang chi tiết RIÊNG (bố cục giống DB Design,
+    # roadmap 5 module render client-side; tiến độ = localStorage pe_progress_ml + enrollments).
+    if course_id == 'ml':
+        user = conn.execute('SELECT name, streak FROM users WHERE id=%s', (uid,)).fetchone()
+        enrollment = conn.execute(
+            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, course_id)
+        ).fetchone()
+        conn.close()
+        user = dict(user) if user else {}
+        return render_template('course_ml.html',
+            course_id='ml',
+            user_name=user.get('name', ''),
+            streak=user.get('streak', 0),
+            enrollment=dict(enrollment) if enrollment else None)
 
     # 2026-07-04: DB Design = 3 khóa riêng (Cơ bản / Trung cấp / Nâng cao) — dùng CHUNG
     # trang chi tiết course_db_design.html; JS đọc data-course để render roadmap đúng khóa.

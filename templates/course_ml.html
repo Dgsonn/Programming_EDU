@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Machine Learning Cơ bản – Programming EDU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=9" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_db_design.css') }}?v=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_ml.css') }}?v=1" />
+</head>
+<body class="dark" data-course="{{ course_id or 'ml' }}">
+
+<div id="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="brand brand-always">
+        <div class="brand-title">Programming EDU</div>
+      </div>
+    </div>
+    <nav class="topbar-nav" role="navigation" aria-label="Main navigation">
+      <button class="nav-btn" onclick="window.location='/dashboard'" aria-label="Dashboard">
+        <span class="nav-icon">🏠</span><span>Dashboard</span>
+      </button>
+      <button class="nav-btn active" aria-label="Khóa học">
+        <span class="nav-icon">📖</span><span>Khóa học</span>
+      </button>
+      <button class="nav-btn" onclick="window.location='/dashboard#roadmap'" aria-label="Lộ trình">
+        <span class="nav-icon">🗺️</span><span>Lộ trình</span>
+      </button>
+      <button class="nav-btn" onclick="window.location='/dashboard#skills'" aria-label="Kỹ năng">
+        <span class="nav-icon">🏅</span><span>Kỹ năng</span>
+      </button>
+      <button class="nav-btn" onclick="window.location='/dashboard#forum'" aria-label="Diễn đàn">
+        <span class="nav-icon">💬</span><span>Diễn đàn</span>
+      </button>
+    </nav>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Tìm kiếm khóa học..."
+          onkeydown="if(event.key==='Enter'&&this.value.trim())window.location='/dashboard?q='+encodeURIComponent(this.value.trim())" />
+      </div>
+      <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Đổi giao diện">🌙</button>
+      <div class="bell-wrap" id="bell-wrap">
+        <button class="bell-btn" id="bell-btn" onclick="toggleBellPanel()" aria-haspopup="true" aria-expanded="false" aria-label="Thông báo">
+          🔔<span class="bell-dot" id="bell-dot"></span>
+        </button>
+        <div class="bell-panel" id="bell-panel" role="dialog" aria-label="Thông báo">
+          <div class="bell-panel-header">
+            <span class="bell-panel-title">🔔 Thông báo</span>
+            <button class="bell-mark-all" onclick="markAllBellRead()">Đánh dấu đã đọc</button>
+          </div>
+          <div class="bell-panel-body" id="bell-panel-body"></div>
+        </div>
+      </div>
+      <div class="user-chip-wrap" id="user-chip-wrap">
+        <div class="user-chip" id="user-chip-btn" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
+          <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" />
+          <span class="chip-name">{{ user_name or '—' }}</span>
+          <span class="dropdown-icon" id="chip-arrow">▾</span>
+        </div>
+        <div class="user-dropdown" id="user-dropdown" role="menu">
+          <div class="user-dropdown-header">
+            <img src="{{ url_for('static', filename='images/avatar.svg') }}" alt="avatar" class="udh-avatar" />
+            <div>
+              <div class="udh-name">{{ user_name or '—' }}</div>
+              <div class="udh-role">Học viên</div>
+            </div>
+          </div>
+          <div class="user-dropdown-divider"></div>
+          <button class="user-dropdown-item" onclick="window.location='/dashboard'" role="menuitem">
+            <span class="udi-icon">🙋</span> Trang của tôi
+          </button>
+          <button class="user-dropdown-item" onclick="window.location='/dashboard#settings'" role="menuitem">
+            <span class="udi-icon">⚙️</span> Cài đặt
+          </button>
+          <div class="user-dropdown-divider"></div>
+          <button class="user-dropdown-item danger" onclick="window.location='/auth/logout'" role="menuitem">
+            <span class="udi-icon">🚪</span> Đăng xuất
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="page active" style="padding:0;">
+
+    <!-- ── Hero ── -->
+    <div class="cd-hero">
+      <div class="cd-hero-content">
+        <span class="cd-tag">MACHINE LEARNING</span>
+        <h1 class="cd-hero-title">Machine Learning Cơ bản — ML Foundations</h1>
+        <p class="cd-hero-subtitle">USTH StudyLab — dự đoán sớm nguy cơ rớt môn · Python thật chạy trong trình duyệt · numpy, pandas, scikit-learn</p>
+        <div class="cd-meta">
+          <div class="cd-meta-item">🕐 <span class="val" id="cd-hero-time">~5 giờ</span></div>
+          <div class="cd-meta-item">📖 <span class="val">15</span> bài học</div>
+          <div class="cd-meta-item">🎯 <span class="val">Cơ bản</span></div>
+        </div>
+      </div>
+      <div class="cd-hero-visual">🤖</div>
+    </div>
+
+    <!-- ── Body ── -->
+    <div class="cd-body">
+
+      <!-- ── Cột trái ── -->
+      <div class="cd-main-col">
+
+        <!-- Block 1: Tổng quan -->
+        <div class="cd-block">
+          <div class="cd-block-hd">
+            <div class="cd-block-icon">📋</div>
+            <h3>Tổng quan khóa học</h3>
+          </div>
+          <div class="cd-block-body">
+            <p class="cd-desc">
+              Tuần 3 của học kỳ. Hệ thống <strong>USTH StudyLab</strong> muốn trả lời một câu hỏi mà không luật if/else nào viết nổi:
+              <em>"học viên nào đang trên đà rớt môn — khi điểm cuối kỳ còn CHƯA tồn tại?"</em>
+              Bạn là người dựng mô hình Machine Learning đầu tiên cho StudyLab.
+              <br><br>
+              Qua <strong>15 bài</strong> (5 module), bạn đi từ <em>chưa biết ML là gì</em> đến <em>tự tay huấn luyện và đánh giá model trung thực</em>:
+              định nghĩa đúng bài toán, chuẩn bị dữ liệu sạch, hồi quy tuyến tính + gradient descent, phân loại logistic,
+              và nghệ thuật không tự dối mình khi đánh giá (train/validation/test).
+              <br><br>
+              Điểm đặc biệt: <strong>Python THẬT (numpy, pandas, scikit-learn) chạy ngay trong trình duyệt</strong> — không cần cài đặt gì.
+              Mỗi bài kết thúc bằng IDE thật, và bài nộp được chấm <strong>4 tầng như code review thật</strong>:
+              Output đúng chưa — Code đúng thứ tự chưa — Model có thật sự học không — và có "chạy được nhưng SAI về nghĩa" không.
+            </p>
+            <p class="cd-desc" style="margin-top: 14px;"><strong>Sau khóa học, bạn sẽ làm được:</strong></p>
+            <ul class="cd-outcomes">
+              <li>🎯 <strong>Nhận diện đúng loại bài toán ML</strong> (regression / classification / clustering) từ câu hỏi + target — không nhìn nhầm theo kiểu dữ liệu lưu trữ</li>
+              <li>🧹 <strong>Chuẩn bị dữ liệu sạch</strong>: kiểu dữ liệu ngữ nghĩa, làm sạch, scale — và không bao giờ để lộ target vào X (leakage)</li>
+              <li>📈 <strong>Tự tay huấn luyện Linear Regression</strong>, đo lỗi bằng MSE và hiểu gradient descent tự chỉnh đường thẳng thế nào</li>
+              <li>🎲 <strong>Biến điểm số thành xác suất</strong> bằng sigmoid và vẽ decision boundary tách 2 lớp</li>
+              <li>🔬 <strong>Chẩn đoán underfit / overfit</strong> và chia Train / Validation / Test để đánh giá không tự dối mình</li>
+              <li>🐍 <strong>Viết code ML bằng Python thật</strong> — pandas chọn cột theo nghĩa, fit/predict đúng quy trình, qua được cả 4 tầng chấm</li>
+            </ul>
+            <p class="cd-desc" style="margin-top: 14px; font-size: 13px; color: #9CA3AF;">
+              💡 <strong>Cách học:</strong> Mỗi bài 4 bước — Model Story (xem hiện tượng) → Concept Check (kéo thả, phân loại) →
+              Experiment Builder (tự dựng thí nghiệm, xem code sinh ra) → Full Python IDE (tự code, chấm 4 tầng thật).
+            </p>
+          </div>
+        </div>
+
+        <!-- Block 2: Giáo trình -->
+        <div class="cd-block">
+          <div class="cd-block-hd">
+            <div class="cd-block-icon">📚</div>
+            <h3>Giáo trình</h3>
+            <span style="margin-left:auto;font-size:12px;color:#9CA3AF;">Khóa Cơ bản: 15 bài · 5 module</span>
+          </div>
+          <div style="padding:0;">
+            <!-- Course Roadmap Visual (Brilliant-style node path) — rendered by JS -->
+            <div class="cd-roadmap" id="cd-roadmap" aria-label="Lộ trình khóa học"></div>
+          </div>
+        </div>
+
+        <!-- Block 3: Yêu cầu -->
+        <div class="cd-block">
+          <div class="cd-block-hd">
+            <div class="cd-block-icon">📌</div>
+            <h3>Yêu cầu</h3>
+          </div>
+          <div class="cd-block-body">
+            <ul class="cd-req-list">
+              <li data-prereq="python">
+                <span class="cd-req-text">Python cơ bản: biến, hàm, list (tương đương phần đầu khóa Python)</span>
+                <span class="cd-req-status" aria-label="Trạng thái"><i class="fas fa-lock"></i></span>
+              </li>
+              <li data-prereq="static">
+                <span class="cd-req-text">Toán phổ thông: hàm số, trung bình cộng — mọi công thức đều được giải thích lại bằng hình</span>
+                <span class="cd-req-status is-info" aria-label="Khuyến nghị"><i class="fas fa-lightbulb"></i></span>
+              </li>
+              <li data-prereq="static">
+                <span class="cd-req-text">Trình duyệt hiện đại — Python chạy NGAY TRONG trình duyệt (Pyodide), không cần cài đặt gì</span>
+                <span class="cd-req-status is-info" aria-label="Khuyến nghị"><i class="fas fa-lightbulb"></i></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Block 4: Thành tựu -->
+        <div class="cd-block">
+          <div class="cd-block-hd">
+            <div class="cd-block-icon">🏅</div>
+            <h3>Thành tựu</h3>
+          </div>
+          <div class="cd-block-body">
+            <div class="cd-skills">
+              <div class="cd-skill-item" data-module="1">
+                <div class="cd-skill-icon"><i class="fas fa-compass"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">ML Problem Framer</div>
+                  <div class="cd-skill-desc">Nhận diện đúng loại bài toán, target và hợp đồng dữ liệu</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="1">
+                <div class="cd-skill-icon"><i class="fas fa-table"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Người đọc Dataset</div>
+                  <div class="cd-skill-desc">Dòng = sample, cột = attribute, X/y không leakage</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="2">
+                <div class="cd-skill-icon"><i class="fas fa-broom"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Data Preparation Scout</div>
+                  <div class="cd-skill-desc">Kiểu dữ liệu ngữ nghĩa, làm sạch bảo thủ, scale đúng cột</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="2">
+                <div class="cd-skill-icon"><i class="fas fa-chart-simple"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Người đọc Thống kê</div>
+                  <div class="cd-skill-desc">Mean / median / std — đọc dữ liệu trước khi train</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="3">
+                <div class="cd-skill-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Kỹ sư Hồi quy</div>
+                  <div class="cd-skill-desc">Đường dự đoán đầu tiên + đo lỗi bằng MSE</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="3">
+                <div class="cd-skill-icon"><i class="fas fa-arrow-trend-down"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Người thuần Gradient</div>
+                  <div class="cd-skill-desc">Gradient descent — model tự chỉnh đường thẳng</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="4">
+                <div class="cd-skill-icon"><i class="fas fa-wave-square"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Sigmoid &amp; Xác suất</div>
+                  <div class="cd-skill-desc">Từ score sang xác suất — logistic regression</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="4">
+                <div class="cd-skill-icon"><i class="fas fa-draw-polygon"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Người vẽ Ranh giới</div>
+                  <div class="cd-skill-desc">Decision boundary — luật tách 2 lớp học được</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="5">
+                <div class="cd-skill-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Thợ săn Overfit</div>
+                  <div class="cd-skill-desc">Chẩn đoán under/good/overfit từ đường cong học</div>
+                </div>
+              </div>
+              <div class="cd-skill-item" data-module="5">
+                <div class="cd-skill-icon"><i class="fas fa-scale-balanced"></i></div>
+                <div class="cd-skill-body">
+                  <div class="cd-skill-title">Người đánh giá Trung thực</div>
+                  <div class="cd-skill-desc">Train / Validation / Test — không tự dối mình</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Block 5: Đánh giá -->
+        <div class="cd-block">
+          <div class="cd-block-hd">
+            <div class="cd-block-icon">⭐</div>
+            <h3>Đánh giá của học viên</h3>
+          </div>
+          <div class="cd-block-body">
+            <div class="cd-reviews-stub">
+              <div class="star-avg-wrap">
+                <div class="star-avg">
+                  <div class="star-avg-bg">★★★★★</div>
+                  <div class="star-avg-fill" data-fill="96">★★★★★</div>
+                </div>
+              </div>
+              <div class="score">4.9</div>
+              <div class="avg-label">Đánh giá trung bình</div>
+              <div class="user-rate-section">
+                <div class="user-rate-label">Đánh giá của bạn:</div>
+                <div class="star-interactive" id="starInteractive">
+                  {% for i in [1,2,3,4,5] %}
+                  <div class="si-star" data-star="{{ i }}">★</div>
+                  {% endfor %}
+                </div>
+                <div class="user-rate-val" id="userRateVal">—</div>
+              </div>
+              <div class="coming-soon-note">Tính năng lưu đánh giá đang được phát triển. Hãy quay lại sau!</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /cd-main-col -->
+
+      <!-- ── Sidebar ── -->
+      <div class="cd-side-col">
+        <div class="cd-card">
+          <div class="cd-card-image">🤖</div>
+          <div class="cd-card-body">
+            <div class="cd-card-price">Miễn phí</div>
+            <div class="cd-card-free">🎉 Hoàn toàn không mất phí</div>
+
+            {% if enrollment %}
+              {% set done = [enrollment.completed_lessons, 15] | min %}
+              {% set pct = (done * 100 / 15) | round(1) if done > 0 else 0 %}
+              <div class="cd-progress-row" style="margin-top:14px;">
+                <div class="cd-progress-label">
+                  <span>Tiến độ</span>
+                  <span class="pct">{{ pct }}%</span>
+                </div>
+                <div class="cd-prog-bar">
+                  <div class="cd-prog-fill" id="prog-fill"></div>
+                </div>
+              </div>
+
+              <div class="cd-card-stats">
+                <div class="cd-cs">
+                  <div class="v">{{ [enrollment.completed_lessons, 15] | min }}</div>
+                  <div class="l">Bài đã học</div>
+                </div>
+                <div class="cd-cs">
+                  <div class="v">{{ [15 - enrollment.completed_lessons, 0] | max }}</div>
+                  <div class="l">Còn lại</div>
+                </div>
+                <div class="cd-cs">
+                  <div class="v">{{ enrollment.time_spent or '0h' }}</div>
+                  <div class="l">Đã học</div>
+                </div>
+                <div class="cd-cs">
+                  <div class="v">{{ streak }}</div>
+                  <div class="l">🔥 Streak</div>
+                </div>
+              </div>
+
+              <button class="cd-enroll-btn continue" onclick="goLesson()">▶ Tiếp tục học</button>
+              <button class="cd-enroll-btn unenroll" id="unenroll-btn" onclick="unenroll()">Hủy đăng ký</button>
+
+            {% else %}
+              <button class="cd-enroll-btn primary" style="margin-top:14px;" id="enroll-btn" onclick="enroll()">
+                Đăng ký ngay – Miễn phí
+              </button>
+            {% endif %}
+
+            <div class="cd-includes">
+              <div class="cd-includes-title">KHÓA HỌC BAO GỒM</div>
+              <div class="cd-inc-item"><i class="fas fa-book-open"></i> 15 bài học (dự án USTH StudyLab)</div>
+              <div class="cd-inc-item"><i class="fas fa-project-diagram"></i> 5 module (Framing / Data / Regression / Classification / Evaluation)</div>
+              <div class="cd-inc-item"><i class="fas fa-clock"></i> ~5 giờ học</div>
+              <div class="cd-inc-item"><i class="fab fa-python"></i> Python thật trong trình duyệt (numpy, pandas, sklearn)</div>
+              <div class="cd-inc-item"><i class="fas fa-infinity"></i> Truy cập vĩnh viễn</div>
+              <div class="cd-inc-item"><i class="fas fa-certificate"></i> Chứng chỉ hoàn thành</div>
+              <div class="cd-inc-item"><i class="fas fa-mobile-alt"></i> Học trên mọi thiết bị</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /cd-side-col -->
+
+    </div><!-- /cd-body -->
+  </div><!-- /page -->
+</div><!-- /main -->
+
+<script>
+  const COURSE_ID = '{{ course_id or 'ml' }}';
+  const CURRENT_LESSON_IDX = {{ enrollment.completed_lessons if enrollment else 0 }};
+  const LESSON_URL = '/lesson/' + COURSE_ID;
+  const progFill = document.getElementById('prog-fill');
+  if (progFill) progFill.style.width = '{{ pct if enrollment else 0 }}%';
+</script>
+<script src="{{ url_for('static', filename='js/course_ml.js') }}?v=1"></script>
+<script>
+  if (!document.body.classList.contains('light')) {
+    document.body.classList.add('dark');
+  }
+</script>
+
+{% include 'chatbot.html' %}
+</body>
+</html>
