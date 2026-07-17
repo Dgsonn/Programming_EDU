@@ -181,7 +181,9 @@
          khỏi phình ZONE_CONFIG mỗi lần thêm bài khái niệm (M6 storage, NC engine).
          ZONE_CONFIG giữ vai trò meta chung cho zone chuẩn/tái dùng. */
       const cfg = z.station || ZONE_CONFIG[z.id] || { icon: '📋', label: z.id, sub: '' };
-      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, hint: cfg.hint, zone: z.id };
+      /* ML SHELL 2026-07-18: zone khai ml_effect {type, rows?, columns?, note?} → executeStation
+         chạy hiệu ứng data khai báo thay vì engine SQL (khóa ml — bài SQL không khai = no-op). */
+      return { id: z.id, icon: cfg.icon, label: cfg.label, sub: cfg.sub, hint: cfg.hint, zone: z.id, mlEffect: z.ml_effect || null };
     });
 
     return [start, ...zoneStations];
@@ -781,6 +783,20 @@
     var zone = station.zone;
     var text = String(input || '').trim();
 
+    /* ML SHELL 2026-07-18: trạm pipeline ML — hiệu ứng data thuần KHAI BÁO từ zone.ml_effect,
+       không đi qua engine SQL. 'predict' thay bảng bằng hồ sơ mới + cột dự đoán;
+       'load'/'note' giữ nguyên dòng chảy (bảng nguồn 12 học viên). */
+    if (station.mlEffect) {
+      var eff = station.mlEffect;
+      if (eff.type === 'predict' && eff.rows) {
+        return {
+          data: { rows: eff.rows.map(function (r) { return r.slice(); }), columns: (eff.columns || currentData.columns).slice() },
+          display: 'projected', error: false
+        };
+      }
+      return { data: currentData, display: 'simple', error: false };
+    }
+
     if (zone === 'from-line') {
       return {
         data: { rows: sourceTable.dataRows.slice(), columns: sourceTable.columns.slice() },
@@ -1254,13 +1270,21 @@
     }
     if (result.error) {
       manifestBodyEl.innerHTML = '<div class="manifest-error">⚠ Lỗi xử lý</div>';
+    } else if (station.mlEffect && station.mlEffect.type === 'predict' && result.data) {
+      /* ML SHELL 2026-07-18: trạm PREDICT hiện DATA SAU HIỆU ỨNG (hồ sơ mới + cột dự đoán)
+         — đường mặc định vẽ data TRƯỚC trạm với header bảng nguồn → sai bản chất trạm này. */
+      manifestBodyEl.innerHTML = renderStationMiniTable(result.data, {}, { columns: result.data.columns });
+      var mlRows = manifestBodyEl.querySelectorAll('.station-mini-table tbody tr');
+      mlRows.forEach(function(tr, idx) { tr.style.setProperty('--i', idx); });
     } else {
       manifestBodyEl.innerHTML = renderStationMiniTable(data, result, table);
       var rows = manifestBodyEl.querySelectorAll('.station-mini-table tbody tr');
       rows.forEach(function(tr, idx) { tr.style.setProperty('--i', idx); });
     }
     if (manifestSubEl) {
-      manifestSubEl.textContent = getStepLogText(station, result, data);
+      manifestSubEl.textContent = (station.mlEffect && station.mlEffect.type === 'predict')
+        ? '🔮 Dự đoán cho hồ sơ CHƯA TỪNG THẤY'
+        : getStepLogText(station, result, data);
     }
     manifestEl.classList.add('show');
 

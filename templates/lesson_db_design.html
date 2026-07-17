@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>Database Design — Bài {{ (lesson_idx or 0) + 1 }}</title>
+  <title>{% if course_id == 'ml' %}Machine Learning — Bài {{ (lesson_idx or 0) + 1 }}{% else %}Database Design — Bài {{ (lesson_idx or 0) + 1 }}{% endif %}</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,11 +15,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/theme/material-darker.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/sql/sql.min.js"></script>
+  {% if course_id == 'ml' %}
+  <!-- ML: Python mode cho editor Step 4 (cùng CodeMirror của shell — nhất quán visual) -->
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/python/python.min.js"></script>
+  {% endif %}
 
   <!-- Canvas Confetti for Duolingo-style celebrations -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=3" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=4" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body class="lesson-focus-mode" data-course="{{ course_id or 'db_design' }}">
@@ -93,6 +97,14 @@
         </div>
       </div>
 
+      {% if course_id == 'ml' %}
+      <!-- ML: trạng thái Python runtime (Pyodide nạp numpy/pandas/sklearn ~40s lần đầu) -->
+      <div class="ml-runtime-pill" id="ml-runtime-pill" title="Trạng thái Python runtime">
+        <span class="ml-runtime-dot" id="ml-runtime-dot"></span>
+        <span id="ml-runtime-label">Đang khởi động Python…</span>
+      </div>
+      {% endif %}
+
       <button class="report-btn" onclick="reportBug()" title="Báo lỗi">
         <i class="fa-regular fa-flag"></i>
       </button>
@@ -113,6 +125,10 @@
 
         <!-- Story banner (dự án GameHub xuyên suốt) — populated from lesson.story, hidden nếu bài chưa có -->
         <div id="story-banner" class="story-banner" hidden></div>
+
+        <!-- "Bạn sẽ học gì" scaffold (chuẩn nội dung 2026-07-18 — feedback người dùng DB:
+             thiếu định nghĩa/mục tiêu đầu bài). Data-driven từ step_1.you_will_learn; bài chưa có = ẩn. -->
+        <div id="you-will-learn" class="you-will-learn" hidden></div>
 
         <!-- Hero visual per lesson (CHANGE 1) — populated by renderLessonHero() based on lesson.id -->
         <div id="lesson-hero" class="lesson-hero" role="img" aria-label="Hero illustration"></div>
@@ -613,10 +629,15 @@
   <!-- NC (GameHub Marketplace) — data riêng, renderer dùng chung -->
   <script src="{{ url_for('static', filename='js/lesson_content_nc.js') }}?v=1"></script>
   {% endif %}
+  {% if course_id == 'ml' %}
+  <!-- ML (USTH StudyLab) — data riêng theo schema shell + engine Pyodide ngầm -->
+  <script src="{{ url_for('static', filename='js/lesson_content_ml.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='js/ml_engine.js') }}?v=1"></script>
+  {% endif %}
   <script src="{{ url_for('static', filename='js/table_explorer.js') }}?v=1"></script>
-  <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=2"></script>
+  <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=3"></script>
   <script src="{{ url_for('static', filename='js/decomp_game.js') }}?v=1"></script>
-  <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=11"></script>
+  <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=12"></script>
 
   <!-- B7 Mobile: Step 3 drag-drop fallback notice (shown via JS only on mobile + step 3) -->
   <div id="mobile-step3-notice" class="mobile-step3-notice" role="alertdialog" aria-labelledby="mobile-step3-title">

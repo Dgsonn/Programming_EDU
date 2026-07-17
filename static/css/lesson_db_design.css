@@ -10958,3 +10958,236 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .mco-rank { margin-top: 12px; padding: 11px 14px; border-radius: 10px; text-align: center; font-size: 13px; color: #e8edf5; background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(129,140,248,.12)); border: 1px solid rgba(52,211,153,.4); }
 .mco-rank b { color: #6ee7b7; font-weight: 800; font-size: 15px; }
 .mco-rank-count { color: #7f93ad; font-size: 11px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ML SHELL (pilot Bài 1 — docs/ML_REWORK_PILOT_BAI1_2026-07-18.md)
+   Additive: chỉ khóa ML render các block này (bài DB không khai data tương ứng).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── "Bạn sẽ học gì" scaffold (chuẩn nội dung mới — mọi khóa dùng dần) ── */
+.you-will-learn {
+  margin: 18px 0 22px;
+  padding: 18px 20px;
+  background: rgba(21, 30, 50, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-left: 3px solid var(--module-accent);
+  border-radius: var(--radius);
+}
+.you-will-learn .ywl-head {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--text-100);
+  margin-bottom: 10px;
+}
+.you-will-learn .ywl-head i { color: var(--module-accent); margin-right: 8px; }
+.you-will-learn .ywl-outcomes {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.you-will-learn .ywl-outcomes li {
+  color: var(--text-300);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+.you-will-learn .ywl-outcomes li::marker { color: var(--module-accent); }
+.you-will-learn .ywl-defs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.you-will-learn .ywl-def {
+  background: rgba(11, 18, 32, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.you-will-learn .ywl-term {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--module-accent);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.you-will-learn .ywl-plain {
+  color: var(--text-400);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+/* ── Paradigm visual (sim Bài 1 ML — 2 luồng rule vs learn) ── */
+.pgv-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin: 20px 0 12px;
+}
+.pgv-flow {
+  background: rgba(21, 30, 50, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-top: 3px solid var(--pgv-accent, var(--module-accent));
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pgv-flow-head { display: flex; flex-direction: column; gap: 2px; }
+.pgv-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--pgv-accent, var(--module-accent));
+  letter-spacing: 0.5px;
+}
+.pgv-sub { font-size: var(--text-xs); color: var(--text-500); }
+.pgv-nodes { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
+.pgv-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(11, 18, 32, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: var(--radius-sm);
+  opacity: 0.55;
+  transition: opacity var(--anim-normal) var(--anim-ease), border-color var(--anim-normal), box-shadow var(--anim-normal);
+}
+.pgv-node--lit { opacity: 1; border-color: var(--pgv-accent, var(--module-accent)); }
+.pgv-node--active { box-shadow: 0 0 14px var(--module-accent-glow); }
+.pgv-node--good.pgv-node--lit { border-color: #34D399; }
+.pgv-node--good.pgv-node--lit .pgv-node-label { color: #34D399; font-weight: 700; }
+.pgv-node-icon { font-size: 16px; flex: 0 0 auto; }
+.pgv-node-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-sm);
+  color: var(--text-200);
+  line-height: 1.4;
+}
+.pgv-arrow { text-align: center; color: var(--text-600); font-size: 12px; line-height: 1.1; }
+.pgv-run {
+  align-self: flex-start;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--pgv-accent, var(--module-accent));
+  background: transparent;
+  color: var(--pgv-accent, var(--module-accent));
+  font-family: inherit;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--anim-fast), color var(--anim-fast);
+}
+.pgv-run:hover:not(:disabled) { background: var(--module-accent-soft); }
+.pgv-run:disabled { opacity: 0.5; cursor: wait; }
+.pgv-punch {
+  font-size: var(--text-sm);
+  color: var(--text-300);
+  border-left: 2px solid var(--pgv-accent, var(--module-accent));
+  padding-left: 10px;
+  line-height: 1.6;
+}
+.pgv-sokeo {
+  margin: 4px 0 8px;
+  padding: 14px 16px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.30);
+  border-radius: var(--radius);
+  color: var(--text-200);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+/* ── Runtime pill (header — trạng thái Pyodide) ── */
+.ml-runtime-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(21, 30, 50, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: var(--text-xs);
+  color: var(--text-400);
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ml-runtime-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F59E0B;
+  flex: 0 0 auto;
+  animation: mlPulse 1.4s infinite;
+}
+.ml-runtime-dot.ml-runtime-ready { background: #34D399; animation: none; }
+@keyframes mlPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ── Bảng chấm 4 tầng (cột 3 Step 4 — thay "Kết quả truy vấn" của SQL) ── */
+.ml-checks { display: flex; flex-direction: column; gap: 8px; padding: 14px; }
+.ml-checks-head {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-200);
+  margin-bottom: 4px;
+}
+.ml-checks-head i { color: var(--module-accent); margin-right: 6px; }
+.ml-check-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(11, 18, 32, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  border-radius: var(--radius-sm);
+}
+.ml-check-icon {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--text-500);
+  flex: 0 0 14px;
+}
+.ml-check-row.is-ok .ml-check-icon { color: #34D399; }
+.ml-check-row.is-bad .ml-check-icon { color: #F87171; }
+.ml-check-row.is-ok { border-color: rgba(52, 211, 153, 0.35); }
+.ml-check-row.is-bad { border-color: rgba(248, 113, 113, 0.40); }
+.ml-check-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-300);
+  flex: 0 0 108px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.ml-check-msg { font-size: var(--text-xs); color: var(--text-400); line-height: 1.55; }
+.ml-check-row.is-bad .ml-check-msg { color: #FCA5A5; }
+.ml-checks-foot { font-size: var(--text-xs); color: var(--text-500); margin-top: 4px; line-height: 1.6; }
+.ml-checks-foot.is-pass { color: #34D399; font-weight: 700; }
+.ml-checks-foot.is-fail { color: #FCA5A5; }
+.ml-checks-error {
+  margin: 6px 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(248, 113, 113, 0.10);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #FCA5A5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+}
+.ml-term-pre {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text-200);
+  white-space: pre-wrap;
+  line-height: 1.6;
+}

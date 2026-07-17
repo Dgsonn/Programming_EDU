@@ -2010,6 +2010,9 @@
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
     // hiện nhầm hero Bài 1 Basic.
     let svg = HERO_SVGS[lessonId];
+    /* ML SHELL 2026-07-18: heroes khóa ML sống trong lesson_content_ml.js (window.HERO_SVGS_ML)
+       — lookup additive theo EXACT id (c1_lN), không đụng heroes DB. */
+    if (!svg && window.HERO_SVGS_ML) svg = window.HERO_SVGS_ML[lessonId];
     if (!svg && /^(db_|b)/i.test(String(lessonId))) {
       const m = String(lessonId).match(/\d+/);
       if (m) svg = HERO_SVGS['db_' + String(m[0]).padStart(2, '0')];
@@ -2321,6 +2324,24 @@
       document.documentElement.style.setProperty('--primary', data.accent_color);
     }
 
+    // ML SHELL 2026-07-18: template success-modal hardcode nhãn XP "Kéo thả SQL"/"Viết code"
+    // — khóa ML đổi cho đúng ngôn ngữ pipeline/Python (không đụng khóa DB).
+    if (courseId === 'ml') {
+      const xpLabels = document.querySelectorAll('#success-xp-breakdown .success-xp-row span:first-child');
+      if (xpLabels[2]) xpLabels[2].textContent = 'Lắp pipeline ML';
+      if (xpLabels[3]) xpLabels[3].textContent = 'Viết Python';
+      // IDE hybrid step-3: file tab + placeholder đúng ngôn ngữ Python
+      const ideTab = document.querySelector('.step3-ide .filename-tab span');
+      if (ideTab) ideTab.textContent = 'solution.py';
+      const ideCodeEl = document.getElementById('ide-code');
+      if (ideCodeEl) ideCodeEl.setAttribute('data-placeholder', '✎ Gõ Python trực tiếp ở đây, hoặc kéo khối lệnh phía trên…');
+      // Nhãn template hardcode ngôn ngữ SQL → bản ML
+      const s1Tag = document.querySelector('.step-pane[data-step="1"] .topic-tag');
+      if (s1Tag) s1Tag.textContent = 'Lý thuyết bite-sized + Trực quan DataFrame';
+      const resHead = document.querySelector('.results-head');
+      if (resHead) resHead.innerHTML = '<i class="fa-solid fa-square-poll-vertical"></i> Kết quả chấm';
+    }
+
     // Set module accent color (Amber/Indigo/Emerald) dựa trên module number
     // Module 1 (B1-B6)  ER Mapping     → Amber  #F59E0B
     // Module 2 (B7-B13) Normalization → Indigo #8B5CF6
@@ -2336,7 +2357,13 @@
       // NC (GameHub Marketplace) — module 7-9 (NC_SHELL_NC01_SPEC_2026-07-05)
       7: { accent: '#818CF8', softAlpha: '1a', glowAlpha: '59' },  // Indigo — Engine Room
       8: { accent: '#FB7185', softAlpha: '1a', glowAlpha: '59' },  // Rose   — Concurrency
-      9: { accent: '#34D399', softAlpha: '1a', glowAlpha: '59' }   // Emerald— Recovery
+      9: { accent: '#34D399', softAlpha: '1a', glowAlpha: '59' },  // Emerald— Recovery
+      // ML (USTH StudyLab) — module 10-14 (docs/ML_REWORK_PILOT_BAI1_2026-07-18.md)
+      10: { accent: '#A78BFA', softAlpha: '1a', glowAlpha: '59' }, // Violet — Problem Framing
+      11: { accent: '#F472B6', softAlpha: '1a', glowAlpha: '59' }, // Pink   — Data Readiness
+      12: { accent: '#60A5FA', softAlpha: '1a', glowAlpha: '59' }, // Blue   — Linear Regression
+      13: { accent: '#FBBF24', softAlpha: '1a', glowAlpha: '59' }, // Amber  — Logistic
+      14: { accent: '#4ADE80', softAlpha: '1a', glowAlpha: '59' }  // Green  — Generalization
     };
     const mod = state.currentLesson.module;
     const mc = MODULE_COLORS[mod] || { accent: data.accent_color || '#06B6D4', softAlpha: '1a', glowAlpha: '59' };
@@ -3819,6 +3846,56 @@
     });
   }
 
+  /* ═══ renderParadigmVisual — sim ML Bài 1 (shell 2026-07-18): 2 luồng rule vs learn
+     HIỆN SẴN toàn bộ nút (không giấu nội dung sau click), ▶ thắp sáng tuần tự từng nút;
+     chạy đủ cả 2 luồng → hiện dòng so kèo chốt ranh giới Traditional ↔ ML. ═══ */
+  function renderParadigmVisual(mount, cfg) {
+    const ran = {};
+    const flowsHtml = (cfg.flows || []).map(function (f) {
+      const nodes = (f.nodes || []).map(function (n, i) {
+        return '<div class="pgv-node' + (n.cls ? ' pgv-node--' + n.cls : '') + '" data-flow="' + f.id + '" data-node="' + i + '">' +
+          '<span class="pgv-node-icon">' + n.icon + '</span><span class="pgv-node-label">' + n.label + '</span></div>' +
+          (i < f.nodes.length - 1 ? '<div class="pgv-arrow">↓</div>' : '');
+      }).join('');
+      return '<div class="pgv-flow" style="--pgv-accent:' + (f.accent || '#A78BFA') + '">' +
+        '<div class="pgv-flow-head"><span class="pgv-tag">' + f.tag + '</span><span class="pgv-sub">' + f.sub + '</span></div>' +
+        '<div class="pgv-nodes">' + nodes + '</div>' +
+        '<button class="pgv-run" type="button" data-flow="' + f.id + '">▶ Chạy luồng</button>' +
+        '<div class="pgv-punch" data-flow="' + f.id + '" hidden>' + (f.punch || '') + '</div>' +
+        '</div>';
+    }).join('');
+    mount.innerHTML = '<div class="pgv-wrap">' + flowsHtml + '</div>' +
+      '<div class="pgv-sokeo" id="pgv-sokeo" hidden>⚖️ ' + (cfg.so_keo || '') + '</div>';
+    mount.querySelectorAll('.pgv-run').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const fid = btn.getAttribute('data-flow');
+        const nodes = mount.querySelectorAll('.pgv-node[data-flow="' + fid + '"]');
+        nodes.forEach(function (n) { n.classList.remove('pgv-node--lit', 'pgv-node--active'); });
+        btn.disabled = true;
+        let i = 0;
+        (function step() {
+          if (i > 0) nodes[i - 1].classList.remove('pgv-node--active');
+          if (i < nodes.length) {
+            nodes[i].classList.add('pgv-node--lit', 'pgv-node--active');
+            i++;
+            setTimeout(step, 550);
+          } else {
+            const punch = mount.querySelector('.pgv-punch[data-flow="' + fid + '"]');
+            if (punch) punch.hidden = false;
+            btn.innerHTML = '↻ Chạy lại';
+            btn.disabled = false;
+            ran[fid] = true;
+            if ((cfg.flows || []).every(function (f) { return ran[f.id]; })) {
+              const sk = mount.querySelector('#pgv-sokeo');
+              if (sk) sk.hidden = false;
+            }
+          }
+        })();
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -3963,6 +4040,29 @@
       }
     }
 
+    // "Bạn sẽ học gì" scaffold (chuẩn nội dung 2026-07-18 — feedback người dùng DB:
+    // thiếu định nghĩa + mục tiêu đầu bài). step_1.you_will_learn = {lead, outcomes[], defs[{term,plain}]}.
+    // Bài chưa khai = ẩn hẳn (3 khóa DB sửa đợt sau — không regression).
+    const ywlEl = document.getElementById('you-will-learn');
+    if (ywlEl) {
+      const ywl = s1.you_will_learn;
+      if (ywl && ((ywl.outcomes && ywl.outcomes.length) || (ywl.defs && ywl.defs.length))) {
+        let ywlHtml = '<div class="ywl-head"><i class="fa-solid fa-graduation-cap"></i> ' + (ywl.lead || 'Xong bài này, bạn sẽ:') + '</div>';
+        if (ywl.outcomes && ywl.outcomes.length) {
+          ywlHtml += '<ul class="ywl-outcomes">' + ywl.outcomes.map(o => '<li>' + o + '</li>').join('') + '</ul>';
+        }
+        if (ywl.defs && ywl.defs.length) {
+          ywlHtml += '<div class="ywl-defs">' + ywl.defs.map(d =>
+            '<div class="ywl-def"><span class="ywl-term">' + d.term + '</span><span class="ywl-plain">' + d.plain + '</span></div>'
+          ).join('') + '</div>';
+        }
+        ywlEl.innerHTML = ywlHtml;
+        ywlEl.hidden = false;
+      } else {
+        ywlEl.hidden = true;
+      }
+    }
+
     // Intro & example (hide empty ones so removed paragraphs leave no dead gap)
     const introEl = document.getElementById('lesson-intro');
     const exampleEl = document.getElementById('lesson-example');
@@ -4074,6 +4174,9 @@
         pvMount.hidden = false;
       } else if (s1.aries_visual) {
         renderAriesVisual(pvMount, s1.aries_visual);
+        pvMount.hidden = false;
+      } else if (s1.paradigm_visual) {
+        renderParadigmVisual(pvMount, s1.paradigm_visual);
         pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -6797,6 +6900,31 @@
     if (!sqlText) return false;
     var hasAnyBlock = Object.keys(state.step3Blocks).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
     if (hasAnyBlock) return false;
+    /* ML SHELL 2026-07-18: bài pipeline Python (step_3.ml_pipeline) — hydrate theo DÒNG:
+       1 dòng lệnh = 1 zone theo thứ tự khai báo; bỏ qua comment/import/print (boilerplate).
+       PE_parseSQLToBlocks là parser SQL — không áp cho Python. */
+    if (s3.ml_pipeline) {
+      /* contenteditable gõ Enter tạo <div> con — textContent NUỐT xuống dòng;
+         innerText giữ line break nên mới tách được 1 dòng lệnh / 1 zone. */
+      var pyText = (ideCode.innerText || sqlText);
+      var pyLines = pyText.split('\n').map(function (t) { return t.trim(); }).filter(function (t) {
+        return t && t.indexOf('#') !== 0 && t.indexOf('--') !== 0 &&
+          !/^from\s+/.test(t) && !/^import\s+/.test(t) && !/^print\s*\(/.test(t);
+      });
+      var mlZones = s3.drop_zones || [];
+      /* Chỉ hydrate khi script ĐỦ dòng (như SQL chỉ hydrate khi parse trọn câu) —
+         hydrate sớm giữa chừng sẽ khóa zone với nội dung dở dang (hasAnyBlock chặn lượt sau). */
+      if (pyLines.length < mlZones.length) return false;
+      var applied = false;
+      pyLines.slice(0, mlZones.length).forEach(function (line, i) {
+        state.step3Blocks[mlZones[i].id] = [{ type: 'py', token: line }];
+        applied = true;
+      });
+      if (applied && typeof renderZone === 'function') {
+        mlZones.forEach(function (z) { renderZone(z.id); });
+      }
+      return applied;
+    }
     var parsed = window.PE_parseSQLToBlocks(sqlText, s3);
     if (parsed.error) return false;
     /* Apply to state.step3Blocks */
@@ -7112,7 +7240,10 @@
     }
 
     // Determine challenge type (default: full_ide)
-    const challengeType = l.challenge_type || s4.challenge_type || 'full_ide';
+    let challengeType = l.challenge_type || s4.challenge_type || 'full_ide';
+    // ML SHELL 2026-07-18: khóa ML → IDE Python (CodeMirror python-mode, chấm 4 tầng Pyodide).
+    // Dùng CHUNG pane full_ide của shell — chỉ đổi mode editor + đường chấm.
+    if (state.courseId === 'ml') challengeType = 'ml_ide';
     state.challengeState = { type: challengeType, submitted: false };
 
     // Title + prompt
@@ -7135,11 +7266,13 @@
     // Hide ALL challenge panes first
     document.querySelectorAll('.challenge-pane').forEach(p => { p.hidden = true; });
 
-    // Dispatch to correct renderer
-    const targetPane = document.querySelector(`.challenge-pane[data-challenge="${challengeType}"]`);
+    // Dispatch to correct renderer (ml_ide dùng chung pane full_ide)
+    const paneType = challengeType === 'ml_ide' ? 'full_ide' : challengeType;
+    const targetPane = document.querySelector(`.challenge-pane[data-challenge="${paneType}"]`);
     if (targetPane) {
       targetPane.hidden = false;
-      if (challengeType === 'full_ide') initChallengeFullIDE(s4, targetPane);
+      if (challengeType === 'ml_ide') initChallengeMLIDE(s4, targetPane);
+      else if (challengeType === 'full_ide') initChallengeFullIDE(s4, targetPane);
       else if (challengeType === 'mcq_code') initChallengeMCQCode(s4, targetPane);
       else if (challengeType === 'fill_blank') initChallengeFillBlank(s4, targetPane);
       else if (challengeType === 'bug_fix') initChallengeBugFix(s4, targetPane);
@@ -7148,8 +7281,10 @@
     // Reset terminal
     const term = document.getElementById('terminal-output');
     term.innerHTML = '<span class="prompt-arrow">$</span> Đang chờ bạn hoàn thành thử thách...';
-    // C4 (STAGE 2d): reset results panel (cột 3) — clean slate cho mỗi bài
-    renderStep4Idle();
+    // C4 (STAGE 2d): reset results panel (cột 3) — clean slate cho mỗi bài.
+    // ml_ide: cột 3 = bảng chấm 4 tầng (initChallengeMLIDE đã vẽ) — đừng ghi đè bằng idle SQL.
+    if (challengeType === 'ml_ide') renderMLChecksIdle();
+    else renderStep4Idle();
 
     // FIX 2e-C2: data-driven context giàu. Render s4.context vào #step4-instructions.
     // Bài nào có context → render đầy đủ (scenario+steps+example+expected).
@@ -7287,6 +7422,123 @@
     }
   }
 
+  /* ═══ ML SHELL 2026-07-18 — Step 4 Python IDE (CodeMirror python-mode, engine
+     Pyodide chấm 4 tầng qua window.MLEngine / ml_worker.js). Cột 3 = bảng chấm
+     4 tầng + output model (thay "Kết quả truy vấn" của SQL). ═══ */
+  const MLCHECK_LAYERS = [
+    { key: 'output',   name: 'Output',         idle: 'Kết quả in ra có hợp lệ?' },
+    { key: 'code',     name: 'Code / AST',     idle: 'fit trước predict? Không hardcode?' },
+    { key: 'behavior', name: 'Model behavior', idle: 'Đổi X_new ngầm — dự đoán vẫn thật?' },
+    { key: 'risk',     name: 'Risk',           idle: 'Có bẫy "đúng mà vô dụng" không?' }
+  ];
+
+  function initChallengeMLIDE(s4, pane) {
+    pane.innerHTML = '<div id="code-editor" style="flex:1;display:flex;flex-direction:column;min-height:0;"></div>';
+    // Editor TRỐNG (no-over-gamify: IDE thật mở trống, người học viết từ đầu)
+    const ghostHint = s4.starter_hint || '💡 Gõ script Python của bạn vào đây — bắt đầu bằng from ml_lab import …';
+    if (window.CodeMirror) {
+      state.cmEditor = CodeMirror(pane.querySelector('#code-editor'), {
+        value: '',
+        mode: 'python',
+        theme: 'material-darker',
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+        autofocus: false,
+        matchBrackets: true,
+        placeholder: ghostHint
+      });
+      state.cmEditor.on('change', () => {
+        const hintDetails = document.getElementById('step4-hint-details');
+        if (hintDetails && hintDetails.open) hintDetails.open = false;
+      });
+    } else {
+      pane.querySelector('#code-editor').innerHTML =
+        `<textarea id="cm-fallback" style="flex:1;width:100%;background:#0F172A;color:#F1F5F9;font-family:'JetBrains Mono',monospace;font-size:14px;padding:16px;border:none;outline:none;resize:none;line-height:1.7;" placeholder="${escapeHtml(ghostHint)}"></textarea>`;
+    }
+    // Shell dùng chung lang-selector SQL/PostgreSQL — khóa ML chỉ có Python
+    const sel = document.querySelector('.lang-selector');
+    if (sel) { sel.innerHTML = '<option>Python</option>'; sel.disabled = true; }
+    renderMLChecksIdle();
+  }
+
+  function renderMLChecksIdle() {
+    const mount = document.getElementById('step4-results');
+    if (!mount) return;
+    mount.innerHTML = '<div class="ml-checks">' +
+      '<div class="ml-checks-head"><i class="fa-solid fa-list-check"></i> Chấm 4 tầng — như code review thật</div>' +
+      MLCHECK_LAYERS.map(l =>
+        '<div class="ml-check-row" data-layer="' + l.key + '"><span class="ml-check-icon">○</span><span class="ml-check-name">' + l.name + '</span><span class="ml-check-msg">' + l.idle + '</span></div>'
+      ).join('') +
+      '<div class="ml-checks-foot">Bấm <strong>Run</strong> chạy thử (không tốn tim) · <strong>Submit</strong> để chấm.</div>' +
+      '</div>';
+  }
+
+  function renderMLChecks(res) {
+    const mount = document.getElementById('step4-results');
+    if (!mount) return;
+    const okMap = { output: 'output_ok', code: 'code_ok', behavior: 'behavior_ok', risk: 'risk_ok' };
+    const msgMap = { output: 'output_msg', code: 'code_msg', behavior: 'behavior_msg', risk: 'risk_msg' };
+    mount.innerHTML = '<div class="ml-checks">' +
+      '<div class="ml-checks-head"><i class="fa-solid fa-list-check"></i> Chấm 4 tầng — như code review thật</div>' +
+      MLCHECK_LAYERS.map(l => {
+        const ok = !!res[okMap[l.key]];
+        return '<div class="ml-check-row ' + (ok ? 'is-ok' : 'is-bad') + '" data-layer="' + l.key + '"><span class="ml-check-icon">' + (ok ? '✓' : '✗') + '</span><span class="ml-check-name">' + l.name + '</span><span class="ml-check-msg">' + escapeHtml(res[msgMap[l.key]] || '') + '</span></div>';
+      }).join('') +
+      (res.overall_pass
+        ? '<div class="ml-checks-foot is-pass">✅ 4/4 tầng xanh — pipeline của bạn là hàng thật!</div>'
+        : '<div class="ml-checks-foot is-fail">Chưa qua — đọc tầng đỏ, sửa code rồi Submit lại.</div>') +
+      (res.grader_error ? '<div class="ml-checks-error">' + escapeHtml(res.grader_error) + '</div>' : '') +
+      '</div>';
+  }
+
+  function runCodeML(isSubmit) {
+    const userCode = state.cmEditor
+      ? state.cmEditor.getValue()
+      : ((document.getElementById('cm-fallback') || {}).value || '');
+    if (!userCode.trim()) {
+      flashTerminal('warn', 'Bạn chưa viết code!');
+      return;
+    }
+    if (!window.MLEngine) {
+      flashTerminal('warn', 'Python engine chưa được nạp — tải lại trang.');
+      return;
+    }
+    if (!window.MLEngine.ready) {
+      flashTerminal('info', 'Python runtime đang khởi động (numpy · pandas · scikit-learn)… đèn pill góc phải chuyển xanh là chạy được.');
+      return;
+    }
+    const term = document.getElementById('terminal-output');
+    term.innerHTML = '<span class="prompt-arrow">$</span> Đang chạy trong Python (Pyodide)…';
+    const btnRun = document.getElementById('btn-run');
+    const btnSubmit = document.getElementById('btn-submit');
+    if (btnRun) btnRun.disabled = true;
+    if (btnSubmit) btnSubmit.disabled = true;
+    const unlock = () => { if (btnRun) btnRun.disabled = false; if (btnSubmit) btnSubmit.disabled = false; };
+    if (!isSubmit) {
+      window.MLEngine.run(userCode, function (res) {
+        unlock();
+        const out = (res.stdout || '').trim();
+        term.innerHTML = '<pre class="ml-term-pre">' + escapeHtml(out || '(không có output)') +
+          (res.error ? '\n⚠ ' + escapeHtml(res.error) : '') + '</pre>';
+      });
+    } else {
+      const graderFn = (state.currentLesson.step_4 && state.currentLesson.step_4.grader_fn) || 'grade_lesson1';
+      window.MLEngine.grade(userCode, graderFn, function (res) {
+        unlock();
+        const out = (res.stdout || '').trim();
+        term.innerHTML = '<pre class="ml-term-pre">' + escapeHtml(out || '(không có output)') + '</pre>';
+        renderMLChecks(res);
+        if (res.overall_pass) {
+          triggerStep4Success();
+          setTimeout(showSuccess, 1200);
+        } else {
+          loseHeart();
+        }
+      });
+    }
+  }
+
   /* ── Challenge type: mcq_code (4 query options) ────────────────── */
   function initChallengeMCQCode(s4, pane) {
     state.challengeState.mcqCodeLocked = false;
@@ -7386,6 +7638,7 @@
   window.handleChallengeRun = function (isSubmit) {
     const s4 = state.currentLesson.step_4;
     const type = state.challengeState && state.challengeState.type || 'full_ide';
+    if (type === 'ml_ide') return runCodeML(isSubmit);
     if (type === 'full_ide') return runCodeIDE(isSubmit);
     if (type === 'mcq_code') {
       // mcq_code handles its own click; Run button is mostly disabled / informative

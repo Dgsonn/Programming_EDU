@@ -416,9 +416,9 @@ _LESSON_TEMPLATES = {
     'db_design_tc': 'lesson_db_design.html',
     # NC (GameHub Marketplace) — cùng cơ chế (docs/NC_SHELL_NC01_SPEC_2026-07-05.md)
     'db_design_nc': 'lesson_db_design.html',
-    # Machine Learning — pilot C1 Bài 1 (docs/ML_TECHNICAL_ARCHITECTURE_2026-07-08.md).
-    # Route/template RIÊNG, không đụng lesson_db_design — stack khác hẳn (Pyodide/Monaco).
-    'ml': 'lesson_ml.html',
+    # ML REWORK 2026-07-18 (docs/ML_REWORK_PILOT_BAI1_2026-07-18.md): dùng CHUNG shell
+    # lesson_db_design như TC/NC — engine Pyodide giữ ngầm, UI đúng anatomy DB Design.
+    'ml': 'lesson_db_design.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js

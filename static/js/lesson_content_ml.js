@@ -1,2001 +1,388 @@
-/* lesson_content_ml.js — Nội dung khóa Machine Learning (PE Web).
- * Course 1 — ML Foundations (USTH StudyLab). Theo đúng spec
- * ML_Curriculum_Course_1_2_3_Revised_with_Coverage_Audit.pdf.
- * Mỗi step có `type` → lesson_ml.js dispatch đúng renderer:
- *   step_1: story_rounds | table_lens
- *   step_2: sort_scenarios | role_rounds
- *   step_3: spec_builder | experiment_rounds | xy_builder
- *   step_4: Full Python IDE (chấm 4 tầng thật trong Pyodide)          */
-window.LESSON_CONTENT_ML = {
-  course: 'Course 1 — ML Foundations',
+/* ============================================================================
+ * LESSON_CONTENT['ml'] — Machine Learning Cơ bản (USTH StudyLab)
+ * REWORK 2026-07-18: schema SHELL DB DESIGN (docs/ML_REWORK_PILOT_BAI1_2026-07-18.md)
+ * — cùng anatomy 4 step với db_design/tc/nc, engine Pyodide chấm 4 tầng giữ ngầm.
+ * (Bản type-dispatch cũ nằm trong git history — commit 2ef4a7b trở về trước.)
+ *
+ * Pilot: Bài 1 (c1_l1) đầy đủ. Bài 2-15 = stub (shell hiện "đang cập nhật")
+ * — rollout theo module sau khi user duyệt pilot.
+ *
+ * SỐ LIỆU THẬT (ml_lab.load_study_data — mọi visual PHẢI khớp):
+ *   X = 12 học viên × [study_hours, attendance, quiz_score], y = pass_fail 0/1
+ *   X_new = [7.0, 90.0, 82.0] → SimpleClassifier dự đoán 1 (ĐẬU)
+ * ============================================================================ */
+
+window.LESSON_CONTENT = window.LESSON_CONTENT || {};
+
+/* Hero SVG riêng của khóa ML — renderLessonHero tra HERO_SVGS_ML khi id không có
+ * trong HERO_SVGS (lookup additive, không đụng heroes DB). */
+window.HERO_SVGS_ML = {
+  c1_l1: `<svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img"
+  aria-label="So sánh hai con đường: luật viết sẵn dùng final_score có sẵn, còn Machine Learning học pattern từ 12 học viên khóa trước để dự đoán cho học viên mới khi final_score chưa tồn tại"
+  font-family="'JetBrains Mono', monospace">
+  <text x="460" y="30" text-anchor="middle" fill="#94A3B8" font-size="14" letter-spacing="2">MỘT CÂU HỎI — HAI CON ĐƯỜNG TRẢ LỜI</text>
+
+  <!-- ── Panel trái: LUẬT VIẾT SẴN ── -->
+  <rect x="20" y="48" width="430" height="252" rx="12" fill="#131C2E" stroke="#263349"/>
+  <text x="40" y="76" fill="#FBBF24" font-size="13" font-weight="bold">① LUẬT VIẾT SẴN — Lập trình truyền thống</text>
+
+  <rect x="60" y="96" width="190" height="34" rx="8" fill="#0B1220" stroke="#334155"/>
+  <text x="155" y="118" text-anchor="middle" fill="#E2E8F0" font-size="13">final_score = 62</text>
+
+  <path d="M155 130 v16" stroke="#475569" stroke-width="2" marker-end="url(#mlArr)"/>
+
+  <rect x="60" y="150" width="190" height="34" rx="8" fill="#0B1220" stroke="#FBBF24"/>
+  <text x="155" y="172" text-anchor="middle" fill="#FBBF24" font-size="13">if score &gt;= 50 ?</text>
+
+  <path d="M155 184 v16" stroke="#475569" stroke-width="2" marker-end="url(#mlArr)"/>
+
+  <rect x="60" y="204" width="190" height="34" rx="8" fill="#0B1220" stroke="#34D399"/>
+  <text x="155" y="226" text-anchor="middle" fill="#34D399" font-size="13" font-weight="bold">→ ĐẬU ✓</text>
+
+  <text x="290" y="150" fill="#64748B" font-size="11">Người viết LUẬT,</text>
+  <text x="290" y="166" fill="#64748B" font-size="11">máy chỉ áp dụng.</text>
+  <text x="40" y="278" fill="#94A3B8" font-size="11">Chạy được vì đáp án final_score ĐÃ TỒN TẠI trong tay.</text>
+
+  <!-- ── Panel phải: HỌC TỪ DỮ LIỆU ── -->
+  <rect x="470" y="48" width="430" height="252" rx="12" fill="#161226" stroke="#4C1D95"/>
+  <text x="490" y="76" fill="#A78BFA" font-size="13" font-weight="bold">② HỌC TỪ DỮ LIỆU — Machine Learning</text>
+  <rect x="700" y="58" width="188" height="22" rx="11" fill="#2D1420"/>
+  <text x="794" y="73" text-anchor="middle" fill="#F87171" font-size="10">tuần 3 — CHƯA có final_score</text>
+
+  <!-- bảng lịch sử (giá trị thật từ load_study_data) -->
+  <rect x="490" y="92" width="196" height="96" rx="8" fill="#0B1220" stroke="#334155"/>
+  <text x="500" y="110" fill="#64748B" font-size="10">giờ · điểm danh · quiz → nhãn</text>
+  <text x="500" y="128" fill="#E2E8F0" font-size="11">2.0 · 55 · 45  → 0 RỚT</text>
+  <text x="500" y="146" fill="#E2E8F0" font-size="11">8.0 · 95 · 85  → 1 ĐẬU</text>
+  <text x="500" y="164" fill="#E2E8F0" font-size="11">1.0 · 50 · 40  → 0 RỚT</text>
+  <text x="500" y="182" fill="#64748B" font-size="10">⋯ đủ 12 học viên khóa trước</text>
+
+  <path d="M686 140 h18" stroke="#7C3AED" stroke-width="2" marker-end="url(#mlArrV)"/>
+
+  <rect x="708" y="112" width="172" height="56" rx="10" fill="#1E1B4B" stroke="#A78BFA"/>
+  <text x="794" y="135" text-anchor="middle" fill="#A78BFA" font-size="13" font-weight="bold">MODEL</text>
+  <text x="794" y="153" text-anchor="middle" fill="#94A3B8" font-size="10">tự rút pattern từ 12 hồ sơ</text>
+
+  <!-- học viên mới → dự đoán -->
+  <rect x="490" y="216" width="196" height="36" rx="8" fill="#0B1220" stroke="#A78BFA"/>
+  <text x="588" y="238" text-anchor="middle" fill="#E2E8F0" font-size="11">👤 MỚI: 7h · 90% · quiz 82</text>
+
+  <path d="M686 234 h18" stroke="#7C3AED" stroke-width="2" marker-end="url(#mlArrV)"/>
+
+  <rect x="708" y="216" width="172" height="36" rx="8" fill="#0B1220" stroke="#34D399" stroke-dasharray="5 3"/>
+  <text x="794" y="238" text-anchor="middle" fill="#34D399" font-size="12" font-weight="bold">Dự đoán: ĐẬU</text>
+
+  <text x="490" y="278" fill="#94A3B8" font-size="11">Không ai viết nổi luật — model HỌC từ lịch sử rồi dự đoán.</text>
+
+  <defs>
+    <marker id="mlArr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#475569"/>
+    </marker>
+    <marker id="mlArrV" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#7C3AED"/>
+    </marker>
+  </defs>
+</svg>`
+};
+
+window.LESSON_CONTENT['ml'] = {
+  course_id: 'ml',
+  course_title: 'Machine Learning Cơ bản',
+  accent_color: '#A78BFA',
+  module_color: '#A78BFA',
   total_lessons: 15,
   lessons: [
-
-    /* ═══════════════ BÀI 1 — ML vs Traditional Programming ═══════════════ */
     {
-      id: 'c1_l1', index: 1,
-      course: 'Course 1 — ML Foundations', module: 'M1 — ML Problem Framing',
-      title: 'Machine Learning vs Traditional Programming',
-      subtitle: 'Luật viết sẵn, mẫu học được, và luồng fit/predict đầu tiên',
-      xp_reward: 20, badge: 'ML Problem Framer',
+      id: 'c1_l1',
+      index: 1,
+      title: 'Machine Learning vs Lập trình truyền thống',
+      subtitle: 'Luật viết sẵn hay pattern học được từ dữ liệu?',
+      module: 10,
+      module_title: 'M1 — Định khung bài toán ML',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎓 StudyLab · Ticket #01',
+        hook: 'Bạn vừa nhận vai <strong>người dựng mô hình ML đầu tiên</strong> cho <strong>USTH StudyLab</strong>. Hệ thống chấm Đậu/Rớt đã có luật rõ ràng: <code>final_score >= 50</code>. Nhưng ticket đầu tiên hỏi một câu KHÁC hẳn: <em>"học viên nào đang trên đà rớt môn — ngay từ tuần 3, khi final_score CHƯA tồn tại?"</em> Không ai viết nổi luật cho câu này. Nhiệm vụ trong ticket: tìm cách để máy <strong>tự học pattern</strong> từ các khóa trước.'
+      },
+      achievement: { name: 'ML Problem Framer — Khởi đầu', desc: 'bài đầu về định khung bài toán ML' },
 
+      /* ----- STEP 1: Model Story (shell: hero + scaffold + cards + sim + data + mission) ----- */
       step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Luật viết sẵn hay mẫu học được?',
-        intro_html: 'StudyLab đã có luật chấm Đậu/Rớt rõ ràng theo <code>final_score &gt;= 50</code>. ' +
-          'Nhưng có 1 câu hỏi KHÁC: liệu 1 học viên có <em>đang trên đà rớt môn</em> ngay từ tuần 3 — ' +
-          'khi <code>final_score</code> CHƯA tồn tại? Đây là ranh giới giữa lập trình truyền thống và Machine Learning.',
-        rounds: [
-          {
-            id: 'known-rule',
-            label: 'Luồng luật viết sẵn (Traditional Programming)',
-            flow: ['Input: final_score = 42', 'Luật: if final_score >= 50', 'Output: "Rớt"'],
-            note: 'Con người TỰ VIẾT luật. Máy chỉ áp dụng — không có gì để "học".'
-          },
-          {
-            id: 'learning-flow',
-            label: 'Luồng học từ dữ liệu (Machine Learning)',
-            flow: ['Input: 500 học viên khóa trước (có nhãn Đậu/Rớt)', 'Model TỰ TÌM mẫu từ dữ liệu', 'Học viên MỚI (tuần 3, chưa có final_score) → dự đoán'],
-            note: 'Không ai viết luật "bao nhiêu giờ học thì đậu". Model tự học mẫu đó từ 500 học viên cũ.'
-          }
-        ],
-        micro_check: {
-          question: 'Bài toán "cảnh báo sớm nguy cơ rớt môn ở tuần 3" (chưa có final_score) thuộc loại nào?',
-          options: [
-            { text: 'Traditional Programming — chỉ cần viết luật if/else', correct: false },
-            { text: 'Machine Learning — cần học mẫu từ dữ liệu lịch sử vì luật chưa tồn tại', correct: true }
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Giải thích vì sao <code>final_score >= 50</code> là lập trình truyền thống, còn <em>cảnh báo sớm tuần 3</em> là bài toán Machine Learning.',
+            'Gọi tên đúng 3 mảnh của một bài toán ML: <strong>Task – Experience – Performance</strong>.',
+            'Chạy pipeline ML tối thiểu bằng Python thật: <code>fit</code> trước, <code>predict</code> trên học viên <strong>mới</strong>.'
           ],
-          feedback_correct: 'Đúng! Không có final_score để viết luật if/else — bắt buộc phải học mẫu từ dữ liệu quá khứ.',
-          feedback_wrong: 'Chưa đúng — final_score CHƯA xuất hiện ở tuần 3, nên không thể viết luật if/else. Phải học từ dữ liệu 500 học viên cũ.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Mọi bài toán Machine Learning đều mô tả được bằng 3 phần: <b>Task</b> (làm gì), <b>Experience</b> (học từ đâu), <b>Performance</b> (đo tốt/xấu bằng gì). Chọn thẻ rồi bấm vào đúng ngăn.',
-        bins: [
-          { key: 'task', label: 'TASK — LÀM GÌ' },
-          { key: 'experience', label: 'EXPERIENCE — HỌC TỪ ĐÂU' },
-          { key: 'performance', label: 'PERFORMANCE — ĐO BẰNG GÌ' }
-        ],
-        cards: [
-          { text: 'Dự đoán học viên nào có nguy cơ rớt môn', role: 'task' },
-          { text: '500 hồ sơ học viên khóa trước kèm nhãn Đậu/Rớt', role: 'experience' },
-          { text: 'Tỉ lệ dự đoán đúng trên học viên mới', role: 'performance' },
-          { text: 'Sĩ số lớp học', role: 'distractor' },
-          { text: 'Học viên mới chưa có nhãn', role: 'distractor' },
-          { text: 'Màu giao diện StudyLab', role: 'distractor' }
-        ],
-        wrong_feedback: 'Học viên mới KHÔNG có nhãn không phải là "kinh nghiệm huấn luyện" — Experience phải là dữ liệu ĐÃ có nhãn.',
-        scenario_intro: 'Phân loại 3 tình huống StudyLab',
-        scenario_options: [
-          { key: 'rule', label: 'Traditional' },
-          { key: 'ml', label: 'Machine Learning' }
-        ],
-        scenarios: [
-          { text: 'StudyLab tính điểm trung bình = tổng điểm / số bài (công thức cố định)', answer: 'rule', explain: 'Công thức cố định, không học từ dữ liệu → Traditional Programming.' },
-          { text: 'StudyLab gợi ý khóa học tiếp theo dựa trên hành vi học của hàng nghìn học viên trước', answer: 'ml', explain: 'Cần học mẫu hành vi từ dữ liệu lịch sử → Machine Learning.' },
-          { text: 'StudyLab khóa tài khoản sau 5 lần đăng nhập sai (đếm số lần cố định)', answer: 'rule', explain: 'Luật đếm cố định, không có gì để học → Traditional Programming.' }
-        ]
-      },
-
-      step_3: {
-        type: 'spec_builder',
-        mission: 'Dựng thí nghiệm ML đầu tiên: chọn Dataset → gán Features/Target → Train → đưa Học viên mới vào → Predict.',
-        spec_fields: [
-          { key: 'dataset', label: 'Dataset', value: 'study_workflow_demo_v1 (12 học viên)', locked: true },
-          { key: 'features', label: 'Features (X)', value: 'study_hours, attendance, quiz_score', reveal_after: 'dataset' },
-          { key: 'target', label: 'Target (y)', value: 'pass_fail', reveal_after: 'dataset' },
-          { key: 'train', label: 'Train', value: 'model.fit(X, y)', reveal_after: 'features' },
-          { key: 'new_input', label: 'Học viên mới (X_new)', value: 'study_hours=7, attendance=90, quiz_score=82', reveal_after: 'train' },
-          { key: 'predict', label: 'Predict', value: 'model.predict(X_new) → ?', reveal_after: 'new_input' }
-        ],
-        code_preview_template:
-          'from ml_lab import SimpleClassifier, load_study_data\n' +
-          'X, y, X_new = load_study_data()\n' +
-          'model = SimpleClassifier()\n' +
-          'model.fit(X, y)\n' +
-          'prediction = model.predict(X_new)\n' +
-          'print(prediction)',
-        completion_note: 'Sau khi Train, model được hỏi về 1 học viên CHƯA từng thấy — đây chính là "dự đoán trên input mới", khác hẳn việc lặp lại dữ liệu đã học.'
-      },
-
-      step_4: {
-        prompt_html: 'Viết lại đúng quy trình: <code>from ml_lab import ...</code> → tạo <code>X, y, X_new</code> → <code>fit</code> → <code>predict</code> → gán kết quả vào biến <code>prediction</code>.',
-        starter_code:
-          'from ml_lab import SimpleClassifier, load_study_data\n\n' +
-          '# 1. Nạp dữ liệu 12 học viên lịch sử + 1 học viên mới cần dự đoán\n' +
-          'X, y, X_new = load_study_data()\n\n' +
-          '# 2. Tạo model và huấn luyện (TODO)\n' +
-          'model = SimpleClassifier()\n' +
-          '# model.fit(...)\n\n' +
-          '# 3. Dự đoán cho X_new và gán vào biến `prediction` (TODO)\n' +
-          'prediction = None\n\n' +
-          'print(prediction)',
-        grader_fn: 'grade_lesson1',
-        hints: [
-          'Gọi model.fit(X, y) TRƯỚC khi gọi predict.',
-          'predict() phải nhận X_new (học viên MỚI), không phải X (dữ liệu train).',
-          'Nhớ gán kết quả predict() vào đúng biến tên `prediction`.'
-        ],
-        success_message: 'Bạn vừa chạy đúng luồng ML đầu tiên: dữ liệu lịch sử → fit → predict trên input CHƯA từng thấy. Đây là bộ khung của MỌI bài toán ML phía sau.'
-      }
-    },
-
-    /* ═══════════════ BÀI 2 — Bài toán ML này thuộc loại nào? ═══════════════ */
-    {
-      id: 'c1_l2', index: 2,
-      course: 'Course 1 — ML Foundations', module: 'M1 — ML Problem Framing',
-      title: 'Bài toán ML này thuộc loại nào?',
-      subtitle: 'Regression, Classification và Clustering trên CÙNG 1 bảng dữ liệu',
-      xp_reward: 20, badge: 'ML Problem Framer',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Cùng 1 bảng — 3 câu hỏi khác nhau',
-        intro_html: 'Vẫn là bảng học viên StudyLab hôm qua. Nhưng hôm nay đội vận hành hỏi <b>3 câu KHÁC nhau</b> — ' +
-          'và mỗi câu biến cùng 1 bảng thành một LOẠI bài toán ML khác nhau. ' +
-          'Loại bài toán không nằm ở dữ liệu — nó nằm ở <em>câu hỏi và target</em>.',
-        rounds: [
-          {
-            id: 'q-regression',
-            label: 'Câu 1 — Dự đoán final_score (số điểm)',
-            flow: ['Features: study_hours, attendance, quiz_score', 'Target: final_score (SỐ liên tục)', 'Output: ước lượng 71.8 điểm'],
-            note: 'Target ĐỊNH LƯỢNG → Regression. Output là con số, có thể lệch ít hay nhiều.'
-          },
-          {
-            id: 'q-classification',
-            label: 'Câu 2 — Dự đoán pass_fail (Đậu/Rớt)',
-            flow: ['Features: CÙNG 3 cột đó', 'Target: pass_fail ∈ {0, 1} (TÊN LỚP)', 'Output: nhãn "Đậu" (1)'],
-            note: 'Target PHÂN LOẠI → Classification. 0/1 là tên 2 lớp — dù được mã hóa bằng số.'
-          },
-          {
-            id: 'q-clustering',
-            label: 'Câu 3 — Gom nhóm hành vi học (không có target)',
-            flow: ['Features: CÙNG 3 cột đó', 'KHÔNG dùng cột target nào', 'Output: Cluster 0 / 1 / 2 (k=3)'],
-            note: 'Không học từ nhãn → Clustering. ID cụm là tên TÙY Ý — Cluster 2 không "tốt hơn" Cluster 0.'
-          }
-        ],
-        micro_check: {
-          question: 'Vì sao thí nghiệm gom nhóm (câu 3) KHÔNG đưa final_score / pass_fail vào?',
-          options: [
-            { text: 'Vì file dữ liệu không còn 2 cột đó nữa', correct: false },
-            { text: 'Vì clustering tìm cấu trúc từ CHÍNH các feature — không học từ nhãn, dù file vẫn còn nguyên 2 cột đó', correct: true }
-          ],
-          feedback_correct: 'Chuẩn! DataFrame vẫn đủ 5 cột — clustering CHỌN không dùng target, chứ không phải dữ liệu không có target.',
-          feedback_wrong: 'Chưa đúng — file vẫn còn nguyên 2 cột đó. Clustering không dùng chúng vì nó không học từ nhãn, không phải vì chúng biến mất.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Nhìn <b>OUTPUT</b> đoán loại bài toán: mỗi loại có một "hợp đồng output" riêng. Chọn thẻ rồi bấm vào đúng ngăn.',
-        bins: [
-          { key: 'regression', label: 'REGRESSION — SỐ LIÊN TỤC' },
-          { key: 'classification', label: 'CLASSIFICATION — TÊN LỚP' },
-          { key: 'clustering', label: 'CLUSTERING — ID CỤM TÙY Ý' }
-        ],
-        cards: [
-          { text: '72.5 — ước lượng điểm cuối kỳ', role: 'regression' },
-          { text: 'Nhãn: "Rớt" (0)', role: 'classification' },
-          { text: '[2, 0, 1, 1, 2, …] — nhóm hành vi, ID không có thứ tự', role: 'clustering' },
-          { text: 'Xác suất đậu 0.83 → chốt nhãn "Đậu"', role: 'classification' },
-          { text: '2.4 — số giờ ôn tập cần thêm mỗi tuần', role: 'regression' }
-        ],
-        wrong_feedback: 'Nhìn HỢP ĐỒNG output: số liên tục = regression; tên lớp (kể cả mã hóa 0/1) = classification; ID cụm tùy ý = clustering.',
-        scenario_intro: 'Phân loại 3 nhiệm vụ mới của StudyLab',
-        scenario_options: [
-          { key: 'regression', label: 'Regression' },
-          { key: 'classification', label: 'Classification' },
-          { key: 'clustering', label: 'Clustering' }
-        ],
-        scenarios: [
-          { text: 'Dự đoán SỐ GIỜ học thêm mỗi tuần để học viên đạt 80 điểm (target: số giờ)', answer: 'regression', explain: 'Target là đại lượng liên tục → regression.' },
-          { text: 'Dự đoán học viên có BỎ khóa học không — nhãn dropped ∈ {0,1} lấy từ lịch sử', answer: 'classification', explain: '0/1 ở đây là TÊN 2 lớp (bỏ / không bỏ). Target mã hóa bằng số vẫn là categorical.' },
-          { text: 'Chia toàn bộ học viên thành các nhóm phong cách học giống nhau — chưa ai gán nhãn nhóm', answer: 'clustering', explain: 'Không tồn tại nhãn để học → clustering trên features.' }
-        ]
-      },
-
-      step_3: {
-        type: 'experiment_rounds',
-        mission: 'Chạy 3 thí nghiệm trên CÙNG 1 bảng feature — chỉ đổi target/task, và xem hợp đồng output đổi theo.',
-        rounds: [
-          {
-            title: 'Round 1 — Target: final_score',
-            fixed: [
-              { label: 'Dataset', value: 'study_task_demo_v1 (24 học viên)' },
-              { label: 'Features (X)', value: 'study_hours, attendance, quiz_score' },
-              { label: 'Target (y)', value: 'final_score — số liên tục' }
-            ],
-            choose: { label: 'Đây là loại bài toán nào?', answer: 'regression' },
-            output: 'predict(X_new) → 71.8  (điểm ước lượng — SỐ THỰC)',
-            code: 'regressor = SimpleRegressor()\nregressor.fit(X, y_score)\nprint(regressor.predict(X_new))',
-            note: 'Target định lượng → train/predict trả về ước lượng số.'
-          },
-          {
-            title: 'Round 2 — Target: pass_fail',
-            fixed: [
-              { label: 'Dataset', value: 'study_task_demo_v1 (CÙNG 24 học viên)' },
-              { label: 'Features (X)', value: 'CÙNG 3 cột feature' },
-              { label: 'Target (y)', value: 'pass_fail ∈ {0, 1} — tên lớp' }
-            ],
-            choose: { label: 'Đây là loại bài toán nào?', answer: 'classification' },
-            output: 'predict(X_new) → 1  (nhãn lớp: "Đậu")',
-            code: 'classifier = SimpleClassifier()\nclassifier.fit(X, y_label)\nprint(classifier.predict(X_new))',
-            note: 'Target 0/1 là categorical — output là TÊN LỚP, không phải con số để cộng trừ.'
-          },
-          {
-            title: 'Round 3 — BỎ target ra ngoài',
-            fixed: [
-              { label: 'Dataset', value: 'study_task_demo_v1 (CÙNG 24 học viên)' },
-              { label: 'Features (X)', value: 'CÙNG 3 cột feature' },
-              { label: 'Target (y)', value: '— (không dùng cột target nào, k = 3)' }
-            ],
-            choose: { label: 'Đây là loại bài toán nào?', answer: 'clustering' },
-            output: 'fit_predict(X) → [2 0 1 1 2 0 …]  (3 nhóm — ID tùy ý)',
-            code: 'clusterer = SimpleClusterer(k=3)\nclusters = clusterer.fit_predict(X)\nprint(clusters)',
-            note: 'Đổi tên Cluster 0 ↔ 2 không thay đổi ý nghĩa — ID cụm không có thứ tự.'
-          }
-        ],
-        choose_options: [
-          { key: 'regression', label: 'Regression' },
-          { key: 'classification', label: 'Classification' },
-          { key: 'clustering', label: 'Clustering' }
-        ],
-        completion_note: '3 output — 3 hợp đồng khác nhau — từ CÙNG 1 bảng feature. Loại bài toán do CÂU HỎI + TARGET quyết định, không phải do dữ liệu.'
-      },
-
-      step_4: {
-        prompt_html: 'Huấn luyện CẢ 2 model trên cùng bảng: <code>SimpleRegressor</code> với <code>y_score</code>, ' +
-          '<code>SimpleClassifier</code> với <code>y_label</code>, rồi cùng predict <code>X_new</code> và in cả 2 kết quả.',
-        starter_code:
-          'from ml_lab import load_study_data_full, SimpleRegressor, SimpleClassifier\n\n' +
-          '# 1. Nạp bảng feature + 2 target khả dĩ + 1 học viên mới\n' +
-          'X, y_score, y_label, X_new = load_study_data_full()\n\n' +
-          '# 2. Regression — dự đoán ĐIỂM (TODO: fit đúng target rồi predict X_new)\n' +
-          'regressor = SimpleRegressor()\n\n' +
-          '# 3. Classification — dự đoán ĐẬU/RỚT (TODO: fit đúng target rồi predict X_new)\n' +
-          'classifier = SimpleClassifier()\n',
-        grader_fn: 'grade_lesson2',
-        hints: [
-          'Regressor học đại lượng LIÊN TỤC → regressor.fit(X, y_score). Classifier học TÊN LỚP → classifier.fit(X, y_label).',
-          'Cả 2 model cùng predict(X_new), rồi print từng kết quả — so sánh 2 kiểu output.',
-          'Nếu lỡ fit regressor bằng y_label: code vẫn CHẠY — nhưng tầng Risk sẽ giải thích vì sao đó là công thức hóa sai.'
-        ],
-        success_message: 'Cùng 1 bảng dữ liệu — 2 hợp đồng output: số thực (điểm) và nhãn lớp (0/1). Chọn loại bài toán = chọn target và Ý NGHĨA của nó, không phải nhìn kiểu dữ liệu lưu trữ.'
-      }
-    },
-
-    /* ═══════════════ BÀI 3 — Dataset trong mắt model ═══════════════ */
-    {
-      id: 'c1_l3', index: 3,
-      course: 'Course 1 — ML Foundations', module: 'M1 — ML Problem Framing',
-      title: 'Dataset trông thế nào trong mắt model?',
-      subtitle: 'DataFrame thô, ma trận feature X và vector target y',
-      xp_reward: 20, badge: 'ML Problem Framer',
-
-      step_1: {
-        type: 'table_lens',
-        topic_tag: 'Soi bảng dữ liệu bằng 3 tầng',
-        intro_html: 'Đội StudyLab vừa xuất bảng <code>student_history_v1</code>: <b>200 dòng × 5 cột</b>, đơn vị ghi ngay trên tên cột. ' +
-          'Trước khi cho model "ăn", bạn phải đọc bảng đúng cách model nhìn: mỗi DÒNG là gì, mỗi CỘT là gì, mỗi Ô là gì.',
-        table: {
-          columns: [
-            { key: 'study_hours', label: 'study_hours', unit: 'giờ/tuần' },
-            { key: 'attendance', label: 'attendance', unit: '%' },
-            { key: 'quiz_score', label: 'quiz_score', unit: '0–100' },
-            { key: 'final_score', label: 'final_score', unit: '0–100' },
-            { key: 'pass_fail', label: 'pass_fail', unit: '0=Rớt · 1=Đậu' }
-          ],
-          rows: [
-            [7.2, 91, 78, 82, 1],
-            [2.1, 55, 34, 38, 0],
-            [5.4, 76, 61, 66, 1],
-            [8.9, 97, 90, 94, 1],
-            [1.3, 48, 22, 25, 0],
-            [6.7, 84, 72, 75, 1],
-            [3.5, 62, 45, 47, 0],
-            [9.6, 99, 95, 98, 1]
-          ],
-          total_rows: 200
-        },
-        tasks: [
-          { key: 'row', label: 'Bấm vào SỐ THỨ TỰ của 1 dòng', note: '1 dòng = 1 SAMPLE — một học viên đã được ghi nhận đầy đủ.' },
-          { key: 'col', label: 'Bấm vào TÊN 1 cột', note: '1 cột = 1 ATTRIBUTE — một thuộc tính đo trên MỌI học viên (có đơn vị).' },
-          { key: 'cell', label: 'Bấm vào 1 Ô giá trị', note: '1 ô = 1 VALUE — giá trị của đúng 1 thuộc tính, trên đúng 1 học viên.' }
-        ],
-        micro_check: {
-          question: 'Bảng có 200 dòng — 200 dòng đó nghĩa là gì?',
-          options: [
-            { text: '200 mẫu (sample) đã được ghi nhận — mỗi mẫu là 1 học viên', correct: true },
-            { text: '200 thuộc tính (feature) khác nhau của cùng 1 học viên', correct: false }
-          ],
-          feedback_correct: 'Đúng! Dòng = sample, cột = attribute. 200 dòng = 200 học viên đã ghi nhận.',
-          feedback_wrong: 'Chưa đúng — thuộc tính nằm ở CỘT (bảng này chỉ có 5). 200 dòng là 200 mẫu/học viên.'
-        }
-      },
-
-      step_2: {
-        type: 'role_rounds',
-        intro_html: 'Vai trò của một cột <b>KHÔNG cố định</b> — nó đổi theo CÂU HỎI. Gán <b>Feature / Target / Không dùng</b> cho cả 5 cột, trong 2 nhiệm vụ khác nhau.',
-        columns: [
-          { key: 'study_hours', label: 'study_hours' },
-          { key: 'attendance', label: 'attendance' },
-          { key: 'quiz_score', label: 'quiz_score' },
-          { key: 'final_score', label: 'final_score' },
-          { key: 'pass_fail', label: 'pass_fail' }
-        ],
-        role_options: [
-          { key: 'feature', label: 'Feature' },
-          { key: 'target', label: 'Target' },
-          { key: 'not_used', label: 'Không dùng' }
-        ],
-        rounds: [
-          {
-            title: 'Nhiệm vụ A — Cảnh báo SỚM pass_fail ở tuần 3',
-            task_html: 'Đang là <b>tuần 3</b>: <code>final_score</code> CHƯA tồn tại. Câu hỏi: học viên này rồi sẽ Đậu hay Rớt?',
-            roles: { study_hours: 'feature', attendance: 'feature', quiz_score: 'feature', final_score: 'not_used', pass_fail: 'target' },
-            reveal: 'Raw DataFrame: (200, 5)  →  X: (200, 3) — y: (200,) kiểu int (0/1)',
-            wrong_hint: 'Tuần 3 CHƯA có final_score → nó là thông tin TƯƠNG LAI, không thể làm input. pass_fail là target — không được nằm trong X.'
-          },
-          {
-            title: 'Nhiệm vụ B — Dự đoán final_score cuối kỳ',
-            task_html: 'Câu hỏi đổi: dự đoán <code>final_score</code>. Cùng bảng — nhưng vai trò các cột thì sao?',
-            roles: { study_hours: 'feature', attendance: 'feature', quiz_score: 'feature', final_score: 'target', pass_fail: 'not_used' },
-            reveal: 'Raw DataFrame: (200, 5)  →  X: (200, 3) — y: (200,) kiểu float',
-            wrong_hint: 'Bây giờ final_score là TARGET (không còn là "tương lai cấm dùng" nữa) — còn pass_fail được suy trực tiếp từ final_score nên không dùng.'
-          }
-        ],
-        misconception: 'Một cột không sinh ra đã là feature hay target mãi mãi — vai trò gắn với TỪNG bài toán.'
-      },
-
-      step_3: {
-        type: 'xy_builder',
-        mission: 'Tự dựng X và y: bấm chọn từng cột rồi thả vào đúng vùng. Đúng hết → thấy shape + code Pandas được sinh ra.',
-        zones: [
-          { key: 'feature', label: 'X — FEATURE MATRIX' },
-          { key: 'target', label: 'y — TARGET VECTOR' },
-          { key: 'not_used', label: 'KHÔNG DÙNG' }
-        ],
-        columns: [
-          { key: 'study_hours', label: 'study_hours' },
-          { key: 'attendance', label: 'attendance' },
-          { key: 'quiz_score', label: 'quiz_score' },
-          { key: 'final_score', label: 'final_score' },
-          { key: 'pass_fail', label: 'pass_fail' }
-        ],
-        rounds: [
-          {
-            title: 'Round 1 — Cảnh báo sớm pass_fail (tuần 3)',
-            roles: { study_hours: 'feature', attendance: 'feature', quiz_score: 'feature', final_score: 'not_used', pass_fail: 'target' },
-            leak_warnings: {
-              feature: {
-                final_score: '⚠ final_score vào X = leak thông tin TƯƠNG LAI — tuần 3 chưa có điểm cuối kỳ!',
-                pass_fail: '⚠ pass_fail vào X = model nhìn thấy chính đáp án!'
-              }
-            },
-            code: 'X = df[["study_hours", "attendance", "quiz_score"]]\ny = df["pass_fail"]',
-            reveal: 'X: (200, 3) — y: (200,) int'
-          },
-          {
-            title: 'Round 2 — Dự đoán final_score',
-            roles: { study_hours: 'feature', attendance: 'feature', quiz_score: 'feature', final_score: 'target', pass_fail: 'not_used' },
-            leak_warnings: {
-              feature: {
-                pass_fail: '⚠ pass_fail suy trực tiếp từ final_score — cho vào X là leak đáp án dạng nén!'
-              }
-            },
-            code: 'X = df[["study_hours", "attendance", "quiz_score"]]\ny = df["final_score"]',
-            reveal: 'X: (200, 3) — y: (200,) float (dtype đổi theo task!)'
-          }
-        ],
-        completion_note: 'X không phải "bảng trừ đi vài cột ngẫu nhiên" — nó là HỢP ĐỒNG DỮ LIỆU của đúng 1 bài toán. Đổi câu hỏi → ký lại hợp đồng.'
-      },
-
-      step_4: {
-        prompt_html: 'Nạp DataFrame, in cấu trúc, rồi tạo <code>X</code> (3 feature quan sát được ở tuần 3) và ' +
-          '<code>y</code> (target của bài cảnh báo sớm). In shape của cả hai.',
-        starter_code:
-          'from ml_lab import load_student_dataframe\n\n' +
-          '# 1. Nạp bảng 200 dòng x 5 cột và xem cấu trúc\n' +
-          'df = load_student_dataframe()\n' +
-          'print(df.shape)\n' +
-          'print(df.columns.tolist())\n\n' +
-          '# 2. Tạo X = 3 feature quan sát được ở tuần 3 (TODO)\n' +
-          'X = None\n\n' +
-          '# 3. Tạo y = cột target của bài toán cảnh báo sớm (TODO)\n' +
-          'y = None\n\n' +
-          'print(X.shape)\n' +
-          'print(y.shape)',
-        grader_fn: 'grade_lesson3',
-        hints: [
-          'Chọn nhiều cột: df[["study_hours", "attendance", "quiz_score"]] — chú ý 2 lớp ngoặc vuông.',
-          'Chọn 1 cột thành Series: df["pass_fail"].',
-          'Tuần 3 CHƯA có final_score — cho nó vào X thì shape vẫn (200, 3) nhưng tầng Risk sẽ bắt leak thông tin tương lai.'
-        ],
-        success_message: 'Bạn vừa ký "hợp đồng dữ liệu" đầu tiên: X (200×3) toàn thông tin tuần 3, y = pass_fail, không leakage. Mọi model phía sau đều đứng trên hợp đồng này.'
-      }
-    },
-
-    /* ═══════════════ BÀI 4 — Hiểu kiểu dữ liệu trước khi train ═══════════════ */
-    {
-      id: 'c1_l4', index: 4,
-      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
-      title: 'Hiểu kiểu dữ liệu trước khi train',
-      subtitle: 'Cách lưu (dtype) không phải là nghĩa (semantic type)',
-      xp_reward: 20, badge: 'Data Preparation Scout',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Cùng là int64 — nghĩa khác hẳn nhau',
-        intro_html: 'Bảng hồ sơ StudyLab mới có 4 cột trông đều "là số". Nhưng dtype chỉ nói CÁCH LƯU — ' +
-          'muốn biết cột đó LÀ GÌ với model, phải hỏi <em>ý nghĩa ngoài đời</em> của nó. Mở từng cột để soi.',
-        rounds: [
-          {
-            id: 'col-study-hours',
-            label: 'study_hours — float64',
-            flow: ['Giá trị: 7.5, 3.2, 9.1…', 'Đo được, có phần thập phân CÓ NGHĨA', '→ SỐ LIÊN TỤC (continuous)'],
-            note: 'Hành động mặc định: dùng thẳng làm feature số.'
-          },
-          {
-            id: 'col-missed',
-            label: 'missed_classes — int64',
-            flow: ['Giá trị: 0, 1, 2, 3…', 'ĐẾM số buổi nghỉ — 2.5 buổi là vô nghĩa', '→ SỐ ĐẾM RỜI RẠC (discrete)'],
-            note: 'Vẫn là số thật: 4 buổi nghỉ nhiều gấp đôi 2 buổi.'
-          },
-          {
-            id: 'col-scholarship',
-            label: 'scholarship — int64',
-            flow: ['Giá trị: chỉ có 0 và 1', '0/1 là TÊN 2 nhóm (không/có học bổng)', '→ PHÂN LOẠI NHỊ PHÂN (binary)'],
-            note: 'Cộng trừ 0/1 ở đây vô nghĩa — "trung bình học bổng = 0.3" không phải một lượng.'
-          },
-          {
-            id: 'col-id',
-            label: 'student_id — int64',
-            flow: ['Giá trị: 20520001, 20520002…', 'Chỉ là MÃ HỒ SƠ, không mang thông tin học tập', '→ ĐỊNH DANH (identifier)'],
-            note: 'Hành động mặc định: LOẠI khỏi X — model học theo ID là học vẹt.'
-          }
-        ],
-        micro_check: {
-          question: 'Ba cột missed_classes, scholarship, student_id đều lưu int64 — cột nào là SỐ ĐẾM thật sự?',
-          options: [
-            { text: 'missed_classes — đếm số buổi nghỉ, gấp đôi = nghỉ nhiều gấp đôi', correct: true },
-            { text: 'student_id — vì giá trị của nó lớn nhất', correct: false }
-          ],
-          feedback_correct: 'Chuẩn! Cùng int64 nhưng: missed_classes = lượng đếm được, scholarship = tên nhóm, student_id = mã định danh.',
-          feedback_wrong: 'Chưa đúng — ID to hay nhỏ không mang nghĩa số lượng. Chỉ missed_classes là đếm thật: gấp đôi = nghỉ nhiều gấp đôi.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Phân loại theo NGHĨA, không theo dtype: kéo 5 thẻ vào đúng ngăn ngữ nghĩa.',
-        bins: [
-          { key: 'continuous', label: 'LIÊN TỤC — ĐO ĐƯỢC' },
-          { key: 'discrete', label: 'RỜI RẠC — ĐẾM ĐƯỢC' },
-          { key: 'categorical', label: 'PHÂN LOẠI — TÊN NHÓM' },
-          { key: 'identifier', label: 'ĐỊNH DANH — LOẠI KHỎI X' }
-        ],
-        cards: [
-          { text: 'gpa = 3.25 — đo được, thập phân có nghĩa', role: 'continuous' },
-          { text: 'missed_classes = 3 — đếm nguyên', role: 'discrete' },
-          { text: 'scholarship ∈ {0, 1} — hai nhóm', role: 'categorical' },
-          { text: 'student_id = 20521001', role: 'identifier' },
-          { text: 'study_hours = 7.5 giờ/tuần', role: 'continuous' }
-        ],
-        wrong_feedback: 'Đừng nhìn dtype — hỏi: giá trị này ĐO được, ĐẾM được, là TÊN nhóm, hay chỉ là MÃ hồ sơ?',
-        scenario_intro: 'Soi kỹ hơn nhóm PHÂN LOẠI: có thứ tự hay không? (nominal vs ordinal)',
-        scenario_options: [
-          { key: 'nominal', label: 'Nominal — không thứ tự' },
-          { key: 'ordinal', label: 'Ordinal — có thứ tự' },
-          { key: 'count', label: 'Số đếm thật' }
-        ],
-        scenarios: [
-          { text: 'major ∈ {ICT, DS, Space} — các ngành học', answer: 'nominal', explain: 'Không có ngành nào "lớn hơn" ngành nào → nominal. Chỉ so sánh bằng/khác.' },
-          { text: 'satisfaction ∈ {Thấp, Vừa, Cao} — mức hài lòng khảo sát', answer: 'ordinal', explain: 'CÓ thứ tự (Thấp < Vừa < Cao) nhưng khoảng cách giữa các mức KHÔNG đo được — vẫn không phải số. Đây là ordinal: so sánh </> được, cộng trừ thì không.' },
-          { text: 'scholarship ∈ {0, 1} — có/không học bổng', answer: 'nominal', explain: '0/1 là tên 2 nhóm không thứ bậc — binary là nominal đặc biệt với đúng 2 giá trị.' },
-          { text: 'missed_classes ∈ {0, 1, 2, …} — số buổi nghỉ', answer: 'count', explain: 'Đếm thật: 4 buổi = gấp đôi 2 buổi. Cộng trừ nhân chia đều có nghĩa.' }
-        ]
-      },
-
-      step_3: {
-        type: 'xy_builder',
-        mission: 'Dựng feature schema qua 3 vòng — mỗi vòng chỉ 2 cột × 2 vùng, không bị ngợp 6 vùng cùng lúc.',
-        zones: [], columns: [],
-        rounds: [
-          {
-            title: 'Round 1 — Chốt vai trò: Target vs Loại bỏ',
-            task_html: 'Bài toán: dự đoán <code>pass_fail</code>. Hai cột này đứng đâu?',
-            columns: [
-              { key: 'pass_fail', label: 'pass_fail' },
-              { key: 'student_id', label: 'student_id' }
-            ],
-            zones: [
-              { key: 'target', label: 'TARGET (y)' },
-              { key: 'exclude', label: 'LOẠI KHỎI X' }
-            ],
-            roles: { pass_fail: 'target', student_id: 'exclude' },
-            leak_warnings: {
-              target: { student_id: '⚠ student_id làm target? Không ai cần "dự đoán mã hồ sơ".' },
-              exclude: { pass_fail: '⚠ pass_fail là thứ ta CẦN dự đoán — nó là target, không phải cột bỏ đi.' }
-            },
-            code: 'y = df["pass_fail"]\n# student_id: loại khỏi X (định danh)',
-            reveal: 'Target chốt xong — định danh đứng ngoài mọi nhóm feature.'
-          },
-          {
-            title: 'Round 2 — Nhóm số: Liên tục vs Đếm rời rạc',
-            task_html: 'Cả hai đều là feature số hợp lệ — nhưng thuộc 2 tiểu loại khác nhau.',
-            columns: [
-              { key: 'study_hours', label: 'study_hours' },
-              { key: 'missed_classes', label: 'missed_classes' }
-            ],
-            zones: [
-              { key: 'continuous', label: 'LIÊN TỤC (đo)' },
-              { key: 'discrete', label: 'RỜI RẠC (đếm)' }
-            ],
-            roles: { study_hours: 'continuous', missed_classes: 'discrete' },
-            code: 'continuous_cols = ["study_hours"]\ndiscrete_cols = ["missed_classes"]',
-            reveal: '7.5 giờ có nghĩa (đo được) — 2.5 buổi nghỉ thì không (đếm nguyên).'
-          },
-          {
-            title: 'Round 3 — Nhóm phân loại: Nominal vs Binary',
-            task_html: 'Cột chữ và cột 0/1 — cả hai đều là TÊN NHÓM.',
-            columns: [
-              { key: 'major', label: 'major (ICT/DS/Space)' },
-              { key: 'scholarship', label: 'scholarship (0/1)' }
-            ],
-            zones: [
-              { key: 'categorical', label: 'CATEGORICAL (chữ)' },
-              { key: 'binary', label: 'BINARY (0/1)' }
-            ],
-            roles: { major: 'categorical', scholarship: 'binary' },
-            code: 'categorical_cols = ["major"]\nbinary_cols = ["scholarship"]',
-            reveal: '⚠ major là CHỮ — model số chưa "ăn" được, cần ENCODING (đánh dấu, chưa làm vội ở bài này).'
-          }
-        ],
-        completion_note: 'Readiness card: 4 feature ∈ 4 tiểu loại ngữ nghĩa, major cần encoding, ID + target đứng ngoài X. dtype nói cách LƯU — schema này mới nói cách HIỂU.'
-      },
-
-      step_4: {
-        prompt_html: 'Soi dtype/unique thật của bảng, rồi xếp 4 feature vào đúng 4 nhóm ngữ nghĩa: ' +
-          '<code>continuous_cols</code>, <code>discrete_cols</code>, <code>categorical_cols</code>, <code>binary_cols</code>.',
-        starter_code:
-          'from ml_lab import load_student_profile\n\n' +
-          '# 1. Nạp hồ sơ 200 học viên và soi kiểu dữ liệu\n' +
-          'df = load_student_profile()\n' +
-          'print(df.dtypes)\n' +
-          'print(df["major"].unique())\n' +
-          'print(df["scholarship"].unique())\n\n' +
-          '# 2. Xếp 4 feature vào đúng nhóm NGỮ NGHĨA (TODO)\n' +
-          'continuous_cols = []\n' +
-          'discrete_cols = []\n' +
-          'categorical_cols = []\n' +
-          'binary_cols = []\n\n' +
-          '# 3. Ghép schema + tạo X/y (giữ nguyên)\n' +
-          'feature_cols = continuous_cols + discrete_cols + categorical_cols + binary_cols\n' +
-          'X = df[feature_cols]\n' +
-          'y = df["pass_fail"]\n' +
-          'print(X.shape)',
-        grader_fn: 'grade_lesson4',
-        hints: [
-          'dtype chỉ nói CÁCH LƯU — int64 có thể là đếm (missed_classes), tên nhóm (scholarship) hay mã số (student_id).',
-          'scholarship ∈ {0,1} là TÊN 2 nhóm → binary_cols. Xếp nó vào nhóm số: code vẫn chạy, nhưng tầng Risk sẽ bắt.',
-          'student_id và pass_fail không được nằm trong bất kỳ nhóm feature nào.'
-        ],
-        success_message: 'Schema ngữ nghĩa hoàn chỉnh: 4 feature phân đúng tiểu loại, major chờ encoding, ID/target đứng ngoài. Từ giờ, câu hỏi đầu tiên trước mọi cột dữ liệu là "nó NGHĨA là gì?", không phải "nó lưu kiểu gì?".'
-      }
-    },
-
-    /* ═══════════════ BÀI 5 — Làm sạch dữ liệu bẩn ═══════════════ */
-    {
-      id: 'c1_l5', index: 5,
-      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
-      title: 'Làm sạch dữ liệu bẩn',
-      subtitle: 'Missing, trùng lặp, sai thang đo và giá trị đáng ngờ — 4 loại lỗi, 4 cách xử',
-      xp_reward: 20, badge: 'Data Preparation Scout',
-
-      step_1: {
-        type: 'issue_hunt',
-        topic_tag: 'Bảng này bị gì? — soi 5 vết bẩn',
-        intro_html: 'Đội StudyLab đổ dữ liệu từ 2 nguồn vào 1 bảng và… <b>204 dòng thay vì 200</b>. ' +
-          'Trước khi làm sạch phải GỌI TÊN đúng từng loại lỗi — vì mỗi loại có cách xử khác nhau. ' +
-          'Bấm vào 5 ô/dòng được khoanh để nhận diện.',
-        table: {
-          columns: [
-            { key: 'student_id', label: 'student_id', unit: 'mã hồ sơ' },
-            { key: 'study_hours', label: 'study_hours', unit: 'giờ/tuần' },
-            { key: 'attendance', label: 'attendance', unit: 'thang 0–10' },
-            { key: 'quiz_score', label: 'quiz_score', unit: 'thang 0–10' },
-            { key: 'major', label: 'major', unit: 'ICT · DS · Space' }
-          ],
-          rows: [
-            [20520001, 7.2, 8.4, 7.9, 'ICT'],
-            [20520002, 2.1, 'NaN', 3.4, 'DS'],
-            [20520003, 60.0, 6.1, 5.5, 'DS'],
-            [20520004, 5.4, 12.0, 6.6, 'Space'],
-            [20520005, 8.9, 9.7, 9.0, 'ITC'],
-            [20520001, 7.2, 8.4, 7.9, 'ICT'],
-            [20520006, 3.5, 6.2, 4.5, 'ICT']
-          ],
-          footnote: '… còn 197 dòng nữa (tổng 204 dòng — lẽ ra chỉ có 200 học viên)'
-        },
-        issues: [
-          { row: 1, col: 2, label: 'MISSING', note: 'Ô trống (NaN) = KHÔNG BIẾT — tuyệt đối không phải 0. Học viên thiếu dữ liệu điểm danh không có nghĩa là nghỉ hết.' },
-          { row: 3, col: 2, label: 'INVALID (thang đo)', note: 'attendance = 12 trên thang 0–10 — CHẮC CHẮN sai. Đủ bằng chứng → chuyển thành NaN rồi xử lý như missing.' },
-          { row: 4, col: 4, label: 'INVALID (chính tả)', note: '"ITC" không nằm trong {ICT, DS, Space} — lỗi gõ phím. Map về nhóm hợp lệ hoặc "Unknown".' },
-          { row: 2, col: 1, label: 'SUSPICIOUS', note: 'study_hours = 60 — cực đoan nhưng CÓ THỂ thật (ôn thi nước rút?). Bằng chứng CHƯA đủ để xóa → giữ lại + cắm cờ review.' },
-          { row: 5, col: null, label: 'DUPLICATE', note: 'Dòng #6 giống 100% dòng #1 (kể cả student_id) — bản ghi bị nhân đôi khi ghép nguồn → drop bản thừa.' }
-        ],
-        micro_check: {
-          question: 'study_hours = 60 (bất thường nhưng có thể thật) — xử lý thế nào?',
-          options: [
-            { text: 'GIỮ LẠI + cắm cờ study_hours_outlier để review — bất thường chưa chắc là sai', correct: true },
-            { text: 'Xóa dòng ngay — số to thế này chắc chắn là lỗi nhập liệu', correct: false }
-          ],
-          feedback_correct: 'Chuẩn nguyên tắc BẢO THỦ: chỉ sửa khi CHẮC CHẮN sai (12 trên thang 0-10); nghi ngờ thì giữ + flag.',
-          feedback_wrong: 'Xóa vội = có thể vứt một học viên thật. attendance=12 mới là chắc chắn sai (vượt thang); còn 60 giờ/tuần chỉ ĐÁNG NGỜ → flag.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Gọi tên 5 ca lỗi vào đúng ngăn — rồi chọn hành động xử lý CÓ BẰNG CHỨNG cho từng ca.',
-        bins: [
-          { key: 'missing', label: 'MISSING — TRỐNG' },
-          { key: 'duplicate', label: 'DUPLICATE — TRÙNG 100%' },
-          { key: 'invalid', label: 'INVALID — CHẮC CHẮN SAI' },
-          { key: 'suspicious', label: 'SUSPICIOUS — ĐÁNG NGỜ' }
-        ],
-        cards: [
-          { text: 'Ô attendance trống (NaN)', role: 'missing' },
-          { text: '2 dòng giống nhau tuyệt đối, kể cả student_id', role: 'duplicate' },
-          { text: 'quiz_score = 15 trên thang 0–10', role: 'invalid' },
-          { text: 'major = "ITC" ngoài danh mục {ICT, DS, Space}', role: 'invalid' },
-          { text: 'study_hours = 60 — cực đoan nhưng khả dĩ', role: 'suspicious' }
-        ],
-        wrong_feedback: 'Phân biệt theo BẰNG CHỨNG: vượt thang/ngoài danh mục = chắc chắn sai; chỉ "to bất thường" = mới đáng ngờ.',
-        scenario_intro: 'Chọn hành động xử lý cho 3 ca',
-        scenario_options: [
-          { key: 'drop', label: 'Drop (xóa)' },
-          { key: 'to_nan', label: 'Sửa → NaN → impute' },
-          { key: 'flag', label: 'Giữ + Flag' }
-        ],
-        scenarios: [
-          { text: 'Dòng trùng 100% (kể cả student_id) do ghép 2 nguồn dữ liệu', answer: 'drop', explain: 'Bản ghi nhân đôi không mang thêm thông tin — drop bản thừa. Lưu ý: CÙNG ID nhưng KHÁC giá trị thì KHÔNG phải exact duplicate — phải review chứ không drop.' },
-          { text: 'quiz_score = 15 trên thang 0–10', answer: 'to_nan', explain: 'Chắc chắn sai (vượt thang) → chuyển NaN rồi impute bằng median. Số missing TĂNG lên một cách CÓ CHỦ ĐÍCH — đó là điều đúng.' },
-          { text: 'study_hours = 60 — bất thường nhưng có thể thật', answer: 'flag', explain: 'Không đủ bằng chứng sai → giữ lại + cột cờ study_hours_outlier. Xóa mọi outlier là xóa luôn học viên thật.' }
-        ]
-      },
-
-      step_3: {
-        type: 'experiment_rounds',
-        mission: 'Chạy recipe làm sạch 4 phase theo ĐÚNG THỨ TỰ — xem số dòng/số lỗi đổi sau từng phase.',
-        choose_options: [
-          { key: 'dedup', label: 'Drop trùng 100%' },
-          { key: 'invalid_nan', label: 'Invalid → NaN' },
-          { key: 'impute', label: 'Median + Unknown' },
-          { key: 'flag', label: 'Cắm cờ outlier' }
-        ],
-        rounds: [
-          {
-            title: 'Phase 1 — Bảng đang 204 dòng (thừa 4)',
-            fixed: [
-              { label: 'Hiện trạng', value: '204 dòng · 4 trùng 100% · 9 NaN · 2 invalid · 2 outlier' },
-              { label: 'Nguyên tắc', value: 'Xử cái CHẮC CHẮN nhất trước' }
-            ],
-            choose: { label: 'Phase 1 làm gì?', answer: 'dedup' },
-            output: '204 → 200 dòng  (4 bản ghi nhân đôi biến mất)',
-            code: 'clean_df = df.drop_duplicates().copy()',
-            note: 'Luôn giữ df gốc — làm sạch trên clean_df.'
-          },
-          {
-            title: 'Phase 2 — Còn 2 giá trị vượt thang 0–10',
-            fixed: [
-              { label: 'Hiện trạng', value: '200 dòng · attendance=12, quiz_score=15' },
-              { label: 'Bằng chứng', value: 'Vượt thang đo = CHẮC CHẮN sai' }
-            ],
-            choose: { label: 'Phase 2 làm gì?', answer: 'invalid_nan' },
-            output: 'invalid: 2 → 0   |   NaN: 9 → 11  (tăng CÓ CHỦ ĐÍCH)',
-            code: 'for col in ["attendance", "quiz_score"]:\n    clean_df.loc[~clean_df[col].between(0, 10), col] = np.nan',
-            note: 'Sai chắc chắn thì KHÔNG đoán bừa giá trị — chuyển thành "không biết" rồi xử lý chung với missing.'
-          },
-          {
-            title: 'Phase 3 — 11 ô NaN + 2 major lạ',
-            fixed: [
-              { label: 'Hiện trạng', value: '200 dòng · 11 NaN số · major="ITC" ×2' },
-              { label: 'Nguyên tắc', value: 'Missing = không biết ≠ 0' }
-            ],
-            choose: { label: 'Phase 3 làm gì?', answer: 'impute' },
-            output: 'NaN: 11 → 0  ·  major lạ → "Unknown"  ·  vẫn đủ 200 dòng',
-            code: 'for col in ["study_hours", "attendance", "quiz_score"]:\n    clean_df[col] = clean_df[col].fillna(clean_df[col].median())\nclean_df.loc[~clean_df["major"].isin(["ICT", "DS", "Space"]), "major"] = "Unknown"',
-            note: 'Median bền với outlier hơn mean — và không dòng nào bị vứt.'
-          },
-          {
-            title: 'Phase 4 — 2 outlier study_hours (60, 45)',
-            fixed: [
-              { label: 'Hiện trạng', value: '200 dòng sạch · 2 giá trị đáng ngờ còn nguyên' },
-              { label: 'Bằng chứng', value: 'Chưa đủ để kết luận sai' }
-            ],
-            choose: { label: 'Phase 4 làm gì?', answer: 'flag' },
-            output: 'validate ✓ — 200 dòng, 0 NaN, 0 invalid, 2 dòng CẮM CỜ chờ review',
-            code: 'clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40',
-            note: 'Recipe bảo thủ hoàn chỉnh: inspect → dedup → invalid → missing → flag → validate.'
-          }
-        ],
-        completion_note: 'Số missing TĂNG ở phase 2 rồi mới về 0 ở phase 3 — làm sạch đúng đôi khi trông "tệ đi" trước khi tốt lên. Thứ tự phase là một phần của recipe.'
-      },
-
-      step_4: {
-        prompt_html: 'Tự tay chạy recipe: dedup → invalid→NaN → median + Unknown → cắm cờ outlier. ' +
-          'Bảng sạch phải đủ 200 dòng và 2 outlier PHẢI còn sống (có cờ).',
-        starter_code:
-          'import numpy as np\n' +
-          'from ml_lab import load_dirty_student_profile\n\n' +
-          '# 1. Nạp bảng bẩn 204 dòng — giữ df gốc, làm sạch trên clean_df\n' +
-          'df = load_dirty_student_profile()\n' +
-          'clean_df = df.drop_duplicates().copy()\n\n' +
-          '# 2. Giá trị vượt thang 0-10 (attendance, quiz_score) -> NaN (TODO)\n\n\n' +
-          '# 3. Điền NaN 3 cột số bằng MEDIAN + map major lạ về "Unknown" (TODO)\n\n\n' +
-          '# 4. Cắm cờ outlier: study_hours > 40 — GIỮ LẠI, chỉ đánh dấu (TODO)\n' +
-          '# clean_df["study_hours_outlier"] = ...\n\n' +
-          'print(len(df), "->", len(clean_df))',
-        grader_fn: 'grade_lesson5',
-        hints: [
-          'clean_df.loc[~clean_df[col].between(0, 10), col] = np.nan — cho attendance và quiz_score (KHÔNG áp cho study_hours: giờ/tuần không có trần 10).',
-          'clean_df[col] = clean_df[col].fillna(clean_df[col].median()) cho 3 cột số — median, tuyệt đối không phải 0.',
-          'valid = ["ICT", "DS", "Space"]; clean_df.loc[~clean_df["major"].isin(valid), "major"] = "Unknown".',
-          'Outlier: clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40 — nếu bạn XÓA outlier, tầng Risk sẽ bắt.'
-        ],
-        success_message: 'Recipe bảo thủ chạy chuẩn: 200 dòng, 0 trùng, 0 invalid, 0 NaN — và 2 học viên "đáng ngờ" vẫn sống, có cờ chờ review. Ghi nhớ cho Course 2: median để impute phải học từ TRAIN split.'
-      }
-    },
-
-    /* ═══════════════ BÀI 6 — Scale feature ═══════════════ */
-    {
-      id: 'c1_l6', index: 6,
-      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
-      title: 'Scale feature — không để một đơn vị lấn át',
-      subtitle: 'Min-Max, Standardization và khoảng cách công bằng giữa các feature',
-      xp_reward: 20, badge: 'Data Preparation Scout',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Feature nào đang NÓI TO nhất?',
-        intro_html: 'StudyLab muốn tìm "học viên giống nhau" để gợi ý nhóm học. Nhưng 3 feature có thang đo lệch nhau ' +
-          'hàng trăm lần: <code>study_hours</code> 0–10, <code>attendance_rate</code> 0–100, <code>activity_count</code> 0–2000. ' +
-          'So sánh 2 học viên bằng khoảng cách thô xem chuyện gì xảy ra.',
-        rounds: [
-          {
-            id: 'raw-distance',
-            label: 'Khoảng cách THÔ giữa học viên A và B',
-            flow: ['Δ study_hours = 2  (thang 0–10)', 'Δ attendance_rate = 5  (thang 0–100)', 'Δ activity_count = 900  (thang 0–2000)', '→ activity_count chiếm ~99.99% khoảng cách'],
-            note: 'Hai học viên "khác nhau" gần như CHỈ vì activity_count — 2 feature còn lại thành người câm.'
-          },
-          {
-            id: 'scaled-distance',
-            label: 'CÙNG cặp học viên — sau standardization',
-            flow: ['Mỗi feature: x → (x − mean) / std', 'Δ ≈ 0.7 vs 0.5 vs 0.9 (cùng đơn vị "độ lệch chuẩn")', '→ ba feature đóng góp cùng bậc'],
-            note: 'Scale không đổi THÔNG TIN — nó đổi ÂM LƯỢNG để mọi feature được nghe thấy.'
-          }
-        ],
-        micro_check: {
-          question: 'Vì sao activity_count áp đảo khoảng cách TRƯỚC khi scale?',
-          options: [
-            { text: 'Vì range 0–2000 lớn gấp hàng trăm lần — đơn vị to át tiếng, KHÔNG phải vì nó quan trọng hơn', correct: true },
-            { text: 'Vì activity_count là feature quan trọng nhất với kết quả học tập', correct: false }
-          ],
-          feedback_correct: 'Chuẩn! Range lớn ≠ quan trọng. Đó chỉ là hệ quả của đơn vị đo — và là lý do phải scale.',
-          feedback_wrong: 'Chưa đúng — dữ liệu chưa hề nói activity_count quan trọng hơn. Nó áp đảo chỉ vì THANG ĐO 0–2000 to hơn hàng trăm lần.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Hai phép scale kinh điển — kéo từng đặc điểm vào đúng ngăn.',
-        bins: [
-          { key: 'minmax', label: 'MIN-MAX — ÉP VỀ [0, 1]' },
-          { key: 'standard', label: 'STANDARDIZATION — MEAN 0, STD 1' }
-        ],
-        cards: [
-          { text: "x' = (x − min) / (max − min)", role: 'minmax' },
-          { text: "x' = (x − mean) / std", role: 'standard' },
-          { text: 'Kết quả LUÔN nằm trong [0, 1]', role: 'minmax' },
-          { text: 'Kết quả có thể ÂM (dưới trung bình)', role: 'standard' },
-          { text: 'Bị outlier kéo méo nhiều nhất (min/max nhạy cảm)', role: 'minmax' }
-        ],
-        wrong_feedback: 'Nhớ 2 chữ ký: Min-Max ép vào [0,1] và sống chết theo min/max; Standardization đo "cách trung bình mấy std" nên có thể âm.',
-        scenario_intro: 'Đúng hay sai?',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'Sau standardization, một giá trị chuẩn hóa có thể là số ÂM', answer: 'true', explain: 'Âm nghĩa là "dưới trung bình" — hoàn toàn bình thường. z = -1.5 tức thấp hơn mean 1.5 độ lệch chuẩn.' },
-          { text: 'Scaling giúp LOẠI BỎ outlier khỏi dữ liệu', answer: 'false', explain: 'Outlier vẫn nguyên đó — chỉ đổi thang. Học viên 60 giờ/tuần sau scale vẫn là điểm xa nhất.' },
-          { text: 'Cột có range lớn hơn thì quan trọng hơn với model', answer: 'false', explain: 'Range là hệ quả của ĐƠN VỊ đo, không phải bằng chứng tầm quan trọng — chính là lý do phải scale.' }
-        ]
-      },
-
-      step_3: {
-        type: 'xy_builder',
-        mission: 'Chọn đúng cột đưa vào StandardScaler — ID, cột chữ và target phải đứng ngoài.',
-        zones: [], columns: [],
-        rounds: [
-          {
-            title: 'Round duy nhất — Cột nào vào scaler?',
-            task_html: 'Bảng có 6 cột. Scaler chỉ nhận feature SỐ có nghĩa — chọn nơi đứng cho từng cột.',
-            columns: [
-              { key: 'study_hours', label: 'study_hours (0–10)' },
-              { key: 'attendance_rate', label: 'attendance_rate (0–100)' },
-              { key: 'activity_count', label: 'activity_count (0–2000)' },
-              { key: 'student_id', label: 'student_id' },
-              { key: 'major', label: 'major (chữ)' },
-              { key: 'pass_fail', label: 'pass_fail (target)' }
-            ],
-            zones: [
-              { key: 'scale', label: 'ĐƯA VÀO SCALER' },
-              { key: 'keep_out', label: 'GIỮ NGOÀI' }
-            ],
-            roles: { study_hours: 'scale', attendance_rate: 'scale', activity_count: 'scale', student_id: 'keep_out', major: 'keep_out', pass_fail: 'keep_out' },
-            leak_warnings: {
-              scale: {
-                student_id: '⚠ Scale một MÃ SỐ chỉ tạo ra số vô nghĩa trông-như-feature.',
-                major: '⚠ major là CHỮ — không trừ mean được. Nó cần encoding, không phải scaling.',
-                pass_fail: '⚠ pass_fail là TARGET — không phải input, càng không phải thứ đem chuẩn hóa.'
-              }
-            },
-            code: 'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(df[numeric_cols])',
-            reveal: 'fit: scaler HỌC mean/std của 3 cột → transform: mean ≈ [0, 0, 0], std ≈ [1, 1, 1]'
-          }
-        ],
-        completion_note: 'Ba feature giờ nói cùng âm lượng — khoảng cách giữa học viên phản ánh CẢ 3 chiều, không riêng activity_count.'
-      },
-
-      step_4: {
-        prompt_html: 'In range thô của 3 cột số, chuẩn hóa bằng <code>StandardScaler</code>, rồi tự kiểm chứng mean ≈ 0, std ≈ 1.',
-        starter_code:
-          'from sklearn.preprocessing import StandardScaler\n' +
-          'from ml_lab import load_scaling_dataset\n\n' +
-          '# 1. Nạp bảng + soi range 3 cột số (lệch nhau hàng trăm lần)\n' +
-          'df = load_scaling_dataset()\n' +
-          'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]\n' +
-          'X = df[numeric_cols]\n' +
-          'print(X.min())\n' +
-          'print(X.max())\n\n' +
-          '# 2. Chuẩn hóa: tạo X_scaled bằng StandardScaler (TODO)\n' +
-          'X_scaled = None\n\n' +
-          '# 3. Kiểm chứng phép biến đổi\n' +
-          'print(X_scaled.mean(axis=0))\n' +
-          'print(X_scaled.std(axis=0))',
-        grader_fn: 'grade_lesson6',
-        hints: [
-          'scaler = StandardScaler() rồi X_scaled = scaler.fit_transform(X).',
-          'Chỉ scale 3 cột số — thêm student_id hay pass_fail vào numeric_cols: code chạy, moments vẫn đẹp, nhưng tầng Risk bắt.',
-          'mean sau scale ≈ 0 (cỡ 1e-16 là do số học dấu phẩy động — chính là 0).'
-        ],
-        success_message: 'X_scaled (200×3): mean ≈ 0, std ≈ 1 — ba feature cùng âm lượng. Ghi nhớ cho Course 2: fit scaler trên TRAIN split trước, rồi mới transform validation/test.'
-      }
-    },
-
-    /* ═══════════════ BÀI 7 — Đọc dữ liệu bằng thống kê ═══════════════ */
-    {
-      id: 'c1_l7', index: 7,
-      course: 'Course 1 — ML Foundations', module: 'M2 — Data Readiness',
-      title: 'Đọc dữ liệu bằng thống kê cơ bản',
-      subtitle: 'Mean, variance, covariance, correlation — chọn đúng thước đo cho đúng câu hỏi',
-      xp_reward: 20, badge: 'Data Preparation Scout',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Cùng mean — khác thế giới',
-        intro_html: 'Hai lớp StudyLab cùng có điểm quiz trung bình <b>6.2</b>. Trưởng bộ môn kết luận: "hai lớp học đều như nhau". ' +
-          'Mở dữ liệu từng lớp xem kết luận đó đứng vững không.',
-        rounds: [
-          {
-            id: 'group-a',
-            label: 'Lớp A — mean 6.2',
-            flow: ['Điểm: 5.8 · 6.0 · 6.2 · 6.3 · 6.5 · 6.4', 'Chụm sát quanh 6.2', '→ variance NHỎ (~0.06)'],
-            note: 'Cả lớp đều đều — dạy một nhịp là vừa cho tất cả.'
-          },
-          {
-            id: 'group-b',
-            label: 'Lớp B — CÙNG mean 6.2',
-            flow: ['Điểm: 2.0 · 4.1 · 6.3 · 8.0 · 9.9 · 6.9', 'Trải từ 2 đến 10', '→ variance LỚN (~7.6)'],
-            note: 'Nửa lớp đuối, nửa lớp vượt — "trung bình 6.2" giấu sạch chuyện đó.'
-          }
-        ],
-        micro_check: {
-          question: 'Hai lớp cùng mean 6.2 — điều gì được ĐẢM BẢO giống nhau?',
-          options: [
-            { text: 'Chỉ TÂM (center) của phân phối — độ phân tán có thể khác nhau một trời một vực', correct: true },
-            { text: 'Phân phối điểm của 2 lớp là như nhau', correct: false }
-          ],
-          feedback_correct: 'Chuẩn! Mean chỉ nói tâm. Muốn biết dữ liệu túm tụm hay tản mát phải hỏi variance/std.',
-          feedback_wrong: 'Chưa đúng — lớp A chụm quanh 6.2, lớp B trải 2→10. Cùng mean nhưng variance khác nhau 100 lần.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Đọc quan hệ giữa 2 biến từ mô tả scatter/giá trị — kéo vào đúng ngăn chiều quan hệ.',
-        bins: [
-          { key: 'positive', label: 'TƯƠNG QUAN DƯƠNG' },
-          { key: 'negative', label: 'TƯƠNG QUAN ÂM' },
-          { key: 'zero', label: 'GẦN 0 — KHÔNG TUYẾN TÍNH' }
-        ],
-        cards: [
-          { text: 'study_hours tăng → final_score tăng, điểm chụm quanh đường đi lên', role: 'positive' },
-          { text: 'missed_classes tăng → final_score giảm', role: 'negative' },
-          { text: 'student_id vs final_score — mây điểm tròn vô hướng', role: 'zero' },
-          { text: 'r = +0.85', role: 'positive' },
-          { text: 'r = −0.60', role: 'negative' }
-        ],
-        wrong_feedback: 'Nhìn CHIỀU của đám mây điểm: dốc lên = dương, dốc xuống = âm, tròn vô hướng = gần 0.',
-        scenario_intro: 'Đúng hay sai? — 3 phát biểu hay gặp',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'r(study_hours, final_score) = 0.85 ⇒ học nhiều giờ GÂY RA điểm cao', answer: 'false', explain: 'Tương quan ≠ nhân quả. Có thể động lực học cao gây ra CẢ HAI. Kết luận nhân quả cần thí nghiệm can thiệp, không phải một con số r.' },
-          { text: 'r ≈ 0 ⇒ chắc chắn 2 biến không liên quan gì đến nhau', answer: 'false', explain: 'r chỉ đo quan hệ TUYẾN TÍNH. Quan hệ hình chữ U hoàn hảo vẫn cho r ≈ 0.' },
-          { text: 'Covariance âm cho biết 2 biến ngược chiều, nhưng ĐỘ LỚN của nó phụ thuộc đơn vị đo', answer: 'true', explain: 'Đúng — vì thế mới cần correlation: covariance chuẩn hóa về [-1, 1], so sánh được giữa các cặp biến.' }
-        ]
-      },
-
-      step_3: {
-        type: 'experiment_rounds',
-        mission: 'Mỗi round là 1 CÂU HỎI thật của đội StudyLab — chọn đúng thước đo rồi chạy để xem kết quả.',
-        choose_options: [
-          { key: 'mean', label: 'Mean' },
-          { key: 'variance', label: 'Variance' },
-          { key: 'covariance', label: 'Covariance' },
-          { key: 'correlation', label: 'Correlation' }
-        ],
-        rounds: [
-          {
-            title: 'Round 1 — "Điểm quiz ĐIỂN HÌNH của khóa là bao nhiêu?"',
-            fixed: [{ label: 'Câu hỏi về', value: 'TÂM của một phân phối' }],
-            choose: { label: 'Thước đo nào?', answer: 'mean' },
-            output: 'numeric_df["quiz_score"].mean() → 5.79',
-            code: 'print(numeric_df["quiz_score"].mean())',
-            note: 'Một con số đại diện cho tâm — nhưng nhớ bài học lớp A/B: mean chưa kể hết chuyện.'
-          },
-          {
-            title: 'Round 2 — "Điểm quiz hay điểm final phân hóa mạnh hơn?"',
-            fixed: [{ label: 'Câu hỏi về', value: 'ĐỘ PHÂN TÁN quanh tâm' }],
-            choose: { label: 'Thước đo nào?', answer: 'variance' },
-            output: 'var(quiz_score) = 6.47   <   var(final_score) = 7.15 → final phân hóa hơn',
-            code: 'print(numeric_df.var())',
-            note: 'Variance = trung bình bình phương độ lệch khỏi mean — đơn vị bị bình phương theo.'
-          },
-          {
-            title: 'Round 3 — "Nghỉ học nhiều đi cùng điểm thấp hay cao?"',
-            fixed: [{ label: 'Câu hỏi về', value: 'CHIỀU đồng biến của MỘT CẶP biến' }],
-            choose: { label: 'Thước đo nào?', answer: 'covariance' },
-            output: 'cov(missed_classes, final_score) = −5.0  → NGƯỢC chiều (nhưng −5.0 "buổi×điểm" khó so sánh)',
-            code: 'print(numeric_df.cov())',
-            note: 'Dấu đọc được (âm = ngược chiều) — độ lớn thì dính đơn vị, chưa so sánh được giữa các cặp.'
-          },
-          {
-            title: 'Round 4 — "Feature nào quan hệ TUYẾN TÍNH mạnh nhất với final_score?"',
-            fixed: [{ label: 'Câu hỏi về', value: 'SO SÁNH độ mạnh quan hệ giữa NHIỀU cặp' }],
-            choose: { label: 'Thước đo nào?', answer: 'correlation' },
-            output: 'study_hours 0.95 › quiz_score 0.93 › attendance 0.60 › missed_classes −0.75',
-            code: 'print(corr_matrix["final_score"].drop("final_score")\n      .sort_values(ascending=False))',
-            note: 'Correlation = covariance đã chuẩn hóa về [−1, 1] — giờ mới so sánh được các cặp với nhau.'
-          }
-        ],
-        completion_note: 'Bốn câu hỏi — bốn thước đo. Chọn thống kê là chọn theo CÂU HỎI, không phải tính hết mọi thứ rồi ngồi ngắm.'
-      },
-
-      step_4: {
-        prompt_html: 'Dựng bảng phân tích <code>numeric_df</code> (KHÔNG có student_id), tính mean/var, ' +
-          'rồi tạo <code>cov_matrix</code> và <code>corr_matrix</code> và xếp hạng tương quan với final_score.',
-        starter_code:
-          'from ml_lab import load_statistics_dataset\n\n' +
-          'df = load_statistics_dataset()\n\n' +
-          '# 1. Bảng phân tích: 5 cột số, KHÔNG có student_id (TODO)\n' +
-          'numeric_df = None\n\n' +
-          '# 2. Tâm và độ phân tán\n' +
-          'print(numeric_df.mean())\n' +
-          'print(numeric_df.var())\n\n' +
-          '# 3. Quan hệ tuyến tính (TODO: tạo 2 ma trận)\n' +
-          'cov_matrix = None\n' +
-          'corr_matrix = None\n\n' +
-          '# 4. Feature nào quan hệ mạnh nhất với final_score?\n' +
-          'print(corr_matrix["final_score"].drop("final_score").sort_values(ascending=False))',
-        grader_fn: 'grade_lesson7',
-        hints: [
-          'numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]].',
-          'cov_matrix = numeric_df.cov() và corr_matrix = numeric_df.corr() — đường chéo corr luôn = 1.',
-          'Cho student_id vào bảng phân tích: mọi con số vẫn tính ra — nhưng "tương quan của mã số" là nhiễu vô nghĩa, tầng Risk sẽ bắt.'
-        ],
-        success_message: 'Hồ sơ thống kê hoàn chỉnh: tâm, phân tán, chiều quan hệ và xếp hạng tương quan. Cảnh giới cuối cùng: r = 0.9 vẫn KHÔNG chứng minh nhân quả — và đó là ranh giới giữa người đọc số và người hiểu số.'
-      }
-    },
-
-    /* ═══════════════ BÀI 8 — Vẽ đường dự đoán đầu tiên ═══════════════ */
-    {
-      id: 'c1_l8', index: 8,
-      course: 'Course 1 — ML Foundations', module: 'M3 — Linear Regression Foundations',
-      title: 'Vẽ đường dự đoán đầu tiên',
-      subtitle: 'Weight, bias và hàm dự đoán tuyến tính vectorized',
-      xp_reward: 20, badge: 'Regression Tuner',
-
-      step_1: {
-        type: 'line_reveal',
-        topic_tag: 'Từ giờ học đến điểm dự đoán',
-        intro_html: 'Sau Module 2, dữ liệu đã sạch và đọc được. Giờ StudyLab cần model ĐẦU TIÊN thật sự: ' +
-          'nhìn <code>study_hours</code>, đoán <code>final_score</code>. Model đơn giản nhất là một ĐƯỜNG THẲNG: ' +
-          '<code>ŷ = weight × x + bias</code>.',
-        plot: {
-          points: [[1.3, 34], [1.5, 30], [2.0, 38], [2.7, 45], [2.8, 47], [3.3, 43], [3.4, 50], [4.6, 56], [4.9, 66], [5.9, 63], [6.7, 69], [8.7, 80]],
-          xmax: 10, ymax: 100
-        },
-        line: { w: 8, b: 20 },
-        reveal_btn: 'Vẽ đường dự đoán',
-        formula_html: 'ŷ = <b style="color:#A78BFA">8</b> × study_hours + <b style="color:#10B981">20</b> &nbsp;·&nbsp; <span style="color:#9CA8C4">weight = độ dốc · bias = điểm chặn</span>',
-        trace_btn: 'Dò thử x = 5',
-        trace: {
-          x: 5,
-          note: 'Dò x = 5: đi thẳng lên gặp đường tại ŷ = 8×5 + 20 = <b>60</b>. Mỗi dự đoán chỉ là một phép "tra đường thẳng".'
-        },
-        micro_check: {
-          question: 'Với học viên học x = 7 giờ/tuần, đường ŷ = 8x + 20 dự đoán bao nhiêu điểm?',
-          options: [
-            { text: '76 — vì 8×7 + 20 = 76', correct: true },
-            { text: '56 — vì 8×7 = 56', correct: false }
-          ],
-          feedback_correct: 'Chuẩn! weight nhân với x rồi CỘNG bias — thiếu bias là mất 20 điểm.',
-          feedback_wrong: 'Thiếu bias! ŷ = 8×7 + 20 = 76. bias là phần "gốc" mà mọi dự đoán đều cộng thêm.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Hai tham số — hai vai trò hình học khác hẳn nhau. Kéo từng mô tả vào đúng ngăn.',
-        bins: [
-          { key: 'weight', label: 'WEIGHT (w) — ĐỘ DỐC' },
-          { key: 'bias', label: 'BIAS (b) — TỊNH TIẾN DỌC' }
-        ],
-        cards: [
-          { text: 'w = 8: mỗi giờ học thêm → dự đoán tăng 8 điểm', role: 'weight' },
-          { text: 'Đổi w từ 8 thành −3: đường quay sang DỐC XUỐNG', role: 'weight' },
-          { text: 'b = 20: đường cắt trục tung tại 20 (dự đoán khi x = 0)', role: 'bias' },
-          { text: 'Tăng b thêm 10: cả đường NÂNG lên 10, độ dốc giữ nguyên', role: 'bias' },
-          { text: 'w = 0: đường nằm ngang — x không còn ảnh hưởng gì', role: 'weight' }
-        ],
-        wrong_feedback: 'w điều khiển ĐỘ NGHIÊNG (đổi 1 đơn vị x thì ŷ đổi bao nhiêu); b chỉ NÂNG/HẠ cả đường.',
-        scenario_intro: 'Đúng hay sai?',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'bias là "sai số" (error term) của model', answer: 'false', explain: 'bias là THAM SỐ điểm chặn — giá trị dự đoán khi x = 0. Sai số (residual) là chuyện khác hẳn: khoảng cách giữa dự đoán và thực tế.' },
-          { text: 'Với ŷ = 8x + 20: học 0 giờ vẫn được dự đoán 20 điểm', answer: 'true', explain: 'Đúng — đó chính là nghĩa hình học của bias: nơi đường thẳng bắt đầu trên trục tung.' },
-          { text: 'Đường thẳng không bị chặn — với x đủ lớn, model có thể dự đoán quá 100 điểm', answer: 'true', explain: 'Đúng: 8×11+20 = 108 > 100. Đường thẳng "không biết" thang điểm có trần — hạn chế này sẽ dẫn tới sigmoid ở Module 4.' }
-        ]
-      },
-
-      step_3: {
-        type: 'line_tuner',
-        mission: 'Cầm 2 slider chỉnh đường thẳng THẬT — hoàn thành cả 3 mục tiêu để cảm được tay lái của w và b.',
-        plot: {
-          points: [[1.3, 34], [1.5, 30], [2.0, 38], [2.7, 45], [2.8, 47], [3.3, 43], [3.4, 50], [4.6, 56], [4.9, 66], [5.9, 63], [6.7, 69], [8.7, 80]],
-          xmax: 10, ymax: 100
-        },
-        sliders: {
-          w: { min: -5, max: 15, step: 0.5, init: 2 },
-          b: { min: -20, max: 60, step: 5, init: 0 }
-        },
-        show_mse: false,
-        goals: [
-          { id: 'hit', label: 'Chỉnh để ŷ(5) rơi vào 57–63', check: 'hit_target', x: 5, y: 60, tol: 3 },
-          { id: 'down', label: 'Làm đường DỐC XUỐNG (w < 0)', check: 'w_neg' },
-          { id: 'shift', label: 'Giữ nguyên w, chỉ nâng b thêm ≥ 10', check: 'bias_shift', delta: 10 }
-        ],
-        completion_note: 'w xoay đường quanh điểm chặn, b nâng hạ cả đường — hai tay lái độc lập. Bài sau: để DỮ LIỆU tự chấm xem đường nào tốt (MSE).'
-      },
-
-      step_4: {
-        prompt_html: 'Hoàn thành hàm <code>predict_score(x, weight, bias)</code> — phải chạy VECTORIZED: ' +
-          'nhận cả mảng NumPy, trả về một dự đoán cho mỗi phần tử.',
-        starter_code:
-          'import numpy as np\n\n' +
-          '# 3 học viên với số giờ học khác nhau\n' +
-          'study_hours = np.array([2, 5, 8], dtype=float)\n\n' +
-          '# TODO: hoàn thành hàm dự đoán tuyến tính (1 dòng công thức)\n' +
-          'def predict_score(x, weight, bias):\n' +
-          '    return None\n\n' +
-          'predictions = predict_score(study_hours, 8.0, 20.0)\n' +
-          'print(predictions)',
-        grader_fn: 'grade_lesson8',
-        hints: [
-          'Công thức: weight * x + bias — NumPy tự nhân/cộng cho cả mảng (vectorization).',
-          'Đừng quên "+ bias": grader sẽ đổi bias từ 0 lên 55 để kiểm tra bạn có dùng nó thật không.',
-          'Đừng gõ tay [36, 60, 84] — test ẩn sẽ đổi cả x lẫn tham số (kể cả w âm).'
-        ],
-        success_message: 'Hàm dự đoán tuyến tính đầu tiên: 1 dòng công thức, chạy cho mọi mảng, mọi tham số. Model chỉ là công thức + tham số — bài sau ta đo xem tham số nào TỐT.'
-      }
-    },
-
-    /* ═══════════════ BÀI 9 — Đo lỗi model bằng MSE ═══════════════ */
-    {
-      id: 'c1_l9', index: 9,
-      course: 'Course 1 — ML Foundations', module: 'M3 — Linear Regression Foundations',
-      title: 'Đo lỗi model bằng Mean Squared Error',
-      subtitle: 'Residual, bình phương lỗi và chi phí trung bình — kèm R² để đọc cho người thường',
-      xp_reward: 20, badge: 'Regression Tuner',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Đường thẳng cách thực tế bao xa?',
-        intro_html: 'Bài trước bạn chỉnh đường bằng MẮT. Nhưng StudyLab cần một CON SỐ để nói "đường này tốt hơn đường kia". ' +
-          'Thử thước đo ngây thơ nhất — cộng hết các lỗi lại — và xem nó gãy ở đâu.',
-        rounds: [
-          {
-            id: 'cancel',
-            label: 'Thước đo ngây thơ: cộng lỗi CÓ DẤU',
-            flow: ['Học viên 1: ŷ = 68, thực tế 76 → lỗi = −8', 'Học viên 2: ŷ = 66, thực tế 58 → lỗi = +8', 'Tổng lỗi = −8 + 8 = 0 ???'],
-            note: 'Cả 2 dự đoán đều sai 8 điểm mà "tổng lỗi = 0" — lỗi trái dấu TRIỆT TIÊU nhau. Thước đo này khen nhầm model tồi.'
-          },
-          {
-            id: 'squared',
-            label: 'Sửa: BÌNH PHƯƠNG trước, trung bình sau',
-            flow: ['(−8)² = 64  ·  (+8)² = 64', 'MSE = (64 + 64) / 2 = 64', 'Không gì triệt tiêu được nữa'],
-            note: 'Bình phương diệt dấu VÀ phạt nặng lỗi lớn: lỗi 10 → 100, lỗi 2 → chỉ 4. Model bị ép ưu tiên sửa lỗi to nhất.'
-          }
-        ],
-        micro_check: {
-          question: 'Học viên mới: ŷ = 55, thực tế = 63. Residual (= predictions − actual) là bao nhiêu?',
-          options: [
-            { text: '−8 — dự đoán THẤP hơn thực tế 8 điểm', correct: true },
-            { text: '+8 — cứ lấy số lớn trừ số nhỏ', correct: false }
-          ],
-          feedback_correct: 'Chuẩn quy ước: predictions − actual = 55 − 63 = −8. Dấu âm nghĩa là đoán THẤP.',
-          feedback_wrong: 'Sai quy ước — residual = predictions − actual = 55 − 63 = −8. Dấu mang thông tin: âm = đoán thấp, dương = đoán cao.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Bước 1 của MSE: bình phương từng residual. Kéo mỗi residual vào đúng ngăn giá trị bình phương.',
-        bins: [
-          { key: 'sq64', label: 'BÌNH PHƯƠNG = 64' },
-          { key: 'sq4', label: 'BÌNH PHƯƠNG = 4' },
-          { key: 'sq0', label: 'BÌNH PHƯƠNG = 0' }
-        ],
-        cards: [
-          { text: 'residual = −8', role: 'sq64' },
-          { text: 'residual = +8', role: 'sq64' },
-          { text: 'residual = −2', role: 'sq4' },
-          { text: 'residual = +2', role: 'sq4' },
-          { text: 'residual = 0 (đoán trúng phóc)', role: 'sq0' }
-        ],
-        wrong_feedback: 'Bình phương xóa dấu: (−8)² và (+8)² đều là 64. Chỉ độ LỚN của lỗi sống sót.',
-        scenario_intro: 'Đúng hay sai? — gồm cả thước đo chuẩn hóa R²',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'MSE của 3 residual [3, −1, 2] là (9 + 1 + 4) / 3 ≈ 4.67', answer: 'true', explain: 'Đúng quy trình: bình phương từng lỗi → trung bình. Không phải (3−1+2)/3.' },
-          { text: 'MSE = 25 nghĩa là model lệch trung bình 25 điểm', answer: 'false', explain: 'MSE ở đơn vị BÌNH PHƯƠNG (điểm²). Độ lệch điển hình ≈ √25 = 5 điểm. Đây là cái giá của việc bình phương.' },
-          { text: 'Model có MSE = 16, còn "đoán mọi người = mean" có MSE = 64 → R² = 1 − 16/64 = 0.75, tức model giải thích 75% biến thiên của điểm', answer: 'true', explain: 'Đây là R² — thước đo CHUẨN HÓA đọc được ngay: 0 = không hơn gì đoán mean, 1 = hoàn hảo. Mẫu số 64 chính là variance của y mà bạn học ở Bài 7 — MSE của "model ngây thơ nhất".' }
-        ]
-      },
-
-      step_3: {
-        type: 'line_tuner',
-        mission: 'Cost Meter đã bật. Việc 1: so 2 đường ứng viên bằng MSE. Việc 2: tự chỉnh slider hạ MSE xuống dưới 20.',
-        plot: {
-          points: [[1.3, 34], [1.5, 30], [2.0, 38], [2.7, 45], [2.8, 47], [3.3, 43], [3.4, 50], [4.6, 56], [4.9, 66], [5.9, 63], [6.7, 69], [8.7, 80]],
-          xmax: 10, ymax: 100
-        },
-        presets: [
-          { label: 'Đường A: ŷ = 8x + 20', short: 'A', w: 8, b: 20 },
-          { label: 'Đường B: ŷ = 4x + 45', short: 'B', w: 4, b: 45 }
-        ],
-        sliders: {
-          w: { min: -5, max: 15, step: 0.5, init: 8 },
-          b: { min: -20, max: 60, step: 5, init: 20 }
-        },
-        show_mse: true,
-        goals: [
-          { id: 'choose_lower', label: 'Xem MSE cả 2 đường rồi chọn đường RẺ hơn', check: 'choose_lower' },
-          { id: 'tune', label: 'Tinh chỉnh w/b để MSE < 20', check: 'mse_below', value: 20 }
-        ],
-        completion_note: 'Các đoạn đỏ là residual — MSE chính là "tổng diện tích bình phương" của chúng. Đường tối ưu quanh w ≈ 6.5, b ≈ 25 cho MSE ≈ 12: dữ liệu có noise nên MSE = 0 là ẢO TƯỞNG.'
-      },
-
-      step_4: {
-        prompt_html: 'Viết hàm <code>mean_squared_error(actual, predictions)</code> dùng chung cho mọi mảng, ' +
-          'rồi dùng nó phân xử: đường A (8x+20) hay đường B (4x+45) rẻ hơn trên 12 học viên thật?',
-        starter_code:
-          'import numpy as np\n' +
-          'from ml_lab import load_mse_demo\n\n' +
-          '# 12 học viên: điểm thật + dự đoán của 2 đường ứng viên\n' +
-          'actual, pred_a, pred_b = load_mse_demo()\n\n' +
-          '# TODO: residual -> bình phương -> trung bình (vectorized, không vòng lặp)\n' +
-          'def mean_squared_error(actual, predictions):\n' +
-          '    return None\n\n' +
-          'print("MSE A:", mean_squared_error(actual, pred_a))\n' +
-          'print("MSE B:", mean_squared_error(actual, pred_b))',
-        grader_fn: 'grade_lesson9',
-        hints: [
-          'errors = predictions - actual, rồi (errors ** 2).mean().',
-          'Trả về np.abs(errors).mean() là MAE — metric hợp lệ nhưng KHÁC; tầng Risk sẽ chỉ ra.',
-          'Trả về errors.mean() (giữ dấu) thì các lỗi trái dấu triệt tiêu — chính cái bẫy ở Step 1.'
-        ],
-        success_message: 'MSE(A) ≈ 20.9 < MSE(B) ≈ 127.6 — dữ liệu đã phân xử thay cho mắt. Và khi cần nói cho người thường: đổi sang R² = 1 − MSE/variance(y), thang 0→1, "model giải thích bao nhiêu % biến thiên".'
-      }
-    },
-
-    /* ═══════════════ BÀI 10 — Gradient Descent ═══════════════ */
-    {
-      id: 'c1_l10', index: 10,
-      course: 'Course 1 — ML Foundations', module: 'M3 — Linear Regression Foundations',
-      title: 'Gradient Descent — để model tự chỉnh đường',
-      subtitle: 'Hướng gradient, learning rate, luật update và hội tụ',
-      xp_reward: 20, badge: 'Regression Tuner',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Quả bóng trên đồi chi phí',
-        intro_html: 'Bài 9 bạn tự xoay slider hạ MSE. Nhưng model thật có hàng nghìn tham số — không ai xoay tay nổi. ' +
-          'Cần một luật để tham số TỰ đi xuống đáy đồi chi phí: <b>Gradient Descent</b>. ' +
-          'Hãy tưởng tượng MSE(w) là một thung lũng hình chữ U và w hiện tại là quả bóng đứng trên sườn.',
-        rounds: [
-          {
-            id: 'direction',
-            label: 'Gradient nói gì?',
-            flow: ['Bóng đang ở w = 2', 'gradient = +14 → đi sang PHẢI thì cost TĂNG', 'Muốn xuống đáy: đi NGƯỢC gradient (sang trái)'],
-            note: 'Gradient là "độ dốc tại chỗ đứng". Dấu CỘNG = dốc lên phía phải → phải đi lùi. Luật: luôn đi NGƯỢC dấu gradient.'
-          },
-          {
-            id: 'update',
-            label: 'Một bước update bằng số',
-            flow: ['w = 2, gradient = +14, learning rate α = 0.1', 'w mới = 2 − 0.1 × 14 = 0.6', 'MSE: 210 → 96 — thấp hơn thật'],
-            note: 'Dấu TRỪ trong "w −= α × grad" chính là "đi ngược gradient". α quyết định bước đi dài hay ngắn.'
-          }
-        ],
-        micro_check: {
-          question: 'Gradient tại w hiện tại là +14. Để GIẢM cost, w phải thay đổi thế nào?',
-          options: [
-            { text: 'GIẢM — đi ngược dấu gradient, đúng luật w −= α × grad', correct: true },
-            { text: 'TĂNG — đi cùng chiều gradient cho nhanh', correct: false }
-          ],
-          feedback_correct: 'Chuẩn! Gradient dương = dốc lên phía trước → lùi lại. Đó là toàn bộ linh hồn của Gradient DESCENT.',
-          feedback_wrong: 'Đi CÙNG chiều gradient là leo dốc — cost tăng. Muốn xuống đáy phải đi ngược: w −= α × grad.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Learning rate là con dao hai lưỡi. Đọc 5 mô tả loss curve và xếp vào đúng chẩn đoán.',
-        bins: [
-          { key: 'small', label: 'α QUÁ NHỎ — BÒ' },
-          { key: 'good', label: 'α PHÙ HỢP — HỘI TỤ' },
-          { key: 'big', label: 'α QUÁ LỚN — VĂNG' }
-        ],
-        cards: [
-          { text: 'Loss giảm đều rồi phẳng dần sau ~50 bước', role: 'good' },
-          { text: 'Loss bò xuống chậm rì — 200 bước vẫn chưa gần đáy', role: 'small' },
-          { text: 'Loss nhảy lên nhảy xuống rồi BÙNG NỔ ra vô cực', role: 'big' },
-          { text: 'Mỗi bước loss chỉ nhích 0.0001', role: 'small' },
-          { text: 'Sau 3 bước, loss dao động qua lại giữa 2 giá trị ngày càng lớn', role: 'big' }
-        ],
-        wrong_feedback: 'Nhìn nhịp của đường loss: bò mãi không tới = α nhỏ; xuống rồi phẳng = vừa; văng khỏi đồi = α lớn.',
-        scenario_intro: 'Tự tính một bước update — gồm cả gradient ÂM',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'w = 5, grad_w = −4, α = 0.5 → w mới = 5 − 0.5×(−4) = 7', answer: 'true', explain: 'Trừ một số âm là CỘNG: gradient âm nghĩa là "dốc xuống phía phải" → w tiến lên là đúng hướng giảm cost.' },
-          { text: 'Gradient chọn HƯỚNG đi, learning rate chọn ĐỘ DÀI mỗi bước', answer: 'true', explain: 'Đúng vai trò từng thành phần trong α × grad — nhầm 2 vai trò này là nguồn gốc của nửa số bug training.' },
-          { text: 'Nếu loss đang TĂNG dần theo từng bước, cứ kiên nhẫn chạy thêm là sẽ hội tụ', answer: 'false', explain: 'Loss tăng dần theo bước = đang phân kỳ (α quá lớn) — chạy thêm chỉ văng xa hơn. Phải GIẢM α, không phải tăng kiên nhẫn.' }
-        ]
-      },
-
-      step_3: {
-        type: 'gd_console',
-        mission: 'Console GD thật: chọn learning rate, chạy từng cụm bước, nhìn đường thẳng tự bò về dữ liệu. Thử CẢ 3 mức α — kể cả mức làm nổ tung.',
-        data: {
-          x: [4.4, 7.5, 1.6, 6.2, 4.7, 3.3, 8.2, 2.5, 5.4, 5.7, 0.8, 9.4, 8.6, 3.9, 1.1, 6.9, 2.1, 7.8, 9.1, 3.0],
-          y: [55.9, 82.1, 34.2, 68.9, 59.1, 44.7, 88.0, 41.3, 62.4, 66.8, 25.2, 96.7, 87.3, 52.9, 27.8, 74.5, 38.6, 84.2, 91.9, 45.1],
-          xmax: 10, ymax: 110
-        },
-        alphas: [
-          { key: 'small', label: 'α = 0.0005' },
-          { key: 'good', label: 'α = 0.02' },
-          { key: 'big', label: 'α = 0.08' }
-        ],
-        alpha_values: { small: 0.0005, good: 0.02, big: 0.08 },
-        run_steps: 50,
-        target_mse: 25,
-        completion_note: 'α = 0.0005 bò cả trăm bước chưa tới; α = 0.08 văng khỏi đồi; α = 0.02 xuống đáy êm. Cùng MỘT luật update — chỉ khác độ dài bước chân.'
-      },
-
-      step_4: {
-        prompt_html: 'Hoàn thành vòng lặp Gradient Descent: mỗi bước gọi <code>compute_gradients</code>, ' +
-          'update <code>weight</code>/<code>bias</code> (nhớ DẤU TRỪ), rồi ghi MSE vào <code>loss_history</code>.',
-        starter_code:
-          'from ml_lab import load_gradient_data, compute_mse, compute_gradients\n\n' +
-          '# 40 học viên, 1 feature — model khởi đầu mù tịt (0, 0)\n' +
-          'x, y = load_gradient_data()\n' +
-          'weight, bias = 0.0, 0.0\n' +
-          'learning_rate, steps = 0.01, 200\n' +
-          'loss_history = []\n\n' +
-          '# TODO: vòng lặp GD — gradient -> update (dấu trừ!) -> predictions -> ghi loss\n' +
-          'for step in range(steps):\n' +
-          '    pass\n\n' +
-          'print("MSE:", loss_history[0], "->", loss_history[-1])\n' +
-          'print("w =", weight, "| b =", bias)',
-        grader_fn: 'grade_lesson10',
-        hints: [
-          'grad_w, grad_b = compute_gradients(x, y, weight, bias) — helper tính sẵn gradient cho bạn.',
-          'weight -= learning_rate * grad_w (và tương tự cho bias). Dùng dấu CỘNG là leo đồi — grader bắt ngay.',
-          'Mỗi bước: predictions = weight * x + bias rồi loss_history.append(compute_mse(y, predictions)).',
-          'Đừng gõ tay loss đẹp: grader đối chiếu loss_history[-1] với MSE tính từ (weight, bias) cuối, và chạy lại trên dataset ẨN có đường thật khác hẳn.'
-        ],
-        success_message: 'MSE 887 → 26 sau 200 bước — model TỰ tìm đường mà không ai xoay slider. Đây chính là trái tim của "học" trong machine learning: lặp lại một luật update nhỏ, đủ nhiều lần.'
-      }
-    },
-
-    /* ═══════ BÀI 11 — Vì sao Linear Regression không phân loại được ═══════ */
-    {
-      id: 'c1_l11', index: 11,
-      course: 'Course 1 — ML Foundations', module: 'M4 — Logistic Classification Foundations',
-      title: 'Vì sao Linear Regression không phải model xác suất phân loại',
-      subtitle: 'Output không bị chặn, threshold chữa cháy và mục tiêu huấn luyện sai',
-      xp_reward: 20, badge: 'Logistic Foundations',
-
-      step_1: {
-        type: 'line_reveal',
-        topic_tag: 'Đường thẳng vượt rào xác suất',
-        intro_html: 'StudyLab quay lại bài toán gốc: dự đoán <b>Đậu/Rớt</b> (0/1). Ý tưởng "lười": ' +
-          'lấy luôn Linear Regression vừa học ở M3, fit thẳng lên nhãn 0/1 — code chạy êm ru. ' +
-          'Nhưng hãy soi OUTPUT của nó trước khi tin.',
-        plot: {
-          points: [[0.8, 0], [1.5, 0], [2.3, 0], [3.0, 0], [3.8, 0], [4.4, 1], [5.0, 0], [5.6, 1], [6.4, 1], [7.2, 1], [8.0, 1], [9.0, 1]],
-          xmax: 10, ymax: 1.5
-        },
-        line: { w: 0.16, b: -0.3 },
-        reveal_btn: 'Fit đường thẳng lên nhãn 0/1',
-        formula_html: 'ŷ = 0.16 × study_hours − 0.3 &nbsp;·&nbsp; <span style="color:#9CA8C4">nhãn chỉ có 0 và 1 — nhưng đường thì KHÔNG biết điều đó</span>',
-        trace_btn: 'Dò học viên chăm nhất (x = 9.7)',
-        trace: {
-          x: 9.7,
-          note: 'ŷ(9.7) = <b>1.25</b>. Và ở đầu kia: ŷ(0.5) = <b>−0.22</b>. "Xác suất" 125%? "Xác suất" âm? Đường thẳng không có trần cũng chẳng có sàn.'
-        },
-        micro_check: {
-          question: 'Model trả 1.25 cho học viên chăm nhất — 1.25 có phải một xác suất hợp lệ?',
-          options: [
-            { text: 'Không — xác suất phải nằm trong [0, 1]; 1.25 chỉ là SCORE không bị chặn', correct: true },
-            { text: 'Có — trên 1 nghĩa là "chắc chắn đậu, còn dư"', correct: false }
-          ],
-          feedback_correct: 'Chuẩn. Code chạy được nhưng CÔNG THỨC HÓA sai: hồi quy tối ưu đại lượng liên tục không bị chặn.',
-          feedback_wrong: 'Không tồn tại xác suất 125% — mọi giá trị ngoài [0,1] đều vô nghĩa với vai trò xác suất. Đây là score, không phải p.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Chữa cháy bằng threshold (ŷ ≥ 0.5 → lớp 1)? Phân loại xem threshold LÀM ĐƯỢC gì và KHÔNG làm được gì.',
-        bins: [
-          { key: 'can', label: 'THRESHOLD LÀM ĐƯỢC' },
-          { key: 'cannot', label: 'THRESHOLD KHÔNG LÀM ĐƯỢC' }
-        ],
-        cards: [
-          { text: 'Biến score liên tục thành quyết định 0/1', role: 'can' },
-          { text: 'Ép output thô nằm trong [0, 1]', role: 'cannot' },
-          { text: 'Biến score thành XÁC SUẤT có nghĩa', role: 'cannot' },
-          { text: 'Đổi số học viên bị gắn nhãn Rớt khi dịch ngưỡng', role: 'can' },
-          { text: 'Sửa mục tiêu huấn luyện (loss) cho đúng bài phân loại', role: 'cannot' }
-        ],
-        wrong_feedback: 'Threshold chỉ CẮT score thành 2 nửa — nó không đổi được range của output, càng không đổi được loss mà model đã tối ưu.',
-        scenario_intro: 'Đúng hay sai?',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'Thêm 1 học viên cực đoan (x = 20, nhãn 1): cả đường hồi quy NGHIÊNG theo, điểm cắt 0.5 dịch chuyển, nhiều bạn khác bị đổi nhãn', answer: 'true', explain: 'Hồi quy tối ưu MSE nên bị outlier kéo mạnh — ranh giới phân lớp của bạn phụ thuộc 1 điểm dữ liệu xa lắc. Rất mong manh.' },
-          { text: 'LinearRegression.fit(X, y_nhị_phân) sẽ báo lỗi khi chạy', answer: 'false', explain: 'Chạy êm ru — sklearn không hỏi bạn nhãn nghĩa là gì. Vấn đề nằm ở CÔNG THỨC HÓA, không phải syntax. Đó là lý do cần tầng Risk.' },
-          { text: 'np.clip(output, 0, 1) là sửa xong vấn đề', answer: 'false', explain: 'Clip chỉ giấu triệu chứng: model bên dưới vẫn tối ưu sai mục tiêu, đường gãy khúc tại 0/1 không phải đường cong xác suất. Cần hàm bị chặn THẬT — bài sau.' }
-        ]
-      },
-
-      step_3: {
-        type: 'experiment_rounds',
-        mission: 'Audit console: chạy 3 lượt kiểm tra trên model "sai" — nhìn tận mắt từng vết nứt trước khi học cách sửa.',
-        choose_options: [],
-        rounds: [
-          {
-            title: 'Lượt 1 — Soi output thô trên 12 điểm probe',
-            fixed: [
-              { label: 'Model', value: 'LinearRegression fit trên y ∈ {0, 1}' },
-              { label: 'Probe', value: '12 điểm trải từ −2 đến 14 giờ (RỘNG hơn khoảng train)' }
-            ],
-            choose: {
-              label: 'Dự đoán: output thô sẽ…',
-              options: [
-                { key: 'inside', label: 'Nằm gọn trong [0, 1]' },
-                { key: 'outside', label: 'Tràn ra ngoài [0, 1]' }
-              ],
-              answer: 'outside'
-            },
-            output: 'linear_outputs = [−0.46, −0.26, −0.12, 0.02, 0.23, …, 1.27, 1.48, 1.75]  →  Below 0: 3 · Above 1: 3',
-            code: 'model = LinearRegression().fit(X_train, y_train)\nlinear_outputs = model.predict(X_probe)',
-            note: 'Trong khoảng train mọi thứ trông ổn — bước ra ngoài một chút là lộ ngay: đường thẳng không có trần/sàn.'
-          },
-          {
-            title: 'Lượt 2 — Thả 1 outlier (x = 20, nhãn 1) rồi fit lại',
-            fixed: [
-              { label: 'Thay đổi', value: '+1 học viên cực đoan duy nhất' },
-              { label: 'Theo dõi', value: 'Điểm cắt ŷ = 0.5 (nơi đổi nhãn)' }
-            ],
-            choose: {
-              label: 'Điểm cắt 0.5 sẽ…',
-              options: [
-                { key: 'same', label: 'Đứng yên — chỉ là 1 điểm' },
-                { key: 'shift', label: 'Dịch chuyển — cả đường nghiêng theo' }
-              ],
-              answer: 'shift'
-            },
-            output: 'Điểm cắt 0.5: x = 5.0  →  x = 5.2   ·   1 học viên sát ranh giới bị ĐỔI NHÃN — bởi đúng 1 điểm outlier',
-            code: 'X2 = np.vstack([X_train, [[20.0]]])\ny2 = np.append(y_train, 1)\nmodel2 = LinearRegression().fit(X2, y2)',
-            note: 'MSE phạt bình phương nên 1 điểm xa kéo cả đường — ranh giới phân lớp trở thành con tin của outlier.'
-          },
-          {
-            title: 'Lượt 3 — Kết luận audit',
-            fixed: [
-              { label: 'Triệu chứng', value: 'Output vô nghĩa ngoài [0,1] · ranh giới mong manh · loss sai bài' },
-              { label: 'Câu hỏi', value: 'Thứ ta THẬT SỰ cần là gì?' }
-            ],
-            choose: {
-              label: 'Chọn phương án:',
-              options: [
-                { key: 'thr', label: 'Threshold khéo hơn' },
-                { key: 'clip', label: 'Clip output vào [0,1]' },
-                { key: 'bounded', label: 'Một hàm BỊ CHẶN thật: mọi score → (0,1)' }
-              ],
-              answer: 'bounded'
-            },
-            output: 'Preview: một đường cong chữ S mượt — ép mọi score về (0, 1), không gãy khúc, không giấu bệnh → Bài 12: SIGMOID',
-            code: '# threshold: chỉ cắt score — không sửa range, không sửa loss\n# clip: giấu triệu chứng — model vẫn tối ưu sai mục tiêu\n# cần: hàm chuyển score → xác suất THẬT',
-            note: 'Chẩn bệnh xong mới bốc thuốc — giờ bạn biết CHÍNH XÁC vì sao cần sigmoid, chứ không phải "sách bảo thế".'
-          }
-        ],
-        completion_note: 'Model sai mà code vẫn chạy êm — bài audit này chính là kỹ năng phát hiện "chạy được nhưng sai về nghĩa" mà cả khóa đang rèn.'
-      },
-
-      step_4: {
-        prompt_html: 'Tự tay fit LinearRegression lên nhãn 0/1, predict 12 điểm probe, threshold tại 0.5 và ' +
-          'ĐẾM số output thô vượt rào [0, 1]. Giữ nguyên output thô — không clip.',
-        starter_code:
-          'import numpy as np\n' +
-          'from sklearn.linear_model import LinearRegression\n' +
-          'from ml_lab import load_binary_regression_demo\n\n' +
-          '# 60 học viên train (nhãn 0/1) + 12 điểm probe trải RỘNG hơn khoảng train\n' +
-          'X_train, y_train, X_probe = load_binary_regression_demo()\n\n' +
-          '# TODO: fit model, lấy output THÔ trên probe, threshold 0.5 thành nhãn\n' +
-          'model = None\n' +
-          'linear_outputs = None\n' +
-          'classes = None\n\n' +
-          'print("Output thô:", np.round(linear_outputs, 2))\n' +
-          'print("Below 0:", np.sum(linear_outputs < 0))\n' +
-          'print("Above 1:", np.sum(linear_outputs > 1))',
-        grader_fn: 'grade_lesson11',
-        hints: [
-          'model = LinearRegression().fit(X_train, y_train), rồi linear_outputs = model.predict(X_probe).',
-          'classes = (linear_outputs >= 0.5).astype(int) — threshold là bước RIÊNG, sau khi đã soi output thô.',
-          'Đừng np.clip cho "đẹp" — tầng Risk bắt ngay: giấu triệu chứng không phải chữa bệnh. Cũng đừng đổi sang LogisticRegression — bài này PHẢI nhìn cái sai tận mắt.'
-        ],
-        success_message: 'Audit hoàn tất: 3 output âm, 3 output vượt 1 — bằng chứng số liệu rằng hồi quy tuyến tính không phải model xác suất. Bài sau: ép mọi score vào (0,1) bằng một đường cong chữ S.'
-      }
-    },
-
-    /* ═══════════════ BÀI 12 — Sigmoid ═══════════════ */
-    {
-      id: 'c1_l12', index: 12,
-      course: 'Course 1 — ML Foundations', module: 'M4 — Logistic Classification Foundations',
-      title: 'Sigmoid — biến score thành xác suất',
-      subtitle: 'Score tuyến tính z, hàm logistic bị chặn, saturation — và vì sao lại ĐÚNG là hàm này',
-      xp_reward: 20, badge: 'Logistic Foundations',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Máy ép score về (0, 1)',
-        intro_html: 'Bài 11 chốt: cần một hàm ép MỌI score thực về khoảng (0, 1). ' +
-          'Gặp <b>sigmoid</b>: <code>p = 1 / (1 + e^(−z))</code> — trái tim của Logistic Regression.',
-        rounds: [
-          {
-            id: 'z-score',
-            label: 'Đầu vào: score tuyến tính z (không bị chặn)',
-            flow: ['z = w · study_hours + b', 'x chạy 0 → 10 ⇒ z chạy −4 → +4', 'z càng DƯƠNG càng nghiêng về "Đậu" — nhưng z chưa phải xác suất'],
-            note: 'z là điểm số thô — chính là thứ Linear Regression trả ra ở bài 11, có thể là bất kỳ số thực nào.'
-          },
-          {
-            id: 'through-sigmoid',
-            label: 'Qua máy ép sigmoid: p = 1/(1+e^(−z))',
-            flow: ['z = −4 → p = 0.018', 'z = −1.6 → p = 0.168', 'z = 0 → p = 0.500', 'z = +1.6 → p = 0.832', 'z = +4 → p = 0.982'],
-            note: 'Mọi score — kể cả ±1000 — đều bị ép vào (0, 1), mượt và đơn điệu. z = 0 là điểm cân bằng tuyệt đối.'
-          }
-        ],
-        micro_check: {
-          question: 'Học viên có score z = 0 (đứng chính giữa) — sigmoid trả xác suất bao nhiêu?',
-          options: [
-            { text: 'p = 0.5 — cân bằng hoàn hảo giữa 2 lớp: 1/(1+e⁰) = 1/2', correct: true },
-            { text: 'p = 0 — vì z bằng 0', correct: false }
-          ],
-          feedback_correct: 'Chuẩn! z = 0 ⇒ e⁰ = 1 ⇒ p = 1/2. Điểm này sẽ trở thành RANH GIỚI quyết định ở bài 13.',
-          feedback_wrong: 'Nhầm z với p! z = 0 nghĩa là "không nghiêng bên nào" → p = 1/(1+1) = 0.5, không phải 0.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Ước lượng nhanh không cần máy tính: kéo mỗi score z vào đúng ngăn xác suất.',
-        bins: [
-          { key: 'low', label: 'p ≈ 0.02 — GẦN SÀN' },
-          { key: 'half', label: 'p = 0.50 — CÂN BẰNG' },
-          { key: 'high', label: 'p ≈ 0.98 — GẦN TRẦN' }
-        ],
-        cards: [
-          { text: 'z = −4', role: 'low' },
-          { text: 'z = 0', role: 'half' },
-          { text: 'z = +4', role: 'high' },
-          { text: 'z = −3.9', role: 'low' },
-          { text: 'z = +4.1', role: 'high' }
-        ],
-        wrong_feedback: 'Nhớ 3 mốc: z âm mạnh → sát 0; z = 0 → đúng 0.5; z dương mạnh → sát 1. Dấu của z quyết định nửa nào.',
-        scenario_intro: 'Đúng hay sai? — gồm câu hỏi "vì sao lại là hàm NÀY" (log-odds)',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'Với z đủ lớn, sigmoid sẽ trả về ĐÚNG 1.0', answer: 'false', explain: 'Sigmoid tiệm cận 1 nhưng không bao giờ chạm — đây là saturation: vùng z lớn, p gần như phẳng, thay đổi z hầu như không đổi p.' },
-          { text: 'p = 0.99 nghĩa là CHẮC CHẮN đậu', answer: 'false', explain: 'p = 0.99 vẫn là xác suất: cứ 100 ca như vậy sẽ có ~1 ca rớt. Tự tin cao ≠ đảm bảo — nhầm lẫn này rất đắt trong thực tế.' },
-          { text: 'z tăng thì p LUÔN tăng theo (đơn điệu)', answer: 'true', explain: 'Sigmoid đơn điệu tăng — thứ tự score được bảo toàn nguyên vẹn sau khi ép, chỉ có thang đo bị nén lại.' },
-          { text: 'Sigmoid không phải công thức "bóp số" tùy hứng: đảo ngược nó ra z = log(p/(1−p)) — tức z chính là LOG-ODDS (log tỉ lệ cược). Kiểm chứng: p = 0.832 → 0.832/0.168 ≈ 4.95 → log ≈ 1.6 = z', answer: 'true', explain: 'Đây là lý do TẠI SAO đúng là hàm này (ISLR §4.3.1): mô hình tuyến tính hóa log-tỉ-lệ-cược, không phải xác suất. Mỗi +1 điểm z = nhân tỉ lệ cược với e ≈ 2.72. Sigmoid chỉ là hàm NGƯỢC của phép biến đổi đó.' }
-        ]
-      },
-
-      step_3: {
-        type: 'sigmoid_tuner',
-        mission: 'Nắn đường cong chữ S bằng tay: w chỉnh độ GẮT của cú chuyển, b đẩy MIDPOINT — hoàn thành 3 mục tiêu.',
-        sliders: {
-          w: { min: 0.2, max: 4, step: 0.2, init: 0.6 },
-          b: { min: -28, max: 4, step: 1, init: -1 },
-          x: { min: 0, max: 10, step: 0.5, init: 5 }
-        },
-        goals: [
-          { id: 'mid5', label: 'Chỉnh để p(x=5) ≈ 0.5 (±0.05)', check: 'p_at', x: 5, p: 0.5, tol: 0.05 },
-          { id: 'steep', label: 'Tăng độ gắt: w ≥ 2 (cú chuyển 0→1 dứt khoát hơn)', check: 'w_min', value: 2 },
-          { id: 'mid7', label: 'Đẩy midpoint (nơi p = 0.5) tới x ≈ 7 (±0.5)', check: 'midpoint', x: 7, tol: 0.5 }
-        ],
-        completion_note: 'Midpoint nằm tại x = −b/w (nơi z = 0). w lớn → chuyển gắt quanh midpoint và saturation sớm hai đầu; b chỉ trượt cả cú chuyển dọc trục x. Hai tay lái này Course 2 sẽ để gradient descent tự xoay.'
-      },
-
-      step_4: {
-        prompt_html: 'Viết hàm <code>sigmoid(z)</code> vectorized bằng NumPy — chạy được cho cả số lẻ lẫn cả mảng, ' +
-          'không clip, không gãy khúc.',
-        starter_code:
-          'import numpy as np\n\n' +
-          '# TODO: 1 dòng công thức logistic — KHÔNG dùng np.clip\n' +
-          'def sigmoid(z):\n' +
-          '    return None\n\n' +
-          'scores = np.array([-5., -1., 0., 1., 5.])\n' +
-          'print(sigmoid(scores))\n' +
-          'print("z=0 ->", sigmoid(0.0))',
-        grader_fn: 'grade_lesson12',
-        hints: [
-          'Công thức: 1 / (1 + np.exp(-z)) — np.exp tự vectorize cho cả mảng.',
-          'np.clip(z, 0, 1) cũng cho output "trong [0,1]" — nhưng gãy khúc, mất độ dốc quanh 0; tầng Risk phân biệt được.',
-          'Grader thử mảng ẩn z từ −30 đến +30: hàm phải đơn điệu và LUÔN trong (0, 1).'
-        ],
-        success_message: 'Sigmoid hoàn chỉnh: mọi score thực → (0,1), mượt, đơn điệu. Và giờ bạn biết lý do sâu: z = log-odds, sigmoid chỉ là hàm ngược của nó. Bài 13: cắt đường cong này tại p = 0.5 để ra QUYẾT ĐỊNH.'
-      }
-    },
-
-    /* ═══════════════ BÀI 13 — Decision Boundary ═══════════════ */
-    {
-      id: 'c1_l13', index: 13,
-      course: 'Course 1 — ML Foundations', module: 'M4 — Logistic Classification Foundations',
-      title: 'Decision Boundary — luật tách 2 lớp',
-      subtitle: 'Ngưỡng xác suất, ranh giới z = 0 và hình học phân lớp 2 chiều',
-      xp_reward: 20, badge: 'Logistic Foundations',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Xác suất chưa phải quyết định',
-        intro_html: 'Cố vấn học tập không đọc "p = 0.48" — họ cần biết GỌI AI ĐI GẶP. ' +
-          'Phải cắt xác suất liên tục thành quyết định rời rạc: đó là việc của <b>ngưỡng (threshold)</b> — ' +
-          'và về mặt hình học, của <b>decision boundary</b>.',
-        rounds: [
-          {
-            id: 'threshold',
-            label: 'Ngưỡng 0.5 cắt xác suất thành lớp',
-            flow: ['p = [0.92, 0.61, 0.48, 0.13, 0.50]', 'luật: p ≥ 0.5 → lớp 1 (Đậu)', '→ nhãn = [1, 1, 0, 0, 1]'],
-            note: '0.48 thành Rớt dù chỉ kém 0.02 — ngưỡng là lưỡi dao sắc. 0.50 đúng mép: quy ước "≥" nên thuộc lớp 1.'
-          },
-          {
-            id: 'z-zero',
-            label: 'Ngưỡng p = 0.5 ⟺ ranh giới z = 0',
-            flow: ['sigmoid: p = 0.5 xảy ra ĐÚNG KHI z = 0', 'z > 0 → lớp 1 · z < 0 → lớp 0', 'tập điểm có z = 0 chính là DECISION BOUNDARY'],
-            note: 'Với 2 feature: w₁x₁ + w₂x₂ + b = 0 là một ĐƯỜNG THẲNG trên mặt phẳng — mỗi phía là một lớp.'
-          }
-        ],
-        micro_check: {
-          question: 'p = 0.48, ngưỡng 0.5 — học viên này được gán lớp nào?',
-          options: [
-            { text: 'Lớp 0 (Rớt) — vì 0.48 < 0.5, dù chỉ kém 0.02', correct: true },
-            { text: 'Lớp 1 (Đậu) — gần 0.5 thì làm tròn lên', correct: false }
-          ],
-          feedback_correct: 'Chuẩn — ngưỡng không "thông cảm". Vì thế các ca sát ranh giới là nơi cần người thật xem lại.',
-          feedback_wrong: 'Không có làm tròn tình cảm ở đây: luật là p ≥ 0.5 → lớp 1, còn lại lớp 0. 0.48 → Rớt.'
-        }
-      },
-
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Tự tính z = 2·x₁ − 1·x₂ − 4 cho từng điểm (hoặc đọc p) rồi xếp vào đúng phía ranh giới.',
-        bins: [
-          { key: 'class1', label: 'LỚP 1 — z > 0' },
-          { key: 'class0', label: 'LỚP 0 — z < 0' },
-          { key: 'edge', label: 'TRÊN RANH GIỚI — z = 0' }
-        ],
-        cards: [
-          { text: 'Điểm (4, 2): z = 2·4 − 1·2 − 4 = +2', role: 'class1' },
-          { text: 'Điểm (1, 1): z = 2·1 − 1·1 − 4 = −3', role: 'class0' },
-          { text: 'Điểm (3, 2): z = 2·3 − 1·2 − 4 = 0', role: 'edge' },
-          { text: 'p = 0.83 (⇒ z > 0)', role: 'class1' },
-          { text: 'p = 0.21 (⇒ z < 0)', role: 'class0' }
-        ],
-        wrong_feedback: 'Tính z rồi nhìn DẤU: dương → lớp 1, âm → lớp 0, bằng 0 → đứng ngay trên đường ranh giới.',
-        scenario_intro: 'Đúng hay sai? — hình học của ranh giới',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'Ranh giới quyết định nằm ở p = 0', answer: 'false', explain: 'Ranh giới ở p = 0.5 (⟺ z = 0). p = 0 không bao giờ đạt được — sigmoid chỉ tiệm cận.' },
-          { text: 'Chỉ đổi bias b: ranh giới TỊNH TIẾN song song, không xoay', answer: 'true', explain: 'b không đổi hướng pháp tuyến (w₁, w₂) — chỉ đẩy đường lại gần/ra xa gốc tọa độ.' },
-          { text: 'Đổi tỉ lệ w₁/w₂: ranh giới XOAY hướng', answer: 'true', explain: '(w₁, w₂) là vector pháp tuyến của đường — đổi tỉ lệ là đổi hướng nghiêng của lưỡi dao.' }
-        ]
-      },
-
-      step_3: {
-        type: 'boundary_tuner',
-        mission: 'Canvas 2 feature (study_hours × quiz_score): xoay w₁/w₂ và đẩy bias để ranh giới tách SẠCH 2 lớp, rồi phân loại 1 học viên mới.',
-        data: {
-          points: [
-            [4, 1, 1], [6, 2, 1], [7, 5, 1], [8, 4, 1], [5, 2, 1], [9, 7, 1], [6.5, 4, 1],
-            [1, 4, 0], [2, 6, 0], [3, 5, 0], [4, 7, 0], [2, 3, 0], [5, 8, 0], [3, 8, 0]
+          defs: [
+            { term: 'Lập trình truyền thống', plain: 'Người viết LUẬT (if/else), máy áp dụng luật lên dữ liệu. Cần biết trước công thức đáp án.' },
+            { term: 'Machine Learning', plain: 'Người đưa DỮ LIỆU LỊCH SỬ kèm đáp án, máy tự rút pattern — rồi dùng pattern đó dự đoán cho ca CHƯA CÓ đáp án.' },
+            { term: 'Task – Experience – Performance', plain: 'Việc cần làm (T) · dữ liệu để học (E) · thước đo làm tốt hay không (P). Thiếu 1 trong 3 là chưa thành bài toán ML.' }
           ]
         },
-        sliders: {
-          w1: { min: -3, max: 3, step: 0.1, init: 0.2 },
-          w2: { min: -3, max: 3, step: 0.1, init: 1.0 },
-          b: { min: -10, max: 10, step: 0.5, init: -5 }
+        primer: {
+          goal: [
+            'Phân biệt luật viết sẵn vs pattern học được',
+            'Task – Experience – Performance',
+            'Pipeline fit → predict đầu tiên'
+          ],
+          intro: '',
+          example: '🔍 <strong>Nhìn bảng SAMPLE DATA bên dưới:</strong> 12 học viên khóa trước — ai học ≥ 6 giờ đều <strong>1 · Đậu</strong>, ai dưới 5 giờ đều <strong>0 · Rớt</strong>. Bạn vừa NHÌN RA một pattern mà không ai viết cho bạn luật nào cả. Máy cũng làm được y như vậy — đó chính là "học". Giữ pattern này khi sang Bước 2 👇'
         },
-        probe: { btn: 'Phân loại học viên mới (6.5, 2.5)', point: [6.5, 2.5] },
-        goals: [
-          { id: 'sep', label: 'Tách sạch 2 lớp: 0 điểm phân sai', check: 'zero_errors' },
-          { id: 'probe', label: 'Phân loại điểm mới — đọc z, p và lớp', check: 'probe' }
+        intro: 'StudyLab có đủ điểm danh, giờ tự học, điểm quiz của <strong>12 học viên khóa trước</strong> — kèm kết cục Đậu/Rớt của từng người. Với khóa MỚI đang ở tuần 3, ta có đúng các con số ấy nhưng <em>chưa có</em> kết cục. Bài toán: dùng lịch sử để <strong>dự đoán trước</strong> kết cục — kịp cảnh báo khi còn cứu được.',
+        concept_cards: [
+          {
+            icon: 'fa-scale-balanced',
+            title: 'Luật viết sẵn (Traditional)',
+            body: 'Chấm Đậu/Rớt cuối kỳ? Dễ — <code>if final_score >= 50</code>. Luật chạy được vì <strong>đáp án đã nằm trong tay</strong>: con người nghĩ ra công thức, máy chỉ áp dụng. Đây là toàn bộ lập trình bạn từng học.'
+          },
+          {
+            icon: 'fa-brain',
+            title: 'Học từ dữ liệu (Machine Learning)',
+            body: 'Tuần 3 <strong>chưa có</strong> final_score — không viết nổi luật. Nhưng có <strong>Experience</strong>: 12 hồ sơ khóa trước kèm nhãn. Máy tự rút pattern (<strong>Task</strong>: dự đoán Đậu/Rớt) và ta đo bằng <strong>Performance</strong>: dự đoán đúng bao nhiêu trên học viên mới.'
+          },
+          {
+            icon: 'fa-hand-pointer',
+            title: 'Thử ngay (Apply)',
+            body: 'Lý thuyết là để <strong>phá</strong>. Ở Bước 3 bạn lắp pipeline <code>fit → predict</code> bằng tay; Bước 4 tự viết code thật — và sẽ có một cái bẫy kinh điển: <code>predict(X)</code> trên chính dữ liệu đã học. Trông "đúng" mà vô dụng. Tự sập bẫy rồi thoát — đó là cách nhớ lâu nhất.'
+          }
         ],
-        completion_note: 'Viền đỏ = điểm bị phân sai theo ranh giới hiện tại. Một đường thẳng — 3 con số (w₁, w₂, b) — quyết định số phận mọi điểm trên mặt phẳng. Course 2 sẽ để dữ liệu TỰ tìm 3 con số này.'
+        /* Sim nhúng theo pattern NC (plan_visual/sort_visual...) — 2 luồng HIỆN SẴN,
+           bấm ▶ chạy animation từng nút; đủ 2 luồng → chốt so kèo. */
+        paradigm_visual: {
+          flows: [
+            {
+              id: 'rule',
+              tag: '① LUẬT VIẾT SẴN',
+              sub: 'cuối kỳ — final_score đã có',
+              accent: '#FBBF24',
+              nodes: [
+                { icon: '📥', label: 'final_score = 62' },
+                { icon: '📏', label: 'if score >= 50' },
+                { icon: '✅', label: 'ĐẬU', cls: 'good' }
+              ],
+              punch: 'Chạy được vì đáp án ĐÃ TỒN TẠI — người viết luật, máy áp dụng.'
+            },
+            {
+              id: 'learn',
+              tag: '② HỌC TỪ DỮ LIỆU',
+              sub: 'tuần 3 — final_score CHƯA tồn tại',
+              accent: '#A78BFA',
+              nodes: [
+                { icon: '🗂️', label: '12 học viên khóa trước + nhãn Đậu/Rớt' },
+                { icon: '🧠', label: 'MODEL tự rút pattern' },
+                { icon: '👤', label: 'Hồ sơ mới: 7h · 90% · quiz 82' },
+                { icon: '🔮', label: 'Dự đoán: ĐẬU', cls: 'good' }
+              ],
+              punch: 'Không ai viết nổi luật — model HỌC từ lịch sử rồi dự đoán ca mới.'
+            }
+          ],
+          so_keo: 'Luật viết sẵn cần ĐÁP ÁN có sẵn trong tay. Cảnh báo sớm tuần 3 không có đáp án nào để viết luật — chỉ còn cách HỌC pattern từ lịch sử. Đó là ranh giới giữa lập trình truyền thống và Machine Learning.'
+        },
+        visual: {
+          schema: {
+            table_name: 'study_data (DataFrame)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT',   key: '',       icon: '' },
+              { name: 'attendance',  type: 'FLOAT',   key: '',       icon: '' },
+              { name: 'quiz_score',  type: 'FLOAT',   key: '',       icon: '' },
+              { name: 'pass_fail',   type: 'INT 0/1', key: 'TARGET', icon: '🎯' }
+            ]
+          },
+          /* 12 dòng = CHÍNH XÁC ml_lab.load_study_data (0=Rớt, 1=Đậu) */
+          data_preview: [
+            ['2.0', '55', '45', '0 · Rớt'],
+            ['8.0', '95', '85', '1 · Đậu'],
+            ['1.0', '50', '40', '0 · Rớt'],
+            ['9.0', '98', '90', '1 · Đậu'],
+            ['3.0', '60', '50', '0 · Rớt'],
+            ['7.0', '92', '80', '1 · Đậu'],
+            ['2.0', '58', '48', '0 · Rớt'],
+            ['8.0', '96', '88', '1 · Đậu'],
+            ['4.0', '70', '60', '0 · Rớt'],
+            ['9.0', '99', '95', '1 · Đậu'],
+            ['1.0', '52', '42', '0 · Rớt'],
+            ['6.0', '88', '78', '1 · Đậu']
+          ]
+        },
+        mission: 'Lắp pipeline ML 4 dòng Python: nạp <code class="code">12 học viên</code> → tạo model → <code class="code">fit</code> → <code class="code">predict</code> cho học viên mới <code class="code">[7h · 90% · quiz 82]</code> — kéo thả khối lệnh xuống dưới ↓'
       },
 
-      step_4: {
-        prompt_html: 'Ghép trọn luồng suy luận logistic: <code>sigmoid</code> + <code>predict_classes(X, weights, bias, threshold=0.5)</code> ' +
-          'trả về CẢ xác suất lẫn nhãn 0/1.',
-        starter_code:
-          'import numpy as np\n' +
-          'from ml_lab import load_boundary_data\n\n' +
-          'def sigmoid(z):\n' +
-          '    return 1 / (1 + np.exp(-z))\n\n' +
-          '# TODO: score ma trận -> sigmoid -> so với threshold\n' +
-          'def predict_classes(X, weights, bias, threshold=0.5):\n' +
-          '    return None\n\n' +
-          'X, weights, bias = load_boundary_data()\n' +
-          'probabilities, predictions = predict_classes(X, weights, bias)\n' +
-          'print(np.round(probabilities, 3))\n' +
-          'print(predictions)',
-        grader_fn: 'grade_lesson13',
-        hints: [
-          'scores = X @ weights + bias — phép nhân ma trận cho cả 20 học viên một lần.',
-          'predictions = (probabilities >= threshold).astype(int) — so XÁC SUẤT với threshold, không phải score. Ngưỡng 0.5 của p tương đương z = 0.',
-          'Giữ threshold là THAM SỐ sống — grader sẽ gọi với threshold 0.3 và 0.7, và cả X có 3 feature.'
+      /* ----- STEP 2: 2 MCQ + mini-game T/E/P (spec C1-L1 Step 2: Check 1 + Check 2) ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'StudyLab muốn cảnh báo <strong>"học viên đang trên đà rớt"</strong> ngay từ tuần 3. Vì sao KHÔNG dùng được luật <code>if final_score >= 50</code>?',
+            options: [
+              { id: 'a', text: 'Vì Python không cho so sánh <code>>=</code> với số thực', correct: false, explanation: 'So sánh >= chạy bình thường với float. Vấn đề không nằm ở cú pháp.' },
+              { id: 'b', text: 'Vì <code>final_score</code> CHƯA TỒN TẠI ở tuần 3 — phải HỌC pattern từ khóa trước để dự đoán', correct: true, explanation: 'Đúng — luật cần đáp án có sẵn. Tuần 3 chưa có final_score nên không có gì để so sánh; chỉ còn cách học pattern từ dữ liệu lịch sử → đây là bài toán ML.' },
+              { id: 'c', text: 'Vì luật này chạy quá chậm khi lớp có 200 học viên', correct: false, explanation: 'Một phép so sánh chạy trong micro-giây với mọi sĩ số. Tốc độ không phải vấn đề — vấn đề là final_score chưa tồn tại.' },
+              { id: 'd', text: 'Vì phải dùng deep learning mới đủ chính xác', correct: false, explanation: 'Chưa cần bàn model mạnh hay yếu — câu hỏi là PARADIGM: luật viết sẵn không có dữ liệu đầu vào để chạy, phải chuyển sang học từ lịch sử.' }
+            ]
+          },
+          {
+            question: 'Trong bài toán cảnh báo sớm, đâu là <strong>EXPERIENCE</strong> (kinh nghiệm) mà model dùng để học?',
+            options: [
+              { id: 'a', text: 'Danh sách học viên MỚI của kỳ này (chưa có nhãn)', correct: false, explanation: 'Học viên mới KHÔNG có nhãn Đậu/Rớt — không có đáp án thì không học được gì. Đây là nơi model DỰ ĐOÁN, không phải nơi model HỌC.' },
+              { id: 'b', text: '12 hồ sơ khóa trước KÈM nhãn Đậu/Rớt', correct: true, explanation: 'Chính xác — Experience = dữ liệu lịch sử CÓ đáp án. Model đối chiếu đặc trưng với kết cục để rút pattern.' },
+              { id: 'c', text: 'Sĩ số lớp học kỳ này', correct: false, explanation: 'Sĩ số là 1 con số về lớp — không phải dữ liệu hành vi kèm nhãn, cũng không đo được model làm tốt hay không. Không phải Experience, càng không phải Performance.' },
+              { id: 'd', text: 'Luật <code>if score >= 50</code> của giáo vụ', correct: false, explanation: 'Luật viết sẵn thuộc paradigm cũ — model ML không học từ luật, nó học từ DỮ LIỆU (đặc trưng + nhãn).' }
+            ]
+          }
         ],
-        success_message: 'Luồng suy luận logistic khép kín: X @ w + b → sigmoid → threshold → nhãn. Course 1 phần "não" phân loại đã xong — M5 sẽ dạy điều cuối cùng và quan trọng nhất: đừng tự dối mình khi ĐÁNH GIÁ nó.'
-      }
-    },
-
-    /* ═══════════════ BÀI 14 — Underfit, Good Fit, Overfit ═══════════════ */
-    {
-      id: 'c1_l14', index: 14,
-      course: 'Course 1 — ML Foundations', module: 'M5 — Generalization & Honest Evaluation',
-      title: 'Underfit, Good Fit và Overfit',
-      subtitle: 'Độ phức tạp model, học vs học vẹt — và tên thật của 2 chế độ hỏng: bias & variance',
-      xp_reward: 20, badge: 'Generalization Guardian',
-
-      step_1: {
-        type: 'curve_compare',
-        topic_tag: 'Ba model cùng nhìn một bộ dữ liệu',
-        intro_html: 'StudyLab có 24 điểm dữ liệu (giờ học → điểm). Ba "ứng viên model" cùng fit lên đó: ' +
-          'một đường phẳng lì, một đường cong mượt, một đường ngoằn ngoèo xuyên đúng từng điểm. ' +
-          '<b>Nếu chỉ nhìn Train MSE — bạn sẽ chọn nhầm.</b> Xem từng ứng viên rồi mở 20 điểm CHƯA THẤY.',
-        plot: {
-          xmax: 10, ymax: 60,
-          train_pts: [[0.43, 29.0], [0.61, 27.8], [1.24, 36.7], [1.3, 38.4], [1.35, 44.2], [1.71, 42.3], [1.91, 38.2], [2.49, 38.8], [2.74, 40.3], [3.15, 46.1], [3.3, 45.4], [3.36, 42.1], [3.53, 41.5], [3.78, 42.1], [4.53, 35.5], [4.66, 37.0], [4.68, 42.5], [4.7, 49.8], [4.82, 46.3], [5.45, 40.0], [6.34, 39.9], [7.41, 37.6], [9.5, 41.0], [9.57, 41.5]]
-        },
-        curves: [
-          { label: 'Model A — bậc 1 (phẳng)', pts: [[0.0,37.8],[0.2,38.0],[0.4,38.1],[0.6,38.2],[0.8,38.3],[1.0,38.4],[1.2,38.6],[1.4,38.7],[1.6,38.8],[1.8,38.9],[2.0,39.0],[2.2,39.2],[2.4,39.3],[2.6,39.4],[2.8,39.5],[3.0,39.7],[3.2,39.8],[3.4,39.9],[3.6,40.0],[3.8,40.1],[4.0,40.3],[4.2,40.4],[4.4,40.5],[4.6,40.6],[4.8,40.7],[5.0,40.9],[5.2,41.0],[5.4,41.1],[5.6,41.2],[5.8,41.3],[6.0,41.5],[6.2,41.6],[6.4,41.7],[6.6,41.8],[6.8,41.9],[7.0,42.1],[7.2,42.2],[7.4,42.3],[7.6,42.4],[7.8,42.5],[8.0,42.7],[8.2,42.8],[8.4,42.9],[8.6,43.0],[8.8,43.1],[9.0,43.3],[9.2,43.4],[9.4,43.5],[9.6,43.6],[9.8,43.8],[10.0,43.9]], train_mse: 21.5, check_mse: 25.2,
-            note: 'Quá CỨNG: bỏ qua mọi khúc cong của dữ liệu — sai ngay cả trên tập train.',
-            verdict: 'UNDERFIT', verdict_cls: '' },
-          { label: 'Model B — bậc 3 (cong mượt)', pts: [[0.0,25.0],[0.2,27.4],[0.4,29.5],[0.6,31.5],[0.8,33.3],[1.0,34.9],[1.2,36.4],[1.4,37.7],[1.6,38.8],[1.8,39.8],[2.0,40.7],[2.2,41.4],[2.4,42.0],[2.6,42.4],[2.8,42.8],[3.0,43.1],[3.2,43.2],[3.4,43.3],[3.6,43.3],[3.8,43.2],[4.0,43.1],[4.2,42.9],[4.4,42.6],[4.6,42.3],[4.8,42.0],[5.0,41.6],[5.2,41.2],[5.4,40.8],[5.6,40.4],[5.8,40.0],[6.0,39.5],[6.2,39.2],[6.4,38.8],[6.6,38.4],[6.8,38.1],[7.0,37.9],[7.2,37.6],[7.4,37.5],[7.6,37.4],[7.8,37.4],[8.0,37.4],[8.2,37.6],[8.4,37.8],[8.6,38.2],[8.8,38.6],[9.0,39.2],[9.2,39.9],[9.4,40.8],[9.6,41.7],[9.8,42.8],[10.0,44.1]], train_mse: 11.1, check_mse: 8.2,
-            note: 'Bám được hình dạng chính, bỏ qua nhiễu vụn.',
-            verdict: 'GOOD FIT ✓', verdict_cls: 'ml-cc-best' },
-          { label: 'Model C — bậc 12 (ngoằn ngoèo)', pts: [[0.0,0.0],[0.2,0.0],[0.4,26.9],[0.6,28.0],[0.8,24.2],[1.0,28.4],[1.2,36.3],[1.4,42.2],[1.6,43.5],[1.8,41.2],[2.0,37.9],[2.2,35.8],[2.4,36.1],[2.6,38.6],[2.8,42.0],[3.0,44.7],[3.2,45.6],[3.4,44.3],[3.6,41.3],[3.8,37.9],[4.0,35.5],[4.2,35.1],[4.4,37.1],[4.6,40.8],[4.8,44.8],[5.0,47.2],[5.2,46.5],[5.4,42.0],[5.6,34.9],[5.8,27.6],[6.0,24.4],[6.2,29.6],[6.4,46.0],[6.6,70.0],[6.8,70.0],[7.0,70.0],[7.2,70.0],[7.4,43.2],[7.6,0.0],[7.8,0.0],[8.0,0.0],[8.2,0.0],[8.4,0.0],[8.6,0.0],[8.8,0.0],[9.0,0.0],[9.2,0.0],[9.4,0.0],[9.6,0.0],[9.8,0.0],[10.0,0.0]], train_mse: 5.4, check_mse: 248525.5,
-            note: 'Train MSE THẤP NHẤT — uốn éo chiều lòng từng điểm train, kể cả nhiễu.',
-            verdict: 'OVERFIT 💥', verdict_cls: 'ml-cc-overfit' }
-        ],
-        reveal: {
-          btn: 'Mở 20 điểm CHƯA THẤY (held-out)',
-          title: 'Sự thật lộ ra trên dữ liệu mới',
-          check_pts: [[0.01, 26.7], [0.6, 34.7], [1.83, 42.0], [1.94, 47.6], [2.23, 43.3], [2.33, 43.4], [3.2, 42.0], [3.41, 44.4], [3.49, 44.3], [4.12, 42.3], [4.15, 42.1], [4.72, 43.1], [4.86, 42.8], [4.89, 47.5], [5.37, 42.8], [6.02, 35.1], [6.33, 43.8], [7.22, 37.7], [7.81, 36.0], [8.8, 37.4]],
-          note: 'Model C: train 5.4 → check 248 525. Nó không HỌC — nó HỌC VẸT. Generalization = hành xử trên dữ liệu KHÔNG dùng để fit.'
-        },
-        micro_check: {
-          question: 'Một model có train error gần 0 nhưng held-out error khổng lồ — chẩn đoán?',
-          options: [
-            { text: 'OVERFIT — model học thuộc lòng tập train (kể cả nhiễu), gãy trên dữ liệu mới', correct: true },
-            { text: 'Model tốt — train error gần 0 là bằng chứng nó đã học xong', correct: false }
+        mini_game: {
+          title: 'Xếp 6 mảnh vào đúng ô: Task – Experience – Performance',
+          instruction: 'Bài toán cảnh báo sớm của StudyLab vừa được định khung. Kéo mỗi thẻ vào đúng ô <strong>T</strong> (việc cần làm), <strong>E</strong> (dữ liệu để học) hoặc <strong>P</strong> (thước đo).',
+          chips: [
+            { id: 'tep-predict', label: 'Dự đoán Đậu/Rớt cho học viên MỚI' },
+            { id: 'tep-early',   label: 'Cảnh báo ngay từ tuần 3' },
+            { id: 'tep-history', label: '12 hồ sơ khóa trước + nhãn' },
+            { id: 'tep-cols',    label: 'Bảng study_hours · attendance · quiz' },
+            { id: 'tep-acc',     label: 'Tỉ lệ dự đoán ĐÚNG trên hồ sơ mới' },
+            { id: 'tep-miss',    label: 'Số ca sắp rớt bị BỎ SÓT' }
           ],
-          feedback_correct: 'Chuẩn chẩn đoán! Train error thấp chỉ chứng minh trí nhớ tốt — generalization mới là điều ta cần.',
-          feedback_wrong: 'Train error gần 0 + held-out error cao là chữ ký kinh điển của OVERFIT — trí nhớ tốt không phải trí tuệ.'
+          bins: [
+            { id: 'task', label: 'T — Task',        correct: 'true' },
+            { id: 'exp',  label: 'E — Experience',  correct: 'true' },
+            { id: 'perf', label: 'P — Performance', correct: 'true' }
+          ],
+          solution: {
+            'tep-predict': 'task',
+            'tep-early':   'task',
+            'tep-history': 'exp',
+            'tep-cols':    'exp',
+            'tep-acc':     'perf',
+            'tep-miss':    'perf'
+          }
         }
       },
 
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Chẩn đoán bằng CẶP số (Train MSE, Check MSE) — kéo từng hồ sơ bệnh án vào đúng ngăn.',
-        bins: [
-          { key: 'underfit', label: 'UNDERFIT — QUÁ CỨNG' },
-          { key: 'good', label: 'GOOD FIT' },
-          { key: 'overfit', label: 'OVERFIT — HỌC VẸT' }
-        ],
-        cards: [
-          { text: 'Train 95 · Check 98 — cả hai đều CAO', role: 'underfit' },
-          { text: 'Train 9 · Check 12 — thấp và sát nhau', role: 'good' },
-          { text: 'Train 0.3 · Check 74 — train gần 0, check bùng nổ', role: 'overfit' },
-          { text: 'Đường phẳng lì bỏ qua mọi khúc cong của dữ liệu', role: 'underfit' },
-          { text: 'Đường ngoằn ngoèo xuyên đúng TỪNG điểm train', role: 'overfit' }
-        ],
-        wrong_feedback: 'Đọc CẶP số: cả hai cao = cứng quá; cả hai thấp + sát nhau = vừa; train ≈ 0 nhưng check cao = học vẹt.',
-        scenario_intro: 'Đúng hay sai? — gọi đúng TÊN của 2 chế độ hỏng',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'Model có train error thấp nhất luôn là model tốt nhất', answer: 'false', explain: 'Train error thưởng cho trí nhớ. Bậc 12 có train MSE thấp nhất (5.4) và check MSE tệ nhất (248 525) — chọn theo train là chọn kẻ học vẹt.' },
-          { text: 'Hai chế độ hỏng này có tên: model quá CỨNG sai theo CÙNG MỘT KIỂU bất kể bộ train nào — lỗi hệ thống đó gọi là BIAS cao (underfit); model quá MỀM đổi hình dạng theo TỪNG bộ train — độ dao động đó gọi là VARIANCE cao (overfit)', answer: 'true', explain: 'Đây là khung bias–variance (ISLR §2.2.2 — "chủ đề quan trọng bậc nhất của cả cuốn sách"): lỗi kỳ vọng = bias² + variance + noise. Tăng độ phức tạp là ĐỔI bias LẤY variance — "trade-off" nằm đúng chỗ đó, và điểm ngọt là nơi tổng hai thứ nhỏ nhất.' },
-          { text: 'Khoảng cách train–check nhỏ là đủ để kết luận model tốt', answer: 'false', explain: 'Gap nhỏ nhưng CẢ HAI cùng cao (95 vs 98) vẫn là underfit — bias cao. Phải nhìn cả mức tuyệt đối lẫn khoảng cách.' }
-        ]
-      },
-
+      /* ----- STEP 3: Map ML PIPELINE (bài QUY TRÌNH — 5 trạm: Kho → DATASET → MODEL → TRAIN → PREDICT) -----
+         Blocks = 8 mảnh Python duy nhất → 4 zone (1 dòng lệnh/zone). Hybrid: gõ Python
+         trực tiếp vào solution.py cũng được (hydrate theo DÒNG — ml_pipeline: true). */
       step_3: {
-        type: 'flex_tuner',
-        mission: 'Kéo qua 5 mức linh hoạt. Train MSE lộ ngay — Check MSE bị GIẤU. Thử hết, mở khóa, rồi chọn mức tốt nhất.',
-        plot: {
-          xmax: 10, ymax: 60,
-          train_pts: [[0.43, 29.0], [0.61, 27.8], [1.24, 36.7], [1.3, 38.4], [1.35, 44.2], [1.71, 42.3], [1.91, 38.2], [2.49, 38.8], [2.74, 40.3], [3.15, 46.1], [3.3, 45.4], [3.36, 42.1], [3.53, 41.5], [3.78, 42.1], [4.53, 35.5], [4.66, 37.0], [4.68, 42.5], [4.7, 49.8], [4.82, 46.3], [5.45, 40.0], [6.34, 39.9], [7.41, 37.6], [9.5, 41.0], [9.57, 41.5]],
-          check_pts: [[0.01, 26.7], [0.6, 34.7], [1.83, 42.0], [1.94, 47.6], [2.23, 43.3], [2.33, 43.4], [3.2, 42.0], [3.41, 44.4], [3.49, 44.3], [4.12, 42.3], [4.15, 42.1], [4.72, 43.1], [4.86, 42.8], [4.89, 47.5], [5.37, 42.8], [6.02, 35.1], [6.33, 43.8], [7.22, 37.7], [7.81, 36.0], [8.8, 37.4]]
-        },
-        levels: [
-          { short: 'Bậc 1', label: 'Mức 1 — bậc 1', pts: [[0.0,37.8],[0.2,38.0],[0.4,38.1],[0.6,38.2],[0.8,38.3],[1.0,38.4],[1.2,38.6],[1.4,38.7],[1.6,38.8],[1.8,38.9],[2.0,39.0],[2.2,39.2],[2.4,39.3],[2.6,39.4],[2.8,39.5],[3.0,39.7],[3.2,39.8],[3.4,39.9],[3.6,40.0],[3.8,40.1],[4.0,40.3],[4.2,40.4],[4.4,40.5],[4.6,40.6],[4.8,40.7],[5.0,40.9],[5.2,41.0],[5.4,41.1],[5.6,41.2],[5.8,41.3],[6.0,41.5],[6.2,41.6],[6.4,41.7],[6.6,41.8],[6.8,41.9],[7.0,42.1],[7.2,42.2],[7.4,42.3],[7.6,42.4],[7.8,42.5],[8.0,42.7],[8.2,42.8],[8.4,42.9],[8.6,43.0],[8.8,43.1],[9.0,43.3],[9.2,43.4],[9.4,43.5],[9.6,43.6],[9.8,43.8],[10.0,43.9]], train_mse: 21.5, check_mse: 25.2 },
-          { short: 'Bậc 2', label: 'Mức 2 — bậc 2', pts: [[0.0,32.7],[0.2,33.4],[0.4,34.1],[0.6,34.8],[0.8,35.4],[1.0,36.0],[1.2,36.6],[1.4,37.2],[1.6,37.7],[1.8,38.2],[2.0,38.7],[2.2,39.2],[2.4,39.6],[2.6,40.0],[2.8,40.4],[3.0,40.7],[3.2,41.1],[3.4,41.4],[3.6,41.7],[3.8,42.0],[4.0,42.2],[4.2,42.4],[4.4,42.6],[4.6,42.8],[4.8,42.9],[5.0,43.0],[5.2,43.1],[5.4,43.2],[5.6,43.2],[5.8,43.2],[6.0,43.2],[6.2,43.2],[6.4,43.1],[6.6,43.0],[6.8,42.9],[7.0,42.8],[7.2,42.6],[7.4,42.5],[7.6,42.3],[7.8,42.0],[8.0,41.8],[8.2,41.5],[8.4,41.2],[8.6,40.8],[8.8,40.5],[9.0,40.1],[9.2,39.7],[9.4,39.3],[9.6,38.8],[9.8,38.3],[10.0,37.8]], train_mse: 16.4, check_mse: 17.0 },
-          { short: 'Bậc 3', label: 'Mức 3 — bậc 3', pts: [[0.0,25.0],[0.2,27.4],[0.4,29.5],[0.6,31.5],[0.8,33.3],[1.0,34.9],[1.2,36.4],[1.4,37.7],[1.6,38.8],[1.8,39.8],[2.0,40.7],[2.2,41.4],[2.4,42.0],[2.6,42.4],[2.8,42.8],[3.0,43.1],[3.2,43.2],[3.4,43.3],[3.6,43.3],[3.8,43.2],[4.0,43.1],[4.2,42.9],[4.4,42.6],[4.6,42.3],[4.8,42.0],[5.0,41.6],[5.2,41.2],[5.4,40.8],[5.6,40.4],[5.8,40.0],[6.0,39.5],[6.2,39.2],[6.4,38.8],[6.6,38.4],[6.8,38.1],[7.0,37.9],[7.2,37.6],[7.4,37.5],[7.6,37.4],[7.8,37.4],[8.0,37.4],[8.2,37.6],[8.4,37.8],[8.6,38.2],[8.8,38.6],[9.0,39.2],[9.2,39.9],[9.4,40.8],[9.6,41.7],[9.8,42.8],[10.0,44.1]], train_mse: 11.1, check_mse: 8.2 },
-          { short: 'Bậc 6', label: 'Mức 4 — bậc 6', pts: [[0.0,14.1],[0.2,21.0],[0.4,26.5],[0.6,30.7],[0.8,33.9],[1.0,36.3],[1.2,38.1],[1.4,39.3],[1.6,40.2],[1.8,40.9],[2.0,41.3],[2.2,41.6],[2.4,41.8],[2.6,41.9],[2.8,42.0],[3.0,42.1],[3.2,42.2],[3.4,42.3],[3.6,42.4],[3.8,42.4],[4.0,42.5],[4.2,42.5],[4.4,42.4],[4.6,42.4],[4.8,42.2],[5.0,42.0],[5.2,41.8],[5.4,41.5],[5.6,41.1],[5.8,40.7],[6.0,40.3],[6.2,39.9],[6.4,39.4],[6.6,38.9],[6.8,38.5],[7.0,38.2],[7.2,37.9],[7.4,37.6],[7.6,37.5],[7.8,37.5],[8.0,37.7],[8.2,37.9],[8.4,38.3],[8.6,38.8],[8.8,39.4],[9.0,40.0],[9.2,40.5],[9.4,41.0],[9.6,41.3],[9.8,41.4],[10.0,40.9]], train_mse: 10.1, check_mse: 15.2 },
-          { short: 'Bậc 12', label: 'Mức 5 — bậc 12', pts: [[0.0,0.0],[0.2,0.0],[0.4,26.9],[0.6,28.0],[0.8,24.2],[1.0,28.4],[1.2,36.3],[1.4,42.2],[1.6,43.5],[1.8,41.2],[2.0,37.9],[2.2,35.8],[2.4,36.1],[2.6,38.6],[2.8,42.0],[3.0,44.7],[3.2,45.6],[3.4,44.3],[3.6,41.3],[3.8,37.9],[4.0,35.5],[4.2,35.1],[4.4,37.1],[4.6,40.8],[4.8,44.8],[5.0,47.2],[5.2,46.5],[5.4,42.0],[5.6,34.9],[5.8,27.6],[6.0,24.4],[6.2,29.6],[6.4,46.0],[6.6,70.0],[6.8,70.0],[7.0,70.0],[7.2,70.0],[7.4,43.2],[7.6,0.0],[7.8,0.0],[8.0,0.0],[8.2,0.0],[8.4,0.0],[8.6,0.0],[8.8,0.0],[9.0,0.0],[9.2,0.0],[9.4,0.0],[9.6,0.0],[9.8,0.0],[10.0,0.0]], train_mse: 5.4, check_mse: 248525.5 }
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'X, y, X_new =',          slot: 'z1a' },
+          { type: 'py', token: 'load_study_data()',      slot: 'z1b' },
+          { type: 'py', token: 'model =',                slot: 'z2a' },
+          { type: 'py', token: 'SimpleClassifier()',     slot: 'z2b' },
+          { type: 'py', token: 'model.fit',              slot: 'z3a' },
+          { type: 'py', token: '(X, y)',                 slot: 'z3b' },
+          { type: 'py', token: 'prediction =',           slot: 'z4a' },
+          { type: 'py', token: 'model.predict(X_new)',   slot: 'z4b' }
         ],
-        reveal_btn: '🔓 Mở Check MSE (20 điểm giấu)',
-        pick_label: 'Chọn mức TỐT NHẤT:',
-        goals: [
-          { id: 'try_all', label: 'Thử đủ 5 mức linh hoạt' },
-          { id: 'reveal', label: 'Mở khóa Check MSE' },
-          { id: 'pick', label: 'Chọn mức có CHECK MSE thấp nhất' }
-        ],
-        completion_note: 'Train MSE giảm ĐỀU theo độ phức tạp (21.5 → 5.4) — nó không bao giờ mách bạn dừng lại. Check MSE vẽ hình chữ U (25.2 → 8.2 → 248 525): đáy chữ U là điểm ngọt bias–variance.'
-      },
-
-      step_4: {
-        prompt_html: 'Fit đa thức bậc 1, 3, 12 trên TRAIN; tính train_mse + check_mse cho từng bậc; ' +
-          'chọn <code>best_degree</code> theo <b>check MSE nhỏ nhất</b>. 20 điểm check KHÔNG được vào fit.',
-        starter_code:
-          'from ml_lab import load_complexity_demo, fit_polynomial_model, mean_squared_error\n\n' +
-          '# 24 điểm train + 20 điểm check (dữ liệu "tương lai" — cấm fit)\n' +
-          'X_train, y_train, X_check, y_check = load_complexity_demo()\n\n' +
-          'results = []\n' +
-          '# TODO: với mỗi bậc — fit trên TRAIN, tính train_mse và check_mse, append dict\n' +
-          'for degree in [1, 3, 12]:\n' +
-          '    pass\n\n' +
-          '# TODO: chọn bậc có CHECK MSE nhỏ nhất\n' +
-          'best_degree = None\n\n' +
-          'for r in results:\n' +
-          '    print(r)\n' +
-          'print("Best degree:", best_degree)',
-        grader_fn: 'grade_lesson14',
-        hints: [
-          'model = fit_polynomial_model(X_train, y_train, degree=degree) — TRAIN only; rồi model.predict() cho cả 2 tập.',
-          'results.append({"degree": degree, "train_mse": ..., "check_mse": ...}).',
-          'best_degree = min(results, key=lambda r: r["check_mse"])["degree"] — chọn theo train_mse là trap; gõ cứng best_degree = 3 cũng là trap: dataset ẨN của grader có đường thật TUYẾN TÍNH, bậc tốt nhất ở đó là 1.'
-        ],
-        success_message: 'Bậc 3 thắng bằng check MSE 8.2 — trong khi bậc 12 khoe train MSE 5.4 rồi nổ 248 525 trên dữ liệu mới. Chọn model bằng dữ liệu CHƯA THẤY: nguyên tắc sống còn mà mọi bài từ nay trở đi đều đứng trên nó.'
-      }
-    },
-
-    /* ═══════════════ BÀI 15 — Train / Validation / Test ═══════════════ */
-    {
-      id: 'c1_l15', index: 15,
-      course: 'Course 1 — ML Foundations', module: 'M5 — Generalization & Honest Evaluation',
-      title: 'Chia dữ liệu: Train, Validation và Test',
-      subtitle: 'Đánh giá trung thực, split tái lập được và két sắt Test niêm phong',
-      xp_reward: 20, badge: 'Generalization Guardian',
-
-      step_1: {
-        type: 'story_rounds',
-        topic_tag: 'Ba căn phòng, ba nhiệm vụ',
-        intro_html: 'Bài 14 dùng "20 điểm giấu" — nhưng ai giấu, giấu thế nào cho đúng? Chuẩn công nghiệp: ' +
-          'chia 1.000 hồ sơ StudyLab thành <b>3 căn phòng</b> với 3 quyền hạn khác hẳn nhau — 600 / 200 / 200.',
-        rounds: [
+        drop_zones: [
           {
-            id: 'train-room',
-            label: '🏋️ Training Room — 600 hồ sơ',
-            flow: ['Model VÀO đây học weights', 'fit() chỉ được nhìn 600 dòng này', 'Học thuộc lòng? Cũng chỉ thuộc được phòng này'],
-            note: 'Tập DUY NHẤT mà tham số model được học từ đó.'
+            id: 'ml-data', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            station: { icon: '📦', label: 'DATASET', sub: 'Nạp 12 học viên', hint: 'Nạp dữ liệu từ ml_lab: 3 cột đặc trưng vào <code>X</code>, nhãn Đậu/Rớt vào <code>y</code>, học viên mới vào <code>X_new</code>.' },
+            ml_effect: { type: 'load' }
           },
           {
-            id: 'val-room',
-            label: '🔍 Validation Room — 200 hồ sơ',
-            flow: ['So sánh các LỰA CHỌN: bậc nào, ngưỡng nào, model nào', 'Được nhìn NHIỀU LẦN trong lúc phát triển', 'Nhưng không bao giờ được vào fit()'],
-            note: 'Chính là "20 điểm giấu" của bài 14 — trọng tài cho mọi quyết định thiết kế.'
+            id: 'ml-model', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            station: { icon: '🤖', label: 'MODEL', sub: 'Khởi tạo bộ học', hint: 'Tạo model rỗng — lúc này nó chưa biết gì về học viên.' },
+            ml_effect: { type: 'note', note: 'Model rỗng — chưa học gì. Dữ liệu chưa đổi.' }
           },
           {
-            id: 'test-vault',
-            label: '🔒 Test Vault — 200 hồ sơ NIÊM PHONG',
-            flow: ['Khóa từ đầu đến phút CHÓT', 'Mở đúng MỘT lần → con số đem đi báo cáo', 'Đụng vào sớm = con số báo cáo thành tự dối mình'],
-            note: 'Vì validation bị nhìn nhiều lần nên chính nó cũng "mòn" — cần một tập chưa ai đụng để nói sự thật cuối cùng.'
+            id: 'ml-fit', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            station: { icon: '🎓', label: 'TRAIN', sub: 'fit — học từ X, y', hint: 'Model đọc 12 hồ sơ + đáp án để tự rút pattern. Phải fit TRƯỚC khi predict.' },
+            ml_effect: { type: 'note', note: 'Model đã FIT — pattern từ 12 hồ sơ giờ nằm trong model.' }
+          },
+          {
+            id: 'ml-predict', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            station: { icon: '🔮', label: 'PREDICT', sub: 'Học viên MỚI', hint: 'Dự đoán cho <code>X_new</code> — hồ sơ CHƯA TỪNG có trong dữ liệu học.' },
+            ml_effect: {
+              type: 'predict',
+              columns: ['study_hours', 'attendance', 'quiz_score', 'dự đoán'],
+              rows: [['7.0', '90', '82', '1 · ĐẬU']]
+            }
           }
         ],
-        micro_check: {
-          question: 'Tập nào là tập DUY NHẤT được dùng để học weights (vào fit)?',
-          options: [
-            { text: 'Train — 600 hồ sơ trong Training Room', correct: true },
-            { text: 'Train + Validation — càng nhiều dữ liệu học càng tốt', correct: false }
-          ],
-          feedback_correct: 'Chuẩn phân quyền! Validation chỉ để SO SÁNH lựa chọn, Test chỉ để báo cáo — fit() chỉ ăn Train.',
-          feedback_wrong: 'Cho Validation vào fit() thì lấy gì làm trọng tài? Model sẽ "thuộc bài" cả tập so sánh — fit chỉ được ăn Train.'
+        expected_sql: 'X, y, X_new = load_study_data() model = SimpleClassifier() model.fit (X, y) prediction = model.predict(X_new)',
+        expected_zones: {
+          'ml-data':    'X, y, X_new = load_study_data()',
+          'ml-model':   'model = SimpleClassifier()',
+          'ml-fit':     'model.fit (X, y)',
+          'ml-predict': 'prediction = model.predict(X_new)'
+        },
+        reveal_hints: {
+          'ml-data':    'Bắt đầu bằng nạp dữ liệu: <strong>X, y, X_new = load_study_data()</strong>.',
+          'ml-model':   'Tạo bộ học: <strong>model = SimpleClassifier()</strong>.',
+          'ml-fit':     'Cho model học: <strong>model.fit(X, y)</strong> — fit TRƯỚC predict.',
+          'ml-predict': 'Dự đoán ca mới: <strong>prediction = model.predict(X_new)</strong>.'
         }
       },
 
-      step_2: {
-        type: 'sort_scenarios',
-        intro_html: 'Kiểm tra quy trình: kéo từng workflow vào ngăn AN TOÀN hay LEAKAGE.',
-        bins: [
-          { key: 'safe', label: 'AN TOÀN ✓' },
-          { key: 'leak', label: 'LEAKAGE ✗' }
-        ],
-        cards: [
-          { text: 'Scaler học mean/std từ TRAIN, rồi transform validation/test', role: 'safe' },
-          { text: 'fit_transform scaler trên TOÀN BỘ 1000 dòng, sau đó mới split', role: 'leak' },
-          { text: 'Chọn ngưỡng phân lớp bằng VALIDATION', role: 'safe' },
-          { text: 'Thử 10 model, chọn cái có điểm TEST cao nhất', role: 'leak' },
-          { text: 'Mở Test Vault đúng 1 lần cuối cùng để lấy số báo cáo', role: 'safe' }
-        ],
-        wrong_feedback: 'Hỏi 1 câu: thông tin từ dữ liệu ĐÁNH GIÁ có chảy ngược vào quá trình học/chọn không? Có = leakage, dù shape vẫn đẹp.',
-        scenario_intro: 'Toán chia tỉ lệ 60/20/20 — chỗ mọi người hay ngã',
-        scenario_options: [
-          { key: 'true', label: 'Đúng' },
-          { key: 'false', label: 'Sai' }
-        ],
-        scenarios: [
-          { text: 'Muốn 60/20/20: bước 1 tách 20% test; bước 2 lấy 25% của phần 80% còn lại làm validation — vì 0.25 × 0.8 = 0.20', answer: 'true', explain: 'Đúng phép nhân tỉ lệ: lần split thứ hai tính phần trăm trên TẬP TẠM 800 dòng, không phải trên 1000 dòng gốc.' },
-          { text: 'Lấy 20% của phần 80% làm validation cũng ra 20% toàn cục', answer: 'false', explain: '0.20 × 0.8 = 0.16 — validation chỉ còn 16% (160 dòng). Sai số tưởng nhỏ này làm mọi so sánh nghiêng lệch.' },
-          { text: 'stratify=y giữ tỉ lệ Đậu/Rớt ≈ 70/30 giống nhau ở CẢ 3 tập, và random_state làm split tái lập được y hệt mỗi lần chạy', answer: 'true', explain: 'Không stratify, một tập có thể ngẫu nhiên lệch 78/22 — mọi phép đo trên đó méo theo. Không random_state, thí nghiệm hôm nay không lặp lại được ngày mai.' }
-        ]
+      /* Map dùng bảng NGUỒN = 12 học viên thật (drag_game đọc lesson.drag_map.table) */
+      drag_map: {
+        table: {
+          name: 'study_data',
+          columns: ['study_hours', 'attendance', 'quiz_score', 'pass_fail'],
+          dataRows: [
+            ['2.0', '55', '45', '0'],
+            ['8.0', '95', '85', '1'],
+            ['1.0', '50', '40', '0'],
+            ['9.0', '98', '90', '1'],
+            ['3.0', '60', '50', '0'],
+            ['7.0', '92', '80', '1'],
+            ['2.0', '58', '48', '0'],
+            ['8.0', '96', '88', '1'],
+            ['4.0', '70', '60', '0'],
+            ['9.0', '99', '95', '1'],
+            ['1.0', '52', '42', '0'],
+            ['6.0', '88', '78', '1']
+          ]
+        }
       },
 
-      step_3: {
-        type: 'experiment_rounds',
-        mission: 'Khóa Test Vault từng bước: Raw 1000 → tách test → tách validation → chốt stratify + random_state.',
-        choose_options: [],
-        rounds: [
-          {
-            title: 'Bước 1 — 1000 hồ sơ thô đang đứng trước cửa',
-            fixed: [
-              { label: 'Raw', value: '1000 dòng · Đậu/Rớt = 70/30' },
-              { label: 'Nguyên tắc', value: 'Chưa ai được HỌC gì từ dữ liệu trước khi chia phòng' }
-            ],
-            choose: {
-              label: 'Làm gì trước tiên?',
-              options: [
-                { key: 'scale_first', label: 'Scale toàn bộ cho tiện rồi split' },
-                { key: 'split_first', label: 'Tách NGAY 20% test và khóa lại' }
-              ],
-              answer: 'split_first'
-            },
-            output: 'temp: 800 dòng  ·  test: 200 dòng 🔒  (chưa thống kê nào được học từ 200 dòng này)',
-            code: 'X_temp, X_test, y_temp, y_test = train_test_split(\n    X, y, test_size=0.20, ...)',
-            note: 'Scale-trước-split là leakage kinh điển: mean/std của test đã lộ vào training. Split TRƯỚC — mọi thứ khác SAU.'
-          },
-          {
-            title: 'Bước 2 — Cắt validation từ tập tạm 800 dòng',
-            fixed: [
-              { label: 'Còn lại', value: 'temp = 800 dòng' },
-              { label: 'Mục tiêu', value: 'validation = 200 dòng (20% TOÀN CỤC)' }
-            ],
-            choose: {
-              label: 'test_size cho lần split thứ 2?',
-              options: [
-                { key: 'p20', label: '0.20 — cứ 20% là 20%' },
-                { key: 'p25', label: '0.25 — vì 0.25 × 800 = 200' }
-              ],
-              answer: 'p25'
-            },
-            output: 'train: 600  ·  validation: 200  ·  test: 200 🔒  — đúng 60/20/20',
-            code: 'X_train, X_val, y_train, y_val = train_test_split(\n    X_temp, y_temp, test_size=0.25, ...)',
-            note: '0.20 × 800 chỉ ra 160 dòng (16% toàn cục) — phần trăm lần 2 tính trên tập TẠM, không phải tập gốc.'
-          },
-          {
-            title: 'Bước 3 — Chốt 2 tham số cuối cho cả 2 lần split',
-            fixed: [
-              { label: 'Rủi ro 1', value: 'Một phòng ngẫu nhiên lệch tỉ lệ Đậu/Rớt' },
-              { label: 'Rủi ro 2', value: 'Ngày mai chạy lại ra split KHÁC — không ai kiểm chứng được' }
-            ],
-            choose: {
-              label: 'Thêm gì vào cả 2 lệnh split?',
-              options: [
-                { key: 'nothing', label: 'Không cần gì thêm' },
-                { key: 'both', label: 'random_state=42 + stratify=y' }
-              ],
-              answer: 'both'
-            },
-            output: 'Tỉ lệ Đậu: train 0.70 · val 0.70 · test 0.70  ·  chạy lại 100 lần vẫn Y HỆT  —  TEST VAULT LOCKED 🔒',
-            code: 'train_test_split(..., random_state=42, stratify=y)\ntrain_test_split(..., random_state=42, stratify=y_temp)',
-            note: 'stratify giữ cân tỉ lệ lớp ở cả 3 phòng; random_state biến split thành thí nghiệm tái lập được.'
-          }
-        ],
-        completion_note: 'Từ đây về sau — Course 2, Course 3, và mọi dự án thật — quy trình LUÔN mở màn bằng nghi thức này: chia phòng trước, học sau, Test Vault mở đúng một lần.'
-      },
-
+      /* ----- STEP 4: câu hỏi KHÁC Step 3 (luật anti-boredom) — viết TRỌN script,
+         hidden tests đổi X_new; bẫy kinh điển predict(X). Grader 4 tầng chạy thật
+         trong Pyodide (ml_grader.grade_lesson1). ----- */
       step_4: {
-        prompt_html: 'Tự tay tạo split 60/20/20 stratified, tái lập được, bằng ĐÚNG 2 lần <code>train_test_split</code>. ' +
-          'In shapes + tỉ lệ Đậu của cả 3 tập.',
-        starter_code:
-          'from sklearn.model_selection import train_test_split\n' +
-          'from ml_lab import load_split_dataset\n\n' +
-          '# 1000 hồ sơ, nhãn Đậu/Rớt 70/30\n' +
-          'X, y = load_split_dataset()\n\n' +
-          '# TODO: lần 1 — tách 20% test (nhớ random_state + stratify)\n\n\n' +
-          '# TODO: lần 2 — tách validation từ phần còn lại sao cho ra 200 dòng\n\n\n' +
-          'print(X_train.shape, X_val.shape, X_test.shape)\n' +
-          'print(y_train.mean(), y_val.mean(), y_test.mean())',
-        grader_fn: 'grade_lesson15',
+        prompt: 'Bước 3 bạn đã lắp pipeline bằng tay. Giờ StudyLab cần bản <strong>code thật</strong> — và hệ thống chấm sẽ <strong>thay hồ sơ học viên mới</strong> (X_new đổi ngầm) để chắc chắn model dự đoán thật. Tự viết TRỌN script: nạp dữ liệu → tạo model → <code>fit</code> → <code>predict</code> cho học viên MỚI → <code>print(prediction)</code>.',
+        context: {
+          scenario: 'Pipeline kéo thả ở Bước 3 chỉ chạy cho 1 hồ sơ demo. Bản code thật phải sống sót qua <strong>hidden tests</strong>: hệ thống bí mật đổi X_new — nếu bạn viết đúng quy trình, kết quả vẫn hợp lệ với mọi hồ sơ.',
+          real_world: 'Đây chính là bộ lọc <strong>spam của Gmail</strong>: model được fit trên email QUÁ KHỨ đã gắn nhãn, rồi predict cho email MỚI vừa đến. Nếu chỉ <code>predict(X)</code> — dự đoán lại chính các email cũ — bộ lọc "đúng 100%" mà vô dụng: thư rác mới lọt sạch. Dự đoán chỉ có giá trị trên dữ liệu <strong>chưa từng thấy</strong>.',
+          steps: [
+            'Import: <code>from ml_lab import SimpleClassifier, load_study_data</code>.',
+            'Nạp dữ liệu: <code>X, y, X_new = load_study_data()</code>.',
+            'Tạo rồi huấn luyện: <code>model = SimpleClassifier()</code> → <code>model.fit(X, y)</code> — fit TRƯỚC predict.',
+            'Dự đoán học viên MỚI: <code>prediction = model.predict(X_new)</code> — đừng rơi bẫy <code>predict(X)</code>!',
+            '<code>print(prediction)</code> → bấm Run xem thử, Submit để chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn xem dữ liệu trước? Gõ <code>print(X.shape)</code> hoặc <code>print(X[:3])</code> rồi <strong>Run</strong> — 12 dòng × 3 cột đặc trưng.',
+          expected: 'Console in <code>[1]</code> — học viên mới (7h · 90% · quiz 82) được dự đoán <strong>ĐẬU</strong>. Cả 4 tầng Checks phải xanh — kể cả khi hệ thống đổi X_new ngầm.'
+        },
         hints: [
-          'Lần 1: X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, random_state=42, stratify=y).',
-          'Lần 2: test_size=0.25 trên X_temp/y_temp (0.25 × 800 = 200) với stratify=y_temp — dùng 0.20 chỉ ra 160 dòng.',
-          'Grader kiểm 1000 row-id không giẫm nhau, chạy lại lần 2 phải Y HỆT (random_state), và bắt scaler fit trước split.'
+          { level: 1, text: 'Chính là pipeline 4 trạm của Bước 3 — nhưng viết thành code, thêm dòng import ở đầu và print ở cuối.' },
+          { level: 2, text: 'Dòng 1: <code>from ml_lab import SimpleClassifier, load_study_data</code>. Dòng 2: <code>X, y, X_new = load_study_data()</code>.' },
+          { level: 3, text: 'Thứ tự bắt buộc: <code>model = SimpleClassifier()</code> → <code>model.fit(X, y)</code> → <code>prediction = model.predict(X_new)</code>. Predict trên <strong>X_new</strong>, không phải X.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import SimpleClassifier, load_study_data<br>X, y, X_new = load_study_data()<br>model = SimpleClassifier()<br>model.fit(X, y)<br>prediction = model.predict(X_new)<br>print(prediction)</code>' }
         ],
-        success_message: 'Split 600/200/200 stratified, tái lập được, Test Vault niêm phong — Course 1 khép lại bằng nghi thức trung thực quan trọng nhất của nghề. 🎓 Course 2 sẽ mở màn bằng chính split này để huấn luyện pipeline thật.'
+        grader_fn: 'grade_lesson1',
+        success_message: 'Pipeline ML đầu tiên của bạn chạy thật: model học từ 12 hồ sơ và dự đoán đúng cho học viên chưa từng thấy. Bài 2: cùng một bảng dữ liệu — ba loại bài toán ML khác nhau.',
+        xp_reward: 50
       }
-    }
+    },
+
+    /* ── Bài 2-15: stub chờ rollout theo module (shell hiện màn "đang cập nhật") ── */
+    { id: 'c1_l2',  index: 2,  title: 'Bài toán ML này thuộc loại nào?',              module: 10, module_title: 'M1 — Định khung bài toán ML',  xp_reward: 50 },
+    { id: 'c1_l3',  index: 3,  title: 'Dataset trong mắt model — X và y',             module: 10, module_title: 'M1 — Định khung bài toán ML',  xp_reward: 50 },
+    { id: 'c1_l4',  index: 4,  title: 'Hiểu kiểu dữ liệu trước khi train',            module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    { id: 'c1_l5',  index: 5,  title: 'Làm sạch dữ liệu bẩn',                         module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    { id: 'c1_l6',  index: 6,  title: 'Scale feature — không để 1 đơn vị lấn át',     module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    { id: 'c1_l7',  index: 7,  title: 'Đọc dữ liệu bằng thống kê cơ bản',             module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    { id: 'c1_l8',  index: 8,  title: 'Vẽ đường dự đoán đầu tiên',                    module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
+    { id: 'c1_l9',  index: 9,  title: 'Đo lỗi model bằng MSE',                        module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
+    { id: 'c1_l10', index: 10, title: 'Gradient Descent — model tự chỉnh đường',      module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
+    { id: 'c1_l11', index: 11, title: 'Vì sao Linear Regression không phân loại được', module: 13, module_title: 'M4 — Phân loại Logistic',     xp_reward: 50 },
+    { id: 'c1_l12', index: 12, title: 'Sigmoid — biến score thành xác suất',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
+    { id: 'c1_l13', index: 13, title: 'Decision Boundary — luật tách 2 lớp',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
+    { id: 'c1_l14', index: 14, title: 'Underfit, Good Fit và Overfit',                module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 },
+    { id: 'c1_l15', index: 15, title: 'Chia Train / Validation / Test',               module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 }
   ]
 };
