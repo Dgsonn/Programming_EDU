@@ -1343,6 +1343,378 @@ window.LESSON_CONTENT_ML = {
         ],
         success_message: 'MSE 887 → 26 sau 200 bước — model TỰ tìm đường mà không ai xoay slider. Đây chính là trái tim của "học" trong machine learning: lặp lại một luật update nhỏ, đủ nhiều lần.'
       }
+    },
+
+    /* ═══════ BÀI 11 — Vì sao Linear Regression không phân loại được ═══════ */
+    {
+      id: 'c1_l11', index: 11,
+      course: 'Course 1 — ML Foundations', module: 'M4 — Logistic Classification Foundations',
+      title: 'Vì sao Linear Regression không phải model xác suất phân loại',
+      subtitle: 'Output không bị chặn, threshold chữa cháy và mục tiêu huấn luyện sai',
+      xp_reward: 20, badge: 'Logistic Foundations',
+
+      step_1: {
+        type: 'line_reveal',
+        topic_tag: 'Đường thẳng vượt rào xác suất',
+        intro_html: 'StudyLab quay lại bài toán gốc: dự đoán <b>Đậu/Rớt</b> (0/1). Ý tưởng "lười": ' +
+          'lấy luôn Linear Regression vừa học ở M3, fit thẳng lên nhãn 0/1 — code chạy êm ru. ' +
+          'Nhưng hãy soi OUTPUT của nó trước khi tin.',
+        plot: {
+          points: [[0.8, 0], [1.5, 0], [2.3, 0], [3.0, 0], [3.8, 0], [4.4, 1], [5.0, 0], [5.6, 1], [6.4, 1], [7.2, 1], [8.0, 1], [9.0, 1]],
+          xmax: 10, ymax: 1.5
+        },
+        line: { w: 0.16, b: -0.3 },
+        reveal_btn: 'Fit đường thẳng lên nhãn 0/1',
+        formula_html: 'ŷ = 0.16 × study_hours − 0.3 &nbsp;·&nbsp; <span style="color:#9CA8C4">nhãn chỉ có 0 và 1 — nhưng đường thì KHÔNG biết điều đó</span>',
+        trace_btn: 'Dò học viên chăm nhất (x = 9.7)',
+        trace: {
+          x: 9.7,
+          note: 'ŷ(9.7) = <b>1.25</b>. Và ở đầu kia: ŷ(0.5) = <b>−0.22</b>. "Xác suất" 125%? "Xác suất" âm? Đường thẳng không có trần cũng chẳng có sàn.'
+        },
+        micro_check: {
+          question: 'Model trả 1.25 cho học viên chăm nhất — 1.25 có phải một xác suất hợp lệ?',
+          options: [
+            { text: 'Không — xác suất phải nằm trong [0, 1]; 1.25 chỉ là SCORE không bị chặn', correct: true },
+            { text: 'Có — trên 1 nghĩa là "chắc chắn đậu, còn dư"', correct: false }
+          ],
+          feedback_correct: 'Chuẩn. Code chạy được nhưng CÔNG THỨC HÓA sai: hồi quy tối ưu đại lượng liên tục không bị chặn.',
+          feedback_wrong: 'Không tồn tại xác suất 125% — mọi giá trị ngoài [0,1] đều vô nghĩa với vai trò xác suất. Đây là score, không phải p.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Chữa cháy bằng threshold (ŷ ≥ 0.5 → lớp 1)? Phân loại xem threshold LÀM ĐƯỢC gì và KHÔNG làm được gì.',
+        bins: [
+          { key: 'can', label: 'THRESHOLD LÀM ĐƯỢC' },
+          { key: 'cannot', label: 'THRESHOLD KHÔNG LÀM ĐƯỢC' }
+        ],
+        cards: [
+          { text: 'Biến score liên tục thành quyết định 0/1', role: 'can' },
+          { text: 'Ép output thô nằm trong [0, 1]', role: 'cannot' },
+          { text: 'Biến score thành XÁC SUẤT có nghĩa', role: 'cannot' },
+          { text: 'Đổi số học viên bị gắn nhãn Rớt khi dịch ngưỡng', role: 'can' },
+          { text: 'Sửa mục tiêu huấn luyện (loss) cho đúng bài phân loại', role: 'cannot' }
+        ],
+        wrong_feedback: 'Threshold chỉ CẮT score thành 2 nửa — nó không đổi được range của output, càng không đổi được loss mà model đã tối ưu.',
+        scenario_intro: 'Đúng hay sai?',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'Thêm 1 học viên cực đoan (x = 20, nhãn 1): cả đường hồi quy NGHIÊNG theo, điểm cắt 0.5 dịch chuyển, nhiều bạn khác bị đổi nhãn', answer: 'true', explain: 'Hồi quy tối ưu MSE nên bị outlier kéo mạnh — ranh giới phân lớp của bạn phụ thuộc 1 điểm dữ liệu xa lắc. Rất mong manh.' },
+          { text: 'LinearRegression.fit(X, y_nhị_phân) sẽ báo lỗi khi chạy', answer: 'false', explain: 'Chạy êm ru — sklearn không hỏi bạn nhãn nghĩa là gì. Vấn đề nằm ở CÔNG THỨC HÓA, không phải syntax. Đó là lý do cần tầng Risk.' },
+          { text: 'np.clip(output, 0, 1) là sửa xong vấn đề', answer: 'false', explain: 'Clip chỉ giấu triệu chứng: model bên dưới vẫn tối ưu sai mục tiêu, đường gãy khúc tại 0/1 không phải đường cong xác suất. Cần hàm bị chặn THẬT — bài sau.' }
+        ]
+      },
+
+      step_3: {
+        type: 'experiment_rounds',
+        mission: 'Audit console: chạy 3 lượt kiểm tra trên model "sai" — nhìn tận mắt từng vết nứt trước khi học cách sửa.',
+        choose_options: [],
+        rounds: [
+          {
+            title: 'Lượt 1 — Soi output thô trên 12 điểm probe',
+            fixed: [
+              { label: 'Model', value: 'LinearRegression fit trên y ∈ {0, 1}' },
+              { label: 'Probe', value: '12 điểm trải từ −2 đến 14 giờ (RỘNG hơn khoảng train)' }
+            ],
+            choose: {
+              label: 'Dự đoán: output thô sẽ…',
+              options: [
+                { key: 'inside', label: 'Nằm gọn trong [0, 1]' },
+                { key: 'outside', label: 'Tràn ra ngoài [0, 1]' }
+              ],
+              answer: 'outside'
+            },
+            output: 'linear_outputs = [−0.46, −0.26, −0.12, 0.02, 0.23, …, 1.27, 1.48, 1.75]  →  Below 0: 3 · Above 1: 3',
+            code: 'model = LinearRegression().fit(X_train, y_train)\nlinear_outputs = model.predict(X_probe)',
+            note: 'Trong khoảng train mọi thứ trông ổn — bước ra ngoài một chút là lộ ngay: đường thẳng không có trần/sàn.'
+          },
+          {
+            title: 'Lượt 2 — Thả 1 outlier (x = 20, nhãn 1) rồi fit lại',
+            fixed: [
+              { label: 'Thay đổi', value: '+1 học viên cực đoan duy nhất' },
+              { label: 'Theo dõi', value: 'Điểm cắt ŷ = 0.5 (nơi đổi nhãn)' }
+            ],
+            choose: {
+              label: 'Điểm cắt 0.5 sẽ…',
+              options: [
+                { key: 'same', label: 'Đứng yên — chỉ là 1 điểm' },
+                { key: 'shift', label: 'Dịch chuyển — cả đường nghiêng theo' }
+              ],
+              answer: 'shift'
+            },
+            output: 'Điểm cắt 0.5: x = 5.0  →  x = 5.2   ·   1 học viên sát ranh giới bị ĐỔI NHÃN — bởi đúng 1 điểm outlier',
+            code: 'X2 = np.vstack([X_train, [[20.0]]])\ny2 = np.append(y_train, 1)\nmodel2 = LinearRegression().fit(X2, y2)',
+            note: 'MSE phạt bình phương nên 1 điểm xa kéo cả đường — ranh giới phân lớp trở thành con tin của outlier.'
+          },
+          {
+            title: 'Lượt 3 — Kết luận audit',
+            fixed: [
+              { label: 'Triệu chứng', value: 'Output vô nghĩa ngoài [0,1] · ranh giới mong manh · loss sai bài' },
+              { label: 'Câu hỏi', value: 'Thứ ta THẬT SỰ cần là gì?' }
+            ],
+            choose: {
+              label: 'Chọn phương án:',
+              options: [
+                { key: 'thr', label: 'Threshold khéo hơn' },
+                { key: 'clip', label: 'Clip output vào [0,1]' },
+                { key: 'bounded', label: 'Một hàm BỊ CHẶN thật: mọi score → (0,1)' }
+              ],
+              answer: 'bounded'
+            },
+            output: 'Preview: một đường cong chữ S mượt — ép mọi score về (0, 1), không gãy khúc, không giấu bệnh → Bài 12: SIGMOID',
+            code: '# threshold: chỉ cắt score — không sửa range, không sửa loss\n# clip: giấu triệu chứng — model vẫn tối ưu sai mục tiêu\n# cần: hàm chuyển score → xác suất THẬT',
+            note: 'Chẩn bệnh xong mới bốc thuốc — giờ bạn biết CHÍNH XÁC vì sao cần sigmoid, chứ không phải "sách bảo thế".'
+          }
+        ],
+        completion_note: 'Model sai mà code vẫn chạy êm — bài audit này chính là kỹ năng phát hiện "chạy được nhưng sai về nghĩa" mà cả khóa đang rèn.'
+      },
+
+      step_4: {
+        prompt_html: 'Tự tay fit LinearRegression lên nhãn 0/1, predict 12 điểm probe, threshold tại 0.5 và ' +
+          'ĐẾM số output thô vượt rào [0, 1]. Giữ nguyên output thô — không clip.',
+        starter_code:
+          'import numpy as np\n' +
+          'from sklearn.linear_model import LinearRegression\n' +
+          'from ml_lab import load_binary_regression_demo\n\n' +
+          '# 60 học viên train (nhãn 0/1) + 12 điểm probe trải RỘNG hơn khoảng train\n' +
+          'X_train, y_train, X_probe = load_binary_regression_demo()\n\n' +
+          '# TODO: fit model, lấy output THÔ trên probe, threshold 0.5 thành nhãn\n' +
+          'model = None\n' +
+          'linear_outputs = None\n' +
+          'classes = None\n\n' +
+          'print("Output thô:", np.round(linear_outputs, 2))\n' +
+          'print("Below 0:", np.sum(linear_outputs < 0))\n' +
+          'print("Above 1:", np.sum(linear_outputs > 1))',
+        grader_fn: 'grade_lesson11',
+        hints: [
+          'model = LinearRegression().fit(X_train, y_train), rồi linear_outputs = model.predict(X_probe).',
+          'classes = (linear_outputs >= 0.5).astype(int) — threshold là bước RIÊNG, sau khi đã soi output thô.',
+          'Đừng np.clip cho "đẹp" — tầng Risk bắt ngay: giấu triệu chứng không phải chữa bệnh. Cũng đừng đổi sang LogisticRegression — bài này PHẢI nhìn cái sai tận mắt.'
+        ],
+        success_message: 'Audit hoàn tất: 3 output âm, 3 output vượt 1 — bằng chứng số liệu rằng hồi quy tuyến tính không phải model xác suất. Bài sau: ép mọi score vào (0,1) bằng một đường cong chữ S.'
+      }
+    },
+
+    /* ═══════════════ BÀI 12 — Sigmoid ═══════════════ */
+    {
+      id: 'c1_l12', index: 12,
+      course: 'Course 1 — ML Foundations', module: 'M4 — Logistic Classification Foundations',
+      title: 'Sigmoid — biến score thành xác suất',
+      subtitle: 'Score tuyến tính z, hàm logistic bị chặn, saturation — và vì sao lại ĐÚNG là hàm này',
+      xp_reward: 20, badge: 'Logistic Foundations',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Máy ép score về (0, 1)',
+        intro_html: 'Bài 11 chốt: cần một hàm ép MỌI score thực về khoảng (0, 1). ' +
+          'Gặp <b>sigmoid</b>: <code>p = 1 / (1 + e^(−z))</code> — trái tim của Logistic Regression.',
+        rounds: [
+          {
+            id: 'z-score',
+            label: 'Đầu vào: score tuyến tính z (không bị chặn)',
+            flow: ['z = w · study_hours + b', 'x chạy 0 → 10 ⇒ z chạy −4 → +4', 'z càng DƯƠNG càng nghiêng về "Đậu" — nhưng z chưa phải xác suất'],
+            note: 'z là điểm số thô — chính là thứ Linear Regression trả ra ở bài 11, có thể là bất kỳ số thực nào.'
+          },
+          {
+            id: 'through-sigmoid',
+            label: 'Qua máy ép sigmoid: p = 1/(1+e^(−z))',
+            flow: ['z = −4 → p = 0.018', 'z = −1.6 → p = 0.168', 'z = 0 → p = 0.500', 'z = +1.6 → p = 0.832', 'z = +4 → p = 0.982'],
+            note: 'Mọi score — kể cả ±1000 — đều bị ép vào (0, 1), mượt và đơn điệu. z = 0 là điểm cân bằng tuyệt đối.'
+          }
+        ],
+        micro_check: {
+          question: 'Học viên có score z = 0 (đứng chính giữa) — sigmoid trả xác suất bao nhiêu?',
+          options: [
+            { text: 'p = 0.5 — cân bằng hoàn hảo giữa 2 lớp: 1/(1+e⁰) = 1/2', correct: true },
+            { text: 'p = 0 — vì z bằng 0', correct: false }
+          ],
+          feedback_correct: 'Chuẩn! z = 0 ⇒ e⁰ = 1 ⇒ p = 1/2. Điểm này sẽ trở thành RANH GIỚI quyết định ở bài 13.',
+          feedback_wrong: 'Nhầm z với p! z = 0 nghĩa là "không nghiêng bên nào" → p = 1/(1+1) = 0.5, không phải 0.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Ước lượng nhanh không cần máy tính: kéo mỗi score z vào đúng ngăn xác suất.',
+        bins: [
+          { key: 'low', label: 'p ≈ 0.02 — GẦN SÀN' },
+          { key: 'half', label: 'p = 0.50 — CÂN BẰNG' },
+          { key: 'high', label: 'p ≈ 0.98 — GẦN TRẦN' }
+        ],
+        cards: [
+          { text: 'z = −4', role: 'low' },
+          { text: 'z = 0', role: 'half' },
+          { text: 'z = +4', role: 'high' },
+          { text: 'z = −3.9', role: 'low' },
+          { text: 'z = +4.1', role: 'high' }
+        ],
+        wrong_feedback: 'Nhớ 3 mốc: z âm mạnh → sát 0; z = 0 → đúng 0.5; z dương mạnh → sát 1. Dấu của z quyết định nửa nào.',
+        scenario_intro: 'Đúng hay sai? — gồm câu hỏi "vì sao lại là hàm NÀY" (log-odds)',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'Với z đủ lớn, sigmoid sẽ trả về ĐÚNG 1.0', answer: 'false', explain: 'Sigmoid tiệm cận 1 nhưng không bao giờ chạm — đây là saturation: vùng z lớn, p gần như phẳng, thay đổi z hầu như không đổi p.' },
+          { text: 'p = 0.99 nghĩa là CHẮC CHẮN đậu', answer: 'false', explain: 'p = 0.99 vẫn là xác suất: cứ 100 ca như vậy sẽ có ~1 ca rớt. Tự tin cao ≠ đảm bảo — nhầm lẫn này rất đắt trong thực tế.' },
+          { text: 'z tăng thì p LUÔN tăng theo (đơn điệu)', answer: 'true', explain: 'Sigmoid đơn điệu tăng — thứ tự score được bảo toàn nguyên vẹn sau khi ép, chỉ có thang đo bị nén lại.' },
+          { text: 'Sigmoid không phải công thức "bóp số" tùy hứng: đảo ngược nó ra z = log(p/(1−p)) — tức z chính là LOG-ODDS (log tỉ lệ cược). Kiểm chứng: p = 0.832 → 0.832/0.168 ≈ 4.95 → log ≈ 1.6 = z', answer: 'true', explain: 'Đây là lý do TẠI SAO đúng là hàm này (ISLR §4.3.1): mô hình tuyến tính hóa log-tỉ-lệ-cược, không phải xác suất. Mỗi +1 điểm z = nhân tỉ lệ cược với e ≈ 2.72. Sigmoid chỉ là hàm NGƯỢC của phép biến đổi đó.' }
+        ]
+      },
+
+      step_3: {
+        type: 'sigmoid_tuner',
+        mission: 'Nắn đường cong chữ S bằng tay: w chỉnh độ GẮT của cú chuyển, b đẩy MIDPOINT — hoàn thành 3 mục tiêu.',
+        sliders: {
+          w: { min: 0.2, max: 4, step: 0.2, init: 0.6 },
+          b: { min: -28, max: 4, step: 1, init: -1 },
+          x: { min: 0, max: 10, step: 0.5, init: 5 }
+        },
+        goals: [
+          { id: 'mid5', label: 'Chỉnh để p(x=5) ≈ 0.5 (±0.05)', check: 'p_at', x: 5, p: 0.5, tol: 0.05 },
+          { id: 'steep', label: 'Tăng độ gắt: w ≥ 2 (cú chuyển 0→1 dứt khoát hơn)', check: 'w_min', value: 2 },
+          { id: 'mid7', label: 'Đẩy midpoint (nơi p = 0.5) tới x ≈ 7 (±0.5)', check: 'midpoint', x: 7, tol: 0.5 }
+        ],
+        completion_note: 'Midpoint nằm tại x = −b/w (nơi z = 0). w lớn → chuyển gắt quanh midpoint và saturation sớm hai đầu; b chỉ trượt cả cú chuyển dọc trục x. Hai tay lái này Course 2 sẽ để gradient descent tự xoay.'
+      },
+
+      step_4: {
+        prompt_html: 'Viết hàm <code>sigmoid(z)</code> vectorized bằng NumPy — chạy được cho cả số lẻ lẫn cả mảng, ' +
+          'không clip, không gãy khúc.',
+        starter_code:
+          'import numpy as np\n\n' +
+          '# TODO: 1 dòng công thức logistic — KHÔNG dùng np.clip\n' +
+          'def sigmoid(z):\n' +
+          '    return None\n\n' +
+          'scores = np.array([-5., -1., 0., 1., 5.])\n' +
+          'print(sigmoid(scores))\n' +
+          'print("z=0 ->", sigmoid(0.0))',
+        grader_fn: 'grade_lesson12',
+        hints: [
+          'Công thức: 1 / (1 + np.exp(-z)) — np.exp tự vectorize cho cả mảng.',
+          'np.clip(z, 0, 1) cũng cho output "trong [0,1]" — nhưng gãy khúc, mất độ dốc quanh 0; tầng Risk phân biệt được.',
+          'Grader thử mảng ẩn z từ −30 đến +30: hàm phải đơn điệu và LUÔN trong (0, 1).'
+        ],
+        success_message: 'Sigmoid hoàn chỉnh: mọi score thực → (0,1), mượt, đơn điệu. Và giờ bạn biết lý do sâu: z = log-odds, sigmoid chỉ là hàm ngược của nó. Bài 13: cắt đường cong này tại p = 0.5 để ra QUYẾT ĐỊNH.'
+      }
+    },
+
+    /* ═══════════════ BÀI 13 — Decision Boundary ═══════════════ */
+    {
+      id: 'c1_l13', index: 13,
+      course: 'Course 1 — ML Foundations', module: 'M4 — Logistic Classification Foundations',
+      title: 'Decision Boundary — luật tách 2 lớp',
+      subtitle: 'Ngưỡng xác suất, ranh giới z = 0 và hình học phân lớp 2 chiều',
+      xp_reward: 20, badge: 'Logistic Foundations',
+
+      step_1: {
+        type: 'story_rounds',
+        topic_tag: 'Xác suất chưa phải quyết định',
+        intro_html: 'Cố vấn học tập không đọc "p = 0.48" — họ cần biết GỌI AI ĐI GẶP. ' +
+          'Phải cắt xác suất liên tục thành quyết định rời rạc: đó là việc của <b>ngưỡng (threshold)</b> — ' +
+          'và về mặt hình học, của <b>decision boundary</b>.',
+        rounds: [
+          {
+            id: 'threshold',
+            label: 'Ngưỡng 0.5 cắt xác suất thành lớp',
+            flow: ['p = [0.92, 0.61, 0.48, 0.13, 0.50]', 'luật: p ≥ 0.5 → lớp 1 (Đậu)', '→ nhãn = [1, 1, 0, 0, 1]'],
+            note: '0.48 thành Rớt dù chỉ kém 0.02 — ngưỡng là lưỡi dao sắc. 0.50 đúng mép: quy ước "≥" nên thuộc lớp 1.'
+          },
+          {
+            id: 'z-zero',
+            label: 'Ngưỡng p = 0.5 ⟺ ranh giới z = 0',
+            flow: ['sigmoid: p = 0.5 xảy ra ĐÚNG KHI z = 0', 'z > 0 → lớp 1 · z < 0 → lớp 0', 'tập điểm có z = 0 chính là DECISION BOUNDARY'],
+            note: 'Với 2 feature: w₁x₁ + w₂x₂ + b = 0 là một ĐƯỜNG THẲNG trên mặt phẳng — mỗi phía là một lớp.'
+          }
+        ],
+        micro_check: {
+          question: 'p = 0.48, ngưỡng 0.5 — học viên này được gán lớp nào?',
+          options: [
+            { text: 'Lớp 0 (Rớt) — vì 0.48 < 0.5, dù chỉ kém 0.02', correct: true },
+            { text: 'Lớp 1 (Đậu) — gần 0.5 thì làm tròn lên', correct: false }
+          ],
+          feedback_correct: 'Chuẩn — ngưỡng không "thông cảm". Vì thế các ca sát ranh giới là nơi cần người thật xem lại.',
+          feedback_wrong: 'Không có làm tròn tình cảm ở đây: luật là p ≥ 0.5 → lớp 1, còn lại lớp 0. 0.48 → Rớt.'
+        }
+      },
+
+      step_2: {
+        type: 'sort_scenarios',
+        intro_html: 'Tự tính z = 2·x₁ − 1·x₂ − 4 cho từng điểm (hoặc đọc p) rồi xếp vào đúng phía ranh giới.',
+        bins: [
+          { key: 'class1', label: 'LỚP 1 — z > 0' },
+          { key: 'class0', label: 'LỚP 0 — z < 0' },
+          { key: 'edge', label: 'TRÊN RANH GIỚI — z = 0' }
+        ],
+        cards: [
+          { text: 'Điểm (4, 2): z = 2·4 − 1·2 − 4 = +2', role: 'class1' },
+          { text: 'Điểm (1, 1): z = 2·1 − 1·1 − 4 = −3', role: 'class0' },
+          { text: 'Điểm (3, 2): z = 2·3 − 1·2 − 4 = 0', role: 'edge' },
+          { text: 'p = 0.83 (⇒ z > 0)', role: 'class1' },
+          { text: 'p = 0.21 (⇒ z < 0)', role: 'class0' }
+        ],
+        wrong_feedback: 'Tính z rồi nhìn DẤU: dương → lớp 1, âm → lớp 0, bằng 0 → đứng ngay trên đường ranh giới.',
+        scenario_intro: 'Đúng hay sai? — hình học của ranh giới',
+        scenario_options: [
+          { key: 'true', label: 'Đúng' },
+          { key: 'false', label: 'Sai' }
+        ],
+        scenarios: [
+          { text: 'Ranh giới quyết định nằm ở p = 0', answer: 'false', explain: 'Ranh giới ở p = 0.5 (⟺ z = 0). p = 0 không bao giờ đạt được — sigmoid chỉ tiệm cận.' },
+          { text: 'Chỉ đổi bias b: ranh giới TỊNH TIẾN song song, không xoay', answer: 'true', explain: 'b không đổi hướng pháp tuyến (w₁, w₂) — chỉ đẩy đường lại gần/ra xa gốc tọa độ.' },
+          { text: 'Đổi tỉ lệ w₁/w₂: ranh giới XOAY hướng', answer: 'true', explain: '(w₁, w₂) là vector pháp tuyến của đường — đổi tỉ lệ là đổi hướng nghiêng của lưỡi dao.' }
+        ]
+      },
+
+      step_3: {
+        type: 'boundary_tuner',
+        mission: 'Canvas 2 feature (study_hours × quiz_score): xoay w₁/w₂ và đẩy bias để ranh giới tách SẠCH 2 lớp, rồi phân loại 1 học viên mới.',
+        data: {
+          points: [
+            [4, 1, 1], [6, 2, 1], [7, 5, 1], [8, 4, 1], [5, 2, 1], [9, 7, 1], [6.5, 4, 1],
+            [1, 4, 0], [2, 6, 0], [3, 5, 0], [4, 7, 0], [2, 3, 0], [5, 8, 0], [3, 8, 0]
+          ]
+        },
+        sliders: {
+          w1: { min: -3, max: 3, step: 0.1, init: 0.2 },
+          w2: { min: -3, max: 3, step: 0.1, init: 1.0 },
+          b: { min: -10, max: 10, step: 0.5, init: -5 }
+        },
+        probe: { btn: 'Phân loại học viên mới (6.5, 2.5)', point: [6.5, 2.5] },
+        goals: [
+          { id: 'sep', label: 'Tách sạch 2 lớp: 0 điểm phân sai', check: 'zero_errors' },
+          { id: 'probe', label: 'Phân loại điểm mới — đọc z, p và lớp', check: 'probe' }
+        ],
+        completion_note: 'Viền đỏ = điểm bị phân sai theo ranh giới hiện tại. Một đường thẳng — 3 con số (w₁, w₂, b) — quyết định số phận mọi điểm trên mặt phẳng. Course 2 sẽ để dữ liệu TỰ tìm 3 con số này.'
+      },
+
+      step_4: {
+        prompt_html: 'Ghép trọn luồng suy luận logistic: <code>sigmoid</code> + <code>predict_classes(X, weights, bias, threshold=0.5)</code> ' +
+          'trả về CẢ xác suất lẫn nhãn 0/1.',
+        starter_code:
+          'import numpy as np\n' +
+          'from ml_lab import load_boundary_data\n\n' +
+          'def sigmoid(z):\n' +
+          '    return 1 / (1 + np.exp(-z))\n\n' +
+          '# TODO: score ma trận -> sigmoid -> so với threshold\n' +
+          'def predict_classes(X, weights, bias, threshold=0.5):\n' +
+          '    return None\n\n' +
+          'X, weights, bias = load_boundary_data()\n' +
+          'probabilities, predictions = predict_classes(X, weights, bias)\n' +
+          'print(np.round(probabilities, 3))\n' +
+          'print(predictions)',
+        grader_fn: 'grade_lesson13',
+        hints: [
+          'scores = X @ weights + bias — phép nhân ma trận cho cả 20 học viên một lần.',
+          'predictions = (probabilities >= threshold).astype(int) — so XÁC SUẤT với threshold, không phải score. Ngưỡng 0.5 của p tương đương z = 0.',
+          'Giữ threshold là THAM SỐ sống — grader sẽ gọi với threshold 0.3 và 0.7, và cả X có 3 feature.'
+        ],
+        success_message: 'Luồng suy luận logistic khép kín: X @ w + b → sigmoid → threshold → nhãn. Course 1 phần "não" phân loại đã xong — M5 sẽ dạy điều cuối cùng và quan trọng nhất: đừng tự dối mình khi ĐÁNH GIÁ nó.'
+      }
     }
   ]
 };

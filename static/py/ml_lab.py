@@ -219,6 +219,38 @@ def compute_gradients(x, y, weight, bias):
     return float(2.0 * (err * x).mean()), float(2.0 * err.mean())
 
 
+# ── Bài 11 — LinearRegression trên nhãn 0/1 (audit công thức hóa sai) ────────
+def load_binary_regression_demo(variant=None):
+    """X_train (60,1) study_hours + y_train 0/1, X_probe (12,1) TRẢI RỘNG HƠN
+    khoảng train (kể cả x âm/x rất lớn) để lộ output không bị chặn."""
+    rng = np.random.RandomState(variant if variant is not None else 1101)
+    x = np.round(rng.uniform(0.5, 9.5, 60), 1)
+    p_true = 1.0 / (1.0 + np.exp(-(1.1 * x - 5.5)))
+    y = (rng.uniform(0, 1, 60) < p_true).astype(int)
+    X_train = x.reshape(-1, 1)
+    probe = np.array([-2.0, -0.5, 0.5, 1.5, 3.0, 4.5, 5.5, 7.0, 8.5, 10.5, 12.0, 14.0])
+    if variant is not None:
+        probe = probe + rng.uniform(-0.4, 0.4, probe.shape)
+    return X_train, y, probe.reshape(-1, 1)
+
+
+# ── Bài 12 — Sigmoid ─────────────────────────────────────────────────────────
+def load_sigmoid_scores():
+    """Mảng score tuyến tính z dùng trong bài sigmoid."""
+    return np.array([-4.0, -1.6, 0.0, 1.6, 4.0])
+
+
+# ── Bài 13 — Decision boundary 2 feature ─────────────────────────────────────
+def load_boundary_data():
+    """Trả về X (20, 2), weights (2,), bias — demo ranh giới tuyến tính 2D
+    (2 feature: study_hours, quiz_score thang 0-10)."""
+    rng = np.random.RandomState(1301)
+    X = np.round(rng.uniform(0.5, 9.5, (20, 2)), 1)
+    weights = np.array([1.2, -1.0])
+    bias = -2.0
+    return X, weights.copy(), float(bias)
+
+
 # ── Bài 4 — Storage dtype vs semantic type ───────────────────────────────────
 def load_student_profile(shuffle_seed=None):
     """DataFrame 200 dòng × 6 cột minh họa 'cùng int64 nhưng nghĩa khác nhau':

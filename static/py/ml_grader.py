@@ -964,6 +964,277 @@ def grade_lesson10(user_code):
     return result
 
 
+def _uses_name(tree, name):
+    return any(isinstance(n, ast.Name) and n.id == name for n in ast.walk(tree))
+
+
+def grade_lesson11(user_code):
+    """Bài 11 — audit LinearRegression trên nhãn 0/1. Unsafe-but-correct: clip
+    output vào [0,1] cho 'đẹp' — giấu triệu chứng, không sửa công thức hóa."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    # ── Code/AST: phải fit LinearRegression thật; cấm né bài ──
+    if not _uses_call(tree, 'load_binary_regression_demo'):
+        result['code_msg'] = 'Chưa thấy load_binary_regression_demo().'
+        return result
+    if not (_uses_name(tree, 'LinearRegression') or _uses_call(tree, 'LinearRegression')):
+        result['code_msg'] = 'Bài này audit LinearRegression — phải fit đúng model "sai" đó.'
+        return result
+    if not _uses_call(tree, 'fit') or not _uses_call(tree, 'predict'):
+        result['code_msg'] = 'Cần .fit(X_train, y_train) rồi .predict(X_probe).'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'LinearRegression được fit và predict thật.'
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+
+    # Tham chiếu: tự fit trên cùng dữ liệu
+    from sklearn.linear_model import LinearRegression as _LR
+    Xt, yt, Xp = ml_lab.load_binary_regression_demo()
+    ref = _LR().fit(Xt, yt).predict(Xp)
+    ref_below, ref_above = int((ref < 0).sum()), int((ref > 1).sum())
+
+    lo = ns.get('linear_outputs')
+    classes = ns.get('classes')
+    lo_arr = np.asarray(lo, dtype=float) if lo is not None else None
+
+    out_ok = (lo_arr is not None and lo_arr.shape == ref.shape and np.allclose(lo_arr, ref, atol=1e-6)
+              and classes is not None and set(np.unique(np.asarray(classes)).tolist()) <= {0, 1})
+    if out_ok:
+        result['output_ok'] = True
+        result['output_msg'] = ('Audit đúng: %d output < 0, %d output > 1 — đường thẳng KHÔNG biết '
+                                'xác suất có trần/sàn.' % (ref_below, ref_above))
+    else:
+        result['output_msg'] = ('linear_outputs phải là output THÔ của model trên X_probe '
+                                '(chưa clip/chưa threshold) + classes là nhãn 0/1.')
+
+    # ── Risk: clip là giấu bệnh; LogisticRegression là né bài ──
+    if _uses_call(tree, 'clip'):
+        result['risk_msg'] = ('np.clip ép output vào [0,1] cho ĐẸP — nhưng model bên dưới vẫn tối ưu '
+                              'sai mục tiêu. Giấu triệu chứng không phải chữa bệnh: cần hàm bị chặn '
+                              'THẬT (sigmoid, bài 12).')
+    elif _uses_name(tree, 'LogisticRegression'):
+        result['risk_msg'] = 'Nhảy thẳng sang LogisticRegression là né mất bài audit — phải nhìn tận mắt cái sai trước đã.'
+    elif lo_arr is not None and lo_arr.size and float(lo_arr.min()) >= 0 and float(lo_arr.max()) <= 1:
+        result['risk_msg'] = 'Output thô đang nằm gọn trong [0,1] — có vẻ đã bị xử lý trước khi lưu. Giữ nguyên giá trị thô.'
+    else:
+        result['risk_ok'] = True
+        result['risk_msg'] = 'Output thô được giữ nguyên không che đậy — audit trung thực.'
+
+    # ── Behavior: dữ liệu ẨN (probe khác) — audit phải vẫn đúng ──
+    orig_load = ml_lab.load_binary_regression_demo
+
+    def hidden_load(variant=None):
+        return orig_load(variant=555)
+
+    ml_lab.load_binary_regression_demo = hidden_load
+    try:
+        ns2, _ = _exec_capture(tree, '<user_code_hidden>')
+        Xt2, yt2, Xp2 = orig_load(variant=555)
+        ref2 = _LR().fit(Xt2, yt2).predict(Xp2)
+        lo2 = np.asarray(ns2.get('linear_outputs'), dtype=float) if ns2.get('linear_outputs') is not None else None
+        if lo2 is not None and lo2.shape == ref2.shape and np.allclose(lo2, ref2, atol=1e-6):
+            result['behavior_ok'] = True
+            result['behavior_msg'] = 'Trên bộ probe ẨN, output khớp model fit thật — không gõ tay số đếm.'
+        else:
+            result['behavior_msg'] = 'Trên bộ probe ẩn, output không khớp — audit đang bị hard-code.'
+    except Exception as e:
+        result['behavior_msg'] = 'Chạy lại với dữ liệu ẩn bị lỗi: ' + str(e)
+    finally:
+        ml_lab.load_binary_regression_demo = orig_load
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
+def grade_lesson12(user_code):
+    """Bài 12 — sigmoid vectorized. Unsafe-but-correct: np.clip(z, 0, 1) cho
+    output 'trong [0,1]' nhưng không phải đường cong xác suất."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    fn_def = _find_funcdef(tree, 'sigmoid')
+    if fn_def is None or len(fn_def.args.args) != 1:
+        result['code_msg'] = 'Cần hàm sigmoid(z) đúng 1 tham số.'
+        return result
+    if not _uses_call(tree, 'exp'):
+        result['code_msg'] = 'Sigmoid chuẩn dùng hàm mũ: 1 / (1 + np.exp(-z)).'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'Hàm sigmoid dùng công thức mũ thật.'
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+    fn = ns.get('sigmoid')
+
+    ref = lambda z: 1.0 / (1.0 + np.exp(-np.asarray(z, dtype=float)))
+
+    # ── Output: z=0 → 0.5 + khớp tham chiếu trên mảng bài ──
+    try:
+        z0 = float(np.asarray(fn(0.0)))
+        arr = np.asarray(fn(np.array([-5.0, -1.0, 0.0, 1.0, 5.0])), dtype=float)
+        if abs(z0 - 0.5) < 1e-9 and np.allclose(arr, ref([-5, -1, 0, 1, 5]), atol=1e-9):
+            result['output_ok'] = True
+            result['output_msg'] = 'sigmoid(0) = 0.5, cả mảng khớp công thức logistic chuẩn.'
+        else:
+            result['output_msg'] = 'sigmoid(0) phải bằng 0.5 và khớp 1/(1+e^(−z)) trên mọi phần tử.'
+    except Exception as e:
+        result['output_msg'] = 'Gọi sigmoid bị lỗi: ' + str(e)
+        return result
+
+    # ── Risk: clip / trả z thô ──
+    try:
+        zt = np.array([-3.0, -0.5, 0.25, 0.8, 3.0])
+        got = np.asarray(fn(zt), dtype=float)
+        if np.allclose(got, np.clip(zt, 0, 1), atol=1e-9):
+            result['risk_msg'] = ('Đây là np.clip chứ không phải sigmoid: output bị chặn nhưng gãy khúc, '
+                                  'mất độ dốc quanh 0 — không phải đường cong xác suất mượt.')
+        elif np.allclose(got, zt, atol=1e-9):
+            result['risk_msg'] = 'Hàm đang trả z thô — score chưa qua ép, không phải xác suất.'
+        else:
+            result['risk_ok'] = True
+            result['risk_msg'] = 'Đường cong mượt, bị chặn thật sự trong (0, 1) — đúng chất sigmoid.'
+    except Exception as e:
+        result['risk_msg'] = 'Test risk bị lỗi: ' + str(e)
+
+    # ── Behavior: mảng ẩn — khớp công thức + đơn điệu + trong (0,1) ──
+    try:
+        rng = np.random.RandomState(7)
+        z_hidden = np.sort(rng.uniform(-30, 30, 41))
+        got = np.asarray(fn(z_hidden), dtype=float)
+        mono = bool(np.all(np.diff(got) >= 0))
+        in_range = bool(np.all(got > 0) and np.all(got < 1))
+        match = np.allclose(got, ref(z_hidden), atol=1e-9)
+        if mono and in_range and match:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = 'Mảng score ẩn (−30..30): đơn điệu tăng, luôn trong (0,1), khớp công thức.'
+        else:
+            result['behavior_msg'] = 'Trên score ẩn: cần đơn điệu tăng, nằm trong (0,1) và khớp 1/(1+e^(−z)).'
+    except Exception as e:
+        result['behavior_msg'] = 'Test ẩn bị lỗi: ' + str(e)
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
+def grade_lesson13(user_code):
+    """Bài 13 — predict_classes: score ma trận → sigmoid → threshold.
+    Unsafe-but-correct: so SCORE với 0.5 thay vì so XÁC SUẤT với 0.5."""
+    result = _empty_result()
+    tree = _parse_or_fail(user_code, result)
+    if tree is None:
+        return result
+
+    fn_def = _find_funcdef(tree, 'predict_classes')
+    n_args = len(fn_def.args.args) if fn_def else 0
+    if fn_def is None or n_args < 3:
+        result['code_msg'] = 'Cần hàm predict_classes(X, weights, bias, threshold=0.5).'
+        return result
+    has_matmul = any(isinstance(n, ast.BinOp) and isinstance(n.op, ast.MatMult) for n in ast.walk(tree)) \
+        or _uses_call(tree, 'dot') or _uses_call(tree, 'matmul')
+    if not has_matmul:
+        result['code_msg'] = 'Score phải tính bằng phép nhân ma trận: X @ weights + bias.'
+        return result
+    result['code_ok'] = True
+    result['code_msg'] = 'Có X @ weights + bias và đủ tham số threshold.'
+
+    try:
+        ns, out = _exec_capture(tree)
+    except Exception as e:
+        result['output_msg'] = 'Lỗi khi chạy: ' + str(e)
+        return result
+    result['stdout'] = out
+    fn = ns.get('predict_classes')
+
+    def ref(X, w, b, t=0.5):
+        p = 1.0 / (1.0 + np.exp(-(np.asarray(X, float) @ np.asarray(w, float) + b)))
+        return p, (p >= t).astype(int)
+
+    X, w, b = ml_lab.load_boundary_data()
+
+    # ── Output: shapes + nhãn 0/1 + khớp tham chiếu trên dữ liệu bài ──
+    try:
+        got = fn(X, w, b)
+        if not (isinstance(got, tuple) and len(got) == 2):
+            result['output_msg'] = 'Hàm phải return (probabilities, predictions) — đủ CẢ HAI.'
+            return result
+        p_got, c_got = np.asarray(got[0], float), np.asarray(got[1])
+        p_ref, c_ref = ref(X, w, b)
+        if p_got.shape == (20,) and c_got.shape == (20,) \
+                and set(np.unique(c_got).tolist()) <= {0, 1} \
+                and np.allclose(p_got, p_ref, atol=1e-9) and np.array_equal(c_got, c_ref):
+            result['output_ok'] = True
+            result['output_msg'] = '20 xác suất trong (0,1) + 20 nhãn 0/1, khớp tham chiếu từng phần tử.'
+        else:
+            result['output_msg'] = 'Xác suất/nhãn chưa khớp: cần p = sigmoid(X @ w + b), nhãn = (p >= threshold).'
+    except Exception as e:
+        result['output_msg'] = 'Gọi predict_classes bị lỗi: ' + str(e)
+        return result
+
+    # ── Risk: so SCORE với 0.5 (trap kinh điển) + threshold bị bỏ ──
+    try:
+        # z = 0.2 → p = 0.55: đúng phải là lớp 1 tại threshold 0.5.
+        # Ai so score >= 0.5 sẽ trả lớp 0.
+        Xt = np.array([[0.2]])
+        _, ct = fn(Xt, np.array([1.0]), 0.0)
+        ct = np.asarray(ct)
+        # threshold phải là tham số sống: p=0.55 với threshold 0.9 → lớp 0
+        _, ct2 = fn(Xt, np.array([1.0]), 0.0, 0.9)
+        ct2 = np.asarray(ct2)
+        if int(ct[0]) == 0:
+            result['risk_msg'] = ('Điểm có z = 0.2 (p = 0.55) đang bị gán lớp 0 — bạn so SCORE với 0.5. '
+                                  'Ngưỡng 0.5 là của XÁC SUẤT; bên score nó tương đương z = 0. '
+                                  'Cả luật phân lớp đang bị dịch sai.')
+        elif int(ct2[0]) == 1:
+            result['risk_msg'] = 'threshold=0.9 mà p=0.55 vẫn được lớp 1 — tham số threshold đang bị bỏ qua (hard-code 0.5).'
+        else:
+            result['risk_ok'] = True
+            result['risk_msg'] = 'So đúng XÁC SUẤT với threshold, và threshold là tham số sống.'
+    except Exception as e:
+        result['risk_msg'] = 'Test risk bị lỗi: ' + str(e)
+
+    # ── Behavior: số feature khác + threshold khác ──
+    try:
+        rng = np.random.RandomState(9)
+        X3 = rng.uniform(-2, 2, (7, 3))
+        w3 = np.array([0.8, -1.2, 0.5])
+        ok = True
+        for t in (0.3, 0.7):
+            got = fn(X3, w3, 0.4, t)
+            p_ref, c_ref = ref(X3, w3, 0.4, t)
+            if not (np.allclose(np.asarray(got[0], float), p_ref, atol=1e-9)
+                    and np.array_equal(np.asarray(got[1]), c_ref)):
+                ok = False
+                break
+        if ok:
+            result['behavior_ok'] = True
+            result['behavior_msg'] = '3 feature + threshold 0.3/0.7 ẩn đều khớp — hàm tổng quát thật.'
+        else:
+            result['behavior_msg'] = 'Với 3 feature hoặc threshold khác 0.5, kết quả lệch tham chiếu.'
+    except Exception as e:
+        result['behavior_msg'] = 'Test ẩn bị lỗi: ' + str(e)
+
+    result['overall_pass'] = (result['output_ok'] and result['code_ok']
+                               and result['behavior_ok'] and result['risk_ok'])
+    return result
+
+
 def grade_lesson3(user_code):
     """Bài 3 — Raw DataFrame vs X/y. Học viên tạo X = 3 feature hợp lệ, y = pass_fail.
     Unsafe-but-correct: X đủ shape (200, 3) nhưng chứa final_score → leak thông tin

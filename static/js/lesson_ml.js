@@ -228,6 +228,19 @@
         s += `<line x1="${X(px)}" y1="${Y(Math.max(0, Math.min(ymax, py)))}" x2="${X(px)}" y2="${Y(Math.max(0, Math.min(ymax, yh)))}" class="ml-plot-residual" clip-path="url(#${cid})"/>`;
       });
     }
+    // đường ngang tham chiếu (vd. p = 0 và p = 1 ở bài xác suất)
+    (cfg.hlines || []).forEach((h) => {
+      s += `<line x1="${mL}" y1="${Y(h.y)}" x2="${W - mR}" y2="${Y(h.y)}" class="${h.cls || 'ml-plot-hline'}"/>`;
+      if (h.label) s += `<text x="${W - mR - 4}" y="${Y(h.y) - 4}" class="ml-plot-tick" text-anchor="end">${h.label}</text>`;
+    });
+    // đường cong (polyline điểm đã tính sẵn — vd. sigmoid)
+    if (cfg.curvePts && cfg.curvePts.length) {
+      let d = '';
+      cfg.curvePts.forEach(([px, py], i) => {
+        d += (i === 0 ? 'M' : 'L') + X(px).toFixed(1) + ',' + Y(Math.max(0, Math.min(ymax, py))).toFixed(1);
+      });
+      s += `<path d="${d}" class="ml-plot-line" fill="none" clip-path="url(#${cid})"/>`;
+    }
     // đường thẳng
     const drawLine = (ln, cls) => {
       if (!ln) return;
@@ -626,7 +639,189 @@
     else if (t === 'xy_builder') renderXyBuilder(mount);
     else if (t === 'line_tuner') renderLineTuner(mount);
     else if (t === 'gd_console') renderGdConsole(mount);
+    else if (t === 'sigmoid_tuner') renderSigmoidTuner(mount);
+    else if (t === 'boundary_tuner') renderBoundaryTuner(mount);
     else renderSpecBuilder(mount);
+  }
+
+  const sigmoidFn = (z) => 1 / (1 + Math.exp(-z));
+
+  /* sigmoid_tuner — chỉnh w/b của p = sigmoid(w·x + b); slider x dò z & p sống */
+  function renderSigmoidTuner(mount) {
+    const s3 = lesson.step_3;
+    const st = { w: s3.sliders.w.init, b: s3.sliders.b.init, x: s3.sliders.x.init };
+    const goalsDone = new Set();
+
+    mount.innerHTML = `<p class="ml-step-instr">${s3.mission}</p>
+      <div class="ml-lt-grid">
+        <div class="ml-plot-wrap" id="ml-sg-plot"></div>
+        <div class="ml-lt-side">
+          <div class="ml-lt-formula" id="ml-sg-formula"></div>
+          <div class="ml-gd-readout" id="ml-sg-readout"></div>
+          <label class="ml-lt-slider">weight (w) <input type="range" id="ml-sg-w" min="${s3.sliders.w.min}" max="${s3.sliders.w.max}" step="${s3.sliders.w.step}" value="${s3.sliders.w.init}"><span id="ml-sg-wv"></span></label>
+          <label class="ml-lt-slider">bias (b) <input type="range" id="ml-sg-b" min="${s3.sliders.b.min}" max="${s3.sliders.b.max}" step="${s3.sliders.b.step}" value="${s3.sliders.b.init}"><span id="ml-sg-bv"></span></label>
+          <label class="ml-lt-slider">dò x <input type="range" id="ml-sg-x" min="${s3.sliders.x.min}" max="${s3.sliders.x.max}" step="${s3.sliders.x.step}" value="${s3.sliders.x.init}"><span id="ml-sg-xv"></span></label>
+          <div class="ml-lt-goals">${s3.goals.map((g) =>
+            `<div class="ml-lens-task" data-goal="${g.id}"><span class="ml-lens-task-dot"></span>${g.label}</div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="ml-s3-note" id="ml-s3-note" hidden>${s3.completion_note}</div>`;
+
+    function markGoal(id) {
+      if (goalsDone.has(id)) return;
+      goalsDone.add(id);
+      const chip = mount.querySelector(`.ml-lens-task[data-goal="${id}"]`);
+      if (chip) chip.classList.add('ml-lens-task-done');
+      if (goalsDone.size === s3.goals.length) {
+        document.getElementById('ml-s3-note').hidden = false;
+        completeStep3();
+      }
+    }
+
+    function update() {
+      st.w = parseFloat(document.getElementById('ml-sg-w').value);
+      st.b = parseFloat(document.getElementById('ml-sg-b').value);
+      st.x = parseFloat(document.getElementById('ml-sg-x').value);
+      document.getElementById('ml-sg-wv').textContent = st.w;
+      document.getElementById('ml-sg-bv').textContent = st.b;
+      document.getElementById('ml-sg-xv').textContent = st.x;
+      const pts = [];
+      for (let x = 0; x <= 10.001; x += 0.2) pts.push([x, sigmoidFn(st.w * x + st.b)]);
+      document.getElementById('ml-sg-plot').innerHTML = mlSvgPlot({
+        xmax: 10, ymax: 1, curvePts: pts,
+        hlines: [{ y: 0.5, label: 'p = 0.5' }],
+        points: [[st.x, sigmoidFn(st.w * st.x + st.b)]],
+      });
+      const z = st.w * st.x + st.b;
+      const p = sigmoidFn(z);
+      document.getElementById('ml-sg-formula').innerHTML = `p = sigmoid(<b>${st.w}</b> × x ${st.b >= 0 ? '+' : '−'} <b>${Math.abs(st.b)}</b>)`;
+      document.getElementById('ml-sg-readout').innerHTML =
+        `x = <b>${st.x}</b> → z = <b>${z.toFixed(2)}</b> → p = <b>${p.toFixed(3)}</b>`;
+      const mid = -st.b / st.w;
+      s3.goals.forEach((g) => {
+        if (goalsDone.has(g.id)) return;
+        if (g.check === 'p_at' && Math.abs(sigmoidFn(st.w * g.x + st.b) - g.p) <= g.tol) markGoal(g.id);
+        if (g.check === 'w_min' && st.w >= g.value) markGoal(g.id);
+        if (g.check === 'midpoint' && isFinite(mid) && Math.abs(mid - g.x) <= g.tol) markGoal(g.id);
+      });
+    }
+    ['ml-sg-w', 'ml-sg-b', 'ml-sg-x'].forEach((id) =>
+      document.getElementById(id).addEventListener('input', update));
+    update();
+  }
+
+  /* boundary_tuner — canvas 2 feature: chỉnh w1/w2/b để ranh giới tách đúng 2 lớp */
+  function renderBoundaryTuner(mount) {
+    const s3 = lesson.step_3;
+    const st = { w1: s3.sliders.w1.init, w2: s3.sliders.w2.init, b: s3.sliders.b.init, probed: false };
+    const goalsDone = new Set();
+
+    mount.innerHTML = `<p class="ml-step-instr">${s3.mission}</p>
+      <div class="ml-lt-grid">
+        <div class="ml-plot-wrap" id="ml-bd-plot"></div>
+        <div class="ml-lt-side">
+          <div class="ml-lt-formula" id="ml-bd-formula"></div>
+          <div class="ml-gd-readout" id="ml-bd-readout"></div>
+          <label class="ml-lt-slider">w₁ <input type="range" id="ml-bd-w1" min="${s3.sliders.w1.min}" max="${s3.sliders.w1.max}" step="${s3.sliders.w1.step}" value="${s3.sliders.w1.init}"><span id="ml-bd-w1v"></span></label>
+          <label class="ml-lt-slider">w₂ <input type="range" id="ml-bd-w2" min="${s3.sliders.w2.min}" max="${s3.sliders.w2.max}" step="${s3.sliders.w2.step}" value="${s3.sliders.w2.init}"><span id="ml-bd-w2v"></span></label>
+          <label class="ml-lt-slider">bias <input type="range" id="ml-bd-b" min="${s3.sliders.b.min}" max="${s3.sliders.b.max}" step="${s3.sliders.b.step}" value="${s3.sliders.b.init}"><span id="ml-bd-bv"></span></label>
+          <button class="ml-btn ml-btn-primary" id="ml-bd-probe">${s3.probe.btn}</button>
+          <div class="ml-gd-readout" id="ml-bd-probe-out" hidden></div>
+          <div class="ml-lt-goals">${s3.goals.map((g) =>
+            `<div class="ml-lens-task" data-goal="${g.id}"><span class="ml-lens-task-dot"></span>${g.label}</div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="ml-s3-note" id="ml-s3-note" hidden>${s3.completion_note}</div>`;
+
+    function markGoal(id) {
+      if (goalsDone.has(id)) return;
+      goalsDone.add(id);
+      const chip = mount.querySelector(`.ml-lens-task[data-goal="${id}"]`);
+      if (chip) chip.classList.add('ml-lens-task-done');
+      if (goalsDone.size === s3.goals.length) {
+        document.getElementById('ml-s3-note').hidden = false;
+        completeStep3();
+      }
+    }
+
+    function boundarySvg() {
+      // vẽ 2 lớp điểm + đường w1·x1 + w2·x2 + b = 0 trong khung 0..10 × 0..10
+      const W = 460, H = 320, mL = 40, mB = 28, mT = 12, mR = 14;
+      const pw = W - mL - mR, ph = H - mT - mB;
+      const X = (v) => mL + (v / 10) * pw;
+      const Y = (v) => mT + ph - (v / 10) * ph;
+      let s = `<svg viewBox="0 0 ${W} ${H}" class="ml-plot" role="img">`;
+      for (let g = 0; g <= 10; g += 2) {
+        s += `<line x1="${mL}" y1="${Y(g)}" x2="${W - mR}" y2="${Y(g)}" class="ml-plot-grid"/>`;
+        s += `<text x="${mL - 6}" y="${Y(g) + 4}" class="ml-plot-tick" text-anchor="end">${g}</text>`;
+        s += `<text x="${X(g)}" y="${H - 8}" class="ml-plot-tick" text-anchor="middle">${g}</text>`;
+      }
+      s += `<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + ph}" class="ml-plot-axis"/>`;
+      s += `<line x1="${mL}" y1="${mT + ph}" x2="${W - mR}" y2="${mT + ph}" class="ml-plot-axis"/>`;
+      // ranh giới: w1*x1 + w2*x2 + b = 0
+      const segs = [];
+      if (Math.abs(st.w2) > 1e-9) {
+        const y0 = -(st.w1 * 0 + st.b) / st.w2;
+        const y10 = -(st.w1 * 10 + st.b) / st.w2;
+        segs.push([[0, y0], [10, y10]]);
+      } else if (Math.abs(st.w1) > 1e-9) {
+        const x0 = -st.b / st.w1;
+        segs.push([[x0, 0], [x0, 10]]);
+      }
+      segs.forEach(([[ax, ay], [bx, by]]) => {
+        s += `<line x1="${X(ax)}" y1="${Y(Math.max(-2, Math.min(12, ay)))}" x2="${X(bx)}" y2="${Y(Math.max(-2, Math.min(12, by)))}" class="ml-plot-line"/>`;
+      });
+      // điểm 2 lớp — viền đỏ nếu bị phân sai theo ranh giới hiện tại
+      let errors = 0;
+      s3.data.points.forEach(([x1, x2, label]) => {
+        const z = st.w1 * x1 + st.w2 * x2 + st.b;
+        const pred = z >= 0 ? 1 : 0;
+        const wrong = pred !== label;
+        if (wrong) errors++;
+        s += `<circle cx="${X(x1)}" cy="${Y(x2)}" r="5.5" class="${label === 1 ? 'ml-bd-dot1' : 'ml-bd-dot0'}${wrong ? ' ml-bd-wrong' : ''}"/>`;
+      });
+      // điểm probe (ngôi sao đơn giản = hình thoi)
+      if (st.probed) {
+        const [px, py] = s3.probe.point;
+        s += `<rect x="${X(px) - 6}" y="${Y(py) - 6}" width="12" height="12" transform="rotate(45 ${X(px)} ${Y(py)})" class="ml-bd-probe"/>`;
+      }
+      return { svg: s + '</svg>', errors };
+    }
+
+    function update() {
+      st.w1 = parseFloat(document.getElementById('ml-bd-w1').value);
+      st.w2 = parseFloat(document.getElementById('ml-bd-w2').value);
+      st.b = parseFloat(document.getElementById('ml-bd-b').value);
+      document.getElementById('ml-bd-w1v').textContent = st.w1;
+      document.getElementById('ml-bd-w2v').textContent = st.w2;
+      document.getElementById('ml-bd-bv').textContent = st.b;
+      const { svg, errors } = boundarySvg();
+      document.getElementById('ml-bd-plot').innerHTML = svg;
+      document.getElementById('ml-bd-formula').innerHTML =
+        `z = <b>${st.w1}</b>·x₁ ${st.w2 >= 0 ? '+' : '−'} <b>${Math.abs(st.w2)}</b>·x₂ ${st.b >= 0 ? '+' : '−'} <b>${Math.abs(st.b)}</b>`;
+      document.getElementById('ml-bd-readout').innerHTML =
+        `Phân sai: <b>${errors}</b> / ${s3.data.points.length} điểm`;
+      if (st.probed) {
+        const [px, py] = s3.probe.point;
+        const z = st.w1 * px + st.w2 * py + st.b;
+        const p = sigmoidFn(z);
+        document.getElementById('ml-bd-probe-out').hidden = false;
+        document.getElementById('ml-bd-probe-out').innerHTML =
+          `Điểm mới (${px}, ${py}): z = <b>${z.toFixed(2)}</b> → p = <b>${p.toFixed(3)}</b> → lớp <b>${z >= 0 ? 1 : 0}</b>`;
+      }
+      s3.goals.forEach((g) => {
+        if (goalsDone.has(g.id)) return;
+        if (g.check === 'zero_errors' && errors === 0) markGoal(g.id);
+        if (g.check === 'probe' && st.probed && errors === 0) markGoal(g.id);
+      });
+    }
+    ['ml-bd-w1', 'ml-bd-w2', 'ml-bd-b'].forEach((id) =>
+      document.getElementById(id).addEventListener('input', update));
+    document.getElementById('ml-bd-probe').addEventListener('click', () => {
+      st.probed = true;
+      update();
+    });
+    update();
   }
 
   /* line_tuner — slider w/b chỉnh đường thẳng trực tiếp; goals + (tùy chọn) MSE meter */
@@ -876,7 +1071,7 @@
           `<div class="ml-spec-field ml-spec-filled"><div class="ml-spec-label">${f.label}</div><div class="ml-spec-value">${f.value}</div></div>`).join('')}</div>
         <div class="ml-exp-choose">
           <span class="ml-exp-choose-label">${round.choose.label}</span>
-          ${s3.choose_options.map((o) => `<button class="ml-btn ml-btn-ghost ml-exp-opt" data-key="${o.key}">${o.label}</button>`).join('')}
+          ${(round.choose.options || s3.choose_options).map((o) => `<button class="ml-btn ml-btn-ghost ml-exp-opt" data-key="${o.key}">${o.label}</button>`).join('')}
         </div>
         <div class="ml-exp-runwrap" hidden>
           <button class="ml-btn ml-btn-primary ml-exp-run"><i class="fa-solid fa-play"></i> Chạy thí nghiệm</button>

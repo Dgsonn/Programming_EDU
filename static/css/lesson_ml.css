@@ -176,6 +176,12 @@ body.ml-focus-mode { --module-accent: var(--ml-accent); --module-accent-soft: va
 .ml-lt-presets { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:10px 0; }
 .ml-lt-choose { font-size:13px; display:inline-flex; align-items:center; gap:8px; }
 
+.ml-plot-hline { stroke:#10B981; stroke-width:1.2; stroke-dasharray:5 4; opacity:.7; }
+.ml-bd-dot1 { fill:#34D399; opacity:.92; }
+.ml-bd-dot0 { fill:#FB7185; opacity:.92; }
+.ml-bd-wrong { stroke:#EF4444; stroke-width:2.5; }
+.ml-bd-probe { fill:#F59E0B; stroke:#fff7; stroke-width:1.5; }
+
 .ml-gd-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:12px 0; }
 .ml-gd-readout { font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 12px; background:rgba(255,255,255,.03); border:1px solid var(--border-default); border-radius:8px; margin-bottom:10px; }
 .ml-gd-loss-hint { color:#5C6370; font-size:12.5px; text-align:center; padding:40px 10px; }
