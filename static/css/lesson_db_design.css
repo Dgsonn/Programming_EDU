@@ -11191,3 +11191,44 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
   white-space: pre-wrap;
   line-height: 1.6;
 }
+
+/* ── ML SHELL đợt cải tiến UX (2026-07-18b) — scope body.course-ml ──
+   Gốc: ở 1366×768 cột phải step 3 bị nhồi (4 zone × 62px tràn chữ, kho khối lệnh
+   bị cắt hàng 2, zone đầu/cuối bị cắt do justify-content:center + overflow hidden). */
+.course-ml .step3-editor {
+  overflow-y: auto;               /* van an toàn: nội dung cao hơn cột → cuộn, không cắt */
+}
+.course-ml .step3-editor .drop-zone-stack {
+  justify-content: flex-start;    /* không căn giữa — hết cảnh zone đầu/cuối bị xén */
+  gap: 8px;
+  flex: 0 0 auto;                 /* cao theo nội dung thật */
+}
+.course-ml .step3-editor #drop-zones .drop-line {
+  min-height: 46px;
+  padding: 7px 12px;
+}
+.course-ml .step3-editor #drop-zones .drop-line-slot {
+  min-height: 40px;               /* 1 dong lenh / zone - 56px cua SQL lam 4 zone tran 768px */
+}
+.course-ml .step3-editor #drop-zones .drop-line-prompt { font-size: 11.5px; }
+.course-ml .step3-editor #drop-zones .drop-line-num { font-size: 13px; }
+.course-ml .step3-editor .block-bank-wrap {
+  flex: 0 0 auto;                 /* kho khối hiện TRỌN 2 hàng, không bị cắt */
+  max-height: none;
+  overflow: visible;
+  padding: 8px 12px;
+}
+.course-ml .step3-editor .block-bank .logic-pill { padding: 8px 12px; }
+.course-ml .step3-editor { padding: 12px 14px; }
+
+/* Map ML chỉ 5 trạm — sub của trạm là nội dung dạy ("Nạp 12 học viên", "fit — học từ X, y"):
+   dense skin không được giấu. */
+.course-ml .town-map--dense .town-station.qcard .qcard-sub { display: block; }
+
+/* Màn thấp (≤1440×~768): nén thêm 1 nấc để 4 zone + kho khối lọt trọn cột phải */
+@media (max-height: 800px) {
+  .course-ml .step3-editor #drop-zones .drop-line { min-height: 40px; padding: 5px 12px; }
+  .course-ml .step3-editor #drop-zones .drop-line-slot { min-height: 34px; }
+  .course-ml .step3-editor .drop-zone-stack { gap: 6px; }
+  .course-ml .step3-editor .block-bank .logic-pill { padding: 6px 10px; font-size: 12.5px; }
+}

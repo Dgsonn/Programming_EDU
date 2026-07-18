@@ -2340,6 +2340,10 @@
       if (s1Tag) s1Tag.textContent = 'Lý thuyết bite-sized + Trực quan DataFrame';
       const resHead = document.querySelector('.results-head');
       if (resHead) resHead.innerHTML = '<i class="fa-solid fa-square-poll-vertical"></i> Kết quả chấm';
+      const playerClass = document.querySelector('.player-class');
+      if (playerClass) playerClass.textContent = 'ML Apprentice';
+      // Scope CSS compact/nhãn cho khóa ML (course-ml — đợt cải tiến UX 2026-07-18)
+      document.body.classList.add('course-ml');
     }
 
     // Set module accent color (Amber/Indigo/Emerald) dựa trên module number
@@ -5258,7 +5262,7 @@
        * - KEEP data-slot="<id>" — JS uses querySelector('[data-slot="<id>"]') at line 1926, 2127. */
       line.innerHTML = `
         <span class="drop-line-num">${pos}.</span>
-        <span class="drop-line-prompt">Kéo mệnh đề vào đây…</span>
+        <span class="drop-line-prompt">${s3.ml_pipeline ? 'Kéo dòng lệnh vào đây…' : 'Kéo mệnh đề vào đây…'}</span>
         <span class="drop-line-slot" data-slot="${zone.id}"></span>
         <span class="broken-tooltip" data-broken-tooltip="${zone.id}">⚠️ Thứ tự chưa đúng — thử kéo swap trong slot</span>
       `;
@@ -7184,7 +7188,12 @@
   }
 
   function highlightSQL(sql) {
-    if (!sql) return '<span class="t-comment">-- Query của bạn sẽ hiện ở đây</span>';
+    if (!sql) {
+      // ML SHELL: comment mồi đúng ngôn ngữ (Python '#', SQL '--')
+      return state.courseId === 'ml'
+        ? '<span class="t-comment"># Code Python của bạn sẽ hiện ở đây</span>'
+        : '<span class="t-comment">-- Query của bạn sẽ hiện ở đây</span>';
+    }
 
     // Tokenize: keywords, strings, numbers, identifiers
     const tokens = sql.split(/(\s+|[;,()'])/);

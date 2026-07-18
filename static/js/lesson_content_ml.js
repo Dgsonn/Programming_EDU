@@ -278,22 +278,22 @@ window.LESSON_CONTENT['ml'] = {
         ],
         drop_zones: [
           {
-            id: 'ml-data', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            id: 'ml-data', accepts: ['py'], multi: true,
             station: { icon: '📦', label: 'DATASET', sub: 'Nạp 12 học viên', hint: 'Nạp dữ liệu từ ml_lab: 3 cột đặc trưng vào <code>X</code>, nhãn Đậu/Rớt vào <code>y</code>, học viên mới vào <code>X_new</code>.' },
             ml_effect: { type: 'load' }
           },
           {
-            id: 'ml-model', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            id: 'ml-model', accepts: ['py'], multi: true,
             station: { icon: '🤖', label: 'MODEL', sub: 'Khởi tạo bộ học', hint: 'Tạo model rỗng — lúc này nó chưa biết gì về học viên.' },
             ml_effect: { type: 'note', note: 'Model rỗng — chưa học gì. Dữ liệu chưa đổi.' }
           },
           {
-            id: 'ml-fit', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            id: 'ml-fit', accepts: ['py'], multi: true,
             station: { icon: '🎓', label: 'TRAIN', sub: 'fit — học từ X, y', hint: 'Model đọc 12 hồ sơ + đáp án để tự rút pattern. Phải fit TRƯỚC khi predict.' },
             ml_effect: { type: 'note', note: 'Model đã FIT — pattern từ 12 hồ sơ giờ nằm trong model.' }
           },
           {
-            id: 'ml-predict', placeholder: 'dòng lệnh ____', accepts: ['py'], multi: true,
+            id: 'ml-predict', accepts: ['py'], multi: true,
             station: { icon: '🔮', label: 'PREDICT', sub: 'Học viên MỚI', hint: 'Dự đoán cho <code>X_new</code> — hồ sơ CHƯA TỪNG có trong dữ liệu học.' },
             ml_effect: {
               type: 'predict',
@@ -317,8 +317,13 @@ window.LESSON_CONTENT['ml'] = {
         }
       },
 
-      /* Map dùng bảng NGUỒN = 12 học viên thật (drag_game đọc lesson.drag_map.table) */
+      /* Map dùng bảng NGUỒN = 12 học viên thật (drag_game đọc lesson.drag_map.table).
+         Nhãn map data-driven — nói ngôn ngữ ML, không phải SQL. */
       drag_map: {
+        brand: 'DÒNG CHẢY PIPELINE ML',
+        table_sub: 'DataFrame nguồn · 12 học viên',
+        idle_sub: '12 học viên · ▶ chạy pipeline để xem dữ liệu chảy',
+        run_label: '▶ Chạy Pipeline',
         table: {
           name: 'study_data',
           columns: ['study_hours', 'attendance', 'quiz_score', 'pass_fail'],

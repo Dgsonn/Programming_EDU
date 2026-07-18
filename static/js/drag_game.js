@@ -79,6 +79,7 @@
   let lastIsComplete = false;
   let activeStations = [];
   let runBtnEl = null;
+  let mapCfg = {};          /* ML SHELL: lesson.drag_map — nhãn map data-driven */
   /* STAGE 2c: current truck position as fraction (0..1) along path */
   let currentTruckF = 0;
   /* Option A (vertical flow): fMap from the current computed route — keeps packet stops aligned to cards. */
@@ -198,6 +199,9 @@
 
     const lesson = opts.lesson || {};
     const table = (lesson.drag_map && lesson.drag_map.table) || DEFAULT_TABLE;
+    /* ML SHELL 2026-07-18: nhãn map data-driven (brand/table_sub/idle_sub/run_label)
+       — khóa ML nói "pipeline/DataFrame", bài SQL không khai = giữ nhãn cũ nguyên vẹn. */
+    mapCfg = lesson.drag_map || {};
     const dropZones = opts.dropZones || null;
 
     activeStations = buildStations(dropZones);
@@ -445,9 +449,10 @@
       if (s.id === 'start') {
         return '<span class="qcard-glyph src">🗄</span>'
           + '<span class="qcard-main"><span class="qcard-label mono">' + escapeHtml(table.name) + '</span>'
-          + '<span class="qcard-sub">bảng nguồn · ' + table.dataRows.length + ' dòng</span></span>';
+          + '<span class="qcard-sub">' + (mapCfg.table_sub || ('bảng nguồn · ' + table.dataRows.length + ' dòng')) + '</span></span>';
       }
-      var glyph = ZONE_GLYPH[z] || '▸';
+      /* ML SHELL: trạm khai icon riêng (📦🤖🎓🔮) — dùng trước khi rơi về '▸' */
+      var glyph = ZONE_GLYPH[z] || s.icon || '▸';
       return (ord > 0 ? '<span class="qcard-ord">' + ord + '</span>' : '')
         + '<span class="qcard-glyph" style="color:' + stroke + '">' + glyph + '</span>'
         + '<span class="qcard-main"><span class="qcard-label">' + escapeHtml(s.label) + '</span>'
@@ -468,7 +473,7 @@
     var truck = '<div class="town-truck packet" data-town-truck><div class="pk-rot"><div class="pk-trail"></div><div class="pk-body"></div></div><div class="pk-badge town-truck-badge" data-town-truck-badge>'+table.dataRows.length+' dòng</div></div>';
     /* Panel dữ liệu (phải): bảng "nhìn theo" + số liệu sống (Brilliant-style) — luôn hiện, cập nhật theo packet. */
     var manifest = '<div class="town-manifest" data-town-manifest><div class="town-manifest-ttl" data-town-manifest-ttl>DỮ LIỆU</div><div class="town-manifest-body" data-town-manifest-body></div><div class="town-manifest-sub" data-town-manifest-sub></div></div>';
-    var brand = '<div class="town-brand"><span class="town-brand-dot"></span><b>PE_TEST</b> · DÒNG CHẢY TRUY VẤN</div>';
+    var brand = '<div class="town-brand"><span class="town-brand-dot"></span><b>PE_TEST</b> · ' + (mapCfg.brand || 'DÒNG CHẢY TRUY VẤN') + '</div>';
     var flow = '<div class="qflow" data-qflow>'
       + '<svg class="town-svg" viewBox="0 0 600 600" preserveAspectRatio="none"><path class="town-route-shadow" d="'+routeD+'"/><path class="town-route" d="'+routeD+'"/><path class="town-route-flow" d="'+routeD+'"/></svg>'
       + '<div class="town-stations">'+stationsHTML+'</div>' + peHub + truck
@@ -567,7 +572,7 @@
     /* Phase A (Fix 4 v5) — Run Query button */
     runBtnEl = document.createElement('button');
     runBtnEl.className = 'run-query-btn';
-    runBtnEl.innerHTML = '▶ Chạy Query';
+    runBtnEl.innerHTML = mapCfg.run_label || '▶ Chạy Query';
     runBtnEl.disabled = true;
     runBtnEl.addEventListener('click', function() { window.runQuery(); });
     root.appendChild(runBtnEl);
@@ -619,7 +624,7 @@
       var rows = manifestBodyEl.querySelectorAll('.station-mini-table tbody tr');
       rows.forEach(function(tr, idx) { tr.style.setProperty('--i', idx); });
     }
-    if (manifestSubEl) manifestSubEl.textContent = table.dataRows.length + ' dòng · ▶ chạy để xem lọc';
+    if (manifestSubEl) manifestSubEl.textContent = mapCfg.idle_sub || (table.dataRows.length + ' dòng · ▶ chạy để xem lọc');
     manifestEl.classList.add('show');
   }
 
@@ -1681,7 +1686,7 @@
     currentIsComplete = false;
     if (runBtnEl) {
       runBtnEl.disabled = true;
-      runBtnEl.innerHTML = '▶ Chạy Query';
+      runBtnEl.innerHTML = mapCfg.run_label || '▶ Chạy Query';
     }
     if (statusEl) {
       statusEl.classList.remove('warn', 'ok');
