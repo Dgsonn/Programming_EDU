@@ -11343,7 +11343,9 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 
 /* ── dock sticky: sân khấu + nút chạy ── */
 .mlf-dock {
-  position: sticky; bottom: 0; z-index: 2;
+  /* Đợt 4: auto-fit co cả map lọt cột → dock KHÔNG sticky nữa (sticky + scale
+     từng đè dock lên 3 node giữa flow — bug screenshot 2026-07-19). */
+  position: static; z-index: 2;
   display: flex; flex-direction: column; gap: 8px;
   padding: 10px 0 12px;
   background: linear-gradient(180deg, transparent, #0B1220 18%);
@@ -11434,3 +11436,32 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .course-ml .pgv-tag { font-size: 14px; }
 
 .mlf-dist-mini { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-500); flex-basis: 100%; }
+
+/* ═══ ML ĐỢT 4 (2026-07-19) — mốc sự kiện timeline + auto-fit map ═══ */
+/* Mốc giữa kỳ trên dải tuần (tl.marks) */
+.pgv-tl-cell.is-mark { background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.55); }
+.pgv-tl-marks { display: flex; gap: 14px; margin-top: 6px; font-size: 11px; color: #7DD3FC; font-weight: 600; }
+
+/* Auto-fit: .mlf-root bị scale(k) bằng JS — mount cắt gọn phần layout thừa */
+#drag-game-mount { position: relative; }
+.course-ml .step3-pipeline-map { overflow-y: auto; }
+/* Sân khấu không được phình vượt đo đạc lúc idle — cảnh cao thì cuộn trong thân */
+.mlf-stage-body { max-height: 380px; overflow-y: auto; }
+
+/* Đợt 4b — nâng hệ số auto-fit (k 0.57 → ~0.7): giảm chiều cao TỰ NHIÊN của map
+   mà không bỏ phần tử nào — bảng dài chuyển thành cuộn TRONG sân khấu. */
+.mlf-stage-body { max-height: 260px; }
+.mlf-node-src .mlf-node-body { max-height: 74px; }
+.mlf-link { height: 12px; }
+.mlf-node { padding: 7px 11px; }
+.mlf-dock { padding: 6px 0 8px; }
+.mlf-root { padding: 10px 14px 0; }
+
+/* Đợt 4c — nén thêm chiều cao tự nhiên map để k auto-fit ≈ 0.6 ở 1366×768
+   (mount content 532px): sân khấu idle cuộn trong, node/link sít hơn chút. */
+.mlf-stage-body { max-height: 200px; }
+.mlf-node-src .mlf-node-body { max-height: 64px; }
+.mlf-link { height: 10px; }
+.mlf-node { padding: 6px 10px; }
+.mlf-node-body { margin-top: 5px; }
+.mlf-stage { padding: 8px 10px; }

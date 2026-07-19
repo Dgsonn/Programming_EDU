@@ -63,3 +63,28 @@ Pattern nêu trong bridge text ("≥ 6 giờ đều Đậu, < 5 giờ đều R�
 - Trang `/courses/ml` giữ nguyên (đã theo layout course_db_design); polish ảnh card robot → SVG cùng họ 3 card DB: để đợt rollout.
 - COURSE_MILESTONES/trophy cho ML (SHIP STUDYLAB v1.0…): thêm khi khép module 1 (Bài 3) trong rollout.
 - Files v1 không còn được route tới (lesson_ml.html, lesson_ml.js, lesson_ml.css, ml_grader/ml_lab GIỮ — engine dùng chung); dọn file chết sau khi rollout ổn định.
+
+---
+
+## ĐỢT 4 (2026-07-19) — tuần 8 + midterm, gõ-code sống lại, auto-fit map
+
+User feedback sau đợt 3: (1) step 3 phải zoom 50% mới thấy hết; (2) không còn gõ code để chạy pipeline được; (3) Schema Explorer còn tip SQL "SUM trong SELECT"; (4) "quiz 1" → điểm giữa kỳ hợp bối cảnh hơn; (5) tuần 3 quá sớm để dự đoán → tuần 7/8. 3 quyết định user (AskUserQuestion): **auto co map theo màn hình (giữ bố cục)** · **tuần 8 + rename cột `quiz_score` → `midterm_score`** · **gõ thắng kéo lúc Run**.
+
+### Bối cảnh mới (đồng bộ toàn bài)
+- TUẦN 8 của kỳ 15 tuần; thi giữa kỳ tuần 7 vừa chấm → `midterm_score` /100 (giá trị 40-95 giữ nguyên — thang khớp); còn 7 tuần can thiệp. Timeline thêm `marks:[{week:7, icon:'📝'}]` (renderParadigmVisual hỗ trợ mốc sự kiện chung).
+- Grader KHÔNG đụng tên cột (load_study_data trả mảng numpy) → rename chỉ chạm display JS + docstring ml_lab. Lưu ý rollout: dataset bài sau (200 dòng, thang 0-10) vẫn tên `quiz_score` — soát bối cảnh từng bài khi build.
+- Schema Explorer (`table_explorer.js`): cột khai `note` (HTML) → thay tip SQL mặc định. ML: 3 feature + 1 label giải nghĩa đúng vai trò; khóa DB không khai note → tip SUM/LIKE nguyên vẹn.
+
+### Gõ-code chạy pipeline (3 bug chồng nhau → luật "gõ thắng kéo")
+1. Nút Run MLFlowMap từng `disabled` khi zone trống → **click trên button disabled không phát event** → delegation hydrate không bao giờ chạy. Fix: nút luôn sống; thiếu input → pill nhắc.
+2. `updateIDEFromBlocks` join token bằng dấu cách (chuẩn SQL 1 câu) → kéo thả echo Python thành 1 dòng 96 ký tự → hydrate (đòi ≥4 dòng) vĩnh viễn fail. Fix: bài `ml_pipeline` echo mỗi zone 1 dòng, join `\n` (`#ide-code` thừa kế `white-space:pre` nên hiển thị chuẩn).
+3. Hydrate return sớm khi đã có block ở zone → gõ đè bị nuốt. Fix: `hydrateZonesFromTypedSQL(force)` — force chỉ từ click Run: code gõ đủ dòng GHI ĐÈ zones (skip nếu text == echo, để giữ block objects + bank); ghi đè thì clear `step3Placed` + unlock pill như reset. Blur/updateTruckGrid giữ luật cũ (chỉ hydrate khi trống).
+4. Bonus: focus editor tự dọn dòng mồi `-- Query…`/`# Code Python…` (quirk shell cũ, áp cả SQL lẫn ML).
+
+### Auto-fit map (phương án user chọn: giữ bố cục, co theo màn hình)
+- `fitScale()` trong ml_flow_map.js dùng **CSS `zoom`** (không phải transform — transform giữ layout box gốc, bù width lại reflow ra chiều cao khác số đã đo → nút Run từng bị xén mất). Đo theo **content box của `#drag-game-mount`** (mount có padding 18×2 + `overflow:hidden` — chính là clip thật; đo theo chiều cao cột là sai chuẩn). Vòng lặp hội tụ ≤3 lần; sàn k=0.5; refit khi resize + mỗi lần sân khấu đổi cảnh (debounce 120ms).
+- `.mlf-root` cần `flex:none` (mount là flex container → root từng bị bóp chiều cao, content tràn box làm mọi phép đo sai).
+- `.mlf-dock` bỏ sticky (sticky + co từng đè dock lên 3 node giữa flow); `.mlf-stage-body` max-height 200 cuộn trong; trim link/padding. Kết quả đo: **1366×768 → k=0.608, nút Run 641..665 (clip edge 692)** · **1536×864 → k=0.70**. Đánh đổi đã báo user: chữ trên map nhỏ ở màn thấp.
+
+### Verify (verify_pilot3.js — 32/32 · 0 pageerror)
+Tuần 8/mốc giữa kỳ/hook; sạch quiz + tuần 3 + từ khóa SQL toàn trang; explorer note Feature/Label; fit lọt cột cả idle lẫn done; Run trống → pill nhắc; gõ sai → pill số dòng (không lộ đáp án) + editor giữ nhiều dòng; gõ lại đúng không cần reset → máy chạy; kéo 8 khối → echo 4 DÒNG; gõ đè sau kéo → chấm theo code gõ (bẫy predict(X) báo dòng 4); step 4 Pyodide 4/4 + modal; regression Basic B1 (map SQL + tip SUM + typed SQL run + focus-clear seed) + NC plan_visual. Screenshot tự soi: idle fit đủ 5 node + bảng + nút Run; máy chạy cảnh split X/y; done confetti + tri thức lộ đủ.

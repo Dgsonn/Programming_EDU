@@ -160,6 +160,12 @@
         ` : `
           <div class="te-distribution te-dist-empty">Không có dữ liệu mẫu cho cột này.</div>
         `}
+        ${col.note ? `
+          <div class="te-detail-note">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span>${col.note}</span>
+          </div>
+        ` : `
         ${isPK ? `
           <div class="te-detail-note te-note-pk">
             <i class="fa-solid fa-key"></i>
@@ -177,7 +183,7 @@
             <i class="fa-solid fa-lightbulb"></i>
             <span>Cột chuỗi — dùng <code>LIKE '%pattern%'</code> trong <code>WHERE</code> để tìm kiếm gần đúng.</span>
           </div>
-        ` : ''}
+        ` : ''}`}
       </div>
     `;
   }

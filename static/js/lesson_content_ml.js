@@ -8,7 +8,8 @@
  * — rollout theo module sau khi user duyệt pilot.
  *
  * SỐ LIỆU THẬT (ml_lab.load_study_data — mọi visual PHẢI khớp):
- *   X = 12 học viên × [study_hours, attendance, quiz_score], y = pass_fail 0/1
+ *   X = 12 học viên × [study_hours, attendance, midterm_score], y = pass_fail 0/1
+ *   (bối cảnh: TUẦN 8 — giữa kỳ thi tuần 7 vừa chấm; thang điểm /100 giữ nguyên giá trị)
  *   X_new = [7.0, 90.0, 82.0] → SimpleClassifier dự đoán 1 (ĐẬU)
  * ============================================================================ */
 
@@ -38,7 +39,7 @@ window.LESSON_CONTENT['ml'] = {
       challenge_type: 'full_ide',
       story: {
         tag: '🎓 StudyLab · Ticket #01',
-        hook: 'Bạn là <strong>người dựng mô hình ML đầu tiên</strong> của <strong>USTH StudyLab</strong>. Môn học kéo dài <strong>15 tuần</strong>: suốt kỳ hệ thống ghi <em>giờ tự học, điểm danh, điểm quiz</em>; đến <strong>tuần 15</strong> thi cuối mới sinh ra <code>final_score</code> — và luật <code>final_score >= 50</code> chấm Đậu/Rớt. Ticket #01 hỏi một câu luật KHÔNG trả lời nổi: <em>"mới TUẦN 3 — ai đang trên đà rớt, để còn kịp cứu?"</em> Lúc này final_score <strong>chưa tồn tại</strong>. May thay, kho còn nguyên <strong>12 hồ sơ khóa trước</strong> — có đủ cả hành vi LẪN kết cục. Nhiệm vụ: để máy <strong>tự học pattern</strong> từ 12 hồ sơ đó rồi dự đoán cho khóa mới.'
+        hook: 'Bạn là <strong>người dựng mô hình ML đầu tiên</strong> của <strong>USTH StudyLab</strong>. Môn học kéo dài <strong>15 tuần</strong>: hệ thống ghi <em>giờ tự học, điểm danh</em> mỗi tuần; <strong>tuần 7</strong> thi giữa kỳ sinh ra <em>điểm giữa kỳ</em>; nhưng phải đến <strong>tuần 15</strong> thi cuối mới sinh ra <code>final_score</code> — và luật <code>final_score >= 50</code> chấm Đậu/Rớt. Đang <strong>TUẦN 8</strong>, điểm giữa kỳ vừa chấm xong, Ticket #01 hỏi một câu luật KHÔNG trả lời nổi: <em>"ai đang trên đà rớt, để còn 7 tuần kịp cứu?"</em> — vì final_score <strong>chưa tồn tại</strong>. May thay, kho còn nguyên <strong>12 hồ sơ khóa trước</strong>: cũng đo đúng 3 con số ấy ở tuần 8, và nay đã biết kết cục Đậu/Rớt. Nhiệm vụ: để máy <strong>tự học pattern</strong> từ 12 hồ sơ đó rồi dự đoán cho khóa mới.'
       },
       achievement: { name: 'ML Problem Framer — Khởi đầu', desc: 'bài đầu về định khung bài toán ML' },
 
@@ -47,7 +48,7 @@ window.LESSON_CONTENT['ml'] = {
         you_will_learn: {
           lead: 'Xong bài này, bạn sẽ:',
           outcomes: [
-            'Giải thích vì sao <code>final_score >= 50</code> là lập trình truyền thống, còn <em>cảnh báo sớm tuần 3</em> là bài toán Machine Learning.',
+            'Giải thích vì sao <code>final_score >= 50</code> là lập trình truyền thống, còn <em>cảnh báo sớm ở tuần 8</em> là bài toán Machine Learning.',
             'Gọi tên đúng 3 mảnh của một bài toán ML: <strong>Task – Experience – Performance</strong>.',
             'Chạy pipeline ML tối thiểu bằng Python thật: <code>fit</code> trước, <code>predict</code> trên học viên <strong>mới</strong>.'
           ],
@@ -66,7 +67,7 @@ window.LESSON_CONTENT['ml'] = {
           intro: '',
           example: '🔍 <strong>Nhìn bảng SAMPLE DATA bên dưới:</strong> 12 học viên khóa trước — ai học ≥ 6 giờ đều <strong>1 · Đậu</strong>, ai dưới 5 giờ đều <strong>0 · Rớt</strong>. Bạn vừa NHÌN RA một pattern mà không ai viết cho bạn luật nào cả. Máy cũng làm được y như vậy — đó chính là "học". Giữ pattern này khi sang Bước 2 👇'
         },
-        intro: 'StudyLab có đủ điểm danh, giờ tự học, điểm quiz của <strong>12 học viên khóa trước</strong> — kèm kết cục Đậu/Rớt của từng người. Với khóa MỚI đang ở tuần 3, ta có đúng các con số ấy nhưng <em>chưa có</em> kết cục. Bài toán: dùng lịch sử để <strong>dự đoán trước</strong> kết cục — kịp cảnh báo khi còn cứu được.',
+        intro: 'StudyLab có đủ giờ tự học, điểm danh, điểm giữa kỳ của <strong>12 học viên khóa trước</strong> — kèm kết cục Đậu/Rớt của từng người. Với khóa MỚI đang ở tuần 8, ta có đúng các con số ấy nhưng <em>chưa có</em> kết cục. Bài toán: dùng lịch sử để <strong>dự đoán trước</strong> kết cục — kịp cảnh báo khi còn 7 tuần để cứu.',
         concept_cards: [
           {
             icon: 'fa-scale-balanced',
@@ -76,7 +77,7 @@ window.LESSON_CONTENT['ml'] = {
           {
             icon: 'fa-brain',
             title: 'Học từ dữ liệu (Machine Learning)',
-            body: 'Tuần 3 <strong>chưa có</strong> final_score — không viết nổi luật. Nhưng có <strong>Experience</strong>: 12 hồ sơ khóa trước kèm nhãn. Máy tự rút pattern (<strong>Task</strong>: dự đoán Đậu/Rớt) và ta đo bằng <strong>Performance</strong>: dự đoán đúng bao nhiêu trên học viên mới.'
+            body: 'Tuần 8 <strong>chưa có</strong> final_score — không viết nổi luật. Nhưng có <strong>Experience</strong>: 12 hồ sơ khóa trước kèm nhãn. Máy tự rút pattern (<strong>Task</strong>: dự đoán Đậu/Rớt) và ta đo bằng <strong>Performance</strong>: dự đoán đúng bao nhiêu trên học viên mới.'
           },
           {
             icon: 'fa-hand-pointer',
@@ -88,12 +89,13 @@ window.LESSON_CONTENT['ml'] = {
            bấm ▶ chạy animation từng nút; đủ 2 luồng → chốt so kèo. */
         paradigm_visual: {
           timeline: {
-            title: 'HỌC KỲ 15 TUẦN — BẠN ĐANG Ở TUẦN 3',
-            weeks: 15, now: 3, exam_week: 15,
-            now_label: '📍 Tuần 3 — ĐÃ CÓ: giờ tự học · điểm danh · quiz 1',
-            mid_label: '⋯ chưa xảy ra ⋯',
+            title: 'HỌC KỲ 15 TUẦN — BẠN ĐANG Ở TUẦN 8',
+            weeks: 15, now: 8, exam_week: 15,
+            marks: [{ week: 7, icon: '📝', label: 'Tuần 7: thi GIỮA KỲ → midterm_score' }],
+            now_label: '📍 Tuần 8 — ĐÃ CÓ: giờ tự học · điểm danh · điểm giữa kỳ',
+            mid_label: '⋯ tuần 9–14: chưa xảy ra ⋯',
             exam_label: 'Tuần 15: thi cuối → final_score MỚI tồn tại',
-            note: 'Luật <code>final_score >= 50</code> phải đợi tới tuần 15 mới có dữ liệu để chạy. Cảnh báo sớm = trả lời NGAY BÂY GIỜ — khi còn 12 tuần để cứu.'
+            note: 'Luật <code>final_score >= 50</code> phải đợi tới tuần 15 mới có dữ liệu để chạy. Cảnh báo sớm = trả lời NGAY BÂY GIỜ — điểm giữa kỳ vừa có, còn 7 tuần để cứu.'
           },
           flows: [
             {
@@ -111,27 +113,31 @@ window.LESSON_CONTENT['ml'] = {
             {
               id: 'learn',
               tag: '② HỌC TỪ DỮ LIỆU',
-              sub: 'tuần 3 — final_score CHƯA tồn tại',
+              sub: 'tuần 8 — final_score CHƯA tồn tại',
               accent: '#A78BFA',
               nodes: [
                 { icon: '🗂️', label: '12 học viên khóa trước + nhãn Đậu/Rớt' },
                 { icon: '🧠', label: 'MODEL tự rút pattern' },
-                { icon: '👤', label: 'Hồ sơ mới: 7h · 90% · quiz 82' },
+                { icon: '👤', label: 'Hồ sơ mới: 7h · 90% · giữa kỳ 82' },
                 { icon: '🔮', label: 'Dự đoán: ĐẬU', cls: 'good' }
               ],
               punch: 'Không ai viết nổi luật — model HỌC từ lịch sử rồi dự đoán ca mới.'
             }
           ],
-          so_keo: 'Luật viết sẵn cần ĐÁP ÁN có sẵn trong tay. Cảnh báo sớm tuần 3 không có đáp án nào để viết luật — chỉ còn cách HỌC pattern từ lịch sử. Đó là ranh giới giữa lập trình truyền thống và Machine Learning.'
+          so_keo: 'Luật viết sẵn cần ĐÁP ÁN có sẵn trong tay. Cảnh báo sớm ở tuần 8 không có đáp án nào để viết luật — chỉ còn cách HỌC pattern từ lịch sử. Đó là ranh giới giữa lập trình truyền thống và Machine Learning.'
         },
         visual: {
           schema: {
             table_name: 'study_data (DataFrame)',
             columns: [
-              { name: 'study_hours', type: 'FLOAT',   key: '',       icon: '' },
-              { name: 'attendance',  type: 'FLOAT',   key: '',       icon: '' },
-              { name: 'quiz_score',  type: 'FLOAT',   key: '',       icon: '' },
-              { name: 'pass_fail',   type: 'INT 0/1', key: 'TARGET', icon: '🎯' }
+              { name: 'study_hours',   type: 'FLOAT',   key: '',       icon: '',
+                note: '<strong>Feature (đặc trưng)</strong> — giờ tự học trung bình mỗi tuần, đo suốt 8 tuần đầu. Một trong 3 cột vào <code>X</code> cho model nhìn.' },
+              { name: 'attendance',    type: 'FLOAT',   key: '',       icon: '',
+                note: '<strong>Feature (đặc trưng)</strong> — % chuyên cần 8 tuần đầu. Vào <code>X</code> cùng 2 cột kia.' },
+              { name: 'midterm_score', type: 'FLOAT',   key: '',       icon: '',
+                note: '<strong>Feature (đặc trưng)</strong> — điểm thi giữa kỳ /100 (thi tuần 7). Tín hiệu mạnh nhất đang có trong tay.' },
+              { name: 'pass_fail',     type: 'INT 0/1', key: 'TARGET', icon: '🎯',
+                note: '<strong>Label (nhãn <code>y</code>)</strong> — kết cục Đậu/Rớt của khóa TRƯỚC, đáp án để model học. Với khóa mới, đây chính là ô trống cần DỰ ĐOÁN.' }
             ]
           },
           /* 12 dòng = CHÍNH XÁC ml_lab.load_study_data (0=Rớt, 1=Đậu) */
@@ -150,17 +156,17 @@ window.LESSON_CONTENT['ml'] = {
             ['6.0', '88', '78', '1 · Đậu']
           ]
         },
-        mission: 'Lắp pipeline ML 4 dòng Python: nạp <code class="code">12 học viên</code> → tạo model → <code class="code">fit</code> → <code class="code">predict</code> cho học viên mới <code class="code">[7h · 90% · quiz 82]</code> — kéo thả khối lệnh xuống dưới ↓'
+        mission: 'Lắp pipeline ML 4 dòng Python: nạp <code class="code">12 học viên</code> → tạo model → <code class="code">fit</code> → <code class="code">predict</code> cho học viên mới <code class="code">[7h · 90% · giữa kỳ 82]</code> — kéo thả khối lệnh xuống dưới ↓'
       },
 
       /* ----- STEP 2: 2 MCQ + mini-game T/E/P (spec C1-L1 Step 2: Check 1 + Check 2) ----- */
       step_2: {
         mcq: [
           {
-            question: 'StudyLab muốn cảnh báo <strong>"học viên đang trên đà rớt"</strong> ngay từ tuần 3. Vì sao KHÔNG dùng được luật <code>if final_score >= 50</code>?',
+            question: 'StudyLab muốn cảnh báo <strong>"học viên đang trên đà rớt"</strong> ngay ở tuần 8 — vừa có điểm giữa kỳ. Vì sao KHÔNG dùng được luật <code>if final_score >= 50</code>?',
             options: [
               { id: 'a', text: 'Vì Python không cho so sánh <code>>=</code> với số thực', correct: false, explanation: 'So sánh >= chạy bình thường với float. Vấn đề không nằm ở cú pháp.' },
-              { id: 'b', text: 'Vì <code>final_score</code> CHƯA TỒN TẠI ở tuần 3 — phải HỌC pattern từ khóa trước để dự đoán', correct: true, explanation: 'Đúng — luật cần đáp án có sẵn. Tuần 3 chưa có final_score nên không có gì để so sánh; chỉ còn cách học pattern từ dữ liệu lịch sử → đây là bài toán ML.' },
+              { id: 'b', text: 'Vì <code>final_score</code> CHƯA TỒN TẠI ở tuần 8 — phải HỌC pattern từ khóa trước để dự đoán', correct: true, explanation: 'Đúng — luật cần đáp án có sẵn. Tuần 8 mới có điểm giữa kỳ, còn final_score phải đợi thi cuối tuần 15; không có gì để so sánh thì chỉ còn cách học pattern từ dữ liệu lịch sử → đây là bài toán ML.' },
               { id: 'c', text: 'Vì luật này chạy quá chậm khi lớp có 200 học viên', correct: false, explanation: 'Một phép so sánh chạy trong micro-giây với mọi sĩ số. Tốc độ không phải vấn đề — vấn đề là final_score chưa tồn tại.' },
               { id: 'd', text: 'Vì phải dùng deep learning mới đủ chính xác', correct: false, explanation: 'Chưa cần bàn model mạnh hay yếu — câu hỏi là PARADIGM: luật viết sẵn không có dữ liệu đầu vào để chạy, phải chuyển sang học từ lịch sử.' }
             ]
@@ -180,9 +186,9 @@ window.LESSON_CONTENT['ml'] = {
           instruction: 'Bài toán cảnh báo sớm của StudyLab vừa được định khung. Kéo mỗi thẻ vào đúng ô <strong>T</strong> (việc cần làm), <strong>E</strong> (dữ liệu để học) hoặc <strong>P</strong> (thước đo).',
           chips: [
             { id: 'tep-predict', label: 'Dự đoán Đậu/Rớt cho học viên MỚI' },
-            { id: 'tep-early',   label: 'Cảnh báo ngay từ tuần 3' },
+            { id: 'tep-early',   label: 'Cảnh báo ngay ở tuần 8' },
             { id: 'tep-history', label: '12 hồ sơ khóa trước + nhãn' },
-            { id: 'tep-cols',    label: 'Bảng study_hours · attendance · quiz' },
+            { id: 'tep-cols',    label: 'Bảng giờ học · điểm danh · giữa kỳ' },
             { id: 'tep-acc',     label: 'Tỉ lệ dự đoán ĐÚNG trên hồ sơ mới' },
             { id: 'tep-miss',    label: 'Số ca sắp rớt bị BỎ SÓT' }
           ],
@@ -237,7 +243,7 @@ window.LESSON_CONTENT['ml'] = {
             {
               zone: 'ml-data', icon: '📦', label: 'DATASET', sub: 'Nạp & tách dữ liệu', result_kind: 'xy_split',
               split: {
-                features: ['study_hours', 'attendance', 'quiz_score'], target: 'pass_fail',
+                features: ['study_hours', 'attendance', 'midterm_score'], target: 'pass_fail',
                 x_desc: '12×3 đặc trưng', y_desc: '12 nhãn Đậu/Rớt', new_desc: '1 hồ sơ CHƯA nhãn',
                 new_profile: '7.0 · 90 · 82'
               },
@@ -250,14 +256,14 @@ window.LESSON_CONTENT['ml'] = {
             {
               zone: 'ml-fit', icon: '🎓', label: 'TRAIN', sub: 'fit — học từ X, y', result_kind: 'centroids',
               centroids: {
-                fail: { title: 'RỚT trung bình', vals: '≈ 2.2h · 58% · quiz 48', n: 'từ 6 hồ sơ Rớt' },
-                pass: { title: 'ĐẬU trung bình', vals: '≈ 7.8h · 95% · quiz 86', n: 'từ 6 hồ sơ Đậu' }
+                fail: { title: 'RỚT trung bình', vals: '≈ 2.2h · 58% · giữa kỳ 48', n: 'từ 6 hồ sơ Rớt' },
+                pass: { title: 'ĐẬU trung bình', vals: '≈ 7.8h · 95% · giữa kỳ 86', n: 'từ 6 hồ sơ Đậu' }
               },
               narration: '<code>model.fit(X, y)</code>: model đọc 12 hồ sơ KÈM đáp án và kết tinh thành 2 <b>chân dung trung bình</b>. Toàn bộ "cái đã học" của model chỉ là 2 tấm thẻ này — không hơn.'
             },
             {
               zone: 'ml-predict', icon: '🔮', label: 'PREDICT', sub: 'Hồ sơ MỚI', result_kind: 'nearest',
-              profile: '7h · 90% · quiz 82', dist: { pass: 6.2, fail: 47.6 }, verdict: '1 · ĐẬU',
+              profile: '7h · 90% · giữa kỳ 82', dist: { pass: 6.2, fail: 47.6 }, verdict: '1 · ĐẬU',
               narration: '<code>model.predict(X_new)</code>: đo khoảng cách hồ sơ mới tới 2 chân dung — tới ĐẬU ≈ <b>6.2</b>, tới RỚT ≈ <b>47.6</b> → gần ĐẬU hơn hẳn → dự đoán <b>1 · ĐẬU</b>. Không phép màu: chỉ là phép so khoảng cách.'
             }
           ]
@@ -286,7 +292,7 @@ window.LESSON_CONTENT['ml'] = {
         run_label: '▶ Chạy Pipeline',
         table: {
           name: 'study_data',
-          columns: ['study_hours', 'attendance', 'quiz_score', 'pass_fail'],
+          columns: ['study_hours', 'attendance', 'midterm_score', 'pass_fail'],
           dataRows: [
             ['2.0', '55', '45', '0'],
             ['8.0', '95', '85', '1'],
@@ -320,7 +326,7 @@ window.LESSON_CONTENT['ml'] = {
             'In kết quả · Run chạy thử · Submit chấm 4 tầng.'
           ],
           hint_explore: 'Muốn xem dữ liệu trước? Gõ <code>print(X.shape)</code> hoặc <code>print(X[:3])</code> rồi <strong>Run</strong> — 12 dòng × 3 cột đặc trưng.',
-          expected: 'Console in <code>[1]</code> — học viên mới (7h · 90% · quiz 82) được dự đoán <strong>ĐẬU</strong>. Cả 4 tầng Checks phải xanh — kể cả khi hệ thống đổi X_new ngầm.'
+          expected: 'Console in <code>[1]</code> — học viên mới (7h · 90% · giữa kỳ 82) được dự đoán <strong>ĐẬU</strong>. Cả 4 tầng Checks phải xanh — kể cả khi hệ thống đổi X_new ngầm.'
         },
         hints: [
           { level: 1, text: 'Chính là pipeline 4 trạm của Bước 3 — nhưng viết thành code, thêm dòng import ở đầu và print ở cuối.' },

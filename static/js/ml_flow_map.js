@@ -25,8 +25,40 @@
   let stations = [];       // cfg.stations (theo thứ tự zone)
   let runBtn = null;
   let stageEl = null;
+  let rootEl = null;       // đợt 4: giữ ref để auto-fit scale
+  let fitTimer = null;
   let state = { phase: 'idle', idx: -1, done: false };
   let grading = { zoneFills: {}, zoneCorrect: {}, wrongLines: [], isComplete: false };
+
+  /* ── Đợt 4 (user chốt 2026-07-19): AUTO CO map theo màn hình — giữ nguyên bố cục,
+     zoom(k) cả .mlf-root để trọn pipeline + bảng + nút Run lọt cột trái ở zoom 100%.
+     Dùng CSS zoom (reflow THẬT) thay transform: transform giữ layout box gốc nên phải
+     bù width/height tay — width đổi lại reflow ra chiều cao KHÁC số đã đo → nút Run
+     từng văng khỏi vùng clip (bug screenshot 2026-07-19). zoom co cả layout, đo lại
+     hội tụ sau ≤3 vòng. Sàn k=0.55 — dưới sàn thì cột cuộn phần dư. */
+  function fitScale() {
+    if (!rootEl || !mountEl || !document.body.contains(rootEl)) return;
+    rootEl.style.zoom = '';
+    /* Chuẩn đo = CONTENT BOX của mount (mount có padding 18×2 + overflow:hidden là
+       thứ THẬT SỰ cắt nội dung — đo theo chiều cao cột từng làm nút Run bị xén). */
+    const cs = getComputedStyle(mountEl);
+    const avail = mountEl.clientHeight
+      - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0) - 2;
+    if (avail <= 120) return;
+    let k = 1;
+    for (let i = 0; i < 3; i++) {
+      const vis = rootEl.getBoundingClientRect().height;
+      if (!vis || vis <= avail + 2) break;
+      k = Math.max(0.5, k * (avail / vis));
+      rootEl.style.zoom = String(k);
+      if (k <= 0.501) break;
+    }
+  }
+
+  function scheduleFit() {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitScale, 120);
+  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -150,6 +182,7 @@
       '<div class="mlf-stage-head"><span>🗄 ' + esc(table.name) + '</span><span class="mlf-stage-sub">' + esc((cfg.source && cfg.source.sub) || (table.dataRows.length + ' dòng')) + '</span></div>' +
       '<div class="mlf-stage-body">' + tableHTML('mlf-table-stage', 0) + '</div>' +
       '<div class="mlf-stage-foot">Lắp 4 dòng lệnh (kéo hoặc tự gõ) rồi bấm <b>▶ Chạy Pipeline</b> — sân khấu này sẽ diễn từng phép biến đổi.</div>';
+    scheduleFit();
   }
 
   function showScene(i, replay) {
@@ -171,6 +204,7 @@
     stageEl.classList.remove('mlf-stage-pop');
     void stageEl.offsetWidth;
     stageEl.classList.add('mlf-stage-pop');
+    scheduleFit();
   }
 
   function setNodeState(i, phase) {
@@ -214,6 +248,13 @@
   /* ── step machine ── */
   function startRun() {
     if (state.phase === 'running') return;
+    /* Đợt 4: nút Run KHÔNG bao giờ disabled (button disabled nuốt click → delegation
+       hydrate typed-code của shell không chạy được — bug user báo 2026-07-19).
+       Chưa lắp/gõ gì → nhắc việc, không chấm sai. */
+    if (!Object.keys(grading.zoneFills || {}).length) {
+      showPill('incorrect', 'Chưa có dòng lệnh nào — kéo khối hoặc gõ đủ 4 dòng vào solution.py rồi bấm Chạy.');
+      return;
+    }
     /* chấm: dòng sai/thiếu → dừng ở node đó, chỉ báo SỐ dòng (không làm hộ) */
     if (!grading.isComplete) {
       const wrong = grading.wrongLines && grading.wrongLines.length ? grading.wrongLines : null;
@@ -265,6 +306,7 @@
     stageEl.innerHTML =
       '<div class="mlf-stage-head"><span>✅ Pipeline hoàn chỉnh</span></div>' +
       '<div class="mlf-stage-body"><div class="mlf-done-note">' + (cfg.done_note || 'Bạn vừa xem cả hệ thống vận hành. Click lại bất kỳ trạm nào để mổ xẻ phép biến đổi của trạm đó.') + '</div></div>';
+    scheduleFit();
   }
 
   /* ── public API ── */
@@ -285,6 +327,9 @@
 
       const root = document.createElement('div');
       root.className = 'mlf-root';
+      /* mount là flex container (shell) — flex:none để root KHÔNG bị bóp chiều cao
+         (squash từng làm content tràn box → đo đạc fit sai hết) */
+      root.style.flex = 'none';
       root.innerHTML =
         '<div class="mlf-brand"><span class="mlf-brand-dot"></span><b>PE_TEST</b> · ' + esc(cfg.brand || 'DÒNG CHẢY PIPELINE ML') + '</div>' +
         '<div class="mlf-flow">' +
@@ -301,10 +346,11 @@
       showStageIdle();
 
       runBtn = document.createElement('button');
-      /* class run-query-btn: tái dùng delegation hydrate typed-code của shell */
+      /* class run-query-btn: tái dùng delegation hydrate typed-code của shell.
+         Đợt 4: KHÔNG disabled — click trên button disabled không phát event nên
+         luồng gõ-code (hydrate lúc Run) chết; thiếu input thì startRun tự nhắc. */
       runBtn.className = 'run-query-btn mlf-run';
       runBtn.innerHTML = cfg.run_label || '▶ Chạy Pipeline';
-      runBtn.disabled = true;
       runBtn.addEventListener('click', startRun);
       root.querySelector('.mlf-dock').appendChild(runBtn);
 
@@ -318,16 +364,23 @@
         });
       });
 
+      /* đợt 4: auto-fit — đo sau layout đầu + đo lại khi font mono load xong đổi metric */
+      rootEl = root;
+      requestAnimationFrame(fitScale);
+      setTimeout(fitScale, 450);
+      if (!window.__mlfFitWired) {
+        window.__mlfFitWired = true;
+        window.addEventListener('resize', scheduleFit);
+      }
+
       this.active = true;
       return true;
     },
 
     update(payload) {
       grading = payload || grading;
-      if (runBtn && state.phase !== 'running') {
-        const hasAny = Object.keys(grading.zoneFills || {}).length > 0;
-        runBtn.disabled = !hasAny;
-      }
+      /* Đợt 4: không toggle disabled theo zoneFills nữa — nút luôn sống,
+         startRun tự phân nhánh nhắc/chấm. */
     },
 
     reset() {
@@ -339,7 +392,7 @@
         if (el) el.innerHTML = nodeResultHTML(stations[i], false);
       });
       if (stageEl) showStageIdle();
-      if (runBtn) { runBtn.disabled = true; runBtn.innerHTML = (cfg && cfg.run_label) || '▶ Chạy Pipeline'; }
+      if (runBtn) { runBtn.disabled = false; runBtn.innerHTML = (cfg && cfg.run_label) || '▶ Chạy Pipeline'; }
       document.querySelectorAll('.query-feedback').forEach(e => e.remove());
       setWrapperState(null);
     }

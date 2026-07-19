@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 # ── Bài 1 — Machine Learning vs Traditional Programming ─────────────────────
-# Dataset: 12 học viên, 3 feature (study_hours, attendance, quiz_score), target pass_fail.
+# Dataset: 12 học viên, 3 feature (study_hours, attendance, midterm_score), target pass_fail.
+# Bối cảnh Bài 1: tuần 8 của kỳ 15 tuần — midterm_score = điểm giữa kỳ /100 (thi tuần 7).
 _STUDY_X = np.array([
     [2, 55, 45], [8, 95, 85], [1, 50, 40], [9, 98, 90], [3, 60, 50],
     [7, 92, 80], [2, 58, 48], [8, 96, 88], [4, 70, 60], [9, 99, 95],

@@ -3864,13 +3864,20 @@
     let tlHtml = '';
     const tl = cfg.timeline;
     if (tl) {
+      // Đợt 4: tl.marks = [{week, icon, label}] — mốc sự kiện giữa kỳ (📝 thi giữa kỳ…)
+      const marks = {};
+      (tl.marks || []).forEach(function (m) { if (m && m.week) marks[m.week] = m; });
       const cells = [];
       for (let w = 1; w <= (tl.weeks || 15); w++) {
         let cls = 'pgv-tl-cell';
         if (w <= tl.now) cls += ' is-past';
         if (w === tl.now) cls += ' is-now';
         if (w === (tl.exam_week || tl.weeks)) cls += ' is-exam';
-        cells.push('<span class="' + cls + '" data-week="' + w + '">' + (w === tl.now ? '📍' : (w === (tl.exam_week || tl.weeks) ? '🎓' : '')) + '</span>');
+        if (marks[w]) cls += ' is-mark';
+        const glyph = w === tl.now ? '📍'
+          : (w === (tl.exam_week || tl.weeks) ? '🎓' : (marks[w] ? (marks[w].icon || '•') : ''));
+        const tip = marks[w] && marks[w].label ? ' title="' + marks[w].label.replace(/"/g, '&quot;') + '"' : '';
+        cells.push('<span class="' + cls + '" data-week="' + w + '"' + tip + '>' + glyph + '</span>');
       }
       tlHtml = '<div class="pgv-timeline">' +
         '<div class="pgv-tl-title">' + tl.title + '</div>' +
@@ -3880,6 +3887,9 @@
           '<span class="pgv-tl-mid">' + (tl.mid_label || '') + '</span>' +
           '<span class="pgv-tl-exam">' + tl.exam_label + '</span>' +
         '</div>' +
+        (tl.marks && tl.marks.length
+          ? '<div class="pgv-tl-marks">' + tl.marks.map(function (m) { return '<span>' + (m.icon || '•') + ' ' + m.label + '</span>'; }).join('') + '</div>'
+          : '') +
         (tl.note ? '<div class="pgv-tl-note">' + tl.note + '</div>' : '') +
         '</div>';
     }
@@ -5045,6 +5055,14 @@
           document.execCommand('insertText', false, '  ');
         }
       });
+      /* Đợt 4: dòng mồi "-- Query…"/"# Code Python…" là TEXT thật — user từng phải tự
+         xóa mới gõ được (quirk shell). Focus vào mà nội dung vẫn là dòng mồi → tự dọn. */
+      ideCodeEl.addEventListener('focus', function() {
+        var seed = ideCodeEl.textContent.trim();
+        if (seed === '# Code Python của bạn sẽ hiện ở đây' || seed === '-- Query của bạn sẽ hiện ở đây') {
+          ideCodeEl.innerHTML = '';
+        }
+      });
       /* A4: hydrate khi user click Run (hoặc blur) */
       ideCodeEl.addEventListener('blur', function() {
         var hasAny = Object.keys(state.step3Blocks || {}).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
@@ -5067,6 +5085,13 @@
           } else {
             return;
           }
+        }
+        /* Đợt 4: bài ml_pipeline — GÕ THẮNG KÉO lúc Run: luôn thử hydrate force
+           (code gõ đủ dòng ghi đè zones đã kéo; text = echo thì hydrate tự skip). */
+        var s3cur = state.currentLesson && state.currentLesson.step_3;
+        if (s3cur && s3cur.ml_pipeline) {
+          if (hydrateZonesFromTypedSQL(true)) updateTruckGrid();
+          return;
         }
         var hasAny = Object.keys(state.step3Blocks || {}).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
         if (!hasAny) {
@@ -5770,11 +5795,18 @@
     // Build SQL in canonical order, preserving zone order then within-zone order.
     // Auto-insert comma between two consecutive column-type tokens in the same zone
     // (e.g. SELECT name, price) — matches natural SQL convention.
+    // ML SHELL đợt 4: bài ml_pipeline echo MỖI ZONE 1 DÒNG (Python 1 lệnh/dòng) —
+    // echo 1 dòng kiểu SQL từng phá typed-hydrate (đòi ≥4 dòng) → user không gõ-chạy được.
+    const isMLPipe = !!s3.ml_pipeline;
     const parts = [];
     s3.drop_zones.forEach(zone => {
       const blocks = state.step3Blocks[zone.id];
       if (!blocks || !blocks.length) return;
 
+      if (isMLPipe) {
+        parts.push(blocks.map(b => b.token).join(' '));
+        return;
+      }
       blocks.forEach((b, idx) => {
         parts.push(b.token);
         // Comma only between two value-type tokens in the SELECT clause
@@ -5789,7 +5821,7 @@
       });
     });
 
-    const sql = parts.join(' ').trim().replace(/\s+,/g, ',');
+    const sql = isMLPipe ? parts.join('\n') : parts.join(' ').trim().replace(/\s+,/g, ',');
     const ideCode = document.getElementById('ide-code');
     if (ideCode) ideCode.innerHTML = highlightSQL(sql);
     const ideCharCount = document.getElementById('ide-char-count');
@@ -6933,7 +6965,7 @@
   };
 
   /* A4: hydrateZonesFromTypedSQL — khi user gõ tay SQL mà blocks trống, fill state.step3Blocks */
-  function hydrateZonesFromTypedSQL() {
+  function hydrateZonesFromTypedSQL(force) {
     var s3 = state.currentLesson && state.currentLesson.step_3;
     if (!s3) return false;
     var ideCode = document.getElementById('ide-code');
@@ -6941,7 +6973,6 @@
     var sqlText = (ideCode.textContent || '').trim();
     if (!sqlText) return false;
     var hasAnyBlock = Object.keys(state.step3Blocks).some(function(k){ return (state.step3Blocks[k] || []).length > 0; });
-    if (hasAnyBlock) return false;
     /* ML SHELL 2026-07-18: bài pipeline Python (step_3.ml_pipeline) — hydrate theo DÒNG:
        1 dòng lệnh = 1 zone theo thứ tự khai báo; bỏ qua comment/import/print (boilerplate).
        PE_parseSQLToBlocks là parser SQL — không áp cho Python. */
@@ -6955,8 +6986,23 @@
       });
       var mlZones = s3.drop_zones || [];
       /* Chỉ hydrate khi script ĐỦ dòng (như SQL chỉ hydrate khi parse trọn câu) —
-         hydrate sớm giữa chừng sẽ khóa zone với nội dung dở dang (hasAnyBlock chặn lượt sau). */
+         hydrate sớm giữa chừng sẽ khóa zone với nội dung dở dang. */
       if (pyLines.length < mlZones.length) return false;
+      /* Đợt 4 (user chốt 2026-07-19): GÕ THẮNG KÉO lúc Run — force=true (từ click Run)
+         cho phép code gõ GHI ĐÈ zones đã kéo. Không force (blur/updateTruckGrid):
+         giữ luật cũ, chỉ hydrate khi zones trống. Skip khi text gõ = echo từ kéo
+         (giữ nguyên block objects + bank state, tránh ghi đè vô nghĩa). */
+      if (hasAnyBlock) {
+        if (!force) return false;
+        var same = mlZones.every(function (z, i) {
+          var cur = (state.step3Blocks[z.id] || []).map(function (b) { return b.token; }).join(' ');
+          return normClauseS3(cur) === normClauseS3(pyLines[i] || '');
+        });
+        if (same) return false;
+        /* Ghi đè: trả toàn bộ pill về kho như reset (block kéo cũ bị thay bằng dòng gõ) */
+        state.step3Placed.clear();
+        document.querySelectorAll('#block-bank .logic-pill').forEach(function (p) { p.classList.remove('locked'); });
+      }
       var applied = false;
       pyLines.slice(0, mlZones.length).forEach(function (line, i) {
         state.step3Blocks[mlZones[i].id] = [{ type: 'py', token: line }];
@@ -6967,6 +7013,7 @@
       }
       return applied;
     }
+    if (hasAnyBlock) return false;
     var parsed = window.PE_parseSQLToBlocks(sqlText, s3);
     if (parsed.error) return false;
     /* Apply to state.step3Blocks */
