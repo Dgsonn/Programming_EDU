@@ -10,7 +10,9 @@ function post(type, payload) {
 }
 
 async function fetchText(url) {
-  const res = await fetch(url);
+  /* B3 2026-07-19: no-store — ml_lab/ml_grader đổi CHỨC NĂNG theo bài (vd rename cột
+     midterm_score); bản cache cũ trong browser sẽ chấm sai lệch nội dung bài. */
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Không tải được ' + url + ' (HTTP ' + res.status + ')');
   return res.text();
 }

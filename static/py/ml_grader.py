@@ -1511,19 +1511,19 @@ def grade_lesson3(user_code):
 
     if x_cols is None:
         result['risk_msg'] = ('X không còn là DataFrame nên không kiểm tra được schema — '
-                              'hãy giữ X = df[["study_hours", "attendance", "quiz_score"]].')
+                              'hãy giữ X = df[["study_hours", "attendance", "midterm_score"]].')
     elif 'pass_fail' in x_cols:
         result['risk_msg'] = ('pass_fail đang nằm TRONG X — target leakage trực tiếp: '
                               'model "dự đoán" bằng chính đáp án.')
     elif 'final_score' in x_cols:
         result['risk_msg'] = ('X đủ shape (200, 3) nhưng chứa final_score — bài toán là cảnh báo SỚM '
-                              '(tuần 3), khi final_score CHƯA tồn tại. Code chạy được nhưng leak '
+                              '(tuần 8), khi final_score CHƯA tồn tại. Code chạy được nhưng leak '
                               'thông tin tương lai — không dùng được ngoài đời.')
     elif not y_is_passfail:
         result['risk_msg'] = 'y chưa phải cột pass_fail — target của bài này là pass_fail.'
     else:
         result['risk_ok'] = True
-        result['risk_msg'] = 'Schema sạch: X = 3 feature quan sát được ở tuần 3, y = pass_fail, không leakage.'
+        result['risk_msg'] = 'Schema sạch: X = 3 feature quan sát được ở tuần 8, y = pass_fail, không leakage.'
 
     # ── Tầng Model behavior: xáo thứ tự dòng (patch loader), schema phải vẫn đúng ──
     orig_load = ml_lab.load_student_dataframe

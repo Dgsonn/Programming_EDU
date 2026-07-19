@@ -112,3 +112,25 @@ Tuần 8/mốc giữa kỳ/hook; sạch quiz + tuần 3 + từ khóa SQL toàn t
 
 ### Verify (verify_b2.js — 31/31 · 0 pageerror)
 Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; map fit (zoom 0.80, cột phải 413/413); gõ SAI CẶP → dòng 1,3 + nhánh REG đỏ không lộ đáp án; gõ đúng không reset → 3 scene số thật; kéo 6 khối → echo 6 dòng; kéo MỒI BẪY → bắt dòng 1; step 4 bẫy Risk bị bắt rồi bản đúng 4/4 + modal; regression Bài 1 ML map dọc + Basic B1 + NC sạch. Screenshot tự soi: idle 3 nhánh, scene cluster gạch target, hero 3 cột.
+
+---
+
+## BÀI 3 (2026-07-19) — "Dataset trong mắt model — X và y" (spec C1-L3 tr.18-21)
+
+4 quyết định user (AskUserQuestion): **rename cột dataset `quiz_score` → `midterm_score` TẬN GỐC (ml_lab + grader — DEVIATION spec API, grader không check tên feature nên an toàn)** · **hero = sim ỐNG KÍNH BẢNG tương tác (bấm DÒNG/CỘT/Ô thật — đúng spec Dataset Lens)** · **map 2 NHÁNH nhiệm vụ (branch layout tái dùng)** · **nhúng đủ 200 dòng thật (badge/phân bố truthful)**.
+
+### Spec fidelity + engine
+- Step 1 Dataset Lens → `renderTableLens` (component mới hệ shell): bảng 8 dòng đầu thật + đơn vị dưới tên cột; click số-thứ-tự/tên-cột/ô → highlight + thẻ SAMPLE/ATTRIBUTE/VALUE + checklist ✓; đủ 3 → banner "200 dòng = 200 SAMPLE" (completion rule spec). Step 2: MCQ 200-samples + MCQ vai-trò-không-cố-định (misconception spec) + minigame gán vai trò 5 cột (Round A). Step 3: 2 round bắt buộc = 2 nhánh NHIỆM VỤ A/B, scene mới `roles_split` (bảng 200 dòng tô 3 vai trò: X tím · y vàng · BỎ gạch + lý do; side X (200×3) + y kèm DTYPE **int 0/1 ↔ float đổi theo nhiệm vụ** — đúng chi tiết spec). Step 4 = grade_lesson3 có sẵn (xáo dòng hidden; bẫy unsafe-but-correct final_score trong X — suite xác nhận tầng Risk bắt cả 2 pha).
+- Grader messages sửa "tuần 3" → "tuần 8" (3 chỗ) + quiz_score → midterm_score (1 chỗ) — đồng bộ bối cảnh.
+- **ml_worker.fetchText → `cache:'no-store'`** + worker URL `?v=2` (ml_engine): rename cột là thay đổi CHỨC NĂNG trong ml_lab — bản cache cũ sẽ chấm sai lệch bài.
+- Hydrate typed-Python: **nháy đơn → nháy kép** (chỉ nhánh ml_pipeline — df['pass_fail'] gõ tay từng bị chấm sai oan; SQL không đụng). Dense cột phải mở rộng điều kiện: zones ≥5 HOẶC blocks ≥7 (B3: 4 zones + 7 khối pandas dài).
+
+### Bẫy leak (3 mồi trong kho + 2 pha step 4)
+`X_a` chứa final_score (future leak) · `y_a = midterm_score` (target nhầm) · `X_b` chứa pass_fail (target leak — narration giải thích pass_fail SINH RA TỪ final_score ≥ 50). Suite: gõ leak → pill dòng 1 + nhánh A đỏ; kéo mồi target-leak → dòng 3 + nhánh B đỏ; step 4 nộp bẫy → Risk nêu "leak... tuần 8".
+
+### Gotchas mới (rollout)
+- Layout tlens 2 cột (bảng + thẻ 250px) từng CẮT MẤT cột pass_fail — bảng 6 cột cần trọn chiều ngang → thẻ giải nghĩa chuyển xuống DƯỚI bảng. Screenshot-soi bắt được, suite DOM không thấy.
+- 200 dòng nhúng thẳng content (~8KB) chạy êm: explorer badge 200 rows + phân bố thật 56/144; bảng scene cuộn trong stage-body.
+
+### Verify (verify_b3.js — 32/32 · 0 pageerror ×2 lượt)
+Ống kính 3 click + banner; explorer 200 rows + note 2 TARGET nêu leak; map fit zoom 0.797 + cột phải 413/413; gõ nháy ĐƠN đúng → normalize → máy chạy 2 nhánh (int → float); done + replay; echo 4 dòng; step 4 bẫy rồi đúng 4/4 + modal; regression B1-ML map dọc + B2-ML 3 nhánh + Basic + NC sạch.

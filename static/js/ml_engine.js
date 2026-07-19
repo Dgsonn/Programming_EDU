@@ -13,7 +13,8 @@
   'use strict';
   if (!document.body || document.body.dataset.course !== 'ml') return;
 
-  var worker = new Worker('/static/js/ml_worker.js');
+  /* ?v= bust cache script worker — B3 đổi fetchText(no-store) + ml_lab rename cột */
+  var worker = new Worker('/static/js/ml_worker.js?v=2');
   var reqSeq = 0;
   var pending = {};   // reqId → callback
 

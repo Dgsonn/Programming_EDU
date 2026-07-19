@@ -145,22 +145,24 @@ class SimpleClusterer:
 
 # ── Bài 3 — Raw DataFrame, X và y ────────────────────────────────────────────
 def load_student_dataframe(shuffle_seed=None):
-    """Trả về DataFrame 200 dòng × 5 cột: study_hours, attendance, quiz_score,
+    """Trả về DataFrame 200 dòng × 5 cột: study_hours, attendance, midterm_score,
     final_score, pass_fail. Sinh tất định (seed cố định) — mọi học viên thấy cùng dữ liệu.
+    (2026-07-19: cột điểm đổi tên quiz_score → midterm_score đồng bộ bối cảnh tuần 8
+    của Bài 1-2 — spec API gốc ghi quiz_score, deviation có ghi trong doc audit.)
     shuffle_seed (grader dùng): xáo thứ tự dòng để kiểm schema không phụ thuộc vị trí."""
     rng = np.random.RandomState(4242)
     n = 200
     study_hours = np.round(rng.uniform(0.5, 10.0, n), 1)
     attendance = np.round(rng.uniform(40, 100, n), 0)
-    quiz_score = np.round(np.clip(6.5 * study_hours + rng.normal(0, 12, n) + 18, 0, 100), 0)
+    midterm_score = np.round(np.clip(6.5 * study_hours + rng.normal(0, 12, n) + 18, 0, 100), 0)
     final_score = np.round(np.clip(
-        4.5 * study_hours + 0.25 * attendance + 0.35 * quiz_score + rng.normal(0, 6, n),
+        4.5 * study_hours + 0.25 * attendance + 0.35 * midterm_score + rng.normal(0, 6, n),
         0, 100), 0)
     pass_fail = (final_score >= 50).astype(int)
     df = pd.DataFrame({
         'study_hours': study_hours,
         'attendance': attendance,
-        'quiz_score': quiz_score,
+        'midterm_score': midterm_score,
         'final_score': final_score,
         'pass_fail': pass_fail,
     })

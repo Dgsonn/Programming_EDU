@@ -11533,3 +11533,35 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-tag { font-size: 12.5px; }
 .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-sub { font-size: 10.5px; }
 .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-punch { font-size: 11px; }
+
+/* ═══ ML BÀI 3 (2026-07-19) — ỐNG KÍNH BẢNG + HỢP ĐỒNG X/y ═══ */
+.mlf-chip.ban { color: #94A3B8; border-color: rgba(148, 163, 184, 0.4); background: rgba(148, 163, 184, 0.08); text-decoration: line-through; }
+
+.tlens { background: rgba(21, 30, 50, 0.55); border: 1px solid rgba(148, 163, 184, 0.14); border-radius: var(--radius); padding: 14px 16px; }
+.tlens-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.tlens-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text-200); }
+.tlens-intro { font-size: 12.5px; color: var(--text-400); }
+.tlens-checks { display: flex; gap: 8px; margin-bottom: 10px; }
+.tlens-check { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px dashed rgba(148, 163, 184, 0.35); color: var(--text-500); }
+.tlens-check.is-done { border-style: solid; border-color: rgba(52, 211, 153, 0.55); color: #6EE7B7; background: rgba(52, 211, 153, 0.08); }
+/* card GIẢI NGHĨA nằm DƯỚI bảng — layout 2 cột từng cắt mất cột pass_fail (bảng 6 cột
+   cần trọn chiều ngang; screenshot soi 2026-07-19) */
+.tlens-body { display: flex; flex-direction: column; gap: 10px; }
+.tlens-tablewrap { overflow-x: auto; }
+.tlens-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.tlens-table th { cursor: pointer; text-align: left; padding: 6px 10px; border-bottom: 1px solid rgba(148, 163, 184, 0.25); }
+.tlens-cname { display: block; color: var(--text-200); font-weight: 700; font-size: 12px; }
+.tlens-unit { display: block; color: var(--text-500); font-size: 10px; font-weight: 400; }
+.tlens-table td { padding: 5px 10px; color: var(--text-300); border-bottom: 1px solid rgba(148, 163, 184, 0.07); cursor: pointer; }
+.tlens-idx { color: var(--text-600); font-size: 10.5px; width: 30px; }
+td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
+.tlens-table th.tlens-idx { cursor: default; }
+.tlens-table tr.tl-hl-row td { background: rgba(167, 139, 250, 0.14); }
+.tlens-table .tl-hl-col { background: rgba(56, 189, 248, 0.12); }
+.tlens-table th.tl-hl-col .tlens-cname { color: #7DD3FC; }
+.tlens-table td.tl-hl-cell { background: rgba(251, 191, 36, 0.25); outline: 2px solid rgba(251, 191, 36, 0.7); outline-offset: -2px; }
+.tlens-table td:hover, .tlens-table th:hover { filter: brightness(1.35); }
+.tlens-more { font-size: 11px; color: var(--text-500); font-style: italic; padding: 6px 2px; }
+.tlens-card { font-size: 12.5px; color: var(--text-300); line-height: 1.6; border: 1px solid rgba(167, 139, 250, 0.3); background: rgba(167, 139, 250, 0.06); border-radius: 10px; padding: 10px 12px; min-height: 74px; }
+.tlens-done { margin-top: 10px; font-size: 12.5px; color: #6EE7B7; border-top: 1px dashed rgba(148, 163, 184, 0.18); padding-top: 10px; line-height: 1.6; }
+@media (max-width: 900px) { .tlens-body { grid-template-columns: 1fr; } }

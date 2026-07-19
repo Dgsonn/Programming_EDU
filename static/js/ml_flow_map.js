@@ -140,6 +140,18 @@
           : gs.map(() => '<span class="mlf-chip ghost">nhóm ?</span>').join('')) +
         '</div>';
     }
+    /* Bài 3 — HỢP ĐỒNG X/y theo nhiệm vụ: reveal shape + dtype + cột bị gạch */
+    if (k === 'roles_split') {
+      const ro = st.roles || {};
+      if (!revealed) {
+        return '<div class="mlf-chips"><span class="mlf-chip ghost">X → ?</span><span class="mlf-chip ghost">y → ?</span><span class="mlf-chip ghost">bỏ → ?</span></div>';
+      }
+      return '<div class="mlf-chips">' +
+        '<span class="mlf-chip x">' + esc(ro.x_shape || 'X') + '</span>' +
+        '<span class="mlf-chip y">' + esc(ro.y_shape || 'y') + '</span>' +
+        (ro.banned && ro.banned.length ? '<span class="mlf-chip ban">🚫 ' + esc(ro.banned[0].col) + '</span>' : '') +
+        '</div>';
+    }
     return '';
   }
 
@@ -242,6 +254,27 @@
             gs.map(g => '<span class="mlf-chip clu clu-' + g.id + '">C' + g.id + ' · ' + g.n + ' hv · ' + esc(g.center) + '</span>').join('') +
           '</div>' +
           (cu.note ? '<div class="mlf-clu-note">🔀 ' + esc(cu.note) + '</div>' : '') +
+        '</div></div>';
+    }
+    /* Bài 3 — bảng tô 3 VAI TRÒ theo nhiệm vụ: X tím · y vàng · BỎ gạch xám kèm lý do */
+    if (k === 'roles_split') {
+      const ro = st.roles || {};
+      const xCols = ro.x || [];
+      const banned = (ro.banned || []).map(b => b.col);
+      const cls = (c) => xCols.indexOf(c) >= 0 ? 'hl-x' : (c === ro.y ? 'hl-y' : (banned.indexOf(c) >= 0 ? 'hl-ban' : ''));
+      return '<div class="mlf-scene mlf-scene-clu mlf-scene-roles">' +
+        '<table class="mlf-table mlf-table-stage"><thead><tr>' +
+        table.columns.map(c => '<th class="' + cls(c) + '">' + (banned.indexOf(c) >= 0 ? '🚫 ' : '') + esc(c) + '</th>').join('') +
+        '</tr></thead><tbody>' +
+        table.dataRows.map(r => '<tr>' + r.map((v, ci) =>
+          '<td class="' + cls(table.columns[ci]) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table>' +
+        '<div class="mlf-scene-side">' +
+          '<div class="mlf-legend">' +
+            '<span class="mlf-chip x">' + esc(ro.x_shape || 'X') + '</span>' +
+            '<span class="mlf-chip y">' + esc(ro.y_shape || 'y') + (ro.y_note ? ' · ' + esc(ro.y_note) : '') + '</span>' +
+          '</div>' +
+          (ro.banned || []).map(b => '<div class="mlf-clu-note">🚫 <b>' + esc(b.col) + '</b> — ' + esc(b.why || '') + '</div>').join('') +
         '</div></div>';
     }
     return '';

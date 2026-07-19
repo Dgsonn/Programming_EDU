@@ -2005,10 +2005,10 @@
   function renderLessonHero(lessonId) {
     const mount = document.getElementById('lesson-hero');
     if (!mount) return;
-    // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual → slot hero thuộc về sim
-    // (renderParadigmVisual đã/sẽ render vào đây) — không được xóa/ghi đè.
-    const s1pv = state.currentLesson && state.currentLesson.step_1 && state.currentLesson.step_1.paradigm_visual;
-    if (s1pv) return;
+    // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
+    // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
+    const s1cur = state.currentLesson && state.currentLesson.step_1;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -3938,6 +3938,81 @@
     });
   }
 
+  /* ═══ ML Bài 3 (2026-07-19) — ỐNG KÍNH BẢNG (spec C1-L3 "Dataset Lens"): bấm thẳng
+     vào bảng thật — SỐ THỨ TỰ dòng / TÊN cột / 1 Ô — phần được chọn sáng lên + thẻ
+     giải nghĩa (1 dòng = 1 SAMPLE…). Đủ 3 tầng → banner chốt "200 dòng = 200 mẫu".
+     cfg = { title, intro, columns:[{name,unit}], rows, total_rows, tasks:{row,col,cell}, done } ═══ */
+  function renderTableLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const cols = cfg.columns || [];
+    const rows = cfg.rows || [];
+    const seen = { row: false, col: false, cell: false };
+    const T = { row: 'DÒNG', col: 'CỘT', cell: 'Ô' };
+    let html = '<section class="tlens" aria-label="Ống kính bảng — dòng, cột, ô">';
+    html += '<div class="tlens-head"><span class="tlens-title">' + (cfg.title || 'ỐNG KÍNH BẢNG') + '</span>' +
+      '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>';
+    html += '<div class="tlens-checks">' +
+      ['row', 'col', 'cell'].map(k => '<span class="tlens-check" data-tl-check="' + k + '">☐ ' + T[k] + '</span>').join('') + '</div>';
+    html += '<div class="tlens-body"><div class="tlens-tablewrap"><table class="tlens-table"><thead><tr>' +
+      '<th class="tlens-idx">#</th>' +
+      cols.map((c, ci) => '<th data-tl-col="' + ci + '"><span class="tlens-cname">' + escapeHtml(c.name) + '</span><span class="tlens-unit">' + escapeHtml(c.unit || '') + '</span></th>').join('') +
+      '</tr></thead><tbody>' +
+      rows.map((r, ri) => '<tr data-tl-row="' + ri + '"><td class="tlens-idx" data-tl-rowbtn="' + ri + '">' + (ri + 1) + '</td>' +
+        r.map((v, ci) => '<td data-tl-cell="' + ri + ':' + ci + '">' + escapeHtml(String(v)) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table>' +
+      (cfg.total_rows && cfg.total_rows > rows.length
+        ? '<div class="tlens-more">⋯ còn ' + (cfg.total_rows - rows.length) + ' dòng nữa — tổng ' + cfg.total_rows + ' dòng</div>' : '') +
+      '</div>' +
+      '<div class="tlens-card" data-tl-card>💡 Bấm thẳng vào bảng: <b>số thứ tự</b> đầu dòng · <b>tên cột</b> · hoặc <b>1 ô giá trị</b>.</div>' +
+    '</div>' +
+    '<div class="tlens-done" data-tl-done hidden>' + (cfg.done || '') + '</div>' +
+    '</section>';
+    mount.innerHTML = html;
+
+    const card = mount.querySelector('[data-tl-card]');
+    function clearHl() {
+      mount.querySelectorAll('.tl-hl-row, .tl-hl-col, .tl-hl-cell').forEach(el =>
+        el.classList.remove('tl-hl-row', 'tl-hl-col', 'tl-hl-cell'));
+    }
+    function tick(kind, msgHtml) {
+      seen[kind] = true;
+      const chip = mount.querySelector('[data-tl-check="' + kind + '"]');
+      if (chip) { chip.classList.add('is-done'); chip.textContent = '✓ ' + T[kind]; }
+      if (card) card.innerHTML = msgHtml;
+      if (seen.row && seen.col && seen.cell) {
+        const d = mount.querySelector('[data-tl-done]');
+        if (d) d.hidden = false;
+      }
+    }
+    mount.querySelector('.tlens-table').addEventListener('click', function (e) {
+      const rowBtn = e.target.closest('[data-tl-rowbtn]');
+      const th = e.target.closest('th[data-tl-col]');
+      const cell = e.target.closest('td[data-tl-cell]');
+      clearHl();
+      if (rowBtn) {
+        rowBtn.parentElement.classList.add('tl-hl-row');
+        tick('row', '🔎 <b>Dòng ' + (parseInt(rowBtn.getAttribute('data-tl-rowbtn'), 10) + 1) + '</b> — ' + ((cfg.tasks && cfg.tasks.row) || ''));
+        return;
+      }
+      if (th) {
+        const ci = parseInt(th.getAttribute('data-tl-col'), 10);
+        th.classList.add('tl-hl-col');
+        mount.querySelectorAll('.tlens-table tbody tr').forEach(tr => {
+          const td = tr.children[ci + 1]; /* +1 vì cột # */
+          if (td) td.classList.add('tl-hl-col');
+        });
+        tick('col', '🔎 Cột <b>' + escapeHtml((cols[ci] || {}).name || '') + '</b> (' + escapeHtml((cols[ci] || {}).unit || '') + ') — ' + ((cfg.tasks && cfg.tasks.col) || ''));
+        return;
+      }
+      if (cell) {
+        cell.classList.add('tl-hl-cell');
+        const pos = cell.getAttribute('data-tl-cell').split(':');
+        const ci2 = parseInt(pos[1], 10);
+        tick('cell', '🔎 Ô <b>' + escapeHtml(cell.textContent) + '</b> (dòng ' + (parseInt(pos[0], 10) + 1) + ' · cột ' + escapeHtml((cols[ci2] || {}).name || '') + ') — ' + ((cfg.tasks && cfg.tasks.cell) || ''));
+      }
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4223,6 +4298,13 @@
         const heroMountPgv = document.getElementById('lesson-hero');
         renderParadigmVisual(heroMountPgv || pvMount, s1.paradigm_visual);
         if (heroMountPgv) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.table_lens) {
+        // ML Bài 3 (user chốt 2026-07-19): ỐNG KÍNH BẢNG — bấm DÒNG/CỘT/Ô trên bảng
+        // thật để học sample/attribute/value (spec C1-L3 Dataset Lens). Render vào hero.
+        const heroMountTl = document.getElementById('lesson-hero');
+        renderTableLens(heroMountTl || pvMount, s1.table_lens);
+        if (heroMountTl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -5104,9 +5186,10 @@
     // Build map cột trái: khóa ML (s3.ml_flow) → MLFlowMap skin riêng (dataflow 2 tầng,
     // user chốt 2026-07-18); còn lại → DragGame DÒNG CHẢY chuẩn.
     if (s3.ml_flow && window.MLFlowMap) {
-      /* Bài ≥5 zone (B2: 6 zones): class nén cột phải thêm 1 nấc */
+      /* Bài ≥5 zone (B2: 6 zones) HOẶC kho ≥7 khối dài (B3: 7 khối pandas) — nén cột phải */
       var dzEl = document.getElementById('drop-zones');
-      if (dzEl) dzEl.classList.toggle('ml-zones-dense', (s3.drop_zones || []).length >= 5);
+      if (dzEl) dzEl.classList.toggle('ml-zones-dense',
+        (s3.drop_zones || []).length >= 5 || (s3.blocks || []).length >= 7);
       window.MLFlowMap.init({ lesson: l, dropZones: s3.drop_zones });
     } else if (window.DragGame) {
       if (window.MLFlowMap) window.MLFlowMap.active = false;
@@ -6983,7 +7066,9 @@
       /* contenteditable gõ Enter tạo <div> con — textContent NUỐT xuống dòng;
          innerText giữ line break nên mới tách được 1 dòng lệnh / 1 zone. */
       var pyText = (ideCode.innerText || sqlText);
-      var pyLines = pyText.split('\n').map(function (t) { return t.trim(); }).filter(function (t) {
+      /* B3: nháy đơn → nháy kép — Python chấp nhận cả hai, expected/blocks viết nháy kép
+         (df['pass_fail'] gõ tay từng bị chấm sai oan). Chỉ áp cho bài ml_pipeline. */
+      var pyLines = pyText.split('\n').map(function (t) { return t.trim().replace(/'/g, '"'); }).filter(function (t) {
         return t && t.indexOf('#') !== 0 && t.indexOf('--') !== 0 &&
           !/^from\s+/.test(t) && !/^import\s+/.test(t) && !/^print\s*\(/.test(t);
       });
