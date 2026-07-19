@@ -4666,8 +4666,13 @@
         // ASCII (string) OR HTML table (array of arrays)
         bodyHTML = renderDiagramOption(opt.diagram);
       } else {
-        // Default text rendering
-        bodyHTML = `<span>${escapeHtml(opt.text || '')}</span>`;
+        // Default text rendering — cho DUY NHẤT <code>…</code> đi qua escape (đợt 6 audit
+        // 2026-07-19: 3 option ML + 30 option Basic viết <code> inline từng hiện NGUYÊN
+        // CHỮ tag cho học viên). Mọi tag khác vẫn bị escape như cũ.
+        const safeText = escapeHtml(opt.text || '')
+          .replace(/&lt;code&gt;/g, '<code>')
+          .replace(/&lt;\/code&gt;/g, '</code>');
+        bodyHTML = `<span>${safeText}</span>`;
       }
 
       btn.innerHTML = `<span class="opt-letter">${letter}</span>${bodyHTML}`;

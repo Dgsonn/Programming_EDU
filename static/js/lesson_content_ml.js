@@ -39,7 +39,7 @@ window.LESSON_CONTENT['ml'] = {
       challenge_type: 'full_ide',
       story: {
         tag: '🎓 StudyLab · Ticket #01',
-        hook: 'Bạn là <strong>người dựng mô hình ML đầu tiên</strong> của <strong>USTH StudyLab</strong>. Môn học kéo dài <strong>15 tuần</strong>: hệ thống ghi <em>giờ tự học, điểm danh</em> mỗi tuần; <strong>tuần 7</strong> thi giữa kỳ sinh ra <em>điểm giữa kỳ</em>; nhưng phải đến <strong>tuần 15</strong> thi cuối mới sinh ra <code>final_score</code> — và luật <code>final_score >= 50</code> chấm Đậu/Rớt. Đang <strong>TUẦN 8</strong>, điểm giữa kỳ vừa chấm xong, Ticket #01 hỏi một câu luật KHÔNG trả lời nổi: <em>"ai đang trên đà rớt, để còn 7 tuần kịp cứu?"</em> — vì final_score <strong>chưa tồn tại</strong>. May thay, kho còn nguyên <strong>12 hồ sơ khóa trước</strong>: cũng đo đúng 3 con số ấy ở tuần 8, và nay đã biết kết cục Đậu/Rớt. Nhiệm vụ: để máy <strong>tự học pattern</strong> từ 12 hồ sơ đó rồi dự đoán cho khóa mới.'
+        hook: 'Bạn là <strong>người dựng mô hình ML đầu tiên</strong> của <strong>USTH StudyLab</strong>. Môn học kéo dài <strong>15 tuần</strong>: hệ thống ghi <em>giờ tự học, điểm danh</em> mỗi tuần; <strong>tuần 7</strong> thi giữa kỳ sinh ra <em>điểm giữa kỳ</em>; nhưng phải đến <strong>tuần 15</strong> thi cuối mới sinh ra <code>final_score</code> — và luật <code>final_score >= 50</code> chấm Đậu/Rớt. Đang <strong>TUẦN 8</strong>, điểm giữa kỳ vừa chấm xong, Ticket #01 hỏi một câu luật KHÔNG trả lời nổi: <em>"ai đang trên đà rớt, để còn 7 tuần kịp cứu?"</em> — vì final_score <strong>chưa tồn tại</strong>. Hồ sơ đầu tiên trên bàn: <strong>Lan — học viên khóa này</strong>, <code>7h/tuần · điểm danh 90% · giữa kỳ 82</code>. May thay, kho còn nguyên <strong>12 hồ sơ khóa trước</strong>: cũng đo đúng 3 con số ấy ở tuần 8, và nay đã biết kết cục Đậu/Rớt. Nhiệm vụ: để máy <strong>tự học pattern</strong> từ 12 hồ sơ đó rồi dự đoán cho Lan và các bạn cùng khóa.'
       },
       achievement: { name: 'ML Problem Framer — Khởi đầu', desc: 'bài đầu về định khung bài toán ML' },
 
@@ -137,7 +137,7 @@ window.LESSON_CONTENT['ml'] = {
               nodes: [
                 { icon: '🗂️', label: '12 học viên khóa trước + nhãn Đậu/Rớt' },
                 { icon: '🧠', label: 'MODEL tự rút pattern' },
-                { icon: '👤', label: 'Hồ sơ mới: 7h · 90% · giữa kỳ 82' },
+                { icon: '👤', label: 'Lan (khóa này): 7h · 90% · giữa kỳ 82' },
                 { icon: '🔮', label: 'Dự đoán: ĐẬU', cls: 'good' }
               ],
               punch: 'Không ai viết nổi luật — model HỌC từ lịch sử rồi dự đoán ca mới.'
@@ -175,7 +175,7 @@ window.LESSON_CONTENT['ml'] = {
             ['6.0', '88', '78', '1 · Đậu']
           ]
         },
-        mission: 'Lắp pipeline ML 4 dòng Python: nạp <code class="code">12 học viên</code> → tạo model → <code class="code">fit</code> → <code class="code">predict</code> cho học viên mới <code class="code">[7h · 90% · giữa kỳ 82]</code> — kéo thả khối lệnh xuống dưới ↓'
+        mission: 'Lắp pipeline ML 4 dòng Python: nạp <code class="code">12 học viên</code> → tạo model → <code class="code">fit</code> → <code class="code">predict</code> cho Lan <code class="code">[7h · 90% · giữa kỳ 82]</code> — kéo thả khối lệnh xuống dưới ↓'
       },
 
       /* ----- STEP 2: 2 MCQ + mini-game T/E/P (spec C1-L1 Step 2: Check 1 + Check 2) ----- */
@@ -197,6 +197,16 @@ window.LESSON_CONTENT['ml'] = {
               { id: 'b', text: '12 hồ sơ khóa trước KÈM nhãn Đậu/Rớt', correct: true, explanation: 'Chính xác — Experience = dữ liệu lịch sử CÓ đáp án. Model đối chiếu đặc trưng với kết cục để rút pattern.' },
               { id: 'c', text: 'Sĩ số lớp học kỳ này', correct: false, explanation: 'Sĩ số là 1 con số về lớp — không phải dữ liệu hành vi kèm nhãn, cũng không đo được model làm tốt hay không. Không phải Experience, càng không phải Performance.' },
               { id: 'd', text: 'Luật <code>if score >= 50</code> của giáo vụ', correct: false, explanation: 'Luật viết sẵn thuộc paradigm cũ — model ML không học từ luật, nó học từ DỮ LIỆU (đặc trưng + nhãn).' }
+            ]
+          },
+          /* Câu 3 — ôn dải ĐỊNH NGHĨA (đợt 6, user chốt 2026-07-19: khép vòng học-ôn) */
+          {
+            question: 'Ôn nhanh định nghĩa: lệnh <code>model.fit(X, y)</code> làm việc gì?',
+            options: [
+              { id: 'a', text: 'Cho model ĐỌC dữ liệu cũ (X, y) để tự rút quy luật', correct: true, explanation: 'Chuẩn — fit = huấn luyện: model đối chiếu đặc trưng X với đáp án y của 12 hồ sơ cũ để rút pattern. Như ôn tập đề cũ CÓ lời giải trước khi đi thi.' },
+              { id: 'b', text: 'Dự đoán kết cục cho hồ sơ chưa có đáp án', correct: false, explanation: 'Đó là việc của predict — bước SAU KHI đã học xong. fit là bước học, predict là bước thi.' },
+              { id: 'c', text: 'Kiểm tra xem X và y có cùng số dòng không', correct: false, explanation: 'Việc kiểm tra shape chỉ là bước phụ bên trong. Bản chất của fit là HỌC: rút quy luật từ dữ liệu có đáp án.' },
+              { id: 'd', text: 'Vẽ biểu đồ phân bố của dữ liệu', correct: false, explanation: 'fit không vẽ gì cả — nó âm thầm điều chỉnh "quy luật" bên trong model theo dữ liệu. Vẽ biểu đồ là việc của thư viện khác (matplotlib).' }
             ]
           }
         ],
@@ -282,7 +292,7 @@ window.LESSON_CONTENT['ml'] = {
             },
             {
               zone: 'ml-predict', icon: '🔮', label: 'PREDICT', sub: 'Hồ sơ MỚI', result_kind: 'nearest',
-              profile: '7h · 90% · giữa kỳ 82', dist: { pass: 6.2, fail: 47.6 }, verdict: '1 · ĐẬU',
+              profile: 'Lan · 7h · 90% · giữa kỳ 82', dist: { pass: 6.2, fail: 47.6 }, verdict: '1 · ĐẬU',
               narration: '<code>model.predict(X_new)</code>: đo khoảng cách hồ sơ mới tới 2 chân dung — tới ĐẬU ≈ <b>6.2</b>, tới RỚT ≈ <b>47.6</b> → gần ĐẬU hơn hẳn → dự đoán <b>1 · ĐẬU</b>. Không phép màu: chỉ là phép so khoảng cách.'
             }
           ]
@@ -333,7 +343,7 @@ window.LESSON_CONTENT['ml'] = {
          hidden tests đổi X_new; bẫy kinh điển predict(X). Grader 4 tầng chạy thật
          trong Pyodide (ml_grader.grade_lesson1). ----- */
       step_4: {
-        prompt: 'Bước 3 bạn đã lắp pipeline bằng tay. Giờ StudyLab cần bản <strong>code thật</strong> — và hệ thống chấm sẽ <strong>thay hồ sơ học viên mới</strong> (X_new đổi ngầm) để chắc chắn model dự đoán thật. Tự viết TRỌN script: nạp dữ liệu → tạo model → <code>fit</code> → <code>predict</code> cho học viên MỚI → <code>print(prediction)</code>.',
+        prompt: 'Bước 3 bạn đã lắp pipeline bằng tay. Giờ StudyLab cần bản <strong>code thật</strong> — và hệ thống chấm sẽ <strong>thay hồ sơ Lan bằng hồ sơ khác</strong> (X_new đổi ngầm) để chắc chắn model dự đoán thật. Tự viết TRỌN script: nạp dữ liệu → tạo model → <code>fit</code> → <code>predict</code> cho học viên mới → <code>print(prediction)</code>.',
         context: {
           scenario: 'Pipeline kéo thả ở Bước 3 chỉ chạy cho 1 hồ sơ demo. Bản code thật phải sống sót qua <strong>hidden tests</strong>: hệ thống bí mật đổi X_new — nếu bạn viết đúng quy trình, kết quả vẫn hợp lệ với mọi hồ sơ.',
           real_world: 'Đây chính là bộ lọc <strong>spam của Gmail</strong>: model được fit trên email QUÁ KHỨ đã gắn nhãn, rồi predict cho email MỚI vừa đến. Nếu chỉ <code>predict(X)</code> — dự đoán lại chính các email cũ — bộ lọc "đúng 100%" mà vô dụng: thư rác mới lọt sạch. Dự đoán chỉ có giá trị trên dữ liệu <strong>chưa từng thấy</strong>.',
@@ -345,7 +355,7 @@ window.LESSON_CONTENT['ml'] = {
             'In kết quả · Run chạy thử · Submit chấm 4 tầng.'
           ],
           hint_explore: 'Muốn xem dữ liệu trước? Gõ <code>print(X.shape)</code> hoặc <code>print(X[:3])</code> rồi <strong>Run</strong> — 12 dòng × 3 cột đặc trưng.',
-          expected: 'Console in <code>[1]</code> — học viên mới (7h · 90% · giữa kỳ 82) được dự đoán <strong>ĐẬU</strong>. Cả 4 tầng Checks phải xanh — kể cả khi hệ thống đổi X_new ngầm.'
+          expected: 'Console in <code>[1]</code> — Lan (7h · 90% · giữa kỳ 82) được dự đoán <strong>ĐẬU</strong>. Cả 4 tầng Checks phải xanh — kể cả khi hệ thống đổi X_new ngầm.'
         },
         hints: [
           { level: 1, text: 'Chính là pipeline 4 trạm của Bước 3 — nhưng viết thành code, thêm dòng import ở đầu và print ở cuối.' },
@@ -563,6 +573,16 @@ window.LESSON_CONTENT['ml'] = {
               { id: 'b', text: 'Vì clustering tìm cấu trúc từ CHÍNH các feature — không học từ nhãn, dù bảng vẫn còn nguyên 2 cột đó', correct: true, explanation: 'Chuẩn — unsupervised nghĩa là KHÔNG DÙNG target, một lựa chọn của người đặt bài toán chứ không phải giới hạn của dữ liệu.' },
               { id: 'c', text: 'Vì 2 cột đó bị lỗi, giá trị không tin được', correct: false, explanation: 'Dữ liệu sạch — chính 2 cột đó vừa làm target cho câu hỏi ① và ②. Vấn đề là gom nhóm không CẦN nhãn.' },
               { id: 'd', text: 'Vì k=3 chỉ cho phép dùng đúng 3 cột', correct: false, explanation: 'k là SỐ CỤM muốn chia, không liên quan số cột. Dùng 2 feature hay 10 feature thì k=3 vẫn chia 3 nhóm.' }
+            ]
+          },
+          /* Câu 3 — ôn dải ĐỊNH NGHĨA (đợt 6, user chốt 2026-07-19: khép vòng học-ôn) */
+          {
+            question: 'Ôn nhanh định nghĩa: trong 3 loại bài toán của bài này, loại nào là <strong>UNSUPERVISED</strong> — model học mà KHÔNG cần cột đáp án?',
+            options: [
+              { id: 'a', text: 'Clustering — tự gom các dòng giống nhau thành nhóm', correct: true, explanation: 'Chuẩn — clustering không dùng target nào: model tự tìm cấu trúc từ chính các feature. Như siêu thị tự chia khách thành nhóm mua sắm dù chưa ai đặt tên nhóm.' },
+              { id: 'b', text: 'Regression — vì output là số thực, không phải đáp án', correct: false, explanation: 'Regression vẫn cần cột đáp án để HỌC (y = final_score của khóa trước) — có target là supervised, bất kể output dạng gì.' },
+              { id: 'c', text: 'Classification — vì 0/1 không phải đáp án thật', correct: false, explanation: '0/1 chính LÀ đáp án (tên 2 lớp) — model học từ cột pass_fail nên classification là supervised.' },
+              { id: 'd', text: 'Cả ba đều cần cột đáp án', correct: false, explanation: 'Sai — clustering là ngoại lệ: nó CHỌN không dùng target. Đó là ranh giới supervised vs unsupervised bạn vừa học ở dải ĐỊNH NGHĨA.' }
             ]
           }
         ],
@@ -1105,6 +1125,16 @@ window.LESSON_CONTENT['ml'] = {
               { id: 'b', text: 'Vai trò cột do NHIỆM VỤ quyết định — không cột nào "bẩm sinh" là feature hay target', correct: true, explanation: 'Chuẩn — đổi câu hỏi là đổi hợp đồng X/y. Đây là lý do mọi dự án ML phải chốt nhiệm vụ TRƯỚC khi tách dữ liệu.' },
               { id: 'c', text: 'Phải xuất 2 file dữ liệu khác nhau cho 2 nhiệm vụ', correct: false, explanation: 'Không cần — CÙNG một DataFrame, chỉ khác cách CHỌN cột khi tách X/y. Dữ liệu là kho, hợp đồng mới là thứ thay đổi.' },
               { id: 'd', text: 'Cột điểm số thì luôn phải là target', correct: false, explanation: 'midterm_score cũng là điểm số mà làm FEATURE ở cả 2 nhiệm vụ. Không có luật "điểm = target" — chỉ có câu hỏi quyết định.' }
+            ]
+          },
+          /* Câu 3 — ôn dải ĐỊNH NGHĨA (đợt 6, user chốt 2026-07-19: khép vòng học-ôn) */
+          {
+            question: 'Ôn nhanh định nghĩa: model đạt 99% trong lab nhưng ra đời thật thì vô dụng — và code KHÔNG hề báo lỗi. Hiện tượng này tên là gì?',
+            options: [
+              { id: 'a', text: 'Leakage — X chứa thông tin lẽ ra không được biết lúc dự đoán', correct: true, explanation: 'Chuẩn — như đề thi kẹp sẵn tờ lời giải: điểm 10 trong phòng thi, ra đời không làm nổi. Nguy hiểm vì code vẫn chạy êm — chỉ HỢP ĐỒNG X/y sai.' },
+              { id: 'b', text: 'Overflow — số quá lớn tràn bộ nhớ', correct: false, explanation: 'Overflow là lỗi kỹ thuật có thông báo rõ ràng. Ở đây code chạy hoàn hảo — cái sai nằm ở việc X được nhìn thứ không được phép nhìn.' },
+              { id: 'c', text: 'Bug cú pháp Pandas khi tách cột', correct: false, explanation: 'Cú pháp sai thì Python báo lỗi ngay — dễ thấy, dễ sửa. Leakage đáng sợ hơn nhiều vì nó KHÔNG báo gì cả.' },
+              { id: 'd', text: 'Model quá yếu, cần đổi sang deep learning', correct: false, explanation: 'Ngược lại — model "quá mạnh" một cách ảo vì được đưa sẵn đáp án. Đổi model không cứu được hợp đồng dữ liệu sai.' }
             ]
           }
         ],

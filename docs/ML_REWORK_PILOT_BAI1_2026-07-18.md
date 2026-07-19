@@ -171,3 +171,26 @@ Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; m
 - Hero unclip là fix NỀN cho mọi bài ML sau — component sống render vào `#lesson-hero` sẽ không bao giờ vừa hộp ảnh 720×400.
 - Ngưỡng dense theo COUNT khối là sai bản chất — độ dài text mới quyết định; đã đổi sang tổng ký tự.
 - Template đổi phải RESTART Flask (Jinja cache) — probe đầu tưởng glossary "missing".
+
+---
+
+## ĐỢT 6 (2026-07-20) — audit trình tự 4 step + 3 cải tiến user chốt
+
+### Audit trình tự (walkthrough cả 4 step × 3 bài, tương tác thật)
+- Step 1 thứ tự chuẩn: story → outcomes → glossary → hero sim → concept cards → explorer → mission.
+- Step 2 flow lành mạnh: sai mất tim + tip giải thích bản chất + highlight đáp án; xong MCQ mời mini-game; CTA inline chỉ mở sau mini-game; footer tự do (user chốt GIỮ — triết lý Brilliant).
+- Không sót từ vựng SQL/quiz cũ; step 3/4 giữ nguyên kết quả đợt 5.
+
+### Bug tìm ra & vá: MCQ option escape toàn bộ HTML
+- `renderMCQQuestion` nhánh default dùng `escapeHtml(opt.text)` → **3 option ML + 30 option Basic** viết `<code>` inline hiện NGUYÊN CHỮ tag cho học viên (VD Basic B1: `<code>WHERE id = 101</code>`). Đã vá renderer: escape xong re-enable DUY NHẤT `&lt;code&gt;`/`&lt;/code&gt;` — mọi tag khác vẫn chặn. Basic tự lành (verify cả 2 khóa, raw=false).
+- explanation fields sạch (0 bài dính) — chỉ option text.
+
+### 3 cải tiến (user chốt 2026-07-20)
+1. **Persona "mỗi ticket 1 nhân vật"**: B1 = **Lan** (7h · 90% · giữa kỳ 82, khóa này) phủ hook / node sim 'Lan (khóa này)' / mission 'predict cho Lan' / map profile 'Lan · 7h…' / step-4 prompt+expected ("thay hồ sơ Lan bằng hồ sơ khác"). Minh giữ riêng B2 (số liệu khác nhau → 2 người khác nhau). B3 bảng 200 người, không persona đơn.
+2. **MCQ câu 3 ôn glossary** mỗi bài: B1 "model.fit(X, y) làm gì?" (fit vs predict); B2 "loại nào UNSUPERVISED?" (clustering); B3 "99% lab nhưng đời thật vô dụng, code không báo lỗi = ?" (leakage). Đủ 4 option + explanation từng option (wrong-tip UX dùng).
+3. **Gate footer giữ tự do** — không đổi code.
+
+### Verify
+- Probe đợt 6: Lan đủ 4 step; counter (1/3) cả 3 bài; trả lời đúng 3 câu liên tiếp → banner mời mini-game (trình tự nguyên vẹn); 0 pageerror.
+- 3 suite đầy đủ: **32 + 31 + 32 pass · 0 pageerror**, regression Basic/NC/B1-B2-ML sạch.
+- Versions: shell v18 · content v9.
