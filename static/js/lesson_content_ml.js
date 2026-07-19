@@ -52,12 +52,31 @@ window.LESSON_CONTENT['ml'] = {
             'Gọi tên đúng 3 mảnh của một bài toán ML: <strong>Task – Experience – Performance</strong>.',
             'Chạy pipeline ML tối thiểu bằng Python thật: <code>fit</code> trước, <code>predict</code> trên học viên <strong>mới</strong>.'
           ],
-          defs: [
-            { term: 'Lập trình truyền thống', plain: 'Người viết LUẬT (if/else), máy áp dụng luật lên dữ liệu. Cần biết trước công thức đáp án.' },
-            { term: 'Machine Learning', plain: 'Người đưa DỮ LIỆU LỊCH SỬ kèm đáp án, máy tự rút pattern — rồi dùng pattern đó dự đoán cho ca CHƯA CÓ đáp án.' },
-            { term: 'Task – Experience – Performance', plain: 'Việc cần làm (T) · dữ liệu để học (E) · thước đo làm tốt hay không (P). Thiếu 1 trong 3 là chưa thành bài toán ML.' }
-          ]
+          /* defs 1 dòng bỏ (đợt 5) — thay bằng dải glossary chuẩn ngay dưới. */
         },
+        /* Dải ĐỊNH NGHĨA (chuẩn ML đợt 5, user chốt 2026-07-19) — đặt TRƯỚC sim */
+        glossary: [
+          { term: 'LẬP TRÌNH TRUYỀN THỐNG', vi: 'rule-based', accent: '#FBBF24',
+            def: 'Người nghĩ ra <b>LUẬT</b> (if/else), máy chỉ áp dụng. Chỉ chạy được khi <b>biết trước công thức</b> đáp án.',
+            ex: 'máy tính bỏ túi; chấm Đậu/Rớt bằng <code>if final_score >= 50</code>.',
+            out: 'kết quả bấm ra từ công thức có sẵn' },
+          { term: 'MACHINE LEARNING', vi: 'học máy', accent: '#A78BFA',
+            def: 'Người đưa <b>DỮ LIỆU LỊCH SỬ kèm đáp án</b>, máy TỰ RÚT pattern — rồi dùng pattern dự đoán cho ca <b>chưa có đáp án</b>.',
+            ex: 'Netflix gợi ý phim từ lịch sử xem — không ai viết luật "thích phim A thì xem phim B".',
+            out: 'một MODEL biết dự đoán' },
+          { term: 'MODEL', vi: 'mô hình', accent: '#38BDF8',
+            def: '"Cỗ máy quy luật" sinh ra sau khi học — nhận hồ sơ mới, trả về dự đoán. Trong bài này: <code>SimpleClassifier</code>.',
+            ex: 'một giám khảo đã đọc kỹ 12 hồ sơ cũ, giờ nhìn hồ sơ mới là đoán được.',
+            out: 'model.predict(hồ sơ mới) → 0/1' },
+          { term: 'FIT → PREDICT', vi: 'huấn luyện → dự đoán', accent: '#34D399',
+            def: '<code>fit</code> = cho model ĐỌC dữ liệu cũ (X, y) để rút quy luật. <code>predict</code> = áp quy luật lên hồ sơ <b>chưa có đáp án</b>.',
+            ex: 'ôn tập đề cũ có lời giải (fit), rồi vào phòng thi làm đề mới (predict).',
+            out: 'prediction = [1] · ĐẬU' },
+          { term: 'TASK · EXPERIENCE · PERFORMANCE', vi: '3 mảnh bài toán ML', accent: '#F87171',
+            def: 'Việc cần làm (<b>T</b>) · dữ liệu để học (<b>E</b>) · thước đo làm tốt không (<b>P</b>). Thiếu 1 trong 3 → chưa thành bài toán ML.',
+            ex: 'T = đoán Đậu/Rớt tuần 8 · E = 12 hồ sơ khóa trước · P = %  đoán đúng trên học viên mới.',
+            out: 'một bài toán ML được định khung đủ' }
+        ],
         primer: {
           goal: [
             'Phân biệt luật viết sẵn vs pattern học được',
@@ -358,7 +377,7 @@ window.LESSON_CONTENT['ml'] = {
       challenge_type: 'full_ide',
       story: {
         tag: '🎓 StudyLab · Ticket #02',
-        hook: 'Ticket #01 vừa đóng thì giáo vụ gửi tiếp <strong>Ticket #02</strong> — kèm tin vui: kho vừa bổ sung, giờ có <strong>24 hồ sơ khóa trước</strong>, đủ cả <code>final_score</code> lẫn <code>pass_fail</code> (khóa đó thi xong rồi). Họ hỏi 3 câu trên <strong>CÙNG một bảng</strong>: (1) học viên mới <code>[6.5h · 85% · giữa kỳ 74]</code> sẽ được <em>bao nhiêu ĐIỂM</em> cuối kỳ? (2) bạn ấy <em>ĐẬU hay RỚT</em>? (3) chia 24 học viên thành các <em>NHÓM hành vi học</em> để xếp lớp phụ đạo — mà chưa ai định nghĩa nhóm nào cả. 1 bảng — 3 câu hỏi — <strong>3 loại bài toán ML khác nhau</strong>. Chọn sai loại là trả lời sai câu hỏi.'
+        hook: 'Ticket #01 vừa đóng thì giáo vụ gửi tiếp <strong>Ticket #02</strong>. Kho dữ liệu vừa bổ sung <strong>24 hồ sơ của KHÓA TRƯỚC</strong> — khóa đó học xong, thi xong, nên bảng có đủ cả <code>final_score</code> lẫn <code>pass_fail</code> (đáp án đầy đủ). Nhân vật chính của ticket là <strong>Minh — học viên khóa NÀY</strong>, mới học tới tuần 8: <code>giờ tự học 6.5h/tuần · điểm danh 85% · giữa kỳ 74</code>. Giáo vụ hỏi 3 câu: (1) cuối kỳ Minh sẽ được <em>bao nhiêu ĐIỂM</em>? (2) Minh <em>ĐẬU hay RỚT</em>? (3) chia 24 học viên khóa trước thành các <em>NHÓM hành vi học</em> để mở lớp phụ đạo cho khóa của Minh — mà chưa ai định nghĩa nhóm nào cả. 1 bảng — 3 câu hỏi — <strong>3 loại bài toán ML khác nhau</strong>. Chọn sai loại là trả lời sai câu hỏi.'
       },
       achievement: { name: 'ML Problem Framer — Chọn đúng loại', desc: 'phân biệt regression / classification / clustering' },
 
@@ -370,12 +389,28 @@ window.LESSON_CONTENT['ml'] = {
             'Gọi đúng tên bài toán theo <strong>Ý NGHĨA target</strong>: số liên tục → regression, tên lớp → classification — kể cả khi lớp được mã hóa 0/1.',
             'Chạy 2 model thật trên cùng bảng và đọc kết quả clustering k=3 — hiểu vì sao <strong>ID cụm không có thứ tự</strong>.'
           ],
-          defs: [
-            { term: 'Regression', plain: 'Target là ĐẠI LƯỢNG liên tục (điểm số, số giờ…). Output = một số thực, có thể lệch ít hay nhiều.' },
-            { term: 'Classification', plain: 'Target là TÊN LỚP (Đậu/Rớt…). Mã hóa bằng 0/1 vẫn là tên lớp — không có "0.5 lớp", không cộng trừ được.' },
-            { term: 'Clustering', plain: 'KHÔNG dùng target — model tự tìm cấu trúc trong feature. ID cụm là tên tùy ý: đổi 0 ↔ 2 không đổi ý nghĩa.' }
-          ]
+          /* defs 1 dòng bỏ (đợt 5) — user feedback "chưa đưa định nghĩa": thay bằng dải
+             glossary đầy đủ (định nghĩa + ví dụ đời thường + output) ngay dưới đây. */
         },
+        /* Dải ĐỊNH NGHĨA (chuẩn ML đợt 5, user chốt 2026-07-19) — đặt TRƯỚC sim */
+        glossary: [
+          { term: 'SUPERVISED', vi: 'học có giám sát', accent: '#34D399',
+            def: 'Model học từ bảng <b>ĐÃ CÓ đáp án</b> (cột target). Có target là supervised; không có là <b>unsupervised</b>.',
+            ex: 'học sinh luyện tập đề cũ CÓ lời giải (supervised) vs tự xếp tài liệu thành chồng theo cảm nhận (unsupervised).',
+            out: 'model biết dự đoán target cho hồ sơ mới' },
+          { term: 'REGRESSION', vi: 'hồi quy', accent: '#38BDF8',
+            def: 'Bài toán supervised mà target là <b>MỘT CON SỐ liên tục</b> — trả lời câu hỏi "bao nhiêu?".',
+            ex: 'dự báo ngày mai bao nhiêu độ; căn nhà này giá bao nhiêu tiền.',
+            out: 'số thực — 67.7 điểm (có thể lệch ít/nhiều)' },
+          { term: 'CLASSIFICATION', vi: 'phân loại', accent: '#A78BFA',
+            def: 'Bài toán supervised mà target là <b>TÊN LỚP</b> — trả lời "loại nào?". Lớp mã hóa 0/1 thì 0/1 vẫn là TÊN, không phải số đếm được.',
+            ex: 'email này spam hay không spam; ảnh này chó hay mèo.',
+            out: '1 nhãn — ĐẬU hoặc RỚT (đúng lớp / sai lớp)' },
+          { term: 'CLUSTERING', vi: 'gom cụm', accent: '#FBBF24',
+            def: '<b>KHÔNG có đáp án</b> để học (unsupervised) — model tự gom các dòng GIỐNG NHAU thành nhóm.',
+            ex: 'siêu thị chia khách hàng thành các nhóm mua sắm dù chưa ai đặt tên nhóm.',
+            out: 'ID cụm 0/1/2 — tên TÙY Ý, không có thứ tự' }
+        ],
         primer: {
           goal: [
             'Supervised vs unsupervised',
@@ -385,7 +420,7 @@ window.LESSON_CONTENT['ml'] = {
           intro: '',
           example: '🔍 <strong>Nhìn bảng SAMPLE DATA bên dưới:</strong> so cột <code>final_score</code> (26.8, 81.8, 18.5… — số nào cũng có thể xảy ra) với cột <code>pass_fail</code> (chỉ có đúng 2 giá trị 0/1 — tên của 2 lớp). Cùng lưu bằng SỐ, nhưng Ý NGHĨA khác hẳn nhau — và chính ý nghĩa đó quyết định loại bài toán. Giữ nhận xét này khi sang Bước 2 👇'
         },
-        intro: 'Vẫn tuần 8, vẫn StudyLab — nhưng bảng dữ liệu giờ có <strong>24 hồ sơ</strong> với đủ 2 cột kết cục. Cùng một bảng, đặt 3 câu hỏi khác nhau sẽ ra 3 bài toán khác nhau: loại bài toán <em>không nằm trong dữ liệu</em> — nó nằm ở <strong>câu hỏi và target bạn chọn</strong>.',
+        intro: 'Vẫn tuần 8, vẫn StudyLab — giờ có <strong>24 hồ sơ khóa trước</strong> đủ 2 cột kết cục làm tài liệu học, và <strong>Minh (khóa này)</strong> cần được dự đoán. Cùng một bảng, đặt 3 câu hỏi khác nhau sẽ ra 3 bài toán khác nhau: loại bài toán <em>không nằm trong dữ liệu</em> — nó nằm ở <strong>câu hỏi và target bạn chọn</strong>.',
         concept_cards: [
           {
             icon: 'fa-ruler',
@@ -403,8 +438,22 @@ window.LESSON_CONTENT['ml'] = {
             body: 'Hỏi "chia nhóm hành vi học?" — chưa ai gán nhãn nhóm cho bất kỳ học viên nào. Model tự tìm cấu trúc từ CHÍNH các feature, trả về ID cụm <strong>tùy ý</strong>. Lưu ý: bảng VẪN CÒN nguyên 2 cột kết cục — clustering CHỌN không dùng, chứ không phải dữ liệu thiếu.'
           }
         ],
-        /* Hero = sim 3 luồng (user chốt 2026-07-19: bỏ dải timeline, 1 dòng nhắc tuần 8 nằm trong story) */
+        /* Hero = sim 3 luồng (user chốt 2026-07-19: bỏ dải timeline, 1 dòng nhắc tuần 8 nằm trong story)
+           + cohort strip (đợt 5): sơ đồ 2 khóa trả lời "khóa khác thì liên quan gì đến Minh?" */
         paradigm_visual: {
+          cohort: {
+            old: {
+              tag: '🗂️ KHÓA TRƯỚC — 24 học viên',
+              sub: 'đã học xong · đã thi cuối kỳ',
+              body: 'Bảng có <strong>ĐỦ đáp án</strong>: <code>final_score</code> + <code>pass_fail</code>. Đây là tài liệu để model <strong>HỌC</strong> — như tập đề cũ đã kèm lời giải.'
+            },
+            arrow: 'cùng chương trình học → quy luật lặp lại',
+            new: {
+              tag: '🎓 KHÓA NÀY — Minh, tuần 8',
+              sub: 'giờ tự học 6.5h/tuần · điểm danh 85% · giữa kỳ 74',
+              body: 'Minh <strong>CHƯA thi cuối kỳ</strong> → dòng của Minh thiếu 2 cột kết cục. Model áp quy luật rút từ khóa trước để <strong>DỰ ĐOÁN</strong> phần còn thiếu đó.'
+            }
+          },
           flows: [
             {
               id: 'reg',
@@ -415,7 +464,7 @@ window.LESSON_CONTENT['ml'] = {
                 { icon: '🗂️', label: '24 hồ sơ khóa trước' },
                 { icon: '🎯', label: 'y = final_score (17.4 → 93.7)' },
                 { icon: '🧠', label: 'SimpleRegressor học đường khớp' },
-                { icon: '🔢', label: 'X_new → ≈ 67.7 điểm', cls: 'good' }
+                { icon: '🔢', label: 'Minh (X_new) → ≈ 67.7 điểm', cls: 'good' }
               ],
               punch: 'Output là SỐ THỰC — có thể lệch ít hay nhiều → REGRESSION.'
             },
@@ -428,7 +477,7 @@ window.LESSON_CONTENT['ml'] = {
                 { icon: '🗂️', label: 'CÙNG 24 hồ sơ đó' },
                 { icon: '🎯', label: 'y = pass_fail ∈ {0, 1}' },
                 { icon: '🧠', label: 'SimpleClassifier học 2 chân dung' },
-                { icon: '🏷️', label: 'X_new → 1 · ĐẬU', cls: 'good' }
+                { icon: '🏷️', label: 'Minh (X_new) → 1 · ĐẬU', cls: 'good' }
               ],
               punch: '0/1 chỉ là TÊN của 2 lớp — output là NHÃN → CLASSIFICATION.'
             },
@@ -579,7 +628,7 @@ window.LESSON_CONTENT['ml'] = {
               zones: ['ml2-regfit', 'ml2-regpred'],
               icon: '🔢', label: 'REGRESSION', sub: 'y = final_score (SỐ)', result_kind: 'reg_sum',
               reg: {
-                xnew: '6.5h · 85% · giữa kỳ 74',
+                xnew: 'Minh · 6.5h · 85% · giữa kỳ 74',
                 parts: [
                   { label: '6.5h × 5.48',  val: 35.6 },
                   { label: '85% × 0.30',   val: 25.2 },
@@ -593,8 +642,8 @@ window.LESSON_CONTENT['ml'] = {
             {
               zones: ['ml2-clffit', 'ml2-clfpred'],
               icon: '🏷️', label: 'CLASSIFICATION', sub: 'y = pass_fail (TÊN LỚP)', result_kind: 'nearest',
-              profile: '6.5h · 85% · giữa kỳ 74', dist: { pass: 9.3, fail: 36.2 }, verdict: '1 · ĐẬU',
-              narration: '<code>classifier.fit(X, y_label)</code> kết tinh 24 hồ sơ thành 2 chân dung: ĐẬU ≈ 7.4h · 91% · giữa kỳ 81 vs RỚT ≈ 2.6h · 60% · giữa kỳ 48. Hồ sơ mới đo khoảng cách: Δ ĐẬU ≈ <b>9.3</b> vs Δ RỚT ≈ <b>36.2</b> → nhãn <b>1 · ĐẬU</b>. Output là TÊN LỚP — không phải con số để cộng trừ.'
+              profile: 'Minh · 6.5h · 85% · giữa kỳ 74', dist: { pass: 9.3, fail: 36.2 }, verdict: '1 · ĐẬU',
+              narration: '<code>classifier.fit(X, y_label)</code> kết tinh 24 hồ sơ thành 2 chân dung: ĐẬU ≈ 7.4h · 91% · giữa kỳ 81 vs RỚT ≈ 2.6h · 60% · giữa kỳ 48. Hồ sơ của Minh đo khoảng cách: Δ ĐẬU ≈ <b>9.3</b> vs Δ RỚT ≈ <b>36.2</b> → nhãn <b>1 · ĐẬU</b>. Output là TÊN LỚP — không phải con số để cộng trừ.'
             },
             {
               zones: ['ml2-clu', 'ml2-clupred'],
@@ -674,7 +723,7 @@ window.LESSON_CONTENT['ml'] = {
       step_4: {
         prompt: 'Bước 3 bạn đã ghép đúng cặp model–target. Giờ viết <strong>bản code thật</strong> cho 2 nhánh supervised: <code>SimpleRegressor</code> học <code>y_score</code>, <code>SimpleClassifier</code> học <code>y_label</code>, cả hai cùng predict một <code>X_new</code> — và hệ thống sẽ <strong>đổi X_new ngầm</strong> khi chấm. In cả 2 kết quả.',
         context: {
-          scenario: 'Giáo vụ cần trả lời câu hỏi ① và ② cho MỌI học viên mới, không riêng hồ sơ demo. Hidden test đổi X_new — viết đúng quy trình thì kết quả vẫn hợp lệ với bất kỳ hồ sơ nào. Clustering (câu hỏi ③) không cần code lại — bạn đã đọc nó ở Bước 3.',
+          scenario: 'Giáo vụ cần trả lời câu hỏi ① và ② cho MỌI học viên khóa này, không riêng Minh. Hidden test đổi X_new (thay hồ sơ Minh bằng hồ sơ khác) — viết đúng quy trình thì kết quả vẫn hợp lệ với bất kỳ ai. Clustering (câu hỏi ③) không cần code lại — bạn đã đọc nó ở Bước 3.',
           real_world: 'Đây là một hồ sơ vay ngân hàng: cùng 1 bảng khách hàng, hỏi "cho vay được BAO NHIÊU tiền?" là regression, hỏi "DUYỆT hay TỪ CHỐI?" là classification. Ghép nhầm cặp — bắt regressor học nhãn duyệt/từ chối 0/1 — code vẫn chạy và trả về "0.7": không phải số tiền, cũng chẳng phải quyết định. Sai từ công thức hóa thì mọi con số sau đó đều vô nghĩa.',
           steps: [
             'Import 2 model + hàm nạp dữ liệu từ <code>ml_lab</code>.',
@@ -728,12 +777,36 @@ window.LESSON_CONTENT['ml'] = {
             'Gán vai trò <strong>Feature / Target / Bỏ</strong> cho từng cột THEO NHIỆM VỤ — và thấy cùng một cột đổi vai khi nhiệm vụ đổi.',
             'Tách <code>X</code> (200×3) và <code>y</code> (200,) bằng Pandas mà không dính <strong>leakage</strong> — lỗi âm thầm nguy hiểm nhất của ML.'
           ],
-          defs: [
-            { term: 'Feature matrix X', plain: 'Phần của bảng mà model ĐƯỢC NHÌN khi dự đoán — N dòng × D cột feature. Bài này: X (200 × 3).' },
-            { term: 'Target vector y', plain: 'Cột đáp án model phải học — mỗi dòng đúng 1 giá trị, shape (N,). Kiểu của y đổi theo nhiệm vụ: 0/1 hay số thực.' },
-            { term: 'Leakage (rò rỉ)', plain: 'X chứa thông tin lẽ ra KHÔNG được biết lúc dự đoán: chính đáp án (target leak) hoặc dữ liệu tương lai (future leak). Code vẫn chạy, điểm ảo rất cao — ra đời thật thì sập.' }
-          ]
+          /* defs 1 dòng bỏ (đợt 5) — user feedback "chưa đưa định nghĩa gì rõ ràng":
+             thay bằng dải glossary đầy đủ ngay dưới. */
         },
+        /* Dải ĐỊNH NGHĨA (chuẩn ML đợt 5, user chốt 2026-07-19) — đặt TRƯỚC ống kính bảng */
+        glossary: [
+          { term: 'DATAFRAME', vi: 'cái bảng trong Python', accent: '#7DD3FC',
+            def: 'Bảng dữ liệu của thư viện <b>pandas</b> — như 1 sheet Excel sống trong code. Bài này: <code>df</code> = 200 dòng × 5 cột.',
+            ex: 'sổ điểm cả lớp: mỗi học viên 1 hàng, mỗi loại điểm 1 cột.',
+            out: 'df — thứ mọi dòng code Bước 3/4 thao tác lên' },
+          { term: 'SAMPLE', vi: 'mẫu — 1 DÒNG', accent: '#34D399',
+            def: 'Mỗi <b>dòng</b> = 1 cá thể được ghi lại. 200 dòng = 200 học viên = 200 sample.',
+            ex: 'dòng 2 = toàn bộ thông tin của MỘT bạn: 9.4h · 82% · 91 · 97 · Đậu.',
+            out: 'df có 200 sample' },
+          { term: 'FEATURE / ATTRIBUTE', vi: 'đặc trưng — 1 CỘT', accent: '#A78BFA',
+            def: 'Mỗi <b>cột</b> = 1 thuộc tính đo được trên MỌI sample. Cột nào được chọn cho model nhìn thì gọi là <b>feature</b>.',
+            ex: 'cột study_hours = "mỗi bạn học bao nhiêu giờ/tuần" — đo trên cả 200 bạn.',
+            out: '1 ô = 1 value (giá trị của 1 sample tại 1 cột)' },
+          { term: 'X', vi: 'feature matrix', accent: '#38BDF8',
+            def: 'Phần của bảng model <b>ĐƯỢC NHÌN</b> khi dự đoán — N dòng × D cột feature ĐƯỢC CHỌN. Bài này: X (200 × 3).',
+            ex: 'phần đề bài phát cho thí sinh — không kèm đáp án.',
+            out: 'X = df[["study_hours", "attendance", "midterm_score"]]' },
+          { term: 'y', vi: 'target vector', accent: '#FBBF24',
+            def: 'Cột <b>ĐÁP ÁN</b> model phải học — mỗi sample đúng 1 giá trị, shape (N,). Kiểu của y đổi theo nhiệm vụ: 0/1 hay số thực.',
+            ex: 'cột lời giải của tập đề cũ — thứ model dò để rút quy luật.',
+            out: 'y = df["pass_fail"] → (200,)' },
+          { term: 'LEAKAGE', vi: 'rò rỉ đáp án', accent: '#F87171',
+            def: 'X chứa thông tin lẽ ra <b>KHÔNG được biết</b> lúc dự đoán: chính đáp án (<b>target leak</b>) hoặc dữ liệu tương lai (<b>future leak</b>).',
+            ex: 'đề thi kẹp sẵn tờ lời giải — điểm 10 trong phòng thi, ra đời không làm nổi.',
+            out: 'code VẪN chạy, điểm lab ảo cao — ngoài đời sập' }
+        ],
         primer: {
           goal: [
             'Dòng / cột / ô — 3 tầng của bảng',

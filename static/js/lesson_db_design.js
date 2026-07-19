@@ -3906,7 +3906,25 @@
         '<div class="pgv-punch" data-flow="' + f.id + '" hidden>' + (f.punch || '') + '</div>' +
         '</div>';
     }).join('');
-    mount.innerHTML = tlHtml + '<div class="pgv-wrap">' + flowsHtml + '</div>' +
+    // Đợt 5 (user chốt 2026-07-19): sơ đồ 2 khóa — trả lời "khóa khác thì liên quan gì
+    // đến học viên mới?": khóa TRƯỚC đủ đáp án = tài liệu HỌC ─quy luật→ khóa NÀY cần DỰ ĐOÁN.
+    // cfg.cohort = { old:{tag,sub,body}, arrow, new:{tag,sub,body} }
+    let cohortHtml = '';
+    const co = cfg.cohort;
+    if (co && co.old && co.new) {
+      cohortHtml = '<div class="pgv-cohort">' +
+        '<div class="pgv-cohort-card is-old">' +
+          '<div class="pgv-cohort-tag">' + co.old.tag + '</div>' +
+          (co.old.sub ? '<div class="pgv-cohort-sub">' + co.old.sub + '</div>' : '') +
+          '<div class="pgv-cohort-body">' + co.old.body + '</div></div>' +
+        '<div class="pgv-cohort-arrow"><span class="ar">⟶</span><span>' + (co.arrow || 'quy luật') + '</span></div>' +
+        '<div class="pgv-cohort-card is-new">' +
+          '<div class="pgv-cohort-tag">' + co.new.tag + '</div>' +
+          (co.new.sub ? '<div class="pgv-cohort-sub">' + co.new.sub + '</div>' : '') +
+          '<div class="pgv-cohort-body">' + co.new.body + '</div></div>' +
+        '</div>';
+    }
+    mount.innerHTML = tlHtml + cohortHtml + '<div class="pgv-wrap">' + flowsHtml + '</div>' +
       '<div class="pgv-sokeo" id="pgv-sokeo" hidden>⚖️ ' + (cfg.so_keo || '') + '</div>';
     mount.querySelectorAll('.pgv-run').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -4177,6 +4195,29 @@
         ywlEl.hidden = false;
       } else {
         ywlEl.hidden = true;
+      }
+    }
+
+    // Dải ĐỊNH NGHĨA (chuẩn ML đợt 5, user chốt 2026-07-19 — feedback học viên: "Regression
+    // là gì, Clustering là gì cũng chưa nói"). step_1.glossary = [{term, vi, def, ex, out, accent}]
+    // — khác ywl.defs (1 dòng): thẻ đủ định nghĩa 1 câu + ví dụ đời thường + "output trông thế nào".
+    const glosEl = document.getElementById('ml-glossary');
+    if (glosEl) {
+      const glos = s1.glossary;
+      if (glos && glos.length) {
+        glosEl.innerHTML =
+          '<div class="ml-glossary-title">📖 ĐỊNH NGHĨA — NẮM ' + glos.length + ' TỪ NÀY TRƯỚC ĐÃ</div>' +
+          '<div class="ml-glossary-grid">' + glos.map(g =>
+            '<div class="ml-gloss-card"' + (g.accent ? ' style="--gls-accent:' + g.accent + '"' : '') + '>' +
+              '<div class="ml-gloss-term">' + g.term + (g.vi ? '<small>· ' + g.vi + '</small>' : '') + '</div>' +
+              '<div class="ml-gloss-def">' + g.def + '</div>' +
+              (g.ex ? '<div class="ml-gloss-ex"><b>Ví dụ đời thường:</b> ' + g.ex + '</div>' : '') +
+              (g.out ? '<div class="ml-gloss-out">output → <b>' + g.out + '</b></div>' : '') +
+            '</div>'
+          ).join('') + '</div>';
+        glosEl.hidden = false;
+      } else {
+        glosEl.hidden = true;
       }
     }
 
@@ -5186,10 +5227,13 @@
     // Build map cột trái: khóa ML (s3.ml_flow) → MLFlowMap skin riêng (dataflow 2 tầng,
     // user chốt 2026-07-18); còn lại → DragGame DÒNG CHẢY chuẩn.
     if (s3.ml_flow && window.MLFlowMap) {
-      /* Bài ≥5 zone (B2: 6 zones) HOẶC kho ≥7 khối dài (B3: 7 khối pandas) — nén cột phải */
+      /* Bài ≥5 zone (B2: 6 zones) HOẶC kho khối DÀI (B3: 7 khối pandas ~300 ký tự) — nén cột phải.
+         Đợt 5: đếm theo TỔNG KÝ TỰ thay vì số khối — ngưỡng cũ (blocks>=7) bắt nhầm Bài 1
+         (10 khối NGẮN ~100 ký tự, không cần nén → user chê zone teo nhỏ). CSS chỉ nén @màn thấp. */
       var dzEl = document.getElementById('drop-zones');
+      var mlBlockChars = (s3.blocks || []).reduce(function (n, b) { return n + String((b && b.token) || '').length; }, 0);
       if (dzEl) dzEl.classList.toggle('ml-zones-dense',
-        (s3.drop_zones || []).length >= 5 || (s3.blocks || []).length >= 7);
+        (s3.drop_zones || []).length >= 5 || mlBlockChars >= 220);
       window.MLFlowMap.init({ lesson: l, dropZones: s3.drop_zones });
     } else if (window.DragGame) {
       if (window.MLFlowMap) window.MLFlowMap.active = false;

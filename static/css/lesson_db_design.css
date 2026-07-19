@@ -11497,23 +11497,23 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .mlf-scene-clu .mlf-legend { display: flex; flex-direction: column; gap: 6px; }
 .mlf-clu-note { font-size: 11px; color: var(--text-400); line-height: 1.5; }
 
-/* Bài ≥5 zone (Bài 2: 6 zones + 9 khối) — nén cột phải thêm 1 nấc so với tuning 4-zone */
-.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 36px; padding: 4px 10px; }
-.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 30px; }
-.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-prompt { font-size: 10.5px; }
-.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-num { font-size: 12px; }
-@media (max-height: 800px) {
-  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 32px; padding: 3px 10px; }
-  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 26px; }
-}
+/* Bài ≥5 zone / kho khối DÀI — nén cột phải. ĐỢT 5 (feedback 2026-07-19): nén CHỈ khi
+   màn THẤP (≤840px — laptop 768/800); màn cao dùng cỡ thường (user chê pill/zone teo
+   nhỏ xấu ở màn lớn). Trigger class giờ theo TỔNG KÝ TỰ khối (JS) nên Bài 1 thoát dense. */
+@media (max-height: 840px) {
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 36px; padding: 4px 10px; }
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 30px; }
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-prompt { font-size: 10.5px; }
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-num { font-size: 12px; }
 
-/* B2-fit: 6 zones (298px) + kho 9 khối DÀI (234px) từng tràn cột phải 155px @768.
-   Khối Bài 2 dài ~2× Bài 1 (1-2 khối/hàng) → nén pill + zone + gap khi bài ml-zones-dense. */
-#drop-zones.ml-zones-dense, #drop-zones.ml-zones-dense .drop-zone-stack { gap: 5px; }
-.course-ml .step3-editor:has(#drop-zones.ml-zones-dense) { padding: 10px 12px; }
-.course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank-wrap { padding: 6px 10px; }
-.course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank .logic-pill {
-  font-size: 11.5px; padding: 4px 8px;
+  /* B2-fit: 6 zones (298px) + kho 9 khối DÀI (234px) từng tràn cột phải 155px @768.
+     Khối Bài 2 dài ~2× Bài 1 (1-2 khối/hàng) → nén pill + zone + gap khi bài ml-zones-dense. */
+  #drop-zones.ml-zones-dense, #drop-zones.ml-zones-dense .drop-zone-stack { gap: 5px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) { padding: 10px 12px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank-wrap { padding: 6px 10px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank .logic-pill {
+    font-size: 11.5px; padding: 4px 8px;
+  }
 }
 @media (max-height: 800px) {
   .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 30px; padding: 2px 10px; }
@@ -11565,3 +11565,160 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .tlens-card { font-size: 12.5px; color: var(--text-300); line-height: 1.6; border: 1px solid rgba(167, 139, 250, 0.3); background: rgba(167, 139, 250, 0.06); border-radius: 10px; padding: 10px 12px; min-height: 74px; }
 .tlens-done { margin-top: 10px; font-size: 12.5px; color: #6EE7B7; border-top: 1px dashed rgba(148, 163, 184, 0.18); padding-top: 10px; line-height: 1.6; }
 @media (max-width: 900px) { .tlens-body { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 5 (2026-07-19) — feedback user 5 điểm trên Bài 1-3
+ * 1) Hero unclip  2) pill-py skin  3) hero B2 retune  4) cohort strip
+ * 5) glossary (dải ĐỊNH NGHĨA)  6) polish step3
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO UNCLIP — .lesson-hero gốc là hộp SVG 720×(3/2, max 400) + overflow hidden:
+   cắt sim B1 (623px) và ống kính B3 (475px), ép 3 luồng B2 dính bẹp trong 720px.
+   Khóa ML render COMPONENT SỐNG vào hero → gỡ toàn bộ ràng buộc hộp ảnh. */
+.course-ml .lesson-hero {
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  overflow: visible;
+  box-shadow: none;
+}
+.course-ml .lesson-hero::before,
+.course-ml .lesson-hero::after { content: none; }
+
+/* 2) PILL-PY — khối ML type 'py' chưa hề có skin (pill trần = chữ mộc, user báo "lỗi").
+   Cùng DNA FIX-7 (nền color-mix + vòng inset + chấm anchor) nhưng trung tính dev-tool:
+   1 màu slate/cyan cho MỌI khối python — phân loại màu là việc của SQL, không phải ở đây. */
+.logic-pill.pill-py {
+  background: color-mix(in srgb, #334155 42%, transparent);
+  color: #E2E8F0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #94A3B8 34%, transparent), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.logic-pill.pill-py::before { background: #38BDF8; box-shadow: 0 0 6px rgba(56, 189, 248, 0.7); }
+.logic-pill.pill-py:hover { box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.5), 0 6px 14px rgba(0, 0, 0, 0.35); }
+
+/* 3) HERO B2 SAU UNCLIP — hero giờ ăn full cột nội dung (~1000px) thay vì 720px:
+   nới gap/padding 3 luồng cho hết "dính"; giữ bộ nén chữ chỉ khi cột thực sự hẹp. */
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) { gap: 16px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-flow { padding: 14px 16px; }
+@media (min-width: 1500px) {
+  .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) { gap: 20px; }
+  .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-node-label { font-size: 13px; }
+  .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-sub { font-size: 11.5px; }
+  .course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-punch { font-size: 12px; }
+}
+/* Nhãn mốc timeline (Tuần 7/8/15) hết chen nhau khi hero rộng — mỗi nhãn 1 khối gọn */
+.pgv-tl-marks span { white-space: nowrap; }
+.pgv-tl-labels { flex-wrap: wrap; }
+
+/* 4) COHORT STRIP (B2 — sơ đồ 2 khóa, user chốt 2026-07-19): KHÓA TRƯỚC đủ đáp án
+   = tài liệu HỌC  ─quy luật→  KHÓA NÀY (persona) thiếu 2 cột kết cục = cần DỰ ĐOÁN. */
+.pgv-cohort {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 14px;
+}
+.pgv-cohort-card {
+  background: rgba(21, 30, 50, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-top: 3px solid var(--pgc-accent, #64748B);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.pgv-cohort-card.is-old { --pgc-accent: #34D399; }
+.pgv-cohort-card.is-new { --pgc-accent: #A78BFA; }
+.pgv-cohort-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
+  color: var(--pgc-accent);
+  margin-bottom: 4px;
+}
+.pgv-cohort-sub { font-size: 11.5px; color: var(--text-500); margin-bottom: 8px; }
+.pgv-cohort-body { font-size: 12.5px; color: var(--text-300); line-height: 1.55; }
+.pgv-cohort-body code { color: #C4B5FD; font-size: 11.5px; }
+.pgv-cohort-arrow {
+  align-self: center;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: #7DD3FC; font-size: 11px; font-weight: 700; white-space: nowrap;
+  padding: 0 2px;
+}
+.pgv-cohort-arrow .ar { font-size: 18px; line-height: 1; }
+@media (max-width: 860px) {
+  .pgv-cohort { grid-template-columns: 1fr; }
+  .pgv-cohort-arrow { flex-direction: row; }
+}
+
+/* 5) GLOSSARY — dải ĐỊNH NGHĨA chuẩn khóa ML (user chốt 2026-07-19: sau hook, TRƯỚC sim;
+   format chung mọi bài ML). Mỗi thẻ: term + tên Việt + định nghĩa 1 câu + ví dụ + output. */
+.ml-glossary {
+  margin: 0 0 var(--space-5);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-lg);
+  background: rgba(15, 23, 42, 0.45);
+  padding: 14px 16px;
+}
+.ml-glossary-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.2px;
+  color: var(--text-300);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ml-glossary-title::after { content: ''; flex: 1; border-top: 1px dashed rgba(148, 163, 184, 0.2); }
+.ml-glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+/* Đúng 4 thẻ → 2×2 cân (auto-fit 3 cột để lẻ 3+1, thẻ số 4 lẻ loi) */
+.ml-glossary-grid:has(.ml-gloss-card:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
+.ml-gloss-card {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-left: 3px solid var(--gls-accent, #64748B);
+  border-radius: var(--radius-sm);
+  background: rgba(11, 18, 32, 0.6);
+  padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.ml-gloss-term {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.4px;
+  color: var(--gls-accent, var(--text-100));
+}
+.ml-gloss-term small { color: var(--text-500); font-weight: 600; letter-spacing: 0; margin-left: 4px; }
+.ml-gloss-def { font-size: 12.5px; color: var(--text-200); line-height: 1.55; }
+.ml-gloss-def b { color: var(--text-50); }
+.ml-gloss-ex { font-size: 11.5px; color: var(--text-500); line-height: 1.5; }
+.ml-gloss-ex b { color: var(--text-400); font-weight: 600; }
+.ml-gloss-out {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: #7DD3FC;
+  border-top: 1px dashed rgba(148, 163, 184, 0.15);
+  padding-top: 5px; margin-top: 1px;
+}
+.ml-gloss-out b { color: #BAE6FD; font-weight: 700; }
+
+/* 5b) TIER NÉN TRUNG BÌNH cho bài dense ở màn 841–1040px (probe 1920×950: B2 6 zone
+   cỡ đầy đủ tràn cột 662/595 — kho bị cắt). Giữa "nén gắt @≤840" và "thả full @>1040". */
+@media (min-height: 841px) and (max-height: 1040px) {
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 40px; padding: 3px 10px; }
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 34px; }
+  #drop-zones.ml-zones-dense, #drop-zones.ml-zones-dense .drop-zone-stack { gap: 6px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) { padding: 12px 14px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank-wrap { padding: 8px 10px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank .logic-pill {
+    font-size: 12.5px; padding: 6px 10px;
+  }
+}
+/* Lưới an toàn: cột phải khóa ML thà CUỘN còn hơn CẮT mất khối (overflow hidden gốc) */
+.course-ml .step3-editor { overflow-y: auto; }
+
+/* 6) POLISH STEP 3 — (a) màn cao: solution.py được thở cao hơn (bớt hổng giữa cột phải);
+   (b) đầu thẻ trạm nhánh (NHIỆM VỤ A/B): icon + tên giữ 1 hàng, không rớt tên xuống dưới. */
+@media (min-height: 841px) {
+  .course-ml .step3-ide .ide-display { max-height: 320px; }
+}
+.mlf-branch-row .mlf-node-head { flex-wrap: nowrap; align-items: center; }
+.mlf-branch-row .mlf-node-head .mlf-node-title { min-width: 0; }
+.mlf-branch-row .mlf-node-head .mlf-node-title b { white-space: normal; }

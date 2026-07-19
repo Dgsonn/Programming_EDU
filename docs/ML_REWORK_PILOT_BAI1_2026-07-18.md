@@ -134,3 +134,40 @@ Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; m
 
 ### Verify (verify_b3.js — 32/32 · 0 pageerror ×2 lượt)
 Ống kính 3 click + banner; explorer 200 rows + note 2 TARGET nêu leak; map fit zoom 0.797 + cột phải 413/413; gõ nháy ĐƠN đúng → normalize → máy chạy 2 nhánh (int → float); done + replay; echo 4 dòng; step 4 bẫy rồi đúng 4/4 + modal; regression B1-ML map dọc + B2-ML 3 nhánh + Basic + NC sạch.
+
+---
+
+## ĐỢT 5 (2026-07-19) — feedback user 5 điểm trên Bài 1-3 (sau khi duyệt sơ Bài 3)
+
+### Feedback gốc
+1. B1 step 3: map ổn nhưng drop-zone/kho "thu bé lại trông khá xấu".
+2. B1 step 1: hero lỗi (sim bị cắt).
+3. B2 step 1: ngữ cảnh học viên mới ↔ 24 hồ sơ chưa rõ; thiếu định nghĩa regression/clustering; "bảng dính quá, xấu".
+4. B3 step 1: thiếu định nghĩa rõ ràng.
+5. B3 step 3: lỗi như ảnh (kho chữ mộc + nén xấu).
+
+### Chẩn đoán gốc rễ (probe 1366×768 + 1920×950)
+- **Hero box legacy**: `.lesson-hero` gốc là hộp SVG `max-width:720px + max-height:400px + aspect-ratio:3/2 + overflow:hidden`; override `.course-ml` (đợt 3) chỉ reset display/padding — **B1 tràn 623/400 (cắt nút Chạy), B3 tràn 475/400 (cắt banner lens), B2 "vừa" 401/400 nhưng 3 luồng bị ép bẹp trong 720px = "bảng dính"**.
+- **`.pill-py` không tồn tại trong CSS**: khối ML type 'py' → pill trần không nền/viền = "đống chữ" ở kho (cả 3 bài, mọi cỡ màn).
+- **Dense sai 2 tầng**: trigger `blocks>=7` bắt nhầm B1 (10 khối NGẮN ~102 ký tự); CSS nén áp mọi cỡ màn (1920×950 pill vẫn 11.5px).
+
+### Quyết định user (AskUserQuestion)
+1. B2 ngữ cảnh: **Persona + sơ đồ 2 khóa** (Minh — khóa NÀY tuần 8; cohort strip: khóa trước đủ đáp án = tài liệu HỌC ─quy luật→ Minh cần DỰ ĐOÁN).
+2. Định nghĩa: **Dải ĐỊNH NGHĨA đầu step 1** (sau hook, TRƯỚC sim) — format chuẩn mọi bài ML: term + tên Việt + định nghĩa 1 câu + ví dụ đời thường + output.
+3. Kho khối dài: **giữ wrap tự do** (chỉ tăng cỡ + chip style; không xếp 1 khối/dòng).
+
+### Việc đã làm
+- CSS `?v=9`: (1) `.course-ml .lesson-hero` unclip (max-width/height none, aspect auto, overflow visible, tắt ::before/::after glow); (2) `.logic-pill.pill-py` skin chip dev-tool (nền slate color-mix + inset ring + chấm cyan — cùng DNA FIX-7, 1 màu cho mọi khối python); (3) dense 3 tier: gắt @≤800, vừa @≤840, **trung bình @841–1040** (probe 1920×950: B2 6-zone full-size tràn 662/595 → tier 12.5px/40px → 595/595), thả full @>1040 + lưới an toàn `overflow-y:auto`; (4) hero B2 3 luồng nới gap/padding + media ≥1500px; (5) `.pgv-cohort*` strip; (6) `.ml-glossary*` component; (7) marks nowrap; (8) `:has(4 thẻ)` glossary → 2×2.
+- JS shell `?v=17`: dense trigger đổi sang **tổng ký tự khối ≥220 || zones ≥5** (B1 102 ký tự → thoát dense, về sizing đợt 4 đã verify); `renderParadigmVisual` thêm `cfg.cohort`; renderer `#ml-glossary` (data-driven `step_1.glossary`, ẩn khi bài chưa khai — 3 khóa DB không đụng).
+- Template: mount `#ml-glossary` giữa you-will-learn và hero.
+- Content `?v=8`: B1/B2/B3 bỏ `ywl.defs` 1 dòng → `glossary` đầy đủ (B1 5 thẻ: truyền thống/ML/model/fit→predict/T·E·P; B2 4 thẻ: supervised/regression/classification/clustering; B3 6 thẻ: DataFrame/sample/feature/X/y/leakage). B2 persona **Minh** xuyên suốt: hook (khóa trước đã thi xong ↔ Minh khóa này tuần 8), intro, cohort, node cuối 2 luồng supervised "Minh (X_new) → …", ml_flow xnew/profile "Minh · 6.5h · 85% · giữa kỳ 74", narration classification, step_4 scenario (hidden test = thay hồ sơ Minh).
+
+### Verify
+- 3 suite: **B1 32/32 · B2 31/31 · B3 32/32 — 0 pageerror**, regression Basic B1 SQL + NC + B1-ML map dọc + B2-ML branch sạch.
+- Probe số: hero hết clip cả 3 bài (560/560 · 551/551 · 475/475); B1 s3 thoát dense (pill 13.5px, zone 44px, editor 413/413@768); B2/B3 s3 khít 413/413@768 (zoom 0.824) và 595/595@950.
+- Screenshot soi mắt: b1_hero_top (timeline marks 1 dòng/mốc, 2 luồng đủ nút Chạy), gloss_b1/b2_v2/b3 (2×2 B2 cân), sm_b1_s3 (kho chip đẹp), lg2_b2/b3_s3 (kho hết cắt sau tier trung bình — bug này CHÍNH probe bắt được, suite cũ không có case 950px).
+
+### Gotcha ghi sổ
+- Hero unclip là fix NỀN cho mọi bài ML sau — component sống render vào `#lesson-hero` sẽ không bao giờ vừa hộp ảnh 720×400.
+- Ngưỡng dense theo COUNT khối là sai bản chất — độ dài text mới quyết định; đã đổi sang tổng ký tự.
+- Template đổi phải RESTART Flask (Jinja cache) — probe đầu tưởng glossary "missing".
