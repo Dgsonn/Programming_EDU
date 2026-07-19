@@ -14,76 +14,9 @@
 
 window.LESSON_CONTENT = window.LESSON_CONTENT || {};
 
-/* Hero SVG riêng của khóa ML — renderLessonHero tra HERO_SVGS_ML khi id không có
- * trong HERO_SVGS (lookup additive, không đụng heroes DB). */
-window.HERO_SVGS_ML = {
-  c1_l1: `<svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img"
-  aria-label="So sánh hai con đường: luật viết sẵn dùng final_score có sẵn, còn Machine Learning học pattern từ 12 học viên khóa trước để dự đoán cho học viên mới khi final_score chưa tồn tại"
-  font-family="'JetBrains Mono', monospace">
-  <text x="460" y="30" text-anchor="middle" fill="#94A3B8" font-size="14" letter-spacing="2">MỘT CÂU HỎI — HAI CON ĐƯỜNG TRẢ LỜI</text>
-
-  <!-- ── Panel trái: LUẬT VIẾT SẴN ── -->
-  <rect x="20" y="48" width="430" height="252" rx="12" fill="#131C2E" stroke="#263349"/>
-  <text x="40" y="76" fill="#FBBF24" font-size="13" font-weight="bold">① LUẬT VIẾT SẴN — Lập trình truyền thống</text>
-
-  <rect x="60" y="96" width="190" height="34" rx="8" fill="#0B1220" stroke="#334155"/>
-  <text x="155" y="118" text-anchor="middle" fill="#E2E8F0" font-size="13">final_score = 62</text>
-
-  <path d="M155 130 v16" stroke="#475569" stroke-width="2" marker-end="url(#mlArr)"/>
-
-  <rect x="60" y="150" width="190" height="34" rx="8" fill="#0B1220" stroke="#FBBF24"/>
-  <text x="155" y="172" text-anchor="middle" fill="#FBBF24" font-size="13">if score &gt;= 50 ?</text>
-
-  <path d="M155 184 v16" stroke="#475569" stroke-width="2" marker-end="url(#mlArr)"/>
-
-  <rect x="60" y="204" width="190" height="34" rx="8" fill="#0B1220" stroke="#34D399"/>
-  <text x="155" y="226" text-anchor="middle" fill="#34D399" font-size="13" font-weight="bold">→ ĐẬU ✓</text>
-
-  <text x="290" y="150" fill="#64748B" font-size="11">Người viết LUẬT,</text>
-  <text x="290" y="166" fill="#64748B" font-size="11">máy chỉ áp dụng.</text>
-  <text x="40" y="278" fill="#94A3B8" font-size="11">Chạy được vì đáp án final_score ĐÃ TỒN TẠI trong tay.</text>
-
-  <!-- ── Panel phải: HỌC TỪ DỮ LIỆU ── -->
-  <rect x="470" y="48" width="430" height="252" rx="12" fill="#161226" stroke="#4C1D95"/>
-  <text x="490" y="76" fill="#A78BFA" font-size="13" font-weight="bold">② HỌC TỪ DỮ LIỆU — Machine Learning</text>
-  <rect x="700" y="58" width="188" height="22" rx="11" fill="#2D1420"/>
-  <text x="794" y="73" text-anchor="middle" fill="#F87171" font-size="10">tuần 3 — CHƯA có final_score</text>
-
-  <!-- bảng lịch sử (giá trị thật từ load_study_data) -->
-  <rect x="490" y="92" width="196" height="96" rx="8" fill="#0B1220" stroke="#334155"/>
-  <text x="500" y="110" fill="#64748B" font-size="10">giờ · điểm danh · quiz → nhãn</text>
-  <text x="500" y="128" fill="#E2E8F0" font-size="11">2.0 · 55 · 45  → 0 RỚT</text>
-  <text x="500" y="146" fill="#E2E8F0" font-size="11">8.0 · 95 · 85  → 1 ĐẬU</text>
-  <text x="500" y="164" fill="#E2E8F0" font-size="11">1.0 · 50 · 40  → 0 RỚT</text>
-  <text x="500" y="182" fill="#64748B" font-size="10">⋯ đủ 12 học viên khóa trước</text>
-
-  <path d="M686 140 h18" stroke="#7C3AED" stroke-width="2" marker-end="url(#mlArrV)"/>
-
-  <rect x="708" y="112" width="172" height="56" rx="10" fill="#1E1B4B" stroke="#A78BFA"/>
-  <text x="794" y="135" text-anchor="middle" fill="#A78BFA" font-size="13" font-weight="bold">MODEL</text>
-  <text x="794" y="153" text-anchor="middle" fill="#94A3B8" font-size="10">tự rút pattern từ 12 hồ sơ</text>
-
-  <!-- học viên mới → dự đoán -->
-  <rect x="490" y="216" width="196" height="36" rx="8" fill="#0B1220" stroke="#A78BFA"/>
-  <text x="588" y="238" text-anchor="middle" fill="#E2E8F0" font-size="11">👤 MỚI: 7h · 90% · quiz 82</text>
-
-  <path d="M686 234 h18" stroke="#7C3AED" stroke-width="2" marker-end="url(#mlArrV)"/>
-
-  <rect x="708" y="216" width="172" height="36" rx="8" fill="#0B1220" stroke="#34D399" stroke-dasharray="5 3"/>
-  <text x="794" y="238" text-anchor="middle" fill="#34D399" font-size="12" font-weight="bold">Dự đoán: ĐẬU</text>
-
-  <text x="490" y="278" fill="#94A3B8" font-size="11">Không ai viết nổi luật — model HỌC từ lịch sử rồi dự đoán.</text>
-
-  <defs>
-    <marker id="mlArr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="#475569"/>
-    </marker>
-    <marker id="mlArrV" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="#7C3AED"/>
-    </marker>
-  </defs>
-</svg>`
-};
+/* Hero SVG tĩnh Bài 1 đã GỘP vào paradigm_visual (user chốt 2026-07-18) —
+ * sim 2 luồng + timeline render thẳng vào slot hero. Bài sau cần hero tĩnh thì khai ở đây. */
+window.HERO_SVGS_ML = {};
 
 window.LESSON_CONTENT['ml'] = {
   course_id: 'ml',
@@ -105,7 +38,7 @@ window.LESSON_CONTENT['ml'] = {
       challenge_type: 'full_ide',
       story: {
         tag: '🎓 StudyLab · Ticket #01',
-        hook: 'Bạn vừa nhận vai <strong>người dựng mô hình ML đầu tiên</strong> cho <strong>USTH StudyLab</strong>. Hệ thống chấm Đậu/Rớt đã có luật rõ ràng: <code>final_score >= 50</code>. Nhưng ticket đầu tiên hỏi một câu KHÁC hẳn: <em>"học viên nào đang trên đà rớt môn — ngay từ tuần 3, khi final_score CHƯA tồn tại?"</em> Không ai viết nổi luật cho câu này. Nhiệm vụ trong ticket: tìm cách để máy <strong>tự học pattern</strong> từ các khóa trước.'
+        hook: 'Bạn là <strong>người dựng mô hình ML đầu tiên</strong> của <strong>USTH StudyLab</strong>. Môn học kéo dài <strong>15 tuần</strong>: suốt kỳ hệ thống ghi <em>giờ tự học, điểm danh, điểm quiz</em>; đến <strong>tuần 15</strong> thi cuối mới sinh ra <code>final_score</code> — và luật <code>final_score >= 50</code> chấm Đậu/Rớt. Ticket #01 hỏi một câu luật KHÔNG trả lời nổi: <em>"mới TUẦN 3 — ai đang trên đà rớt, để còn kịp cứu?"</em> Lúc này final_score <strong>chưa tồn tại</strong>. May thay, kho còn nguyên <strong>12 hồ sơ khóa trước</strong> — có đủ cả hành vi LẪN kết cục. Nhiệm vụ: để máy <strong>tự học pattern</strong> từ 12 hồ sơ đó rồi dự đoán cho khóa mới.'
       },
       achievement: { name: 'ML Problem Framer — Khởi đầu', desc: 'bài đầu về định khung bài toán ML' },
 
@@ -154,6 +87,14 @@ window.LESSON_CONTENT['ml'] = {
         /* Sim nhúng theo pattern NC (plan_visual/sort_visual...) — 2 luồng HIỆN SẴN,
            bấm ▶ chạy animation từng nút; đủ 2 luồng → chốt so kèo. */
         paradigm_visual: {
+          timeline: {
+            title: 'HỌC KỲ 15 TUẦN — BẠN ĐANG Ở TUẦN 3',
+            weeks: 15, now: 3, exam_week: 15,
+            now_label: '📍 Tuần 3 — ĐÃ CÓ: giờ tự học · điểm danh · quiz 1',
+            mid_label: '⋯ chưa xảy ra ⋯',
+            exam_label: 'Tuần 15: thi cuối → final_score MỚI tồn tại',
+            note: 'Luật <code>final_score >= 50</code> phải đợi tới tuần 15 mới có dữ liệu để chạy. Cảnh báo sớm = trả lời NGAY BÂY GIỜ — khi còn 12 tuần để cứu.'
+          },
           flows: [
             {
               id: 'rule',
@@ -277,31 +218,50 @@ window.LESSON_CONTENT['ml'] = {
           { type: 'py', token: 'model.predict(X_new)',   slot: 'z4b' }
         ],
         drop_zones: [
-          {
-            id: 'ml-data', accepts: ['py'], multi: true,
-            station: { icon: '📦', label: 'DATASET', sub: 'Nạp 12 học viên', hint: 'Nạp dữ liệu từ ml_lab: 3 cột đặc trưng vào <code>X</code>, nhãn Đậu/Rớt vào <code>y</code>, học viên mới vào <code>X_new</code>.' },
-            ml_effect: { type: 'load' }
-          },
-          {
-            id: 'ml-model', accepts: ['py'], multi: true,
-            station: { icon: '🤖', label: 'MODEL', sub: 'Khởi tạo bộ học', hint: 'Tạo model rỗng — lúc này nó chưa biết gì về học viên.' },
-            ml_effect: { type: 'note', note: 'Model rỗng — chưa học gì. Dữ liệu chưa đổi.' }
-          },
-          {
-            id: 'ml-fit', accepts: ['py'], multi: true,
-            station: { icon: '🎓', label: 'TRAIN', sub: 'fit — học từ X, y', hint: 'Model đọc 12 hồ sơ + đáp án để tự rút pattern. Phải fit TRƯỚC khi predict.' },
-            ml_effect: { type: 'note', note: 'Model đã FIT — pattern từ 12 hồ sơ giờ nằm trong model.' }
-          },
-          {
-            id: 'ml-predict', accepts: ['py'], multi: true,
-            station: { icon: '🔮', label: 'PREDICT', sub: 'Học viên MỚI', hint: 'Dự đoán cho <code>X_new</code> — hồ sơ CHƯA TỪNG có trong dữ liệu học.' },
-            ml_effect: {
-              type: 'predict',
-              columns: ['study_hours', 'attendance', 'quiz_score', 'dự đoán'],
-              rows: [['7.0', '90', '82', '1 · ĐẬU']]
-            }
-          }
+          { id: 'ml-data',    accepts: ['py'], multi: true },
+          { id: 'ml-model',   accepts: ['py'], multi: true },
+          { id: 'ml-fit',     accepts: ['py'], multi: true },
+          { id: 'ml-predict', accepts: ['py'], multi: true }
         ],
+        /* Map DÒNG CHẢY PIPELINE ML — representation của logic hệ thống (7 quyết định user
+           2026-07-18): node hiện INPUT giấu KẾT QUẢ · sân khấu diễn biến đổi · bấm từng bước
+           + narration · click trạm xem lại · TRAIN/PREDICT = nearest-centroid THẬT
+           (số từ ml_lab: RỚT tb 2.17h·57.5%·47.5 → hiện ≈2.2h·58%·48; ĐẬU tb 7.83h·94.7%·86;
+           khoảng cách X_new: ĐẬU 6.2 vs RỚT 47.6). */
+        ml_flow: {
+          brand: 'DÒNG CHẢY PIPELINE ML',
+          run_label: '▶ Chạy Pipeline',
+          source: { sub: '12 học viên khóa trước · 3 đặc trưng + nhãn' },
+          done_note: 'Bạn vừa xem cả hệ thống vận hành trên dữ liệu thật. Click lại bất kỳ trạm nào để mổ xẻ phép biến đổi của nó — rồi sang Bước 4 tự viết code cho chính hệ thống này.',
+          stations: [
+            {
+              zone: 'ml-data', icon: '📦', label: 'DATASET', sub: 'Nạp & tách dữ liệu', result_kind: 'xy_split',
+              split: {
+                features: ['study_hours', 'attendance', 'quiz_score'], target: 'pass_fail',
+                x_desc: '12×3 đặc trưng', y_desc: '12 nhãn Đậu/Rớt', new_desc: '1 hồ sơ CHƯA nhãn',
+                new_profile: '7.0 · 90 · 82'
+              },
+              narration: '<code>load_study_data()</code> nạp 12 hồ sơ rồi TÁCH: <b>X</b> = 3 cột đặc trưng (tím) — thứ máy được nhìn · <b>y</b> = cột nhãn (vàng) — đáp án để học · <b>X_new</b> = hồ sơ mới CHƯA có nhãn, để dành cho trạm cuối.'
+            },
+            {
+              zone: 'ml-model', icon: '🤖', label: 'MODEL', sub: 'Khởi tạo bộ học', result_kind: 'model_empty',
+              narration: '<code>SimpleClassifier()</code> tạo model RỖNG — chưa đọc hồ sơ nào. Cách nó sẽ học ở trạm sau: tính <b>chân dung trung bình</b> của từng nhóm, rồi so mọi hồ sơ mới với 2 chân dung đó.'
+            },
+            {
+              zone: 'ml-fit', icon: '🎓', label: 'TRAIN', sub: 'fit — học từ X, y', result_kind: 'centroids',
+              centroids: {
+                fail: { title: 'RỚT trung bình', vals: '≈ 2.2h · 58% · quiz 48', n: 'từ 6 hồ sơ Rớt' },
+                pass: { title: 'ĐẬU trung bình', vals: '≈ 7.8h · 95% · quiz 86', n: 'từ 6 hồ sơ Đậu' }
+              },
+              narration: '<code>model.fit(X, y)</code>: model đọc 12 hồ sơ KÈM đáp án và kết tinh thành 2 <b>chân dung trung bình</b>. Toàn bộ "cái đã học" của model chỉ là 2 tấm thẻ này — không hơn.'
+            },
+            {
+              zone: 'ml-predict', icon: '🔮', label: 'PREDICT', sub: 'Hồ sơ MỚI', result_kind: 'nearest',
+              profile: '7h · 90% · quiz 82', dist: { pass: 6.2, fail: 47.6 }, verdict: '1 · ĐẬU',
+              narration: '<code>model.predict(X_new)</code>: đo khoảng cách hồ sơ mới tới 2 chân dung — tới ĐẬU ≈ <b>6.2</b>, tới RỚT ≈ <b>47.6</b> → gần ĐẬU hơn hẳn → dự đoán <b>1 · ĐẬU</b>. Không phép màu: chỉ là phép so khoảng cách.'
+            }
+          ]
+        },
         expected_sql: 'X, y, X_new = load_study_data() model = SimpleClassifier() model.fit (X, y) prediction = model.predict(X_new)',
         expected_zones: {
           'ml-data':    'X, y, X_new = load_study_data()',
@@ -353,11 +313,11 @@ window.LESSON_CONTENT['ml'] = {
           scenario: 'Pipeline kéo thả ở Bước 3 chỉ chạy cho 1 hồ sơ demo. Bản code thật phải sống sót qua <strong>hidden tests</strong>: hệ thống bí mật đổi X_new — nếu bạn viết đúng quy trình, kết quả vẫn hợp lệ với mọi hồ sơ.',
           real_world: 'Đây chính là bộ lọc <strong>spam của Gmail</strong>: model được fit trên email QUÁ KHỨ đã gắn nhãn, rồi predict cho email MỚI vừa đến. Nếu chỉ <code>predict(X)</code> — dự đoán lại chính các email cũ — bộ lọc "đúng 100%" mà vô dụng: thư rác mới lọt sạch. Dự đoán chỉ có giá trị trên dữ liệu <strong>chưa từng thấy</strong>.',
           steps: [
-            'Import: <code>from ml_lab import SimpleClassifier, load_study_data</code>.',
-            'Nạp dữ liệu: <code>X, y, X_new = load_study_data()</code>.',
-            'Tạo rồi huấn luyện: <code>model = SimpleClassifier()</code> → <code>model.fit(X, y)</code> — fit TRƯỚC predict.',
-            'Dự đoán học viên MỚI: <code>prediction = model.predict(X_new)</code> — đừng rơi bẫy <code>predict(X)</code>!',
-            '<code>print(prediction)</code> → bấm Run xem thử, Submit để chấm 4 tầng.'
+            'Import công cụ từ <code>ml_lab</code>.',
+            'Nạp dữ liệu: 3 biến — đặc trưng, nhãn, và hồ sơ mới.',
+            'Tạo model rồi huấn luyện — học TRƯỚC, đoán SAU.',
+            'Dự đoán cho hồ sơ MỚI (đừng đoán lại 12 hồ sơ cũ).',
+            'In kết quả · Run chạy thử · Submit chấm 4 tầng.'
           ],
           hint_explore: 'Muốn xem dữ liệu trước? Gõ <code>print(X.shape)</code> hoặc <code>print(X[:3])</code> rồi <strong>Run</strong> — 12 dòng × 3 cột đặc trưng.',
           expected: 'Console in <code>[1]</code> — học viên mới (7h · 90% · quiz 82) được dự đoán <strong>ĐẬU</strong>. Cả 4 tầng Checks phải xanh — kể cả khi hệ thống đổi X_new ngầm.'

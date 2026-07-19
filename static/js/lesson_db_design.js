@@ -2005,6 +2005,10 @@
   function renderLessonHero(lessonId) {
     const mount = document.getElementById('lesson-hero');
     if (!mount) return;
+    // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual → slot hero thuộc về sim
+    // (renderParadigmVisual đã/sẽ render vào đây) — không được xóa/ghi đè.
+    const s1pv = state.currentLesson && state.currentLesson.step_1 && state.currentLesson.step_1.paradigm_visual;
+    if (s1pv) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -3855,6 +3859,30 @@
      chạy đủ cả 2 luồng → hiện dòng so kèo chốt ranh giới Traditional ↔ ML. ═══ */
   function renderParadigmVisual(mount, cfg) {
     const ran = {};
+    // Timeline học kỳ (user chốt 2026-07-18): dải 15 tuần đặt NGAY TRÊN 2 luồng —
+    // trả lời "tuần 3 là gì": chấm BẠN Ở ĐÂY + vùng chưa xảy ra + mốc final_score.
+    let tlHtml = '';
+    const tl = cfg.timeline;
+    if (tl) {
+      const cells = [];
+      for (let w = 1; w <= (tl.weeks || 15); w++) {
+        let cls = 'pgv-tl-cell';
+        if (w <= tl.now) cls += ' is-past';
+        if (w === tl.now) cls += ' is-now';
+        if (w === (tl.exam_week || tl.weeks)) cls += ' is-exam';
+        cells.push('<span class="' + cls + '" data-week="' + w + '">' + (w === tl.now ? '📍' : (w === (tl.exam_week || tl.weeks) ? '🎓' : '')) + '</span>');
+      }
+      tlHtml = '<div class="pgv-timeline">' +
+        '<div class="pgv-tl-title">' + tl.title + '</div>' +
+        '<div class="pgv-tl-bar">' + cells.join('') + '</div>' +
+        '<div class="pgv-tl-labels">' +
+          '<span class="pgv-tl-now">' + tl.now_label + '</span>' +
+          '<span class="pgv-tl-mid">' + (tl.mid_label || '') + '</span>' +
+          '<span class="pgv-tl-exam">' + tl.exam_label + '</span>' +
+        '</div>' +
+        (tl.note ? '<div class="pgv-tl-note">' + tl.note + '</div>' : '') +
+        '</div>';
+    }
     const flowsHtml = (cfg.flows || []).map(function (f) {
       const nodes = (f.nodes || []).map(function (n, i) {
         return '<div class="pgv-node' + (n.cls ? ' pgv-node--' + n.cls : '') + '" data-flow="' + f.id + '" data-node="' + i + '">' +
@@ -3868,7 +3896,7 @@
         '<div class="pgv-punch" data-flow="' + f.id + '" hidden>' + (f.punch || '') + '</div>' +
         '</div>';
     }).join('');
-    mount.innerHTML = '<div class="pgv-wrap">' + flowsHtml + '</div>' +
+    mount.innerHTML = tlHtml + '<div class="pgv-wrap">' + flowsHtml + '</div>' +
       '<div class="pgv-sokeo" id="pgv-sokeo" hidden>⚖️ ' + (cfg.so_keo || '') + '</div>';
     mount.querySelectorAll('.pgv-run').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -4180,8 +4208,12 @@
         renderAriesVisual(pvMount, s1.aries_visual);
         pvMount.hidden = false;
       } else if (s1.paradigm_visual) {
-        renderParadigmVisual(pvMount, s1.paradigm_visual);
-        pvMount.hidden = false;
+        // ML Bài 1 (user chốt 2026-07-18): GỘP — sim 2 luồng + timeline = VISUAL CHÍNH,
+        // render vào slot hero (thay hero SVG tĩnh trùng ý). pvMount để trống.
+        const heroMountPgv = document.getElementById('lesson-hero');
+        renderParadigmVisual(heroMountPgv || pvMount, s1.paradigm_visual);
+        if (heroMountPgv) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
         pvMount.hidden = true;
@@ -5044,8 +5076,12 @@
       }, true);
     }
 
-    // Build Truck Grid map (big, in bottom of left pane, always visible)
-    if (window.DragGame) {
+    // Build map cột trái: khóa ML (s3.ml_flow) → MLFlowMap skin riêng (dataflow 2 tầng,
+    // user chốt 2026-07-18); còn lại → DragGame DÒNG CHẢY chuẩn.
+    if (s3.ml_flow && window.MLFlowMap) {
+      window.MLFlowMap.init({ lesson: l, dropZones: s3.drop_zones });
+    } else if (window.DragGame) {
+      if (window.MLFlowMap) window.MLFlowMap.active = false;
       window.DragGame.init({
         lesson: l,
         expectedSql: s3.expected_sql,
@@ -5710,7 +5746,8 @@
     s3.drop_zones.forEach(zone => {
       const slotEl = document.querySelector(`[data-slot="${zone.id}"]`);
       if (slotEl) {
-        slotEl.innerHTML = zone.placeholder.split(' ').slice(1).join(' ') || '...';
+        // ML SHELL: zone không khai placeholder → fallback '...' (tránh TypeError undefined.split)
+        slotEl.innerHTML = (zone.placeholder || '').split(' ').slice(1).join(' ') || '...';
         slotEl.classList.remove('filled');
       }
     });
@@ -5719,7 +5756,8 @@
     if (wrapper) wrapper.classList.remove('step3-state-correct', 'step3-state-wrong');
     hidePillBadge();
     updateIDEFromBlocks();
-    if (window.DragGame) window.DragGame.reset();
+    if (window.MLFlowMap && window.MLFlowMap.active) window.MLFlowMap.reset();
+    else if (window.DragGame) window.DragGame.reset();
   };
 
   // No-op stub (kept for backwards compat — undo button was removed from HTML)
@@ -7045,14 +7083,17 @@
 
     // v4: KHÔNG gửi lời giải thích per-clause nữa (user chốt: chỉ "Chưa đúng", không làm hộ).
     // zoneCorrect vẫn dùng để tô ĐỎ đúng ga sai trên bản đồ (người học tự nhìn ra).
-    window.DragGame.update({
+    const gradePayload = {
       zoneFills: zoneFills,
       zoneCorrect: zoneCorrect,   // v4: per-clause correctness cho pipeline (tô đỏ ga sai)
       wrongLines: wrongLines,     // v5: số dòng sai (chỉ SỐ, không nội dung) cho feedback
       isComplete: isComplete,
       expected: expected,    // FIX 2g-A4: pass for diagnostic on incorrect feedback
       userBuilt: builtSQL,   // FIX 2g-A4: pass for diagnostic on incorrect feedback
-    });
+    };
+    // ML SHELL: map ML nhận cùng payload chấm — logic chấm KHÔNG đổi, chỉ đổi skin trình diễn.
+    if (window.MLFlowMap && window.MLFlowMap.active) window.MLFlowMap.update(gradePayload);
+    else window.DragGame.update(gradePayload);
   }
 
   /* v4: tách expected_sql thành nội dung MỆNH ĐỀ theo zone (để pipeline chấm từng ga).
