@@ -5104,6 +5104,9 @@
     // Build map cột trái: khóa ML (s3.ml_flow) → MLFlowMap skin riêng (dataflow 2 tầng,
     // user chốt 2026-07-18); còn lại → DragGame DÒNG CHẢY chuẩn.
     if (s3.ml_flow && window.MLFlowMap) {
+      /* Bài ≥5 zone (B2: 6 zones): class nén cột phải thêm 1 nấc */
+      var dzEl = document.getElementById('drop-zones');
+      if (dzEl) dzEl.classList.toggle('ml-zones-dense', (s3.drop_zones || []).length >= 5);
       window.MLFlowMap.init({ lesson: l, dropZones: s3.drop_zones });
     } else if (window.DragGame) {
       if (window.MLFlowMap) window.MLFlowMap.active = false;

@@ -340,8 +340,365 @@ window.LESSON_CONTENT['ml'] = {
       }
     },
 
-    /* ── Bài 2-15: stub chờ rollout theo module (shell hiện màn "đang cập nhật") ── */
-    { id: 'c1_l2',  index: 2,  title: 'Bài toán ML này thuộc loại nào?',              module: 10, module_title: 'M1 — Định khung bài toán ML',  xp_reward: 50 },
+    /* ═══════════ BÀI 2 — Bài toán ML này thuộc loại nào? (spec C1-L2 tr.13-17) ═══════════
+       SỐ THẬT từ ml_lab.load_study_data_full (24 hv) — verify 2026-07-19:
+       REG w=[5.476, 0.297, 0.257, −12.05] → X_new [6.5, 85, 74]: 35.6+25.2+19.0−12.0 = 67.7
+       CLF centroid ĐẬU [7.42, 90.5, 81.5] RỚT [2.55, 59.8, 48.4]; Δ 9.3 vs 36.2 → 1·ĐẬU
+       CLUSTER k=3: C0=9hv [2.2, 57.3, 46] · C1=5hv [5.1, 76.4, 65] · C2=10hv [8.0, 93.7, 85.2] */
+    {
+      id: 'c1_l2',
+      index: 2,
+      title: 'Bài toán ML này thuộc loại nào?',
+      subtitle: 'Regression, Classification, Clustering — cùng 1 bảng dữ liệu',
+      module: 10,
+      module_title: 'M1 — Định khung bài toán ML',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎓 StudyLab · Ticket #02',
+        hook: 'Ticket #01 vừa đóng thì giáo vụ gửi tiếp <strong>Ticket #02</strong> — kèm tin vui: kho vừa bổ sung, giờ có <strong>24 hồ sơ khóa trước</strong>, đủ cả <code>final_score</code> lẫn <code>pass_fail</code> (khóa đó thi xong rồi). Họ hỏi 3 câu trên <strong>CÙNG một bảng</strong>: (1) học viên mới <code>[6.5h · 85% · giữa kỳ 74]</code> sẽ được <em>bao nhiêu ĐIỂM</em> cuối kỳ? (2) bạn ấy <em>ĐẬU hay RỚT</em>? (3) chia 24 học viên thành các <em>NHÓM hành vi học</em> để xếp lớp phụ đạo — mà chưa ai định nghĩa nhóm nào cả. 1 bảng — 3 câu hỏi — <strong>3 loại bài toán ML khác nhau</strong>. Chọn sai loại là trả lời sai câu hỏi.'
+      },
+      achievement: { name: 'ML Problem Framer — Chọn đúng loại', desc: 'phân biệt regression / classification / clustering' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Phân biệt <strong>supervised vs unsupervised</strong> bằng đúng 1 câu hỏi: model CÓ HỌC TỪ TARGET không?',
+            'Gọi đúng tên bài toán theo <strong>Ý NGHĨA target</strong>: số liên tục → regression, tên lớp → classification — kể cả khi lớp được mã hóa 0/1.',
+            'Chạy 2 model thật trên cùng bảng và đọc kết quả clustering k=3 — hiểu vì sao <strong>ID cụm không có thứ tự</strong>.'
+          ],
+          defs: [
+            { term: 'Regression', plain: 'Target là ĐẠI LƯỢNG liên tục (điểm số, số giờ…). Output = một số thực, có thể lệch ít hay nhiều.' },
+            { term: 'Classification', plain: 'Target là TÊN LỚP (Đậu/Rớt…). Mã hóa bằng 0/1 vẫn là tên lớp — không có "0.5 lớp", không cộng trừ được.' },
+            { term: 'Clustering', plain: 'KHÔNG dùng target — model tự tìm cấu trúc trong feature. ID cụm là tên tùy ý: đổi 0 ↔ 2 không đổi ý nghĩa.' }
+          ]
+        },
+        primer: {
+          goal: [
+            'Supervised vs unsupervised',
+            'Ý nghĩa target quyết định loại bài toán',
+            '3 hợp đồng output từ cùng 1 bảng'
+          ],
+          intro: '',
+          example: '🔍 <strong>Nhìn bảng SAMPLE DATA bên dưới:</strong> so cột <code>final_score</code> (26.8, 81.8, 18.5… — số nào cũng có thể xảy ra) với cột <code>pass_fail</code> (chỉ có đúng 2 giá trị 0/1 — tên của 2 lớp). Cùng lưu bằng SỐ, nhưng Ý NGHĨA khác hẳn nhau — và chính ý nghĩa đó quyết định loại bài toán. Giữ nhận xét này khi sang Bước 2 👇'
+        },
+        intro: 'Vẫn tuần 8, vẫn StudyLab — nhưng bảng dữ liệu giờ có <strong>24 hồ sơ</strong> với đủ 2 cột kết cục. Cùng một bảng, đặt 3 câu hỏi khác nhau sẽ ra 3 bài toán khác nhau: loại bài toán <em>không nằm trong dữ liệu</em> — nó nằm ở <strong>câu hỏi và target bạn chọn</strong>.',
+        concept_cards: [
+          {
+            icon: 'fa-ruler',
+            title: 'Target là SỐ → Regression',
+            body: 'Hỏi "được BAO NHIÊU điểm?" — target <code>final_score</code> là đại lượng liên tục. Model trả về ước lượng số thực (67.7), có thể lệch 2 điểm hay 20 điểm. Sai số đo bằng ĐỘ LỆCH.'
+          },
+          {
+            icon: 'fa-tags',
+            title: 'Target là TÊN LỚP → Classification',
+            body: 'Hỏi "ĐẬU hay RỚT?" — target <code>pass_fail</code> chỉ có 2 giá trị {0, 1}, và chúng là <strong>tên của 2 lớp</strong> dù được lưu bằng số. Model trả về nhãn. Không tồn tại "đậu 0.7 lớp" — chỉ đúng lớp hoặc sai lớp.'
+          },
+          {
+            icon: 'fa-object-group',
+            title: 'KHÔNG có target → Clustering',
+            body: 'Hỏi "chia nhóm hành vi học?" — chưa ai gán nhãn nhóm cho bất kỳ học viên nào. Model tự tìm cấu trúc từ CHÍNH các feature, trả về ID cụm <strong>tùy ý</strong>. Lưu ý: bảng VẪN CÒN nguyên 2 cột kết cục — clustering CHỌN không dùng, chứ không phải dữ liệu thiếu.'
+          }
+        ],
+        /* Hero = sim 3 luồng (user chốt 2026-07-19: bỏ dải timeline, 1 dòng nhắc tuần 8 nằm trong story) */
+        paradigm_visual: {
+          flows: [
+            {
+              id: 'reg',
+              tag: '① DỰ ĐOÁN ĐIỂM',
+              sub: 'target: final_score — SỐ liên tục',
+              accent: '#38BDF8',
+              nodes: [
+                { icon: '🗂️', label: '24 hồ sơ khóa trước' },
+                { icon: '🎯', label: 'y = final_score (17.4 → 93.7)' },
+                { icon: '🧠', label: 'SimpleRegressor học đường khớp' },
+                { icon: '🔢', label: 'X_new → ≈ 67.7 điểm', cls: 'good' }
+              ],
+              punch: 'Output là SỐ THỰC — có thể lệch ít hay nhiều → REGRESSION.'
+            },
+            {
+              id: 'clf',
+              tag: '② DỰ ĐOÁN ĐẬU/RỚT',
+              sub: 'target: pass_fail — 0/1 là TÊN LỚP',
+              accent: '#A78BFA',
+              nodes: [
+                { icon: '🗂️', label: 'CÙNG 24 hồ sơ đó' },
+                { icon: '🎯', label: 'y = pass_fail ∈ {0, 1}' },
+                { icon: '🧠', label: 'SimpleClassifier học 2 chân dung' },
+                { icon: '🏷️', label: 'X_new → 1 · ĐẬU', cls: 'good' }
+              ],
+              punch: '0/1 chỉ là TÊN của 2 lớp — output là NHÃN → CLASSIFICATION.'
+            },
+            {
+              id: 'clu',
+              tag: '③ GOM NHÓM HÀNH VI',
+              sub: 'KHÔNG dùng cột target nào · k = 3',
+              accent: '#FBBF24',
+              nodes: [
+                { icon: '🗂️', label: 'CÙNG 24 hồ sơ đó' },
+                { icon: '🚫', label: 'BỎ final_score & pass_fail ra' },
+                { icon: '🧠', label: 'k=3 tự tìm cấu trúc' },
+                { icon: '🎨', label: '3 nhóm: 9 · 5 · 10 học viên', cls: 'good' }
+              ],
+              punch: 'Không có nhãn nào để học — ID nhóm là tên TÙY Ý → CLUSTERING.'
+            }
+          ],
+          so_keo: 'CÙNG một bảng — 3 hợp đồng output: số thực (67.7) · nhãn lớp (1·ĐẬU) · ID cụm (9/5/10). Loại bài toán không nằm trong dữ liệu — nó nằm ở CÂU HỎI bạn hỏi và TARGET bạn chọn.'
+        },
+        visual: {
+          schema: {
+            table_name: 'study_data (DataFrame)',
+            columns: [
+              { name: 'study_hours',   type: 'FLOAT',   key: '',       icon: '',
+                note: '<strong>Feature (đặc trưng)</strong> — giờ tự học trung bình mỗi tuần. Cả 3 thí nghiệm đều dùng.' },
+              { name: 'attendance',    type: 'FLOAT',   key: '',       icon: '',
+                note: '<strong>Feature (đặc trưng)</strong> — % chuyên cần 8 tuần đầu. Cả 3 thí nghiệm đều dùng.' },
+              { name: 'midterm_score', type: 'FLOAT',   key: '',       icon: '',
+                note: '<strong>Feature (đặc trưng)</strong> — điểm giữa kỳ /100 (thi tuần 7). Cả 3 thí nghiệm đều dùng.' },
+              { name: 'final_score',   type: 'FLOAT',   key: 'TARGET', icon: '📈',
+                note: '<strong>Target của câu hỏi ①</strong> — SỐ liên tục 17.4→93.7 → bài toán REGRESSION. Khóa trước thi xong nên cột này tồn tại; khóa mới thì chưa. Thí nghiệm gom nhóm KHÔNG dùng cột này.' },
+              { name: 'pass_fail',     type: 'INT 0/1', key: 'TARGET', icon: '🏷️',
+                note: '<strong>Target của câu hỏi ②</strong> — 0/1 là TÊN 2 LỚP (Rớt/Đậu) dù lưu bằng số → bài toán CLASSIFICATION. Thí nghiệm gom nhóm KHÔNG dùng cột này.' }
+            ]
+          },
+          /* 24 dòng = CHÍNH XÁC ml_lab.load_study_data_full (final_score 1 lẻ, 0=Rớt 1=Đậu) */
+          data_preview: [
+            ['2.0', '55', '45', '26.8', '0 · Rớt'],
+            ['8.0', '95', '85', '81.8', '1 · Đậu'],
+            ['1.0', '50', '40', '18.5', '0 · Rớt'],
+            ['9.0', '98', '90', '89.4', '1 · Đậu'],
+            ['3.0', '60', '50', '35.0', '0 · Rớt'],
+            ['7.0', '92', '80', '74.1', '1 · Đậu'],
+            ['2.5', '58', '48', '31.2', '0 · Rớt'],
+            ['8.5', '96', '88', '85.6', '1 · Đậu'],
+            ['4.0', '70', '60', '46.0', '0 · Rớt'],
+            ['9.5', '99', '95', '93.7', '1 · Đậu'],
+            ['1.5', '52', '42', '22.4', '0 · Rớt'],
+            ['6.0', '88', '78', '66.9', '1 · Đậu'],
+            ['5.0', '75', '65', '54.2', '1 · Đậu'],
+            ['3.5', '65', '55', '40.5', '0 · Rớt'],
+            ['7.5', '90', '82', '76.8', '1 · Đậu'],
+            ['2.0', '62', '44', '28.6', '0 · Rớt'],
+            ['6.5', '85', '72', '67.2', '1 · Đậu'],
+            ['4.5', '72', '58', '48.8', '0 · Rớt'],
+            ['8.0', '93', '86', '81.4', '1 · Đậu'],
+            ['1.0', '48', '38', '17.4', '0 · Rớt'],
+            ['5.5', '80', '70', '59.8', '1 · Đậu'],
+            ['9.0', '97', '92', '89.6', '1 · Đậu'],
+            ['3.0', '66', '52', '37.3', '0 · Rớt'],
+            ['7.0', '89', '76', '72.2', '1 · Đậu']
+          ]
+        },
+        mission: 'Ghép ĐÚNG CẶP model ↔ target: lắp <code class="code">6 dòng lệnh</code> cho 3 thí nghiệm trên cùng bảng 24 học viên — kho khối có <code class="code">mồi sai cặp 🪤</code>, lắp nhầm là bảng chấm chỉ ra ngay dòng lỗi ↓'
+      },
+
+      /* ----- STEP 2: 2 MCQ + mini-game hợp đồng output (spec C1-L2 Step 2) ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Cột <code>pass_fail</code> được lưu bằng SỐ (0 và 1). Vì sao dự đoán pass_fail vẫn là <strong>CLASSIFICATION</strong> chứ không phải regression?',
+            options: [
+              { id: 'a', text: 'Vì số nguyên là classification, số thực mới là regression', correct: false, explanation: 'Sai — kiểu LƯU TRỮ không quyết định gì. Số giờ học 2, 3, 4 là số nguyên nhưng dự đoán nó vẫn là regression. Phải nhìn Ý NGHĨA.' },
+              { id: 'b', text: 'Vì 0 và 1 ở đây là TÊN của 2 lớp — không tồn tại "0.5 lớp", không cộng trừ được', correct: true, explanation: 'Đúng — 0/1 là mã của {Rớt, Đậu}. Trung bình của Đậu và Rớt không có nghĩa; output hợp lệ chỉ có thể là 1 trong 2 tên lớp → classification.' },
+              { id: 'c', text: 'Vì bảng chỉ có 24 dòng, quá ít cho regression', correct: false, explanation: 'Sĩ số không đổi được loại bài toán — 24 dòng vẫn chạy được cả 2 loại. Vấn đề nằm ở ý nghĩa target.' },
+              { id: 'd', text: 'Vì SimpleRegressor báo lỗi khi gặp số 0/1', correct: false, explanation: 'Ngược lại mới nguy hiểm: regressor CHẠY ĐƯỢC trên 0/1 và trả về số vô nghĩa kiểu 0.7. Code chạy ≠ công thức hóa đúng — đây chính là bẫy của bài.' }
+            ]
+          },
+          {
+            question: 'Thí nghiệm gom nhóm (câu hỏi ③) vì sao KHÔNG đưa <code>final_score</code> / <code>pass_fail</code> vào?',
+            options: [
+              { id: 'a', text: 'Vì file dữ liệu không còn 2 cột đó nữa', correct: false, explanation: 'Bảng VẪN CÒN nguyên 5 cột — mở Sample Data ở Bước 1 mà xem. Clustering CHỌN không dùng target, không phải dữ liệu thiếu.' },
+              { id: 'b', text: 'Vì clustering tìm cấu trúc từ CHÍNH các feature — không học từ nhãn, dù bảng vẫn còn nguyên 2 cột đó', correct: true, explanation: 'Chuẩn — unsupervised nghĩa là KHÔNG DÙNG target, một lựa chọn của người đặt bài toán chứ không phải giới hạn của dữ liệu.' },
+              { id: 'c', text: 'Vì 2 cột đó bị lỗi, giá trị không tin được', correct: false, explanation: 'Dữ liệu sạch — chính 2 cột đó vừa làm target cho câu hỏi ① và ②. Vấn đề là gom nhóm không CẦN nhãn.' },
+              { id: 'd', text: 'Vì k=3 chỉ cho phép dùng đúng 3 cột', correct: false, explanation: 'k là SỐ CỤM muốn chia, không liên quan số cột. Dùng 2 feature hay 10 feature thì k=3 vẫn chia 3 nhóm.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Nhìn OUTPUT đoán loại bài toán',
+          instruction: 'Mỗi loại bài toán có một <strong>hợp đồng output</strong> riêng. Kéo 6 kết quả vào đúng ngăn: <strong>SỐ LIÊN TỤC</strong> · <strong>TÊN LỚP</strong> · <strong>ID CỤM TÙY Ý</strong>.',
+          chips: [
+            { id: 'out-score', label: '72.5 — ước lượng điểm cuối kỳ' },
+            { id: 'out-fail',  label: 'Nhãn: "Rớt" (0)' },
+            { id: 'out-ids',   label: '[2, 0, 1, 1, …] — ID nhóm, không có thứ tự' },
+            { id: 'out-prob',  label: 'Xác suất đậu 0.83 → chốt nhãn "Đậu"' },
+            { id: 'out-hours', label: '2.4 — số giờ ôn cần thêm mỗi tuần' },
+            { id: 'out-sizes', label: '3 nhóm hành vi: 9 · 5 · 10 học viên' }
+          ],
+          bins: [
+            { id: 'reg', label: 'REGRESSION — SỐ LIÊN TỤC', correct: 'true' },
+            { id: 'clf', label: 'CLASSIFICATION — TÊN LỚP',  correct: 'true' },
+            { id: 'clu', label: 'CLUSTERING — ID CỤM TÙY Ý', correct: 'true' }
+          ],
+          solution: {
+            'out-score': 'reg',
+            'out-fail':  'clf',
+            'out-ids':   'clu',
+            'out-prob':  'clf',
+            'out-hours': 'reg',
+            'out-sizes': 'clu'
+          }
+        }
+      },
+
+      /* ----- STEP 3: map 1 BẢNG → 3 NHÁNH (user chốt 2026-07-19) — trọng tâm GHÉP model↔target,
+         kho khối có 3 MỒI sai cặp; regressor/classifier đã khởi tạo sẵn trong lab. ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'regressor.fit(X, y_score)',              slot: 'b1' },
+          { type: 'py', token: 'pred_score = regressor.predict(X_new)',  slot: 'b2' },
+          { type: 'py', token: 'classifier.fit(X, y_label)',             slot: 'b3' },
+          { type: 'py', token: 'pred_label = classifier.predict(X_new)', slot: 'b4' },
+          { type: 'py', token: 'clusterer = SimpleClusterer(k=3)',       slot: 'b5' },
+          { type: 'py', token: 'clusters = clusterer.fit_predict(X)',    slot: 'b6' },
+          /* 3 mồi bẫy — sai CẶP model↔target (unsafe-but-correct của spec) */
+          { type: 'py', token: 'regressor.fit(X, y_label)',              slot: 't1' },
+          { type: 'py', token: 'classifier.fit(X, y_score)',             slot: 't2' },
+          { type: 'py', token: 'clusters = clusterer.fit_predict(X, y_label)', slot: 't3' }
+        ],
+        drop_zones: [
+          { id: 'ml2-regfit',  accepts: ['py'], multi: true },
+          { id: 'ml2-regpred', accepts: ['py'], multi: true },
+          { id: 'ml2-clffit',  accepts: ['py'], multi: true },
+          { id: 'ml2-clfpred', accepts: ['py'], multi: true },
+          { id: 'ml2-clu',     accepts: ['py'], multi: true },
+          { id: 'ml2-clupred', accepts: ['py'], multi: true }
+        ],
+        ml_flow: {
+          brand: 'BẢN ĐỒ 3 THÍ NGHIỆM — 1 BẢNG',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 thí nghiệm',
+          source: { sub: '24 học viên khóa trước · 3 feature + 2 cột kết cục' },
+          done_note: '3 hợp đồng output — từ CÙNG một bảng. Click lại nhánh bất kỳ để mổ xẻ; rồi sang Bước 4 tự viết code cho 2 nhánh supervised.',
+          stations: [
+            {
+              zones: ['ml2-regfit', 'ml2-regpred'],
+              icon: '🔢', label: 'REGRESSION', sub: 'y = final_score (SỐ)', result_kind: 'reg_sum',
+              reg: {
+                xnew: '6.5h · 85% · giữa kỳ 74',
+                parts: [
+                  { label: '6.5h × 5.48',  val: 35.6 },
+                  { label: '85% × 0.30',   val: 25.2 },
+                  { label: '74đ × 0.26',   val: 19.0 },
+                  { label: 'gốc (bias)',   val: -12.0 }
+                ],
+                total: '≈ 67.7 điểm'
+              },
+              narration: '<code>regressor.fit(X, y_score)</code> khớp một ĐƯỜNG THẲNG qua 24 hồ sơ: mỗi feature nhận một trọng số. Dự đoán = cộng các đóng góp: 35.6 + 25.2 + 19.0 − 12.0 = <b>67.7 điểm</b>. Output là SỐ THỰC — lệch 2 hay 20 điểm đều có thể.'
+            },
+            {
+              zones: ['ml2-clffit', 'ml2-clfpred'],
+              icon: '🏷️', label: 'CLASSIFICATION', sub: 'y = pass_fail (TÊN LỚP)', result_kind: 'nearest',
+              profile: '6.5h · 85% · giữa kỳ 74', dist: { pass: 9.3, fail: 36.2 }, verdict: '1 · ĐẬU',
+              narration: '<code>classifier.fit(X, y_label)</code> kết tinh 24 hồ sơ thành 2 chân dung: ĐẬU ≈ 7.4h · 91% · giữa kỳ 81 vs RỚT ≈ 2.6h · 60% · giữa kỳ 48. Hồ sơ mới đo khoảng cách: Δ ĐẬU ≈ <b>9.3</b> vs Δ RỚT ≈ <b>36.2</b> → nhãn <b>1 · ĐẬU</b>. Output là TÊN LỚP — không phải con số để cộng trừ.'
+            },
+            {
+              zones: ['ml2-clu', 'ml2-clupred'],
+              icon: '🎨', label: 'CLUSTERING', sub: 'KHÔNG dùng target · k=3', result_kind: 'clusters',
+              clusters: {
+                banned: ['final_score', 'pass_fail'],
+                labels: [0, 2, 0, 2, 0, 2, 0, 2, 1, 2, 0, 2, 1, 0, 2, 0, 1, 1, 2, 0, 1, 2, 0, 2],
+                groups: [
+                  { id: 0, n: 9,  center: '2.2h · 57% · giữa kỳ 46' },
+                  { id: 1, n: 5,  center: '5.1h · 76% · giữa kỳ 65' },
+                  { id: 2, n: 10, center: '8.0h · 94% · giữa kỳ 85' }
+                ],
+                note: 'ID cụm là tên TÙY Ý — đổi tên 0 ↔ 2 không thay đổi ý nghĩa nhóm.'
+              },
+              narration: '<code>clusterer.fit_predict(X)</code> chỉ nhìn 3 cột feature — 2 cột kết cục bị GẠCH BỎ dù vẫn nằm trong bảng. k=3 tự chia 24 học viên thành 3 nhóm <b>9 · 5 · 10</b> theo độ giống nhau. ID 0/1/2 là tên tùy ý: không nhóm nào "lớn hơn" nhóm nào.'
+            }
+          ]
+        },
+        expected_sql: 'regressor.fit(X, y_score) pred_score = regressor.predict(X_new) classifier.fit(X, y_label) pred_label = classifier.predict(X_new) clusterer = SimpleClusterer(k=3) clusters = clusterer.fit_predict(X)',
+        expected_zones: {
+          'ml2-regfit':  'regressor.fit(X, y_score)',
+          'ml2-regpred': 'pred_score = regressor.predict(X_new)',
+          'ml2-clffit':  'classifier.fit(X, y_label)',
+          'ml2-clfpred': 'pred_label = classifier.predict(X_new)',
+          'ml2-clu':     'clusterer = SimpleClusterer(k=3)',
+          'ml2-clupred': 'clusters = clusterer.fit_predict(X)'
+        },
+        reveal_hints: {
+          'ml2-regfit':  'Regressor học đại lượng LIÊN TỤC → fit với <strong>y_score</strong>.',
+          'ml2-regpred': 'Dự đoán điểm cho hồ sơ mới: <strong>pred_score = regressor.predict(X_new)</strong>.',
+          'ml2-clffit':  'Classifier học TÊN LỚP → fit với <strong>y_label</strong>.',
+          'ml2-clfpred': 'Dự đoán nhãn cho CÙNG hồ sơ: <strong>pred_label = classifier.predict(X_new)</strong>.',
+          'ml2-clu':     'Gom nhóm cần khai số cụm: <strong>clusterer = SimpleClusterer(k=3)</strong>.',
+          'ml2-clupred': 'Clustering KHÔNG nhận target: <strong>clusters = clusterer.fit_predict(X)</strong> — chỉ X thôi.'
+        }
+      },
+
+      drag_map: {
+        brand: 'BẢN ĐỒ 3 THÍ NGHIỆM — 1 BẢNG',
+        table_sub: 'DataFrame nguồn · 24 học viên',
+        idle_sub: '24 học viên · ▶ chạy để xem 3 hợp đồng output',
+        run_label: '▶ Chạy 3 thí nghiệm',
+        table: {
+          name: 'study_data',
+          columns: ['study_hours', 'attendance', 'midterm_score', 'final_score', 'pass_fail'],
+          dataRows: [
+            ['2.0', '55', '45', '26.8', '0'],
+            ['8.0', '95', '85', '81.8', '1'],
+            ['1.0', '50', '40', '18.5', '0'],
+            ['9.0', '98', '90', '89.4', '1'],
+            ['3.0', '60', '50', '35.0', '0'],
+            ['7.0', '92', '80', '74.1', '1'],
+            ['2.5', '58', '48', '31.2', '0'],
+            ['8.5', '96', '88', '85.6', '1'],
+            ['4.0', '70', '60', '46.0', '0'],
+            ['9.5', '99', '95', '93.7', '1'],
+            ['1.5', '52', '42', '22.4', '0'],
+            ['6.0', '88', '78', '66.9', '1'],
+            ['5.0', '75', '65', '54.2', '1'],
+            ['3.5', '65', '55', '40.5', '0'],
+            ['7.5', '90', '82', '76.8', '1'],
+            ['2.0', '62', '44', '28.6', '0'],
+            ['6.5', '85', '72', '67.2', '1'],
+            ['4.5', '72', '58', '48.8', '0'],
+            ['8.0', '93', '86', '81.4', '1'],
+            ['1.0', '48', '38', '17.4', '0'],
+            ['5.5', '80', '70', '59.8', '1'],
+            ['9.0', '97', '92', '89.6', '1'],
+            ['3.0', '66', '52', '37.3', '0'],
+            ['7.0', '89', '76', '72.2', '1']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: viết TRỌN script 2 nhánh supervised (spec: clustering chỉ đọc ở Bước 3) —
+         câu hỏi KHÁC Bước 3 (anti-boredom): Bước 3 ghép cặp, Bước 4 tự viết từ đầu. ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn đã ghép đúng cặp model–target. Giờ viết <strong>bản code thật</strong> cho 2 nhánh supervised: <code>SimpleRegressor</code> học <code>y_score</code>, <code>SimpleClassifier</code> học <code>y_label</code>, cả hai cùng predict một <code>X_new</code> — và hệ thống sẽ <strong>đổi X_new ngầm</strong> khi chấm. In cả 2 kết quả.',
+        context: {
+          scenario: 'Giáo vụ cần trả lời câu hỏi ① và ② cho MỌI học viên mới, không riêng hồ sơ demo. Hidden test đổi X_new — viết đúng quy trình thì kết quả vẫn hợp lệ với bất kỳ hồ sơ nào. Clustering (câu hỏi ③) không cần code lại — bạn đã đọc nó ở Bước 3.',
+          real_world: 'Đây là một hồ sơ vay ngân hàng: cùng 1 bảng khách hàng, hỏi "cho vay được BAO NHIÊU tiền?" là regression, hỏi "DUYỆT hay TỪ CHỐI?" là classification. Ghép nhầm cặp — bắt regressor học nhãn duyệt/từ chối 0/1 — code vẫn chạy và trả về "0.7": không phải số tiền, cũng chẳng phải quyết định. Sai từ công thức hóa thì mọi con số sau đó đều vô nghĩa.',
+          steps: [
+            'Import 2 model + hàm nạp dữ liệu từ <code>ml_lab</code>.',
+            'Nạp 4 biến: bảng feature, 2 target khả dĩ, hồ sơ mới.',
+            'Nhánh ĐIỂM: tạo model — huấn luyện với target SỐ — dự đoán hồ sơ mới.',
+            'Nhánh ĐẬU/RỚT: tạo model — huấn luyện với target NHÃN — dự đoán CÙNG hồ sơ.',
+            'In cả 2 kết quả · Run chạy thử · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn thấy 2 target khác nhau thế nào? Gõ <code>print(y_score[:5])</code> và <code>print(y_label[:5])</code> rồi <strong>Run</strong> — một bên số lẻ liên tục, một bên chỉ 0/1.',
+          expected: 'Console in ≈ <code>[67.7]</code> (điểm ước lượng — số thực) và <code>[1]</code> (nhãn Đậu). Cả 4 tầng Checks xanh — kể cả khi hệ thống đổi X_new ngầm.'
+        },
+        hints: [
+          { level: 1, text: 'Chính là 2 pipeline kiểu Bài 1 chạy song song trên CÙNG bảng — khác nhau đúng một chỗ: TARGET đưa vào fit.' },
+          { level: 2, text: 'Dòng 1: <code>from ml_lab import load_study_data_full, SimpleRegressor, SimpleClassifier</code>. Dòng 2: <code>X, y_score, y_label, X_new = load_study_data_full()</code>.' },
+          { level: 3, text: 'Regressor fit với <strong>y_score</strong> (số liên tục), classifier fit với <strong>y_label</strong> (tên lớp) — rồi cả hai <code>predict(X_new)</code>. Lỡ hoán đổi 2 target: code vẫn CHẠY nhưng tầng Risk sẽ bắt và giải thích.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_study_data_full, SimpleRegressor, SimpleClassifier<br>X, y_score, y_label, X_new = load_study_data_full()<br>regressor = SimpleRegressor()<br>regressor.fit(X, y_score)<br>print(regressor.predict(X_new))<br>classifier = SimpleClassifier()<br>classifier.fit(X, y_label)<br>print(classifier.predict(X_new))</code>' }
+        ],
+        grader_fn: 'grade_lesson2',
+        success_message: 'Cùng 1 bảng — 2 hợp đồng output: 67.7 (số thực) và 1 (tên lớp). Chọn loại bài toán = chọn target và Ý NGHĨA của nó, không phải nhìn kiểu dữ liệu lưu trữ. Bài 3: bảng thô 200 dòng trong mắt model — X và y.',
+        xp_reward: 50
+      }
+    },
+
+    /* ── Bài 3-15: stub chờ rollout theo module (shell hiện màn "đang cập nhật") ── */
     { id: 'c1_l3',  index: 3,  title: 'Dataset trong mắt model — X và y',             module: 10, module_title: 'M1 — Định khung bài toán ML',  xp_reward: 50 },
     { id: 'c1_l4',  index: 4,  title: 'Hiểu kiểu dữ liệu trước khi train',            module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
     { id: 'c1_l5',  index: 5,  title: 'Làm sạch dữ liệu bẩn',                         module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },

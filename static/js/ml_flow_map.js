@@ -27,6 +27,7 @@
   let stageEl = null;
   let rootEl = null;       // đợt 4: giữ ref để auto-fit scale
   let fitTimer = null;
+  let zoneIds = [];        // Bài 2: thứ tự drop_zones — map số dòng sai → trạm
   let state = { phase: 'idle', idx: -1, done: false };
   let grading = { zoneFills: {}, zoneCorrect: {}, wrongLines: [], isComplete: false };
 
@@ -76,6 +77,12 @@
       '</tbody></table>';
   }
 
+  /* Bài 2 (branch): 1 trạm có thể ôm NHIỀU zone — key node = zone đầu tiên */
+  function stKey(st) { return st.zone || (st.zones && st.zones[0]) || ''; }
+  function stationIndexForZone(zoneId) {
+    return stations.findIndex(s => s.zone === zoneId || (s.zones || []).indexOf(zoneId) >= 0);
+  }
+
   /* ── phần RESULT của node theo kind — ẩn ("?") tới khi reveal ── */
   function nodeResultHTML(st, revealed) {
     const k = st.result_kind;
@@ -111,11 +118,33 @@
           : '<span class="mlf-verdict">nhãn: ?</span>') +
         '</div>';
     }
+    /* Bài 2 — REGRESSION: tổng các đóng góp w·x (least squares thật) */
+    if (k === 'reg_sum') {
+      const rg = st.reg || {};
+      return '<div class="mlf-predict-row">' +
+        '<span class="mlf-chip xnew">👤 ' + esc(rg.xnew || '') + '</span>' +
+        '<span class="mlf-arrow-r">→</span>' +
+        (revealed
+          ? '<span class="mlf-verdict is-on">' + esc(rg.total || '') + '</span>' +
+            '<span class="mlf-dist-mini">' + (rg.parts || []).map(p => (p.val >= 0 && p !== (rg.parts || [])[0] ? '+' : '') + p.val).join(' ') + '</span>'
+          : '<span class="mlf-verdict">điểm: ?</span>') +
+        '</div>';
+    }
+    /* Bài 2 — CLUSTERING: k nhóm với sĩ số thật, ID tùy ý */
+    if (k === 'clusters') {
+      const cu = st.clusters || {};
+      const gs = cu.groups || [];
+      return '<div class="mlf-chips">' +
+        (revealed
+          ? gs.map(g => '<span class="mlf-chip clu clu-' + g.id + '">C' + g.id + ' · ' + g.n + ' hv</span>').join('')
+          : gs.map(() => '<span class="mlf-chip ghost">nhóm ?</span>').join('')) +
+        '</div>';
+    }
     return '';
   }
 
   function nodeHTML(st, i) {
-    return '<div class="mlf-node" data-mlf-node="' + st.zone + '">' +
+    return '<div class="mlf-node" data-mlf-node="' + stKey(st) + '">' +
       '<div class="mlf-node-head">' +
         '<span class="mlf-ord">' + (i + 1) + '</span>' +
         '<span class="mlf-icon">' + st.icon + '</span>' +
@@ -174,6 +203,47 @@
         '<div class="mlf-verdict is-on big">' + esc(st.verdict || '') + '</div>' +
         '</div>';
     }
+    /* Bài 2 — REGRESSION: cộng đóng góp từng feature (trọng số least squares thật) */
+    if (k === 'reg_sum') {
+      const rg = st.reg || {};
+      const parts = rg.parts || [];
+      const maxV = Math.max.apply(null, parts.map(p => Math.abs(p.val))) || 1;
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">👤 Hồ sơ mới<br><b>' + esc(rg.xnew || '') + '</b></div>' +
+        '<div class="mlf-dists">' +
+          parts.map(p => {
+            const w = Math.max(6, Math.round((Math.abs(p.val) / maxV) * 100));
+            const neg = p.val < 0;
+            return '<div class="mlf-dist"><span>' + esc(p.label) + '</span>' +
+              '<div class="mlf-dist-bar"><i class="' + (neg ? 'fail' : 'reg') + '" style="width:' + w + '%"></i></div>' +
+              '<b>' + (neg ? '−' : '+') + Math.abs(p.val) + '</b></div>';
+          }).join('') +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">' + esc(rg.total || '') + '</div>' +
+        '</div>';
+    }
+    /* Bài 2 — CLUSTERING: bảng tô màu nhóm THẬT, cột target GẠCH BỎ */
+    if (k === 'clusters') {
+      const cu = st.clusters || {};
+      const banned = cu.banned || [];
+      const labels = cu.labels || [];
+      const gs = cu.groups || [];
+      return '<div class="mlf-scene mlf-scene-clu">' +
+        '<table class="mlf-table mlf-table-stage"><thead><tr>' +
+        table.columns.map(c => '<th class="' + (banned.indexOf(c) >= 0 ? 'hl-ban' : '') + '">' +
+          (banned.indexOf(c) >= 0 ? '🚫 ' : '') + esc(c) + '</th>').join('') +
+        '<th>nhóm</th></tr></thead><tbody>' +
+        table.dataRows.map((r, ri) => '<tr class="clu-row-' + labels[ri] + '">' +
+          r.map((v, ci) => '<td class="' + (banned.indexOf(table.columns[ci]) >= 0 ? 'hl-ban' : '') + '">' + esc(v) + '</td>').join('') +
+          '<td><b>C' + labels[ri] + '</b></td></tr>').join('') +
+        '</tbody></table>' +
+        '<div class="mlf-scene-side">' +
+          '<div class="mlf-legend">' +
+            gs.map(g => '<span class="mlf-chip clu clu-' + g.id + '">C' + g.id + ' · ' + g.n + ' hv · ' + esc(g.center) + '</span>').join('') +
+          '</div>' +
+          (cu.note ? '<div class="mlf-clu-note">🔀 ' + esc(cu.note) + '</div>' : '') +
+        '</div></div>';
+    }
     return '';
   }
 
@@ -181,7 +251,8 @@
     stageEl.innerHTML =
       '<div class="mlf-stage-head"><span>🗄 ' + esc(table.name) + '</span><span class="mlf-stage-sub">' + esc((cfg.source && cfg.source.sub) || (table.dataRows.length + ' dòng')) + '</span></div>' +
       '<div class="mlf-stage-body">' + tableHTML('mlf-table-stage', 0) + '</div>' +
-      '<div class="mlf-stage-foot">Lắp 4 dòng lệnh (kéo hoặc tự gõ) rồi bấm <b>▶ Chạy Pipeline</b> — sân khấu này sẽ diễn từng phép biến đổi.</div>';
+      '<div class="mlf-stage-foot">Lắp ' + (zoneIds.length || 4) + ' dòng lệnh (kéo hoặc tự gõ) rồi bấm <b>' +
+        esc(cfg.run_label || '▶ Chạy Pipeline') + '</b> — sân khấu này sẽ diễn từng phép biến đổi.</div>';
     scheduleFit();
   }
 
@@ -209,7 +280,7 @@
 
   function setNodeState(i, phase) {
     const st = stations[i];
-    const el = mountEl.querySelector('[data-mlf-node="' + st.zone + '"]');
+    const el = mountEl.querySelector('[data-mlf-node="' + stKey(st) + '"]');
     if (!el) return;
     /* 'reveal' chỉ thay body — KHÔNG đụng class trạng thái (từng gỡ nhầm is-active) */
     if (phase === 'reveal') {
@@ -252,14 +323,19 @@
        hydrate typed-code của shell không chạy được — bug user báo 2026-07-19).
        Chưa lắp/gõ gì → nhắc việc, không chấm sai. */
     if (!Object.keys(grading.zoneFills || {}).length) {
-      showPill('incorrect', 'Chưa có dòng lệnh nào — kéo khối hoặc gõ đủ 4 dòng vào solution.py rồi bấm Chạy.');
+      showPill('incorrect', 'Chưa có dòng lệnh nào — kéo khối hoặc gõ đủ ' + (zoneIds.length || 4) + ' dòng vào solution.py rồi bấm Chạy.');
       return;
     }
     /* chấm: dòng sai/thiếu → dừng ở node đó, chỉ báo SỐ dòng (không làm hộ) */
     if (!grading.isComplete) {
       const wrong = grading.wrongLines && grading.wrongLines.length ? grading.wrongLines : null;
       let errIdx = -1;
-      if (wrong) errIdx = wrong[0] - 1;
+      /* dòng sai (1-based theo drop_zones) → trạm chứa zone đó (Bài 2: 1 trạm ôm 2 zone) */
+      if (wrong) {
+        const zid = zoneIds[wrong[0] - 1];
+        errIdx = zid ? stationIndexForZone(zid) : wrong[0] - 1;
+        if (errIdx < 0) errIdx = wrong[0] - 1;
+      }
       for (let i = 0; i < stations.length; i++) setNodeState(i, i === errIdx ? 'error' : '');
       showPill('incorrect', wrong ? 'Chưa đúng — xem lại dòng ' + wrong.join(', ') : 'Chưa đúng — kiểm tra thứ tự các dòng lệnh');
       setWrapperState(false);
@@ -278,7 +354,7 @@
     setNodeState(i, 'active');
     setNodeState(i, 'reveal');
     showScene(i, false);
-    const nodeEl = mountEl.querySelector('[data-mlf-node="' + stations[i].zone + '"]');
+    const nodeEl = mountEl.querySelector('[data-mlf-node="' + stKey(stations[i]) + '"]');
     if (nodeEl && nodeEl.scrollIntoView) nodeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
@@ -319,6 +395,7 @@
       table = (lesson.drag_map && lesson.drag_map.table) || { name: '?', columns: [], dataRows: [] };
       if (!cfg) return false;
       stations = cfg.stations || [];
+      zoneIds = (opts.dropZones || (lesson.step_3 && lesson.step_3.drop_zones) || []).map(z => z.id);
       mountEl = document.getElementById('drag-game-mount');
       if (!mountEl) return false;
       mountEl.innerHTML = '';
@@ -330,15 +407,23 @@
       /* mount là flex container (shell) — flex:none để root KHÔNG bị bóp chiều cao
          (squash từng làm content tràn box → đo đạc fit sai hết) */
       root.style.flex = 'none';
+      const srcNode =
+        '<div class="mlf-node mlf-node-src"><div class="mlf-node-head"><span class="mlf-icon">🗄</span>' +
+          '<span class="mlf-node-title"><b class="mono">' + esc(table.name) + '</b><i>' + esc((cfg.source && cfg.source.sub) || '') + '</i></span></div>' +
+          '<div class="mlf-node-body">' + tableHTML('', 3) + '</div></div>';
+      /* Bài 2 (layout 'branch'): 1 bảng → 3 NHÁNH song song (user chốt 2026-07-19);
+         mặc định (Bài 1): pipeline dọc nối link. */
+      const flowHtml = cfg.layout === 'branch'
+        ? '<div class="mlf-flow mlf-flow-branch">' + srcNode +
+            '<div class="mlf-split" aria-hidden="true">' + stations.map(() => '<span></span>').join('') + '</div>' +
+            '<div class="mlf-branch-row">' + stations.map((st, i) => nodeHTML(st, i)).join('') + '</div>' +
+          '</div>'
+        : '<div class="mlf-flow">' + srcNode +
+            stations.map((st, i) => '<div class="mlf-link" aria-hidden="true"><span></span></div>' + nodeHTML(st, i)).join('') +
+          '</div>';
       root.innerHTML =
         '<div class="mlf-brand"><span class="mlf-brand-dot"></span><b>PE_TEST</b> · ' + esc(cfg.brand || 'DÒNG CHẢY PIPELINE ML') + '</div>' +
-        '<div class="mlf-flow">' +
-          '<div class="mlf-node mlf-node-src"><div class="mlf-node-head"><span class="mlf-icon">🗄</span>' +
-            '<span class="mlf-node-title"><b class="mono">' + esc(table.name) + '</b><i>' + esc((cfg.source && cfg.source.sub) || '') + '</i></span></div>' +
-            '<div class="mlf-node-body">' + tableHTML('', 3) + '</div></div>' +
-          stations.map((st, i) => '<div class="mlf-link" aria-hidden="true"><span></span></div>' + nodeHTML(st, i)).join('') +
-        '</div>' +
-        /* dock sticky đáy cột: sân khấu + nút chạy LUÔN trong tầm mắt, flow cuộn phía trên */
+        flowHtml +
         '<div class="mlf-dock"><div class="mlf-stage" data-mlf-stage></div></div>';
       mountEl.appendChild(root);
 
@@ -359,7 +444,7 @@
         el.addEventListener('click', () => {
           if (!state.done) return;
           const zone = el.getAttribute('data-mlf-node');
-          const idx = stations.findIndex(s => s.zone === zone);
+          const idx = stations.findIndex(s => stKey(s) === zone);
           if (idx >= 0) showScene(idx, true);
         });
       });
@@ -388,7 +473,7 @@
       state = { phase: 'idle', idx: -1, done: false };
       stations.forEach((s, i) => {
         setNodeState(i, '');
-        const el = mountEl.querySelector('[data-mlf-node="' + s.zone + '"] [data-mlf-body]');
+        const el = mountEl.querySelector('[data-mlf-node="' + stKey(s) + '"] [data-mlf-body]');
         if (el) el.innerHTML = nodeResultHTML(stations[i], false);
       });
       if (stageEl) showStageIdle();

@@ -11465,3 +11465,71 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
 .mlf-node { padding: 6px 10px; }
 .mlf-node-body { margin-top: 5px; }
 .mlf-stage { padding: 8px 10px; }
+
+/* ═══ ML BÀI 2 (2026-07-19) — map 1 bảng → 3 NHÁNH + scene reg_sum/clusters + 6 zones ═══ */
+.mlf-flow-branch { display: flex; flex-direction: column; }
+.mlf-split { display: flex; justify-content: space-around; height: 13px; padding: 0 10%; }
+.mlf-split span { width: 2px; background: linear-gradient(180deg, rgba(103, 232, 249, 0.5), rgba(167, 139, 250, 0.55)); position: relative; }
+.mlf-split span::after { content: '▾'; position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); color: #7C3AED; font-size: 10px; }
+.mlf-branch-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.mlf-branch-row .mlf-node-head { gap: 6px; flex-wrap: wrap; }
+.mlf-branch-row .mlf-node-title b { font-size: 11.5px; letter-spacing: 0.3px; }
+.mlf-branch-row .mlf-node-title i { font-size: 9.5px; }
+.mlf-branch-row .mlf-predict-row { flex-wrap: wrap; gap: 4px; }
+.mlf-branch-row .mlf-chip { font-size: 9.5px; padding: 3px 7px; }
+.mlf-branch-row .mlf-verdict { font-size: 10px; padding: 3px 8px; }
+.mlf-branch-row .mlf-dist-mini { font-size: 9px; }
+
+/* REGRESSION scene: thanh đóng góp w·x (dương cyan, âm đỏ dùng .fail sẵn có) */
+.mlf-dist-bar i.reg { background: #38BDF8; }
+.mlf-scene-reg { display: flex; flex-direction: column; gap: 8px; }
+
+/* CLUSTERING: 3 màu nhóm + cột target gạch bỏ */
+.mlf-chip.clu-0 { color: #FCA5A5; border-color: rgba(248, 113, 113, 0.5); background: rgba(248, 113, 113, 0.08); }
+.mlf-chip.clu-1 { color: #FCD34D; border-color: rgba(251, 191, 36, 0.5); background: rgba(251, 191, 36, 0.08); }
+.mlf-chip.clu-2 { color: #6EE7B7; border-color: rgba(52, 211, 153, 0.5); background: rgba(52, 211, 153, 0.08); }
+.mlf-table tr.clu-row-0 td { background: rgba(248, 113, 113, 0.08); }
+.mlf-table tr.clu-row-1 td { background: rgba(251, 191, 36, 0.08); }
+.mlf-table tr.clu-row-2 td { background: rgba(52, 211, 153, 0.08); }
+.mlf-table .hl-ban { text-decoration: line-through; opacity: 0.45; }
+.mlf-scene-clu { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+.mlf-scene-clu .mlf-scene-side { max-width: 250px; display: flex; flex-direction: column; gap: 8px; }
+.mlf-scene-clu .mlf-legend { display: flex; flex-direction: column; gap: 6px; }
+.mlf-clu-note { font-size: 11px; color: var(--text-400); line-height: 1.5; }
+
+/* Bài ≥5 zone (Bài 2: 6 zones + 9 khối) — nén cột phải thêm 1 nấc so với tuning 4-zone */
+.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 36px; padding: 4px 10px; }
+.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 30px; }
+.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-prompt { font-size: 10.5px; }
+.course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-num { font-size: 12px; }
+@media (max-height: 800px) {
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 32px; padding: 3px 10px; }
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 26px; }
+}
+
+/* B2-fit: 6 zones (298px) + kho 9 khối DÀI (234px) từng tràn cột phải 155px @768.
+   Khối Bài 2 dài ~2× Bài 1 (1-2 khối/hàng) → nén pill + zone + gap khi bài ml-zones-dense. */
+#drop-zones.ml-zones-dense, #drop-zones.ml-zones-dense .drop-zone-stack { gap: 5px; }
+.course-ml .step3-editor:has(#drop-zones.ml-zones-dense) { padding: 10px 12px; }
+.course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank-wrap { padding: 6px 10px; }
+.course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank .logic-pill {
+  font-size: 11.5px; padding: 4px 8px;
+}
+@media (max-height: 800px) {
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line { min-height: 30px; padding: 2px 10px; }
+  .course-ml .step3-editor #drop-zones.ml-zones-dense .drop-line-slot { min-height: 24px; }
+  #drop-zones.ml-zones-dense, #drop-zones.ml-zones-dense .drop-zone-stack { gap: 4px; }
+  .course-ml .step3-editor:has(#drop-zones.ml-zones-dense) .block-bank .logic-pill {
+    font-size: 11px; padding: 3px 7px;
+  }
+}
+
+/* B2: hero 3 luồng — pgv-wrap auto-fit minmax(300px) chỉ vừa 2 cột @~770px
+   → luồng ③ rớt hàng (bố cục 2+1 lệch). Có ≥3 luồng: ép 3 cột đều + nén chữ. */
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-flow { padding: 12px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-node { padding: 8px 10px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-node-label { font-size: 12px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-tag { font-size: 12.5px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-sub { font-size: 10.5px; }
+.course-ml .pgv-wrap:has(.pgv-flow:nth-child(3)) .pgv-punch { font-size: 11px; }

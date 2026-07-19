@@ -88,3 +88,27 @@ User feedback sau đợt 3: (1) step 3 phải zoom 50% mới thấy hết; (2) k
 
 ### Verify (verify_pilot3.js — 32/32 · 0 pageerror)
 Tuần 8/mốc giữa kỳ/hook; sạch quiz + tuần 3 + từ khóa SQL toàn trang; explorer note Feature/Label; fit lọt cột cả idle lẫn done; Run trống → pill nhắc; gõ sai → pill số dòng (không lộ đáp án) + editor giữ nhiều dòng; gõ lại đúng không cần reset → máy chạy; kéo 8 khối → echo 4 DÒNG; gõ đè sau kéo → chấm theo code gõ (bẫy predict(X) báo dòng 4); step 4 Pyodide 4/4 + modal; regression Basic B1 (map SQL + tip SUM + typed SQL run + focus-clear seed) + NC plan_visual. Screenshot tự soi: idle fit đủ 5 node + bảng + nút Run; máy chạy cảnh split X/y; done confetti + tri thức lộ đủ.
+
+---
+
+## BÀI 2 (2026-07-19) — "Bài toán ML này thuộc loại nào?" (spec C1-L2 tr.13-17)
+
+4 quyết định user (AskUserQuestion): **map 1 bảng → 3 NHÁNH song song** · **kéo-thả = GHÉP MODEL↔TARGET, kho có 3 mồi bẫy sai cặp** · **hero 3 luồng chạy được (bỏ dải timeline, ngữ cảnh tuần 8 nằm trong story)** · **step 4 editor trống như Bài 1**.
+
+### Spec fidelity
+- Goal spec: chọn loại bài toán theo CÂU HỎI + Ý NGHĨA target, không theo dtype. Step 1 "same data, three questions" → hero 3 luồng pgv (67.7 / 1·ĐẬU / 3 nhóm 9·5·10) + so kèo. Step 2 output-sorting (6 chip → 3 bin hợp đồng output) + 2 MCQ đúng misconception spec (0/1 = tên lớp; clustering không dùng target dù bảng còn nguyên cột). Step 3 ba round bắt buộc (spec) = 3 nhánh cùng chạy step machine. Step 4 = regression + classification (spec: clustering chỉ read-only ở step 3) — grade_lesson2 4 tầng có sẵn, bẫy unsafe-but-correct regressor←y_label (suite xác nhận tầng Risk bắt).
+- SỐ THẬT từ ml_lab (content v1 cũ ghi 71.8 là SAI — đã thay): REG w=[5.476, 0.297, 0.257, −12.05] → đóng góp 35.6+25.2+19.0−12.0 = **67.7**; CLF 24hv chân dung ĐẬU [7.4h·91%·81] vs RỚT [2.6h·60%·48], Δ **9.3 vs 36.2** → 1·ĐẬU; CLUSTER k=3 labels thật 24 dòng, sĩ số **9/5/10**, tâm [2.2h·57%·46]/[5.1h·76%·65]/[8.0h·94%·85]. Bảng 24 dòng × 5 cột (midterm_score nhất quán Bài 1; final_score tồn tại vì khóa trước đã thi xong — giải thích trong hook Ticket #02).
+
+### Hạ tầng mới (ml_flow_map.js — Bài 1 nguyên vẹn, suite regression xác nhận)
+- `cfg.layout: 'branch'`: source node → `.mlf-split` (3 mũi tên) → `.mlf-branch-row` grid 3 cột. Map NGẮN hơn map dọc → auto-fit k=0.80 @1366×768 (Bài 1 vẫn 0.61).
+- `station.zones[]` (1 trạm ôm nhiều zone) + `stKey()` + `stationIndexForZone()` — số dòng sai map đúng NHÁNH đỏ (gõ sai cặp dòng 1,3 → trạm REGRESSION đỏ).
+- 2 result_kind mới: `reg_sum` (node: điểm ? → ≈67.7 + chuỗi đóng góp; scene: thanh đóng góp w·x từng feature — đúng ruột least squares) và `clusters` (node: 3 chip nhóm màu; scene: bảng 24 dòng tô 3 màu nhóm THẬT, 2 cột target GẠCH BỎ 🚫, 3 thẻ tâm + note ID tùy ý). CLF tái dùng `nearest` của Bài 1 với số 24-hv.
+- Stage-foot + pill Run-trống data-driven theo `zoneIds.length` + `cfg.run_label` (từng hardcode "4 dòng"/"Chạy Pipeline" — lộ khi soi screenshot).
+
+### Gotchas mới (ghi cho rollout)
+- `.pgv-wrap` auto-fit minmax(300px) chỉ vừa 2 luồng @~770px — 3 luồng bị rớt hàng 2+1: fix `:has(.pgv-flow:nth-child(3))` ép 3 cột + nén chữ.
+- Cột phải 6 zones + 9 khối DÀI (khối Bài 2 ~2× Bài 1) từng tràn 155px @768: class `ml-zones-dense` (renderStep3 toggle khi ≥5 zone) + nén pill/zone/gap → editor khít 413/413.
+- Suite đo pgv so-kèo phải chờ theo điều kiện (luồng 4 nút chạy ~3s), không chờ cứng.
+
+### Verify (verify_b2.js — 31/31 · 0 pageerror)
+Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; map fit (zoom 0.80, cột phải 413/413); gõ SAI CẶP → dòng 1,3 + nhánh REG đỏ không lộ đáp án; gõ đúng không reset → 3 scene số thật; kéo 6 khối → echo 6 dòng; kéo MỒI BẪY → bắt dòng 1; step 4 bẫy Risk bị bắt rồi bản đúng 4/4 + modal; regression Bài 1 ML map dọc + Basic B1 + NC sạch. Screenshot tự soi: idle 3 nhánh, scene cluster gạch target, hero 3 cột.
