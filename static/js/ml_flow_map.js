@@ -152,6 +152,27 @@
         (ro.banned && ro.banned.length ? '<span class="mlf-chip ban">🚫 ' + esc(ro.banned[0].col) + '</span>' : '') +
         '</div>';
     }
+    /* Bài 4 — 4 NHÓM KIỂU NGỮ NGHĨA: mỗi cột feature nhận 1 nhãn nhóm */
+    if (k === 'type_groups') {
+      const tg = (st.type_groups || {}).groups || [];
+      return '<div class="mlf-chips">' +
+        (revealed
+          ? tg.map(g => '<span class="mlf-chip tg tg-' + esc(g.kind) + '">' + esc(g.col) + ' · ' + esc(g.tag) + '</span>').join('')
+          : tg.map(() => '<span class="mlf-chip ghost">nhóm ?</span>').join('')) +
+        '</div>';
+    }
+    /* Bài 4 — READINESS CARD: X/y chốt + cột loại + cảnh báo encoding */
+    if (k === 'readiness') {
+      const rd = st.readiness || {};
+      if (!revealed) {
+        return '<div class="mlf-chips"><span class="mlf-chip ghost">X → ?</span><span class="mlf-chip ghost">y → ?</span><span class="mlf-chip ghost">⚠ ?</span></div>';
+      }
+      return '<div class="mlf-chips">' +
+        '<span class="mlf-chip x">' + esc(rd.x_shape || 'X') + '</span>' +
+        '<span class="mlf-chip y">' + esc(rd.y_shape || 'y') + '</span>' +
+        ((rd.warns || []).length ? '<span class="mlf-chip warn">⚠ ' + (rd.warns || []).length + ' cột cần xử lý' : '') +
+        '</div>';
+    }
     return '';
   }
 
@@ -276,6 +297,37 @@
           '</div>' +
           (ro.banned || []).map(b => '<div class="mlf-clu-note">🚫 <b>' + esc(b.col) + '</b> — ' + esc(b.why || '') + '</div>').join('') +
         '</div></div>';
+    }
+    /* Bài 4 — bảng tô 4 NHÓM kiểu ngữ nghĩa; cột ngoài nhóm (ID/target) mờ đi */
+    if (k === 'type_groups') {
+      const tg = (st.type_groups || {}).groups || [];
+      const byCol = {};
+      tg.forEach(g => { byCol[g.col] = g; });
+      const cls = (c) => byCol[c] ? 'hl-tg hl-tg-' + byCol[c].kind : 'hl-dim';
+      return '<div class="mlf-scene mlf-scene-clu mlf-scene-roles">' +
+        '<table class="mlf-table mlf-table-stage"><thead><tr>' +
+        table.columns.map(c => '<th class="' + cls(c) + '">' + esc(c) + (byCol[c] ? '<i class="mlf-tg-tag">' + esc(byCol[c].tag) + '</i>' : '') + '</th>').join('') +
+        '</tr></thead><tbody>' +
+        table.dataRows.map(r => '<tr>' + r.map((v, ci) =>
+          '<td class="' + cls(table.columns[ci]) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table>' +
+        '<div class="mlf-scene-side">' +
+          tg.map(g => '<div class="mlf-clu-note"><span class="mlf-chip tg tg-' + esc(g.kind) + '">' + esc(g.tag) + '</span> <b>' + esc(g.col) + '</b> — ' + esc(g.note || '') + '</div>').join('') +
+        '</div></div>';
+    }
+    /* Bài 4 — READINESS CARD: thẻ chốt schema sẵn sàng train */
+    if (k === 'readiness') {
+      const rd = st.readiness || {};
+      return '<div class="mlf-scene mlf-readiness">' +
+        '<div class="mlf-ready-head">📋 ' + esc(rd.title || 'READINESS CARD — schema sẵn sàng?') + '</div>' +
+        '<div class="mlf-ready-grid">' +
+          '<div class="mlf-ready-row ok"><span class="mlf-chip x">' + esc(rd.x_shape || 'X') + '</span><span>' + esc(rd.x_note || '') + '</span></div>' +
+          '<div class="mlf-ready-row ok"><span class="mlf-chip y">' + esc(rd.y_shape || 'y') + '</span><span>' + esc(rd.y_note || '') + '</span></div>' +
+          (rd.excluded || []).map(b => '<div class="mlf-ready-row ban"><span class="mlf-chip ban">🚫 ' + esc(b.col) + '</span><span>' + esc(b.why || '') + '</span></div>').join('') +
+          (rd.warns || []).map(w => '<div class="mlf-ready-row warn"><span class="mlf-chip warn">⚠ ' + esc(w.col) + '</span><span>' + esc(w.note || '') + '</span></div>').join('') +
+        '</div>' +
+        (rd.verdict ? '<div class="mlf-ready-verdict">✅ ' + esc(rd.verdict) + '</div>' : '') +
+        '</div>';
     }
     return '';
   }

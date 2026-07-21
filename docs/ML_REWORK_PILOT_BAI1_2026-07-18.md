@@ -194,3 +194,36 @@ Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; m
 - Probe đợt 6: Lan đủ 4 step; counter (1/3) cả 3 bài; trả lời đúng 3 câu liên tiếp → banner mời mini-game (trình tự nguyên vẹn); 0 pageerror.
 - 3 suite đầy đủ: **32 + 31 + 32 pass · 0 pageerror**, regression Basic/NC/B1-B2-ML sạch.
 - Versions: shell v18 · content v9.
+
+---
+
+## ĐỢT 7 (2026-07-20) — BÀI 4 "Hiểu kiểu dữ liệu trước khi train" (spec C1-L4, mở màn M2)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH DTYPE + câu đố chốt** (mở rộng ống kính Bài 3): `renderDtypeLens` — bấm từng THẺ CỘT lật dtype LƯU TRỮ vs NGHĨA THẬT + hành động modeling; xem đủ 4 thẻ bắt buộc (student_id/study_hours/missed_classes/scholarship) → mở câu đố completion-rule spec "3 cột cùng int64 — cột nào SỐ ĐẾM thật?" (chọn missed_classes). Bug bắt được khi soi screenshot: `.dlens-reveal{display:flex}` override thuộc tính `hidden` → thẻ lộ nghĩa NGAY khi chưa bấm → vá `.dlens-reveal[hidden]{display:none}`.
+- **Story = FILE MỚI** (Ticket #04, phòng đào tạo gửi student_profile chuẩn bị model thế hệ 2) — bảng ĐỘC LẬP với student_history Bài 3, tránh mâu thuẫn số liệu 2 bảng cùng cột.
+- **Step 3 = map 3 TRẠM = 3 VÒNG spec** (VÒNG 1 VAI TRÒ roles_split · VÒNG 2 PHÂN NHÓM KIỂU type_groups · VÒNG 3 ĐÓNG GÓI readiness) — tinh thần progressive nằm ở sân khấu diễn theo vòng, giữ anatomy shell (7 dòng schema + 3 mồi bẫy), KHÔNG cần cơ chế gating zone mới.
+
+### Shell mở rộng (ml_flow_map v5)
+- 2 result_kind mới: **type_groups** (chip 4 nhóm + scene bảng tô 4 màu ngữ nghĩa cont/disc/cat/bin, cột ID/target mờ đi) và **readiness** (thẻ READINESS CARD: X/y chốt + cột loại + cảnh báo encoding + verdict).
+- CSS: `.dlens*` (ống kính dtype), `.mlf-chip.tg-*` + `.hl-tg-*` (tô bảng), `.mlf-readiness` (thẻ chốt). Tier dense mới cho 7 zones (`:has(.drop-line:nth-child(7))`) — B4 nhiều hơn B2 1 zone.
+
+### Dataset (ml_lab.load_student_profile seed 1401 — mọi số tính từ engine)
+- 200 dòng × 6 cột: student_id (định danh, không lặp) · study_hours (float, liên tục) · missed_classes (int64, đếm, TB 3.0) · major (object: DS 70 · ICT 66 · Space 64) · scholarship (int64 0/1, 25% có) · pass_fail (target: 113 Đậu · 87 Rớt).
+- Ép `.astype(np.int64)` tường minh cho missed_classes/scholarship — bài dạy "3 cột CÙNG int64" nên dtype phải ổn định Windows (int32) ↔ Pyodide (int64).
+- Grader `grade_lesson4` đã tồn tại từ trước (semantic 4 tầng) — khớp đáp án; unsafe-but-correct: scholarship vào nhóm SỐ → Risk bắt.
+
+### Content c1_l4 (thay stub) — theo chuẩn đợt 5-6
+- glossary 6 thẻ (dtype/continuous/discrete/categorical/binary/identifier) + 3 concept card + explorer 6 cột (note giải nghĩa từng vai) + 200 dòng thật.
+- Step 2: **3 MCQ** (int64 3 số phận · tuổi làm-tròn vẫn continuous · ôn glossary: vì sao loại student_id dù lab điểm cao) + minigame 6 cột → 3 ngăn ĐO/ĐẾM/TÊN.
+- Step 4 (≠ step 3): thêm khảo sát `df.dtypes` + `unique()` trước khi dựng schema; real_world = vụ model X-quang học từ mã máy chụp.
+
+### Verify
+- **verify_b4.js: 30/30 pass · 0 pageerror** — hero lật thẻ + câu đố (sai student_id → fb, đúng missed_classes → done), 3 MCQ (1/3), map 3 vòng branch (7 zone/10 khối fit), 3 scene (roles/type_groups/readiness) qua gõ đúng, decoy student_id → dòng 1 + VÒNG 2 đỏ, grade_lesson4 bẫy scholarship (Risk) rồi đúng 4/4 + modal.
+- Regression: **B1 32 · B2 31 · B3 32 — tất cả 0 pageerror**; Basic B1 SQL + NC sạch.
+- Screenshot soi mắt: hero (reveal fix), 3 scene VÒNG, bank 10 pill đủ hiện.
+- Versions: css v12 · content v10 · shell v19 · ml_flow_map v5.
+
+### Gotcha
+- `hidden` attribute LUÔN thua `display:flex/grid/block` set trực tiếp — mọi element ẩn-mặc-định phải kèm `[hidden]{display:none}` nếu có rule display. (Chỉ `.dlens-reveal` dính; `.dlens-riddle`/`.tlens-done` dùng display block mặc định nên `hidden` ăn.)
+- Bài có 7 zone là ngưỡng chật nhất 4 bài — `overflow-y:auto` trên `.course-ml .step3-editor` là lưới an toàn; đo `edScroll>edClient` ~34px nhưng grid-row cao hơn nên hiển thị đủ (không cắt).

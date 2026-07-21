@@ -322,9 +322,11 @@ def load_student_profile(shuffle_seed=None):
     rng = np.random.RandomState(1401)
     n = 200
     study_hours = np.round(rng.uniform(0.5, 10.0, n), 1)
-    missed_classes = rng.poisson(3, n).clip(0, 12)
+    # B4 đợt 7: ép int64 tường minh — poisson/astype(int) ra int32 trên Windows nhưng
+    # int64 trên Pyodide; bài giảng dạy "3 cột CÙNG int64" nên dtype phải ổn định mọi nền.
+    missed_classes = rng.poisson(3, n).clip(0, 12).astype(np.int64)
     major = np.array(['ICT', 'DS', 'Space'])[rng.randint(0, 3, n)]
-    scholarship = (rng.uniform(0, 1, n) < 0.3).astype(int)
+    scholarship = (rng.uniform(0, 1, n) < 0.3).astype(np.int64)
     score = 6.0 * study_hours - 1.5 * missed_classes + 3.0 * scholarship + rng.normal(0, 8, n) + 25
     pass_fail = (score >= 50).astype(int)
     df = pd.DataFrame({

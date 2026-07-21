@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4031,6 +4031,83 @@
     });
   }
 
+  /* ═══ ML Bài 4 (2026-07-20) — ỐNG KÍNH DTYPE (spec C1-L4 Dataset Lens "toàn số,
+     thật không?"): bấm từng THẺ CỘT lật ra dtype LƯU TRỮ vs NGHĨA THẬT + hành động
+     modeling mặc định; xem đủ cột bắt buộc → mở CÂU ĐỐ chốt (chọn cột SỐ ĐẾM thật
+     trong 3 cột cùng int64 — completion rule của spec).
+     cfg = { title, intro, columns:[{name,dtype,icon,accent,meaning,action}],
+             require:[names], rows (bảng minh họa), rows_note,
+             riddle:{prompt,options[],answer,wrong:{opt:why},done} } ═══ */
+  function renderDtypeLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const cols = cfg.columns || [];
+    const req = cfg.require || cols.map(c => c.name);
+    const seen = {};
+    const rid = cfg.riddle || {};
+    mount.innerHTML =
+      '<section class="tlens dlens" aria-label="Ống kính dtype — kiểu lưu trữ vs nghĩa thật">' +
+        '<div class="tlens-head"><span class="tlens-title">' + (cfg.title || 'ỐNG KÍNH DTYPE') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="tlens-tablewrap"><table class="tlens-table"><thead><tr>' +
+          cols.map(c => '<th><span class="tlens-cname">' + escapeHtml(c.name) + '</span><span class="tlens-unit">' + escapeHtml(c.dtype || '') + '</span></th>').join('') +
+        '</tr></thead><tbody>' +
+          (cfg.rows || []).map(r => '<tr>' + r.map(v => '<td>' + escapeHtml(String(v)) + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table>' +
+        (cfg.rows_note ? '<div class="tlens-more">' + cfg.rows_note + '</div>' : '') +
+        '</div>' +
+        '<div class="dlens-cards">' + cols.map(c =>
+          '<button type="button" class="dlens-card" data-dl-col="' + escapeHtml(c.name) + '" style="--dl-accent:' + (c.accent || '#94A3B8') + '">' +
+            '<span class="dlens-name">' + (c.icon || '') + ' ' + escapeHtml(c.name) +
+              (req.indexOf(c.name) >= 0 ? '<span class="dlens-check" data-dl-check>☐</span>' : '') + '</span>' +
+            '<span class="dlens-dtype">dtype lưu trữ: <b>' + escapeHtml(c.dtype || '') + '</b></span>' +
+            '<span class="dlens-reveal" hidden>' +
+              '<span class="dlens-meaning">' + (c.meaning || '') + '</span>' +
+              '<span class="dlens-action">→ ' + (c.action || '') + '</span>' +
+            '</span>' +
+          '</button>').join('') + '</div>' +
+        '<div class="dlens-riddle" data-dl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(o =>
+            '<button type="button" class="dlens-opt" data-dl-opt="' + escapeHtml(o) + '"><code>' + escapeHtml(o) + '</code></button>').join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-dl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-dl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const riddleEl = mount.querySelector('[data-dl-riddle]');
+    mount.querySelectorAll('.dlens-card').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        btn.classList.add('is-open');
+        const rv = btn.querySelector('.dlens-reveal');
+        if (rv) rv.hidden = false;
+        const ck = btn.querySelector('[data-dl-check]');
+        if (ck) { ck.textContent = '✓'; ck.classList.add('is-on'); }
+        seen[btn.getAttribute('data-dl-col')] = true;
+        if (riddleEl && riddleEl.hidden && req.every(function (n) { return seen[n]; })) {
+          riddleEl.hidden = false;
+        }
+      });
+    });
+    const fb = mount.querySelector('[data-dl-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-dl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-dl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nghĩ về NGHĨA của cột, đừng nhìn dtype.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4346,6 +4423,13 @@
         const heroMountTl = document.getElementById('lesson-hero');
         renderTableLens(heroMountTl || pvMount, s1.table_lens);
         if (heroMountTl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.dtype_lens) {
+        // ML Bài 4 (user chốt 2026-07-20): ỐNG KÍNH DTYPE — lật thẻ dtype vs NGHĨA
+        // từng cột + câu đố chốt "cột SỐ ĐẾM thật" (spec C1-L4). Render vào hero.
+        const heroMountDl = document.getElementById('lesson-hero');
+        renderDtypeLens(heroMountDl || pvMount, s1.dtype_lens);
+        if (heroMountDl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
