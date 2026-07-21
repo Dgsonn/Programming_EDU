@@ -200,6 +200,26 @@
           (sc.mode === 'verify' ? 'σ1·μ0' : ('σ' + esc(bs) + '→1')) + '</b></span>';
       }).join('') + '</div>';
     }
+    /* Bài 7 — CHỌN cột phân tích: pick (X) + exclude (ban) */
+    if (k === 'stat_select') {
+      const ss = st.stat_select || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">cột → ?</span></div>';
+      return '<div class="mlf-chips">' +
+        (ss.pick || []).map(p => '<span class="mlf-chip x">' + esc(p.col) + '</span>').join('') +
+        (ss.exclude || []).map(e => '<span class="mlf-chip ban">🚫 ' + esc(e.col) + '</span>').join('') +
+        '</div>';
+    }
+    /* Bài 7 — ma trận cov/corr: node hiện CỘT mục tiêu (final) xếp hạng */
+    if (k === 'stat_matrix') {
+      const sm = st.stat || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">' + (sm.mode === 'corr' ? 'r' : 'cov') + ' → ?</span></div>';
+      const hc = sm.highlight_col, cols = sm.cols || [], grid = sm.grid || [];
+      return '<div class="mlf-sc-mini">' + grid.map(function (row, i) {
+        if (i === hc) return '';
+        var v = row[hc];
+        return '<span class="mlf-sc-cell"><i>' + esc(cols[i]) + '</i><b>' + esc(sm.mode === 'corr' ? v.toFixed(2) : v.toFixed(1)) + '</b></span>';
+      }).join('') + '</div>';
+    }
     return '';
   }
 
@@ -434,6 +454,43 @@
             '</span></div>';
         }).join('') + '</div>' +
         (sc.note ? '<div class="mlf-qc-note">' + sc.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 7 — CHỌN cột phân tích: 5 cột PHÂN TÍCH vs student_id ĐỨNG NGOÀI */
+    if (k === 'stat_select') {
+      const ss = st.stat_select || {};
+      return '<div class="mlf-scene mlf-scale-select">' +
+        '<div class="mlf-sc-col mlf-sc-in"><div class="mlf-sc-colhead">📊 PHÂN TÍCH — 5 cột số</div>' +
+          (ss.pick || []).map(p => '<div class="mlf-sc-row ok"><span class="mlf-chip x">' + esc(p.col) + '</span></div>').join('') +
+        '</div>' +
+        '<div class="mlf-sc-col mlf-sc-out"><div class="mlf-sc-colhead">🚫 ĐỨNG NGOÀI</div>' +
+          (ss.exclude || []).map(e => '<div class="mlf-sc-row ban"><span class="mlf-chip ban">' + esc(e.icon || '🚫') + ' ' + esc(e.col) + '</span>' +
+            '<span class="mlf-sc-why">' + esc(e.why || '') + '</span></div>').join('') +
+        '</div></div>';
+    }
+    /* Bài 7 — ma trận cov/corr 5×5 heatmap; corr tô màu theo r [−1,1], cột final tô vàng */
+    if (k === 'stat_matrix') {
+      const sm = st.stat || {};
+      const cols = sm.cols || [], grid = sm.grid || [], hc = sm.highlight_col;
+      const isCorr = sm.mode === 'corr';
+      const cell = function (v, ri, ci) {
+        let cls = 'mlf-mat-cell';
+        if (ci === hc || ri === hc) cls += ' mlf-mat-hl';
+        if (ri === ci) cls += ' mlf-mat-diag';
+        let style = '';
+        if (isCorr) {
+          const a = Math.min(1, Math.abs(v));
+          const rgb = v >= 0 ? '56,189,248' : '248,113,113';
+          style = 'background:rgba(' + rgb + ',' + (a * 0.5).toFixed(2) + ')';
+        }
+        return '<td class="' + cls + '" style="' + style + '">' + esc(isCorr ? v.toFixed(2) : v.toFixed(1)) + '</td>';
+      };
+      return '<div class="mlf-scene mlf-mat-scene">' +
+        '<div class="mlf-mat-wrap"><table class="mlf-mat"><thead><tr><th></th>' +
+          cols.map((c, i) => '<th class="' + (i === hc ? 'mlf-mat-hl' : '') + '">' + esc(c) + '</th>').join('') + '</tr></thead>' +
+        '<tbody>' + grid.map((row, ri) => '<tr><th class="' + (ri === hc ? 'mlf-mat-hl' : '') + '">' + esc(cols[ri]) + '</th>' +
+          row.map((v, ci) => cell(v, ri, ci)).join('') + '</tr>').join('') + '</tbody></table></div>' +
+        (sm.note ? '<div class="mlf-qc-note">' + sm.note + '</div>' : '') +
       '</div>';
     }
     return '';

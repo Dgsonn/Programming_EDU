@@ -2927,7 +2927,343 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l7',  index: 7,  title: 'Đọc dữ liệu bằng thống kê cơ bản',             module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    {
+      id: 'c1_l7',
+      index: 7,
+      title: 'Đọc dữ liệu bằng thống kê cơ bản',
+      subtitle: 'Tương quan chỉ ra "đi cùng nhau" — KHÔNG chứng minh "gây ra nhau"',
+      module: 11,
+      module_title: 'M2 — Dữ liệu sẵn sàng',
+      estimated_minutes: 18,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎓 StudyLab · Ticket #07',
+        hook: 'Phòng đào tạo gửi Ticket #07: <strong>"Yếu tố nào LIÊN QUAN nhất tới điểm cuối kỳ?"</strong> — họ có bảng <strong>200 học viên</strong> với giờ tự học, chuyên cần, số buổi nghỉ, điểm quiz và <code>final_score</code>. Trước khi dựng model, việc đầu tiên là <strong>ĐỌC dữ liệu bằng thống kê</strong>: trung bình mỗi cột bao nhiêu, và cột nào <strong>tương quan</strong> mạnh với điểm cuối. Nhưng có một cái bẫy chết người: nếu thấy <code>study_hours</code> tương quan <strong>0.95</strong> với điểm rồi kết luận "học nhiều GÂY RA điểm cao" để ra chính sách — bạn có thể sai. <strong>Tương quan ≠ nhân quả.</strong> Nhiệm vụ: tính ma trận tương quan, đọc đúng, và biết dừng đúng chỗ.'
+      },
+      achievement: { name: 'Data Analyst — đọc số tỉnh táo', desc: 'đọc ma trận tương quan, phân biệt tương quan với nhân quả, loại ID khỏi phân tích' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Đọc <strong>trung bình · độ lệch chuẩn</strong> để nắm "trung tâm" và "độ rộng" mỗi cột.',
+            'Tính <strong>ma trận tương quan</strong> (r ∈ [−1, 1]) và đọc cột nào liên hệ mạnh/nghịch với <code>final_score</code> — biết vì sao dùng <strong>corr</strong> thay <strong>cov</strong>.',
+            'Nhớ cảnh giới lớn nhất: <strong>tương quan ≠ nhân quả</strong> — và loại <code>student_id</code> (ID vô nghĩa) khỏi phân tích.'
+          ]
+        },
+        glossary: [
+          { term: 'TRUNG BÌNH (mean)', vi: 'trung tâm', accent: '#38BDF8',
+            def: 'Giá trị <b>điển hình</b> của một cột = tổng chia số dòng. Cho biết "quanh mức nào".',
+            ex: 'final_score trung bình ≈ 6.15 → lớp này điểm cuối kỳ quanh 6/10.',
+            out: 'df.mean() · nhạy với outlier (khác median)' },
+          { term: 'ĐỘ LỆCH CHUẨN (std σ)', vi: 'độ rộng', accent: '#22D3EE',
+            def: 'Đo mức <b>phân tán</b> quanh trung bình. σ lớn = điểm trải rộng; σ nhỏ = xúm quanh mean.',
+            ex: 'final_score σ ≈ 2.67 → phần lớn điểm nằm trong ~6.15 ± 2.67.',
+            out: 'df.std() · cùng đơn vị với cột' },
+          { term: 'HIỆP PHƯƠNG SAI (cov)', vi: 'đi cùng nhau (thô)', accent: '#A78BFA',
+            def: 'Đo 2 cột có <b>cùng lên/xuống</b> không, nhưng con số <b>phụ thuộc đơn vị</b> nên khó so sánh.',
+            ex: 'cov(study, final) = 7.3 — dương (cùng chiều) nhưng 7.3 to hay nhỏ? khó nói.',
+            out: 'df.cov() · cần chuẩn hóa thành corr mới đọc được' },
+          { term: 'HỆ SỐ TƯƠNG QUAN r', vi: 'tương quan', accent: '#34D399',
+            def: 'Cov <b>chuẩn hóa</b> về <b>[−1, 1]</b>: +1 cùng chiều chặt · −1 ngược chiều chặt · 0 không liên hệ tuyến tính.',
+            ex: 'r(study, final) = 0.95 → học nhiều đi cùng điểm cao, rất chặt.',
+            out: 'df.corr() · SO SÁNH được giữa các cặp' },
+          { term: 'MA TRẬN TƯƠNG QUAN', vi: 'bảng r', accent: '#FBBF24',
+            def: 'Bảng <b>n×n</b> chứa r của mọi cặp cột; đường chéo = 1 (mỗi cột với chính nó).',
+            ex: 'nhìn CỘT final_score để xếp hạng feature nào liên quan điểm nhất.',
+            out: 'df.corr() · đối xứng qua đường chéo' },
+          { term: 'TƯƠNG QUAN ≠ NHÂN QUẢ', vi: 'cảnh giới', accent: '#F87171',
+            def: 'r cao nói 2 biến <b>đi cùng nhau</b>, KHÔNG nói cái nào <b>gây ra</b> cái nào.',
+            ex: 'mùa hè: kem bán chạy VÀ đuối nước tăng — cả hai do NÓNG, không phải kem gây đuối nước.',
+            out: 'muốn khẳng định nhân quả → cần THÍ NGHIỆM can thiệp' }
+        ],
+        primer: {
+          goal: [
+            'Đọc mean/std: trung tâm & độ rộng mỗi cột',
+            'Ma trận tương quan: cột nào liên quan điểm nhất',
+            'Tương quan ≠ nhân quả — dừng đúng chỗ'
+          ],
+          intro: '',
+          example: '🔍 <strong>Bấm cột <code>study_hours</code> trong SCHEMA EXPLORER:</strong> nó tương quan 0.95 với điểm cuối — mạnh nhất. Rồi bấm <code>student_id</code>: chỉ là mã số, tương quan ≈ 0 (nhiễu vô nghĩa). Đọc tương quan là để tìm cột ĐÁNG đào sâu — nhưng nhớ: nó chỉ ra "đi cùng nhau", chưa nói "gây ra nhau". Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Trước khi train bất cứ model nào, người phân tích giỏi <strong>ĐỌC dữ liệu</strong> trước: mỗi cột trung bình bao nhiêu, phân tán ra sao, và các cột <strong>liên hệ</strong> với nhau (nhất là với mục tiêu <code>final_score</code>) thế nào. Công cụ chính là <strong>ma trận tương quan</strong>. Nhưng đọc số phải tỉnh táo: r cao chỉ nói "đi cùng nhau", và <code>student_id</code> dù cho ra một con số r nào đó thì vẫn là <strong>nhiễu vô nghĩa</strong> — mã số không "liên quan" điểm.',
+        concept_cards: [
+          {
+            icon: 'fa-arrows-up-down',
+            title: 'r đo gì (−1 → +1)',
+            body: '<strong>r = +1</strong>: đồng biến chặt (cột này lên, cột kia lên). <strong>r = −1</strong>: nghịch biến chặt. <strong>r ≈ 0</strong>: không liên hệ tuyến tính. |r| càng gần 1 quan hệ càng mạnh. Đọc CỘT <code>final_score</code> trong ma trận để xếp hạng feature.'
+          },
+          {
+            icon: 'fa-arrows-left-right-to-line',
+            title: 'Cov vs Corr',
+            body: '<strong>Cov</strong> nói chiều (âm/dương) nhưng con số <strong>phụ thuộc đơn vị</strong> — cov 7.3 vs 3.2 không so trực tiếp được. <strong>Corr</strong> = cov chia cho tích 2 độ lệch chuẩn → gói về <strong>[−1, 1]</strong>, nên SO SÁNH được cặp nào mạnh hơn. (Cùng ý "chuẩn hóa" như scale ở Bài 6.)'
+          },
+          {
+            icon: 'fa-triangle-exclamation',
+            title: 'Tương quan ≠ Nhân quả',
+            body: 'r(study, final) = 0.95 <strong>KHÔNG</strong> chứng minh "học nhiều GÂY RA điểm cao". Có thể do <strong>biến ẩn</strong> (bạn chăm → vừa học nhiều vừa điểm cao), <strong>đảo chiều</strong>, hoặc <strong>trùng hợp</strong>. Tương quan gợi ý "chỗ nào đáng đào sâu"; khẳng định nhân quả cần <strong>thí nghiệm can thiệp</strong>.'
+          }
+        ],
+        /* Hero = ỐNG KÍNH TƯƠNG QUAN + scatter (user chốt 2026-07-21) */
+        corr_lens: {
+          title: 'ỐNG KÍNH TƯƠNG QUAN — CỘT NÀO LIÊN QUAN ĐIỂM NHẤT?',
+          intro: 'Thanh dưới là |r| của từng cột với <code>final_score</code>. Bấm một thanh để xem <b>scatter 200 học viên thật</b> + đường xu hướng. Đừng bỏ qua <code>student_id</code> (phản ví dụ). Trả lời câu chốt để mở Bước 2.',
+          target: 'final_score',
+          series: [
+            { name: 'study_hours', r: 0.95, note: 'Giờ tự học/tuần. Điểm bám sát đường đi lên — <b>tương quan dương mạnh nhất</b> với điểm cuối.' },
+            { name: 'quiz_score', r: 0.93, note: 'Điểm quiz giữa kỳ. Cũng đi lên rất chặt — nhưng coi chừng: quiz cao & final cao có thể cùng do <b>chăm học</b> (biến ẩn).' },
+            { name: 'missed_classes', r: -0.75, note: 'Số buổi nghỉ. Đường đi <b>XUỐNG</b> — nghỉ càng nhiều điểm càng thấp (tương quan ÂM).' },
+            { name: 'attendance', r: 0.60, note: 'Chuyên cần. Dương vừa — đám mây điểm rộng hơn, quan hệ lỏng hơn study/quiz.' },
+            { name: 'student_id', r: 0.03, note: 'Mã số sinh viên — chỉ là ĐỊNH DANH. Điểm rải thành <b>mây tản</b>, r ≈ 0: không hề liên quan. ID phải đứng NGOÀI phân tích.' }
+          ],
+          riddle: {
+            prompt: 'r(study_hours, final_score) = 0.95 — rất cao. Kết luận nào ĐÚNG?',
+            options: ['Học nhiều & điểm cao ĐI CÙNG nhau — nhưng r không chứng minh cái nào GÂY RA cái nào', 'Đã chứng minh: học nhiều GÂY RA điểm cao', 'r cao chắc do ngẫu nhiên, bỏ qua được'],
+            answer: 'Học nhiều & điểm cao ĐI CÙNG nhau — nhưng r không chứng minh cái nào GÂY RA cái nào',
+            wrong: {
+              'Đã chứng minh: học nhiều GÂY RA điểm cao': 'Tương quan ≠ nhân quả. r cao chỉ nói 2 biến đi cùng chiều; có thể do <b>biến ẩn</b> (bạn chăm học → vừa học nhiều, vừa làm quiz tốt, vừa điểm cao), đảo chiều, hoặc trùng hợp. Khẳng định nhân quả cần <b>thí nghiệm can thiệp</b>.',
+              'r cao chắc do ngẫu nhiên, bỏ qua được': 'r = 0.95 trên 200 SV rất khó là ngẫu nhiên — quan hệ CÓ THẬT và đáng chú ý. Vấn đề chỉ là "có quan hệ" ≠ "cái này gây ra cái kia".'
+            },
+            done: '✅ Đúng — r = 0.95 nói study_hours và final_score đi cùng nhau rất chặt, nhưng KHÔNG nói cái nào gây ra cái nào. Ví dụ đời: mùa hè kem bán chạy VÀ số vụ đuối nước tăng — cả hai do trời NÓNG, chứ kem không gây đuối nước. Tương quan gợi ý "chỗ nào đáng đào sâu"; nhân quả cần thí nghiệm. Xuống Bước 2 luyện đọc r 👇'
+          },
+          /* 200 điểm THẬT (seed 1701) — chia sẻ trục y = final_score */
+          y: [2.4,2.9,6.4,8.1,8.8,9.3,3.5,3.3,10.0,7.7,5.4,2.1,3.3,4.9,10.0,0.0,8.1,2.6,6.8,10.0,10.0,7.7,7.8,4.7,2.6,9.3,6.1,5.4,9.7,7.9,9.7,3.0,4.9,4.2,5.4,9.6,2.3,4.3,10.0,6.1,8.0,10.0,4.2,7.7,2.3,8.2,2.8,6.8,4.8,3.9,2.2,5.3,0.5,2.9,3.0,9.5,7.0,9.5,6.9,9.7,9.4,6.4,3.1,6.5,2.4,9.6,2.7,7.2,9.8,5.1,8.8,1.7,8.5,6.0,5.5,7.3,3.6,10.0,9.5,7.3,5.8,8.3,10.0,2.7,3.1,4.9,5.3,8.7,5.5,5.4,5.2,7.6,4.8,8.8,5.2,9.6,8.9,6.5,8.0,6.1,9.6,8.1,2.1,1.0,7.7,2.0,1.9,2.0,6.3,4.4,3.2,6.5,4.2,6.2,10.0,4.8,3.2,9.0,3.7,10.0,8.9,5.7,7.1,5.8,6.1,9.3,9.9,6.7,2.1,2.3,4.9,7.4,6.1,4.0,7.1,5.0,6.5,3.9,6.1,1.5,3.4,3.7,4.4,9.2,7.9,4.5,4.8,10.0,7.5,10.0,3.2,4.7,6.9,10.0,9.8,4.7,8.6,4.4,3.4,3.4,8.1,8.2,6.6,7.3,2.7,7.2,9.1,5.4,5.8,10.0,3.1,6.3,10.0,7.1,10.0,4.7,4.8,10.0,8.8,1.9,6.8,8.1,7.7,9.7,4.1,7.1,7.8,10.0,1.6,9.7,1.5,5.8,4.1,9.0,10.0,7.6,1.6,4.6,3.5,4.4],
+          x: {
+            study_hours: [1.3,1.6,5.4,5.1,8.9,8.4,2.5,1.3,9.7,7.0,3.6,2.1,3.6,4.1,9.4,0.6,7.3,1.8,6.3,9.6,8.3,6.8,6.2,2.6,1.7,7.7,5.8,4.7,9.4,5.1,9.0,1.0,4.0,3.6,5.0,9.2,0.8,4.0,9.7,6.4,6.7,8.8,2.6,7.5,1.0,7.6,2.5,6.5,4.5,2.3,1.0,2.6,1.3,1.1,1.3,8.6,8.9,9.9,7.0,9.5,8.7,6.7,1.4,5.3,2.0,9.9,1.0,5.3,10.0,3.5,8.4,0.9,8.7,5.7,2.8,6.1,2.0,8.8,8.1,6.3,5.6,7.7,9.9,2.3,2.9,5.2,5.9,8.2,2.8,3.5,4.2,6.8,4.1,7.6,3.1,7.9,8.4,5.2,7.7,5.5,9.0,8.0,2.3,0.9,6.8,0.8,1.9,1.1,6.0,2.8,1.4,8.2,3.8,7.0,9.4,4.1,3.9,7.8,1.5,9.6,9.9,5.2,5.6,5.2,3.8,7.5,8.9,7.1,1.7,2.2,3.5,6.2,7.0,3.5,6.2,6.0,6.7,2.9,6.9,0.9,3.8,1.1,3.0,8.1,7.8,3.3,3.5,9.9,8.8,10.0,2.4,2.4,6.4,9.4,7.6,3.1,9.9,3.7,1.8,3.8,9.0,6.6,6.7,7.6,1.6,7.2,9.5,3.2,5.6,9.9,1.0,6.7,8.4,6.3,8.3,3.7,5.2,9.5,8.2,2.3,6.0,7.0,7.0,8.5,3.7,9.0,7.9,9.9,1.0,9.8,0.7,4.5,4.0,7.4,9.0,6.8,2.3,3.2,3.7,3.7],
+            quiz_score: [3.2,3.7,5.3,5.7,8.7,7.6,3.9,2.4,10.0,6.5,2.5,3.0,4.1,4.2,9.9,0.3,9.2,2.7,7.1,8.3,8.6,7.2,7.6,3.8,3.7,8.7,6.8,4.9,9.6,4.4,9.3,2.8,3.1,2.7,4.4,8.9,0.6,5.0,10.0,6.3,7.1,9.1,5.1,6.6,2.2,8.7,2.5,8.0,6.0,3.2,1.5,4.9,0.3,2.6,3.2,8.9,9.0,7.8,5.1,8.2,9.2,5.2,3.8,3.8,1.6,7.7,1.8,6.9,8.0,4.3,9.5,1.8,7.2,5.3,4.9,7.1,3.4,9.4,7.2,6.0,4.7,6.3,8.5,2.0,3.6,6.2,4.6,8.1,4.7,5.3,5.0,6.6,6.7,7.3,3.0,7.7,8.9,6.3,7.4,5.4,10.0,8.6,1.6,1.7,7.9,2.9,1.7,1.5,5.9,3.6,2.6,6.5,6.0,7.2,9.6,4.6,2.7,8.2,3.0,10.0,9.0,7.9,5.9,5.1,5.2,7.8,9.7,6.2,3.2,2.1,4.2,6.7,6.2,4.1,7.6,6.2,6.1,3.6,7.0,1.5,4.3,2.7,3.6,8.4,7.7,4.1,4.9,9.3,8.6,9.3,4.0,5.6,7.5,9.7,8.9,4.9,8.1,3.9,2.8,3.0,6.6,7.0,6.8,7.6,3.3,7.0,9.7,4.2,5.9,9.2,1.2,5.3,8.3,7.7,9.1,4.5,5.8,9.9,8.3,2.3,6.9,6.2,8.1,8.0,4.2,8.2,7.9,8.5,2.9,9.1,0.4,5.1,3.1,8.5,8.6,7.6,2.7,3.3,4.1,3.1],
+            missed_classes: [6,7,6,4,4,2,7,9,2,3,7,10,10,5,3,8,5,6,3,2,3,8,5,5,8,3,8,6,1,4,2,11,5,6,4,2,9,8,1,5,5,4,8,2,11,1,5,4,5,9,11,10,9,8,7,2,3,7,5,3,3,1,10,4,8,0,8,4,5,7,3,7,5,2,8,2,5,3,3,2,7,3,1,8,7,5,5,2,8,6,9,5,6,4,9,3,5,3,4,6,2,5,7,7,5,7,6,7,5,8,7,4,5,6,1,8,5,4,6,3,3,7,7,9,5,2,0,6,5,9,5,4,5,9,6,6,5,6,6,8,6,11,7,4,5,6,4,2,2,2,8,6,5,2,3,9,3,5,7,6,3,3,5,0,9,4,2,8,6,0,6,7,3,5,4,6,6,3,3,6,8,2,2,5,5,5,6,0,7,4,6,7,4,3,3,4,9,6,6,6],
+            attendance: [2.7,4.0,8.2,5.4,4.8,5.8,1.8,6.8,8.0,6.8,6.7,4.0,3.7,4.3,7.0,3.3,4.3,5.0,4.1,9.9,8.6,9.0,7.9,6.6,2.9,9.1,6.9,6.1,8.7,5.9,6.5,7.2,6.1,5.7,4.2,8.3,2.6,6.2,7.4,6.5,7.2,8.4,3.4,8.5,2.5,4.2,6.7,3.3,2.7,6.4,5.1,5.3,3.1,5.3,5.6,8.5,5.6,8.3,7.0,10.0,7.6,5.6,3.6,8.7,4.8,7.3,5.7,8.0,6.9,8.1,5.5,5.9,7.9,6.2,6.3,7.0,5.5,8.9,6.4,9.1,5.7,8.9,5.8,4.5,7.4,2.8,9.8,5.0,7.1,5.2,6.5,8.7,5.1,7.9,6.5,8.0,5.6,8.1,6.7,7.6,7.0,5.5,3.3,3.2,7.3,5.9,6.1,6.5,5.3,6.3,6.1,7.2,2.8,6.0,10.0,3.3,2.5,8.3,6.2,7.2,3.0,5.9,5.2,5.3,4.1,6.2,4.1,8.1,4.2,5.6,5.1,5.7,4.8,5.2,7.5,3.7,6.0,6.9,3.1,4.1,3.6,4.6,7.5,10.0,8.9,5.3,7.0,10.0,4.1,7.1,4.4,5.3,6.8,9.0,8.9,6.5,8.0,5.7,2.8,2.7,6.6,5.5,7.3,4.9,3.2,3.1,6.1,6.8,6.5,7.4,4.5,6.2,9.5,4.5,7.6,7.0,4.0,8.6,9.6,3.8,7.0,5.6,5.0,8.1,2.6,0.7,7.8,10.0,4.0,8.7,3.5,2.2,6.1,9.2,7.5,7.1,1.5,7.6,6.0,5.4]
+          },
+          x_max: { study_hours: 10, quiz_score: 10, missed_classes: 12, attendance: 10, student_id: 200 }
+        },
+        visual: {
+          schema: {
+            table_name: 'student_stats (200 dòng · 5 cột phân tích + ID)',
+            columns: [
+              { name: 'student_id', type: 'INT64 · định danh', key: 'ID', icon: '🪪',
+                note: '<strong>Identifier</strong> — mã số, KHÔNG mang thông tin. r với điểm ≈ 0 (nhiễu). Loại khỏi ma trận phân tích.' },
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: '⭐', icon: '',
+                note: '<strong>Feature</strong> — <strong>r = 0.95</strong> với final_score, CAO NHẤT. Học nhiều đi cùng điểm cao (chưa chắc gây ra).' },
+              { name: 'attendance', type: 'FLOAT · /10', key: '', icon: '',
+                note: '<strong>Feature</strong> — r = 0.60, dương VỪA. Quan hệ có nhưng lỏng hơn study/quiz.' },
+              { name: 'missed_classes', type: 'INT · buổi', key: '', icon: '',
+                note: '<strong>Feature</strong> — <strong>r = −0.75</strong>, tương quan ÂM: nghỉ càng nhiều điểm càng thấp.' },
+              { name: 'quiz_score', type: 'FLOAT · /10', key: '', icon: '',
+                note: '<strong>Feature</strong> — r = 0.93, dương mạnh. Nhưng quiz & final cùng cao có thể do biến ẩn "chăm học".' },
+              { name: 'final_score', type: 'FLOAT · /10', key: 'MỤC TIÊU', icon: '🎯',
+                note: '<strong>Điểm cuối kỳ</strong> — cột ta muốn hiểu. Đọc CỘT này trong ma trận để xếp hạng feature.' }
+            ]
+          },
+          data_preview: [
+            ['20520001', '1.3', '2.7', '6', '3.2', '2.4'],
+            ['20520003', '5.4', '8.2', '6', '5.3', '6.4'],
+            ['20520005', '8.9', '4.8', '4', '8.7', '8.8'],
+            ['20520020', '9.6', '9.9', '2', '8.3', '10.0'],
+            ['20520016', '0.6', '3.3', '8', '0.3', '0.0'],
+            ['20520004', '5.1', '5.4', '4', '5.7', '8.1'],
+            ['20520009', '9.7', '8.0', '2', '10.0', '10.0'],
+            ['20520024', '2.6', '6.6', '5', '3.8', '4.7']
+          ]
+        },
+        mission: 'Dựng <code class="code">RECIPE ĐỌC SỐ</code> cho <code class="code">student_stats</code>: CHỌN 5 cột số (loại <code class="code">student_id</code>) → <code class="code">cov</code> (thô) → <code class="code">corr</code> (chuẩn hóa, đọc predictor mạnh nhất) — kho có <code class="code">mồi bẫy 🪤</code> (đưa ID vào · nhầm cov thành corr) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (đọc r âm · cov vs corr · nhân quả) + mini-game 4 ngăn ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Ma trận cho <code>r(missed_classes, final_score) = −0.75</code>. Đọc thế nào cho ĐÚNG?',
+            options: [
+              { id: 'a', text: 'Nghỉ càng nhiều thì điểm càng thấp — tương quan ÂM khá mạnh', correct: true, explanation: 'Đúng — dấu ÂM = ngược chiều (một cái tăng, cái kia giảm); |−0.75| khá lớn nên quan hệ mạnh. Nghỉ nhiều đi cùng điểm thấp.' },
+              { id: 'b', text: 'Nghỉ học không liên quan gì tới điểm', correct: false, explanation: '"Không liên quan" ứng với r ≈ 0. −0.75 là quan hệ MẠNH, chỉ là ngược chiều.' },
+              { id: 'c', text: 'Nghỉ càng nhiều điểm càng CAO', correct: false, explanation: 'Đó là đọc nhầm dấu. r ÂM nghĩa là ngược chiều: nghỉ nhiều → điểm THẤP.' },
+              { id: 'd', text: 'r âm là lỗi tính toán, phải bỏ', correct: false, explanation: 'r âm hoàn toàn hợp lệ — nó chỉ nói quan hệ ngược chiều. Không có gì sai để bỏ.' }
+            ]
+          },
+          {
+            question: 'Bạn muốn biết cột nào liên quan <code>final_score</code> MẠNH hơn: study hay attendance. Nên nhìn <strong>cov</strong> hay <strong>corr</strong>?',
+            options: [
+              { id: 'a', text: 'corr — vì nó chuẩn hóa về [−1,1], so sánh các cặp được', correct: true, explanation: 'Đúng — corr(study,final)=0.95 > corr(att,final)=0.60 nói ngay study mạnh hơn. cov phụ thuộc đơn vị nên số to/nhỏ không so trực tiếp được.' },
+              { id: 'b', text: 'cov — vì số của nó lớn hơn nên chính xác hơn', correct: false, explanation: 'Số cov lớn KHÔNG có nghĩa quan hệ mạnh hơn — nó chỉ phản ánh đơn vị/thang. Phải chuẩn hóa thành corr mới so được.' },
+              { id: 'c', text: 'Cả hai đều không so sánh được', correct: false, explanation: 'corr chính là công cụ để so sánh — đó là lý do nó tồn tại (cov chuẩn hóa về [−1,1]).' },
+              { id: 'd', text: 'Nhìn cột nào có trung bình cao hơn', correct: false, explanation: 'Trung bình nói "quanh mức nào", không nói quan hệ với final_score. Muốn xếp hạng liên hệ phải dùng corr.' }
+            ]
+          },
+          {
+            question: 'Phòng đào tạo thấy <code>r(study_hours, final) = 0.95</code> và định ra chính sách "ép mọi SV học thêm 5 giờ để điểm tăng". Nhận xét nào ĐÚNG?',
+            options: [
+              { id: 'a', text: 'Cẩn thận — r cao không chứng minh học GÂY RA điểm cao; có thể do biến ẩn (SV chăm)', correct: true, explanation: 'Chuẩn — tương quan ≠ nhân quả. Có thể "chăm học" là biến ẩn kéo cả study_hours lẫn final_score lên. Ép giờ học chưa chắc nâng điểm. Muốn chắc phải thí nghiệm can thiệp.' },
+              { id: 'b', text: 'Hợp lý — r = 0.95 đã chứng minh học nhiều làm điểm cao', correct: false, explanation: 'Đây đúng là cái bẫy của bài. r cao chỉ nói "đi cùng nhau", KHÔNG chứng minh nhân quả. Ra chính sách từ tương quan là rủi ro.' },
+              { id: 'c', text: 'Sai vì r = 0.95 quá cao, chắc chắn tính nhầm', correct: false, explanation: 'r = 0.95 hợp lệ và quan hệ có thật. Vấn đề không phải con số sai, mà là suy ra NHÂN QUẢ từ tương quan.' },
+              { id: 'd', text: 'Nên dùng student_id thay vì study_hours cho chắc', correct: false, explanation: 'student_id là mã số vô nghĩa (r ≈ 0). Nó không liên quan điểm — càng không thể dựa vào để ra chính sách.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Xếp mỗi cột theo quan hệ với final_score',
+          instruction: 'Đọc r rồi kéo mỗi cột vào đúng ngăn: <strong>🔵 THUẬN mạnh</strong> (r ≥ 0.9) · <strong>🟢 THUẬN vừa</strong> (0.4–0.7) · <strong>🔴 NGHỊCH</strong> (r âm) · <strong>⚪ VÔ NGHĨA</strong> (r ≈ 0).',
+          chips: [
+            { id: 'g-study', label: 'study_hours (r 0.95)' },
+            { id: 'g-quiz',  label: 'quiz_score (r 0.93)' },
+            { id: 'g-att',   label: 'attendance (r 0.60)' },
+            { id: 'g-miss',  label: 'missed_classes (r −0.75)' },
+            { id: 'g-id',    label: 'student_id (r ≈ 0)' }
+          ],
+          bins: [
+            { id: 'strong', label: '🔵 THUẬN mạnh', correct: 'true' },
+            { id: 'mid',    label: '🟢 THUẬN vừa',  correct: 'true' },
+            { id: 'neg',    label: '🔴 NGHỊCH',     correct: 'true' },
+            { id: 'none',   label: '⚪ VÔ NGHĨA',    correct: 'true' }
+          ],
+          solution: {
+            'g-study': 'strong',
+            'g-quiz':  'strong',
+            'g-att':   'mid',
+            'g-miss':  'neg',
+            'g-id':    'none'
+          },
+          success: 'Chuẩn — đọc r là đọc cả DẤU (thuận/nghịch) lẫn ĐỘ LỚN (mạnh/yếu). study & quiz thuận mạnh, missed nghịch, attendance thuận vừa, student_id vô nghĩa. Nhưng "mạnh" ≠ "gây ra" — đó là recipe Bước 3 sắp dựng.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — numeric_df → cov → corr. 2 mồi bẫy: đưa ID vào / nhầm cov=corr ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]]', slot: 'b1' },
+          { type: 'py', token: 'cov_matrix = numeric_df.cov()', slot: 'b2' },
+          { type: 'py', token: 'corr_matrix = numeric_df.corr()', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'numeric_df = df', slot: 't1' },
+          { type: 'py', token: 'corr_matrix = numeric_df.cov()', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l7-cols', accepts: ['py'], multi: false },
+          { id: 'l7-cov',  accepts: ['py'], multi: false },
+          { id: 'l7-corr', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'RECIPE ĐỌC SỐ — 3 TRẠM · TƯƠNG QUAN',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'student_stats · 200 dòng · 5 cột phân tích + student_id (loại)' },
+          done_note: 'corr_matrix 5×5 (đường chéo = 1): cột final_score xếp hạng study 0.95 > quiz 0.93 > missed −0.75 > attendance 0.60. student_id ĐỨNG NGOÀI. Nhớ: mạnh ≠ nhân quả. Bước 4 tính cả cov + corr bằng Pandas thật.',
+          stations: [
+            {
+              zones: ['l7-cols'],
+              icon: '🎯', label: 'TRẠM 1 — CHỌN 5 CỘT SỐ', sub: 'numeric_df, loại student_id', result_kind: 'stat_select',
+              stat_select: {
+                pick: [
+                  { col: 'study_hours' }, { col: 'attendance' }, { col: 'missed_classes' },
+                  { col: 'quiz_score' }, { col: 'final_score' }
+                ],
+                exclude: [
+                  { col: 'student_id', icon: '🪪', why: 'ĐỊNH DANH — r với điểm chỉ là nhiễu vô nghĩa' }
+                ]
+              },
+              narration: '<code>numeric_df</code> giữ 5 cột PHÂN TÍCH (4 feature + final_score), bỏ <code>student_id</code>. Mã số dù cho ra một con số r nào đó cũng chỉ là nhiễu — đưa ID vào ma trận là mời gọi kết luận sai.'
+            },
+            {
+              zones: ['l7-cov'],
+              icon: '📐', label: 'TRẠM 2 — HIỆP PHƯƠNG SAI', sub: 'cov() — thô, phụ thuộc đơn vị', result_kind: 'stat_matrix',
+              stat: {
+                mode: 'cov',
+                cols: ['study', 'att', 'miss', 'quiz', 'final'],
+                grid: [
+                  [8.2, 2.9, -5.5, 6.8, 7.3],
+                  [2.9, 4.0, -2.0, 2.4, 3.2],
+                  [-5.5, -2.0, 6.2, -4.5, -5.0],
+                  [6.8, 2.4, -4.5, 6.5, 6.4],
+                  [7.3, 3.2, -5.0, 6.4, 7.2]
+                ],
+                highlight_col: 4,
+                note: '<code>cov()</code> cho biết CHIỀU (dương = cùng lên): cov(study,final)=7.3, cov(missed,final)=−5.0. Nhưng 7.3 "to" hay "nhỏ"? Phụ thuộc đơn vị nên KHÔNG so trực tiếp cặp nào mạnh hơn — cần chuẩn hóa.'
+              },
+              narration: '<code>numeric_df.cov()</code> ra ma trận 5×5 hiệp phương sai. Dấu đọc được (dương/âm), nhưng độ lớn phụ thuộc thang từng cột — đó là lý do trạm sau chuẩn hóa thành tương quan.'
+            },
+            {
+              zones: ['l7-corr'],
+              icon: '🔗', label: 'TRẠM 3 — TƯƠNG QUAN', sub: 'corr() — chuẩn hóa [−1,1], đọc được', result_kind: 'stat_matrix',
+              stat: {
+                mode: 'corr',
+                cols: ['study', 'att', 'miss', 'quiz', 'final'],
+                grid: [
+                  [1.00, 0.51, -0.77, 0.93, 0.95],
+                  [0.51, 1.00, -0.40, 0.47, 0.60],
+                  [-0.77, -0.40, 1.00, -0.72, -0.75],
+                  [0.93, 0.47, -0.72, 1.00, 0.93],
+                  [0.95, 0.60, -0.75, 0.93, 1.00]
+                ],
+                highlight_col: 4,
+                note: 'Chuẩn hóa xong: mọi r ∈ [−1,1], đường chéo = 1. Đọc CỘT <b>final</b> (tô vàng): study <b>0.95</b> > quiz 0.93 > missed <b>−0.75</b> > att 0.60. Giờ mới xếp hạng được. ⚠ Nhưng mạnh ≠ nhân quả.'
+              },
+              narration: '<code>numeric_df.corr()</code> = cov chia cho tích độ lệch chuẩn → gói về [−1,1]. Cột final_score cho thứ hạng feature liên quan điểm. student_id đã đứng ngoài nên không lọt vào bảng — không tạo r nhiễu đánh lừa.'
+            }
+          ]
+        },
+        expected_sql: 'numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]] cov_matrix = numeric_df.cov() corr_matrix = numeric_df.corr()',
+        expected_zones: {
+          'l7-cols': 'numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]]',
+          'l7-cov':  'cov_matrix = numeric_df.cov()',
+          'l7-corr': 'corr_matrix = numeric_df.corr()'
+        },
+        reveal_hints: {
+          'l7-cols': 'Trạm 1: 5 cột phân tích, KHÔNG student_id — <strong>numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]]</strong>.',
+          'l7-cov':  'Trạm 2: hiệp phương sai — <strong>cov_matrix = numeric_df.cov()</strong>.',
+          'l7-corr': 'Trạm 3: tương quan chuẩn hóa — <strong>corr_matrix = numeric_df.corr()</strong> (KHÔNG phải .cov()).'
+        }
+      },
+
+      drag_map: {
+        brand: 'RECIPE ĐỌC SỐ — 3 TRẠM · TƯƠNG QUAN',
+        table_sub: 'student_stats · 200 dòng · 5 cột phân tích + ID',
+        idle_sub: '200 dòng · ▶ chạy để đọc mean/cov/corr',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'student_stats',
+          columns: ['student_id', 'study_hours', 'attendance', 'missed_classes', 'quiz_score', 'final_score'],
+          dataRows: [
+            ['20520001', '1.3', '2.7', '6', '3.2', '2.4'],
+            ['20520003', '5.4', '8.2', '6', '5.3', '6.4'],
+            ['20520005', '8.9', '4.8', '4', '8.7', '8.8'],
+            ['20520020', '9.6', '9.9', '2', '8.3', '10.0'],
+            ['20520016', '0.6', '3.3', '8', '0.3', '0.0'],
+            ['20520004', '5.1', '5.4', '4', '5.7', '8.1'],
+            ['20520009', '9.7', '8.0', '2', '10.0', '10.0'],
+            ['20520024', '2.6', '6.6', '5', '3.8', '4.7']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: tính mean/cov/corr bằng Pandas thật. Grader: grade_lesson7
+         (numeric_df 5 cột + cov 5×5 + corr 5×5 khớp; Risk đưa ID vào; Behavior xáo dòng bất biến). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp recipe bằng tay. Giờ viết <strong>Pandas thật</strong>: nạp bảng, tạo <code>numeric_df</code> (5 cột phân tích, bỏ ID), tính <code>cov_matrix</code> và <code>corr_matrix</code>, rồi in tương quan với <code>final_score</code>. Hệ thống chấm sẽ <strong>xáo thứ tự 200 dòng</strong> — ma trận tương quan phải KHÔNG đổi (thống kê không phụ thuộc thứ tự mẫu).',
+        context: {
+          scenario: 'Dữ liệu có thể được nạp theo thứ tự khác nhau mỗi lần. Hidden test xáo trộn 200 dòng — corr viết đúng (tính từ df) thì bất biến; nếu chép tay số hoặc phụ thuộc thứ tự thì vỡ. Và nhớ: <strong>KHÔNG</strong> đưa <code>student_id</code> vào numeric_df — mã số "tương quan" với điểm chỉ là nhiễu, trượt tầng Risk.',
+          real_world: 'Cạm bẫy kinh điển: thấy 2 biến tương quan cao rồi kết luận cái này GÂY RA cái kia để ra quyết định (ép giờ học, cắt ngân sách…). Rất nhiều "phát hiện" kiểu này sụp đổ vì có biến ẩn hoặc đảo chiều nhân quả. Tương quan chỉ ra CHỖ đáng điều tra; khẳng định nhân quả cần thí nghiệm can thiệp (A/B test, RCT) — sẽ gặp ở khóa sau.',
+          steps: [
+            'Import hàm nạp dữ liệu; nạp <code>df</code>.',
+            'Tạo <code>numeric_df</code> = đúng 5 cột số phân tích (bỏ <code>student_id</code>).',
+            'Tính <code>cov_matrix</code> và <code>corr_matrix</code> từ <code>numeric_df</code>.',
+            'In tương quan của các cột với <code>final_score</code> (xếp hạng) · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Gõ <code>print(df.describe())</code> hoặc <code>print(df.corr(numeric_only=True)["final_score"])</code> rồi <strong>Run</strong> để xem trung bình & tương quan trước.',
+          expected: 'Console in tương quan với final_score: study_hours ≈ 0.95, quiz ≈ 0.93, missed ≈ −0.75, att ≈ 0.60. Đủ 4 tầng xanh. Thử thêm student_id vào numeric_df? Code VẪN chạy — tầng Risk sẽ giải thích vì sao sai.'
+        },
+        hints: [
+          { level: 1, text: 'Đúng recipe Bước 3, thêm import + in xếp hạng: chọn 5 cột → cov() → corr() → in cột final_score.' },
+          { level: 2, text: 'Đầu bài: <code>from ml_lab import load_statistics_dataset</code>, <code>df = load_statistics_dataset()</code>.' },
+          { level: 3, text: 'Chọn cột: <code>numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]]</code> (KHÔNG student_id). Rồi <code>cov_matrix = numeric_df.cov()</code> và <code>corr_matrix = numeric_df.corr()</code>.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_statistics_dataset<br>df = load_statistics_dataset()<br>numeric_df = df[["study_hours", "attendance", "missed_classes", "quiz_score", "final_score"]]<br>cov_matrix = numeric_df.cov()<br>corr_matrix = numeric_df.corr()<br>print(corr_matrix["final_score"].sort_values(ascending=False))</code>' }
+        ],
+        grader_fn: 'grade_lesson7',
+        success_message: 'Chuẩn — numeric_df 5 cột, cov 5×5, corr 5×5 khớp tham chiếu (đường chéo = 1). study_hours (0.95) & quiz (0.93) liên quan điểm nhất, missed nghịch (−0.75), student_id đứng ngoài. Và bạn đã ghi nhớ: r cao KHÔNG chứng minh nhân quả. Bài 8: vẽ đường dự đoán đầu tiên — Linear Regression.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l8',  index: 8,  title: 'Vẽ đường dự đoán đầu tiên',                    module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
     { id: 'c1_l9',  index: 9,  title: 'Đo lỗi model bằng MSE',                        module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
     { id: 'c1_l10', index: 10, title: 'Gradient Descent — model tự chỉnh đường',      module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },

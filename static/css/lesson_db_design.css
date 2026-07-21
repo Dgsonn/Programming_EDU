@@ -12109,3 +12109,42 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-sc-cell { display: inline-flex; flex-direction: column; align-items: center; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.18); min-width: 40px; }
 .mlf-sc-cell i { font-size: 9px; color: var(--text-500); font-style: normal; }
 .mlf-sc-cell b { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-100); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 11 (2026-07-21) — BÀI 7 "Đọc dữ liệu bằng thống kê cơ bản"
+ * 1) ỐNG KÍNH TƯƠNG QUAN (hero: thanh |r| + scatter 200 điểm + đường xu hướng)
+ * 2) MAP 3 trạm: stat_select · stat_matrix (cov/corr heatmap 5×5)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens. 2 cột: thanh |r| trái · scatter phải */
+.clens-body { display: grid; grid-template-columns: minmax(230px, 0.85fr) minmax(300px, 1.15fr); gap: 16px; align-items: start; }
+.clens-bars { display: flex; flex-direction: column; gap: 7px; }
+.clens-bars-cap { font-size: 11px; color: var(--text-400); margin-bottom: 3px; }
+.clens-bars-cap b { color: var(--text-200); font-family: 'JetBrains Mono', monospace; }
+.clens-bar-btn { display: grid; grid-template-columns: 104px 1fr 42px; align-items: center; gap: 8px; background: none; border: 1px solid transparent; border-radius: 8px; padding: 5px 7px; cursor: pointer; text-align: left; transition: background var(--anim-fast), border-color var(--anim-fast); }
+.clens-bar-btn:hover { background: rgba(148, 163, 184, 0.06); border-color: rgba(148, 163, 184, 0.22); }
+.clens-bar-btn.is-lit { background: rgba(148, 163, 184, 0.1); border-color: rgba(148, 163, 184, 0.42); }
+.clens-bar-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-200); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clens-bar-track { height: 12px; background: rgba(148, 163, 184, 0.1); border-radius: 6px; overflow: hidden; }
+.clens-bar-fill { display: block; height: 100%; border-radius: 6px; transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .clens-bar-fill { transition: none; } }
+.clens-bar-r { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; text-align: right; }
+.clens-plot { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.5); padding: 10px 12px; }
+.clens-svg { width: 100%; height: auto; display: block; }
+.clens-scap { margin-top: 7px; border-top: 1px dashed rgba(148, 163, 184, 0.16); padding-top: 7px; }
+.clens-rbadge { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 800; }
+.clens-snote { display: block; font-size: 12px; color: var(--text-300); line-height: 1.55; margin-top: 3px; }
+.clens-snote b { color: var(--text-50); }
+.clens-bar-btn:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+@media (max-width: 760px) { .clens-body { grid-template-columns: 1fr; } }
+
+/* 2) MAP — ma trận cov/corr heatmap 5×5 */
+.mlf-mat-scene { display: flex; flex-direction: column; gap: 10px; }
+.mlf-mat-wrap { overflow-x: auto; }
+.mlf-mat { border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; margin: 0 auto; }
+.mlf-mat th { color: var(--text-400); font-weight: 700; padding: 4px 7px; font-size: 10.5px; white-space: nowrap; }
+.mlf-mat tbody th { text-align: right; color: var(--text-300); }
+.mlf-mat-cell { padding: 5px 9px; text-align: center; color: var(--text-100); border: 1px solid rgba(148, 163, 184, 0.08); min-width: 42px; }
+.mlf-mat-cell.mlf-mat-diag { color: var(--text-500); }
+.mlf-mat th.mlf-mat-hl { color: #FCD34D; }
+.mlf-mat-cell.mlf-mat-hl { outline: 1.5px solid rgba(251, 191, 36, 0.5); outline-offset: -1.5px; font-weight: 700; }

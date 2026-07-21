@@ -311,3 +311,29 @@ Hero equalizer raw (activity σ556 cao vống, riddle ẩn) → bấm thanh hi�
 - Màu 3 feature dùng chung hero+map: --scf-0 sky / --scf-1 green / --scf-2 amber (activity = màu "loud").
 
 ### Versions: css v19 · content v15 · shell v22 · flowmap v7.
+
+---
+
+## ĐỢT 11 (2026-07-21) — BÀI 7 "Đọc dữ liệu bằng thống kê cơ bản" (spec C1-L7, M2)
+
+### Spec → shell (user chốt 4 quyết định)
+- **Hero = ỐNG KÍNH TƯƠNG QUAN + scatter** (`renderCorrLens` mới): 5 thanh |r| với final_score (study +0.95 · quiz +0.93 · missed −0.75 · attendance +0.60 · student_id +0.03), tô màu theo dấu (dương xanh / âm đỏ / ≈0 xám); bấm 1 thanh → **scatter 200 điểm THẬT** (SVG, chia sẻ trục y=final_score) + **đường xu hướng least-squares** tính client-side + số r. student_id = phản ví dụ (mây tản, đường gần phẳng). Câu đố chốt tương quan≠nhân quả.
+- **Dạy sâu "tương quan ≠ nhân quả"** (user chốt): concept card + glossary "TƯƠNG QUAN ≠ NHÂN QUẢ" (ví dụ kem↔đuối nước do mùa hè) + MCQ #3 (phòng đào tạo ép giờ học từ r=0.95 — sai vì biến ẩn) + done-banner hero nhắc lại ví dụ đời + biến ẩn. Đây là thông điệp Risk-pass của grade_lesson7.
+- **Ngữ cảnh phòng đào tạo hỏi "yếu tố nào liên quan điểm cuối kỳ?"** (user chốt): Ticket #07, phân tích tương quan 200 SV để trả lời rồi CẢNH BÁO đừng ra chính sách nhân quả. data_preview neo SV thật (20520020 bám trend cao, 20520016 thấp, 20520004 lệch trên).
+- **Step 3 = map 3 TRẠM khớp grader** (user chốt): CHỌN 5 cột số (`stat_select` — pick 5 + exclude student_id) → COV (`stat_matrix` mode cov: bảng 5×5 số trần, phụ thuộc đơn vị) → CORR (`stat_matrix` mode corr: **heatmap 5×5 tô màu [−1,1]**, cột final_score tô vàng, đọc study 0.95>quiz 0.93>missed −0.75>att 0.60). Bẫy: numeric_df=df (đưa ID vào) · corr_matrix=numeric_df.cov() (nhầm cov thành corr).
+
+### Engine + grader (có sẵn, khớp spec)
+- `load_statistics_dataset` seed 1701, 200 dòng: study/attendance/missed_classes/quiz/final_score tương quan DỰNG CÓ CHỦ ĐÍCH; student_id nhiễu (r≈0.03); corr bất biến khi xáo dòng (shuffle_seed). Số 100% từ engine: r 0.95/0.93/−0.75/0.60, cov(study,final)=7.3, mean/std final 6.15/2.67.
+- `grade_lesson7` 4 tầng: numeric_df 5 cột (loại ID) + cov_matrix 5×5 + corr_matrix 5×5 khớp ref.corr() (đường chéo=1); chặn `_has_big_literal` (không chép tay); Risk bắt student_id trong bảng; Behavior xáo dòng (seed 99) corr bất biến; Risk pass = tương quan≠nhân quả. Test server-side: CORRECT 4/4; TRAP_ID risk_ok False "mã số nhiễu".
+
+### Verify — verify_b7.js: 31/31 pass · 0 pageerror (2 lượt sạch)
+Hero 5 thanh + scatter 200 circle (auto vẽ study), bấm missed → r−0.75 + riddle mở, sai "đã chứng minh" → feedback biến ẩn, đúng "ĐI CÙNG" → done kem/đuối nước; glossary 6; explorer 6 cột. 3 MCQ (1/3 đọc r âm) + minigame 4 ngăn THUẬN mạnh/vừa/NGHỊCH/VÔ NGHĨA. Map 3 trạm: stat_select (5+1) → cov 5×5 → corr heatmap 5×5 (final vàng, đọc 0.95). Bẫy numeric_df=df → chấm bắt. Step 4: trap ID → Risk "nhiễu vô nghĩa"; bản đúng 4/4 + nhân quả + modal. Regression B1-B6 + Basic + NC sạch. Multi-viewport 1920/1536/1024/768: 5 bars + 200 circles, 0 h-scroll, map fit.
+
+### Component mới tái dùng được
+- `renderCorrLens` (hero): thanh |r| + scatter SVG 200 điểm + trend line least-squares client-side; scatter chia sẻ trục y để nhúng gọn (5 mảng x + 1 mảng y = ~3.8KB thay vì 200 cặp × 5).
+- `stat_select` (chọn cột phân tích, loại ID) + `stat_matrix` (heatmap 5×5, mode 'cov' số trần / 'corr' tô màu [−1,1] rgba theo |r|, cột highlight vàng) — ml_flow_map result_kind.
+
+### Fix trong đợt
+- Không có lỗi hydrate/pill lần này: zone 3 (corr) là câu GÁN (không phải print) nên qua bộ lọc; pill dài `numeric_df = df[[...]]` tự wrap ở ≤900px nhờ rule ĐỢT 10. Scatter 200 điểm mẫu-đầy-đủ (không lấy mẫu 50 — mẫu 50 từng lệch r attendance 0.72 vs full 0.60) để r khớp mọi nơi.
+
+### Versions: css v20 · content v16 · shell v23 · flowmap v8.

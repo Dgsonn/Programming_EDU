@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4371,6 +4371,132 @@
     });
   }
 
+  /* ═══ renderCorrLens — ML Bài 7 (user chốt 2026-07-21): ỐNG KÍNH TƯƠNG QUAN.
+     cfg = { title, intro, target, series:[{name,r,note}], y:[..], x:{name:[..]}, x_max:{name},
+             riddle:{prompt,options,answer,wrong,done} }
+     Thanh |r| bấm → scatter 200 điểm THẬT + đường xu hướng (least squares); student_id = phản ví dụ;
+     câu đố chốt "tương quan ≠ nhân quả". ═══ */
+  function renderCorrLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const series = cfg.series || [];
+    const y = cfg.y || [];
+    const xmap = cfg.x || {};
+    const xmaxmap = cfg.x_max || {};
+    const rid = cfg.riddle || {};
+    const target = cfg.target || 'final_score';
+    const maxAbsR = Math.max.apply(null, series.map(s => Math.abs(s.r || 0))) || 1;
+    let interacted = false;
+
+    function colorOf(r) {
+      if (Math.abs(r) < 0.15) return '#94A3B8';       // gần 0 = xám
+      return r < 0 ? '#F87171' : '#38BDF8';           // âm đỏ · dương xanh
+    }
+    function xarr(name) {
+      if (xmap[name] && xmap[name].length) return xmap[name];
+      return y.map(function (_, i) { return i + 1; });  // student_id: 1..n
+    }
+
+    function scatterSVG(idx) {
+      const s = series[idx];
+      if (!s) return '';
+      const xs = xarr(s.name);
+      const n = Math.min(xs.length, y.length);
+      const xmax = xmaxmap[s.name] || Math.max.apply(null, xs.slice(0, n)) || 1;
+      const ymax = 10;
+      let sx = 0, sy = 0;
+      for (let i = 0; i < n; i++) { sx += xs[i]; sy += y[i]; }
+      const mx = sx / n, my = sy / n;
+      let sxy = 0, sxx = 0;
+      for (let i = 0; i < n; i++) { sxy += (xs[i] - mx) * (y[i] - my); sxx += (xs[i] - mx) * (xs[i] - mx); }
+      const slope = sxx ? sxy / sxx : 0, inter = my - slope * mx;
+      const W = 440, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+      const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)).toFixed(1); };
+      const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)).toFixed(1); };
+      const col = colorOf(s.r);
+      let grid = '';
+      [0, 5, 10].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + py(g) + '" x2="' + (W - padR) + '" y2="' + py(g) + '" stroke="rgba(148,163,184,0.14)" stroke-width="1"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (parseFloat(py(g)) + 3) + '" text-anchor="end" font-size="9" fill="#64748B">' + g + '</text>';
+      });
+      let pts = '';
+      for (let i = 0; i < n; i++) pts += '<circle cx="' + px(xs[i]) + '" cy="' + py(y[i]) + '" r="2.6" fill="' + col + '" opacity="0.5"/>';
+      const trend = '<line x1="' + px(0) + '" y1="' + py(inter) + '" x2="' + px(xmax) + '" y2="' + py(slope * xmax + inter) + '" stroke="' + col + '" stroke-width="2.6" opacity="0.95" stroke-linecap="round"/>';
+      const rTxt = (s.r > 0 ? '+' : '') + s.r;
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="clens-svg" role="img" aria-label="scatter ' + escapeHtml(s.name) + ' vs ' + target + '">' +
+        grid + trend + pts +
+        '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">' + escapeHtml(s.name) + ' (trục X) →</text>' +
+        '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">' + target + '</text>' +
+        '</svg>' +
+        '<div class="clens-scap"><span class="clens-rbadge" style="color:' + col + '">r = ' + rTxt + '</span>' +
+        '<span class="clens-snote">' + (s.note || '') + '</span></div>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens clens" aria-label="Ống kính tương quan — cột nào liên quan điểm nhất">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH TƯƠNG QUAN') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="clens-body">' +
+          '<div class="clens-bars">' +
+            '<div class="clens-bars-cap">|r| với <b>' + target + '</b> — bấm để xem scatter</div>' +
+            series.map(function (s, i) {
+              const w = Math.max(3, Math.round((Math.abs(s.r) / maxAbsR) * 100));
+              const col = colorOf(s.r);
+              return '<button type="button" class="clens-bar-btn" data-cl-bar="' + i + '">' +
+                '<span class="clens-bar-name">' + escapeHtml(s.name) + '</span>' +
+                '<span class="clens-bar-track"><span class="clens-bar-fill" data-cl-fill="' + i + '" style="width:' + w + '%;background:' + col + '"></span></span>' +
+                '<span class="clens-bar-r" style="color:' + col + '">' + (s.r > 0 ? '+' : '') + s.r + '</span>' +
+              '</button>';
+            }).join('') +
+          '</div>' +
+          '<div class="clens-plot" data-cl-plot></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-cl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-cl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-cl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-cl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-cl-plot]');
+    const riddleEl = mount.querySelector('[data-cl-riddle]');
+    function select(idx) {
+      mount.querySelectorAll('.clens-bar-btn').forEach(function (b) { b.classList.remove('is-lit'); });
+      const btn = mount.querySelector('[data-cl-bar="' + idx + '"]');
+      if (btn) btn.classList.add('is-lit');
+      if (plot) plot.innerHTML = scatterSVG(idx);
+    }
+    // auto vẽ scatter đầu tiên (study_hours) cho hero không trống; riddle chờ user bấm
+    select(0);
+    mount.querySelectorAll('[data-cl-bar]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        select(parseInt(btn.getAttribute('data-cl-bar'), 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-cl-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-cl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-cl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nhớ: r cao chỉ nói "đi cùng nhau".');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4708,6 +4834,13 @@
         const heroMountSl = document.getElementById('lesson-hero');
         renderScaleLens(heroMountSl || pvMount, s1.scale_lens);
         if (heroMountSl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.corr_lens) {
+        // ML Bài 7 (user chốt 2026-07-21): ỐNG KÍNH TƯƠNG QUAN — thanh |r| + bấm → scatter
+        // 200 điểm thật + đường xu hướng; câu đố chốt "tương quan ≠ nhân quả" (spec C1-L7). Vào hero.
+        const heroMountCl = document.getElementById('lesson-hero');
+        renderCorrLens(heroMountCl || pvMount, s1.corr_lens);
+        if (heroMountCl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
