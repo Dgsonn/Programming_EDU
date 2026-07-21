@@ -227,3 +227,31 @@ Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; m
 ### Gotcha
 - `hidden` attribute LUÔN thua `display:flex/grid/block` set trực tiếp — mọi element ẩn-mặc-định phải kèm `[hidden]{display:none}` nếu có rule display. (Chỉ `.dlens-reveal` dính; `.dlens-riddle`/`.tlens-done` dùng display block mặc định nên `hidden` ăn.)
 - Bài có 7 zone là ngưỡng chật nhất 4 bài — `overflow-y:auto` trên `.course-ml .step3-editor` là lưới an toàn; đo `edScroll>edClient` ~34px nhưng grid-row cao hơn nên hiển thị đủ (không cắt).
+
+---
+
+## ĐỢT 8 (2026-07-20) — AUDIT TOÀN DIỆN 4 bài + vá 5 lỗi (buttons/UI/scaling/design/nội dung/a11y)
+
+### Phương pháp
+Đi tự động 4 step × 4 bài ở 1366×768 + 1920×1080 (buttons, hero fit, map fit, step-4 IDE, footer nav, hearts) + tự chơi minigame end-to-end; rồi audit MỞ RỘNG (user chốt): a11y (icon-label, focus ring, contrast WCAG, tab), viewport tablet/nhỏ (1024/820/768), reduced-motion + hover.
+
+### Sạch (xác nhận)
+0 pageerror mọi viewport; mọi button hoạt động; footer Quay lại/Tiếp theo nhất quán 4 bài; 4 hero fit không clip; minigame kéo-thả đúng; step-4 IDE 3 cột gọn; icon-only buttons đều có title/aria; focus ring hiện (outline 2px + cyan glow); số liệu giảng dạy khớp engine.
+
+### 5 lỗi vá (user chốt hướng)
+1. **Bài 4 kho khối bị cắt ở màn cao** (dense chỉ nén ≤840px → @1920 7 zone full-size tràn 772/725, hàng cuối kho bị solution.py che). Fix: base 7-zone (`:has(.drop-line:nth-child(7))`) nén nhẹ 46px MỌI màn + tier 841-1040 nén 32px (900px từng tràn 640/545) + ≤840/≤800 nén tiếp. Kết quả: 1080→725/725, 900→545/545, 768→432/398 (overflow-y:auto absorbed, hiện đủ).
+2. **Bài 4 MCQ câu 2 dùng cột `age` giả định** (không có trong student_profile). Đổi sang cột THẬT: giả sử LÀM TRÒN `study_hours` (6.5→7) — vẫn dạy "số nguyên chưa chắc là đếm / phép đo làm tròn vẫn continuous" nhưng bám dataset; đồng bộ concept card.
+3. **Confetti nổ dù prefers-reduced-motion** (celebrate() chưa gate, khác triggerSparkleRain). Fix: early-return khi matchMedia reduce → xác nhận screenshot hết confetti.
+4. **Scroll ngang @1024** (CHỈ khóa ML — `.ml-runtime-pill` 227px đẩy header-right 1178>1024; DB không dính vì không có pill). Fix: @max-width 1180px ẩn nhãn pill, giữ chấm trạng thái + title → hết scroll ngang mọi step @1024.
+5. **Tương phản chữ phụ <4.5 AA**: `.pgv-sub` 3.5:1 + `.ml-gloss-ex` 3.9:1 (text-500 #64748B) → nâng text-400 (#94A3B8 ~6.7:1), bold đẩy text-300. (`.te-col-type` "1:1" là false-positive của thuật toán đo trên nền 8%-alpha cùng hue — render thật ~6:1.)
+
+### Verify
+- 4 suite: **B4 30 · B1 32 · B2 31 · B3 32 — 0 pageerror**.
+- Re-audit mở rộng: @1024 hết scroll ngang mọi step (Bài 1+4); contrast pgv-sub/gloss-ex hết cờ; reduced-motion hết confetti (screenshot).
+- B4 fit 3 chiều cao: 1080/900 khít tuyệt đối, 768 absorbed.
+- Versions: css v14 · content v11 · shell v20.
+
+### Gotcha
+- `hidden` thua `display` — đã ghi (đợt 7).
+- Nén dense theo chiều cao phải có tier cho MỌI dải (≤800/≤840/841-1040/>1040) khi bài ở ngưỡng zone chật nhất (7 zone) — thiếu 1 dải là tràn ở đúng dải đó (900px từng lọt lưới).
+- Pill runtime ML là phần tử DUY NHẤT khóa ML thêm vào header → thủ phạm scroll ngang màn hẹp; khóa DB sạch.

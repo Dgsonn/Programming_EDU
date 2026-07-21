@@ -2074,6 +2074,9 @@
   /* ── Duolingo-style celebration (confetti) ────────────────────── */
   function celebrate() {
     if (typeof window.confetti !== 'function') return;
+    /* A11Y (audit 2026-07-20): tôn trọng prefers-reduced-motion — confetti từng vẫn nổ
+       khi user tắt hiệu ứng (triggerSparkleRain đã gate, celebrate thì chưa). */
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     // C3: Perfect score (hearts === 3 = no hearts lost) → rainbow palette
     var isPerfect = state && state.hearts === 3;
     var palette = isPerfect

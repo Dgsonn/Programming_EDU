@@ -1551,7 +1551,7 @@ window.LESSON_CONTENT['ml'] = {
           {
             icon: 'fa-ruler-horizontal',
             title: 'Đo liên tục vs Đếm rời rạc',
-            body: '<code>study_hours</code> = 6.5 nghĩa là 6 giờ 30 phút — ĐO được, mọi giá trị trung gian hợp lệ. <code>missed_classes</code> = 3 buổi — ĐẾM được, không tồn tại 2.5 buổi. Cả hai đều là feature số dùng thẳng, nhưng khác bản chất — và một phép đo bị LÀM TRÒN khi lưu (tuổi 19, 20…) vẫn là liên tục.'
+            body: '<code>study_hours</code> = 6.5 nghĩa là 6 giờ 30 phút — ĐO được, mọi giá trị trung gian hợp lệ. <code>missed_classes</code> = 3 buổi — ĐẾM được, không tồn tại 2.5 buổi. Cả hai đều là feature số dùng thẳng, nhưng khác bản chất — và một phép đo bị LÀM TRÒN khi lưu (vd study_hours ghi 7 thay vì 6.5) vẫn là liên tục.'
           },
           {
             icon: 'fa-tags',
@@ -1842,12 +1842,12 @@ window.LESSON_CONTENT['ml'] = {
             ]
           },
           {
-            question: 'Cột <code>age</code> (tuổi) lưu int64 với các giá trị 19, 20, 21… Theo NGHĨA, tuổi là kiểu gì?',
+            question: 'Giả sử phòng đào tạo LÀM TRÒN <code>study_hours</code> thành số nguyên (6.5 → 7, lưu int64). Sau khi làm tròn, theo NGHĨA nó là kiểu gì?',
             options: [
-              { id: 'a', text: 'ĐO liên tục — bị LÀM TRÒN khi lưu; 19.5 tuổi vẫn có nghĩa', correct: true, explanation: 'Đúng — tuổi là phép đo thời gian liên tục, chỉ bị làm tròn lúc ghi. Một phép đo làm tròn vẫn là continuous — dấu chấm thập phân không phải tiêu chí duy nhất.' },
-              { id: 'b', text: 'ĐẾM rời rạc — vì toàn số nguyên', correct: false, explanation: 'Nhìn kỹ nghĩa: 19.5 tuổi tồn tại thật (19 tuổi rưỡi) — tuổi ĐO được chứ không phải ĐẾM từng đơn vị tách rời như buổi vắng.' },
-              { id: 'c', text: 'Nhị phân — vì có thể chia thành trên/dưới 20', correct: false, explanation: 'Chia nhóm là việc BẠN làm sau này (feature engineering) — bản thân cột tuổi là một phép đo liên tục.' },
-              { id: 'd', text: 'Định danh — mỗi người một tuổi riêng', correct: false, explanation: 'Nhiều người trùng tuổi và trung bình tuổi CÓ nghĩa — khác hẳn mã định danh (không lặp, trung bình vô nghĩa).' }
+              { id: 'a', text: 'Vẫn ĐO liên tục — chỉ bị làm tròn lúc lưu; 6.5 giờ vẫn tồn tại thật', correct: true, explanation: 'Đúng — study_hours là phép ĐO thời gian, bản chất liên tục. Làm tròn khi ghi không đổi bản chất: dấu chấm thập phân không phải tiêu chí duy nhất — một phép đo làm tròn vẫn là continuous.' },
+              { id: 'b', text: 'Thành ĐẾM rời rạc — vì giờ đã là số nguyên', correct: false, explanation: 'Cái bẫy "int = đếm": số nguyên chưa chắc là đếm. 6.5 giờ (6 giờ 30 phút) tồn tại thật — study_hours ĐO được, khác hẳn missed_classes ĐẾM từng buổi tách rời.' },
+              { id: 'c', text: 'Thành nhị phân — vì có thể chia trên/dưới 5 giờ', correct: false, explanation: 'Chia nhóm là việc BẠN làm sau này (feature engineering) — bản thân cột giờ học vẫn là một phép đo liên tục.' },
+              { id: 'd', text: 'Thành định danh — mỗi người một số giờ riêng', correct: false, explanation: 'Nhiều người trùng số giờ và trung bình số giờ CÓ nghĩa — khác hẳn mã định danh (không lặp, trung bình vô nghĩa).' }
             ]
           },
           /* Câu 3 — ôn dải ĐỊNH NGHĨA (chuẩn đợt 6) */
