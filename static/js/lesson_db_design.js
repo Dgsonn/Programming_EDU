@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4497,6 +4497,134 @@
     });
   }
 
+  /* ═══ renderLineLens — ML Bài 8 (user chốt 2026-07-21): ỐNG KÍNH ĐƯỜNG.
+     cfg = { title,intro, x:[..],y:[..], x_label,y_label, x_max,y_max,
+             w0,b0, w_min,w_max,w_step, b_min,b_max,b_step, best:{w,b},
+             riddle:{prompt,options,answer,wrong,done} }
+     Kéo 2 thanh w,b → đường ŷ=w·x+b sống trên scatter + đoạn lệch residual + TỔNG LỖI (SSE) live;
+     nút "đường khớp nhất" snap best-fit; câu đố dự đoán. ═══ */
+  function renderLineLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const xs = cfg.x || [], ys = cfg.y || [];
+    const n = Math.min(xs.length, ys.length);
+    const rid = cfg.riddle || {};
+    const xmax = cfg.x_max || (Math.max.apply(null, xs) || 10);
+    const ymax = cfg.y_max || (Math.max.apply(null, ys) || 100);
+    let w = cfg.w0 != null ? cfg.w0 : 5, b = cfg.b0 != null ? cfg.b0 : 0;
+    let interacted = false;
+    const W = 440, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+    const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)); };
+    const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)); };
+
+    function sse() { let s = 0; for (let i = 0; i < n; i++) { const e = w * xs[i] + b - ys[i]; s += e * e; } return s; }
+    function lineSeg() {
+      const cands = [];
+      [0, xmax].forEach(function (xe) { const ye = w * xe + b; if (ye >= -0.01 && ye <= ymax + 0.01) cands.push([xe, ye]); });
+      if (Math.abs(w) > 1e-9) [0, ymax].forEach(function (ye) { const xe = (ye - b) / w; if (xe >= -0.01 && xe <= xmax + 0.01) cands.push([xe, ye]); });
+      if (cands.length < 2) return null;
+      cands.sort(function (p, q) { return p[0] - q[0]; });
+      return [cands[0], cands[cands.length - 1]];
+    }
+    function svg() {
+      let grid = '';
+      [0, ymax / 2, ymax].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + py(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + py(g).toFixed(1) + '" stroke="rgba(148,163,184,0.14)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (py(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + Math.round(g) + '</text>';
+      });
+      // residual segments (điểm thật → đường)
+      let res = '';
+      for (let i = 0; i < n; i++) {
+        const yh = w * xs[i] + b;
+        res += '<line x1="' + px(xs[i]).toFixed(1) + '" y1="' + py(ys[i]).toFixed(1) + '" x2="' + px(xs[i]).toFixed(1) + '" y2="' + py(yh).toFixed(1) + '" stroke="#FB923C" stroke-width="1.4" opacity="0.6"/>';
+      }
+      // đường ŷ
+      const seg = lineSeg();
+      let line = '';
+      if (seg) line = '<line x1="' + px(seg[0][0]).toFixed(1) + '" y1="' + py(seg[0][1]).toFixed(1) + '" x2="' + px(seg[1][0]).toFixed(1) + '" y2="' + py(seg[1][1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round"/>';
+      // điểm thật
+      let pts = '';
+      for (let i = 0; i < n; i++) pts += '<circle cx="' + px(xs[i]).toFixed(1) + '" cy="' + py(ys[i]).toFixed(1) + '" r="3.4" fill="#E2E8F0" stroke="#0B1220" stroke-width="1"/>';
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="llens-svg" role="img" aria-label="đường dự đoán trên scatter">' +
+        grid + res + line + pts +
+        '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
+        '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'y') + '</text>' +
+        '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens llens" aria-label="Ống kính đường — kéo w và b cho khớp">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH ĐƯỜNG') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="llens-plot" data-ll-plot></div>' +
+        '<div class="llens-ctrl">' +
+          '<div class="llens-row"><label class="llens-lab">📐 ĐỘ DỐC <b>w</b> = <output data-ll-wout></output></label>' +
+            '<input type="range" class="llens-slider" data-ll-w min="' + (cfg.w_min != null ? cfg.w_min : 0) + '" max="' + (cfg.w_max != null ? cfg.w_max : 12) + '" step="' + (cfg.w_step || 0.1) + '" value="' + w + '"/></div>' +
+          '<div class="llens-row"><label class="llens-lab">↕️ ĐIỂM CẮT <b>b</b> = <output data-ll-bout></output></label>' +
+            '<input type="range" class="llens-slider" data-ll-b min="' + (cfg.b_min != null ? cfg.b_min : 0) + '" max="' + (cfg.b_max != null ? cfg.b_max : 50) + '" step="' + (cfg.b_step || 1) + '" value="' + b + '"/></div>' +
+          '<div class="llens-readout">' +
+            '<span class="llens-eq" data-ll-eq></span>' +
+            '<span class="llens-err">TỔNG LỖI <b data-ll-err></b> <i>(Σ bình phương lệch)</i></span>' +
+            '<button type="button" class="llens-best" data-ll-best>✨ đường khớp nhất</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-ll-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-ll-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-ll-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-ll-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-ll-plot]');
+    const wOut = mount.querySelector('[data-ll-wout]');
+    const bOut = mount.querySelector('[data-ll-bout]');
+    const eqEl = mount.querySelector('[data-ll-eq]');
+    const errEl = mount.querySelector('[data-ll-err]');
+    const wSl = mount.querySelector('[data-ll-w]');
+    const bSl = mount.querySelector('[data-ll-b]');
+    const riddleEl = mount.querySelector('[data-ll-riddle]');
+
+    function paint() {
+      if (plot) plot.innerHTML = svg();
+      if (wOut) wOut.textContent = w.toFixed(1);
+      if (bOut) bOut.textContent = Math.round(b);
+      if (eqEl) eqEl.innerHTML = 'ŷ = <b>' + w.toFixed(1) + '</b>·x + <b>' + Math.round(b) + '</b>';
+      if (errEl) errEl.textContent = Math.round(sse()).toLocaleString('vi-VN');
+    }
+    function touch() { if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; } }
+    paint();
+    if (wSl) wSl.addEventListener('input', function () { w = parseFloat(wSl.value); paint(); touch(); });
+    if (bSl) bSl.addEventListener('input', function () { b = parseFloat(bSl.value); paint(); touch(); });
+    const bestBtn = mount.querySelector('[data-ll-best]');
+    if (bestBtn) bestBtn.addEventListener('click', function () {
+      const be = cfg.best || {};
+      w = be.w != null ? be.w : w; b = be.b != null ? be.b : b;
+      if (wSl) wSl.value = w; if (bSl) bSl.value = b;
+      paint(); touch();
+    });
+
+    const fb = mount.querySelector('[data-ll-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-ll-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-ll-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — dự đoán = w·x + b.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4841,6 +4969,13 @@
         const heroMountCl = document.getElementById('lesson-hero');
         renderCorrLens(heroMountCl || pvMount, s1.corr_lens);
         if (heroMountCl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.line_lens) {
+        // ML Bài 8 (user chốt 2026-07-21): ỐNG KÍNH ĐƯỜNG — kéo w,b → đường ŷ=w·x+b sống
+        // trên scatter 12 điểm + đoạn lệch residual + tổng lỗi; câu đố dự đoán (spec C1-L8). Vào hero.
+        const heroMountLl = document.getElementById('lesson-hero');
+        renderLineLens(heroMountLl || pvMount, s1.line_lens);
+        if (heroMountLl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

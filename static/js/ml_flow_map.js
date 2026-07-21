@@ -220,6 +220,13 @@
         return '<span class="mlf-sc-cell"><i>' + esc(cols[i]) + '</i><b>' + esc(sm.mode === 'corr' ? v.toFixed(2) : v.toFixed(1)) + '</b></span>';
       }).join('') + '</div>';
     }
+    /* Bài 8 — ĐƯỜNG ŷ=w·x+b: node hiện phương trình đường (+ badge lệch nếu residual) */
+    if (k === 'regline') {
+      const rg = st.reg || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">ŷ → ?</span></div>';
+      return '<div class="mlf-chips"><span class="mlf-chip x">ŷ = ' + esc(rg.w) + '·x + ' + esc(rg.b) + '</span>' +
+        (rg.mode === 'residual' ? '<span class="mlf-chip warn">Σ lệch</span>' : (rg.mode === 'predict' ? '<span class="mlf-chip xnew">12 dự đoán</span>' : '')) + '</div>';
+    }
     return '';
   }
 
@@ -491,6 +498,49 @@
         '<tbody>' + grid.map((row, ri) => '<tr><th class="' + (ri === hc ? 'mlf-mat-hl' : '') + '">' + esc(cols[ri]) + '</th>' +
           row.map((v, ci) => cell(v, ri, ci)).join('') + '</tr>').join('') + '</tbody></table></div>' +
         (sm.note ? '<div class="mlf-qc-note">' + sm.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 8 — ĐƯỜNG DỰ ĐOÁN: scatter (từ table) + đường ŷ=w·x+b; mode params/predict/residual */
+    if (k === 'regline') {
+      const rg = st.reg || {};
+      const w = rg.w || 0, b = rg.b || 0, mode = rg.mode || 'params';
+      const xs = table.dataRows.map(function (r) { return parseFloat(r[0]); });
+      const ys = table.dataRows.map(function (r) { return parseFloat(r[1]); });
+      const nn = xs.length;
+      const xmax = Math.ceil(Math.max.apply(null, xs)) + 1;
+      const ymax = Math.ceil(Math.max.apply(null, ys) / 10) * 10 + 10;
+      const W = 480, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+      const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)); };
+      const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)); };
+      let grid = '';
+      [0, ymax / 2, ymax].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + py(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + py(g).toFixed(1) + '" stroke="rgba(148,163,184,0.14)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (py(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + Math.round(g) + '</text>';
+      });
+      let res = '', preds = '', sse = 0;
+      for (let i = 0; i < nn; i++) {
+        const yh = w * xs[i] + b;
+        sse += (yh - ys[i]) * (yh - ys[i]);
+        if (mode === 'residual') res += '<line x1="' + px(xs[i]).toFixed(1) + '" y1="' + py(ys[i]).toFixed(1) + '" x2="' + px(xs[i]).toFixed(1) + '" y2="' + py(yh).toFixed(1) + '" stroke="#FB923C" stroke-width="1.5" opacity="0.7"/>';
+        if (mode === 'predict') preds += '<circle cx="' + px(xs[i]).toFixed(1) + '" cy="' + py(yh).toFixed(1) + '" r="3" fill="#38BDF8" opacity="0.9"/>';
+      }
+      // clip đường vào khung
+      const cands = [];
+      [0, xmax].forEach(function (xe) { const ye = w * xe + b; if (ye >= -0.01 && ye <= ymax + 0.01) cands.push([xe, ye]); });
+      if (Math.abs(w) > 1e-9) [0, ymax].forEach(function (ye) { const xe = (ye - b) / w; if (xe >= -0.01 && xe <= xmax + 0.01) cands.push([xe, ye]); });
+      let line = '';
+      if (cands.length >= 2) { cands.sort(function (p, q) { return p[0] - q[0]; }); const a = cands[0], z = cands[cands.length - 1]; line = '<line x1="' + px(a[0]).toFixed(1) + '" y1="' + py(a[1]).toFixed(1) + '" x2="' + px(z[0]).toFixed(1) + '" y2="' + py(z[1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round"/>'; }
+      let pts = '';
+      for (let i = 0; i < nn; i++) pts += '<circle cx="' + px(xs[i]).toFixed(1) + '" cy="' + py(ys[i]).toFixed(1) + '" r="3.4" fill="#E2E8F0" stroke="#0B1220" stroke-width="1"/>';
+      const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="đường dự đoán">' +
+        grid + res + line + preds + pts +
+        '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
+        '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">final_score</text></svg>';
+      return '<div class="mlf-scene mlf-reg-scene">' +
+        '<div class="mlf-reg-head"><span class="mlf-reg-eq">ŷ = ' + esc(w) + '·x + ' + esc(b) + '</span>' +
+          (mode === 'residual' ? '<span class="mlf-reg-err">TỔNG LỖI ≈ <b>' + Math.round(sse).toLocaleString('vi-VN') + '</b></span>' : '') + '</div>' +
+        svg +
+        (rg.note ? '<div class="mlf-qc-note">' + rg.note + '</div>' : '') +
       '</div>';
     }
     return '';

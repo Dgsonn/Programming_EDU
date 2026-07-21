@@ -12148,3 +12148,37 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-mat-cell.mlf-mat-diag { color: var(--text-500); }
 .mlf-mat th.mlf-mat-hl { color: #FCD34D; }
 .mlf-mat-cell.mlf-mat-hl { outline: 1.5px solid rgba(251, 191, 36, 0.5); outline-offset: -1.5px; font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 12 (2026-07-21) — BÀI 8 "Vẽ đường dự đoán đầu tiên"
+ * 1) ỐNG KÍNH ĐƯỜNG (hero: scatter 12 điểm + đường ŷ=w·x+b + đoạn lệch + slider w/b)
+ * 2) MAP 3 trạm: regline (params/predict/residual)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.llens-plot { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.5); padding: 10px 12px; }
+.llens-svg { width: 100%; height: auto; display: block; }
+.llens-ctrl { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.llens-row { display: grid; grid-template-columns: 195px 1fr; align-items: center; gap: 12px; }
+.llens-lab { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-300); }
+.llens-lab b { color: var(--text-50); }
+.llens-lab output { font-family: 'JetBrains Mono', monospace; color: #7DD3FC; font-weight: 700; }
+.llens-slider { width: 100%; accent-color: #38BDF8; cursor: pointer; }
+.llens-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-top: 8px; border-top: 1px dashed rgba(148, 163, 184, 0.16); }
+.llens-eq { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-100); }
+.llens-eq b { color: #7DD3FC; }
+.llens-err { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-400); }
+.llens-err b { color: #FCD34D; font-size: 14px; }
+.llens-err i { font-size: 10.5px; color: var(--text-500); font-style: normal; }
+.llens-best { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #0B1220; background: linear-gradient(180deg, #FDE68A, #FBBF24); border: none; border-radius: 8px; padding: 6px 14px; cursor: pointer; transition: filter var(--anim-fast); }
+.llens-best:hover { filter: brightness(1.07); }
+.llens-slider:focus-visible, .llens-best:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+@media (max-width: 620px) { .llens-row { grid-template-columns: 1fr; gap: 4px; } .llens-best { margin-left: 0; } }
+
+/* 2) MAP — regline (scatter + đường) */
+.mlf-reg-scene { display: flex; flex-direction: column; gap: 8px; }
+.mlf-reg-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.mlf-reg-eq { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #7DD3FC; }
+.mlf-reg-err { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-400); }
+.mlf-reg-err b { color: #FCD34D; }
+.mlf-reg-svg { width: 100%; height: auto; display: block; background: rgba(11, 18, 32, 0.4); border-radius: 10px; }

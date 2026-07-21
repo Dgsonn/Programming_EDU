@@ -3264,7 +3264,288 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l8',  index: 8,  title: 'Vẽ đường dự đoán đầu tiên',                    module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
+    {
+      id: 'c1_l8',
+      index: 8,
+      title: 'Vẽ đường dự đoán đầu tiên',
+      subtitle: 'Model tuyến tính = một ĐƯỜNG THẲNG ŷ = w·x + b — kéo w, b để nó khớp dữ liệu',
+      module: 12,
+      module_title: 'M3 — Hồi quy tuyến tính',
+      estimated_minutes: 18,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '📈 StudyLab · Ticket #08',
+        hook: 'Sang chương mới! Phòng đào tạo muốn <strong>DỰ ĐOÁN điểm cuối kỳ từ giờ tự học</strong> — cho một bạn học <code>x</code> giờ, đoán điểm <code>ŷ</code>. Đây là bộ demo nhỏ: <strong>12 học viên</strong> đã biết cả giờ học lẫn điểm (thang 100). Cách đơn giản nhất để dự đoán: <strong>vẽ một ĐƯỜNG THẲNG</strong> xuyên qua đám điểm — <code>ŷ = w·x + b</code>. Kéo <strong>độ dốc w</strong> và <strong>điểm cắt b</strong> cho đường bám sát dữ liệu nhất. Đây mới là đường <strong>ĐẦU TIÊN</strong> — chọn bằng tay, chưa chắc tốt nhất. Nhưng làm sao MÁY tự tìm đường tốt nhất? Đó là chuyện Bài 9-10.'
+      },
+      achievement: { name: 'Line Drawer — đường dự đoán đầu tiên', desc: 'hiểu ŷ = w·x + b, chỉnh độ dốc & điểm cắt cho khớp, viết hàm dự đoán vectorized' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Hiểu <strong>model tuyến tính</strong> là một đường thẳng <code>ŷ = w·x + b</code> — cho <code>x</code> trả về dự đoán <code>ŷ</code>.',
+            'Biết <strong>w</strong> (độ dốc) làm đường nghiêng, <strong>b</strong> (điểm cắt) dịch đường lên/xuống; đo độ tốt bằng <strong>tổng lỗi</strong> (residual).',
+            'Viết hàm <code>predict_score(x, w, b)</code> tính <code>w·x + b</code> cho cả <strong>mảng</strong> — và biết vì sao đây mới là đường ĐẦU TIÊN (Bài 9-10 tối ưu).'
+          ]
+        },
+        glossary: [
+          { term: 'MODEL TUYẾN TÍNH', vi: 'một đường thẳng', accent: '#38BDF8',
+            def: 'Cách dự đoán đơn giản nhất: một <b>đường thẳng</b> <code>ŷ = w·x + b</code>. Cho x → trả ŷ.',
+            ex: 'giờ học x = 5 → đường cho ŷ ≈ 58 điểm.',
+            out: 'khớp = đường bám sát các điểm thật' },
+          { term: 'WEIGHT (w · độ dốc)', vi: 'độ dốc', accent: '#34D399',
+            def: 'Đường <b>dốc</b> bao nhiêu. x tăng 1 đơn vị thì ŷ tăng đúng <b>w</b>.',
+            ex: 'w = 6.6 → học thêm 1 giờ, điểm dự đoán tăng ~6.6.',
+            out: 'kéo w lớn → đường dốc hơn' },
+          { term: 'BIAS (b · điểm cắt)', vi: 'điểm cắt', accent: '#A78BFA',
+            def: 'Giá trị <b>ŷ khi x = 0</b> — chỗ đường cắt trục dọc. Dịch cả đường lên/xuống.',
+            ex: 'b = 25 → học 0 giờ, đường đoán ~25 điểm.',
+            out: 'kéo b → đường tịnh tiến, KHÔNG đổi độ dốc' },
+          { term: 'DỰ ĐOÁN ŷ (y-hat)', vi: 'giá trị đoán', accent: '#22D3EE',
+            def: 'Giá trị <b>model đoán ra</b> = w·x + b. Khác <code>y</code> (điểm THẬT của bạn đó).',
+            ex: 'đường đoán ŷ = 55, nhưng bạn đó thực được y = 60.',
+            out: 'ŷ ≠ y → có sai số (residual)' },
+          { term: 'RESIDUAL (lệch)', vi: 'sai số 1 điểm', accent: '#FB923C',
+            def: 'Khoảng cách DỌC từ điểm thật tới đường: <b>ŷ − y</b>. Âm = đường đoán hụt.',
+            ex: 'ŷ 55 − y 60 = −5: đường đang đoán thấp hơn thực tế 5 điểm.',
+            out: 'residual nhỏ = đường khớp tốt điểm đó' },
+          { term: 'ĐƯỜNG KHỚP NHẤT', vi: 'least squares', accent: '#FBBF24',
+            def: 'Đường làm <b>TỔNG lỗi nhỏ nhất</b>. Ta mò bằng tay; MÁY tự tìm bằng thuật toán.',
+            ex: '12 điểm này: đường khớp nhất ≈ ŷ = 6.6·x + 25.',
+            out: 'Bài 9 ĐO lỗi (MSE) · Bài 10 để máy TỰ chỉnh' }
+        ],
+        primer: {
+          goal: [
+            'Model tuyến tính = đường ŷ = w·x + b',
+            'w nghiêng đường · b dịch đường',
+            'Đo độ tốt = tổng lỗi (residual) — đường đầu tiên chưa tối ưu'
+          ],
+          intro: '',
+          example: '🔍 <strong>Kéo 2 thanh trong ống kính bên dưới:</strong> thanh <strong>ĐỘ DỐC (w)</strong> làm đường nghiêng, thanh <strong>ĐIỂM CẮT (b)</strong> dịch đường lên/xuống. Nhìn các đoạn lệch dọc và <strong>TỔNG LỖI</strong> co lại khi đường bám sát điểm hơn. Bấm "đường khớp nhất" để so với đáp án máy. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Dự đoán một con số (điểm) từ một con số (giờ học) — cách khởi đầu kinh điển là <strong>hồi quy tuyến tính</strong>: dựng một đường thẳng <code>ŷ = w·x + b</code> rồi đọc dự đoán ngay trên đường. <strong>w</strong> quyết định đường dốc thế nào, <strong>b</strong> quyết định đường nằm cao hay thấp. Bài này bạn tự tay kéo w, b cho đường khớp — để CẢM được thế nào là "đường tốt". Việc dạy MÁY tự tìm đường tốt nhất (đo lỗi, tối ưu) là Bài 9 và 10.',
+        concept_cards: [
+          {
+            icon: 'fa-chart-line',
+            title: 'Model = một đường thẳng',
+            body: 'Hồi quy tuyến tính dự đoán bằng <strong>ŷ = w·x + b</strong>. Cho <code>x</code> (giờ học) → đường trả về <code>ŷ</code> (điểm dự đoán). "Dự đoán" chỉ là tìm điểm tương ứng TRÊN đường. Một đường = một model.'
+          },
+          {
+            icon: 'fa-sliders',
+            title: 'w nghiêng · b dịch',
+            body: '<strong>w (độ dốc)</strong>: kéo lên → đường dốc hơn, mỗi giờ học thêm cộng nhiều điểm hơn. <strong>b (điểm cắt)</strong>: kéo lên → cả đường tịnh tiến lên, độ dốc giữ nguyên. Hai núm điều khiển đúng một đường thẳng.'
+          },
+          {
+            icon: 'fa-circle-question',
+            title: 'Đây mới là đường ĐẦU TIÊN',
+            body: 'Ta chọn w, b bằng TAY — chưa chắc tốt nhất. Đo độ tốt bằng <strong>tổng lỗi</strong> (các đoạn lệch residual). Câu hỏi lớn: làm sao MÁY tự tìm w, b nhỏ lỗi nhất? → <strong>Bài 9</strong> đo lỗi bằng MSE, <strong>Bài 10</strong> để máy tự chỉnh (gradient descent).'
+          }
+        ],
+        /* Hero = ỐNG KÍNH ĐƯỜNG (user chốt 2026-07-21): kéo w,b → đường sống + đoạn lệch + tổng lỗi */
+        line_lens: {
+          title: 'ỐNG KÍNH ĐƯỜNG — KÉO w & b CHO KHỚP',
+          intro: 'Scatter 12 học viên thật. Kéo <b>ĐỘ DỐC (w)</b> và <b>ĐIỂM CẮT (b)</b> cho đường <code>ŷ = w·x + b</code> bám sát điểm — nhìn <b>TỔNG LỖI</b> co lại. Bấm "đường khớp nhất" để so với máy, rồi trả lời câu chốt.',
+          x_label: 'study_hours (giờ học)', y_label: 'final_score',
+          x_max: 10, y_max: 90,
+          w0: 4.0, b0: 30, w_min: 0, w_max: 12, w_step: 0.1, b_min: 0, b_max: 50, b_step: 1,
+          best: { w: 6.6, b: 25 },
+          x: [1.3, 1.5, 2.0, 2.7, 2.8, 3.3, 3.4, 4.6, 4.9, 5.9, 6.7, 8.7],
+          y: [34.0, 30.0, 38.0, 45.0, 47.0, 43.0, 50.0, 56.0, 66.0, 63.0, 69.0, 80.0],
+          riddle: {
+            prompt: 'Đường khớp nhất ≈ ŷ = 6.6·x + 25. Một bạn học 5 giờ → model dự đoán bao nhiêu điểm?',
+            options: ['≈ 58 điểm', '≈ 25 điểm', '≈ 6.6 điểm'],
+            answer: '≈ 58 điểm',
+            wrong: {
+              '≈ 25 điểm': 'Đó là <b>b</b> (điểm cắt) — điểm khi x = 0. Phải cộng cả phần độ dốc: w·x = 6.6·5 = 33 → 33 + 25 = 58.',
+              '≈ 6.6 điểm': 'Đó là <b>w</b> (độ dốc) — điểm tăng thêm cho MỖI giờ. Dự đoán = w·x + b = 6.6·5 + 25 = 58, không phải chỉ w.'
+            },
+            done: '✅ Đúng — thay x = 5 vào đường: 6.6·5 + 25 = <b>58</b>. Nhớ: <b>w = 6.6</b> là ĐỘ DỐC (mỗi giờ học thêm, dự đoán +6.6 điểm), <b>b = 25</b> là ĐIỂM CẮT (điểm khi x = 0). Nhưng đây mới là đường ĐẦU TIÊN — làm sao máy biết 6.6/25 là TỐT NHẤT? Bài 9 ĐO lỗi (MSE), Bài 10 để máy TỰ chỉnh. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'linear_intro (12 học viên · 1 feature)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: 'x', icon: '📏',
+                note: '<strong>Feature (x)</strong> — đầu vào ta dùng để dự đoán. Đưa vào đường: ŷ = w·x + b.' },
+              { name: 'final_score', type: 'FLOAT · điểm/100', key: 'y', icon: '🎯',
+                note: '<strong>Nhãn thật (y)</strong> — điểm THỰC của 12 bạn (thang 100). Đường cố bám sát các y này; chênh giữa ŷ và y là residual.' }
+            ]
+          },
+          data_preview: [
+            ['1.3', '34.0'], ['1.5', '30.0'], ['2.0', '38.0'], ['2.7', '45.0'],
+            ['2.8', '47.0'], ['3.3', '43.0'], ['3.4', '50.0'], ['4.6', '56.0'],
+            ['4.9', '66.0'], ['5.9', '63.0'], ['6.7', '69.0'], ['8.7', '80.0']
+          ]
+        },
+        mission: 'Dựng <code class="code">RECIPE DỰ ĐOÁN</code> cho <code class="code">linear_intro</code>: CHỌN tham số đường (<code class="code">weight</code>, <code class="code">bias</code>) → DỰ ĐOÁN (<code class="code">ŷ = w·x + b</code>) → SO với thực tế (đoạn lệch — dẫn sang Bài 9) — kho có <code class="code">mồi bẫy 🪤</code> (quên bias · đảo w/b) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (w là gì · dự đoán · residual) + mini-game 3 ngăn w/b/ŷ ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Đường <code>ŷ = w·x + b</code>. Giữ nguyên b, TĂNG w thì đường thay đổi thế nào?',
+            options: [
+              { id: 'a', text: 'Đường DỐC hơn — mỗi giờ học thêm, ŷ tăng nhiều hơn', correct: true, explanation: 'Đúng — w là độ dốc. x tăng 1 thì ŷ tăng đúng w. w lớn → đường nghiêng gắt hơn quanh điểm cắt.' },
+              { id: 'b', text: 'Đường dịch LÊN nhưng độ dốc giữ nguyên', correct: false, explanation: 'Dịch lên/xuống mà giữ độ dốc là việc của b (điểm cắt), không phải w.' },
+              { id: 'c', text: 'Đường không đổi, chỉ điểm dữ liệu dịch', correct: false, explanation: 'w đổi thì đường đổi ngay (dốc hơn). Điểm dữ liệu thật cố định, không dịch theo.' },
+              { id: 'd', text: 'Đường nằm ngang lại', correct: false, explanation: 'Nằm ngang là w = 0. Tăng w làm đường DỐC hơn, ngược lại.' }
+            ]
+          },
+          {
+            question: 'Một model có <code>ŷ = 6·x + 20</code>. Một bạn học <code>x = 5</code> giờ, model dự đoán điểm nào?',
+            options: [
+              { id: 'a', text: '≈ 50 điểm (6·5 + 20)', correct: true, explanation: 'Đúng — thay x = 5: 6·5 + 20 = 30 + 20 = 50. Dự đoán là ghép cả độ dốc lẫn điểm cắt.' },
+              { id: 'b', text: '≈ 20 điểm', correct: false, explanation: '20 là b — điểm khi x = 0. Bạn này học 5 giờ nên phải cộng w·x = 6·5 = 30 → 50.' },
+              { id: 'c', text: '≈ 30 điểm', correct: false, explanation: '30 mới là phần w·x (6·5). Còn thiếu + bias 20 → 50.' },
+              { id: 'd', text: '≈ 6 điểm', correct: false, explanation: '6 là w (độ dốc), không phải dự đoán. Dự đoán = w·x + b = 50.' }
+            ]
+          },
+          {
+            question: 'Đường của bạn dự đoán <code>ŷ = 55</code> cho một học viên, nhưng bạn đó thực tế được <code>y = 60</code>. "Residual" (sai số điểm này) nói lên điều gì?',
+            options: [
+              { id: 'a', text: 'Lệch 5 điểm, ŷ − y = −5 — đường đang đoán THẤP hơn thực tế', correct: true, explanation: 'Đúng — residual = ŷ − y = 55 − 60 = −5. Âm nghĩa là đường nằm DƯỚI điểm thật ở đây (đoán hụt 5 điểm). Tổng các residual nhỏ = đường khớp tốt.' },
+              { id: 'b', text: 'Không có sai số vì 55 và 60 đều là điểm', correct: false, explanation: 'Có sai số: ŷ (dự đoán) khác y (thật) 5 điểm. Đó chính là residual — thứ ta muốn nhỏ lại.' },
+              { id: 'c', text: 'Đường hoàn hảo cho điểm này', correct: false, explanation: 'Hoàn hảo là ŷ = y (residual 0). Ở đây lệch 5 điểm nên chưa hoàn hảo.' },
+              { id: 'd', text: 'Phải xóa học viên này khỏi dữ liệu', correct: false, explanation: 'Residual chỉ là sai số dự đoán, không phải lỗi dữ liệu. Ta chỉnh ĐƯỜNG cho khớp hơn, không xóa điểm thật.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Mỗi mô tả thuộc thành phần nào của ŷ = w·x + b?',
+          instruction: 'Kéo mỗi mô tả vào đúng ngăn: <strong>w (độ dốc)</strong> · <strong>b (điểm cắt)</strong> · <strong>ŷ (dự đoán)</strong>.',
+          chips: [
+            { id: 'd-slope1', label: 'x tăng 1 → giá trị tăng đúng số này' },
+            { id: 'd-slope2', label: 'đường dốc hơn khi số này lớn' },
+            { id: 'd-int1',   label: 'giá trị khi x = 0' },
+            { id: 'd-int2',   label: 'dịch cả đường lên/xuống' },
+            { id: 'd-pred1',  label: 'kết quả của w·x + b' },
+            { id: 'd-pred2',  label: 'model đoán ra, có thể khác y thật' }
+          ],
+          bins: [
+            { id: 'w',  label: '📐 w (độ dốc)',   correct: 'true' },
+            { id: 'b',  label: '↕️ b (điểm cắt)', correct: 'true' },
+            { id: 'yh', label: '🎯 ŷ (dự đoán)',  correct: 'true' }
+          ],
+          solution: {
+            'd-slope1': 'w', 'd-slope2': 'w',
+            'd-int1': 'b',   'd-int2': 'b',
+            'd-pred1': 'yh', 'd-pred2': 'yh'
+          },
+          success: 'Chuẩn — w điều khiển ĐỘ DỐC, b điều khiển VỊ TRÍ (điểm cắt), còn ŷ là kết quả w·x + b mà model đoán. Ba mảnh ghép của một đường. Đó là recipe Bước 3 sắp dựng.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — tham số → dự đoán → so lệch. 2 mồi bẫy: quên bias / đảo w,b ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'weight, bias = 7.0, 25.0', slot: 'b1' },
+          { type: 'py', token: 'y_pred = weight * study_hours + bias', slot: 'b2' },
+          { type: 'py', token: 'errors = y_pred - final_score', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'y_pred = weight * study_hours', slot: 't1' },
+          { type: 'py', token: 'y_pred = study_hours * bias + weight', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l8-params',  accepts: ['py'], multi: false },
+          { id: 'l8-predict', accepts: ['py'], multi: false },
+          { id: 'l8-resid',   accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'RECIPE DỰ ĐOÁN — 3 TRẠM · ĐƯỜNG ŷ = w·x + b',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'linear_intro · 12 học viên · x = giờ học, y = điểm thật (thang 100)' },
+          done_note: 'Đường ŷ = 7·x + 25 cho 12 dự đoán; đoạn lệch (residual) là chênh ŷ − y. TỔNG lỗi càng nhỏ đường càng khớp — nhưng đây là đường CHỌN TAY. Bài 9 đo lỗi bằng MSE, Bài 10 để máy tự tìm w,b tốt nhất. Bước 4 viết hàm predict_score.',
+          stations: [
+            {
+              zones: ['l8-params'],
+              icon: '🎛️', label: 'TRẠM 1 — THAM SỐ ĐƯỜNG', sub: 'weight (dốc) · bias (cắt)', result_kind: 'regline',
+              reg: {
+                mode: 'params', w: 7.0, b: 25.0,
+                note: 'Chọn <b>weight = 7</b> (độ dốc) và <b>bias = 25</b> (điểm cắt) → khai sinh một đường thẳng. Chưa dự đoán gì, mới định NGHĨA đường. Kéo tay ở Bước 1 để cảm w/b làm gì.'
+              },
+              narration: '<code>weight, bias = 7.0, 25.0</code> — hai số này ĐỊNH NGHĨA đường. weight quyết định độ dốc, bias quyết định đường nằm cao hay thấp. Đổi 2 số = đổi model.'
+            },
+            {
+              zones: ['l8-predict'],
+              icon: '📈', label: 'TRẠM 2 — DỰ ĐOÁN', sub: 'ŷ = w·x + b cho 12 điểm', result_kind: 'regline',
+              reg: {
+                mode: 'predict', w: 7.0, b: 25.0,
+                note: '<code>y_pred = weight * study_hours + bias</code> áp công thức cho CẢ 12 giờ học cùng lúc (vectorized) → 12 dự đoán nằm trên đường. Ví dụ x = 5 → ŷ = 7·5 + 25 = 60.'
+              },
+              narration: 'Một phép nhân + cộng chạy trên cả mảng: mỗi study_hours cho một điểm ŷ TRÊN đường. Không vòng lặp — numpy làm 12 phép cùng lúc.'
+            },
+            {
+              zones: ['l8-resid'],
+              icon: '📏', label: 'TRẠM 3 — SO LỆCH', sub: 'residual = ŷ − y', result_kind: 'regline',
+              reg: {
+                mode: 'residual', w: 7.0, b: 25.0,
+                note: '<code>errors = y_pred - final_score</code> đo chênh giữa dự đoán và thực tế cho từng bạn (đoạn dọc). Có đoạn dương (đường vượt), có đoạn âm (đường hụt). <b>TỔNG lỗi</b> tóm gọn độ khớp — chính là thứ Bài 9 sẽ đo bằng MSE.'
+              },
+              narration: 'Residual = khoảng cách DỌC từ mỗi điểm thật tới đường. Đường tốt = các đoạn này ngắn. Nhưng "tổng lỗi" đo thế nào cho chuẩn, và làm sao giảm nó tự động? Bài 9 & 10 trả lời.'
+            }
+          ]
+        },
+        expected_sql: 'weight, bias = 7.0, 25.0 y_pred = weight * study_hours + bias errors = y_pred - final_score',
+        expected_zones: {
+          'l8-params':  'weight, bias = 7.0, 25.0',
+          'l8-predict': 'y_pred = weight * study_hours + bias',
+          'l8-resid':   'errors = y_pred - final_score'
+        },
+        reveal_hints: {
+          'l8-params':  'Trạm 1: định nghĩa đường — <strong>weight, bias = 7.0, 25.0</strong>.',
+          'l8-predict': 'Trạm 2: áp công thức cho cả mảng — <strong>y_pred = weight * study_hours + bias</strong> (nhớ + bias).',
+          'l8-resid':   'Trạm 3: chênh dự đoán vs thực tế — <strong>errors = y_pred - final_score</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'RECIPE DỰ ĐOÁN — 3 TRẠM · ĐƯỜNG ŷ = w·x + b',
+        table_sub: 'linear_intro · 12 học viên · x = giờ học, y = điểm',
+        idle_sub: '12 điểm · ▶ chạy để vẽ đường + đo lệch',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'linear_intro',
+          columns: ['study_hours', 'final_score'],
+          dataRows: [
+            ['1.3', '34.0'], ['1.5', '30.0'], ['2.0', '38.0'], ['2.7', '45.0'],
+            ['2.8', '47.0'], ['3.3', '43.0'], ['3.4', '50.0'], ['4.6', '56.0'],
+            ['4.9', '66.0'], ['5.9', '63.0'], ['6.7', '69.0'], ['8.7', '80.0']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: viết predict_score(x, w, b) = w*x + b (vectorized).
+         Grader: grade_lesson8 (output [36,60,84]; Risk quên bias/hard-code; Behavior bộ ẩn cả w âm). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp recipe bằng tay. Giờ viết <strong>hàm dự đoán thật</strong>: <code>predict_score(x, weight, bias)</code> trả về <code>weight·x + bias</code> — chạy được cho cả một <strong>mảng</strong> x (numpy). Hệ thống chấm sẽ thử bộ <code>(x, w, b)</code> ẩn (kể cả w ÂM) — hàm phải TÍNH từ công thức, không chép đáp án.',
+        context: {
+          scenario: 'Grader gọi hàm với nhiều bộ tham số khác nhau, có cả w âm và x là mảng. Nếu bạn gõ tay 3 con số hay quên cộng bias, test ẩn sẽ lộ ngay. Công thức đường thẳng (nhân trọng số rồi CỘNG bias) chạy vectorized — numpy nhân/cộng cả mảng cùng lúc — là qua hết.',
+          real_world: 'Đây là "forward pass" nhỏ nhất của mọi model: nhận đầu vào, nhân trọng số, cộng bias, ra dự đoán. Neural network chỉ là xếp CHỒNG nhiều phép w·x + b như thế này rồi thêm phi tuyến — bạn vừa viết viên gạch đầu tiên.',
+          steps: [
+            'Định nghĩa hàm <code>predict_score</code> nhận đúng 3 tham số: x, weight, bias.',
+            'Trả về giá trị theo công thức đường thẳng (nhân trọng số rồi cộng bias).',
+            'Gọi thử với một mảng x để in dự đoán · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Gõ <code>import numpy as np</code> rồi <code>print(predict_score(np.array([2, 5, 8]), 8, 20))</code> — kỳ vọng <code>[36 60 84]</code>.',
+          expected: 'Với x = [2, 5, 8], w = 8, b = 20 → <code>[36, 60, 84]</code>. Đủ 4 tầng xanh. Thử bỏ "+ bias" hay gõ tay 3 số? Code có thể chạy nhưng tầng Risk/Behavior sẽ bắt.'
+        },
+        hints: [
+          { level: 1, text: 'Chỉ cần 1 hàm ngắn: nhận (x, weight, bias), trả về công thức đường thẳng. Đừng gõ tay con số.' },
+          { level: 2, text: 'Khung: <code>def predict_score(x, weight, bias):</code> rồi bên trong <code>return ...</code>. x sẽ là numpy array nên phép nhân/cộng tự chạy trên cả mảng.' },
+          { level: 3, text: 'Công thức đường thẳng: <code>return weight * x + bias</code>. KHÔNG quên <code>+ bias</code>; KHÔNG chép [36, 60, 84].' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>import numpy as np<br>def predict_score(x, weight, bias):<br>&nbsp;&nbsp;&nbsp;&nbsp;return weight * x + bias<br>print(predict_score(np.array([2, 5, 8]), 8, 20))</code>' }
+        ],
+        grader_fn: 'grade_lesson8',
+        success_message: 'Chuẩn — predict_score(x, w, b) = w·x + b chạy vectorized, qua cả bộ ẩn (kể cả w âm). Bạn vừa viết forward pass đầu tiên. Nhưng đường w=8/b=20 này TỐT chưa? Bài 9: đo độ tốt của một đường bằng MSE — rồi Bài 10 để máy tự tìm đường tốt nhất.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l9',  index: 9,  title: 'Đo lỗi model bằng MSE',                        module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
     { id: 'c1_l10', index: 10, title: 'Gradient Descent — model tự chỉnh đường',      module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
     { id: 'c1_l11', index: 11, title: 'Vì sao Linear Regression không phân loại được', module: 13, module_title: 'M4 — Phân loại Logistic',     xp_reward: 50 },

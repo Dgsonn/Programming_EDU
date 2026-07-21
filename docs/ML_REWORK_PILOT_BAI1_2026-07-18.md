@@ -337,3 +337,29 @@ Hero 5 thanh + scatter 200 circle (auto vẽ study), bấm missed → r−0.75 +
 - Không có lỗi hydrate/pill lần này: zone 3 (corr) là câu GÁN (không phải print) nên qua bộ lọc; pill dài `numeric_df = df[[...]]` tự wrap ở ≤900px nhờ rule ĐỢT 10. Scatter 200 điểm mẫu-đầy-đủ (không lấy mẫu 50 — mẫu 50 từng lệch r attendance 0.72 vs full 0.60) để r khớp mọi nơi.
 
 ### Versions: css v20 · content v16 · shell v23 · flowmap v8.
+
+---
+
+## ĐỢT 12 (2026-07-21) — BÀI 8 "Vẽ đường dự đoán đầu tiên" (spec C1-L8, M3 — mở màn Hồi quy tuyến tính)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH ĐƯỜNG** (`renderLineLens` mới): scatter 12 điểm thật + đường ŷ=w·x+b + **đoạn lệch residual dọc (cam)**; 2 thanh trượt **ĐỘ DỐC w** & **ĐIỂM CẮT b** kéo live → đường nghiêng/dịch, **TỔNG LỖI (SSE) cập nhật** (init w4/b30 = 925 → nút "đường khớp nhất" w6.6/b25 = 144). Câu đố dự đoán (học 5 giờ → 6.6·5+25=58; bẫy 25=chỉ b, 6.6=chỉ w). Đường clip vào khung (giao với 4 cạnh) để không tràn khi dốc.
+- **Bắc cầu MSE/GD bằng câu hỏi mở** (user chốt): hero đo tổng lỗi + nút khớp-nhất để learner tự mò rồi so máy; concept card #3 + done-banner đặt câu hỏi "làm sao MÁY tự tìm w,b tốt nhất?" → Bài 9 đo lỗi (MSE), Bài 10 tự chỉnh (GD).
+- **Step 3 = map 3 TRẠM** (user chốt): THAM SỐ (weight,bias định nghĩa đường) → DỰ ĐOÁN (y_pred = weight*x+bias, vectorized) → SO LỆCH (errors = ŷ−y, đoạn residual + tổng lỗi, dẫn Bài 9). `regline` result_kind mới (mode params/predict/residual) — vẽ scatter+đường TỪ table.dataRows (không nhúng lại điểm). Bẫy: quên bias · đảo w,b.
+
+### Engine + grader (có sẵn, khớp spec)
+- `load_linear_intro_data()` — 12 điểm quanh y=7x+25 (best-fit thật w=6.6/b=25.5, SSE≈144). y thang 100 (30–80), khác bộ 200 của Bài 7 (bộ demo nhỏ riêng cho hồi quy).
+- `grade_lesson8` 4 tầng: cần hàm `predict_score(x, weight, bias)` return w*x+b vectorized; Output [2,5,8]·8·20→[36,60,84]; Risk bắt hard-code (x=[1,2,3] ra y hệt) hoặc quên bias (b=0 vs 55 giống nhau); Behavior bộ ẩn cả **w âm**. Test server-side: CORRECT 4/4, TRAP_bias/TRAP_hardcode → risk_ok False.
+
+### Verify — verify_b8.js: 32/32 pass · 0 pageerror (2 lượt sạch)
+Hero: svg 12 circle + đường + 2 slider + nút khớp-nhất; kéo w → eq+SSE đổi + riddle mở; khớp-nhất → 6.6·x+25; đố sai 25 → feedback, đúng 58 → done. Glossary 6; explorer 2 cột. 3 MCQ (w dốc/predict 50/residual −5) + minigame 3 ngăn w/b/ŷ. Map 3 trạm regline (params đường / predict 12 điểm ŷ xanh / residual đoạn cam + tổng lỗi). Bẫy quên bias → chấm bắt. Step4: trap quên bias → Risk; bản đúng 4/4 (bộ ẩn w âm) + Bài 9 MSE + modal. Regression B1-B7 + Basic + NC sạch. Multi-viewport 1920/1536/1024/768: 12 circle + 2 slider, 0 h-scroll, map fit.
+
+### Fix trong đợt
+- **Leak check bắt scenario lộ công thức**: step_4.context.scenario từng chứa nguyên `weight * x + bias` (luôn hiện) → suite bắt → viết lại "công thức đường thẳng (nhân trọng số rồi CỘNG bias)". Các bài trước chỉ lộ ở `steps`; lần này lọt ở `scenario` — nhớ soi CẢ scenario/real_world/steps (phần trước "Muốn soi trước").
+- regline vẽ TỪ table.dataRows (drag_map.table) → không nhúng lại 12 điểm ở station config (chỉ w,b,mode,note).
+
+### Component mới tái dùng được
+- `renderLineLens` (hero): scatter + đường w·x+b + residual + 2 slider live + SSE + nút best-fit + clip đường vào khung.
+- `regline` (ml_flow_map result_kind): mode params (đường) / predict (điểm ŷ trên đường) / residual (đoạn lệch + SSE); dùng chung cho cả 3 trạm.
+
+### Versions: css v21 · content v17 · shell v24 · flowmap v9.
