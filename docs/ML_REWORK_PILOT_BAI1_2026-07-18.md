@@ -363,3 +363,23 @@ Hero: svg 12 circle + đường + 2 slider + nút khớp-nhất; kéo w → eq+S
 - `regline` (ml_flow_map result_kind): mode params (đường) / predict (điểm ŷ trên đường) / residual (đoạn lệch + SSE); dùng chung cho cả 3 trạm.
 
 ### Versions: css v21 · content v17 · shell v24 · flowmap v9.
+
+---
+
+## ĐỢT 13 (2026-07-21) — AUDIT TOÀN KHÓA CƠ BẢN ML (B1-B8) vs 2 BẢN GIÁO TRÌNH + PUSH experiment
+
+### Phương pháp (user chốt)
+Đọc trọn 2 bản giáo trình user làm: **ML_Curriculum_Course_1_2_3_Revised_with_Coverage_Audit.pdf** (L1-L8, tr.9-43) + **ML_Exercise_Bank_Courses_1_2_3_Full.pdf** (Course 1, tr.3-62). Đối chiếu 20 keypoint spec (lesson goals, completion rules, misconception feedback, risk checks, API) với nội dung B1-B8 đã build; E2E đầy đủ 4 step cả 8 bài; vá hết → verify → push.
+
+### Kết quả đối chiếu: 17/20 keypoint ĐÃ PHỦ, 3 lỗ hổng + 1 điểm bổ sung → VÁ
+- ĐÃ PHỦ: L1 T-E-P + 3-scenario rule/ML + sĩ-số-không-phải-metric + học-viên-mới-không-phải-Experience; L2 output-type matching + cluster IDs tùy ý + 0/1 vẫn categorical; L3 200-samples + future-leakage + raw-vs-X ("DataFrame là cái KHO"); L4 missed_classes count + major encoding; L5 CẮM CỜ; L6 scaling-không-xóa-outlier; L7 mean-vs-spread + caveat "tuyến tính"; L8 w âm (step 4).
+- VÁ 1 (L6): misconception spec "standardized values có thể ÂM" chưa dạy → glossary STANDARDSCALER thêm "giá trị DƯỚI trung bình cho z ÂM — bình thường, không phải lỗi" + out "z có thể âm hoặc >1".
+- VÁ 2 (L8): lesson goal #4 "unconstrained line may predict outside 0-100" chưa dạy → concept card 1 thêm "ŷ=8·x+20, x=12 → 116 vượt thang 100; đường thẳng cứ thẳng mãi".
+- VÁ 3 (L8): spec "bias không phải error term / social bias" chưa dạy → glossary BIAS thêm "⚠ KHÔNG phải 'thiên vị' hay sai số — chỉ là tham số vị trí".
+- VÁ 4 (L8, MS-2 weight SIGN): hero slider w_min 0→−4 cho kéo w ÂM (renderLineLens vốn xử lý được — lineSeg giao 4 cạnh); glossary WEIGHT thêm "w ÂM → đường đi XUỐNG". Probe: w=−2 → đường lộn ngược, SSE 14 858 vs 144 (dạy fit tồi bằng mắt).
+
+### E2E toàn khóa: 253/253 pass · 0 fail · 0 pageerror
+B1 32/32 · B2 31/31 · B3 32/32 · B4 30/30 · B5 31/31 · B6 34/34 · B7 31/31 · B8 32/32 (chạy 4 batch, restart Flask giữa batch tránh rate-limit 50/giờ). Content v18.
+
+### Deviations đã được user duyệt từ trước (KHÔNG phải lỗi)
+Hero lens thay "guided visual 3-screen" spec (user chốt từng bài); B1 tuần-3→giữa-kỳ tuần 7/8 (đợt 4); B4 MCQ cột thật thay completed_courses/download_speed giả (đợt 8); B7 step-3 3-trạm thay 4-round (user chốt, mean/var vẫn phủ ở glossary); exercise-bank ghi activity 0-5000 nhưng curriculum + engine đều 0-2000 (theo curriculum).
