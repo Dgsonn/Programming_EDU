@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4213,6 +4213,164 @@
     });
   }
 
+  /* ═══ renderScaleLens — ML Bài 6 (user chốt 2026-07-21): ỐNG KÍNH ÂM LƯỢNG.
+     cfg = { title, intro, features:[{name,unit,std,mean,range,note}],
+             demo:{title, a, b, raw:{study,att,act,dist}, scaled:{...}, raw_note, scaled_note},
+             riddle:{prompt,options,answer,wrong,done} }
+     Toggle THÔ↔SCALE lật cả equalizer (cao ∝ σ → đều nhau) lẫn đóng góp khoảng cách. ═══ */
+  function renderScaleLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const feats = cfg.features || [];
+    const demo = cfg.demo || {};
+    const rid = cfg.riddle || {};
+    const maxStd = Math.max.apply(null, feats.map(f => f.std || 0)) || 1;
+    let scaled = false;      // trạng thái hiện tại
+    let interacted = false;  // đã thao tác → mở câu đố
+    const FKEYS = ['study', 'att', 'act']; // khớp thứ tự feats + demo.raw/scaled
+
+    function eqBarPct(f) {
+      if (scaled) return 52;                       // sau scale: mọi cột σ=1 → cùng cao
+      return Math.max(2.5, Math.round((f.std / maxStd) * 100)); // thô: cao ∝ σ (activity nuốt hết)
+    }
+    function contribOf(i) {
+      const src = scaled ? (demo.scaled || {}) : (demo.raw || {});
+      const v = src[FKEYS[i]];
+      return (v === undefined ? 0 : v);
+    }
+
+    function studentCard(s, cls) {
+      s = s || {};
+      return '<div class="slens-stu slens-' + cls + '">' +
+        '<div class="slens-stu-head"><b>' + escapeHtml(s.name || '') + '</b>' +
+          '<span class="slens-badge slens-' + (s.vclass || 'fail') + '">' + escapeHtml(s.verdict || '') + '</span></div>' +
+        '<div class="slens-stu-tag">' + escapeHtml(s.tag || '') + '</div>' +
+        '<div class="slens-stu-vals">' +
+          '<span>study <b>' + escapeHtml(String(s.study)) + '</b>h</span>' +
+          '<span>att <b>' + escapeHtml(String(s.att)) + '</b></span>' +
+          '<span>LMS <b>' + escapeHtml(String(s.act)) + '</b></span>' +
+        '</div></div>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens slens" aria-label="Ống kính âm lượng — cột nào đang lấn át">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH ÂM LƯỢNG') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="slens-toolbar">' +
+          '<button type="button" class="slens-toggle" data-sl-toggle>▶ SCALE — cân âm lượng</button>' +
+          '<span class="slens-state" data-sl-state></span></div>' +
+        '<div class="slens-eqwrap"><div class="slens-eq-cap">chiều cao ∝ σ (độ rộng cột) — <span data-sl-eqhint></span></div>' +
+          '<div class="slens-eq" data-sl-eq role="group">' +
+            feats.map(function (f, i) {
+              return '<button type="button" class="slens-bar-btn" data-sl-feat="' + i + '">' +
+                '<span class="slens-bar-track"><span class="slens-bar-fill slens-fill-' + i + '" data-sl-fill="' + i + '"></span></span>' +
+                '<span class="slens-bar-val" data-sl-val="' + i + '"></span>' +
+                '<span class="slens-bar-name">' + escapeHtml(f.name) + '</span>' +
+                '<span class="slens-bar-unit">' + escapeHtml(f.unit || '') + '</span>' +
+              '</button>';
+            }).join('') +
+          '</div></div>' +
+        '<div class="slens-card" data-sl-card>💡 Bấm một thanh để xem dải &amp; σ của cột đó.</div>' +
+        '<div class="slens-demo">' +
+          '<div class="slens-demo-title">📏 ' + escapeHtml(demo.title || 'SO KHOẢNG CÁCH 2 HỌC VIÊN') + '</div>' +
+          '<div class="slens-students">' + studentCard(demo.a, 'a') + studentCard(demo.b, 'b') + '</div>' +
+          '<div class="slens-contrib-cap">Mỗi cột đóng góp bao nhiêu vào khoảng cách? <b data-sl-distlbl></b></div>' +
+          '<div class="slens-contrib" data-sl-contrib>' +
+            feats.map(function (f, i) {
+              return '<div class="slens-crow"><span class="slens-cname">' + escapeHtml(f.name) + '</span>' +
+                '<span class="slens-cbar"><span class="slens-cfill slens-fill-' + i + '" data-sl-cfill="' + i + '"></span></span>' +
+                '<span class="slens-cpct" data-sl-cpct="' + i + '"></span></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="slens-demo-note" data-sl-note></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-sl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-sl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-sl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-sl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const stateEl = mount.querySelector('[data-sl-state]');
+    const eqHint = mount.querySelector('[data-sl-eqhint]');
+    const distLbl = mount.querySelector('[data-sl-distlbl]');
+    const noteEl = mount.querySelector('[data-sl-note]');
+    const toggle = mount.querySelector('[data-sl-toggle]');
+    const riddleEl = mount.querySelector('[data-sl-riddle]');
+
+    function paint() {
+      // equalizer
+      feats.forEach(function (f, i) {
+        const fill = mount.querySelector('[data-sl-fill="' + i + '"]');
+        const val = mount.querySelector('[data-sl-val="' + i + '"]');
+        if (fill) fill.style.height = eqBarPct(f) + '%';
+        if (val) val.textContent = scaled ? 'σ 1.0' : ('σ ' + (f.std >= 100 ? Math.round(f.std) : f.std));
+      });
+      // contribution
+      feats.forEach(function (f, i) {
+        const c = contribOf(i);
+        const cf = mount.querySelector('[data-sl-cfill="' + i + '"]');
+        const cp = mount.querySelector('[data-sl-cpct="' + i + '"]');
+        if (cf) cf.style.width = Math.max(1.5, c) + '%';
+        if (cp) cp.textContent = (c < 0.01 ? '<0.01' : c) + '%';
+      });
+      // labels
+      if (stateEl) stateEl.textContent = scaled ? 'Đang xem: SAU SCALE (mean 0 · std 1)' : 'Đang xem: THÔ (chưa scale)';
+      if (eqHint) eqHint.textContent = scaled ? 'sau StandardScaler: cả 3 cột σ = 1, cùng âm lượng' : 'chưa scale: activity_count (σ 556) át 2 cột kia';
+      if (toggle) toggle.textContent = scaled ? '↺ Xem lại THÔ (chưa scale)' : '▶ SCALE — cân âm lượng';
+      mount.querySelector('.slens')?.classList.toggle('is-scaled', scaled);
+      const d = scaled ? (demo.scaled || {}) : (demo.raw || {});
+      if (distLbl) distLbl.textContent = 'khoảng cách ≈ ' + (d.dist || '');
+      if (noteEl) noteEl.innerHTML = scaled ? (demo.scaled_note || '') : (demo.raw_note || '');
+    }
+
+    function openRiddle() {
+      if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+    }
+
+    paint();
+    if (toggle) toggle.addEventListener('click', function () { scaled = !scaled; paint(); openRiddle(); });
+
+    // click 1 thanh → hiện dải + σ của cột
+    const card = mount.querySelector('[data-sl-card]');
+    mount.querySelectorAll('[data-sl-feat]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = parseInt(btn.getAttribute('data-sl-feat'), 10);
+        const f = feats[i];
+        if (!f) return;
+        mount.querySelectorAll('.slens-bar-btn').forEach(function (b) { b.classList.remove('is-lit'); });
+        btn.classList.add('is-lit');
+        if (card) card.innerHTML =
+          '<div class="slens-card-head slens-fillc-' + i + '">' + escapeHtml(f.name) + ' · ' + escapeHtml(f.unit || '') + '</div>' +
+          '<div class="slens-card-meta">dải <b>' + escapeHtml(f.range || '') + '</b> · σ <b>' + escapeHtml(String(f.std)) + '</b> · μ <b>' + escapeHtml(String(f.mean)) + '</b></div>' +
+          '<div class="slens-card-note">' + (f.note || '') + '</div>';
+        openRiddle();
+      });
+    });
+
+    // câu đố chốt
+    const fb = mount.querySelector('[data-sl-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-sl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-sl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nghĩ về THANG (dải số) của từng cột.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4542,6 +4700,14 @@
         const heroMountQl = document.getElementById('lesson-hero');
         renderQualityLens(heroMountQl || pvMount, s1.quality_lens);
         if (heroMountQl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.scale_lens) {
+        // ML Bài 6 (user chốt 2026-07-21): ỐNG KÍNH ÂM LƯỢNG — equalizer 3 feature (σ thật
+        // 2.7/17.7/556) bấm SCALE → cùng cao; demo khoảng cách Nam vs Linh; câu đố chốt
+        // "cột nào lấn át khi CHƯA scale" (spec C1-L6). Render vào hero.
+        const heroMountSl = document.getElementById('lesson-hero');
+        renderScaleLens(heroMountSl || pvMount, s1.scale_lens);
+        if (heroMountSl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

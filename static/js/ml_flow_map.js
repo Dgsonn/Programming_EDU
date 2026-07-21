@@ -180,6 +180,26 @@
       if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">đếm → ?</span></div>';
       return '<div class="mlf-qc-mini">' + qcMiniHTML(qc.before || {}, af, qc.changed || []) + '</div>';
     }
+    /* Bài 6 — CHỌN cột scale: 3 feature số (X) + 3 cột đứng ngoài (ban) */
+    if (k === 'scale_select') {
+      const ss = st.scale_select || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">cột → ?</span></div>';
+      return '<div class="mlf-chips">' +
+        (ss.pick || []).map(p => '<span class="mlf-chip x">🎚 ' + esc(p.col) + '</span>').join('') +
+        (ss.exclude || []).map(e => '<span class="mlf-chip ban">🚫 ' + esc(e.col) + '</span>').join('') +
+        '</div>';
+    }
+    /* Bài 6 — SCALE stats: σ mỗi cột (thô → 1) hoặc verify mean0/std1 */
+    if (k === 'scale_stats') {
+      const sc = st.scale || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">σ → ?</span></div>';
+      return '<div class="mlf-sc-mini">' + (sc.rows || []).map(function (r) {
+        const short = String(r.col).split('_')[0];
+        const bs = r.before_std >= 100 ? Math.round(r.before_std) : r.before_std;
+        return '<span class="mlf-sc-cell"><i>' + esc(short) + '</i><b>' +
+          (sc.mode === 'verify' ? 'σ1·μ0' : ('σ' + esc(bs) + '→1')) + '</b></span>';
+      }).join('') + '</div>';
+    }
     return '';
   }
 
@@ -372,6 +392,49 @@
         }).join('') + '</div>' +
         (qc.note ? '<div class="mlf-qc-note">' + qc.note + '</div>' : '') +
         '</div>';
+    }
+    /* Bài 6 — CHỌN cột: 2 cột SCALE vs ĐỨNG NGOÀI, kèm lý do */
+    if (k === 'scale_select') {
+      const ss = st.scale_select || {};
+      return '<div class="mlf-scene mlf-scale-select">' +
+        '<div class="mlf-sc-col mlf-sc-in"><div class="mlf-sc-colhead">🎚️ SCALE — feature số</div>' +
+          (ss.pick || []).map(p => '<div class="mlf-sc-row ok"><span class="mlf-chip x">' + esc(p.col) + '</span>' +
+            '<span class="mlf-sc-why">σ ≈ ' + esc(p.std) + '</span></div>').join('') +
+        '</div>' +
+        '<div class="mlf-sc-col mlf-sc-out"><div class="mlf-sc-colhead">🚫 ĐỨNG NGOÀI scaler</div>' +
+          (ss.exclude || []).map(e => '<div class="mlf-sc-row ban"><span class="mlf-chip ban">' + esc(e.icon || '🚫') + ' ' + esc(e.col) + '</span>' +
+            '<span class="mlf-sc-why">' + esc(e.why || '') + '</span></div>').join('') +
+        '</div></div>';
+    }
+    /* Bài 6 — SCALE stats: equalizer σ thô→1 (transform) hoặc grid verify mean0/std1 */
+    if (k === 'scale_stats') {
+      const sc = st.scale || {};
+      const rows = sc.rows || [];
+      if (sc.mode === 'verify') {
+        return '<div class="mlf-scene mlf-scale-verify">' +
+          '<div class="mlf-scv-grid">' + rows.map(function (r) {
+            return '<div class="mlf-scv-card"><div class="mlf-scv-col">' + esc(r.col) + '</div>' +
+              '<div class="mlf-scv-line">mean <b>' + Number(r.after_mean || 0).toFixed(2) + '</b> <span class="mlf-scv-ok">✓ ≈ 0</span></div>' +
+              '<div class="mlf-scv-line">std <b>' + Number(r.after_std || 1).toFixed(2) + '</b> <span class="mlf-scv-ok">✓ ≈ 1</span></div></div>';
+          }).join('') + '</div>' +
+          (sc.note ? '<div class="mlf-qc-note">' + sc.note + '</div>' : '') +
+        '</div>';
+      }
+      const maxStd = Math.max.apply(null, rows.map(r => r.before_std || 0)) || 1;
+      return '<div class="mlf-scene mlf-scale-stats">' +
+        '<div class="mlf-scs-rows">' + rows.map(function (r, i) {
+          const bw = Math.max(3, Math.round((r.before_std / maxStd) * 100));
+          const bs = r.before_std >= 100 ? Math.round(r.before_std) : r.before_std;
+          return '<div class="mlf-scs-row">' +
+            '<span class="mlf-scs-name">' + esc(r.col) + '</span>' +
+            '<span class="mlf-scs-bars">' +
+              '<span class="mlf-scs-before"><span class="mlf-scs-bfill sc-fill-' + i + '" style="width:' + bw + '%"></span><i>σ ' + esc(bs) + '</i></span>' +
+              '<span class="mlf-scs-arrow">→</span>' +
+              '<span class="mlf-scs-after"><span class="mlf-scs-afill sc-fill-' + i + '" style="width:44%"></span><i>σ 1.0</i></span>' +
+            '</span></div>';
+        }).join('') + '</div>' +
+        (sc.note ? '<div class="mlf-qc-note">' + sc.note + '</div>' : '') +
+      '</div>';
     }
     return '';
   }

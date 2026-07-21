@@ -11958,3 +11958,154 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-qc-cell.qc-chg.qc-down b { color: #6EE7B7; }
 .mlf-qc-cell.qc-chg.qc-up { border-color: #FBBF24; }
 .mlf-qc-cell.qc-chg.qc-up b { color: #FCD34D; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 10 (2026-07-21) — BÀI 6 "Scale feature — không để 1 đơn vị lấn át"
+ * 1) ỐNG KÍNH ÂM LƯỢNG (hero: equalizer σ + demo khoảng cách)
+ * 2) MAP 3 trạm: scale_select · scale_stats (transform + verify)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Màu 3 feature — dùng chung hero + map. activity_count = màu "loud" (cam) */
+:root {
+  --scf-0: #38BDF8;  /* study_hours  — sky   */
+  --scf-1: #34D399;  /* attendance   — green */
+  --scf-2: #FB923C;  /* activity     — amber (kẻ lấn át) */
+}
+.slens-fill-0, .sc-fill-0 { background: var(--scf-0); }
+.slens-fill-1, .sc-fill-1 { background: var(--scf-1); }
+.slens-fill-2, .sc-fill-2 { background: var(--scf-2); }
+.slens-card-head.slens-fillc-0 { color: var(--scf-0); }
+.slens-card-head.slens-fillc-1 { color: var(--scf-1); }
+.slens-card-head.slens-fillc-2 { color: var(--scf-2); }
+
+/* 1) HERO — kế thừa .tlens. Thanh công cụ + trạng thái */
+.slens-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.slens-toggle {
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700;
+  color: #0B1220; background: linear-gradient(180deg, #7DD3FC, #38BDF8);
+  border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+  transition: transform var(--anim-fast), box-shadow var(--anim-fast), filter var(--anim-fast);
+}
+.slens-toggle:hover { filter: brightness(1.08); box-shadow: 0 4px 14px rgba(56, 189, 248, 0.45); }
+.slens-toggle:active { transform: translateY(1px); }
+.slens.is-scaled .slens-toggle { background: linear-gradient(180deg, #6EE7B7, #34D399); box-shadow: 0 2px 8px rgba(52, 211, 153, 0.3); }
+.slens-state { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-400); }
+.slens.is-scaled .slens-state { color: #6EE7B7; }
+
+/* Equalizer */
+.slens-eqwrap { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.5); padding: 12px 16px 10px; margin-bottom: 10px; }
+.slens-eq-cap { font-size: 11px; color: var(--text-500); margin-bottom: 10px; text-align: center; }
+.slens-eq-cap span { color: var(--text-300); }
+.slens-eq { display: flex; align-items: stretch; gap: 16px; height: 190px; }
+.slens-bar-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer; padding: 4px 4px 2px;
+  transition: border-color var(--anim-fast), background var(--anim-fast);
+}
+.slens-bar-btn:hover { border-color: rgba(148, 163, 184, 0.3); background: rgba(148, 163, 184, 0.05); }
+.slens-bar-btn.is-lit { border-color: rgba(148, 163, 184, 0.45); background: rgba(148, 163, 184, 0.08); }
+.slens-bar-track {
+  position: relative; width: 100%; flex: 1 1 auto; min-height: 0;
+  display: flex; align-items: flex-end;
+  background: rgba(148, 163, 184, 0.08); border-radius: 6px 6px 3px 3px; overflow: hidden;
+}
+.slens-bar-fill {
+  width: 100%; height: 3%; border-radius: 5px 5px 0 0;
+  transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) { .slens-bar-fill { transition: none; } }
+.slens-bar-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--text-100); margin-top: 6px; }
+.slens-bar-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-300); margin-top: 3px; text-align: center; word-break: break-word; }
+.slens-bar-unit { font-size: 9.5px; color: var(--text-500); }
+
+/* Thẻ giải nghĩa 1 cột (bấm thanh) */
+.slens-card { font-size: 12.5px; color: var(--text-300); line-height: 1.6; border: 1px solid rgba(148, 163, 184, 0.2); background: rgba(148, 163, 184, 0.05); border-radius: 10px; padding: 10px 12px; min-height: 70px; margin-bottom: 12px; }
+.slens-card-head { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 5px; }
+.slens-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-400); margin-bottom: 5px; }
+.slens-card-meta b { color: var(--text-100); }
+.slens-card-note { font-size: 12px; color: var(--text-300); line-height: 1.55; }
+.slens-card-note b { color: var(--text-50); }
+
+/* Demo khoảng cách 2 học viên */
+.slens-demo { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.45); padding: 12px 16px; }
+.slens-demo-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: var(--text-200); margin-bottom: 10px; }
+.slens-students { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.slens-stu { border: 1px solid rgba(148, 163, 184, 0.16); border-left: 3px solid var(--st-accent, #64748B); border-radius: 10px; background: rgba(15, 23, 42, 0.5); padding: 9px 12px; }
+.slens-stu.slens-a { --st-accent: #F87171; }
+.slens-stu.slens-b { --st-accent: #34D399; }
+.slens-stu-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+.slens-stu-head b { font-size: 13.5px; color: var(--text-50); }
+.slens-badge { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.slens-badge.slens-fail { color: #FCA5A5; background: rgba(248, 113, 113, 0.16); border: 1px solid rgba(248, 113, 113, 0.4); }
+.slens-badge.slens-pass { color: #6EE7B7; background: rgba(52, 211, 153, 0.16); border: 1px solid rgba(52, 211, 153, 0.4); }
+.slens-stu-tag { font-size: 11px; color: var(--text-500); margin-bottom: 6px; }
+.slens-stu-vals { display: flex; flex-wrap: wrap; gap: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-400); }
+.slens-stu-vals b { color: var(--text-100); }
+.slens-contrib-cap { font-size: 11.5px; color: var(--text-400); margin-bottom: 8px; }
+.slens-contrib-cap b { font-family: 'JetBrains Mono', monospace; color: #7DD3FC; }
+.slens-contrib { display: flex; flex-direction: column; gap: 7px; }
+.slens-crow { display: grid; grid-template-columns: 130px 1fr 62px; align-items: center; gap: 10px; }
+.slens-cname { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-300); }
+.slens-cbar { height: 12px; background: rgba(148, 163, 184, 0.1); border-radius: 6px; overflow: hidden; }
+.slens-cfill { display: block; height: 100%; width: 1.5%; border-radius: 6px; transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .slens-cfill { transition: none; } }
+.slens-cpct { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--text-200); text-align: right; }
+.slens-demo-note { font-size: 12.5px; color: var(--text-300); line-height: 1.6; margin-top: 10px; border-top: 1px dashed rgba(148, 163, 184, 0.18); padding-top: 9px; }
+.slens-demo-note b { color: var(--text-50); }
+.slens-a11y-focus:focus-visible, .slens-toggle:focus-visible, .slens-bar-btn:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .slens-eq { height: 150px; gap: 10px; }
+  .slens-students { grid-template-columns: 1fr; }
+  .slens-crow { grid-template-columns: 96px 1fr 52px; gap: 6px; }
+}
+
+/* 2) MAP — CHỌN cột (scale_select) */
+.mlf-scale-select { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mlf-sc-col { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.mlf-sc-in  { background: rgba(56, 189, 248, 0.05); }
+.mlf-sc-out { background: rgba(248, 113, 113, 0.05); }
+.mlf-sc-colhead { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; letter-spacing: 0.4px; color: var(--text-200); margin-bottom: 2px; }
+.mlf-sc-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-300); }
+.mlf-sc-row .mlf-chip { flex: 0 0 auto; }
+.mlf-sc-why { color: var(--text-400); font-size: 11px; line-height: 1.35; }
+
+/* MAP — SCALE stats (transform: equalizer ngang σ→1) */
+.mlf-scale-stats { display: flex; flex-direction: column; gap: 12px; }
+.mlf-scs-rows { display: flex; flex-direction: column; gap: 10px; }
+.mlf-scs-row { display: grid; grid-template-columns: 128px 1fr; align-items: center; gap: 12px; }
+.mlf-scs-name { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-200); }
+.mlf-scs-bars { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.mlf-scs-before, .mlf-scs-after { position: relative; height: 20px; background: rgba(148, 163, 184, 0.08); border-radius: 6px; display: flex; align-items: center; }
+.mlf-scs-bfill, .mlf-scs-afill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 6px; opacity: 0.85; }
+.mlf-scs-before i, .mlf-scs-after i { position: relative; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: var(--text-50); font-style: normal; padding-left: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+.mlf-scs-arrow { color: #7DD3FC; font-weight: 700; }
+
+/* MAP — SCALE verify (mean0/std1) */
+.mlf-scale-verify { display: flex; flex-direction: column; gap: 12px; }
+.mlf-scv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mlf-scv-card { border: 1px solid rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.06); border-radius: 10px; padding: 10px 12px; text-align: center; }
+.mlf-scv-col { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--text-200); margin-bottom: 6px; word-break: break-word; }
+.mlf-scv-line { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-300); }
+.mlf-scv-line b { color: var(--text-50); }
+.mlf-scv-ok { color: #6EE7B7; font-size: 10.5px; }
+
+/* Pill Python dài (vd StandardScaler().fit_transform(df[numeric_cols + ["pass_fail"]])) —
+   ở màn HẸP (≤900px) cho WRAP thay vì cắt ellipsis: 2 pill X_scaled trùng phần đầu, bị cắt
+   cùng chỗ thì không phân biệt nổi bản đúng vs bẫy. Chỉ áp .course-ml, không đụng bài SQL. */
+@media (max-width: 900px) {
+  .course-ml .block-bank .logic-pill {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+}
+
+/* MAP — node compact scale_stats */
+.mlf-sc-mini { display: flex; gap: 5px; flex-wrap: wrap; }
+.mlf-sc-cell { display: inline-flex; flex-direction: column; align-items: center; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.18); min-width: 40px; }
+.mlf-sc-cell i { font-size: 9px; color: var(--text-500); font-style: normal; }
+.mlf-sc-cell b { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-100); }

@@ -281,3 +281,33 @@ Hero 5 loại + đố sai/đúng; 3 MCQ (1/3) gồm misconception spec "cùng ID
 - **Rate-limiter 50 req/giờ trên route lesson** — chạy suite lặp nhiều lượt sẽ 429 (page trắng, hero null, dễ tưởng bug). Limiter in-memory → RESTART Flask là reset. Budget lượt chạy suite.
 - Tài khoản audit có cờ needs_questionnaire (POST /api/survey để tắt) — không phải nguyên nhân 429 nhưng đã dọn luôn.
 - Versions: css v18 · content v13 · shell v21 · flowmap v6.
+
+---
+
+## ĐỢT 10 (2026-07-21) — BÀI 6 "Scale feature — không để 1 đơn vị lấn át" (spec C1-L6, M2)
+
+### Spec → shell (user chốt 4 quyết định)
+- **Hero = ỐNG KÍNH ÂM LƯỢNG + demo khoảng cách** (`renderScaleLens` mới): equalizer 3 feature với chiều cao ∝ σ THẬT (study 2.72 · attendance 17.69 · activity_count 556 → activity nuốt trọn track, 2 cột kia thành sliver); nút **▶ SCALE** lật cả equalizer (3 thanh về cùng cao σ 1.0) LẪN bảng đóng góp khoảng cách. Demo 2 học viên **Nam** (study 3.1 · LMS 1 971 · **Rớt**) vs **Linh** (study 10 · LMS 152 · **Đậu**): thô → activity chiếm **99.97%**, study **0.001%** (át tiếng); scale → study **31.2%**, activity 51.9% (nghe được). Câu đố chốt "cột nào lấn át khi CHƯA scale" (đúng = activity_count).
+- **Dạy song song Min-Max vs StandardScaler** (user chốt): glossary 6 thẻ (SCALE·STANDARDSCALER z=(x−μ)/σ·MIN-MAX [0,1]·FEATURE DOMINANCE·FIT vs TRANSFORM·STD σ) + concept card so 2 scaler + MCQ #2 test robustness ("outlier kéo Min-Max về gần 0, Standard ít bị"). Exercise vẫn StandardScaler (khớp grader).
+- **Persona tôi chọn khớp seed 1601** (user chốt): soi dữ liệu thật → Nam = 20520135 (activity cao + study thấp + Rớt) làm "vẫy LMS"; Linh = 20520048 (study 10 · Đậu) làm "chăm thật". Cặp cho khoảng cách thô 1 819, contrib activity 99.97% (số 100% từ engine + sklearn).
+- **Step 3 = map 3 TRẠM + 2 mồi bẫy** (user chốt): CHỌN 3 cột số (`scale_select` mới: pick 3 + exclude ID/major/target kèm lý do) → FIT+TRANSFORM (`scale_stats` transform: equalizer ngang σ→1) → KIỂM (`scale_stats` verify: 3 thẻ mean0/std1 ✓). Bẫy: scale student_id · scale pass_fail (`df[numeric_cols + ["pass_fail"]]`).
+
+### Engine + grader (có sẵn, khớp spec)
+- `load_scaling_dataset` seed 1601, 200 dòng: study_hours σ2.72/μ5.22 · attendance_rate σ17.69/μ68.5 · activity_count σ556/μ949 (chênh **204×**) · student_id (ID) · major (ICT68/DS67/Space65) · pass_fail (Đậu64/Rớt136).
+- `grade_lesson6` 4 tầng: cần StandardScaler + fit_transform, X_scaled (200,3) mean≈0/std≈1, `numeric_cols` = đúng {study,attendance,activity}; Risk bắt scale student_id / pass_fail; Behavior variant 777 (không hard-code); Risk pass kèm ⚠ Course-2 fit-trên-TRAIN-split. Test server-side: CORRECT→4/4; TRAP_ID→risk_ok False nêu đích danh; TRAP_TARGET→output (200,4) fail.
+- scikit-learn ĐÃ nạp sẵn trong ml_worker (`loadPackage(['numpy','pandas','scikit-learn'])`) → Run step 4 chạy StandardScaler trong Pyodide OK. Dispatch grader_fn generic (`ml_grader.grade_lesson6`), không allowlist.
+
+### Verify — verify_b6.js: 34/34 pass · 0 pageerror (2 lượt sạch)
+Hero equalizer raw (activity σ556 cao vống, riddle ẩn) → bấm thanh hiện dải/σ/μ → SCALE (3 thanh đều σ1.0 + contrib study 31% + riddle mở) → đố sai study_hours (feedback) → đúng activity_count (done); glossary 6; explorer 6 cột. 3 MCQ (1/3) + minigame 3 ngăn SCALE/ENCODE/NGOÀI. Map 3 trạm: scale_select (3 pick + 3 ban) → transform (σ→1) → verify (mean0/std1). Kéo bẫy scale ID → chấm bắt. Step 4: trap ID → Risk "ĐỊNH DANH/vô nghĩa"; bản đúng 4/4 + TRAIN split + modal. Regression B1-B5 ML + Basic + NC sạch. Multi-viewport 1920/1536/1024/768: 0 h-scroll, hero+map fit (zoom tự co 0.70@1024).
+
+### Fix trong đợt
+- **Hydrate lọc bỏ dòng `print(...)`** (`!/^print\s*\(/.test(t)` — coi print là echo boilerplate): zone 3 "KIỂM" ban đầu là print → bị lọc → còn 2 dòng < 3 zone → hydrate trả false, gõ-code không chạy. B5 không dính vì không có zone print. Sửa: đổi zone 3 sang câu lệnh GÁN thật `means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)` (đúng nghĩa "tính giá trị kiểm chứng", không bị lọc). KHÔNG đụng bộ lọc shell (dùng chung mọi bài).
+- **Pill Python dài bị cắt ellipsis ở ≤900px**: 2 pill `X_scaled = StandardScaler().fit_transform(df[...` trùng phần đầu → cắt cùng chỗ thì không phân biệt nổi bản đúng vs bẫy t2. Vá gọn: `@media (max-width:900px){ .course-ml .block-bank .logic-pill{ white-space:normal; overflow:visible; word-break:break-word } }` — chỉ ML, màn hẹp pill WRAP đủ token. Desktop (1366+) pill vẫn 1 hàng, hiện đủ 100%.
+- Step-4 CÁC BƯỚC từng lộ nguyên dòng `StandardScaler().fit_transform(df[numeric_cols])` → viết lại mô tả không-code (fit→transform khái niệm); hints level 2-4 vẫn giữ code.
+
+### Component mới tái dùng được
+- `renderScaleLens` (hero): equalizer σ + demo khoảng cách, toggle raw↔scaled 1 nút lật cả 2 khối, reduced-motion gate transition.
+- `scale_select` + `scale_stats` (ml_flow_map result_kind): node compact + scene; scale_stats mode 'transform' (equalizer ngang) / 'verify' (grid mean0/std1).
+- Màu 3 feature dùng chung hero+map: --scf-0 sky / --scf-1 green / --scf-2 amber (activity = màu "loud").
+
+### Versions: css v19 · content v15 · shell v22 · flowmap v7.

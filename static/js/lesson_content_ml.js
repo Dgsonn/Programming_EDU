@@ -2594,7 +2594,339 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l6',  index: 6,  title: 'Scale feature — không để 1 đơn vị lấn át',     module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    {
+      id: 'c1_l6',
+      index: 6,
+      title: 'Scale feature — không để 1 đơn vị lấn át',
+      subtitle: 'Đơn vị TO không có nghĩa là quan trọng hơn — đưa mọi cột số về cùng âm lượng',
+      module: 11,
+      module_title: 'M2 — Dữ liệu sẵn sàng',
+      estimated_minutes: 18,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎓 StudyLab · Ticket #06',
+        hook: 'Bảng đã sạch, nhưng Ticket #06 mở ra một cái bẫy tinh vi: 3 cột số <strong>chênh THANG khủng khiếp</strong>. <code>study_hours</code> chạy 0–10, <code>attendance_rate</code> 0–100, còn <code>activity_count</code> (số lượt bấm LMS) lên tới <strong>~2000</strong>. Bạn <strong>Nam</strong> chăm bấm LMS (1 971 lượt) nhưng chỉ tự học 3.1 giờ/tuần — và đã <strong>RỚT</strong>. Bạn <strong>Linh</strong> tự học 10 giờ/tuần, bấm LMS ít (152 lượt) — <strong>ĐẬU</strong>. Trớ trêu: model đo <strong>khoảng cách</strong> sẽ thấy Nam và Linh khác nhau gần như HOÀN TOÀN chỉ vì <code>activity_count</code> lệch 1 819 lượt — còn cái gap ~7 giờ học (thứ THẬT SỰ phân định Đậu/Rớt) thì bị <strong>át tiếng</strong>. Nhiệm vụ: SCALE 3 cột số về cùng âm lượng để không đơn vị nào lấn át.'
+      },
+      achievement: { name: 'Feature Scaling Engineer — cân âm lượng', desc: 'đưa 3 feature chênh 204× về mean 0/std 1, loại ID/category/target khỏi scaler' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Hiểu vì sao cột có <strong>thang lớn</strong> (activity_count 0–2000) lấn át cột thang nhỏ (study_hours 0–10) trong model theo <strong>khoảng cách / gradient</strong> — dù chưa chắc nó quan trọng hơn.',
+            'Dùng <strong>StandardScaler</strong> (z = (x−μ)/σ → mean 0, std 1) và biết khi nào chọn nó thay <strong>Min-Max</strong> [0,1].',
+            'SCALE đúng <strong>3 feature số</strong>, để <code>student_id</code> (ID) · <code>major</code> (category) · <code>pass_fail</code> (target) đứng NGOÀI scaler.'
+          ]
+        },
+        glossary: [
+          { term: 'SCALE (chuẩn hóa thang)', vi: 'cân âm lượng', accent: '#38BDF8',
+            def: 'Đưa các cột số về <b>cùng độ lớn</b> để không cột nào (vì con số to) lấn át phép tính khoảng cách/gradient.',
+            ex: 'giờ học 0–10 và lượt LMS 0–2000 → sau scale cả hai cùng thang, cùng "âm lượng".',
+            out: 'mỗi cột hết chênh thang · model cân nhắc công bằng' },
+          { term: 'STANDARDSCALER (z-score)', vi: 'chuẩn hóa z', accent: '#34D399',
+            def: 'Công thức <b>z = (x − μ) / σ</b>: trừ trung bình rồi chia độ lệch chuẩn → mỗi cột có <b>mean 0, std 1</b>.',
+            ex: 'activity_count μ≈949, σ≈556 → giá trị 1 505 thành z≈+1.0 (trên trung bình 1 độ lệch).',
+            out: 'mean≈0 · std≈1 · giữ hình dạng phân phối, ít bị 1 outlier bóp' },
+          { term: 'MIN-MAX SCALER', vi: 'ép về [0,1]', accent: '#FBBF24',
+            def: 'Công thức <b>x′ = (x − min) / (max − min)</b> → mọi giá trị nằm gọn trong <b>[0, 1]</b>.',
+            ex: 'giờ học min 0.5, max 10 → 5.2 thành ≈0.49. Nhưng 1 giá trị max cực đại kéo mọi số khác về gần 0.',
+            out: 'gọn [0,1] · NHẠY outlier hơn StandardScaler' },
+          { term: 'FEATURE DOMINANCE', vi: 'át tiếng', accent: '#F87171',
+            def: 'Cột có <b>thang lớn</b> chi phối khoảng cách/gradient, nuốt trọn tín hiệu của cột thang nhỏ.',
+            ex: 'activity_count (σ 556) làm study_hours (σ 2.7) gần như vô hình khi tính khoảng cách.',
+            out: 'triệu chứng cần SCALE · biến mất sau khi chuẩn hóa' },
+          { term: 'FIT vs TRANSFORM', vi: 'học rồi áp', accent: '#A78BFA',
+            def: '<b>fit</b> = học μ, σ (hoặc min/max) TỪ dữ liệu. <b>transform</b> = áp công thức lên số. <code>fit_transform</code> gộp 2 bước.',
+            ex: 'scaler.fit học μ,σ mỗi cột; transform mới đổi từng giá trị thành z.',
+            out: '⚠ chỉ fit trên TRAIN split (Course 2) · transform áp cho cả val/test' },
+          { term: 'STD (độ lệch chuẩn σ)', vi: 'độ rộng cột', accent: '#22D3EE',
+            def: 'Thước đo <b>độ rộng</b> của một cột quanh trung bình. σ càng lớn = dải càng rộng = càng dễ lấn át.',
+            ex: 'study_hours σ 2.7 · attendance σ 17.7 · activity σ 556 — chênh nhau tới 204 lần.',
+            out: 'sau StandardScaler mọi cột σ = 1' }
+        ],
+        primer: {
+          goal: [
+            'Vì sao đơn vị TO lại "át tiếng" đơn vị nhỏ',
+            'StandardScaler (mean0/std1) vs Min-Max [0,1]',
+            'Chỉ scale feature số — ID/category/target đứng ngoài'
+          ],
+          intro: '',
+          example: '🔍 <strong>Bấm cột <code>activity_count</code> trong SCHEMA EXPLORER bên dưới:</strong> dải của nó tới ~2000, độ lệch chuẩn ≈556. Rồi bấm <code>study_hours</code>: dải chỉ 0–10, σ≈2.7 — nhỏ hơn <strong>204 lần</strong>. Trong phép tính khoảng cách, con số to của activity_count sẽ nuốt trọn tín hiệu của study_hours. Đó là lý do phải SCALE. Giữ ý này khi sang Bước 2 👇'
+        },
+        intro: 'Ba cột số đo ba thứ khác nhau bằng ba <strong>thang khác nhau</strong>. Model theo khoảng cách (như k-NN ở Bài 2) hay gradient chỉ nhìn <em>con số</em>, không hiểu "đơn vị": cột nào số lớn thì lấn át. Chuẩn hóa (scale) kéo mọi cột về cùng âm lượng — <strong>mean 0, std 1</strong> — để chúng đóng góp công bằng. Nhưng cẩn thận: chỉ scale <strong>feature số có nghĩa</strong>; đừng đụng vào ID, nhãn (target) hay cột chữ.',
+        concept_cards: [
+          {
+            icon: 'fa-volume-high',
+            title: 'Đơn vị TO thì "hét" to',
+            body: 'Model đo khoảng cách/gradient chỉ thấy <strong>con số</strong>, không hiểu đơn vị. <code>activity_count</code> (0–2000) có số to nên chi phối; <code>study_hours</code> (0–10) thành tiếng thì thầm. TO ≠ quan trọng hơn — chỉ là <strong>thang khác</strong>. Scale để cả 3 nói cùng âm lượng.'
+          },
+          {
+            icon: 'fa-arrows-left-right-to-line',
+            title: 'StandardScaler vs Min-Max',
+            body: '<strong>StandardScaler</strong>: z=(x−μ)/σ → mean 0, std 1; giữ hình dạng phân phối, <strong>ít bị 1 outlier bóp</strong> → hay dùng mặc định. <strong>Min-Max</strong>: (x−min)/(max−min) → gọn [0,1], nhưng 1 giá trị cực đại kéo mọi số khác về gần 0. Bài này dùng StandardScaler.'
+          },
+          {
+            icon: 'fa-ban',
+            title: 'Ai ĐỨNG NGOÀI scaler',
+            body: 'Chỉ scale feature SỐ có nghĩa. <code>student_id</code> là <strong>định danh</strong> — scale ra số vô nghĩa; <code>pass_fail</code> là <strong>target</strong> — không phải input; <code>major</code> là <strong>category</strong> — cần ENCODE trước, không scale. ⚠ Và scaler phải <strong>fit trên TRAIN split</strong> (Course 2), không fit cả bảng.'
+          }
+        ],
+        /* Hero = ỐNG KÍNH ÂM LƯỢNG + demo khoảng cách (user chốt 2026-07-21) */
+        scale_lens: {
+          title: 'ỐNG KÍNH ÂM LƯỢNG — CỘT NÀO ĐANG LẤN ÁT?',
+          intro: 'Ba feature số, ba THANG khác nhau. Bấm <b>▶ SCALE</b> để nghe điều gì đổi — cả thanh âm lượng lẫn khoảng cách 2 học viên. Trả lời được câu chốt thì mở Bước 2.',
+          features: [
+            { name: 'study_hours', unit: 'giờ/tuần', std: 2.72, mean: 5.2, range: '0.5 – 10',
+              note: 'Giờ tự học/tuần. Dải hẹp (0–10) → σ chỉ <b>2.7</b>. Đây là tín hiệu MẠNH của Đậu/Rớt nhưng con số nhỏ nên dễ bị át.' },
+            { name: 'attendance_rate', unit: '%', std: 17.69, mean: 68.5, range: '40 – 100',
+              note: 'Tỉ lệ chuyên cần (%). Dải 0–100 → σ ≈ <b>17.7</b>, to hơn giờ học ~6 lần.' },
+            { name: 'activity_count', unit: 'lượt LMS', std: 556, mean: 949, range: '3 – 1 982',
+              note: 'Số lượt bấm LMS. Dải tới ~2000 → σ ≈ <b>556</b> — TO gấp <b>204×</b> giờ học. Chính nó "hét" át 2 cột kia.' }
+          ],
+          demo: {
+            title: 'MODEL SO KHOẢNG CÁCH 2 HỌC VIÊN',
+            a: { name: 'Nam', tag: 'chăm bấm LMS', study: '3.1', att: '66', act: '1 971', verdict: 'Rớt', vclass: 'fail' },
+            b: { name: 'Linh', tag: 'học thật sự', study: '10', att: '99', act: '152', verdict: 'Đậu', vclass: 'pass' },
+            raw: { study: 0.001, att: 0.03, act: 99.97, dist: '1 819' },
+            scaled: { study: 31.2, att: 16.9, act: 51.9, dist: '4.5' },
+            raw_note: 'CHƯA scale: khoảng cách gần như 100% do <b>activity_count</b> (lệch 1 819 lượt). Cái gap ~7 GIỜ HỌC — thứ thật sự phân định Nam Rớt vs Linh Đậu — chỉ đóng góp <b>0.001%</b>, model không "nghe" thấy.',
+            scaled_note: 'SAU scale: 3 cột cùng âm lượng. <b>study_hours giờ chiếm 31%</b> — model cuối cùng nghe được khác biệt quan trọng; activity_count còn 52%, không còn độc chiếm.'
+          },
+          riddle: {
+            prompt: 'CHƯA scale — khác biệt khoảng cách giữa Nam (Rớt) và Linh (Đậu) chủ yếu đến từ cột nào?',
+            options: ['activity_count (lượt LMS)', 'study_hours (giờ học)', 'Cả 3 cột cân nhau'],
+            answer: 'activity_count (lượt LMS)',
+            wrong: {
+              'study_hours (giờ học)': 'Ngược lại — study_hours chỉ đóng góp <b>0.001%</b>! Vì con số của nó nhỏ (0–10) nên bị nuốt. Chính activity_count (0–2000) mới độc chiếm khoảng cách khi CHƯA scale.',
+              'Cả 3 cột cân nhau': 'Chỉ cân nhau SAU khi scale. Chưa scale, activity_count chiếm ~99.97% vì thang của nó lớn gấp trăm lần — đó chính là "đơn vị to át tiếng".'
+            },
+            done: '✅ Đúng — activity_count "hét" át 2 cột kia CHỈ vì con số nó to (thang 0–2000), KHÔNG phải vì nó quan trọng hơn. StandardScaler kéo cả 3 về mean 0 · std 1 để chúng nói cùng âm lượng; khi đó study_hours (tín hiệu thật) mới được nghe. Xuống Bước 2 phân biệt cột nào được scale 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'student_scaling (200 dòng · 3 cột số chênh thang)',
+            columns: [
+              { name: 'student_id', type: 'INT64 · định danh', key: 'ID', icon: '🪪',
+                note: '<strong>Identifier</strong> — số thứ tự, KHÔNG mang thông tin đo lường. Đưa vào scaler chỉ tạo z vô nghĩa. ĐỨNG NGOÀI.' },
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: '', icon: '',
+                note: '<strong>Feature số</strong> — dải 0.5–10, σ ≈ 2.7. Tín hiệu mạnh của Đậu/Rớt nhưng con số nhỏ → dễ bị át. <strong>SCALE.</strong>' },
+              { name: 'attendance_rate', type: 'FLOAT · %', key: '', icon: '',
+                note: '<strong>Feature số</strong> — dải 40–100, σ ≈ 17.7 (to hơn giờ học ~6×). <strong>SCALE.</strong>' },
+              { name: 'activity_count', type: 'INT · lượt LMS', key: '⚠', icon: '📢',
+                note: '<strong>Feature số — KẺ LẤN ÁT</strong>: dải 3–1 982, σ ≈ 556 (gấp 204× giờ học). Chính nó "át tiếng" khi chưa scale. <strong>SCALE.</strong>' },
+              { name: 'major', type: 'OBJECT · ngành', key: '', icon: '🏷️',
+                note: '<strong>Categorical</strong> — ICT/DS/Space (68/67/65). Chữ, không phải số → cần <strong>ENCODE</strong> (bài sau), KHÔNG scale.' },
+              { name: 'pass_fail', type: 'INT 0/1', key: 'TARGET', icon: '🎯',
+                note: '<strong>Target</strong> — Đậu 64 / Rớt 136. Là thứ ta ĐOÁN, không phải input; không đem chuẩn hóa. ĐỨNG NGOÀI.' }
+            ]
+          },
+          data_preview: [
+            ['20520001', '3.0', '57', '1925', 'ICT', '0'],
+            ['20520002', '0.8', '55', '978', 'Space', '0'],
+            ['20520003', '8.6', '89', '1847', 'ICT', '1'],
+            ['20520048', '10.0', '99', '152', 'Space', '1'],
+            ['20520005', '7.8', '93', '1405', 'DS', '1'],
+            ['20520006', '4.5', '66', '947', 'DS', '0'],
+            ['20520135', '3.1', '66', '1971', 'ICT', '0'],
+            ['20520004', '5.9', '65', '512', 'Space', '0']
+          ]
+        },
+        mission: 'Dựng <code class="code">RECIPE SCALE</code> cho <code class="code">student_scaling</code>: CHỌN đúng 3 cột số (loại <code class="code">student_id</code>/<code class="code">major</code>/<code class="code">pass_fail</code>) · <code class="code">StandardScaler</code> fit→transform · KIỂM mean 0/std 1 — kho có <code class="code">mồi bẫy 🪤</code> (scale ID · scale target) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (why dominance · Min-Max vs Standard · exclude cols) + mini-game 3 ngăn ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Model k-NN đo <strong>khoảng cách</strong> giữa 2 học viên. <code>activity_count</code> (0–2000) chi phối gần như toàn bộ khoảng cách, còn <code>study_hours</code> (0–10) gần như vô hình. Vì sao?',
+            options: [
+              { id: 'a', text: 'Vì con số activity_count TO hơn (thang lớn) nên lấn át — không phải vì nó quan trọng hơn', correct: true, explanation: 'Đúng — khoảng cách cộng bình phương hiệu từng cột; hiệu của activity_count (hàng trăm–nghìn) áp đảo hiệu của study_hours (vài đơn vị). Đó thuần túy do THANG, không phải mức quan trọng. Scale để cân lại.' },
+              { id: 'b', text: 'Vì activity_count thật sự quan trọng hơn study_hours', correct: false, explanation: 'Không — thực tế study_hours mới là tín hiệu mạnh của Đậu/Rớt (Nam bấm LMS nhiều vẫn Rớt). activity_count chi phối chỉ vì con số to, đây là bẫy "TO ≠ quan trọng".' },
+              { id: 'c', text: 'Vì activity_count là cột target', correct: false, explanation: 'target là pass_fail. activity_count là feature. Chuyện nó lấn át là do thang đo, không liên quan target.' },
+              { id: 'd', text: 'Vì activity_count có nhiều giá trị thiếu', correct: false, explanation: 'Bảng này đã sạch, không thiếu. Vấn đề là chênh THANG (0–2000 vs 0–10), giải bằng scale chứ không phải điền thiếu.' }
+            ]
+          },
+          {
+            question: '<code>activity_count</code> có 1 học viên bấm LMS gấp mấy lần người khác (một outlier lớn). Nếu dùng <strong>Min-Max [0,1]</strong> cho cột này, chuyện gì xảy ra?',
+            options: [
+              { id: 'a', text: 'Outlier thành 1.0, còn mọi người bình thường bị dồn xuống gần 0 — mất phân biệt', correct: true, explanation: 'Đúng — Min-Max chia cho (max − min); max bị outlier kéo lên nên phần lớn giá trị dồn về sát 0. StandardScaler (dùng μ, σ) ít bị 1 điểm kéo lệch hơn → nhiều bài chọn Standard làm mặc định.' },
+              { id: 'b', text: 'Không sao, Min-Max luôn an toàn hơn StandardScaler', correct: false, explanation: 'Ngược lại — chính vì phụ thuộc min/max nên Min-Max NHẠY với outlier hơn. Không có cái nào "luôn an toàn"; chọn theo dữ liệu.' },
+              { id: 'c', text: 'Min-Max sẽ tự động loại outlier đó ra', correct: false, explanation: 'Scaler không xóa dữ liệu — nó chỉ đổi thang. Loại/giữ outlier là bước làm sạch (Bài 5), không phải việc của Min-Max.' },
+              { id: 'd', text: 'Cả cột sẽ có mean 0 và std 1', correct: false, explanation: 'Đó là kết quả của StandardScaler, không phải Min-Max. Min-Max cho khoảng [0,1], không đảm bảo mean 0/std 1.' }
+            ]
+          },
+          {
+            question: 'Bảng có <code>student_id</code>, <code>study_hours</code>, <code>attendance_rate</code>, <code>activity_count</code>, <code>major</code>, <code>pass_fail</code>. Đưa cột nào vào <strong>StandardScaler</strong>?',
+            options: [
+              { id: 'a', text: 'Đúng 3 feature số: study_hours, attendance_rate, activity_count', correct: true, explanation: 'Chuẩn — chỉ scale feature SỐ có nghĩa. ID là định danh, major là chữ (cần encode), pass_fail là target — cả 3 đứng ngoài scaler.' },
+              { id: 'b', text: 'Mọi cột số, kể cả student_id và pass_fail', correct: false, explanation: 'student_id chỉ là số thứ tự — scale ra z vô nghĩa; pass_fail là target — không đem chuẩn hóa. "Số" không có nghĩa là "feature để scale".' },
+              { id: 'c', text: 'Chỉ activity_count vì nó to nhất', correct: false, explanation: 'Scale phải áp cho CẢ 3 feature số cùng lúc thì chúng mới về chung thang. Scale mỗi activity_count thì study_hours/attendance vẫn lệch nhau.' },
+              { id: 'd', text: 'Cả major nữa cho đủ bộ', correct: false, explanation: 'major là chữ (ICT/DS/Space) — StandardScaler chỉ nhận số. Category cần ENCODE (bài sau) rồi mới xử, không nhét vào scaler.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Mỗi cột đi đâu trước khi train?',
+          instruction: 'Không phải cứ là số thì scale. Kéo mỗi cột vào đúng ngăn: <strong>🎚️ SCALE ngay</strong> (feature số) · <strong>🔤 ENCODE trước</strong> (cột chữ) · <strong>🚫 ĐỨNG NGOÀI</strong> (ID & target).',
+          chips: [
+            { id: 's-study', label: 'study_hours (0–10)' },
+            { id: 's-att',   label: 'attendance_rate (0–100)' },
+            { id: 's-act',   label: 'activity_count (0–2000)' },
+            { id: 's-major', label: 'major (ICT/DS/Space)' },
+            { id: 's-id',    label: 'student_id (định danh)' },
+            { id: 's-y',     label: 'pass_fail (target)' }
+          ],
+          bins: [
+            { id: 'scale',  label: '🎚️ SCALE ngay',   correct: 'true' },
+            { id: 'encode', label: '🔤 ENCODE trước',  correct: 'true' },
+            { id: 'out',    label: '🚫 ĐỨNG NGOÀI',    correct: 'true' }
+          ],
+          solution: {
+            's-study': 'scale',
+            's-att':   'scale',
+            's-act':   'scale',
+            's-major': 'encode',
+            's-id':    'out',
+            's-y':     'out'
+          },
+          success: 'Chuẩn — chỉ 3 feature SỐ vào scaler; major là chữ (encode ở bài sau); student_id/pass_fail đứng ngoài hẳn. "Là số" không đồng nghĩa "đem scale". Đó là recipe Bước 3 sắp dựng.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM (user chốt) — CHỌN cột → FIT+TRANSFORM → KIỂM. 2 mồi bẫy: scale ID / target ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]', slot: 'b1' },
+          { type: 'py', token: 'X_scaled = StandardScaler().fit_transform(df[numeric_cols])', slot: 'b2' },
+          { type: 'py', token: 'means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)', slot: 'b3' },
+          /* 2 mồi bẫy — Risk của grader: scale ID / scale target */
+          { type: 'py', token: 'numeric_cols = ["student_id", "study_hours", "attendance_rate", "activity_count"]', slot: 't1' },
+          { type: 'py', token: 'X_scaled = StandardScaler().fit_transform(df[numeric_cols + ["pass_fail"]])', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l6-cols',  accepts: ['py'], multi: false },
+          { id: 'l6-scale', accepts: ['py'], multi: false },
+          { id: 'l6-check', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'RECIPE SCALE — 3 TRẠM · CÂN ÂM LƯỢNG',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'student_scaling · 200 dòng · study σ2.7 / att σ17.7 / activity σ556 (chênh 204×)' },
+          done_note: 'X_scaled (200, 3): mean ≈ 0 · std ≈ 1 mỗi cột — 3 feature cùng âm lượng; student_id / major / pass_fail ĐỨNG NGOÀI. Click lại trạm để xem; Bước 4 tự viết StandardScaler thật + validate.',
+          stations: [
+            {
+              zones: ['l6-cols'],
+              icon: '🎯', label: 'TRẠM 1 — CHỌN 3 CỘT SỐ', sub: 'loại ID/category/target', result_kind: 'scale_select',
+              scale_select: {
+                pick: [
+                  { col: 'study_hours', std: 2.7 },
+                  { col: 'attendance_rate', std: 17.7 },
+                  { col: 'activity_count', std: 556 }
+                ],
+                exclude: [
+                  { col: 'student_id', icon: '🪪', why: 'ĐỊNH DANH — scale ra số vô nghĩa' },
+                  { col: 'major', icon: '🏷️', why: 'CATEGORY — cần ENCODE, không scale' },
+                  { col: 'pass_fail', icon: '🎯', why: 'TARGET — không phải input' }
+                ]
+              },
+              narration: '<code>numeric_cols</code> chỉ giữ 3 feature SỐ có nghĩa. student_id (định danh), major (chữ), pass_fail (target) bị loại ra — nếu lỡ nhét ID/target vào, scaler tạo ra z vô nghĩa và tầng Risk ở Bước 4 sẽ bắt.'
+            },
+            {
+              zones: ['l6-scale'],
+              icon: '🎚️', label: 'TRẠM 2 — FIT + TRANSFORM', sub: 'StandardScaler z=(x−μ)/σ', result_kind: 'scale_stats',
+              scale: {
+                mode: 'transform',
+                rows: [
+                  { col: 'study_hours', before_std: 2.72, before_mean: 5.2, after_std: 1, after_mean: 0 },
+                  { col: 'attendance_rate', before_std: 17.69, before_mean: 68.5, after_std: 1, after_mean: 0 },
+                  { col: 'activity_count', before_std: 556, before_mean: 949, after_std: 1, after_mean: 0 }
+                ],
+                note: 'StandardScaler <b>fit</b> học μ, σ mỗi cột rồi <b>transform</b> đổi z=(x−μ)/σ. Độ lệch chuẩn từ 2.7 / 17.7 / 556 (chênh 204×) <b>đều về 1</b> — cả 3 cột giờ cùng âm lượng.'
+              },
+              narration: '<code>fit_transform</code> gộp 2 việc: học μ,σ của 3 cột rồi áp z-score. Sau bước này, activity_count không còn "hét" — hiệu của nó và của study_hours đo trên cùng một thang (σ = 1).'
+            },
+            {
+              zones: ['l6-check'],
+              icon: '✅', label: 'TRẠM 3 — KIỂM mean 0 / std 1', sub: 'validate moments', result_kind: 'scale_stats',
+              scale: {
+                mode: 'verify',
+                rows: [
+                  { col: 'study_hours', after_std: 1, after_mean: 0 },
+                  { col: 'attendance_rate', after_std: 1, after_mean: 0 },
+                  { col: 'activity_count', after_std: 1, after_mean: 0 }
+                ],
+                note: 'Tính <code>means = X_scaled.mean(axis=0)</code> ≈ [0, 0, 0] và <code>stds = X_scaled.std(axis=0)</code> ≈ [1, 1, 1] — bằng chứng scale đúng. Shape vẫn (200, 3): không mất dòng nào, chỉ đổi thang.'
+              },
+              narration: 'Luôn KIỂM sau khi biến đổi: mean mỗi cột ≈ 0, std ≈ 1 thì StandardScaler đã chạy đúng. Nếu một cột std ≠ 1, nghĩa là bạn quên đưa nó vào (hoặc lỡ đưa cột lạ vào).'
+            }
+          ]
+        },
+        expected_sql: 'numeric_cols = ["study_hours", "attendance_rate", "activity_count"] X_scaled = StandardScaler().fit_transform(df[numeric_cols]) means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)',
+        expected_zones: {
+          'l6-cols':  'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]',
+          'l6-scale': 'X_scaled = StandardScaler().fit_transform(df[numeric_cols])',
+          'l6-check': 'means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)'
+        },
+        reveal_hints: {
+          'l6-cols':  'Trạm 1: chỉ 3 feature số — <strong>numeric_cols = ["study_hours", "attendance_rate", "activity_count"]</strong> (KHÔNG có student_id/pass_fail).',
+          'l6-scale': 'Trạm 2: fit rồi transform — <strong>X_scaled = StandardScaler().fit_transform(df[numeric_cols])</strong>.',
+          'l6-check': 'Trạm 3: kiểm chứng — <strong>means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)</strong> ≈ [0,0,0] &amp; [1,1,1].'
+        }
+      },
+
+      drag_map: {
+        brand: 'RECIPE SCALE — 3 TRẠM · CÂN ÂM LƯỢNG',
+        table_sub: 'student_scaling · 200 dòng · 3 cột số chênh thang',
+        idle_sub: '3 cột số chênh 204× · ▶ chạy để đưa về cùng âm lượng',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'student_scaling',
+          columns: ['student_id', 'study_hours', 'attendance_rate', 'activity_count', 'major', 'pass_fail'],
+          dataRows: [
+            ['20520001', '3.0', '57', '1925', 'ICT', '0'],
+            ['20520002', '0.8', '55', '978', 'Space', '0'],
+            ['20520003', '8.6', '89', '1847', 'ICT', '1'],
+            ['20520048', '10.0', '99', '152', 'Space', '1'],
+            ['20520005', '7.8', '93', '1405', 'DS', '1'],
+            ['20520006', '4.5', '66', '947', 'DS', '0'],
+            ['20520135', '3.1', '66', '1971', 'ICT', '0'],
+            ['20520004', '5.9', '65', '512', 'Space', '0']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: viết StandardScaler thật (KHÁC step 3: dùng sklearn + validate moments).
+         Grader: grade_lesson6 (StandardScaler đúng 3 cột; trap scale student_id/pass_fail; hidden variant 777). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp recipe bằng tay. Giờ viết <strong>sklearn thật</strong>: nạp bảng, chọn đúng 3 cột số (<code>numeric_cols</code>), dùng <code>StandardScaler</code> fit→transform ra <code>X_scaled</code>, rồi in kiểm chứng mean≈0/std≈1. Hệ thống chấm sẽ chạy lại trên <strong>dữ liệu ẩn</strong> — phép scale phải nhất quán, KHÔNG hard-code số μ,σ cụ thể.',
+        context: {
+          scenario: 'Bản dữ liệu đổi mỗi kỳ, giá trị khác nhau. Hidden test thay toàn bộ dataset bằng variant ẩn — StandardScaler viết đúng thì vẫn ra mean 0 / std 1; hard-code μ,σ thì vỡ. Và nhớ: chỉ đưa 3 feature SỐ vào scaler — thêm <code>student_id</code> hay <code>pass_fail</code> là trượt tầng Risk.',
+          real_world: 'Chuyện thật hay gặp: đội ML fit scaler trên TOÀN bảng (train + test) rồi mới chia tập → điểm test đẹp ẢO vì μ,σ đã "nhìn trộm" test. Đúng quy trình: fit scaler CHỈ trên TRAIN split rồi transform validation/test. Bài này fit cả bảng để học CƠ CHẾ; Course 2 sẽ chặn rò rỉ này.',
+          steps: [
+            'Import bộ chuẩn hóa của sklearn và hàm nạp dữ liệu; nạp <code>df</code>.',
+            'Chọn đúng <strong>3 cột số feature</strong> (bỏ ID, category, target) vào một danh sách <code>numeric_cols</code>.',
+            'Khởi tạo scaler rồi <strong>fit → transform</strong> trên các cột đó để ra <code>X_scaled</code>.',
+            'In shape của <code>X_scaled</code> và mean/std mỗi cột · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Gõ <code>print(df.std(numeric_only=True))</code> rồi <strong>Run</strong> để thấy 3 cột chênh thang cỡ nào TRƯỚC khi scale.',
+          expected: 'Console in <code>(200, 3)</code>, mean mỗi cột ≈ <code>0.0</code> và std ≈ <code>1.0</code>. Đủ 4 tầng xanh. Thử thêm student_id vào numeric_cols? Code VẪN chạy — tầng Risk sẽ giải thích vì sao sai.'
+        },
+        hints: [
+          { level: 1, text: 'Đúng recipe Bước 3, thêm import + in kiểm chứng: chọn 3 cột số → StandardScaler fit_transform → in shape + mean/std.' },
+          { level: 2, text: 'Đầu bài: <code>from ml_lab import load_scaling_dataset</code>, <code>from sklearn.preprocessing import StandardScaler</code>, <code>df = load_scaling_dataset()</code>.' },
+          { level: 3, text: 'Chọn cột: <code>numeric_cols = ["study_hours", "attendance_rate", "activity_count"]</code> (KHÔNG có student_id/pass_fail). Scale: <code>X_scaled = StandardScaler().fit_transform(df[numeric_cols])</code>. Giữ biến <code>numeric_cols</code> để tầng Risk soi được cột nào bị scale.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_scaling_dataset<br>from sklearn.preprocessing import StandardScaler<br>df = load_scaling_dataset()<br>numeric_cols = ["study_hours", "attendance_rate", "activity_count"]<br>scaler = StandardScaler()<br>X_scaled = scaler.fit_transform(df[numeric_cols])<br>print(X_scaled.shape)<br>print(X_scaled.mean(axis=0).round(2))<br>print(X_scaled.std(axis=0).round(2))</code>' }
+        ],
+        grader_fn: 'grade_lesson6',
+        success_message: 'Chuẩn — X_scaled (200, 3): mean ≈ 0 · std ≈ 1 mỗi cột, 3 feature cùng âm lượng, còn student_id/major/pass_fail đứng ngoài scaler. Bạn vừa gỡ cái bẫy "đơn vị to át tiếng". Bài 7: đọc dữ liệu bằng thống kê cơ bản — trung bình, độ lệch, tương quan.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l7',  index: 7,  title: 'Đọc dữ liệu bằng thống kê cơ bản',             module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
     { id: 'c1_l8',  index: 8,  title: 'Vẽ đường dự đoán đầu tiên',                    module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
     { id: 'c1_l9',  index: 9,  title: 'Đo lỗi model bằng MSE',                        module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
