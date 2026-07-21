@@ -255,3 +255,29 @@ Hero 3 luồng + so kèo; explorer 5 cột 2 TARGET; sạch quiz/tuần-3/SQL; m
 - `hidden` thua `display` — đã ghi (đợt 7).
 - Nén dense theo chiều cao phải có tier cho MỌI dải (≤800/≤840/841-1040/>1040) khi bài ở ngưỡng zone chật nhất (7 zone) — thiếu 1 dải là tràn ở đúng dải đó (900px từng lọt lưới).
 - Pill runtime ML là phần tử DUY NHẤT khóa ML thêm vào header → thủ phạm scroll ngang màn hẹp; khóa DB sạch.
+
+---
+
+## ĐỢT 9 (2026-07-20) — BÀI 5 "Làm sạch dữ liệu bẩn" (spec C1-L5 tr.27-30)
+
+### Spec → shell (user chốt 4 quyết định)
+- **Story = BẢN XUẤT THÔ hệ điểm 10** (Ticket #05): attendance/quiz_score chấm /10 như sổ điểm VN → giá trị 12/15 HIỂN NHIÊN nhập nhầm; giải thích bẩn do gộp nguồn + nhập tay. Persona neo dòng lỗi: **Hùng** (chuyên cần 12/10) + **Mai** (60 giờ/tuần — cắm cờ, không xóa).
+- **Hero = ỐNG KÍNH LỖI + câu đố chốt** (`renderQualityLens` mới): bảng 8 dòng, 5 ô/dòng lỗi tô 5 màu theo loại (thiếu đỏ · sai phạm vi cam · sai danh mục vàng · nghi ngờ tím · trùng viền cyan), bấm ô → thẻ LOẠI + BẰNG CHỨNG + HÀNH ĐỘNG; đủ 5 loại → câu đố completion-rule spec "Mai 60h: XÓA hay CẮM CỜ?" (đúng = CẮM CỜ).
+- **Step 3 = map 4 TRẠM + BẢNG ĐẾM** (`result_kind: quality_counts` mới): 5 chỉ số (dòng·trùng·sai·thiếu·cờ) before→after mỗi vòng, chỉ số đổi tô màu (giảm=xanh, tăng=vàng). Khoảnh khắc đắt: VÒNG 2 **thiếu TĂNG 9→11 có chủ đích** (sai→NaN) rồi về 0 sau median; VÒNG 4 cờ 0→2, outlier VẪN CÒN. 2 mồi bẫy: fillna(0) + lọc bỏ outlier.
+- Số 100% từ engine (seed 1501): 204→200 dòng · missing 9→11→0 · invalid 4 (12, 15, 2×ITC) · outlier 60/45 · median study 6.0 / att 6.4 / quiz 4.9.
+
+### Grader (có sẵn, khớp spec): grade_lesson5
+4 tầng; trap Risk: fillna(0) ("không biết ≠ bằng 0") + xóa outlier ("bất thường ≠ sai"); cột cờ bắt buộc; Behavior đổi VỊ TRÍ lỗi (variant 777); Risk pass kèm ⚠ Course-2: median phải học từ TRAIN split.
+
+### Verify — verify_b5.js: 31/31 pass · 0 pageerror (2 lượt sạch)
+Hero 5 loại + đố sai/đúng; 3 MCQ (1/3) gồm misconception spec "cùng ID khác số ≠ trùng"; minigame lỗi→hành động (SỬA/ĐIỀN/CẮM CỜ); map 4 vòng đủ 4 bảng đếm; kéo bẫy fillna(0) → dòng 5 + VÒNG 3 đỏ; step 4: trap fillna(0) → Risk đỏ, trap xóa outlier → Risk đỏ, bản đúng 4/4 + nhắc TRAIN split + modal. Regression B1 dọc/B2/B3/B4 + Basic + NC sạch.
+
+### Fix trong đợt
+- MCQ option escape: không (renderer đã vá đợt 6). Step-4 CÁC BƯỚC từng lộ code đáp án (drop_duplicates().copy()) → viết lại mô tả không-code.
+- Tier nén mới cho bài "kho ≥8 pill DÀI" (B5 mỗi pill 1 hàng ~70 ký tự, từng tràn 462/398): dùng **#block-bank (ID)** trong selector để thắng specificity rule generic có #drop-zones trong :has() — bài học: rule trong :has() chứa ID thì mọi override phải ≥ ID đó. Pill cuối hiện đủ (516≤523).
+- Guard `:not(:has(.drop-line:nth-child(7)))` để tier 8-pill không đè tier 7-zone của B4 (B4 probe độc lập: pill cuối 507≤523, editor 398/398 — còn tốt hơn trước).
+
+### Gotcha môi trường (ghi sổ)
+- **Rate-limiter 50 req/giờ trên route lesson** — chạy suite lặp nhiều lượt sẽ 429 (page trắng, hero null, dễ tưởng bug). Limiter in-memory → RESTART Flask là reset. Budget lượt chạy suite.
+- Tài khoản audit có cờ needs_questionnaire (POST /api/survey để tắt) — không phải nguyên nhân 429 nhưng đã dọn luôn.
+- Versions: css v18 · content v13 · shell v21 · flowmap v6.

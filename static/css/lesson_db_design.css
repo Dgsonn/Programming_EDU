@@ -11553,6 +11553,20 @@ body.module-3 .drop-line { --zone-color-default: #10B981; }
     font-size: 10.5px; padding: 2px 6px;
   }
   .course-ml .step3-editor:has(#drop-zones.ml-zones-dense:has(.drop-line:nth-child(7))) .block-bank { gap: 5px; }
+
+  /* B5 đợt 9: 6 zones + kho ≥8 pill RẤT DÀI (mỗi pill chiếm trọn 1 hàng — recipe pandas
+     ~70 ký tự) từng tràn 462/398 @768. Nén pill + zone thêm 1 nấc; :not(nth-child(7))
+     để KHÔNG đè tier 7-zone của B4 (đã nén sâu hơn). */
+  /* dùng #block-bank (ID) để THẮNG specificity rule generic có #drop-zones trong :has */
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) #block-bank .logic-pill {
+    font-size: 10.5px; padding: 1px 6px;
+  }
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) #block-bank { gap: 3px; }
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) .block-bank-wrap { padding: 4px 8px; }
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) #drop-zones.ml-zones-dense:not(:has(.drop-line:nth-child(7))) .drop-line { min-height: 24px; padding: 1px 10px; }
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) #drop-zones.ml-zones-dense:not(:has(.drop-line:nth-child(7))) .drop-line-slot { min-height: 20px; }
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) #drop-zones.ml-zones-dense:not(:has(.drop-line:nth-child(7))),
+  .course-ml .step3-editor:has(#block-bank .logic-pill:nth-child(8)) #drop-zones.ml-zones-dense:not(:has(.drop-line:nth-child(7))) .drop-zone-stack { gap: 3px; }
 }
 
 /* B2: hero 3 luồng — pgv-wrap auto-fit minmax(300px) chỉ vừa 2 cột @~770px
@@ -11859,3 +11873,88 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-ready-row.warn { background: rgba(251, 146, 60, 0.08); }
 .mlf-ready-row .mlf-chip { flex: 0 0 auto; }
 .mlf-ready-verdict { font-size: 12.5px; font-weight: 700; color: #6EE7B7; border-top: 1px dashed rgba(148, 163, 184, 0.18); padding-top: 8px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 9 (2026-07-20) — BÀI 5 "Làm sạch dữ liệu bẩn"
+ * 1) ỐNG KÍNH LỖI (hero)  2) BẢNG ĐẾM chất lượng (scene + node)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Màu 5 loại lỗi dùng chung */
+:root {
+  --ql-missing: #F87171; --ql-invalid-range: #FB923C; --ql-invalid-cat: #FBBF24;
+  --ql-outlier: #A78BFA; --ql-duplicate: #38BDF8;
+}
+
+/* 1) ỐNG KÍNH LỖI — kế thừa .tlens (Bài 3) + tô ô lỗi + thẻ giải nghĩa */
+.qlens-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+.qlens-check {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--ql-c, #94A3B8); color: var(--ql-c, #94A3B8);
+  background: color-mix(in srgb, var(--ql-c, #94A3B8) 10%, transparent);
+  opacity: 0.85;
+}
+.qlens-check.is-done { opacity: 1; box-shadow: 0 0 0 1px var(--ql-c); }
+.qlens-check.qlens-missing { --ql-c: var(--ql-missing); }
+.qlens-check.qlens-invalid-range { --ql-c: var(--ql-invalid-range); }
+.qlens-check.qlens-invalid-cat { --ql-c: var(--ql-invalid-cat); }
+.qlens-check.qlens-outlier { --ql-c: var(--ql-outlier); }
+.qlens-check.qlens-duplicate { --ql-c: var(--ql-duplicate); }
+
+.qlens-table td.qlens-issue { cursor: pointer; font-weight: 700; position: relative; }
+.qlens-table td.qlens-issue.qlens-missing { background: color-mix(in srgb, var(--ql-missing) 20%, transparent); color: #FECACA; }
+.qlens-table td.qlens-issue.qlens-invalid-range { background: color-mix(in srgb, var(--ql-invalid-range) 22%, transparent); color: #FED7AA; }
+.qlens-table td.qlens-issue.qlens-invalid-cat { background: color-mix(in srgb, var(--ql-invalid-cat) 22%, transparent); color: #FDE68A; }
+.qlens-table td.qlens-issue.qlens-outlier { background: color-mix(in srgb, var(--ql-outlier) 22%, transparent); color: #DDD6FE; }
+.qlens-table tr.qlens-issue-row { outline: 1.5px dashed var(--ql-duplicate); outline-offset: -2px; }
+.qlens-table tr.qlens-issue-row td { cursor: pointer; background: color-mix(in srgb, var(--ql-duplicate) 10%, transparent); }
+.qlens-table td.qlens-issue:hover, .qlens-table tr.qlens-issue-row td:hover { filter: brightness(1.25); }
+.qlens-table td.qlens-lit { box-shadow: inset 0 0 0 2px currentColor; }
+.qlens-nan { color: var(--ql-missing); font-weight: 800; letter-spacing: 2px; }
+
+.qlens-card { min-height: 84px; }
+.qlens-card-head { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 800; letter-spacing: 0.4px; margin-bottom: 5px; }
+.qlens-card-head.qlens-missing { color: var(--ql-missing); }
+.qlens-card-head.qlens-invalid-range { color: var(--ql-invalid-range); }
+.qlens-card-head.qlens-invalid-cat { color: var(--ql-invalid-cat); }
+.qlens-card-head.qlens-outlier { color: var(--ql-outlier); }
+.qlens-card-head.qlens-duplicate { color: var(--ql-duplicate); }
+.qlens-card-ev { font-size: 12.5px; color: var(--text-200); line-height: 1.55; }
+.qlens-card-ev code { color: #FCD34D; }
+.qlens-card-act { font-size: 12px; font-weight: 700; color: #6EE7B7; margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) BẢNG ĐẾM chất lượng — scene lớn (stage) */
+.mlf-qc-scene { display: flex; flex-direction: column; gap: 12px; }
+.mlf-qc-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.mlf-qc-card {
+  border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 10px;
+  background: rgba(11, 18, 32, 0.6); padding: 10px 8px; text-align: center;
+}
+.mlf-qc-card.qc-chg { border-color: rgba(148, 163, 184, 0.4); }
+.mlf-qc-card.qc-chg.qc-down { border-color: #34D399; background: rgba(52, 211, 153, 0.08); }
+.mlf-qc-card.qc-chg.qc-up { border-color: #FBBF24; background: rgba(251, 191, 36, 0.08); }
+.mlf-qc-label { font-size: 10px; font-weight: 700; letter-spacing: 0.4px; color: var(--text-400); text-transform: uppercase; margin-bottom: 6px; min-height: 24px; display: flex; align-items: center; justify-content: center; }
+.mlf-qc-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text-100); }
+.mlf-qc-val s { color: var(--text-500); font-size: 13px; }
+.mlf-qc-val b { font-size: 18px; }
+.mlf-qc-card.qc-down .mlf-qc-val b { color: #6EE7B7; }
+.mlf-qc-card.qc-up .mlf-qc-val b { color: #FCD34D; }
+.mlf-qc-val .qc-ar { color: var(--text-500); }
+.mlf-qc-note { font-size: 12.5px; color: var(--text-300); line-height: 1.55; border-top: 1px dashed rgba(148, 163, 184, 0.18); padding-top: 8px; }
+.mlf-qc-note code { color: #7DD3FC; }
+.mlf-qc-note b { color: var(--text-50); }
+
+/* Node compact — 5 chỉ số nhỏ */
+.mlf-qc-mini { display: flex; gap: 5px; flex-wrap: wrap; }
+.mlf-qc-cell {
+  display: inline-flex; flex-direction: column; align-items: center;
+  padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.08);
+  border: 1px solid transparent; min-width: 34px;
+}
+.mlf-qc-cell b { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-100); }
+.mlf-qc-cell i { font-size: 9px; color: var(--text-500); font-style: normal; }
+.mlf-qc-cell.qc-chg { border-color: rgba(148, 163, 184, 0.35); }
+.mlf-qc-cell.qc-chg.qc-down { border-color: #34D399; }
+.mlf-qc-cell.qc-chg.qc-down b { color: #6EE7B7; }
+.mlf-qc-cell.qc-chg.qc-up { border-color: #FBBF24; }
+.mlf-qc-cell.qc-chg.qc-up b { color: #FCD34D; }

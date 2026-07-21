@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4111,6 +4111,108 @@
     });
   }
 
+  /* ═══ ML Bài 5 (2026-07-20) — ỐNG KÍNH LỖI (spec C1-L5 "Bảng này sai ở đâu?"): bảng
+     nhỏ có 5 Ô/DÒNG LỖI tô màu (thiếu · sai phạm vi · sai danh mục · outlier · trùng),
+     bấm từng ô lỗi → thẻ hiện LOẠI LỖI + bằng chứng + HÀNH ĐỘNG đề xuất; xem đủ 5 loại →
+     câu đố chốt completion-rule spec: study_hours=60 nên XÓA hay CẮM CỜ (chọn CẮM CỜ).
+     cfg = { title, intro, columns, rows, issues:[{cell:'r:c'|row:'r', kind, name, evidence, action, accent}],
+             riddle:{prompt,options,answer,wrong,done} } ═══ */
+  function renderQualityLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const cols = cfg.columns || [];
+    const rows = cfg.rows || [];
+    const issues = cfg.issues || [];
+    const rid = cfg.riddle || {};
+    const seen = {};
+    const need = {};
+    issues.forEach(function (it) { need[it.kind] = true; });
+    const needCount = Object.keys(need).length;
+    // map ô/dòng → issue
+    const cellMap = {};
+    issues.forEach(function (it, i) { cellMap[it.cell || ('row:' + it.row)] = i; });
+
+    function tdClass(ri, ci) {
+      const key = ri + ':' + ci;
+      const idx = cellMap[key];
+      if (idx !== undefined) return ' qlens-issue qlens-' + issues[idx].kind;
+      return '';
+    }
+    function trClass(ri) {
+      const idx = cellMap['row:' + ri];
+      return idx !== undefined ? ' qlens-issue-row qlens-' + issues[idx].kind : '';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens qlens" aria-label="Ống kính lỗi — bảng này sai ở đâu">' +
+        '<div class="tlens-head"><span class="tlens-title">' + (cfg.title || 'ỐNG KÍNH LỖI') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="qlens-checks">' + issues.map(function (it, i) {
+          return '<span class="qlens-check qlens-' + it.kind + '" data-ql-chk="' + i + '">☐ ' + escapeHtml(it.tag || it.kind) + '</span>';
+        }).join('') + '</div>' +
+        '<div class="tlens-tablewrap"><table class="tlens-table qlens-table"><thead><tr>' +
+          '<th class="tlens-idx">#</th>' +
+          cols.map(function (c) { return '<th><span class="tlens-cname">' + escapeHtml(c.name) + '</span><span class="tlens-unit">' + escapeHtml(c.unit || '') + '</span></th>'; }).join('') +
+        '</tr></thead><tbody>' +
+          rows.map(function (r, ri) {
+            return '<tr class="' + trClass(ri).trim() + '" data-ql-row="' + ri + '"><td class="tlens-idx">' + (ri + 1) + '</td>' +
+              r.map(function (v, ci) {
+                const cellIssue = cellMap[ri + ':' + ci];
+                const attr = cellIssue !== undefined ? ' data-ql-cell="' + cellIssue + '"' : (cellMap['row:' + ri] !== undefined ? ' data-ql-cell="' + cellMap['row:' + ri] + '"' : '');
+                return '<td class="' + tdClass(ri, ci).trim() + '"' + attr + '>' + (v === null || v === '' ? '<span class="qlens-nan">—</span>' : escapeHtml(String(v))) + '</td>';
+              }).join('') + '</tr>';
+          }).join('') +
+        '</tbody></table></div>' +
+        '<div class="tlens-card qlens-card" data-ql-card>💡 Bấm vào từng <b>ô tô màu</b> để biết đó là lỗi gì và nên xử lý ra sao. Đủ ' + needCount + ' loại lỗi thì mở câu chốt.</div>' +
+        '<div class="dlens-riddle" data-ql-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-ql-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-ql-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-ql-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const card = mount.querySelector('[data-ql-card]');
+    const riddleEl = mount.querySelector('[data-ql-riddle]');
+    function reveal(i) {
+      const it = issues[i];
+      if (!it) return;
+      // sáng ô + thẻ
+      mount.querySelectorAll('.qlens-lit').forEach(function (el) { el.classList.remove('qlens-lit'); });
+      mount.querySelectorAll('[data-ql-cell="' + i + '"]').forEach(function (el) { el.classList.add('qlens-lit'); });
+      const chip = mount.querySelector('[data-ql-chk="' + i + '"]');
+      if (chip && !chip.classList.contains('is-done')) { chip.classList.add('is-done'); chip.textContent = '✓ ' + (it.tag || it.kind); }
+      if (card) card.innerHTML =
+        '<div class="qlens-card-head qlens-' + it.kind + '">' + escapeHtml(it.tag || it.kind) + (it.name ? ' · <b>' + escapeHtml(it.name) + '</b>' : '') + '</div>' +
+        '<div class="qlens-card-ev">' + (it.evidence || '') + '</div>' +
+        '<div class="qlens-card-act">→ <b>' + (it.action || '') + '</b></div>';
+      seen[it.kind] = true;
+      if (riddleEl && riddleEl.hidden && Object.keys(need).every(function (k) { return seen[k]; })) riddleEl.hidden = false;
+    }
+    mount.querySelectorAll('[data-ql-cell]').forEach(function (el) {
+      el.addEventListener('click', function () { reveal(parseInt(el.getAttribute('data-ql-cell'), 10)); });
+    });
+    const fb = mount.querySelector('[data-ql-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-ql-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-ql-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nghĩ về BẰNG CHỨNG: chắc chắn sai hay chỉ bất thường?');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4433,6 +4535,13 @@
         const heroMountDl = document.getElementById('lesson-hero');
         renderDtypeLens(heroMountDl || pvMount, s1.dtype_lens);
         if (heroMountDl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.quality_lens) {
+        // ML Bài 5 (user chốt 2026-07-20): ỐNG KÍNH LỖI — bấm ô lỗi tô màu → loại lỗi +
+        // hành động; câu đố chốt "study_hours=60 XÓA hay CẮM CỜ" (spec C1-L5). Render vào hero.
+        const heroMountQl = document.getElementById('lesson-hero');
+        renderQualityLens(heroMountQl || pvMount, s1.quality_lens);
+        if (heroMountQl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

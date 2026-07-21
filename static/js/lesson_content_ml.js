@@ -2223,7 +2223,377 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l5',  index: 5,  title: 'Làm sạch dữ liệu bẩn',                         module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
+    /* ═══════════ BÀI 5 — Làm sạch dữ liệu bẩn (spec C1-L5 tr.27-30) ═══════════
+     * Đợt 9 (2026-07-20, user chốt): story = BẢN XUẤT THÔ hệ điểm 10 · hero = ỐNG KÍNH LỖI
+     * + câu đố chốt XÓA/CẮM-CỜ · step 3 = map 4 VÒNG + bảng ĐẾM đổi số · persona neo Hùng/Mai.
+     * Dataset load_dirty_student_profile (seed 1501): 204 dòng — MỌI số tính từ engine:
+     * 4 trùng 100% → 200; missing 9→(invalid→NaN)11→0; invalid 4(2 phạm vi+2 danh mục);
+     * outlier study_hours 60 & 45 (>40) GIỮ + cắm cờ; median study 6.0·att 6.4·quiz 4.9.
+     * grade_lesson5 semantic có sẵn — KHÔNG fit model, chấm recipe làm sạch (spec). */
+    {
+      id: 'c1_l5',
+      index: 5,
+      title: 'Làm sạch dữ liệu bẩn',
+      subtitle: 'Sai chắc chắn thì sửa — chỉ nghi ngờ thì CẮM CỜ, đừng xóa',
+      module: 11,
+      module_title: 'M2 — Dữ liệu sẵn sàng',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎓 StudyLab · Ticket #05',
+        hook: 'Schema đã chuẩn, nhưng Ticket #05 mang tin xấu: <strong>bản xuất THÔ</strong> mà phòng đào tạo gửi — gộp từ nhiều nguồn, nhập tay — <strong>đầy lỗi</strong>. Đây là sổ điểm <strong>hệ 10</strong> thật: <code>attendance</code> (chuyên cần) và <code>quiz_score</code> (điểm quiz) đều chấm trên thang <strong>0–10</strong>. Mở file ra: <strong>204 dòng</strong> mà lẽ ra chỉ có 200 (có dòng bị nhân đôi); vài ô bỏ trống; bạn <strong>Hùng</strong> bị ghi chuyên cần <code>12/10</code> (nhập nhầm — không thể quá 10); một ô ngành ghi <code>ITC</code> (gõ đảo của ICT); và bạn <strong>Mai</strong> ghi tự học <code>60 giờ/tuần</code> — bất thường, nhưng… biết đâu Mai ôn thi thật? Nhiệm vụ: làm sạch <strong>BẢO THỦ</strong> — sửa cái CHẮC CHẮN sai, nhưng KHÔNG vứt cái chỉ mới nghi ngờ.'
+      },
+      achievement: { name: 'Data Preparation Scout — Làm sạch bảo thủ', desc: 'phân biệt sai vs bất thường, làm sạch không mất dữ liệu quý' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Nhận ra <strong>4 loại lỗi</strong> dữ liệu: ô THIẾU · dòng TRÙNG 100% · giá trị SAI (phạm vi/danh mục) · điểm NGHI NGỜ (outlier).',
+            'Chọn hành động theo BẰNG CHỨNG: bỏ / đổi-thành-thiếu / điền median / gộp-Unknown / <strong>cắm cờ</strong> — thay vì "thay hết bằng 0" hay "xóa mọi outlier".',
+            'Dựng <code>clean_df</code> giữ nguyên <code>df</code> gốc, và hiểu vì sao median để điền phải học từ <strong>TRAIN split</strong> (bài Course 2).'
+          ]
+        },
+        glossary: [
+          { term: 'MISSING (NaN)', vi: 'ô thiếu', accent: '#F87171',
+            def: 'Ô <b>bỏ trống</b> — hệ thống KHÔNG ghi được giá trị. "Không biết" <b>khác</b> "bằng 0".',
+            ex: 'ô điểm quiz trống vì bạn đó nghỉ hôm kiểm tra — không phải được 0 điểm.',
+            out: 'pandas hiện NaN · xử l: điền (impute), KHÔNG điền 0' },
+          { term: 'DUPLICATE', vi: 'dòng trùng 100%', accent: '#38BDF8',
+            def: 'Hai dòng <b>giống HỆT nhau mọi cột</b> — bản ghi bị nhân đôi khi gộp file.',
+            ex: 'xuất file 2 lần rồi dán chồng → 1 học viên xuất hiện 2 lần y hệt.',
+            out: 'df.drop_duplicates() · lưu ý: cùng ID mà số KHÁC thì KHÔNG phải trùng' },
+          { term: 'INVALID', vi: 'giá trị sai', accent: '#FB923C',
+            def: 'Giá trị <b>chắc chắn sai</b>: ngoài phạm vi (12 trên thang 0–10) hoặc sai danh mục (ITC không có trong ICT/DS/Space).',
+            ex: 'chấm chuyên cần hệ 10 mà ghi 12 — không thể tồn tại.',
+            out: 'phạm vi → đổi NaN rồi điền · danh mục → gộp "Unknown"' },
+          { term: 'OUTLIER', vi: 'điểm nghi ngờ', accent: '#A78BFA',
+            def: 'Giá trị <b>bất thường</b> nhưng CÓ THỂ THẬT — không đủ bằng chứng nói là sai.',
+            ex: 'tự học 60 giờ/tuần: hiếm, nhưng một bạn ôn thi cật lực có thể thật.',
+            out: 'CẮM CỜ để review — KHÔNG tự động xóa' },
+          { term: 'IMPUTE', vi: 'điền chỗ thiếu', accent: '#34D399',
+            def: 'Điền ô NaN bằng một ước lượng <b>hợp lý</b> — hay dùng <b>median</b> (trung vị, ít bị outlier kéo).',
+            ex: 'ô giờ học trống → điền bằng median cả cột (6.0h), không điền 0.',
+            out: 'fillna(median) · ⚠ median phải học từ TRAIN split' },
+          { term: 'FLAG', vi: 'cắm cờ', accent: '#FBBF24',
+            def: 'Thêm 1 cột <b>đánh dấu</b> (True/False) để CON NGƯỜI review sau — dữ liệu vẫn giữ nguyên.',
+            ex: 'study_hours_outlier = study_hours > 40 → dòng của Mai bật cờ.',
+            out: 'cột cờ mới · dòng bất thường VẪN CÒN trong bảng' }
+        ],
+        primer: {
+          goal: [
+            '4 loại lỗi: thiếu · trùng · sai · nghi ngờ',
+            'Hành động theo bằng chứng (sai→sửa, nghi→cờ)',
+            'clean_df bảo thủ — không mất dữ liệu quý'
+          ],
+          intro: '',
+          example: '🔍 <strong>Bấm cột <code>attendance</code> trong SCHEMA EXPLORER bên dưới:</strong> lẽ ra chỉ 0–10, nhưng có ô lọt ra 12. Rồi bấm <code>major</code>: đúng ra chỉ ICT/DS/Space, nhưng lẫn "ITC". Đây là 2 kiểu "SAI chắc chắn" — khác hẳn số 60 giờ học của Mai (bất thường mà có thể thật). Giữ phân biệt này khi sang Bước 2 👇'
+        },
+        intro: 'Bảng thô KHÔNG dùng để train ngay được — nó lẫn 4 loại lỗi. Việc làm sạch giống bác sĩ: <strong>chỉ can thiệp khi CHẮC CHẮN có bệnh</strong>. Sai rõ ràng (12/10, ITC, dòng trùng) thì sửa; còn cái chỉ <em>nghi ngờ</em> (60 giờ/tuần) thì đánh dấu để hỏi lại, tuyệt đối không vứt bừa — vì xóa nhầm dữ liệu thật là mất mát không lấy lại được.',
+        concept_cards: [
+          {
+            icon: 'fa-scale-balanced',
+            title: 'SAI ≠ Bất thường',
+            body: 'Chuyên cần <code>12/10</code> hay ngành <code>ITC</code> là SAI chắc chắn (vi phạm luật đã biết) → sửa. Nhưng <code>60 giờ/tuần</code> chỉ BẤT THƯỜNG — có thể thật → <strong>cắm cờ</strong>, không xóa. Ranh giới: có <strong>bằng chứng</strong> nói nó sai không? Không có thì GIỮ.'
+          },
+          {
+            icon: 'fa-question',
+            title: 'Missing ≠ 0',
+            body: 'Ô trống nghĩa là "KHÔNG BIẾT", không phải "bằng 0". Điền 0 vào ô giờ học trống = bịa rằng bạn đó học 0 giờ — bóp méo dữ liệu. Cách bảo thủ: điền <strong>median</strong> (trung vị) — giá trị điển hình, ít bị kéo lệch bởi outlier.'
+          },
+          {
+            icon: 'fa-list-ol',
+            title: 'Recipe có THỨ TỰ',
+            body: 'Làm sạch theo trình tự: soi → bỏ trùng → chữa sai → điền thiếu → cắm cờ → kiểm chứng. Đổi thứ tự dễ hỏng (điền median TRƯỚC khi bỏ giá trị 12 thì median bị 12 kéo lệch). ⚠ Và median phải học từ <strong>TRAIN split</strong> — dùng cả bảng là rò rỉ (Course 2).'
+          }
+        ],
+        /* Hero = ỐNG KÍNH LỖI (user chốt 2026-07-20) — bấm ô lỗi tô màu → loại + hành động */
+        quality_lens: {
+          title: 'ỐNG KÍNH LỖI — BẢNG NÀY SAI Ở ĐÂU?',
+          intro: '8 dòng đầu của bản xuất thô. Các ô <b>tô màu</b> là lỗi. Bấm từng ô để biết đó là lỗi GÌ và nên xử lý ra sao (đủ 5 loại thì mở câu chốt).',
+          columns: [
+            { name: 'study_hours',  unit: 'giờ/tuần' },
+            { name: 'attendance',   unit: '/10' },
+            { name: 'quiz_score',   unit: '/10' },
+            { name: 'major',        unit: 'ngành' },
+            { name: 'pass_fail',    unit: '0/1' }
+          ],
+          rows: [
+            ['6.5', '8.0', '7.0', 'ICT', '1'],
+            ['3.2', '5.5', '4.0', 'DS', '0'],
+            ['5.0', '12.0', '6.0', 'DS', '1'],
+            ['7.0', '7.5', '8.0', 'ITC', '1'],
+            ['60.0', '9.0', '8.5', 'Space', '1'],
+            ['4.5', '6.0', null, 'ICT', '0'],
+            ['8.0', '9.5', '9.0', 'Space', '1'],
+            ['6.5', '8.0', '7.0', 'ICT', '1']
+          ],
+          issues: [
+            { cell: '5:2', kind: 'missing', tag: 'THIẾU',
+              evidence: 'Ô <code>quiz_score</code> bỏ trống (NaN) — hệ thống không ghi được điểm quiz. "Không biết" chứ không phải "0 điểm".',
+              action: 'Điền median (≈ 4.9) — KHÔNG điền 0' },
+            { cell: '2:1', kind: 'invalid-range', tag: 'SAI PHẠM VI', name: 'Hùng',
+              evidence: 'Chuyên cần chấm <b>hệ 10</b> mà ghi <code>12</code> — không thể vượt 10. Chắc chắn nhập nhầm khi gõ tay.',
+              action: 'Đổi thành NaN rồi điền median' },
+            { cell: '3:3', kind: 'invalid-cat', tag: 'SAI DANH MỤC',
+              evidence: 'Ngành hợp lệ chỉ <code>ICT / DS / Space</code>. "<code>ITC</code>" là gõ đảo chữ của ICT — sai danh mục.',
+              action: 'Gộp về "Unknown" (an toàn) hoặc sửa ICT nếu chắc' },
+            { cell: '4:0', kind: 'outlier', tag: 'NGHI NGỜ', name: 'Mai',
+              evidence: '<code>60</code> giờ tự học/tuần ≈ 8.5h/ngày — bất thường, NHƯNG một bạn ôn thi cật lực có thể thật. Không có bằng chứng nói nó SAI.',
+              action: 'CẮM CỜ để review — KHÔNG xóa' },
+            { row: 7, kind: 'duplicate', tag: 'TRÙNG 100%',
+              evidence: 'Dòng 8 giống <b>HỆT</b> dòng 1 ở mọi cột — bản ghi bị nhân đôi khi gộp file. (Khác: cùng mã SV mà số liệu KHÁC thì KHÔNG phải trùng, cần review.)',
+              action: 'Bỏ dòng trùng (drop_duplicates)' }
+          ],
+          riddle: {
+            prompt: 'Bạn <b>Mai</b> ghi tự học <code>60 giờ/tuần</code> — bất thường. Nên làm gì?',
+            options: ['XÓA dòng đó', 'CẮM CỜ để review', 'Thay bằng 0'],
+            answer: 'CẮM CỜ để review',
+            wrong: {
+              'XÓA dòng đó': 'Xóa là vứt dữ liệu có thể THẬT — Mai có thể ôn thi 60h/tuần thật. Bất thường ≠ sai; không đủ bằng chứng thì GIỮ + cắm cờ.',
+              'Thay bằng 0': '60 không phải ô thiếu hay giá trị sai rõ ràng — thay 0 còn tệ hơn (bịa "học 0 giờ"). Giữ nguyên + cắm cờ để người review.'
+            },
+            done: '✅ Chuẩn — <b>CẮM CỜ</b> (study_hours_outlier), KHÔNG xóa. Đó là tinh thần làm sạch BẢO THỦ: sửa khi CHẮC CHẮN sai (12/10, ITC, dòng trùng), nhưng GIỮ + đánh dấu khi chỉ NGHI NGỜ. Xóa nhầm 1 outlier thật là mất thông tin quý. Xuống Bước 2 luyện phân loại 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'student_profile_dirty (bản xuất thô)',
+            columns: [
+              { name: 'student_id',  type: 'INT64 · định danh', key: 'ID', icon: '🪪',
+                note: '<strong>Identifier</strong> — có 4 dòng trùng 100% (mã + mọi cột y hệt) do gộp file. drop_duplicates bỏ 4 dòng: 204 → 200.' },
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: '', icon: '',
+                note: '<strong>Feature</strong> — vài ô trống (NaN) + 2 outlier 60 & 45 giờ/tuần. NaN → điền median (6.0); outlier → CẮM CỜ, giữ nguyên.' },
+              { name: 'attendance', type: 'FLOAT · /10', key: '', icon: '',
+                note: '<strong>Chuyên cần hệ 10</strong> — hợp lệ 0–10. Có ô ghi 12 (nhập nhầm, sai phạm vi) + vài ô trống. 12 → NaN → median (6.4).' },
+              { name: 'quiz_score', type: 'FLOAT · /10', key: '', icon: '',
+                note: '<strong>Điểm quiz hệ 10</strong> — hợp lệ 0–10. Có ô ghi 15 (sai phạm vi) + vài ô trống. 15 → NaN → median (4.9).' },
+              { name: 'major', type: 'OBJECT · ngành', key: '', icon: '🏷️',
+                note: '<strong>Categorical</strong> — hợp lệ ICT/DS/Space. Có 2 ô "ITC" (gõ đảo, sai danh mục) → gộp về "Unknown".' },
+              { name: 'pass_fail', type: 'INT 0/1', key: 'TARGET', icon: '🎯',
+                note: '<strong>Target</strong> — Đậu/Rớt. Bài này CHỈ làm sạch, chưa train; giữ target sạch để bài sau dùng.' }
+            ]
+          },
+          /* 8 dòng thô minh họa (khớp thang & loại lỗi của dataset thật) */
+          data_preview: [
+            ['20520001', '6.5', '8.0', '7.0', 'ICT', '1'],
+            ['20520002', '3.2', '5.5', '4.0', 'DS', '0'],
+            ['20520003', '5.0', '12.0', '6.0', 'DS', '1'],
+            ['20520004', '7.0', '7.5', '8.0', 'ITC', '1'],
+            ['20520005', '60.0', '9.0', '8.5', 'Space', '1'],
+            ['20520006', '4.5', '6.0', '—', 'ICT', '0'],
+            ['20520007', '8.0', '9.5', '9.0', 'Space', '1'],
+            ['20520001', '6.5', '8.0', '7.0', 'ICT', '1']
+          ]
+        },
+        mission: 'Dựng <code class="code">RECIPE LÀM SẠCH</code> cho bản thô 204 dòng: bỏ 4 dòng trùng · đổi giá trị sai phạm vi thành NaN · gộp ITC→Unknown · điền median · <code class="code">CẮM CỜ</code> outlier (giữ nguyên) — kho có <code class="code">mồi bẫy 🪤</code> (điền 0 · xóa outlier) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ + mini-game phân loại lỗi → hành động ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Chuyên cần chấm <strong>hệ 10</strong> (0–10) mà một ô ghi <code>12</code>. Đây là loại vấn đề gì?',
+            options: [
+              { id: 'a', text: 'SAI phạm vi — chắc chắn nhập nhầm, không thể vượt 10', correct: true, explanation: 'Đúng — 12 vi phạm luật đã biết (thang 0–10) nên CHẮC CHẮN sai. Xử lý: đổi thành NaN rồi điền median (đừng đoán bừa giá trị thật).' },
+              { id: 'b', text: 'Outlier — bất thường nhưng có thể thật', correct: false, explanation: 'Outlier là giá trị hiếm nhưng KHÔNG vi phạm luật nào (vd 60 giờ học). 12 trên thang 0–10 thì vi phạm luật rõ ràng → là SAI, không phải outlier.' },
+              { id: 'c', text: 'Missing — ô thiếu dữ liệu', correct: false, explanation: 'Ô này CÓ giá trị (12), chỉ là giá trị sai. Missing là ô bỏ TRỐNG (NaN).' },
+              { id: 'd', text: 'Không sao — cứ để nguyên 12', correct: false, explanation: 'Để 12 trên thang 0–10 sẽ bóp méo median, khoảng cách, mọi phép tính sau. Phải chữa.' }
+            ]
+          },
+          {
+            question: 'Ô <code>study_hours</code> của một bạn bị <strong>bỏ trống (NaN)</strong>. Cách xử lý nào ĐÚNG tinh thần bảo thủ?',
+            options: [
+              { id: 'a', text: 'Điền bằng median của cột (giá trị điển hình)', correct: true, explanation: 'Đúng — median là ước lượng hợp lý, ít bị outlier kéo lệch. Giữ được dòng mà không bịa thông tin cực đoan.' },
+              { id: 'b', text: 'Điền 0 — coi như bạn đó không học', correct: false, explanation: 'Cái bẫy kinh điển: "không biết" KHÁC "bằng 0". Điền 0 = bịa rằng bạn đó học 0 giờ, bóp méo dữ liệu và làm model học sai.' },
+              { id: 'c', text: 'Xóa luôn cả dòng đó', correct: false, explanation: 'Xóa cả dòng vì 1 ô thiếu là phí — các cột khác của dòng vẫn tốt. Chỉ xóa khi thiếu quá nhiều hoặc thiếu chính TARGET.' },
+              { id: 'd', text: 'Điền bằng giá trị lớn nhất cột', correct: false, explanation: 'Max thường là outlier (60) — điền max làm dòng đó thành cực đoan giả. Median mới là "điển hình".' }
+            ]
+          },
+          /* Câu 3 — spec misconception "same ID different values ≠ exact duplicate" + ôn glossary */
+          {
+            question: 'Hai dòng có <strong>cùng student_id</strong> nhưng <code>attendance</code> KHÁC nhau (8.0 vs 6.5). Có nên <code>drop_duplicates</code> để bỏ 1 dòng không?',
+            options: [
+              { id: 'a', text: 'KHÔNG — số liệu khác nhau thì không phải trùng 100%, cần review', correct: true, explanation: 'Chuẩn — "trùng 100%" là giống HỆT MỌI cột. Cùng ID mà số khác = mâu thuẫn dữ liệu (2 lần ghi lệch nhau) → phải điều tra, không âm thầm bỏ 1 dòng.' },
+              { id: 'b', text: 'Có — cùng ID là trùng, bỏ 1 dòng ngay', correct: false, explanation: 'drop_duplicates chỉ bỏ dòng giống HỆT mọi cột. Cùng ID mà giá trị khác là chuyện KHÁC — bỏ bừa có thể mất bản ghi đúng.' },
+              { id: 'c', text: 'Có — giữ dòng có attendance cao hơn', correct: false, explanation: 'Chọn giữ dòng nào là quyết định CÓ CĂN CỨ (theo thời gian ghi, nguồn tin cậy…), không phải "cứ lấy số cao". Bước này cần review, không tự động.' },
+              { id: 'd', text: 'Xóa cả hai dòng cho chắc', correct: false, explanation: 'Xóa cả hai là mất trắng thông tin của học viên đó. Tinh thần bảo thủ: giữ + đánh dấu mâu thuẫn để review.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Xếp mỗi lỗi vào đúng HÀNH ĐỘNG',
+          instruction: 'Hành động đi theo BẰNG CHỨNG. Kéo mỗi ca vào đúng ngăn: <strong>SỬA / BỎ</strong> (chắc chắn sai) · <strong>ĐIỀN median</strong> (ô thiếu) · <strong>GIỮ + CẮM CỜ</strong> (chỉ nghi ngờ).',
+          chips: [
+            { id: 'q-dup',    label: 'Dòng giống HỆT 100%' },
+            { id: 'q-range',  label: 'attendance = 12/10' },
+            { id: 'q-cat',    label: 'major = ITC' },
+            { id: 'q-miss1',  label: 'ô study_hours trống' },
+            { id: 'q-miss2',  label: 'ô quiz_score trống' },
+            { id: 'q-out',    label: 'study_hours = 60/tuần' }
+          ],
+          bins: [
+            { id: 'fix',  label: '🔧 SỬA / BỎ',       correct: 'true' },
+            { id: 'fill', label: '💧 ĐIỀN median',    correct: 'true' },
+            { id: 'flag', label: '🚩 GIỮ + CẮM CỜ',   correct: 'true' }
+          ],
+          solution: {
+            'q-dup':   'fix',
+            'q-range': 'fix',
+            'q-cat':   'fix',
+            'q-miss1': 'fill',
+            'q-miss2': 'fill',
+            'q-out':   'flag'
+          },
+          success: 'Thấy quy tắc chưa — hành động đi theo BẰNG CHỨNG: chắc chắn sai thì SỬA/BỎ, thiếu thì ĐIỀN median, chỉ nghi ngờ thì GIỮ + CẮM CỜ. Không có ô nào "thay hết bằng 0" hay "xóa mọi outlier". Đó là recipe Bước 3 sắp dựng.'
+        }
+      },
+
+      /* ----- STEP 3: map 4 VÒNG (spec) — recipe làm sạch + bảng ĐẾM đổi số. KHÔNG fit. ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'clean_df = df.drop_duplicates().copy()',                                      slot: 'b1' },
+          { type: 'py', token: 'clean_df.loc[~clean_df["attendance"].between(0, 10), "attendance"] = np.nan',  slot: 'b2' },
+          { type: 'py', token: 'clean_df.loc[~clean_df["quiz_score"].between(0, 10), "quiz_score"] = np.nan',  slot: 'b3' },
+          { type: 'py', token: 'clean_df.loc[~clean_df["major"].isin(["ICT", "DS", "Space"]), "major"] = "Unknown"', slot: 'b4' },
+          { type: 'py', token: 'clean_df = clean_df.fillna(clean_df.median(numeric_only=True))',              slot: 'b5' },
+          { type: 'py', token: 'clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40',              slot: 'b6' },
+          /* 2 mồi bẫy (unsafe-but-correct của spec) */
+          { type: 'py', token: 'clean_df = clean_df.fillna(0)',                                                slot: 't1' },
+          { type: 'py', token: 'clean_df = clean_df[clean_df["study_hours"] <= 40]',                          slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l5-dedup',   accepts: ['py'], multi: true },
+          { id: 'l5-inv-att', accepts: ['py'], multi: true },
+          { id: 'l5-inv-quiz',accepts: ['py'], multi: true },
+          { id: 'l5-cat',     accepts: ['py'], multi: true },
+          { id: 'l5-fill',    accepts: ['py'], multi: true },
+          { id: 'l5-flag',    accepts: ['py'], multi: true }
+        ],
+        ml_flow: {
+          brand: 'RECIPE LÀM SẠCH — 4 VÒNG · BẢNG ĐẾM',
+          layout: 'branch',
+          run_label: '▶ Chạy 4 vòng',
+          source: { sub: 'student_profile_dirty · 204 dòng thô (4 trùng · 9 thiếu · 4 sai · 2 outlier)' },
+          done_note: 'Bảng SẠCH: 200 dòng · 0 trùng · 0 sai · 0 thiếu số — nhưng 2 outlier VẪN CÒN (đã cắm cờ). Click lại vòng để xem bảng đếm; Bước 4 tự viết recipe + validate bằng Pandas thật.',
+          stations: [
+            {
+              zones: ['l5-dedup'],
+              icon: '🧹', label: 'VÒNG 1 — BỎ TRÙNG', sub: 'drop_duplicates', result_kind: 'quality_counts',
+              quality: {
+                before: { rows: 204, dup: 4, invalid: 4, missing: 9, flag: 0 },
+                after:  { rows: 200, dup: 0, invalid: 4, missing: 9, flag: 0 },
+                changed: ['rows', 'dup'],
+                note: '4 dòng trùng 100% biến mất → <b>204 → 200 dòng</b>. Chỉ bỏ dòng giống HỆT; chưa đụng gì tới sai/thiếu.'
+              },
+              narration: '<code>drop_duplicates()</code> bỏ 4 bản ghi nhân đôi (giống hệt mọi cột) → 200 dòng. <code>.copy()</code> để <b>giữ nguyên df gốc</b> — không phá bảng thô. Các lỗi khác vẫn nguyên, xử ở vòng sau.'
+            },
+            {
+              zones: ['l5-inv-att', 'l5-inv-quiz'],
+              icon: '🩹', label: 'VÒNG 2 — SAI PHẠM VI → THIẾU', sub: 'invalid range = NaN', result_kind: 'quality_counts',
+              quality: {
+                before: { rows: 200, dup: 0, invalid: 4, missing: 9, flag: 0 },
+                after:  { rows: 200, dup: 0, invalid: 2, missing: 11, flag: 0 },
+                changed: ['invalid', 'missing'],
+                note: '2 giá trị ngoài thang (12 & 15) đổi thành NaN. <b>Thiếu TĂNG 9 → 11</b> — CÓ CHỦ ĐÍCH: ta chưa biết giá trị thật, nên biến "sai" thành "chưa biết" rồi điền ở vòng sau.'
+              },
+              narration: '<code>~between(0,10)</code> bắt ô ngoài thang 0–10 (12, 15) và gán <code>np.nan</code>. Số THIẾU tăng lên — nghe ngược nhưng đúng: thà nhận "không biết" còn hơn giữ giá trị bịa. Danh mục ITC vẫn chờ vòng 3.'
+            },
+            {
+              zones: ['l5-cat', 'l5-fill'],
+              icon: '💧', label: 'VÒNG 3 — GỘP + ĐIỀN', sub: 'Unknown + fillna(median)', result_kind: 'quality_counts',
+              quality: {
+                before: { rows: 200, dup: 0, invalid: 2, missing: 11, flag: 0 },
+                after:  { rows: 200, dup: 0, invalid: 0, missing: 0, flag: 0 },
+                changed: ['invalid', 'missing'],
+                note: 'ITC → "Unknown" (hết sai danh mục) và 11 ô NaN được điền <b>median</b> (study 6.0 · att 6.4 · quiz 4.9). <b>Sai & thiếu về 0</b> — không xóa dòng nào.'
+              },
+              narration: '<code>~isin([...])</code> gộp ngành lạ (ITC) về "Unknown" — an toàn khi chưa chắc. <code>fillna(median)</code> điền MỌI ô trống bằng trung vị cột: giá trị điển hình, không bịa cực đoan. 200 dòng nguyên vẹn.'
+            },
+            {
+              zones: ['l5-flag'],
+              icon: '🚩', label: 'VÒNG 4 — CẮM CỜ + CHỐT', sub: 'flag outlier + validate', result_kind: 'quality_counts',
+              quality: {
+                before: { rows: 200, dup: 0, invalid: 0, missing: 0, flag: 0 },
+                after:  { rows: 200, dup: 0, invalid: 0, missing: 0, flag: 2 },
+                changed: ['flag'],
+                note: '<code>study_hours > 40</code> bật cờ 2 dòng (60 & 45) — <b>vẫn còn trong bảng</b>, chỉ đánh dấu để review. Bảng sạch mà KHÔNG mất outlier có thể thật.'
+              },
+              narration: '<code>study_hours_outlier = study_hours > 40</code> tạo cột cờ True/False. 2 dòng của Mai (60) và 1 bạn khác (45) bật cờ — con người sẽ xem lại. Đây là làm sạch BẢO THỦ: sửa cái chắc, giữ + đánh dấu cái nghi.'
+            }
+          ]
+        },
+        expected_sql: 'clean_df = df.drop_duplicates().copy() clean_df.loc[~clean_df["attendance"].between(0, 10), "attendance"] = np.nan clean_df.loc[~clean_df["quiz_score"].between(0, 10), "quiz_score"] = np.nan clean_df.loc[~clean_df["major"].isin(["ICT", "DS", "Space"]), "major"] = "Unknown" clean_df = clean_df.fillna(clean_df.median(numeric_only=True)) clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40',
+        expected_zones: {
+          'l5-dedup':    'clean_df = df.drop_duplicates().copy()',
+          'l5-inv-att':  'clean_df.loc[~clean_df["attendance"].between(0, 10), "attendance"] = np.nan',
+          'l5-inv-quiz': 'clean_df.loc[~clean_df["quiz_score"].between(0, 10), "quiz_score"] = np.nan',
+          'l5-cat':      'clean_df.loc[~clean_df["major"].isin(["ICT", "DS", "Space"]), "major"] = "Unknown"',
+          'l5-fill':     'clean_df = clean_df.fillna(clean_df.median(numeric_only=True))',
+          'l5-flag':     'clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40'
+        },
+        reveal_hints: {
+          'l5-dedup':    'Vòng 1: bỏ dòng trùng 100% + GIỮ df gốc: <strong>clean_df = df.drop_duplicates().copy()</strong>.',
+          'l5-inv-att':  'attendance ngoài thang 0–10 → NaN: <strong>clean_df.loc[~clean_df["attendance"].between(0, 10), "attendance"] = np.nan</strong>.',
+          'l5-inv-quiz': 'quiz_score tương tự: <strong>...["quiz_score"].between(0, 10)... = np.nan</strong>.',
+          'l5-cat':      'Ngành lạ → Unknown: <strong>...~isin(["ICT","DS","Space"]), "major"] = "Unknown"</strong>.',
+          'l5-fill':     'Điền MỌI NaN số bằng median: <strong>clean_df = clean_df.fillna(clean_df.median(numeric_only=True))</strong> — KHÔNG fillna(0).',
+          'l5-flag':     'Cắm cờ, KHÔNG xóa: <strong>clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'RECIPE LÀM SẠCH — 4 VÒNG · BẢNG ĐẾM',
+        table_sub: 'student_profile_dirty · 204 dòng thô',
+        idle_sub: '204 dòng thô · ▶ chạy để làm sạch qua 4 vòng',
+        run_label: '▶ Chạy 4 vòng',
+        table: {
+          name: 'student_profile_dirty',
+          columns: ['study_hours', 'attendance', 'quiz_score', 'major', 'pass_fail'],
+          dataRows: [
+            ['6.5', '8.0', '7.0', 'ICT', '1'],
+            ['3.2', '5.5', '4.0', 'DS', '0'],
+            ['5.0', '12.0', '6.0', 'DS', '1'],
+            ['7.0', '7.5', '8.0', 'ITC', '1'],
+            ['60.0', '9.0', '8.5', 'Space', '1'],
+            ['4.5', '6.0', '—', 'ICT', '0'],
+            ['8.0', '9.5', '9.0', 'Space', '1'],
+            ['6.5', '8.0', '7.0', 'ICT', '1']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: viết recipe + validate bằng Pandas (KHÁC step 3: dùng vòng lặp + validate).
+         Grader: grade_lesson5 (dedup + fillna + giữ outlier + flag; trap fillna(0)/xóa outlier). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp recipe bằng tay. Giờ viết <strong>Pandas thật</strong>: nạp bản thô, tạo <code>clean_df</code> (giữ <code>df</code> gốc), chữa sai · điền median · gộp Unknown · <strong>cắm cờ</strong> outlier — rồi in kiểm chứng. Hệ thống chấm sẽ <strong>đổi VỊ TRÍ toàn bộ lỗi</strong> (variant ẩn): recipe phải xử theo ĐIỀU KIỆN, không theo vị trí ô.',
+        context: {
+          scenario: 'Bản xuất thô sẽ được cập nhật liên tục, lỗi rơi ở vị trí khác nhau mỗi lần. Hidden test đổi chỗ toàn bộ NaN/invalid/outlier — recipe viết đúng (theo điều kiện) thì vẫn sạch; hard-code theo dòng thì vỡ. Và nhớ: <strong>giữ 2 outlier</strong> (chỉ cắm cờ) — xóa chúng là trượt tầng Risk.',
+          real_world: 'Chuyện thật hay gặp: đội ML điền median cho toàn bộ dữ liệu (train + test) TRƯỚC khi chia tập → điểm test đẹp ảo, vì thống kê điền đã "nhìn trộm" test. Đúng quy trình: median phải học từ TRAIN split rồi áp cho test. Bài này làm trên cả bảng để học CƠ CHẾ; Course 2 sẽ chặn rò rỉ này.',
+          steps: [
+            'Import <code>numpy</code> và hàm nạp dữ liệu; nạp <code>df</code>.',
+            'Tạo <code>clean_df</code>: bỏ dòng trùng 100% và GIỮ nguyên <code>df</code> gốc.',
+            'Đổi attendance/quiz ngoài thang 0–10 thành NaN; gộp ngành lạ → "Unknown".',
+            'Điền các ô NaN số bằng median; tạo cột cờ đánh dấu giờ học vượt 40.',
+            'In shape của <code>clean_df</code> và số dòng cắm cờ · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Gõ <code>print(df.shape)</code>, <code>print(df.duplicated().sum())</code>, hoặc <code>print(df.isna().sum())</code> rồi <strong>Run</strong> để thấy lỗi trước khi chữa.',
+          expected: 'Console in <code>(200, 7)</code> và số dòng cờ = <code>2</code>. Đủ 4 tầng xanh. Thử fillna(0) hay xóa outlier? Code VẪN chạy — tầng Risk sẽ giải thích vì sao sai tinh thần bảo thủ.'
+        },
+        hints: [
+          { level: 1, text: 'Đúng recipe Bước 3, thêm import numpy + in kiểm chứng: dedup → chữa sai → điền median → cắm cờ → in shape.' },
+          { level: 2, text: 'Dòng đầu: <code>import numpy as np</code> rồi <code>from ml_lab import load_dirty_student_profile</code>, <code>df = load_dirty_student_profile()</code>. Tạo <code>clean_df = df.drop_duplicates().copy()</code>.' },
+          { level: 3, text: 'Invalid: <code>clean_df.loc[~clean_df[col].between(0,10), col] = np.nan</code> cho attendance & quiz. Gộp: <code>~isin(["ICT","DS","Space"])</code> → "Unknown". Điền: <code>fillna(median)</code> — KHÔNG fillna(0). Cờ: <code>clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40</code> (đừng xóa outlier).' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>import numpy as np<br>from ml_lab import load_dirty_student_profile<br>df = load_dirty_student_profile()<br>clean_df = df.drop_duplicates().copy()<br>for col in ["attendance", "quiz_score"]:<br>&nbsp;&nbsp;&nbsp;&nbsp;clean_df.loc[~clean_df[col].between(0, 10), col] = np.nan<br>for col in ["study_hours", "attendance", "quiz_score"]:<br>&nbsp;&nbsp;&nbsp;&nbsp;clean_df[col] = clean_df[col].fillna(clean_df[col].median())<br>clean_df.loc[~clean_df["major"].isin(["ICT", "DS", "Space"]), "major"] = "Unknown"<br>clean_df["study_hours_outlier"] = clean_df["study_hours"] > 40<br>print(clean_df.shape)<br>print(clean_df["study_hours_outlier"].sum())</code>' }
+        ],
+        grader_fn: 'grade_lesson5',
+        success_message: 'Recipe làm sạch BẢO THỦ chuẩn: 200 dòng · 0 trùng · 0 sai · 0 thiếu số — mà 2 outlier vẫn còn (đã cắm cờ). Bạn vừa cứu dữ liệu quý khỏi bị xóa nhầm. Bài 6: khi các cột số chênh thang nhau (giờ vs điểm vs số hoạt động), phải SCALE để 1 đơn vị không lấn át.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l6',  index: 6,  title: 'Scale feature — không để 1 đơn vị lấn át',     module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
     { id: 'c1_l7',  index: 7,  title: 'Đọc dữ liệu bằng thống kê cơ bản',             module: 11, module_title: 'M2 — Dữ liệu sẵn sàng',        xp_reward: 50 },
     { id: 'c1_l8',  index: 8,  title: 'Vẽ đường dự đoán đầu tiên',                    module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },

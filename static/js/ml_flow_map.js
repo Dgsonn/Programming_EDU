@@ -173,7 +173,33 @@
         ((rd.warns || []).length ? '<span class="mlf-chip warn">⚠ ' + (rd.warns || []).length + ' cột cần xử lý' : '') +
         '</div>';
     }
+    /* Bài 5 — BẢNG ĐẾM chất lượng: 5 chỉ số (dòng·trùng·sai·thiếu·cờ) đổi sau mỗi vòng */
+    if (k === 'quality_counts') {
+      const qc = st.quality || {};
+      const af = qc.after || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">đếm → ?</span></div>';
+      return '<div class="mlf-qc-mini">' + qcMiniHTML(qc.before || {}, af, qc.changed || []) + '</div>';
+    }
     return '';
+  }
+
+  /* 5 chỉ số chất lượng dữ liệu — compact (node) */
+  var QC_KEYS = [
+    { k: 'rows', label: 'dòng', full: 'DÒNG' }, { k: 'dup', label: 'trùng', full: 'TRÙNG 100%' },
+    { k: 'invalid', label: 'sai', full: 'SAI (phạm vi/danh mục)' }, { k: 'missing', label: 'thiếu', full: 'THIẾU (NaN)' },
+    { k: 'flag', label: 'cờ', full: 'CẮM CỜ' }
+  ];
+  function qcMiniHTML(before, after, changed) {
+    return QC_KEYS.map(function (m) {
+      var v = after[m.k];
+      if (v === undefined) v = before[m.k];
+      var chg = changed.indexOf(m.k) >= 0;
+      var dir = '';
+      if (chg && before[m.k] !== undefined && after[m.k] !== undefined) {
+        dir = after[m.k] > before[m.k] ? ' qc-up' : (after[m.k] < before[m.k] ? ' qc-down' : '');
+      }
+      return '<span class="mlf-qc-cell' + (chg ? ' qc-chg' + dir : '') + '"><b>' + esc(v) + '</b><i>' + m.label + '</i></span>';
+    }).join('');
   }
 
   function nodeHTML(st, i) {
@@ -327,6 +353,24 @@
           (rd.warns || []).map(w => '<div class="mlf-ready-row warn"><span class="mlf-chip warn">⚠ ' + esc(w.col) + '</span><span>' + esc(w.note || '') + '</span></div>').join('') +
         '</div>' +
         (rd.verdict ? '<div class="mlf-ready-verdict">✅ ' + esc(rd.verdict) + '</div>' : '') +
+        '</div>';
+    }
+    /* Bài 5 — BẢNG ĐẾM chất lượng: 5 chỉ số before → after, chỉ số đổi được tô + mũi tên */
+    if (k === 'quality_counts') {
+      const qc = st.quality || {};
+      const before = qc.before || {}, after = qc.after || {}, changed = qc.changed || [];
+      return '<div class="mlf-scene mlf-qc-scene">' +
+        '<div class="mlf-qc-grid">' + QC_KEYS.map(function (m) {
+          const b = before[m.k], a = (after[m.k] !== undefined ? after[m.k] : b);
+          const chg = changed.indexOf(m.k) >= 0;
+          const up = chg && a > b, down = chg && a < b;
+          return '<div class="mlf-qc-card' + (chg ? ' qc-chg' : '') + (up ? ' qc-up' : '') + (down ? ' qc-down' : '') + '">' +
+            '<div class="mlf-qc-label">' + esc(m.full || m.label) + '</div>' +
+            '<div class="mlf-qc-val">' +
+              (chg && b !== a ? '<s>' + esc(b) + '</s> <span class="qc-ar">→</span> <b>' + esc(a) + '</b>' : '<b>' + esc(a) + '</b>') +
+            '</div></div>';
+        }).join('') + '</div>' +
+        (qc.note ? '<div class="mlf-qc-note">' + qc.note + '</div>' : '') +
         '</div>';
     }
     return '';
