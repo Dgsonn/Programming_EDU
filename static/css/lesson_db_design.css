@@ -12223,3 +12223,39 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-mse-row.is-best .mlf-mse-fill { background: #34D399; }
 .mlf-mse-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--text-200); text-align: right; }
 .mlf-mse-row.is-best .mlf-mse-val { color: #6EE7B7; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 14 (2026-07-22) — BÀI 10 "Gradient Descent — model tự chỉnh đường"
+ * 1) PHÒNG TẬP GD (hero: scatter+đường + loss curve + lr slider + Train animate)
+ * 2) MAP: gd_curve (loss curve tụt) — dùng lại .mlf-reg-* + .mlf-gdc-scene
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.gdl-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gdl-panel { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.5); padding: 8px 10px; }
+.gdl-panel-cap { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px; color: var(--text-400); margin-bottom: 4px; }
+.gdl-svg { width: 100%; height: auto; display: block; }
+.gdl-ctrl { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.gdl-row { display: grid; grid-template-columns: 230px 1fr; align-items: center; gap: 12px; }
+.gdl-lab { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-300); }
+.gdl-lab output { color: #FCD34D; font-weight: 700; }
+.gdl-slider { width: 100%; accent-color: #FBBF24; cursor: pointer; }
+.gdl-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.gdl-preset { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text-200); background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; padding: 5px 11px; cursor: pointer; transition: background var(--anim-fast), border-color var(--anim-fast); }
+.gdl-preset:hover { background: rgba(148, 163, 184, 0.14); border-color: rgba(148, 163, 184, 0.5); }
+.gdl-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 8px; border-top: 1px dashed rgba(148, 163, 184, 0.16); }
+.gdl-stat { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-400); }
+.gdl-stat b { color: var(--text-100); }
+.gdl-mse b { color: #FCD34D; font-size: 13px; }
+.gdl-mse i { font-style: normal; font-weight: 700; margin-left: 2px; }
+.gdl.is-diverged .gdl-mse b, .gdl.is-diverged .gdl-mse i { color: #FCA5A5; }
+.gdl.is-converged .gdl-mse b, .gdl.is-converged .gdl-mse i { color: #6EE7B7; }
+.gdl-train { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #0B1220; background: linear-gradient(180deg, #7DD3FC, #38BDF8); border: none; border-radius: 8px; padding: 7px 16px; cursor: pointer; transition: filter var(--anim-fast); }
+.gdl-train:hover { filter: brightness(1.08); }
+.gdl-reset { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-300); background: none; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+.gdl-reset:hover { border-color: rgba(148, 163, 184, 0.55); }
+.gdl-slider:focus-visible, .gdl-preset:focus-visible, .gdl-train:focus-visible, .gdl-reset:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+@media (max-width: 720px) { .gdl-panels { grid-template-columns: 1fr; } .gdl-row { grid-template-columns: 1fr; gap: 4px; } .gdl-train { margin-left: 0; } }
+
+/* 2) MAP — loss curve scene (dùng lại .mlf-reg-head/.mlf-reg-svg) */
+.mlf-gdc-scene { display: flex; flex-direction: column; gap: 8px; }

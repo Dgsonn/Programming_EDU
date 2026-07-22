@@ -242,7 +242,29 @@
       return '<div class="mlf-chips"><span class="mlf-chip ' + (ms.mode === 'squared' ? 'warn' : 'x') + '">' +
         (ms.mode === 'squared' ? '12 ô lỗi²' : '12 lỗi có dấu') + '</span></div>';
     }
+    /* Bài 10 — LOSS CURVE: chạy GD từ table → node hiện MSE đầu→cuối */
+    if (k === 'gd_curve') {
+      const gd = st.gd || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">loss → ?</span></div>';
+      const r = gdRun(gd.lr || 0.01, gd.steps || 200);
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">MSE ' + Math.round(r.hist[0]) + ' → ' + Math.round(r.hist[r.hist.length - 1]) + '</span></div>';
+    }
     return '';
+  }
+
+  /* GD chạy từ table.dataRows (khớp compute_gradients Python: 2·mean(err·x), 2·mean(err)) — Bài 10 */
+  function gdRun(lr, steps) {
+    const xs = table.dataRows.map(function (r) { return parseFloat(r[0]); });
+    const ys = table.dataRows.map(function (r) { return parseFloat(r[1]); });
+    const nn = xs.length; let w = 0, b = 0; const hist = [];
+    for (let s = 0; s < steps; s++) {
+      let sw = 0, sb = 0;
+      for (let i = 0; i < nn; i++) { const e = w * xs[i] + b - ys[i]; sw += e * xs[i]; sb += e; }
+      w -= lr * 2 * sw / nn; b -= lr * 2 * sb / nn;
+      let m = 0; for (let i = 0; i < nn; i++) { const e = w * xs[i] + b - ys[i]; m += e * e; } m /= nn;
+      hist.push(m);
+    }
+    return { hist: hist, w: w, b: b };
   }
 
   /* 5 chỉ số chất lượng dữ liệu — compact (node) */
@@ -614,6 +636,33 @@
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
           '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">final_score</text></svg>' +
         (ms.note ? '<div class="mlf-qc-note">' + ms.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 10 — LOSS CURVE: chạy GD live từ table → vẽ MSE theo bước, tụt tới đáy */
+    if (k === 'gd_curve') {
+      const gd = st.gd || {};
+      const steps = gd.steps || 200, lr = gd.lr || 0.01;
+      const r = gdRun(lr, steps);
+      const hist = r.hist;
+      const W = 480, H = 250, padL = 46, padR = 14, padT = 14, padB = 26;
+      const yMax = Math.max.apply(null, hist);
+      const px = function (i) { return (padL + (i / Math.max(1, steps - 1)) * (W - padL - padR)); };
+      const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(yMax, v)) / yMax) * (H - padT - padB)); };
+      let grid = '';
+      [0, yMax / 2, yMax].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + py(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + py(g).toFixed(1) + '" stroke="rgba(148,163,184,0.13)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (py(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + (g >= 1000 ? (g / 1000).toFixed(1) + 'k' : Math.round(g)) + '</text>';
+      });
+      let poly = '';
+      hist.forEach(function (v, i) { poly += px(i).toFixed(1) + ',' + py(v).toFixed(1) + ' '; });
+      return '<div class="mlf-scene mlf-gdc-scene">' +
+        '<div class="mlf-reg-head"><span class="mlf-reg-eq">' + steps + ' bước · α = ' + esc(lr) + '</span>' +
+          '<span class="mlf-reg-err">MSE <b>' + Math.round(hist[0]) + ' → ' + Math.round(hist[hist.length - 1]) + '</b> · đường cuối ŷ=' + r.w.toFixed(1) + '·x+' + Math.round(r.b) + '</span></div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="loss curve MSE theo bước">' +
+          grid + '<polyline points="' + poly.trim() + '" fill="none" stroke="#34D399" stroke-width="2.4"/>' +
+          '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">bước →</text>' +
+          '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">MSE</text></svg>' +
+        (gd.note ? '<div class="mlf-qc-note">' + gd.note + '</div>' : '') +
       '</div>';
     }
     return '';

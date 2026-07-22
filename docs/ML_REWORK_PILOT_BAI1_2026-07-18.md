@@ -409,3 +409,29 @@ Hero: 12 circle + 12 rect + 2 tab + meter + cancel; A→MSE 20.9/RMSE 4.6, đổ
 - `mse_step` (ml_flow_map result_kind): mode residual (đoạn) / squared (ô vuông) / compare (2 thanh MSE, best xanh) — vẽ từ table.dataRows.
 
 ### Versions: css v22 · content v19 · shell v25 · flowmap v10.
+
+---
+
+## ĐỢT 15 (2026-07-22) — BÀI 10 "Gradient Descent — model tự chỉnh đường" (spec C1-L10, ĐÓNG chương M3)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = PHÒNG TẬP GRADIENT DESCENT** (`renderGdLens` mới): 2 panel — trái scatter 40 điểm + đường ŷ=w·x+b, phải LOSS CURVE. Thanh **LEARNING RATE** + 3 preset (🐌 quá NHỎ 0.002 · ✅ VỪA 0.02 · 💥 quá LỚN 0.04) + nút **▶ Train** chạy 60 bước GD **live trong JS** (khớp compute_gradients: 2·mean(err·x), 2·mean(err)): đường TỰ nhích về khớp, loss curve tụt. α vừa → mượt (hội tụ xanh), α lớn → loss VĂNG lên kịch trần (💥 PHÂN KỲ đỏ, đường w=−105 văng khỏi khung). Reduced-motion → chạy đồng bộ. Câu đố chốt "vì sao TRỪ chứ không CỘNG" (gradient chỉ hướng TĂNG → trừ = đi ngược).
+- **Khép trilogy M3 rõ** (user chốt): story Ticket #10 "KHÉP CHƯƠNG M3" nối B8 (chọn tay w,b) → B9 (đo MSE) → B10 (GD tự hạ MSE); concept card #3 + done-banner + success tổng kết "đường → MSE → GD = cách gần như MỌI model học" + mở sang M4 phân loại.
+- **Step 3 = map 3 TRẠM** (user chốt): GRADIENT (regline residual w=2,b=5 đường tệ — "đo độ dốc chi phí") → UPDATE (regline w=5.5,b=12 đường nhích về khớp — "trừ lr×grad đi NGƯỢC") → LẶP+LOSS (`gd_curve` mới — chạy GD live từ table 200 bước, loss curve tụt 887→26, đường cuối ŷ=9.8·x+11). Bẫy: cộng thay trừ (phân kỳ) · gõ tay loss.
+
+### Engine + grader (có sẵn, khớp spec)
+- `load_gradient_data` (40 điểm, đường thật ~8x+20, variant 777=~5x+30) + `compute_gradients` + `compute_mse`. Số thật: lr 0.002 quá nhỏ (60 bước 2816→64), 0.01-0.02 vừa (887→48 / 69→35), 0.04 phân kỳ (→345 757); reference lr=0.01/200 → 887→26.
+- `grade_lesson10` 4 tầng: cần vòng lặp gọi compute_gradients + update phép TRỪ learning_rate×gradient (bắt CỘNG=plus_bad), loss_history==steps hội tụ (cuối<đầu×0.5); Risk bắt w,b=0 chưa update / loss hard-code; Behavior variant ẩn hội tụ. Test server-side: CORRECT 4/4, TRAP cộng→fail output/behavior, TRAP hardcode→fail code.
+
+### Verify — verify_b10.js: 34/34 pass · 0 pageerror (2 lượt sạch)
+Hero: 2 svg + lr slider + 3 preset + Train; Train (reduced-motion sync) → loss curve polyline + 60 bước + hội tụ + riddle mở; preset 💥 → is-diverged + PHÂN KỲ; đố sai Cộng → feedback, đúng NGƯỢC → done khép chương. Glossary 6; explorer 2 cột. 3 MCQ (hướng update GIẢM w / chẩn lr phân kỳ / số học 2−0.1·(−10)=3) + minigame 3 ngăn lr. Map 3 trạm: gradient residual → update residual → gd_curve loss (887→26). Bẫy cộng → chấm bắt. Step4: trap cộng → fail; bản đúng 4/4 (variant ẩn hội tụ) + modal khép chương + Bài 11 sigmoid. Regression B1-B9 + Basic + NC sạch. Multi-viewport 1920/1536/1024/768: 2 svg + 3 preset, 0 h-scroll, map fit.
+
+### Fix trong đợt
+- Suite fail 1 (33/34) do THỨ TỰ test: check "nhắc khép chương" chạy TRƯỚC khi success modal hiện (message nằm trong modal xuất hiện sau ~1.6s) → đổi sang check SAU modal-open. Không phải bug lesson (screenshot xác nhận modal đủ chữ).
+- Ghi sổ (visual honest): map loss curve lr=0.01 có cú tụt đầu rất dốc (gradient khổng lồ ở w=0: 3475→887→69 trong ~5 bước) rồi phẳng dài — ĐÚNG bản chất GD, giữ khớp reference 887→26; hero dùng lr=0.02/60 cho đường cong mượt làm bề mặt dạy chính.
+
+### Component mới tái dùng được
+- `renderGdLens` (hero): GD live JS + scatter/đường/loss-curve 2 panel + lr slider + presets + Train animate (setTimeout 32ms, reduced-motion sync) + diverge detect + clip đường.
+- `gd_curve` (ml_flow_map result_kind) + helper `gdRun(lr,steps)` chạy GD từ table.dataRows → loss curve; dùng lại .mlf-reg-head/.mlf-reg-svg.
+
+### Trạng thái khóa: Course 1 cơ bản 10/15 bài xong (M1-M2-M3 trọn). Versions: css v23 · content v20 · shell v26 · flowmap v11.

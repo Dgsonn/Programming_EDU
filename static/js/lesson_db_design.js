@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4746,6 +4746,194 @@
     });
   }
 
+  /* ═══ renderGdLens — ML Bài 10 (user chốt 2026-07-22): PHÒNG TẬP GRADIENT DESCENT.
+     cfg = { title,intro, x:[..],y:[..], x_label,y_label,x_max,y_max,
+             lr0,lr_min,lr_max,lr_step, steps, presets:[{lr,label}], riddle }
+     Kéo learning rate + ▶ Train → chạy GD live (JS): đường ŷ=w·x+b TỰ nhích về khớp + loss curve tụt;
+     lr nhỏ=rề · vừa=mượt · lớn=phân kỳ. GD khớp compute_gradients Python (2·mean(err·x), 2·mean(err)). ═══ */
+  function renderGdLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const xs = cfg.x || [], ys = cfg.y || [];
+    const n = Math.min(xs.length, ys.length);
+    const rid = cfg.riddle || {};
+    const xmax = cfg.x_max || 10, ymax = cfg.y_max || 100;
+    const totalSteps = cfg.steps || 60;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let lr = cfg.lr0 != null ? cfg.lr0 : 0.01;
+    let w = 0, b = 0, lossHistory = [], training = false, diverged = false, interacted = false;
+
+    function grads() {
+      let sw = 0, sb = 0;
+      for (let i = 0; i < n; i++) { const e = w * xs[i] + b - ys[i]; sw += e * xs[i]; sb += e; }
+      return [2 * sw / n, 2 * sb / n];
+    }
+    function mse() { let s = 0; for (let i = 0; i < n; i++) { const e = w * xs[i] + b - ys[i]; s += e * e; } return s / n; }
+
+    // ── scatter + đường ──
+    const SW = 340, SH = 240, sPadL = 30, sPadR = 10, sPadT = 10, sPadB = 24;
+    const spx = v => sPadL + (v / xmax) * (SW - sPadL - sPadR);
+    const spy = v => (SH - sPadB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (SH - sPadT - sPadB);
+    function scatterSVG() {
+      let grid = '';
+      [0, ymax / 2, ymax].forEach(function (g) {
+        grid += '<line x1="' + sPadL + '" y1="' + spy(g).toFixed(1) + '" x2="' + (SW - sPadR) + '" y2="' + spy(g).toFixed(1) + '" stroke="rgba(148,163,184,0.13)"/>' +
+          '<text x="' + (sPadL - 4) + '" y="' + (spy(g) + 3).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#64748B">' + Math.round(g) + '</text>';
+      });
+      let pts = '';
+      for (let i = 0; i < n; i++) pts += '<circle cx="' + spx(xs[i]).toFixed(1) + '" cy="' + spy(ys[i]).toFixed(1) + '" r="2.8" fill="#E2E8F0" opacity="0.85"/>';
+      // đường clip vào khung
+      const cands = [];
+      [0, xmax].forEach(function (xe) { const ye = w * xe + b; if (ye >= -0.01 && ye <= ymax + 0.01) cands.push([xe, ye]); });
+      if (Math.abs(w) > 1e-9) [0, ymax].forEach(function (ye) { const xe = (ye - b) / w; if (xe >= -0.01 && xe <= xmax + 0.01) cands.push([xe, ye]); });
+      let line = '';
+      if (cands.length >= 2) { cands.sort((p, q) => p[0] - q[0]); const a = cands[0], z = cands[cands.length - 1]; line = '<line x1="' + spx(a[0]).toFixed(1) + '" y1="' + spy(a[1]).toFixed(1) + '" x2="' + spx(z[0]).toFixed(1) + '" y2="' + spy(z[1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>'; }
+      return '<svg viewBox="0 0 ' + SW + ' ' + SH + '" class="gdl-svg" role="img" aria-label="scatter và đường dự đoán">' +
+        grid + line + pts +
+        '<text x="' + (SW / 2) + '" y="' + (SH - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
+        '<text x="8" y="' + (sPadT + 3) + '" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'y') + '</text></svg>';
+    }
+    // ── loss curve ──
+    function lossSVG() {
+      const LW = 340, LH = 240, lPadL = 40, lPadR = 10, lPadT = 12, lPadB = 24;
+      const finite = lossHistory.filter(v => isFinite(v));
+      const yMaxRaw = finite.length ? Math.max.apply(null, finite) : (mse() || 1);
+      const yMax = Math.min(6000, Math.max(yMaxRaw, 1));
+      const lpx = i => lPadL + (i / Math.max(1, totalSteps - 1)) * (LW - lPadL - lPadR);
+      const lpy = v => (LH - lPadB) - (Math.max(0, Math.min(yMax, v)) / yMax) * (LH - lPadT - lPadB);
+      let grid = '';
+      [0, yMax / 2, yMax].forEach(function (g) {
+        grid += '<line x1="' + lPadL + '" y1="' + lpy(g).toFixed(1) + '" x2="' + (LW - lPadR) + '" y2="' + lpy(g).toFixed(1) + '" stroke="rgba(148,163,184,0.13)"/>' +
+          '<text x="' + (lPadL - 4) + '" y="' + (lpy(g) + 3).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#64748B">' + (g >= 1000 ? (g / 1000).toFixed(1) + 'k' : Math.round(g)) + '</text>';
+      });
+      let poly = '';
+      lossHistory.forEach(function (v, i) { poly += lpx(i).toFixed(1) + ',' + lpy(isFinite(v) ? v : yMax).toFixed(1) + ' '; });
+      const path = lossHistory.length ? '<polyline points="' + poly.trim() + '" fill="none" stroke="' + (diverged ? '#F87171' : '#34D399') + '" stroke-width="2.2"/>' : '';
+      const empty = lossHistory.length ? '' : '<text x="' + (LW / 2) + '" y="' + (LH / 2) + '" text-anchor="middle" font-size="11" fill="#64748B">bấm ▶ Train để vẽ loss curve</text>';
+      return '<svg viewBox="0 0 ' + LW + ' ' + LH + '" class="gdl-svg" role="img" aria-label="loss curve MSE theo bước">' +
+        grid + path + empty +
+        '<text x="' + (LW / 2) + '" y="' + (LH - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">bước →</text>' +
+        '<text x="8" y="' + (lPadT + 3) + '" font-size="9.5" fill="#94A3B8">MSE</text></svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens gdl" aria-label="Phòng tập gradient descent">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'PHÒNG TẬP GRADIENT DESCENT') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="gdl-panels">' +
+          '<div class="gdl-panel"><div class="gdl-panel-cap">📈 ĐƯỜNG ŷ = w·x + b</div><div data-gd-plot>' + scatterSVG() + '</div></div>' +
+          '<div class="gdl-panel"><div class="gdl-panel-cap">📉 LOSS CURVE (MSE)</div><div data-gd-loss>' + lossSVG() + '</div></div>' +
+        '</div>' +
+        '<div class="gdl-ctrl">' +
+          '<div class="gdl-row"><label class="gdl-lab">⚡ LEARNING RATE α = <output data-gd-lrout>' + lr + '</output></label>' +
+            '<input type="range" class="gdl-slider" data-gd-lr min="' + (cfg.lr_min || 0.001) + '" max="' + (cfg.lr_max || 0.045) + '" step="' + (cfg.lr_step || 0.001) + '" value="' + lr + '"/></div>' +
+          '<div class="gdl-presets">' + (cfg.presets || []).map(function (p, i) {
+            return '<button type="button" class="gdl-preset" data-gd-preset="' + i + '" data-lr="' + p.lr + '">' + escapeHtml(p.label) + ' (α=' + p.lr + ')</button>';
+          }).join('') + '</div>' +
+          '<div class="gdl-readout">' +
+            '<span class="gdl-stat">bước <b data-gd-step>0</b>/' + totalSteps + '</span>' +
+            '<span class="gdl-stat">ŷ = <b data-gd-eq>0.0·x + 0</b></span>' +
+            '<span class="gdl-stat gdl-mse">MSE <b data-gd-mse>—</b> <i data-gd-status></i></span>' +
+            '<button type="button" class="gdl-train" data-gd-train>▶ Train ' + totalSteps + ' bước</button>' +
+            '<button type="button" class="gdl-reset" data-gd-reset>↺ Reset</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-gd-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-gd-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-gd-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-gd-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plotEl = mount.querySelector('[data-gd-plot]');
+    const lossEl = mount.querySelector('[data-gd-loss]');
+    const stepEl = mount.querySelector('[data-gd-step]');
+    const eqEl = mount.querySelector('[data-gd-eq]');
+    const mseEl = mount.querySelector('[data-gd-mse]');
+    const statusEl = mount.querySelector('[data-gd-status]');
+    const lrOut = mount.querySelector('[data-gd-lrout]');
+    const lrSl = mount.querySelector('[data-gd-lr]');
+    const riddleEl = mount.querySelector('[data-gd-riddle]');
+    const secEl = mount.querySelector('.gdl');
+
+    function paint() {
+      if (plotEl) plotEl.innerHTML = scatterSVG();
+      if (lossEl) lossEl.innerHTML = lossSVG();
+      if (stepEl) stepEl.textContent = lossHistory.length;
+      if (eqEl) eqEl.innerHTML = w.toFixed(1) + '·x + ' + Math.round(b);
+      const m = lossHistory.length ? lossHistory[lossHistory.length - 1] : mse();
+      if (mseEl) mseEl.textContent = (isFinite(m) ? Math.round(m).toLocaleString('vi-VN') : '∞');
+      if (statusEl) statusEl.textContent = diverged ? '💥 PHÂN KỲ' : (lossHistory.length >= totalSteps ? '✅ hội tụ' : (training ? '…' : ''));
+      if (secEl) { secEl.classList.toggle('is-diverged', diverged); secEl.classList.toggle('is-converged', !diverged && lossHistory.length >= totalSteps); }
+    }
+    function touch() { if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; } }
+
+    function train() {
+      if (training) return;
+      training = true; touch();
+      w = 0; b = 0; lossHistory = []; diverged = false;
+      let step = 0;
+      function one() {
+        const [gw, gb] = grads();
+        w -= lr * gw; b -= lr * gb;
+        const m = mse();
+        if (!isFinite(m) || m > 1e9) { diverged = true; lossHistory.push(Infinity); return false; }
+        lossHistory.push(m);
+        if (m > (lossHistory[0] || m) * 1.5 && step > 3) diverged = true;
+        step++;
+        return step < totalSteps;
+      }
+      if (reduce) {
+        while (one()) { }
+        training = false; paint();
+      } else {
+        function tick() {
+          const cont = one();
+          paint();
+          if (cont && !diverged) setTimeout(tick, 32);
+          else { training = false; paint(); }
+        }
+        tick();
+      }
+    }
+    function reset() { training = false; w = 0; b = 0; lossHistory = []; diverged = false; paint(); }
+
+    paint();
+    if (lrSl) lrSl.addEventListener('input', function () { lr = parseFloat(lrSl.value); if (lrOut) lrOut.textContent = lr; });
+    mount.querySelectorAll('[data-gd-preset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        lr = parseFloat(btn.getAttribute('data-lr'));
+        if (lrSl) lrSl.value = lr; if (lrOut) lrOut.textContent = lr;
+        train();
+      });
+    });
+    const trainBtn = mount.querySelector('[data-gd-train]');
+    if (trainBtn) trainBtn.addEventListener('click', train);
+    const resetBtn = mount.querySelector('[data-gd-reset]');
+    if (resetBtn) resetBtn.addEventListener('click', reset);
+
+    const fb = mount.querySelector('[data-gd-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-gd-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-gd-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — gradient chỉ hướng chi phí TĂNG.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -5104,6 +5292,13 @@
         const heroMountCo = document.getElementById('lesson-hero');
         renderCostLens(heroMountCo || pvMount, s1.cost_lens);
         if (heroMountCo) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.gd_lens) {
+        // ML Bài 10 (user chốt 2026-07-22): PHÒNG TẬP GD — lr slider + Train → đường tự chỉnh
+        // + loss curve; 3 regime (nhỏ/vừa/lớn); câu đố "vì sao TRỪ" (spec C1-L10). Vào hero.
+        const heroMountGd = document.getElementById('lesson-hero');
+        renderGdLens(heroMountGd || pvMount, s1.gd_lens);
+        if (heroMountGd) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

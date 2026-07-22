@@ -3830,7 +3830,298 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l10', index: 10, title: 'Gradient Descent — model tự chỉnh đường',      module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
+    {
+      id: 'c1_l10',
+      index: 10,
+      title: 'Gradient Descent — model tự chỉnh đường',
+      subtitle: 'Máy tự tìm w, b tốt nhất: đo độ dốc chi phí, đi NGƯỢC dốc, lặp cho tới khi lỗi chạm đáy',
+      module: 12,
+      module_title: 'M3 — Hồi quy tuyến tính',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '📈 StudyLab · Ticket #10 · KHÉP CHƯƠNG M3',
+        hook: 'Nhớ hành trình chương này chứ? <strong>Bài 8</strong> bạn tự tay kéo <code>w</code>, <code>b</code> cho đường khớp. <strong>Bài 9</strong> bạn đo độ tốt bằng <strong>MSE</strong>. Nhưng câu hỏi lớn vẫn treo đó: <strong>làm sao MÁY tự tìm w, b tốt nhất</strong> mà không cần người mò? Ticket #10 trả lời: <strong>Gradient Descent</strong>. Ý tưởng như thả một quả bóng xuống thung lũng chi phí — ở mỗi điểm, <strong>gradient</strong> (độ dốc) chỉ hướng chi phí TĂNG; ta bước <strong>NGƯỢC</strong> lại một chút; lặp nhiều lần, bóng lăn tới đáy — nơi MSE nhỏ nhất. Nhiệm vụ: chỉnh <strong>learning rate</strong> (độ dài mỗi bước) rồi để vòng lặp tự hạ lỗi.'
+      },
+      achievement: { name: 'Regression Tuner — máy tự học', desc: 'viết vòng lặp Gradient Descent, chọn learning rate, xác nhận MSE giảm bằng loss curve' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Hiểu <strong>gradient</strong> chỉ hướng chi phí TĂNG → cập nhật đi <strong>NGƯỢC</strong>: <code>tham số −= learning_rate × gradient</code>.',
+            'Chẩn được <strong>learning rate</strong> quá nhỏ (tụt rề), vừa (mượt), quá lớn (loss văng — phân kỳ).',
+            'Viết <strong>vòng lặp GD</strong>: gradient → update → ghi <code>loss_history</code>, và dùng <strong>loss curve</strong> để xác nhận model HỌC thật.'
+          ]
+        },
+        glossary: [
+          { term: 'GRADIENT', vi: 'độ dốc chi phí', accent: '#F87171',
+            def: 'Độ dốc của <b>chi phí (MSE)</b> theo tham số — chỉ hướng làm chi phí <b>TĂNG</b> nhanh nhất.',
+            ex: 'gradient của w dương → tăng w thì MSE tăng; nên phải GIẢM w.',
+            out: 'compute_gradients(x, y, w, b) → grad_w, grad_b' },
+          { term: 'UPDATE RULE', vi: 'luật cập nhật', accent: '#34D399',
+            def: 'Đi NGƯỢC gradient để giảm chi phí: <b>tham số −= learning_rate × gradient</b>.',
+            ex: 'w = 2, grad = −10, lr = 0.1 → w −= 0.1·(−10) = w + 1 = 3.',
+            out: 'TRỪ (không cộng) · cộng = leo dốc lên = phân kỳ' },
+          { term: 'LEARNING RATE (α)', vi: 'độ dài bước', accent: '#FBBF24',
+            def: 'Mỗi bước đi <b>bao xa</b>. Nhỏ = rề rà; lớn = nhanh nhưng dễ nhảy vọt qua đáy.',
+            ex: 'α 0.002 tụt rất chậm; α 0.02 mượt; α 0.04 loss VĂNG lên (phân kỳ).',
+            out: 'chọn α vừa · quá lớn → loss tăng vô cực' },
+          { term: 'LOSS CURVE', vi: 'đường lỗi', accent: '#38BDF8',
+            def: 'Đồ thị <b>MSE theo từng bước</b>. Đi XUỐNG và phẳng dần = model đang học tốt.',
+            ex: 'MSE 887 → 26 sau 200 bước: đường lỗi tụt dốc rồi phẳng ở đáy.',
+            out: 'loss_history.append(mse mỗi bước) · verify học thật' },
+          { term: 'CONVERGENCE', vi: 'hội tụ', accent: '#22D3EE',
+            def: 'Loss <b>ngừng giảm</b>, tham số ổn định gần đáy — coi như đã tìm được w, b tốt.',
+            ex: 'sau ~150 bước MSE gần như không đổi → đã hội tụ.',
+            out: 'loss cuối ≪ loss đầu · đường đã khớp' },
+          { term: 'DIVERGENCE', vi: 'phân kỳ', accent: '#A78BFA',
+            def: 'Bước quá dài → nhảy VỌT qua đáy, loss <b>càng lúc càng lớn</b> (có khi → vô cực).',
+            ex: 'α 0.04: loss 3 746 → 345 757 → NaN. Triệu chứng: giảm α.',
+            out: 'dấu hiệu learning rate quá lớn · KHÔNG hội tụ' }
+        ],
+        primer: {
+          goal: [
+            'Gradient chỉ hướng TĂNG → đi NGƯỢC (trừ)',
+            'Learning rate = độ dài bước (nhỏ/vừa/lớn)',
+            'Vòng lặp + loss curve → máy tự hạ MSE'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong phòng tập bên dưới:</strong> kéo thanh <strong>LEARNING RATE</strong> rồi bấm <strong>▶ Train</strong>. α nhỏ → đường nhích rất chậm, loss tụt rề. α vừa → đường lao về khớp, loss xuống mượt. α quá lớn → đường giật lung tung, loss VĂNG lên trời (phân kỳ 💥). Cùng một vòng lặp, chỉ khác độ dài bước. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Đây là mảnh ghép cuối của chương: <strong>máy tự tìm đường tốt nhất</strong>. Cơ chế đơn giản đến bất ngờ — tại vị trí (w, b) hiện tại, tính <strong>gradient</strong> của chi phí (nó chỉ hướng chi phí tăng), rồi bước <strong>ngược lại</strong> một đoạn bằng <code>learning_rate × gradient</code>. Lặp lại: mỗi vòng chi phí giảm một chút, đường nhích dần về khớp, cho tới khi <strong>loss curve</strong> phẳng ở đáy. Không ai mò w, b nữa — model tự lăn xuống thung lũng lỗi.',
+        concept_cards: [
+          {
+            icon: 'fa-arrow-trend-down',
+            title: 'Đi NGƯỢC gradient',
+            body: 'Gradient chỉ hướng chi phí <strong>TĂNG</strong> nhanh nhất. Muốn GIẢM chi phí thì đi <strong>ngược</strong> lại — nên công thức là <strong>tham số −= learning_rate × gradient</strong>. Đổi dấu thành CỘNG = leo ngược lên đồi = loss càng lúc càng lớn (phân kỳ). Như thả bóng: nó lăn xuống, không leo lên.'
+          },
+          {
+            icon: 'fa-ruler-horizontal',
+            title: 'Learning rate = độ dài bước',
+            body: 'Gradient chọn HƯỚNG, learning rate chọn <strong>độ dài</strong> mỗi bước. Quá <strong>nhỏ</strong>: đi tí xíu, 200 bước chưa tới đáy. Quá <strong>lớn</strong>: nhảy vọt qua đáy rồi văng ra xa — loss phân kỳ. Bí quyết là chọn α <strong>vừa</strong>: xuống nhanh mà vẫn ổn định.'
+          },
+          {
+            icon: 'fa-flag-checkered',
+            title: 'KHÉP CHƯƠNG: máy tự học',
+            body: 'Trilogy hồi quy khép lại: <strong>Bài 8</strong> — model là một đường <code>ŷ = w·x + b</code>; <strong>Bài 9</strong> — đo độ tệ bằng <strong>MSE</strong>; <strong>Bài 10</strong> — <strong>Gradient Descent</strong> tự hạ MSE để tìm w, b. Đây chính là cách gần như MỌI model học (kể cả mạng nơ-ron). Chương sau: bài toán PHÂN LOẠI.'
+          }
+        ],
+        /* Hero = PHÒNG TẬP GD (user chốt 2026-07-22): lr slider + Train → đường tự chỉnh + loss curve */
+        gd_lens: {
+          title: 'PHÒNG TẬP GRADIENT DESCENT — ĐỂ MÁY TỰ CHỈNH',
+          intro: 'Scatter 40 học viên thật. Kéo <b>LEARNING RATE</b>, bấm <b>▶ Train</b> để chạy 60 bước: đường <code>ŷ = w·x + b</code> TỰ nhích về khớp và <b>loss curve</b> tụt xuống. Thử α nhỏ · vừa · quá lớn (phân kỳ), rồi trả lời câu chốt.',
+          x_label: 'study_hours (giờ học)', y_label: 'final_score',
+          x_max: 10, y_max: 100,
+          lr0: 0.01, lr_min: 0.001, lr_max: 0.045, lr_step: 0.001, steps: 60,
+          presets: [
+            { lr: 0.002, label: '🐌 quá NHỎ' },
+            { lr: 0.02, label: '✅ VỪA' },
+            { lr: 0.04, label: '💥 quá LỚN' }
+          ],
+          x: [4.4,4.6,6.1,3.2,5.6,4.5,1.9,4.8,2.4,4.2,3.9,8.9,4.2,0.9,8.0,7.2,2.3,5.4,6.6,2.4,6.2,3.3,8.9,1.3,6.0,4.2,0.8,2.0,5.6,9.4,2.9,6.3,2.2,4.5,3.5,2.5,7.3,1.5,2.8,4.7],
+          y: [55.2,59.1,72.0,47.6,67.1,55.5,28.7,60.3,39.9,55.4,47.0,91.3,53.7,35.7,84.0,77.7,40.9,57.7,79.6,37.2,71.3,48.9,97.5,28.6,69.0,56.2,22.6,34.7,68.0,89.9,40.5,76.5,38.0,52.4,45.1,30.4,86.5,34.2,41.1,51.8],
+          riddle: {
+            prompt: 'Công thức cập nhật là <code>weight −= learning_rate × grad_w</code>. Vì sao TRỪ chứ không CỘNG?',
+            options: ['Gradient chỉ hướng chi phí TĂNG → trừ = đi NGƯỢC → chi phí GIẢM', 'Cộng để đi nhanh hơn tới đáy', 'Trừ hay cộng đều được, miễn có learning rate'],
+            answer: 'Gradient chỉ hướng chi phí TĂNG → trừ = đi NGƯỢC → chi phí GIẢM',
+            wrong: {
+              'Cộng để đi nhanh hơn tới đáy': 'Ngược lại — CỘNG là đi CÙNG hướng gradient, tức leo LÊN đồi chi phí. Loss sẽ càng lúc càng lớn (phân kỳ), y như khi α quá lớn. Phải TRỪ để đi xuống.',
+              'Trừ hay cộng đều được, miễn có learning rate': 'Không — DẤU quyết định hướng. Trừ = xuống dốc (giảm loss); cộng = lên dốc (tăng loss vô cực). Learning rate chỉ chọn độ DÀI bước, không đổi được hướng sai.'
+            },
+            done: '✅ Đúng — gradient chỉ hướng chi phí TĂNG, nên ta bước NGƯỢC lại (TRỪ) để giảm chi phí: <b>tham số −= learning_rate × gradient</b>. Lặp đủ nhiều, đường tự lăn tới đáy thung lũng lỗi — MSE nhỏ nhất. Đó là cách máy TỰ học w, b, khép lại chương hồi quy. Xuống Bước 2 luyện chẩn learning rate 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'gradient_regression (40 học viên · 1 feature)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: 'x', icon: '📏',
+                note: '<strong>Feature (x)</strong> — đầu vào. GD sẽ tự tìm w, b để đường ŷ = w·x + b khớp 40 điểm này.' },
+              { name: 'final_score', type: 'FLOAT · điểm/100', key: 'y', icon: '🎯',
+                note: '<strong>Nhãn thật (y)</strong> — điểm THỰC. Chi phí = MSE giữa ŷ và y; GD hạ dần chi phí này.' }
+            ]
+          },
+          data_preview: [
+            ['4.4', '55.2'], ['6.1', '72.0'], ['1.9', '28.7'], ['8.9', '91.3'],
+            ['0.8', '22.6'], ['9.4', '89.9'], ['2.4', '37.2'], ['7.3', '86.5'],
+            ['3.3', '48.9'], ['5.6', '68.0'], ['0.9', '35.7'], ['6.6', '79.6']
+          ]
+        },
+        mission: 'Dựng <code class="code">VÒNG LẶP GD</code> cho <code class="code">gradient_regression</code>: đo <code class="code">GRADIENT</code> → <code class="code">UPDATE</code> đi ngược (trừ lr×grad) → <code class="code">LẶP</code> và ghi loss curve — kho có <code class="code">mồi bẫy 🪤</code> (cộng thay trừ · gõ tay loss) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (hướng update · chẩn lr · số học update) + mini-game 3 ngăn lr ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Ở vị trí hiện tại, <code>grad_w</code> là số <strong>DƯƠNG</strong> (tăng w thì chi phí tăng). Để GIẢM chi phí, nên làm gì với w?',
+            options: [
+              { id: 'a', text: 'GIẢM w — đi ngược gradient (w −= lr × grad_w)', correct: true, explanation: 'Đúng — gradient dương nghĩa "tăng w → chi phí tăng". Muốn chi phí giảm thì đi NGƯỢC lại: giảm w. Đó chính là phép trừ trong luật cập nhật.' },
+              { id: 'b', text: 'TĂNG w — đi cùng hướng gradient cho nhanh', correct: false, explanation: 'Đi cùng gradient là leo LÊN đồi chi phí — MSE sẽ tăng, rồi phân kỳ. Phải đi ngược (giảm w).' },
+              { id: 'c', text: 'Giữ nguyên w, chỉ chỉnh bias', correct: false, explanation: 'Gradient dương báo w đang lệch — bỏ qua nó thì chi phí không giảm tối ưu. GD cập nhật CẢ w và b mỗi bước.' },
+              { id: 'd', text: 'Đặt w = 0 cho an toàn', correct: false, explanation: 'GD không reset tham số — nó nhích từng bước nhỏ theo gradient. Về 0 là vứt hết tiến trình học.' }
+            ]
+          },
+          {
+            question: 'Một loss curve <strong>dao động rồi VỌT LÊN</strong> vô cực sau vài bước. Learning rate đang thế nào?',
+            options: [
+              { id: 'a', text: 'Quá LỚN — bước nhảy vọt qua đáy rồi văng ra xa (phân kỳ)', correct: true, explanation: 'Đúng — bước quá dài làm tham số nhảy qua đáy, mỗi lần càng lệch xa, loss tăng vô cực. Cách chữa: giảm learning rate.' },
+              { id: 'b', text: 'Quá NHỎ — nên loss chưa kịp giảm', correct: false, explanation: 'Quá nhỏ thì loss giảm RẤT CHẬM nhưng vẫn đi XUỐNG, không bao giờ vọt lên. Vọt lên là dấu hiệu bước quá dài.' },
+              { id: 'c', text: 'Vừa đẹp — dao động là bình thường', correct: false, explanation: 'Loss vọt lên vô cực KHÔNG bình thường — đó là phân kỳ. Learning rate vừa cho đường loss xuống mượt rồi phẳng.' },
+              { id: 'd', text: 'Do dữ liệu bẩn, không phải learning rate', correct: false, explanation: 'Cùng dữ liệu, chỉ đổi learning rate là hết phân kỳ — nên thủ phạm là bước quá dài, không phải dữ liệu.' }
+            ]
+          },
+          {
+            question: 'Tính một bước update: <code>w = 2</code>, <code>grad_w = −10</code>, <code>learning_rate = 0.1</code>. Giá trị w MỚI?',
+            options: [
+              { id: 'a', text: 'w = 3  (2 − 0.1 × (−10) = 2 + 1)', correct: true, explanation: 'Đúng — w −= lr × grad = 2 − 0.1·(−10) = 2 − (−1) = 3. Gradient ÂM nên phép trừ lại làm w TĂNG — vẫn đúng hướng giảm chi phí.' },
+              { id: 'b', text: 'w = 1  (2 − 0.1 × 10)', correct: false, explanation: 'Nhầm dấu gradient. grad_w = −10 (âm), nên −0.1·(−10) = +1 → w = 3, không phải 1.' },
+              { id: 'c', text: 'w = 2  (không đổi)', correct: false, explanation: 'grad_w ≠ 0 nên w PHẢI đổi. Kết quả là 3.' },
+              { id: 'd', text: 'w = −8  (2 + 0.1 × (−10) × 10)', correct: false, explanation: 'Công thức chỉ là w − lr·grad = 2 − 0.1·(−10) = 3. Không có phép nhân thêm nào.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Mỗi loss curve ứng với learning rate nào?',
+          instruction: 'Đọc mô tả đường lỗi rồi kéo vào đúng ngăn: <strong>🐌 quá NHỎ</strong> · <strong>✅ VỪA</strong> · <strong>💥 quá LỚN</strong>.',
+          chips: [
+            { id: 'g-s1', label: 'loss tụt rất chậm, 60 bước chưa tới đáy' },
+            { id: 'g-s2', label: 'mỗi bước nhích một tí xíu' },
+            { id: 'g-m1', label: 'loss xuống mượt rồi phẳng ở đáy' },
+            { id: 'g-m2', label: 'về đáy nhanh mà vẫn ổn định' },
+            { id: 'g-l1', label: 'loss dao động rồi vọt lên vô cực' },
+            { id: 'g-l2', label: 'nhảy qua đáy, càng lúc càng xa' }
+          ],
+          bins: [
+            { id: 'small', label: '🐌 quá NHỎ', correct: 'true' },
+            { id: 'good',  label: '✅ VỪA',     correct: 'true' },
+            { id: 'big',   label: '💥 quá LỚN',  correct: 'true' }
+          ],
+          solution: {
+            'g-s1': 'small', 'g-s2': 'small',
+            'g-m1': 'good',  'g-m2': 'good',
+            'g-l1': 'big',   'g-l2': 'big'
+          },
+          success: 'Chuẩn — learning rate quá nhỏ thì an toàn nhưng RỀ, quá lớn thì nhanh nhưng PHÂN KỲ, vừa thì xuống mượt tới đáy. Gradient chọn hướng, learning rate chọn độ dài bước. Đó là recipe Bước 3 sắp dựng.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — gradient → update(trừ) → lặp+loss. 2 mồi bẫy: cộng thay trừ / gõ tay loss ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'grad_w, grad_b = compute_gradients(x, y, weight, bias)', slot: 'b1' },
+          { type: 'py', token: 'weight -= learning_rate * grad_w', slot: 'b2' },
+          { type: 'py', token: 'loss_history.append(compute_mse(y, weight * x + bias))', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'weight += learning_rate * grad_w', slot: 't1' },
+          { type: 'py', token: 'loss_history.append(0.0)', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l10-grad',   accepts: ['py'], multi: false },
+          { id: 'l10-update', accepts: ['py'], multi: false },
+          { id: 'l10-loss',   accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'VÒNG LẶP GD — 3 TRẠM · MÁY TỰ HẠ LỖI',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'gradient_regression · 40 học viên · x = giờ học, y = điểm (đường thật ~8x+20)' },
+          done_note: 'Một vòng: GRADIENT đo độ dốc chi phí → UPDATE đi NGƯỢC (trừ lr×grad) → ghi LOSS. Lặp ~200 vòng, loss curve tụt 887 → 26, đường tự khớp. Máy tìm w, b KHÔNG cần người mò. Bước 4 viết trọn vòng lặp.',
+          stations: [
+            {
+              zones: ['l10-grad'],
+              icon: '📐', label: 'TRẠM 1 — GRADIENT', sub: 'đo độ dốc chi phí', result_kind: 'regline',
+              reg: {
+                mode: 'residual', w: 2.0, b: 5.0,
+                note: '<code>grad_w, grad_b = compute_gradients(x, y, weight, bias)</code>. Đường hiện tại (w=2, b=5) còn tệ — các đoạn lệch dài, chi phí cao. Gradient đo <b>độ dốc của chi phí</b>: nó chỉ hướng làm chi phí TĂNG, để ta biết đường nào NÊN tránh.'
+              },
+              narration: 'compute_gradients trả về grad_w, grad_b — độ dốc chi phí theo w và b tại vị trí hiện tại. Đây là kim chỉ nam: nó nói "đi hướng này thì chi phí tăng", nên bước sau ta đi NGƯỢC.'
+            },
+            {
+              zones: ['l10-update'],
+              icon: '⬇️', label: 'TRẠM 2 — UPDATE (đi NGƯỢC)', sub: 'weight -= lr × grad', result_kind: 'regline',
+              reg: {
+                mode: 'residual', w: 5.5, b: 12.0,
+                note: '<code>weight -= learning_rate * grad_w</code> (bias tương tự). TRỪ = đi NGƯỢC gradient → đường nhích về phía dữ liệu, các đoạn lệch NGẮN lại, chi phí giảm. Nếu CỘNG, đường sẽ chạy ngược ra xa (phân kỳ).'
+              },
+              narration: 'Bước ngược gradient một đoạn dài learning_rate: w và b nhích một chút. Sau bước này đường (w≈5.5, b≈12) đã bám sát hơn — chi phí thấp hơn trạm trước. Một bước = một lần nhích.'
+            },
+            {
+              zones: ['l10-loss'],
+              icon: '📉', label: 'TRẠM 3 — LẶP + LOSS', sub: 'loss curve tụt tới đáy', result_kind: 'gd_curve',
+              gd: {
+                lr: 0.01, steps: 200,
+                note: '<code>loss_history.append(compute_mse(...))</code> ghi MSE mỗi vòng. Lặp ~200 lần: loss curve tụt <b>887 → 26</b> rồi phẳng — đã HỘI TỤ. Đường cuối (w≈9.8, b≈11) khớp dữ liệu. Máy tự tìm ra, không ai mò.'
+              },
+              narration: 'Gói 3 bước vào một vòng lặp for chạy N lần, mỗi vòng ghi lại MSE. Loss curve đi xuống rồi phẳng = bằng chứng model HỌC thật. Đây là cơ chế train của gần như mọi model ML.'
+            }
+          ]
+        },
+        expected_sql: 'grad_w, grad_b = compute_gradients(x, y, weight, bias) weight -= learning_rate * grad_w loss_history.append(compute_mse(y, weight * x + bias))',
+        expected_zones: {
+          'l10-grad':   'grad_w, grad_b = compute_gradients(x, y, weight, bias)',
+          'l10-update': 'weight -= learning_rate * grad_w',
+          'l10-loss':   'loss_history.append(compute_mse(y, weight * x + bias))'
+        },
+        reveal_hints: {
+          'l10-grad':   'Trạm 1: đo độ dốc chi phí — <strong>grad_w, grad_b = compute_gradients(x, y, weight, bias)</strong>.',
+          'l10-update': 'Trạm 2: đi NGƯỢC gradient (TRỪ, không cộng) — <strong>weight -= learning_rate * grad_w</strong>.',
+          'l10-loss':   'Trạm 3: ghi MSE mỗi bước — <strong>loss_history.append(compute_mse(y, weight * x + bias))</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'VÒNG LẶP GD — 3 TRẠM · MÁY TỰ HẠ LỖI',
+        table_sub: 'gradient_regression · 40 học viên · x = giờ học, y = điểm',
+        idle_sub: '40 điểm · ▶ chạy để đo gradient + cập nhật + vẽ loss curve',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'gradient_regression',
+          columns: ['study_hours', 'final_score'],
+          dataRows: [
+            ['4.4', '55.2'], ['4.6', '59.1'], ['6.1', '72.0'], ['3.2', '47.6'], ['5.6', '67.1'],
+            ['4.5', '55.5'], ['1.9', '28.7'], ['4.8', '60.3'], ['2.4', '39.9'], ['4.2', '55.4'],
+            ['3.9', '47.0'], ['8.9', '91.3'], ['4.2', '53.7'], ['0.9', '35.7'], ['8.0', '84.0'],
+            ['7.2', '77.7'], ['2.3', '40.9'], ['5.4', '57.7'], ['6.6', '79.6'], ['2.4', '37.2'],
+            ['6.2', '71.3'], ['3.3', '48.9'], ['8.9', '97.5'], ['1.3', '28.6'], ['6.0', '69.0'],
+            ['4.2', '56.2'], ['0.8', '22.6'], ['2.0', '34.7'], ['5.6', '68.0'], ['9.4', '89.9'],
+            ['2.9', '40.5'], ['6.3', '76.5'], ['2.2', '38.0'], ['4.5', '52.4'], ['3.5', '45.1'],
+            ['2.5', '30.4'], ['7.3', '86.5'], ['1.5', '34.2'], ['2.8', '41.1'], ['4.7', '51.8']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: viết vòng lặp GD hoàn chỉnh. Grader: grade_lesson10
+         (loop + compute_gradients + TRỪ lr×grad + loss_history==steps hội tụ; Risk cộng-sai-dấu/gõ-tay-loss/w,b=0; Behavior variant ẩn). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp một VÒNG. Giờ viết trọn <strong>vòng lặp Gradient Descent</strong>: nạp dữ liệu, khởi tạo <code>weight, bias = 0.0</code>, rồi lặp <code>steps</code> lần — mỗi vòng tính gradient, update đi NGƯỢC (TRỪ lr×grad cho cả w và b), và ghi MSE vào <code>loss_history</code>. Hệ thống chấm chạy lại trên <strong>dataset ẩn</strong> (đường thật khác) — vòng lặp phải vẫn hội tụ.',
+        context: {
+          scenario: 'Grader kiểm: có vòng lặp gọi compute_gradients, update dùng phép TRỪ learning_rate×gradient, loss_history đủ đúng steps phần tử và loss cuối ≪ loss đầu. Đổi TRỪ thành CỘNG → phân kỳ, trượt. Gõ tay một số loss đẹp mà tham số không đổi → tầng Risk bắt (w, b vẫn 0). Dataset ẩn có đường thật khác hẳn — hard-code sẽ lộ.',
+          real_world: 'Đây là trái tim của "training" trong ML: gần như MỌI model — hồi quy, logistic, và cả mạng nơ-ron hàng tỷ tham số — đều học bằng biến thể của vòng lặp này (gradient → update ngược → lặp). Bạn vừa viết bộ máy tự học ở dạng nhỏ nhất.',
+          steps: [
+            'Nạp <code>x, y</code>; khởi tạo <code>weight, bias = 0.0</code>, chọn <code>learning_rate</code> và <code>steps</code>; tạo <code>loss_history = []</code>.',
+            'Trong vòng lặp: tính gradient bằng helper có sẵn.',
+            'Cập nhật <code>weight</code> và <code>bias</code> đi <strong>NGƯỢC</strong> gradient (dùng phép TRỪ).',
+            'Ghi MSE của bước này vào <code>loss_history</code> · in loss đầu/cuối · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Sau vòng lặp, gõ <code>print(loss_history[0], loss_history[-1])</code> — kỳ vọng số đầu LỚN hơn số cuối nhiều lần (loss đã giảm).',
+          expected: 'Với <code>learning_rate = 0.01, steps = 200</code>: loss <code>≈ 887 → ≈ 26</code>, đủ 200 phần tử. Cả 4 tầng xanh. Thử đổi TRỪ thành CỘNG? Loss sẽ VĂNG lên — tầng Output/Code bắt ngay.'
+        },
+        hints: [
+          { level: 1, text: 'Khung: khởi tạo weight, bias = 0.0 + learning_rate + steps + loss_history = []; rồi for step in range(steps): gradient → update TRỪ → append MSE.' },
+          { level: 2, text: 'Đầu bài: <code>from ml_lab import load_gradient_data, compute_mse, compute_gradients</code>, <code>x, y = load_gradient_data()</code>. Đặt <code>weight, bias = 0.0, 0.0</code>, <code>learning_rate, steps = 0.01, 200</code>, <code>loss_history = []</code>.' },
+          { level: 3, text: 'Trong <code>for step in range(steps):</code> — <code>grad_w, grad_b = compute_gradients(x, y, weight, bias)</code>; rồi <code>weight -= learning_rate * grad_w</code> và <code>bias -= learning_rate * grad_b</code> (TRỪ, cho CẢ hai); cuối cùng <code>loss_history.append(compute_mse(y, weight * x + bias))</code>.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_gradient_data, compute_mse, compute_gradients<br>x, y = load_gradient_data()<br>weight, bias = 0.0, 0.0<br>learning_rate, steps = 0.01, 200<br>loss_history = []<br>for step in range(steps):<br>&nbsp;&nbsp;&nbsp;&nbsp;grad_w, grad_b = compute_gradients(x, y, weight, bias)<br>&nbsp;&nbsp;&nbsp;&nbsp;weight -= learning_rate * grad_w<br>&nbsp;&nbsp;&nbsp;&nbsp;bias -= learning_rate * grad_b<br>&nbsp;&nbsp;&nbsp;&nbsp;loss_history.append(compute_mse(y, weight * x + bias))<br>print(loss_history[0], loss_history[-1])</code>' }
+        ],
+        grader_fn: 'grade_lesson10',
+        success_message: 'Chuẩn — vòng lặp GD hội tụ: MSE ≈ 887 → 26, tham số update thật, dataset ẩn cũng học được. Bạn vừa viết bộ máy tự học của ML: gradient → đi ngược → lặp. Khép chương HỒI QUY (đường → MSE → GD). Chương sau — Bài 11: vì sao đường thẳng KHÔNG dùng để phân loại xác suất được, và ta cần sigmoid.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l11', index: 11, title: 'Vì sao Linear Regression không phân loại được', module: 13, module_title: 'M4 — Phân loại Logistic',     xp_reward: 50 },
     { id: 'c1_l12', index: 12, title: 'Sigmoid — biến score thành xác suất',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
     { id: 'c1_l13', index: 13, title: 'Decision Boundary — luật tách 2 lớp',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
