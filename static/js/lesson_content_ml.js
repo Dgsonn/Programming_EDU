@@ -5289,6 +5289,294 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l15', index: 15, title: 'Chia Train / Validation / Test',               module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 }
+    {
+      id: 'c1_l15',
+      index: 15,
+      title: 'Chia Train / Validation / Test',
+      subtitle: 'Ba phòng, ba việc — và bịt mọi lỗ rò rỉ: học thống kê chỉ trên train, niêm phong test tới phút cuối',
+      module: 14,
+      module_title: 'M5 — Tổng quát hóa',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎯 StudyLab · Ticket #15 · CHỐT KHÓA CƠ BẢN',
+        hook: 'Bài trước dạy một chân lý: chỉ <strong>dữ liệu chưa thấy</strong> mới nói được model có tổng quát hay không. Ticket cuối cùng của khóa dựng đúng cái "dữ liệu chưa thấy" ấy cho tử tế. Ta chia 1000 học viên vào <strong>ba phòng</strong>: <strong>Train</strong> (600, để model học), <strong>Validation</strong> (200, để ta chọn giữa các phương án), và một <strong>Két Test khóa kín</strong> (200, chỉ mở đúng một lần ở cuối để báo cáo). Nghe đơn giản, nhưng có hai cái bẫy rò rỉ tinh vi làm mọi con số đánh giá trở nên dối trá — và một phép tính tỉ lệ mà rất nhiều người làm sai. Đây là kỹ năng vệ sinh dữ liệu tách người nghiệp dư khỏi người chuyên nghiệp.'
+      },
+      achievement: { name: 'Generalization — chia dữ liệu sạch', desc: 'gán đúng vai train/validation/test, phát hiện leakage (scale-trước-split, tune-trên-test), và tạo split 60/20/20 stratified tái lập được' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này (và xong khóa cơ bản!), bạn sẽ:',
+          outcomes: [
+            'Gán đúng <strong>ba vai</strong>: train <strong>học</strong> tham số · validation <strong>chọn</strong> quyết định · test <strong>báo cáo</strong> cuối (mở một lần).',
+            'Phát hiện <strong>hai kiểu rò rỉ</strong>: học thống kê (scaler) <strong>trước khi split</strong>, và <strong>chỉnh model dựa trên test</strong>.',
+            'Tính đúng tỉ lệ (<strong>25% của 80% = 20% gốc</strong>) và tạo split <strong>stratified, tái lập được</strong> bằng 2 lần <code>train_test_split</code>.'
+          ]
+        },
+        glossary: [
+          { term: 'TRAIN SET', vi: 'tập huấn luyện', accent: '#34D399',
+            def: 'Phần dữ liệu model <b>được nhìn để học</b> tham số (weights). 60% ở đây = 600 dòng.',
+            ex: 'model.fit(X_train, y_train) — chỉ tập này đi vào fit.',
+            out: 'nơi DUY NHẤT model được học' },
+          { term: 'VALIDATION SET', vi: 'tập kiểm định', accent: '#FBBF24',
+            def: 'Phần để <b>so sánh và chọn</b>: model nào, ngưỡng nào, siêu tham số nào. 20% = 200 dòng.',
+            ex: 'chọn bậc đa thức (Bài 14) hay ngưỡng phân loại dựa trên validation.',
+            out: 'nơi ra QUYẾT ĐỊNH — không dùng để fit' },
+          { term: 'TEST SET', vi: 'tập kiểm tra cuối', accent: '#F87171',
+            def: 'Phần <b>niêm phong</b>, chỉ mở <b>một lần cuối</b> để báo cáo con số trung thực. 20% = 200 dòng.',
+            ex: 'chạm vào nó lúc chọn model = tự lừa mình về hiệu năng thật.',
+            out: 'Két khóa 🔒 — không tune, không peek' },
+          { term: 'DATA LEAKAGE', vi: 'rò rỉ dữ liệu', accent: '#FB923C',
+            def: '<b>Thông tin của tương lai</b> (val/test) lọt vào quá trình training — điểm đẹp mà giả.',
+            ex: 'fit scaler trên TOÀN bộ trước khi split → mean/std đã "thấy" val+test.',
+            out: '⚠ kẻ thù thầm lặng — số liệu trông tốt nhưng dối' },
+          { term: 'STRATIFY', vi: 'phân tầng', accent: '#38BDF8',
+            def: 'Chia sao cho <b>tỉ lệ lớp giữ nguyên</b> ở cả ba tập (ở đây Đậu ≈ 70% khắp nơi).',
+            ex: 'stratify=y — tránh việc test lỡ toàn Đậu hoặc toàn Rớt.',
+            out: 'đánh giá công bằng trên phân bố thật' },
+          { term: 'RANDOM_STATE', vi: 'hạt giống', accent: '#A78BFA',
+            def: 'Số cố định hạt giống ngẫu nhiên → split <b>tái lập y hệt</b> mỗi lần chạy.',
+            ex: 'random_state=42 — hôm nay và mai chia ra đúng cùng 600 dòng train.',
+            out: 'thí nghiệm lặp lại được — nền của khoa học' }
+        ],
+        primer: {
+          goal: [
+            'Train học · Validation chọn · Test niêm phong',
+            'Rò rỉ: scale-trước-split & tune-trên-test',
+            'Tỉ lệ: 25% của 80% = 20% gốc · stratify + seed'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong ống kính bên dưới:</strong> 1000 học viên chảy vào ba phòng — <strong>Train</strong> (600), <strong>Validation</strong> (200) và <strong>Két Test</strong> khóa kín (200). Kéo hai thanh tỉ lệ để thấy số dòng đổi theo, và để ý <strong>tỉ lệ Đậu 70%</strong> được giữ nguyên ở cả ba phòng (đó là stratify). Bật <strong>mô phỏng rò rỉ</strong> để thấy điều gì xảy ra khi ta học thống kê trước khi chia. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Model chỉ được đánh giá trung thực nếu con số cuối cùng đến từ dữ liệu nó <strong>chưa hề chạm vào</strong> — trực tiếp hay gián tiếp. "Gián tiếp" là chỗ hầu hết sai lầm nằm ở đó: nếu ta chuẩn hóa dữ liệu bằng thống kê tính trên cả tập, thì mean/std đã mang thông tin của test vào train; nếu ta chọn ngưỡng dựa trên test, thì test không còn "chưa thấy" nữa. Ba phòng tách bạch và một quy trình sạch — split trước, học thống kê sau, niêm phong test tới cuối — là cách bảo vệ sự trung thực đó. Đây là bài chốt khóa cơ bản: bộ khung để mọi thứ bạn học ở M1–M4 được đánh giá đàng hoàng.',
+        concept_cards: [
+          {
+            icon: 'fa-door-open',
+            title: 'Ba phòng, ba việc khác nhau',
+            body: '<strong>Train</strong> (600) là nơi DUY NHẤT model được fit — nó học weights ở đây. <strong>Validation</strong> (200) là nơi ta <strong>so sánh và chọn</strong>: model nào tốt hơn, ngưỡng nào hợp, bậc mấy (Bài 14 chọn bậc chính là dùng validation). <strong>Test</strong> (200) bị <strong>niêm phong</strong>, chỉ mở đúng một lần ở cuối để lấy con số báo cáo. Trộn vai — ví dụ chọn model dựa trên test — là tự đánh mất thước đo trung thực duy nhất.'
+          },
+          {
+            icon: 'fa-faucet-drip',
+            title: 'Hai kiểu rò rỉ làm số liệu dối',
+            body: '<strong>(1) Scale trước split:</strong> nếu <code>fit</code> scaler trên cả 1000 dòng rồi mới chia, thì mean/std đã "nhìn thấy" val+test — thống kê tương lai rò vào train. Đúng cái Bài 5–6 cảnh báo: học thống kê phải <strong>trên train</strong>, rồi transform phần còn lại. <strong>(2) Tune trên test:</strong> chỉnh ngưỡng/siêu tham số dựa trên test khiến test hết "chưa thấy". Cả hai đều cho điểm đẹp mà <strong>giả</strong>.'
+          },
+          {
+            icon: 'fa-percent',
+            title: 'Tỉ lệ: 25% của 80%, và seed + stratify',
+            body: 'Muốn 60/20/20 bằng hai lần split: lần 1 tách <strong>20% test</strong>, còn 80% (800 dòng). Lần 2 phải lấy <strong>25% của 800</strong> để ra 200 validation — vì <code>0.25 × 800 = 200 = 20%</code> gốc. Lấy nhầm 0.20 chỉ ra 160 (16% gốc). Và luôn kèm <code>random_state</code> (tái lập) + <code>stratify</code> (giữ tỉ lệ Đậu 70% ở cả ba phòng).'
+          }
+        ],
+        /* Hero = ỐNG KÍNH 3 PHÒNG (user chốt 2026-07-22) */
+        split_lens: {
+          title: 'ỐNG KÍNH 3 PHÒNG — TRAIN · VALIDATION · TEST 🔒',
+          intro: '1000 học viên chia vào ba phòng. Kéo <b>test</b> và <b>val</b> để thấy số dòng đổi; tỉ lệ <b>Đậu 70%</b> giữ nguyên ở cả ba (stratify). Bật <b>mô phỏng rò rỉ</b> để thấy học thống kê trước khi chia làm hỏng mọi thứ. Trả lời câu chốt để mở Bước 2.',
+          total: 1000, pos_ratio: 0.70,
+          test_size: 0.20, val_size: 0.25,
+          test_range: [0.10, 0.40], val_range: [0.10, 0.40],
+          riddle: {
+            prompt: 'Bạn đã tách <b>20% làm test</b>, còn lại 800 dòng (80% gốc). Muốn <b>Validation</b> cũng bằng <b>20% của 1000 gốc</b> (tức 200 dòng), <code>test_size</code> của lần split thứ hai (trên 800 dòng) phải là bao nhiêu?',
+            options: ['0.25 — vì 0.25 × 800 = 200 = 20% gốc', '0.20 — vì ta muốn 20%', '0.40 — để bù lại phần đã mất', '0.16 — vì 20% của 80%'],
+            answer: '0.25 — vì 0.25 × 800 = 200 = 20% gốc',
+            wrong: {
+              '0.20 — vì ta muốn 20%': 'Gần đúng ý nhưng sai phép tính. 0.20 áp lên <b>800</b> (không phải 1000) chỉ ra 0.20 × 800 = <b>160</b> dòng = 16% gốc, thiếu 40. Vì lần 2 chia trên tập đã nhỏ đi, phần trăm phải LỚN hơn để bù.',
+              '0.40 — để bù lại phần đã mất': 'Quá tay: 0.40 × 800 = 320 dòng = 32% gốc, thừa nhiều. Con số đúng để 800 cho ra 200 là 200/800 = <b>0.25</b>.',
+              '0.16 — vì 20% của 80%': 'Ngược chiều rồi. "20% của 80%" = 16% chính là KẾT QUẢ sai ta muốn TRÁNH. Ta cần tỉ lệ để 800 dòng nhả ra 200, tức 200/800 = 0.25.'
+            },
+            done: '✅ Đúng — <b>test_size = 0.25</b> cho lần split thứ hai, vì 0.25 × 800 = 200. Mẹo nhớ: sau khi cắt test, tập tạm nhỏ đi nên tỉ lệ val phải tính LẠI trên tập tạm, không phải trên tổng gốc. Ba điều khép bài (và khép khóa): (1) <b>ba phòng ba việc</b> — train học, val chọn, test niêm phong; (2) <b>split TRƯỚC</b>, học thống kê SAU (chống rò rỉ); (3) luôn <b>random_state + stratify</b>. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'split_dataset (1000 học viên · nhị phân 70/30)',
+            columns: [
+              { name: 'features', type: '3 cột · study/attend/quiz', key: 'X', icon: '📊',
+                note: '<strong>Đặc trưng</strong> — 3 cột số. Mọi bước học thống kê từ chúng (scaler…) phải fit <strong>chỉ trên train</strong>.' },
+              { name: 'pass_fail', type: 'INT 0/1 · 70% Đậu', key: 'TARGET', icon: '🎯',
+                note: '<strong>Nhãn nhị phân</strong> — 700 Đậu / 300 Rớt. stratify giữ đúng tỉ lệ 70% này ở cả ba phòng.' },
+              { name: 'row_id', type: 'index 0–999', key: 'ID', icon: '🔑',
+                note: '<strong>Mã dòng ổn định</strong> — dùng để kiểm ba tập <strong>không giẫm chân nhau</strong>: hợp lại phải đủ trọn 1000 mã.' }
+            ]
+          },
+          data_preview: [
+            ['1000 gốc', 'Đậu 70%', '— nguồn'],
+            ['test 0.20', '→ 200', 'niêm phong 🔒'],
+            ['còn 800', '80% gốc', 'tập tạm'],
+            ['val 0.25×800', '→ 200', '20% gốc'],
+            ['train', '→ 600', '60% gốc']
+          ]
+        },
+        mission: 'Dựng <code class="code">CHIA 3 PHÒNG</code>: <code class="code">tách TEST 0.20</code> (stratify + seed) → <code class="code">tách VAL 0.25 từ phần còn lại</code> → <code class="code">niêm phong + kiểm 600/200/200</code> — kho có <code class="code">mồi bẫy 🪤</code> (0.20 lần 2 = 16% · scale trước split) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (vai train · safe/leakage · tỉ lệ 0.25) + mini-game SAFE vs LEAKAGE ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Trong ba tập train / validation / test, tập nào được model dùng để <strong>học tham số (weights)</strong>?',
+            options: [
+              { id: 'a', text: 'Train — đây là tập DUY NHẤT đi vào lời gọi fit', correct: true, explanation: 'Đúng — chỉ train được fit. Validation để chọn quyết định (so sánh model/ngưỡng), test để báo cáo cuối. Nếu val hay test cũng đi vào fit thì chúng mất vai trò "chưa thấy".' },
+              { id: 'b', text: 'Validation — vì nó kiểm định model', correct: false, explanation: 'Validation KHÔNG được fit. Nó chỉ để so sánh và chọn (model nào, ngưỡng nào). Fit trên nó là trộn vai train.' },
+              { id: 'c', text: 'Test — vì nó là chuẩn cuối cùng', correct: false, explanation: 'Test tuyệt đối không fit, cũng không tune. Nó bị niêm phong, chỉ mở một lần cuối để báo cáo.' },
+              { id: 'd', text: 'Cả ba, để model học từ nhiều dữ liệu nhất', correct: false, explanation: 'Đó là công thức tự lừa mình: nếu model học từ cả ba, sẽ không còn tập nào "chưa thấy" để đánh giá trung thực.' }
+            ]
+          },
+          {
+            question: 'Bạn <code>fit</code> một StandardScaler trên <strong>toàn bộ 1000 dòng</strong> rồi mới chia train/val/test. An toàn hay rò rỉ?',
+            options: [
+              { id: 'a', text: 'Rò rỉ — mean/std đã tính từ cả val+test rồi rót vào train', correct: true, explanation: 'Chuẩn — scaler học mean/std từ cả 1000 dòng, nghĩa là thống kê của val+test đã ảnh hưởng cách chuẩn hóa train. Đúng cái Bài 5–6 cảnh báo: fit thống kê CHỈ trên train, rồi transform phần còn lại.' },
+              { id: 'b', text: 'An toàn — vì scaler chỉ đổi thang đo, không phải model', correct: false, explanation: 'Scaler cũng HỌC từ dữ liệu (mean, std). Học trên cả tập = leakage, bất kể nó "chỉ" chuẩn hóa. Shape vẫn đẹp nên bẫy này rất khó thấy.' },
+              { id: 'c', text: 'An toàn — miễn là sau đó vẫn chia đúng 60/20/20', correct: false, explanation: 'Chia đúng tỉ lệ không cứu được leakage đã xảy ra ở bước scale. Thứ tự mới quan trọng: split TRƯỚC, fit scaler SAU.' },
+              { id: 'd', text: 'Rò rỉ, nhưng không đáng kể nên bỏ qua được', correct: false, explanation: 'Với dữ liệu này có thể nhỏ, nhưng thói quen thì nguy hiểm: trong nhiều bài toán leakage kiểu này thổi phồng điểm đánh giá rất mạnh. Luôn split trước.' }
+            ]
+          },
+          {
+            question: 'Đã tách 20% làm test (còn 800 dòng). Để validation cũng bằng 20% của 1000 gốc, <code>test_size</code> lần split thứ hai (trên 800) là bao nhiêu?',
+            options: [
+              { id: 'a', text: '0.25 — vì 0.25 × 800 = 200 = 20% của 1000', correct: true, explanation: 'Đúng — lần 2 chia trên 800, nên để ra 200 dòng cần 200/800 = 0.25. Tập tạm đã nhỏ đi nên phần trăm phải lớn hơn 0.20.' },
+              { id: 'b', text: '0.20 — vì muốn 20%', correct: false, explanation: '0.20 × 800 = 160, chỉ 16% gốc. Đây là cái bẫy tỉ lệ kinh điển: áp 20% lên tập đã bị cắt nhỏ.' },
+              { id: 'c', text: '0.16 — 20% của 80%', correct: false, explanation: '16% là kết quả SAI cần tránh, không phải test_size cần đặt. Ta cần 200/800 = 0.25.' },
+              { id: 'd', text: '0.50 — chia đôi phần còn lại', correct: false, explanation: '0.50 × 800 = 400 = 40% gốc, quá nhiều cho validation. Con số đúng là 0.25.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'SAFE hay LEAKAGE?',
+          instruction: 'Kéo mỗi thao tác vào đúng ngăn: <strong>✅ SAFE</strong> (giữ test/val trong sạch) · <strong>💧 LEAKAGE</strong> (thông tin tương lai rò vào).',
+          chips: [
+            { id: 's-split-first', label: 'split TRƯỚC rồi fit scaler trên train' },
+            { id: 's-val-select',  label: 'chọn model theo điểm VALIDATION' },
+            { id: 's-test-once',   label: 'mở test đúng 1 lần để báo cáo cuối' },
+            { id: 'l-scale-all',   label: 'fit scaler trên TOÀN data rồi mới split' },
+            { id: 'l-tune-test',   label: 'chỉnh ngưỡng dựa trên điểm TEST' },
+            { id: 'l-peek-test',   label: 'chọn model theo điểm TEST' }
+          ],
+          bins: [
+            { id: 'safe', label: '✅ SAFE',    correct: 'true' },
+            { id: 'leak', label: '💧 LEAKAGE', correct: 'true' }
+          ],
+          solution: {
+            's-split-first': 'safe', 's-val-select': 'safe', 's-test-once': 'safe',
+            'l-scale-all': 'leak', 'l-tune-test': 'leak', 'l-peek-test': 'leak'
+          },
+          success: 'Chuẩn — ba việc SAFE đều giữ test/val ở vai "chưa thấy": split trước rồi mới học thống kê, chọn model bằng validation, và chỉ mở test một lần cuối. Ba việc LEAKAGE đều để thông tin tương lai rò ngược: scale toàn data trộn mean/std, còn tune/chọn dựa trên test biến test thành một tập validation trá hình. Bước 3: lắp đúng đường ống tách test → tách val → niêm phong.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — tách test → tách val → niêm phong. 2 mồi bẫy: 0.20 lần 2 / scale trước split ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)', slot: 'b1' },
+          { type: 'py', token: 'X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42)', slot: 'b2' },
+          { type: 'py', token: 'assert len(X_train) == 600 and len(X_val) == 200 and len(X_test) == 200', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.20, stratify=y_temp, random_state=42)', slot: 't1' },
+          { type: 'py', token: 'X_scaled = StandardScaler().fit_transform(X)', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l15-test', accepts: ['py'], multi: false },
+          { id: 'l15-val', accepts: ['py'], multi: false },
+          { id: 'l15-seal', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'CHIA 3 PHÒNG — 3 TRẠM · TÁCH TEST → TÁCH VAL → NIÊM PHONG',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'split_dataset · 1000 học viên · Đậu 70% · mục tiêu 600/200/200' },
+          done_note: 'Đường ống chia sạch: tách TEST 20% trước (niêm phong ngay, stratify + random_state) → tách VAL bằng 0.25 của 800 còn lại (ra đúng 200 = 20% gốc) → kiểm 600/200/200 không giẫm nhau, Đậu 70% khắp ba phòng. Hai mồi bẫy: test_size=0.20 cho lần 2 (chỉ ra 160 = 16% gốc) và fit scaler trên TOÀN data trước khi split (leakage — mean/std rò từ val+test vào train). Bước 4 tự viết 2 lần split.',
+          stations: [
+            {
+              zones: ['l15-test'],
+              icon: '🔒', label: 'TRẠM 1 — TÁCH TEST', sub: '20% niêm phong trước tiên', result_kind: 'split_rooms',
+              sr: {
+                mode: 'test', total: 1000, pos_ratio: 0.70, n_train: 600, n_val: 200, n_test: 200,
+                note: '<code>train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)</code> — cắt <b>200</b> dòng làm test và <b>niêm phong ngay</b>, còn 800 dòng tạm. Tách test SỚM để chắc chắn nó không dính vào bất kỳ bước nào sau. stratify giữ Đậu 70%; random_state để tái lập.'
+              },
+              narration: 'Test tách đầu tiên và khóa lại luôn — đó là kỷ luật. Càng để lâu mới tách, càng dễ vô tình cho nó rò vào quá trình.'
+            },
+            {
+              zones: ['l15-val'],
+              icon: '🎛', label: 'TRẠM 2 — TÁCH VAL', sub: '0.25 của 800 = 200', result_kind: 'split_rooms',
+              sr: {
+                mode: 'val', total: 1000, pos_ratio: 0.70, n_train: 600, n_val: 200, n_test: 200,
+                note: '<code>train_test_split(X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42)</code> — chia 800 dòng tạm thành <b>600 train</b> + <b>200 val</b>. Chú ý <b>0.25</b> (không phải 0.20): vì 0.25 × 800 = 200 = đúng 20% của 1000 gốc.'
+              },
+              narration: 'Đây là chỗ dễ sai tỉ lệ nhất: tập tạm đã nhỏ đi còn 800, nên muốn 200 val phải lấy 0.25 chứ không phải 0.20 (0.20 chỉ ra 160).'
+            },
+            {
+              zones: ['l15-seal'],
+              icon: '✅', label: 'TRẠM 3 — NIÊM PHONG', sub: 'kiểm 600/200/200 · Đậu 70%', result_kind: 'split_rooms',
+              sr: {
+                mode: 'seal', total: 1000, pos_ratio: 0.70, n_train: 600, n_val: 200, n_test: 200,
+                note: '<code>assert len(X_train) == 600 and len(X_val) == 200 and len(X_test) == 200</code> — ba phòng đủ 600/200/200, hợp lại trọn 1000 mã dòng, không giẫm nhau; tỉ lệ Đậu ≈ 70% ở cả ba (stratify). Test giờ khóa kín tới báo cáo cuối.'
+              },
+              narration: 'Split xong và sạch: train để học, validation để chọn, test niêm phong. Mọi bước học thống kê (scaler…) từ đây chỉ được fit trên TRAIN.'
+            }
+          ]
+        },
+        expected_sql: 'X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, stratify=y, random_state=42) X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42) assert len(X_train) == 600 and len(X_val) == 200 and len(X_test) == 200',
+        expected_zones: {
+          'l15-test': 'X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)',
+          'l15-val': 'X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42)',
+          'l15-seal': 'assert len(X_train) == 600 and len(X_val) == 200 and len(X_test) == 200'
+        },
+        reveal_hints: {
+          'l15-test': 'Trạm 1: tách TEST trước, 20% + stratify + random_state — <strong>train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)</strong>.',
+          'l15-val': 'Trạm 2: tách VAL từ phần còn lại, dùng 0.25 (không phải 0.20) — <strong>train_test_split(X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42)</strong>.',
+          'l15-seal': 'Trạm 3: niêm phong + kiểm kích thước — <strong>assert len(X_train) == 600 and len(X_val) == 200 and len(X_test) == 200</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'CHIA 3 PHÒNG — 3 TRẠM · TÁCH TEST → TÁCH VAL → NIÊM PHONG',
+        table_sub: 'split_dataset · 1000 học viên · Đậu 70%',
+        idle_sub: '1000 học viên · ▶ chạy để tách test, tách val và niêm phong 600/200/200',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'split_dataset',
+          columns: ['features (3)', 'pass_fail'],
+          dataRows: [
+            ['study 7.2 · att 8 · quiz 6', '1'], ['study 3.1 · att 4 · quiz 3', '0'],
+            ['study 9.0 · att 9 · quiz 8', '1'], ['study 5.5 · att 6 · quiz 5', '1'],
+            ['study 2.0 · att 3 · quiz 2', '0'], ['study 8.4 · att 7 · quiz 9', '1'],
+            ['study 6.1 · att 6 · quiz 4', '1'], ['study 1.5 · att 2 · quiz 1', '0'],
+            ['study 7.8 · att 8 · quiz 7', '1'], ['study 4.2 · att 5 · quiz 6', '1'],
+            ['study 9.5 · att 9 · quiz 9', '1'], ['study 3.7 · att 4 · quiz 3', '0'],
+            ['study 6.6 · att 7 · quiz 5', '1'], ['study 2.9 · att 3 · quiz 4', '0'],
+            ['… 1000 dòng · Đậu 70%', '…']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: tự viết 2 lần split. Grader: grade_lesson15
+         (2 train_test_split + random_state + stratify; 600/200/200 không giẫm; Đậu 0.70; Risk bắt
+         fit-scaler-trước-split leakage; Behavior chạy lại tái lập y hệt). ----- */
+      step_4: {
+        prompt: 'Bài cuối khóa. Chia 1000 học viên thành <strong>60/20/20</strong> bằng <strong>hai lần</strong> <code>train_test_split</code>: lần một tách <strong>20% test</strong> (niêm phong), lần hai tách <strong>validation</strong> từ phần còn lại. Cả hai lần đều cần <code>stratify</code> (giữ Đậu 70%) và <code>random_state</code> (tái lập). Nhớ tỉ lệ lần hai là <strong>0.25</strong>, và <strong>đừng</strong> học thống kê gì trước khi split.',
+        context: {
+          scenario: 'Bốn ràng buộc của một split sạch: (1) <strong>đúng 600/200/200</strong> — lần hai dùng <code>test_size=0.25</code> vì 25% của 800 mới ra 200; (2) <strong>không giẫm nhau</strong> — lần hai chia từ <code>X_temp</code>, không phải <code>X</code> gốc; (3) <code>stratify</code> cả hai lần để Đậu ≈ 70% khắp ba phòng; (4) <code>random_state</code> cả hai lần để chạy lại ra y hệt. Cạm bẫy lớn nhất: <strong>fit preprocessing trước khi split</strong> — mọi scaler/thống kê phải đợi tới sau, và chỉ học trên train.',
+          real_world: 'Đây là bước đầu tiên của gần như mọi pipeline ML nghiêm túc — trước cả khi chọn model. Một split rò rỉ khiến toàn bộ đánh giá về sau trở nên vô nghĩa: bạn tưởng model đạt 95% nhưng thực tế 80%, và chỉ phát hiện khi đã triển khai. Chia dữ liệu sạch là hợp đồng trung thực giữa bạn và con số cuối cùng.',
+          steps: [
+            'Nạp <code>X, y</code> bằng <code>load_split_dataset()</code> (1000 dòng, Đậu 70%).',
+            'Lần 1: tách <code>X_temp, X_test, y_temp, y_test</code> với <code>test_size=0.20, stratify=y, random_state=…</code>.',
+            'Lần 2: tách <code>X_train, X_val, y_train, y_val</code> từ <code>X_temp, y_temp</code> với <code>test_size=0.25, stratify=y_temp, random_state=…</code>.',
+            'In <code>len(X_train), len(X_val), len(X_test)</code> · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? In <code>len(X_train), len(X_val), len(X_test)</code> — phải là 600 200 200. Nếu ra 640 160 200 thì lần hai đang dùng 0.20 thay vì 0.25.',
+          expected: 'Console in <code>600 200 200</code>. Đủ 4 tầng xanh. Thử fit scaler trước khi split? Kích thước vẫn đẹp nhưng tầng Risk sẽ chỉ ra thống kê đã rò rỉ.'
+        },
+        hints: [
+          { level: 1, text: 'Bốn việc: nạp dữ liệu → tách 20% test → tách val (0.25 của phần còn lại) → in kích thước. Không fit gì trước split; cả hai lần đều random_state + stratify.' },
+          { level: 2, text: 'Đầu bài: <code>from sklearn.model_selection import train_test_split</code> và <code>from ml_lab import load_split_dataset</code>, rồi <code>X, y = load_split_dataset()</code>.' },
+          { level: 3, text: 'Hai lần split:<br><code>X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.20, stratify=y, random_state=42)</code><br><code>X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42)</code><br>Lần 2 chia từ <code>X_temp</code>, dùng <code>0.25</code>.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from sklearn.model_selection import train_test_split<br>from ml_lab import load_split_dataset<br>X, y = load_split_dataset()<br>X_temp, X_test, y_temp, y_test = train_test_split(<br>&nbsp;&nbsp;&nbsp;&nbsp;X, y, test_size=0.20, stratify=y, random_state=42)<br>X_train, X_val, y_train, y_val = train_test_split(<br>&nbsp;&nbsp;&nbsp;&nbsp;X_temp, y_temp, test_size=0.25, stratify=y_temp, random_state=42)<br>print(len(X_train), len(X_val), len(X_test))</code>' }
+        ],
+        grader_fn: 'grade_lesson15',
+        success_message: 'Split sạch — 600/200/200, ba phòng không giẫm nhau, Đậu 70% khắp nơi, và chạy lại ra y hệt (random_state). Bạn vừa khép trọn KHÓA CƠ BẢN: từ đọc dữ liệu, dựng feature, fit hồi quy, đo lỗi, hạ gradient, phân loại bằng sigmoid và ranh giới, tới chẩn overfit và chia dữ liệu trung thực. Đây là bộ khung để mọi model bạn xây từ giờ được đánh giá đàng hoàng. Chúc mừng — nền tảng đã vững! 🎓',
+        xp_reward: 50
+      }
+    }
   ]
 };

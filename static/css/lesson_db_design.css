@@ -12416,3 +12416,59 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-cxm-d { font-weight: 700; }
 .mlf-cxm-tr { color: var(--text-400); }
 .mlf-cxm-ck { font-weight: 700; text-align: right; }
+
+/* ═══ ĐỢT 26 (2026-07-22) — ML BÀI 15: ỐNG KÍNH 3 PHÒNG (.spl) + cảnh split_rooms ═══ */
+.spl-source { margin-top: 10px; text-align: center; font-size: 12.5px; color: var(--text-300);
+  padding: 8px; border-radius: 10px; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.14); }
+.spl-source b { color: #E2E8F0; font-family: 'JetBrains Mono', monospace; }
+.spl-flowdown { display: block; font-size: 10.5px; color: var(--text-500); margin-top: 2px; }
+.spl-rooms { margin-top: 8px; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 6px; }
+.spl-arrow { align-self: center; color: #475569; font-size: 15px; }
+.spl-room { display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 12px;
+  background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.16); }
+.spl-room-train { border-color: rgba(52, 211, 153, 0.4); }
+.spl-room-val { border-color: rgba(251, 191, 36, 0.4); }
+.spl-room-test { border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.06); }
+.spl-room-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.spl-room-name { font-size: 12px; font-weight: 700; color: var(--text-200); }
+.spl-room-pct { font-size: 10px; color: var(--text-500); font-family: 'JetBrains Mono', monospace; }
+.spl-room-n { font-size: 26px; font-weight: 800; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.spl-room-train .spl-room-n { color: #6EE7B7; }
+.spl-room-val .spl-room-n { color: #FCD34D; }
+.spl-room-test .spl-room-n { color: #FCA5A5; }
+.spl-room-job { font-size: 10.5px; color: var(--text-400); }
+.spl-strat { height: 6px; border-radius: 3px; background: rgba(148, 163, 184, 0.22); overflow: hidden; margin-top: 2px; }
+.spl-strat-pos { height: 100%; background: #34D399; border-radius: 3px; }
+.spl-strat-lab { font-size: 9.5px; color: var(--text-500); font-family: 'JetBrains Mono', monospace; }
+.spl-leakmsg { margin-top: 8px; padding: 9px 11px; border-radius: 10px; font-size: 11.5px; line-height: 1.5;
+  background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.4); color: #FDBA74; }
+.spl-leakmsg b { color: #FB923C; }
+.spl.is-leak .spl-rooms { outline: 2px dashed rgba(251, 146, 60, 0.5); outline-offset: 4px; border-radius: 12px; }
+.spl-ctrl { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.spl-row { display: grid; grid-template-columns: 250px 1fr; align-items: center; gap: 12px; }
+.spl-lab { font-size: 12px; color: var(--text-300); white-space: nowrap; }
+.spl-lab b { font-family: 'JetBrains Mono', monospace; color: #FCD34D; }
+.spl-slider { width: 100%; accent-color: #38BDF8; cursor: pointer; }
+.spl-slider:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+.spl-leaktoggle { justify-self: start; border: 1px solid rgba(251, 146, 60, 0.45); background: rgba(251, 146, 60, 0.08);
+  color: #FDBA74; font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.spl-leaktoggle:hover { background: rgba(251, 146, 60, 0.16); }
+.spl-leaktoggle.is-on { background: rgba(52, 211, 153, 0.14); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; }
+.spl-leaktoggle:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+@media (max-width: 760px) {
+  .spl-rooms { grid-template-columns: 1fr; }
+  .spl-arrow { transform: rotate(90deg); justify-self: center; }
+  .spl-row { grid-template-columns: 1fr; gap: 4px; }
+}
+/* cảnh split_rooms trong map */
+.mlf-spl-scene { display: flex; flex-direction: column; gap: 8px; }
+.mlf-spl-rooms { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.mlf-spl-room { display: flex; flex-direction: column; gap: 3px; padding: 8px 9px; border-radius: 9px;
+  background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.16); transition: opacity .2s ease; }
+.mlf-spl-room.is-pending { opacity: 0.4; }
+.mlf-spl-room.is-active { border-color: rgba(56, 189, 248, 0.55); box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3); }
+.mlf-spl-name { font-size: 11px; font-weight: 700; color: var(--text-200); }
+.mlf-spl-n { font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.mlf-spl-bar { height: 5px; border-radius: 3px; background: rgba(148, 163, 184, 0.2); overflow: hidden; }
+.mlf-spl-barpos { height: 100%; border-radius: 3px; }
+.mlf-spl-lab { font-size: 9px; color: var(--text-500); font-family: 'JetBrains Mono', monospace; }

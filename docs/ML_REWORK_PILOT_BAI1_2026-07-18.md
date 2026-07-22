@@ -568,3 +568,28 @@ Hero: title + Ticket #14; glossary 6; svg + polyline + 24 chấm + slider + togg
 ### Fix nhỏ trong đợt: bảng measure ban đầu ✓ mọi bậc có check<30 (bậc 1 underfit cũng ✓ → dễ hiểu nhầm "ổn"). Sửa: ✓ CHỈ cho bậc check nhỏ nhất (đáy U), 🔴 cho check>30, còn lại xám không dấu.
 
 ### Trạng thái khóa: Course 1 cơ bản 14/15 bài xong. Versions: css v29 · content v24 · shell v33 · flowmap v20. Còn Bài 15 (chốt khóa).
+
+---
+
+## ĐỢT 27 (2026-07-22) — BÀI 15 "Chia Train / Validation / Test" (spec C1-L15, CHỐT KHÓA CƠ BẢN) 🎓
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH 3 PHÒNG** (`renderSplitLens` mới, HTML card không SVG): 1000 dòng → 3 phòng Train (600) · Validation (200) · Test 🔒 (200), mỗi phòng có **thanh stratify** (Đậu 70% giữ nguyên) + % gốc. 2 thanh **test_size / val_size** recompute số dòng realtime; kéo val=0.20 → Val hiện **160 + ⚠ (16% gốc)** (lộ bẫy tỉ lệ). Nút **mô phỏng rò rỉ** → banner cảnh báo fit-scaler-trước-split + viền dashed. Câu đố MS3: test_size lần 2 = **0.25** (4 lựa chọn).
+- **Đủ 4 MS + 2 loại leakage** (user chốt): MS1 vai 3 tập · MS2 leakage (scale-trước-split & tune-trên-test) · MS3 tỉ lệ 25% của 80% · MS4 2 split + random_state + stratify. 3 MCQ + mini-game SAFE/LEAKAGE 6 thẻ.
+- **Step 3 = map 3 TRẠM** (user chốt): TÁCH TEST (`split_rooms` mode test — 200 niêm phong + 800 tạm) → TÁCH VAL (mode val — 600 train + 200 val = 20% gốc) → NIÊM PHONG (mode seal — 3 card 600/200/200 không giẫm + Đậu 70%). Bẫy: test_size=0.20 lần 2 (→160) · scaler.fit(X) trước split (leakage).
+
+### Số thật (engine load_split_dataset)
+1000 dòng, Đậu 700 (0.70). Split: test 0.20 → 200 test + 800 tạm; val 0.25 × 800 → 200 val + 600 train = **600/200/200**. Bẫy 16%: 0.20 × 800 = 160 (thay vì 0.25 × 800 = 200). Stratify giữ Đậu 70% ở cả ba (train 420/180, val 140/60, test 140/60).
+
+### Grader (test server-side trước)
+`grade_lesson15` 4 tiêu chí: 2 lần train_test_split + random_state + stratify; Output 600/200/200 KHÔNG giẫm (row-id) + Đậu 0.70; Risk AST bắt fit/fit_transform TRƯỚC split (leakage); Behavior chạy lại tái lập y hệt. CORRECT → **4/4** (stdout "600 200 200"); 0.20-lần-2 → 3/4 (Output 640 160 200); scale-trước-split → 3/4 (Risk leakage); thiếu random_state → 0/4 (Code).
+
+### Verify — verify_b15.js: 36/36 pass · 0 pageerror (lần đầu sạch)
+Hero: title + Ticket #15 CHỐT KHÓA; glossary 6; 3 phòng + 2 thanh + toggle, riddle ẩn; mặc định 600/200/200; stratify Test Đậu 140/Rớt 60; kéo val=0.20 → Val 160 ⚠ + riddle mở; toggle rò rỉ → banner + dashed; sai "0.20" → feedback 16%; đúng "0.25" → done + khóa; explorer 3 cột features/pass_fail/row_id. 3 MCQ + minigame SAFE/LEAKAGE. Map 3 trạm: test active + 200 niêm phong · val 600/200 = 20% gốc · seal 600/200/200 không giẫm Đậu 70%; note trọn; bẫy 0.20 → chấm bắt. Step 4: trap 0.20 fail + báo tỉ lệ, bản đúng 4/4, console 600 200 200, modal chúc mừng KHÓA CƠ BẢN 🎓. Regression B1/B8/B11/B13/B14 + hero B13/B14 còn nguyên + Basic + NC. Multi-viewport 1920/1536/1024/768 OK (3 phòng + 2 thanh + 4 lựa chọn trong màn, 0 h-scroll, map fit).
+
+### Component mới tái dùng được
+- `renderSplitLens` (hero): 3 room card HTML + thanh stratify + 2 thanh tỉ lệ recompute + toggle leakage + câu đố. Card-based (không SVG) — mẫu cho các bài "phân bổ/vai trò".
+- `split_rooms` (ml_flow_map result_kind) 3 mode test/val/seal — card phòng, phòng đang thao tác sáng lên (is-active), phòng chưa tách mờ (is-pending).
+
+### 🎓 KHÓA CƠ BẢN COURSE 1 HOÀN TẤT — 15/15 bài
+M1 (đọc dữ liệu) · M2 (feature) · M3 (hồi quy: line/MSE/GD) · M4 (logistic: linreg-fail/sigmoid/boundary) · M5 (generalization: overfit/split). Versions: css v30 · content v25 · shell v34 · flowmap v21. Kế tiếp: AUDIT toàn khóa 15 bài (user yêu cầu — thiết kế/scaling/UI-UX/trình tự học).

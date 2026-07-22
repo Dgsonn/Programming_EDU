@@ -314,6 +314,18 @@
       }
       return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">best = bậc 3</span></div>';
     }
+    /* Bài 15 — chia 3 phòng: node theo mode test/val/seal */
+    if (k === 'split_rooms') {
+      const sr = st.sr || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">chia 600/200/200 ?</span></div>';
+      if (sr.mode === 'test') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">200 test 🔒</span><span class="mlf-chip x">800 tạm</span></div>';
+      }
+      if (sr.mode === 'val') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">600 train</span><span class="mlf-chip warn">200 val</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">600/200/200 ✓</span></div>';
+    }
     return '';
   }
 
@@ -1004,6 +1016,43 @@
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">x →</text>' +
           '<text x="10" y="11" font-size="9.5" fill="#94A3B8">↑ y</text></svg>' +
         (cx.note ? '<div class="mlf-qc-note">' + cx.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 15 — chia 3 phòng: card TRAIN/VAL/TEST theo mode, phòng đang thao tác sáng lên */
+    if (k === 'split_rooms') {
+      const sr = st.sr || {};
+      const mode = sr.mode || 'test';
+      const total = sr.total || 1000, posR = sr.pos_ratio != null ? sr.pos_ratio : 0.70;
+      // trạng thái mỗi phòng theo mode: 'active' (vừa cắt) · 'pending' (chưa) · 'done'
+      const state = {
+        test: mode === 'test' ? 'active' : 'done',
+        val: mode === 'test' ? 'pending' : (mode === 'val' ? 'active' : 'done'),
+        train: mode === 'seal' || mode === 'val' ? (mode === 'val' ? 'active' : 'done') : 'pending'
+      };
+      function card(kind, name, n, lock) {
+        const cls = state[kind];
+        const pos = Math.round(n * posR);
+        const barW = (pos / Math.max(1, n) * 100).toFixed(1);
+        const col = kind === 'train' ? '#34D399' : kind === 'val' ? '#FBBF24' : '#F87171';
+        return '<div class="mlf-spl-room is-' + cls + '">' +
+          '<div class="mlf-spl-name">' + lock + name + '</div>' +
+          '<div class="mlf-spl-n" style="color:' + (cls === 'pending' ? '#475569' : col) + '">' + (cls === 'pending' ? '—' : n) + '</div>' +
+          '<div class="mlf-spl-bar"><div class="mlf-spl-barpos" style="width:' + (cls === 'pending' ? 0 : barW) + '%;background:' + col + '"></div></div>' +
+          '<div class="mlf-spl-lab">' + (cls === 'pending' ? 'chưa tách' : 'Đậu ' + Math.round(posR * 100) + '%') + '</div></div>';
+      }
+      const head = mode === 'test'
+        ? '<span class="mlf-reg-eq">tách TEST 20%</span><span class="mlf-reg-err">200 niêm phong · 800 tạm</span>'
+        : mode === 'val'
+          ? '<span class="mlf-reg-eq">tách VAL 0.25×800</span><span class="mlf-reg-err">600 train · 200 val (= 20% gốc)</span>'
+          : '<span class="mlf-reg-eq">600 / 200 / 200 ✓</span><span class="mlf-reg-err">không giẫm nhau · Đậu 70% cả ba</span>';
+      return '<div class="mlf-scene mlf-spl-scene">' +
+        '<div class="mlf-reg-head">' + head + '</div>' +
+        '<div class="mlf-spl-rooms">' +
+          card('train', 'Train', sr.n_train || 600, '') +
+          card('val', 'Val', sr.n_val || 200, '') +
+          card('test', 'Test', sr.n_test || 200, '🔒 ') +
+        '</div>' +
+        (sr.note ? '<div class="mlf-qc-note">' + sr.note + '</div>' : '') +
       '</div>';
     }
     return '';

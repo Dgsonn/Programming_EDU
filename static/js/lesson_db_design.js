@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens || s1cur.complexity_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens || s1cur.complexity_lens || s1cur.split_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -5543,6 +5543,126 @@
     });
   }
 
+  /* ═══ Bài 15 ML — ỐNG KÍNH 3 PHÒNG (Train / Validation / Test) ═══
+     1000 dòng chia 3 phòng (HTML card), 2 thanh test/val recompute số dòng + thanh stratify
+     Đậu 70%; toggle mô phỏng rò rỉ; câu đố tỉ lệ 0.25. */
+  function renderSplitLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const total = cfg.total || 1000, posR = cfg.pos_ratio != null ? cfg.pos_ratio : 0.70;
+    const tr = cfg.test_range || [0.10, 0.40], vr = cfg.val_range || [0.10, 0.40];
+    const rid = cfg.riddle || {};
+    let testSize = cfg.test_size != null ? cfg.test_size : 0.20;
+    let valSize = cfg.val_size != null ? cfg.val_size : 0.25;
+    let leak = false;
+    let interacted = false;
+
+    function counts() {
+      const nTest = Math.round(total * testSize);
+      const nTemp = total - nTest;
+      const nVal = Math.round(nTemp * valSize);
+      const nTrain = nTemp - nVal;
+      return { nTest: nTest, nTemp: nTemp, nVal: nVal, nTrain: nTrain };
+    }
+
+    function roomCard(kind, name, job, n, lockedIcon) {
+      const pos = Math.round(n * posR), neg = n - pos;
+      const pctOrig = Math.round(n / total * 100);
+      const barPos = (pos / Math.max(1, n) * 100).toFixed(1);
+      return '<div class="spl-room spl-room-' + kind + '">' +
+        '<div class="spl-room-head"><span class="spl-room-name">' + lockedIcon + name + '</span>' +
+          '<span class="spl-room-pct">' + pctOrig + '% gốc</span></div>' +
+        '<div class="spl-room-n" data-spl-n="' + kind + '">' + n + '</div>' +
+        '<div class="spl-room-job">' + job + '</div>' +
+        '<div class="spl-strat" title="tỉ lệ Đậu giữ nguyên (stratify)"><div class="spl-strat-pos" style="width:' + barPos + '%"></div></div>' +
+        '<div class="spl-strat-lab">Đậu ' + pos + ' · Rớt ' + neg + '</div>' +
+      '</div>';
+    }
+
+    function rooms() {
+      const c = counts();
+      const valPctOrig = Math.round(c.nVal / total * 100);
+      const valBad = Math.abs(valPctOrig - 20) > 1;   // lệch 20% gốc → cảnh báo (bẫy 16%)
+      return roomCard('train', 'Train', 'model HỌC weights', c.nTrain, '') +
+        '<div class="spl-arrow">→</div>' +
+        roomCard('val', 'Validation' + (valBad ? ' ⚠' : ''), 'ta CHỌN quyết định', c.nVal, '') +
+        '<div class="spl-arrow">→</div>' +
+        roomCard('test', 'Test', 'niêm phong · báo cáo cuối', c.nTest, '🔒 ');
+    }
+
+    mount.innerHTML =
+      '<section class="tlens spl' + (leak ? ' is-leak' : '') + '" aria-label="Ống kính ba phòng">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH 3 PHÒNG') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="spl-source"><b>' + total + '</b> học viên · Đậu ' + Math.round(posR * 100) + '% <span class="spl-flowdown">▼ chia stratified</span></div>' +
+        '<div class="spl-rooms" data-spl-rooms>' + rooms() + '</div>' +
+        '<div class="spl-leakmsg" data-spl-leakmsg hidden></div>' +
+        '<div class="spl-ctrl">' +
+          '<div class="spl-row"><label class="spl-lab">test_size (lần 1): <b data-spl-tsv>' + testSize.toFixed(2) + '</b></label>' +
+            '<input type="range" class="spl-slider" data-spl-test min="' + tr[0] + '" max="' + tr[1] + '" step="0.05" value="' + testSize + '"/></div>' +
+          '<div class="spl-row"><label class="spl-lab">val_size (lần 2, của phần tạm): <b data-spl-vsv>' + valSize.toFixed(2) + '</b></label>' +
+            '<input type="range" class="spl-slider" data-spl-val min="' + vr[0] + '" max="' + vr[1] + '" step="0.05" value="' + valSize + '"/></div>' +
+          '<button type="button" class="spl-leaktoggle" data-spl-leak aria-pressed="false">💧 mô phỏng rò rỉ</button>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-spl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-spl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-spl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-spl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const roomsEl = mount.querySelector('[data-spl-rooms]');
+    const leakEl = mount.querySelector('[data-spl-leakmsg]');
+    const sec = mount.querySelector('.spl');
+    const riddleEl = mount.querySelector('[data-spl-riddle]');
+
+    function paint() {
+      if (roomsEl) roomsEl.innerHTML = rooms();
+      const tsv = mount.querySelector('[data-spl-tsv]'); if (tsv) tsv.textContent = testSize.toFixed(2);
+      const vsv = mount.querySelector('[data-spl-vsv]'); if (vsv) vsv.textContent = valSize.toFixed(2);
+      if (sec) sec.classList.toggle('is-leak', leak);
+      if (leakEl) {
+        leakEl.hidden = !leak;
+        if (leak) leakEl.innerHTML = '💧 <b>RÒ RỈ:</b> fit scaler trên cả ' + total + ' dòng TRƯỚC khi chia → mean/std mang thông tin của <b>Validation + Test</b> rót vào Train. Số liệu sẽ đẹp mà <b>giả</b>. Cách đúng: chia TRƯỚC, fit scaler trên <b>train</b> rồi transform phần còn lại.';
+      }
+    }
+    function openRiddle() { if (interacted) return; interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+    paint();
+    const tSl = mount.querySelector('[data-spl-test]');
+    const vSl = mount.querySelector('[data-spl-val]');
+    if (tSl) tSl.addEventListener('input', function () { testSize = parseFloat(tSl.value); paint(); openRiddle(); });
+    if (vSl) vSl.addEventListener('input', function () { valSize = parseFloat(vSl.value); paint(); openRiddle(); });
+    const lkBtn = mount.querySelector('[data-spl-leak]');
+    if (lkBtn) lkBtn.addEventListener('click', function () {
+      leak = !leak;
+      lkBtn.classList.toggle('is-on', leak);
+      lkBtn.setAttribute('aria-pressed', leak ? 'true' : 'false');
+      lkBtn.textContent = (leak ? '✅ chia đúng thứ tự' : '💧 mô phỏng rò rỉ');
+      paint(); openRiddle();
+    });
+
+    const fb = mount.querySelector('[data-spl-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-spl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-spl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nhớ 200/800 = 0.25.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -5936,6 +6056,13 @@
         const heroMountCx = document.getElementById('lesson-hero');
         renderComplexityLens(heroMountCx || pvMount, s1.complexity_lens);
         if (heroMountCx) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.split_lens) {
+        // ML Bài 15 (user chốt 2026-07-22): ỐNG KÍNH 3 PHÒNG — Train/Val/Test, dòng chảy 1000
+        // → 600/200/200, 2 thanh tỉ lệ + stratify + toggle rò rỉ (spec C1-L15, chốt khóa).
+        const heroMountSp = document.getElementById('lesson-hero');
+        renderSplitLens(heroMountSp || pvMount, s1.split_lens);
+        if (heroMountSp) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
