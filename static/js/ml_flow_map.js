@@ -227,6 +227,21 @@
       return '<div class="mlf-chips"><span class="mlf-chip x">ŷ = ' + esc(rg.w) + '·x + ' + esc(rg.b) + '</span>' +
         (rg.mode === 'residual' ? '<span class="mlf-chip warn">Σ lệch</span>' : (rg.mode === 'predict' ? '<span class="mlf-chip xnew">12 dự đoán</span>' : '')) + '</div>';
     }
+    /* Bài 9 — MSE: node hiện mode (lỗi có dấu / ô lỗi² / so A-B) */
+    if (k === 'mse_step') {
+      const ms = st.mse || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">MSE → ?</span></div>';
+      if (ms.mode === 'compare') {
+        const xs = table.dataRows.map(function (r) { return parseFloat(r[0]); });
+        const ys = table.dataRows.map(function (r) { return parseFloat(r[1]); });
+        return '<div class="mlf-chips">' + (ms.compare || []).map(function (L) {
+          let s = 0; for (let i = 0; i < xs.length; i++) { const e = L.w * xs[i] + L.b - ys[i]; s += e * e; }
+          return '<span class="mlf-chip x">' + esc(L.label) + ' ' + (s / xs.length).toFixed(1) + '</span>';
+        }).join('') + '</div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip ' + (ms.mode === 'squared' ? 'warn' : 'x') + '">' +
+        (ms.mode === 'squared' ? '12 ô lỗi²' : '12 lỗi có dấu') + '</span></div>';
+    }
     return '';
   }
 
@@ -541,6 +556,64 @@
           (mode === 'residual' ? '<span class="mlf-reg-err">TỔNG LỖI ≈ <b>' + Math.round(sse).toLocaleString('vi-VN') + '</b></span>' : '') + '</div>' +
         svg +
         (rg.note ? '<div class="mlf-qc-note">' + rg.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 9 — MSE: residual (đoạn) / squared (ô vuông lỗi²) / compare (2 thanh MSE A vs B) */
+    if (k === 'mse_step') {
+      const ms = st.mse || {};
+      const xs = table.dataRows.map(function (r) { return parseFloat(r[0]); });
+      const ys = table.dataRows.map(function (r) { return parseFloat(r[1]); });
+      const nn = xs.length;
+      function mseLine(w, b) { let s = 0; for (let i = 0; i < nn; i++) { const e = w * xs[i] + b - ys[i]; s += e * e; } return s / nn; }
+      if (ms.mode === 'compare') {
+        const cmp = (ms.compare || []).map(function (L) { return { label: L.label, w: L.w, b: L.b, mse: mseLine(L.w, L.b) }; });
+        const mx = Math.max.apply(null, cmp.map(function (c) { return c.mse; })) || 1;
+        const best = cmp.slice().sort(function (a, b) { return a.mse - b.mse; })[0];
+        return '<div class="mlf-scene mlf-mse-compare">' +
+          cmp.map(function (c) {
+            return '<div class="mlf-mse-row' + (c === best ? ' is-best' : '') + '"><span class="mlf-mse-lab">Đường ' + esc(c.label) + ' <i>ŷ=' + esc(c.w) + '·x+' + esc(c.b) + '</i></span>' +
+              '<span class="mlf-mse-bar"><span class="mlf-mse-fill" style="width:' + Math.max(4, Math.round(c.mse / mx * 100)) + '%"></span></span>' +
+              '<span class="mlf-mse-val">MSE ' + c.mse.toFixed(1) + (c === best ? ' ✓' : '') + '</span></div>';
+          }).join('') +
+          (ms.note ? '<div class="mlf-qc-note">' + ms.note + '</div>' : '') +
+        '</div>';
+      }
+      // residual / squared — scatter + line
+      const w = ms.w || 0, b = ms.b || 0;
+      const xmax = Math.ceil(Math.max.apply(null, xs)) + 1;
+      const ymax = Math.ceil(Math.max.apply(null, ys) / 10) * 10 + 20;
+      const W = 480, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+      const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)); };
+      const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)); };
+      let grid = '';
+      [0, ymax / 2, ymax].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + py(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + py(g).toFixed(1) + '" stroke="rgba(148,163,184,0.14)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (py(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + Math.round(g) + '</text>';
+      });
+      let extra = '', seg = '';
+      for (let i = 0; i < nn; i++) {
+        const yh = w * xs[i] + b, ypt = py(ys[i]), yhp = py(yh);
+        seg += '<line x1="' + px(xs[i]).toFixed(1) + '" y1="' + ypt.toFixed(1) + '" x2="' + px(xs[i]).toFixed(1) + '" y2="' + yhp.toFixed(1) + '" stroke="#FB923C" stroke-width="1.6"/>';
+        if (ms.mode === 'squared') {
+          const side = Math.abs(ypt - yhp), top = Math.min(ypt, yhp);
+          extra += '<rect x="' + px(xs[i]).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + side.toFixed(1) + '" height="' + side.toFixed(1) + '" fill="#FB923C" fill-opacity="0.18" stroke="#FB923C" stroke-opacity="0.5"/>';
+        }
+      }
+      const cands = [];
+      [0, xmax].forEach(function (xe) { const ye = w * xe + b; if (ye >= -0.01 && ye <= ymax + 0.01) cands.push([xe, ye]); });
+      if (Math.abs(w) > 1e-9) [0, ymax].forEach(function (ye) { const xe = (ye - b) / w; if (xe >= -0.01 && xe <= xmax + 0.01) cands.push([xe, ye]); });
+      let line = '';
+      if (cands.length >= 2) { cands.sort(function (p, q) { return p[0] - q[0]; }); const a = cands[0], z = cands[cands.length - 1]; line = '<line x1="' + px(a[0]).toFixed(1) + '" y1="' + py(a[1]).toFixed(1) + '" x2="' + px(z[0]).toFixed(1) + '" y2="' + py(z[1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>'; }
+      let pts = '';
+      for (let i = 0; i < nn; i++) pts += '<circle cx="' + px(xs[i]).toFixed(1) + '" cy="' + py(ys[i]).toFixed(1) + '" r="3.2" fill="#E2E8F0" stroke="#0B1220" stroke-width="1"/>';
+      return '<div class="mlf-scene mlf-reg-scene">' +
+        '<div class="mlf-reg-head"><span class="mlf-reg-eq">ŷ = ' + esc(w) + '·x + ' + esc(b) + '</span>' +
+          '<span class="mlf-reg-err">MSE ≈ <b>' + mseLine(w, b).toFixed(1) + '</b></span></div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="MSE ' + esc(ms.mode) + '">' +
+          grid + extra + seg + line + pts +
+          '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
+          '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">final_score</text></svg>' +
+        (ms.note ? '<div class="mlf-qc-note">' + ms.note + '</div>' : '') +
       '</div>';
     }
     return '';

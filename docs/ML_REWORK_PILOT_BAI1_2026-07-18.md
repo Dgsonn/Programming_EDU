@@ -383,3 +383,29 @@ B1 32/32 · B2 31/31 · B3 32/32 · B4 30/30 · B5 31/31 · B6 34/34 · B7 31/31
 
 ### Deviations đã được user duyệt từ trước (KHÔNG phải lỗi)
 Hero lens thay "guided visual 3-screen" spec (user chốt từng bài); B1 tuần-3→giữa-kỳ tuần 7/8 (đợt 4); B4 MCQ cột thật thay completed_courses/download_speed giả (đợt 8); B7 step-3 3-trạm thay 4-round (user chốt, mean/var vẫn phủ ở glossary); exercise-bank ghi activity 0-5000 nhưng curriculum + engine đều 0-2000 (theo curriculum).
+
+---
+
+## ĐỢT 14 (2026-07-22) — BÀI 9 "Đo lỗi model bằng MSE" (spec C1-L9, M3)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH CHI PHÍ** (`renderCostLens` mới): scatter 12 điểm + đường; mỗi lỗi → **Ô VUÔNG diện tích = lỗi²** (rect side = |residual| px → area ∝ error²); đồng hồ MSE sống (xanh thấp / đỏ cao); nút đổi **đường A (8x+20, MSE 20.9) ↔ B (4x+45, MSE 127.6)** — A ô nhỏ xanh, B ô to vống đỏ; dải **cancellation** (−8/+8 cộng = 0 nhưng bình phương → MSE 64); RMSE = √MSE (A 4.6 · B 11.3 điểm). Câu đố chốt "tổng CÓ DẤU ≈ 0 ≠ hoàn hảo" (spec Step 1).
+- **Map = 3 TRẠM** (user chốt): LỆCH (errors = pred − actual, đoạn cam) → BÌNH PHƯƠNG (squared = errors², ô vuông) → TRUNG BÌNH → MSE (mse = squared.mean() + so A/B bằng 2 thanh). `mse_step` result_kind mới (mode residual/squared dùng lại .mlf-reg-* + compare = 2 thanh MSE A/B, A best xanh). Bẫy: quên bình phương (errors.mean → triệt tiêu) · abs (MAE).
+- **Dạy cả 2** (user chốt): phạt-lỗi-lớn (ô vuông to) + đơn vị điểm² → RMSE (glossary + concept card + meter hiện √).
+
+### Engine + grader (có sẵn, khớp spec)
+- `load_mse_demo()` — actual (12 điểm), pred_a (8x+20), pred_b (4x+45). MSE_A 20.9 < MSE_B 127.6 (tính live, số 100% thật).
+- `grade_lesson9` 4 tầng: cần `mean_squared_error(actual, predictions)`; Risk dùng bộ bất đối xứng [0,0,0]/[3,-1,2] → MSE 14/3, bắt **MAE** (=2) và **lỗi có dấu triệt tiêu** (=4/3); Output MSE_A<MSE_B; Behavior mảng ẩn dài 5/17. Test server-side: CORRECT 4/4 · TRAP_MAE/TRAP_signed → risk_ok False đúng thông điệp.
+
+### Verify — verify_b9.js: 33/33 pass · 0 pageerror (2 lượt sạch)
+Hero: 12 circle + 12 rect + 2 tab + meter + cancel; A→MSE 20.9/RMSE 4.6, đổi B→127.6 đỏ + riddle mở; đố sai "tổng≈0=hoàn hảo" → fb triệt tiêu, đúng "Sai—triệt tiêu" → done. Glossary 6; explorer 2 cột. 3 MCQ (residual +5 · vì sao bình phương · MSE 16.67) + minigame 3 ngăn MSE/TRIỆT TIÊU/MAE. Map 3 trạm (residual đoạn cam / squared 12 ô vuông / compare 2 thanh A best). Bẫy errors.mean() → chấm bắt. Step4: trap MAE → Risk; bản đúng 4/4 (mảng ẩn) + Bài 10 GD + modal. Regression B1-B8 + Basic + NC sạch. Multi-viewport 1920/1536/1024/768: 12 circle + 12 rect, 0 h-scroll, map fit.
+
+### Fix trong đợt
+- **renderCostLens dùng `esc(` (hàm của ml_flow_map, KHÔNG có trong lesson_db_design.js)** → PAGEERROR "esc is not defined", rect=0. Các giá trị là số (w,b,cancel) → thay bằng raw (không cần escape). GHI SỔ: shell dùng `escapeHtml`, ml_flow_map dùng `esc` — không lẫn.
+- Flask treo giữa chừng (page.goto /login timeout dù curl 200) sau nhiều lượt chạy trong phiên → RESTART sạch là hết (khác 429: 429 trả nhanh, treo là hang). Ghi sổ cùng nhóm gotcha rate-limiter.
+
+### Component mới tái dùng được
+- `renderCostLens` (hero): scatter + đường + ô vuông lỗi² + đồng hồ MSE + đổi nhiều đường + cancellation strip.
+- `mse_step` (ml_flow_map result_kind): mode residual (đoạn) / squared (ô vuông) / compare (2 thanh MSE, best xanh) — vẽ từ table.dataRows.
+
+### Versions: css v22 · content v19 · shell v25 · flowmap v10.

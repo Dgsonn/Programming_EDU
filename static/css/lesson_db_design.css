@@ -12182,3 +12182,44 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-reg-err { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-400); }
 .mlf-reg-err b { color: #FCD34D; }
 .mlf-reg-svg { width: 100%; height: auto; display: block; background: rgba(11, 18, 32, 0.4); border-radius: 10px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 14 (2026-07-22) — BÀI 9 "Đo lỗi model bằng MSE"
+ * 1) ỐNG KÍNH CHI PHÍ (hero: ô vuông lỗi² + đồng hồ MSE + đổi A↔B + cancellation)
+ * 2) MAP 3 trạm: mse_step (residual/squared dùng .mlf-reg-*, compare = thanh MSE A/B)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.costlens-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.costlens-lab { font-size: 12px; color: var(--text-400); font-family: 'JetBrains Mono', monospace; }
+.costlens-tab { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--text-300); background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: color var(--anim-fast), background var(--anim-fast), border-color var(--anim-fast); }
+.costlens-tab:hover { border-color: rgba(56, 189, 248, 0.45); }
+.costlens-tab.is-on { color: #0B1220; background: linear-gradient(180deg, #7DD3FC, #38BDF8); border-color: transparent; }
+.costlens-tab:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+.costlens-plot { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.5); padding: 10px 12px; }
+.costlens-svg { width: 100%; height: auto; display: block; }
+.costlens-meter { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; }
+.costlens-meter-row { display: grid; grid-template-columns: 150px 1fr 118px; align-items: center; gap: 12px; }
+.costlens-meter-lab { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-300); }
+.costlens-meter-lab b { color: #7DD3FC; }
+.costlens-meter-track { height: 14px; background: rgba(148, 163, 184, 0.1); border-radius: 7px; overflow: hidden; }
+.costlens-meter-fill { display: block; height: 100%; border-radius: 7px; background: #34D399; transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1), background var(--anim-fast); }
+.costlens-meter-fill.is-high { background: #F87171; }
+@media (prefers-reduced-motion: reduce) { .costlens-meter-fill { transition: none; } }
+.costlens-meter-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; color: #FCD34D; text-align: right; }
+.costlens-rmse { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-500); padding-left: 162px; }
+.costlens-rmse b { color: #6EE7B7; }
+.costlens-cancel { margin-top: 12px; font-size: 12px; color: var(--text-300); line-height: 1.6; border: 1px solid rgba(248, 113, 113, 0.28); background: rgba(248, 113, 113, 0.06); border-radius: 10px; padding: 9px 12px; }
+.costlens-cancel b { color: var(--text-50); }
+@media (max-width: 620px) { .costlens-meter-row { grid-template-columns: 1fr; gap: 4px; } .costlens-rmse { padding-left: 0; } }
+
+/* 2) MAP — MSE compare (2 thanh A vs B) */
+.mlf-mse-compare { display: flex; flex-direction: column; gap: 9px; }
+.mlf-mse-row { display: grid; grid-template-columns: 150px 1fr 96px; align-items: center; gap: 10px; }
+.mlf-mse-lab { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-200); }
+.mlf-mse-lab i { color: var(--text-500); font-style: normal; font-size: 10px; display: block; }
+.mlf-mse-bar { height: 16px; background: rgba(148, 163, 184, 0.1); border-radius: 8px; overflow: hidden; }
+.mlf-mse-fill { display: block; height: 100%; border-radius: 8px; background: #F87171; }
+.mlf-mse-row.is-best .mlf-mse-fill { background: #34D399; }
+.mlf-mse-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--text-200); text-align: right; }
+.mlf-mse-row.is-best .mlf-mse-val { color: #6EE7B7; }

@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4625,6 +4625,127 @@
     });
   }
 
+  /* ═══ renderCostLens — ML Bài 9 (user chốt 2026-07-22): ỐNG KÍNH CHI PHÍ.
+     cfg = { title,intro, x:[..],y:[..], x_label,y_label, x_max,y_max,
+             lines:[{label,w,b}], cancel:{e1,e2}, riddle:{...} }
+     Mỗi lỗi → Ô VUÔNG diện tích lỗi²; đồng hồ MSE; đổi đường A↔B; dải cancellation; câu đố. ═══ */
+  function renderCostLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const xs = cfg.x || [], ys = cfg.y || [];
+    const n = Math.min(xs.length, ys.length);
+    const lines = cfg.lines || [{ label: 'A', w: 1, b: 0 }];
+    const rid = cfg.riddle || {};
+    const cancel = cfg.cancel || { e1: -8, e2: 8 };
+    const xmax = cfg.x_max || (Math.max.apply(null, xs) || 10);
+    const ymax = cfg.y_max || 100;
+    let idx = 0;
+    let interacted = false;
+    const W = 440, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+    const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)); };
+    const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)); };
+    function mseOf(L) { let s = 0; for (let i = 0; i < n; i++) { const e = L.w * xs[i] + L.b - ys[i]; s += e * e; } return s / n; }
+    const maxMse = Math.max.apply(null, lines.map(mseOf)) || 1;
+
+    function svg() {
+      const L = lines[idx];
+      let grid = '';
+      [0, ymax / 2, ymax].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + py(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + py(g).toFixed(1) + '" stroke="rgba(148,163,184,0.14)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (py(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + Math.round(g) + '</text>';
+      });
+      // ô vuông lỗi² (diện tích ∝ residual²) + đoạn lệch
+      let sq = '', seg = '';
+      for (let i = 0; i < n; i++) {
+        const yh = L.w * xs[i] + L.b;
+        const ypt = py(ys[i]), yhp = py(yh);
+        const side = Math.abs(ypt - yhp);
+        const top = Math.min(ypt, yhp);
+        sq += '<rect x="' + px(xs[i]).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + side.toFixed(1) + '" height="' + side.toFixed(1) + '" fill="#FB923C" fill-opacity="0.18" stroke="#FB923C" stroke-opacity="0.5" stroke-width="1"/>';
+        seg += '<line x1="' + px(xs[i]).toFixed(1) + '" y1="' + ypt.toFixed(1) + '" x2="' + px(xs[i]).toFixed(1) + '" y2="' + yhp.toFixed(1) + '" stroke="#FB923C" stroke-width="1.6"/>';
+      }
+      // đường
+      const cands = [];
+      [0, xmax].forEach(function (xe) { const ye = L.w * xe + L.b; if (ye >= -0.01 && ye <= ymax + 0.01) cands.push([xe, ye]); });
+      if (Math.abs(L.w) > 1e-9) [0, ymax].forEach(function (ye) { const xe = (ye - L.b) / L.w; if (xe >= -0.01 && xe <= xmax + 0.01) cands.push([xe, ye]); });
+      let line = '';
+      if (cands.length >= 2) { cands.sort(function (p, q) { return p[0] - q[0]; }); const a = cands[0], z = cands[cands.length - 1]; line = '<line x1="' + px(a[0]).toFixed(1) + '" y1="' + py(a[1]).toFixed(1) + '" x2="' + px(z[0]).toFixed(1) + '" y2="' + py(z[1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round"/>'; }
+      let pts = '';
+      for (let i = 0; i < n; i++) pts += '<circle cx="' + px(xs[i]).toFixed(1) + '" cy="' + py(ys[i]).toFixed(1) + '" r="3.2" fill="#E2E8F0" stroke="#0B1220" stroke-width="1"/>';
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="costlens-svg" role="img" aria-label="chi phí đường ' + escapeHtml(L.label) + '">' +
+        grid + sq + seg + line + pts +
+        '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
+        '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'y') + '</text></svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens costlens" aria-label="Ống kính chi phí — đường nào rẻ hơn">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH CHI PHÍ') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="costlens-toolbar"><span class="costlens-lab">Đường:</span>' +
+          lines.map(function (L, i) {
+            return '<button type="button" class="costlens-tab" data-co-line="' + i + '">' + escapeHtml(L.label) + ' · ŷ=' + L.w + '·x+' + L.b + '</button>';
+          }).join('') + '</div>' +
+        '<div class="costlens-plot" data-co-plot></div>' +
+        '<div class="costlens-meter"><div class="costlens-meter-row"><span class="costlens-meter-lab">🧮 MSE đường <b data-co-name></b></span>' +
+          '<span class="costlens-meter-track"><span class="costlens-meter-fill" data-co-fill></span></span>' +
+          '<span class="costlens-meter-val" data-co-mse></span></div>' +
+          '<div class="costlens-rmse" data-co-rmse></div></div>' +
+        '<div class="costlens-cancel">➖ <b>Vì sao không CỘNG lỗi có dấu?</b> Hai lỗi ' + cancel.e1 + ' và +' + cancel.e2 +
+          ' cộng lại = <b>0</b> (như thể hoàn hảo!) — nhưng bình phương: ' + (cancel.e1 * cancel.e1) + ' + ' + (cancel.e2 * cancel.e2) +
+          ' → MSE <b>' + ((cancel.e1 * cancel.e1 + cancel.e2 * cancel.e2) / 2) + '</b>. Lỗi trái dấu <b>triệt tiêu</b> — phải bình phương trước.</div>' +
+        '<div class="dlens-riddle" data-co-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-co-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-co-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-co-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-co-plot]');
+    const nameEl = mount.querySelector('[data-co-name]');
+    const mseEl = mount.querySelector('[data-co-mse]');
+    const fillEl = mount.querySelector('[data-co-fill]');
+    const rmseEl = mount.querySelector('[data-co-rmse]');
+    const riddleEl = mount.querySelector('[data-co-riddle]');
+
+    function paint() {
+      const L = lines[idx];
+      const m = mseOf(L);
+      if (plot) plot.innerHTML = svg();
+      mount.querySelectorAll('.costlens-tab').forEach(function (b, i) { b.classList.toggle('is-on', i === idx); });
+      if (nameEl) nameEl.textContent = L.label;
+      if (mseEl) mseEl.textContent = (Math.round(m * 10) / 10).toLocaleString('vi-VN') + ' điểm²';
+      if (fillEl) { fillEl.style.width = Math.max(3, Math.round(m / maxMse * 100)) + '%'; fillEl.classList.toggle('is-high', m > maxMse * 0.5); }
+      if (rmseEl) rmseEl.innerHTML = 'RMSE = √MSE ≈ <b>' + (Math.round(Math.sqrt(m) * 10) / 10).toLocaleString('vi-VN') + ' điểm</b> (sai trung bình mỗi học viên)';
+    }
+    function touch() { if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; } }
+    paint();
+    mount.querySelectorAll('[data-co-line]').forEach(function (btn) {
+      btn.addEventListener('click', function () { idx = parseInt(btn.getAttribute('data-co-line'), 10); paint(); touch(); });
+    });
+
+    const fb = mount.querySelector('[data-co-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-co-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-co-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nghĩ về TRIỆT TIÊU: lỗi trái dấu khử nhau.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -4976,6 +5097,13 @@
         const heroMountLl = document.getElementById('lesson-hero');
         renderLineLens(heroMountLl || pvMount, s1.line_lens);
         if (heroMountLl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.cost_lens) {
+        // ML Bài 9 (user chốt 2026-07-22): ỐNG KÍNH CHI PHÍ — lỗi → ô vuông lỗi² + đồng hồ MSE
+        // + đổi đường A↔B + dải cancellation; câu đố "tổng có dấu ≈0 ≠ hoàn hảo" (spec C1-L9). Vào hero.
+        const heroMountCo = document.getElementById('lesson-hero');
+        renderCostLens(heroMountCo || pvMount, s1.cost_lens);
+        if (heroMountCo) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

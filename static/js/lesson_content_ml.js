@@ -3546,7 +3546,290 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l9',  index: 9,  title: 'Đo lỗi model bằng MSE',                        module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
+    {
+      id: 'c1_l9',
+      index: 9,
+      title: 'Đo lỗi model bằng MSE',
+      subtitle: 'Một con số cho biết đường dự đoán tốt cỡ nào — và vì sao phải BÌNH PHƯƠNG',
+      module: 12,
+      module_title: 'M3 — Hồi quy tuyến tính',
+      estimated_minutes: 18,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '📈 StudyLab · Ticket #09',
+        hook: 'Bài 8 bạn vẽ đường <code>ŷ = 8·x + 20</code> — nhưng nó <strong>TỐT chưa?</strong> "Nhìn thấy khớp" không đủ; sếp cần <strong>một CON SỐ</strong> để so đường này với đường khác. Ticket #09: đo <strong>lỗi</strong> của đường. Ý tưởng đầu tiên — cộng các <strong>lỗi</strong> (dự đoán − thực tế) — lại hỏng: lỗi <strong>đoán vượt</strong> (+) và <strong>đoán hụt</strong> (−) <strong>triệt tiêu</strong> nhau, một đường sai bét vẫn ra tổng ≈ 0. Cách chuẩn: <strong>bình phương</strong> mỗi lỗi (diệt dấu + phạt lỗi lớn) rồi lấy trung bình → <strong>MSE</strong>. Nhiệm vụ: dựng MSE, dùng nó chấm 2 đường A và B xem cái nào rẻ hơn.'
+      },
+      achievement: { name: 'Cost Meter — đo lỗi bằng MSE', desc: 'hiểu vì sao bình phương lỗi, tính MSE vectorized, dùng MSE so 2 đường' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Tính <strong>lỗi có dấu</strong> (residual = dự đoán − thực tế) và hiểu vì sao <strong>cộng thẳng</strong> lại triệt tiêu.',
+            'Biết vì sao <strong>bình phương</strong> lỗi: diệt dấu VÀ <strong>phạt lỗi lớn</strong> mạnh hơn hẳn; MSE = trung bình các lỗi bình phương.',
+            'Dùng MSE <strong>so 2 đường</strong> (A rẻ hơn B), và viết hàm <code>mean_squared_error</code> vectorized. Biết MSE ở đơn vị <strong>điểm²</strong> → căn ra <strong>RMSE</strong>.'
+          ]
+        },
+        glossary: [
+          { term: 'RESIDUAL (lỗi có dấu)', vi: 'lệch 1 điểm', accent: '#FB923C',
+            def: 'Chênh giữa dự đoán và thực tế: <b>ŷ − y</b>. Dương = đoán VƯỢT; âm = đoán HỤT.',
+            ex: 'ŷ 75, y 70 → residual +5 (đường nằm trên điểm thật 5 đơn vị).',
+            out: 'giữ HƯỚNG sai · nhưng cộng thẳng thì triệt tiêu' },
+          { term: 'TRIỆT TIÊU (cancellation)', vi: 'lỗi khử nhau', accent: '#F87171',
+            def: 'Lỗi trái dấu cộng lại thành 0, <b>che giấu</b> một đường sai bét.',
+            ex: 'hai lỗi −8 và +8 cộng = 0 (như thể hoàn hảo!) dù cả hai đều sai 8 điểm.',
+            out: 'lý do KHÔNG dùng tổng lỗi có dấu' },
+          { term: 'SQUARED ERROR', vi: 'lỗi bình phương', accent: '#FBBF24',
+            def: 'Bình phương mỗi lỗi: <b>(ŷ − y)²</b>. Luôn ≥ 0 (diệt dấu) và <b>phạt lỗi lớn</b> gấp bội.',
+            ex: 'lỗi 10 → 100; lỗi 5 → 25. Một lỗi 10 "tốn" bằng bốn lỗi 5.',
+            out: 'diệt dấu + làm nổi bật lỗi lớn' },
+          { term: 'MSE', vi: 'sai số bình phương TB', accent: '#38BDF8',
+            def: '<b>M</b>ean <b>S</b>quared <b>E</b>rror = <b>trung bình</b> các lỗi bình phương. Một số tóm "đường tốt cỡ nào".',
+            ex: 'đường A: MSE 20.9 · đường B: MSE 127.6 → A rẻ hơn nhiều.',
+            out: 'thấp = khớp tốt · dùng để SO các đường' },
+          { term: 'COST / CHI PHÍ', vi: 'giá của đường', accent: '#A78BFA',
+            def: 'MSE chính là "<b>giá</b>" phải trả cho một đường. Học model = tìm đường CHI PHÍ thấp nhất.',
+            ex: 'Bài 10 sẽ để máy tự HẠ chi phí này bằng gradient descent.',
+            out: 'MSE = hàm mất mát (loss) cho hồi quy' },
+          { term: 'RMSE (căn của MSE)', vi: 'về đúng đơn vị', accent: '#34D399',
+            def: 'MSE ở đơn vị <b>bình phương</b> (điểm²) — khó đọc. Lấy <b>căn</b> → RMSE về đơn vị gốc (điểm).',
+            ex: 'MSE 20.9 điểm² → RMSE ≈ 4.6 điểm: "trung bình lệch ~4.6 điểm".',
+            out: '√MSE · cùng đơn vị với y · dễ diễn giải' }
+        ],
+        primer: {
+          goal: [
+            'Lỗi có dấu triệt tiêu → phải bình phương',
+            'MSE = trung bình lỗi² — 1 số so được các đường',
+            'MSE phạt lỗi lớn · đơn vị điểm² → RMSE'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong ống kính bên dưới, bấm đổi giữa đường A và B:</strong> mỗi lỗi hiện thành một <strong>Ô VUÔNG</strong> (diện tích = lỗi²). Đường A ô nhỏ → <strong>MSE 20.9</strong>; đường B ô to vống → <strong>MSE 127.6</strong>. Để ý dải "TỔNG CÓ DẤU": cộng lỗi có dấu gần 0 dù đường vẫn sai — đó là lý do phải bình phương. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Để MÁY biết một đường tốt hay tệ, ta cần biến "sai lệch" thành <strong>một con số</strong>. Cộng thẳng các lỗi thì hỏng: lỗi dương và âm <strong>triệt tiêu</strong>. Giải pháp kinh điển là <strong>MSE</strong> — bình phương từng lỗi (để dấu không khử nhau và để lỗi lớn bị phạt nặng) rồi lấy trung bình. MSE nhỏ = đường bám sát dữ liệu. Có MSE rồi, Bài 10 sẽ để máy TỰ chỉnh đường sao cho MSE nhỏ dần.',
+        concept_cards: [
+          {
+            icon: 'fa-not-equal',
+            title: 'Vì sao BÌNH PHƯƠNG?',
+            body: 'Cộng lỗi có dấu thì <strong>triệt tiêu</strong>: −8 và +8 → 0, như thể hoàn hảo dù sai. Bình phương giải 2 việc: (1) <strong>diệt dấu</strong> — mọi lỗi thành số dương; (2) <strong>phạt lỗi lớn</strong> — một lỗi 10 (=100) tốn bằng BỐN lỗi 5 (=25×4). Model sẽ rất "ngại" các cú trật lớn.'
+          },
+          {
+            icon: 'fa-gauge-high',
+            title: 'MSE = trung bình lỗi²',
+            body: 'Quy trình: lỗi (ŷ−y) → bình phương → <strong>trung bình</strong>. Ra một con số duy nhất so được nhiều đường: đường A <strong>MSE 20.9</strong> &lt; đường B <strong>MSE 127.6</strong> → chọn A. Đây chính là <strong>hàm chi phí</strong> (loss) mà model muốn hạ.'
+          },
+          {
+            icon: 'fa-ruler',
+            title: 'Đơn vị điểm² → RMSE',
+            body: 'Vì đã bình phương, MSE ở đơn vị <strong>điểm²</strong> — không cùng đơn vị với điểm nên khó đọc "sai bao nhiêu". Lấy <strong>căn bậc hai</strong> → <strong>RMSE</strong> về lại đơn vị điểm: √20.9 ≈ <strong>4.6 điểm</strong> sai trung bình. (Khóa sau dùng nhiều.)'
+          }
+        ],
+        /* Hero = ỐNG KÍNH CHI PHÍ (user chốt 2026-07-22): ô vuông lỗi² + đồng hồ MSE + đổi A↔B */
+        cost_lens: {
+          title: 'ỐNG KÍNH CHI PHÍ — ĐƯỜNG NÀO RẺ HƠN?',
+          intro: 'Scatter 12 học viên. Mỗi lỗi (đoạn dọc) hiện thành <b>Ô VUÔNG</b> — diện tích = lỗi². Bấm đổi <b>đường A ↔ B</b> để so <b>MSE</b>; nhìn dải TỔNG CÓ DẤU thấy vì sao phải bình phương. Trả lời câu chốt để mở Bước 2.',
+          x_label: 'study_hours (giờ học)', y_label: 'final_score',
+          x_max: 10, y_max: 100,
+          x: [1.3, 1.5, 2.0, 2.7, 2.8, 3.3, 3.4, 4.6, 4.9, 5.9, 6.7, 8.7],
+          y: [34.0, 30.0, 38.0, 45.0, 47.0, 43.0, 50.0, 56.0, 66.0, 63.0, 69.0, 80.0],
+          lines: [
+            { label: 'A', w: 8, b: 20 },
+            { label: 'B', w: 4, b: 45 }
+          ],
+          cancel: { e1: -8, e2: 8 },
+          riddle: {
+            prompt: 'Cộng 12 lỗi CÓ DẤU của đường A lại thì ra ≈ 0. Kết luận "đường A dự đoán hoàn hảo" — đúng không?',
+            options: ['Sai — lỗi trên & dưới triệt tiêu nhau; phải BÌNH PHƯƠNG rồi trung bình (MSE 20.9 > 0)', 'Đúng — tổng ≈ 0 nghĩa là không còn lỗi', 'Không đủ dữ liệu để nói'],
+            answer: 'Sai — lỗi trên & dưới triệt tiêu nhau; phải BÌNH PHƯƠNG rồi trung bình (MSE 20.9 > 0)',
+            wrong: {
+              'Đúng — tổng ≈ 0 nghĩa là không còn lỗi': 'Đây chính là cái bẫy TRIỆT TIÊU. Tổng có dấu ≈ 0 vì lỗi đoán-vượt (+) khử lỗi đoán-hụt (−), KHÔNG phải vì hết lỗi. Bình phương rồi trung bình cho MSE 20.9 > 0 — đường A tốt nhưng chưa hoàn hảo.',
+              'Không đủ dữ liệu để nói': 'Có đủ: 12 lỗi hiện rõ trên ống kính. Vấn đề là CÁCH gộp — cộng có dấu thì sai (triệt tiêu), phải bình phương → MSE 20.9.'
+            },
+            done: '✅ Đúng — tổng lỗi CÓ DẤU ≈ 0 chỉ vì các lỗi trái dấu khử nhau, KHÔNG phải vì đường hoàn hảo. Bình phương mỗi lỗi (diệt dấu + phạt lỗi lớn) rồi trung bình → <b>MSE 20.9</b>. So với đường B (MSE 127.6), A rẻ hơn 6 lần. Có "cây thước chi phí" này rồi, Bài 10 sẽ để máy TỰ hạ nó. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'mse_demo (12 học viên · 2 đường dự đoán)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: 'x', icon: '📏',
+                note: '<strong>Feature (x)</strong> — đầu vào của cả 2 đường A và B.' },
+              { name: 'final_score', type: 'FLOAT · điểm/100', key: 'y', icon: '🎯',
+                note: '<strong>Thực tế (y)</strong> — điểm THẬT. Residual = ŷ − y đo đường lệch điểm này bao xa.' }
+            ]
+          },
+          data_preview: [
+            ['1.3', '34.0'], ['2.0', '38.0'], ['2.8', '47.0'], ['3.4', '50.0'],
+            ['4.6', '56.0'], ['4.9', '66.0'], ['5.9', '63.0'], ['8.7', '80.0']
+          ]
+        },
+        mission: 'Dựng <code class="code">CÔNG THỨC MSE</code> cho 12 điểm: LỆCH (<code class="code">errors = ŷ − y</code>, có dấu) → BÌNH PHƯƠNG (<code class="code">errors²</code>, diệt dấu) → TRUNG BÌNH (<code class="code">mse</code>) rồi so đường A vs B — kho có <code class="code">mồi bẫy 🪤</code> (quên bình phương · dùng |lỗi| = MAE) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (residual dấu · vì sao bình phương · tính MSE) + mini-game cách-gộp-lỗi ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Model dự đoán <code>ŷ = 75</code>, thực tế <code>y = 70</code>. Residual (ŷ − y) bằng bao nhiêu và nghĩa là gì?',
+            options: [
+              { id: 'a', text: '+5 — đường đoán VƯỢT thực tế 5 điểm ở đây', correct: true, explanation: 'Đúng — residual = ŷ − y = 75 − 70 = +5. Dấu dương nghĩa là dự đoán cao hơn thực tế (đường nằm TRÊN điểm).' },
+              { id: 'b', text: '−5 — đường đoán hụt', correct: false, explanation: 'Theo quy ước ŷ − y thì 75 − 70 = +5 (dương). Âm là khi dự đoán THẤP hơn thực tế.' },
+              { id: 'c', text: '5 điểm nhưng không có dấu', correct: false, explanation: 'Residual GIỮ dấu để biết hướng lệch (vượt/hụt). Bỏ dấu là bước sau (bình phương hoặc trị tuyệt đối).' },
+              { id: 'd', text: '145 — cộng 75 và 70', correct: false, explanation: 'Residual là HIỆU (ŷ − y), không phải tổng. 75 − 70 = 5.' }
+            ]
+          },
+          {
+            question: 'Hai lỗi là <code>−8</code> và <code>+8</code>. Nếu đo "chất lượng đường" bằng <strong>trung bình lỗi CÓ DẤU</strong>, ta được 0. Vì sao đây là cách đo TỆ?',
+            options: [
+              { id: 'a', text: 'Vì lỗi trái dấu triệt tiêu — đường sai bét vẫn ra 0, phải bình phương trước', correct: true, explanation: 'Chuẩn — (−8 + 8)/2 = 0 dù cả hai điểm đều sai 8. Bình phương (64 + 64)/2 = 64 mới lộ ra lỗi thật. Đó là lý do MSE bình phương trước khi trung bình.' },
+              { id: 'b', text: 'Vì 0 là kết quả tốt, không có gì sai', correct: false, explanation: '0 ở đây là ẢO — do triệt tiêu, không phải do đường đúng. Cả hai điểm lệch 8 điểm mà vẫn ra 0 là dấu hiệu cách đo hỏng.' },
+              { id: 'c', text: 'Vì phải cộng thêm số điểm', correct: false, explanation: 'Vấn đề không phải thiếu số hạng mà là DẤU khử nhau. Bình phương (hoặc trị tuyệt đối) mới diệt được dấu.' },
+              { id: 'd', text: 'Vì chỉ có 2 điểm, cần nhiều hơn', correct: false, explanation: 'Số điểm không phải vấn đề — kể cả 1000 điểm, lỗi trái dấu vẫn triệt tiêu nếu cộng có dấu.' }
+            ]
+          },
+          {
+            question: 'Thực tế <code>[40, 60, 80]</code>, dự đoán <code>[45, 55, 80]</code>. MSE bằng bao nhiêu?',
+            options: [
+              { id: 'a', text: '≈ 16.67', correct: true, explanation: 'Đúng — lỗi = [5, −5, 0]; bình phương = [25, 25, 0]; trung bình = 50/3 ≈ 16.67. Bình phương diệt dấu nên 2 lỗi trái dấu KHÔNG khử nhau.' },
+              { id: 'b', text: '0 — vì lỗi +5 và −5 triệt tiêu', correct: false, explanation: 'Đó là kết quả nếu cộng CÓ DẤU (bẫy triệt tiêu). MSE bình phương TRƯỚC: 25 + 25 + 0 = 50, chia 3 ≈ 16.67.' },
+              { id: 'c', text: '≈ 3.33 — trung bình |lỗi|', correct: false, explanation: '(5 + 5 + 0)/3 ≈ 3.33 là MAE (trung bình trị tuyệt đối) — một metric KHÁC. MSE bình phương nên ra 16.67.' },
+              { id: 'd', text: '50 — tổng các bình phương', correct: false, explanation: '50 mới là TỔNG (25+25+0). MSE là TRUNG BÌNH nên chia cho số mẫu: 50/3 ≈ 16.67.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Cách gộp 12 lỗi thành 1 con số — cái nào là MSE?',
+          instruction: 'Kéo mỗi công thức vào đúng ngăn: <strong>✅ MSE</strong> (đúng) · <strong>➖ TRIỆT TIÊU</strong> (lỗi có dấu khử nhau — sai) · <strong>📏 MAE</strong> (trị tuyệt đối — metric khác).',
+          chips: [
+            { id: 'm-sq',   label: 'bình phương lỗi rồi lấy trung bình' },
+            { id: 'm-mean', label: 'trung bình lỗi CÓ DẤU' },
+            { id: 'm-sum',  label: 'cộng thẳng lỗi có dấu' },
+            { id: 'm-abs',  label: 'trung bình TRỊ TUYỆT ĐỐI của lỗi' }
+          ],
+          bins: [
+            { id: 'mse',    label: '✅ MSE',          correct: 'true' },
+            { id: 'cancel', label: '➖ TRIỆT TIÊU',   correct: 'true' },
+            { id: 'mae',    label: '📏 MAE (khác)',   correct: 'true' }
+          ],
+          solution: {
+            'm-sq':   'mse',
+            'm-mean': 'cancel',
+            'm-sum':  'cancel',
+            'm-abs':  'mae'
+          },
+          success: 'Chuẩn — chỉ "bình phương rồi trung bình" là MSE. Cộng/trung bình lỗi CÓ DẤU thì triệt tiêu (đường sai vẫn đẹp); trung bình |lỗi| là MAE — hợp lệ nhưng KHÁC (không phạt lỗi lớn mạnh như MSE). Đó là recipe Bước 3 sắp dựng.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — lệch → bình phương → MSE (so A/B). 2 mồi bẫy: quên square / MAE ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'errors = predictions - actual', slot: 'b1' },
+          { type: 'py', token: 'squared = errors ** 2', slot: 'b2' },
+          { type: 'py', token: 'mse = squared.mean()', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'mse = errors.mean()', slot: 't1' },
+          { type: 'py', token: 'mse = abs(errors).mean()', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l9-resid',  accepts: ['py'], multi: false },
+          { id: 'l9-square', accepts: ['py'], multi: false },
+          { id: 'l9-mse',    accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'CÔNG THỨC MSE — 3 TRẠM · CHI PHÍ ĐƯỜNG',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'mse_demo · 12 học viên · so đường A (8x+20) vs B (4x+45)' },
+          done_note: 'MSE = trung bình bình phương lỗi. Đường A: 20.9 · đường B: 127.6 → A rẻ hơn 6 lần. Bình phương giúp dấu không triệt tiêu và lỗi lớn bị phạt nặng. Bước 4 viết hàm mean_squared_error dùng lại được; Bài 10 để máy TỰ hạ MSE.',
+          stations: [
+            {
+              zones: ['l9-resid'],
+              icon: '📏', label: 'TRẠM 1 — LỆCH CÓ DẤU', sub: 'errors = ŷ − y', result_kind: 'mse_step',
+              mse: {
+                mode: 'residual', w: 8, b: 20,
+                note: '<code>errors = predictions - actual</code> cho 12 lỗi CÓ DẤU (đoạn cam trên = vượt, dưới = hụt). Cộng thẳng chúng lại gần 0 — <b>triệt tiêu</b>, không dùng được. Cần diệt dấu ở trạm sau.'
+              },
+              narration: 'Residual giữ hướng lệch (vượt/hụt), nhưng chính vì có dấu nên cộng lại thì khử nhau. Đó là lý do ta KHÔNG dừng ở đây.'
+            },
+            {
+              zones: ['l9-square'],
+              icon: '⬛', label: 'TRẠM 2 — BÌNH PHƯƠNG', sub: 'squared = errors²', result_kind: 'mse_step',
+              mse: {
+                mode: 'squared', w: 8, b: 20,
+                note: '<code>squared = errors ** 2</code> biến mỗi lỗi thành DIỆN TÍCH ô vuông (luôn ≥ 0). Lỗi lớn nhất (điểm cuối, lệch ~9.6) cho ô to vống — MSE bị nó chi phối. Đó là "phạt lỗi lớn".'
+              },
+              narration: 'Bình phương làm 2 việc: diệt dấu (ô nào cũng dương) và phóng đại lỗi lớn (9.6² = 92 áp đảo 0.8² = 0.6). Model sẽ rất ngại các cú trật lớn.'
+            },
+            {
+              zones: ['l9-mse'],
+              icon: '🧮', label: 'TRẠM 3 — TRUNG BÌNH → MSE', sub: 'mse = squared.mean() · so A/B', result_kind: 'mse_step',
+              mse: {
+                mode: 'compare',
+                compare: [{ label: 'A', w: 8, b: 20 }, { label: 'B', w: 4, b: 45 }],
+                note: '<code>mse = squared.mean()</code> lấy trung bình 12 ô vuông. Chấm 2 đường: <b>A = 20.9</b> vs <b>B = 127.6</b> → A rẻ hơn 6 lần, chọn A. Một con số đã so được 2 model. (√20.9 ≈ 4.6 điểm = RMSE.)'
+              },
+              narration: 'Trung bình các ô vuông = MSE. Giờ so đường nào cũng chỉ cần 1 con số: A 20.9 < B 127.6. Bài 10 sẽ để máy tự dò w,b sao cho con số này nhỏ dần.'
+            }
+          ]
+        },
+        expected_sql: 'errors = predictions - actual squared = errors ** 2 mse = squared.mean()',
+        expected_zones: {
+          'l9-resid':  'errors = predictions - actual',
+          'l9-square': 'squared = errors ** 2',
+          'l9-mse':    'mse = squared.mean()'
+        },
+        reveal_hints: {
+          'l9-resid':  'Trạm 1: lỗi có dấu — <strong>errors = predictions - actual</strong>.',
+          'l9-square': 'Trạm 2: bình phương diệt dấu — <strong>squared = errors ** 2</strong>.',
+          'l9-mse':    'Trạm 3: trung bình các bình phương — <strong>mse = squared.mean()</strong> (KHÔNG phải errors.mean()).'
+        }
+      },
+
+      drag_map: {
+        brand: 'CÔNG THỨC MSE — 3 TRẠM · CHI PHÍ ĐƯỜNG',
+        table_sub: 'mse_demo · 12 học viên · so A (8x+20) vs B (4x+45)',
+        idle_sub: '12 điểm · ▶ chạy để đo lỗi bằng MSE',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'mse_demo',
+          columns: ['study_hours', 'final_score'],
+          dataRows: [
+            ['1.3', '34.0'], ['1.5', '30.0'], ['2.0', '38.0'], ['2.7', '45.0'],
+            ['2.8', '47.0'], ['3.3', '43.0'], ['3.4', '50.0'], ['4.6', '56.0'],
+            ['4.9', '66.0'], ['5.9', '63.0'], ['6.7', '69.0'], ['8.7', '80.0']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: viết mean_squared_error(actual, predictions) = ((pred−actual)²).mean().
+         Grader: grade_lesson9 (Risk bắt MAE / lỗi có dấu; Output A<B; Behavior mảng ẩn). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp công thức bằng tay. Giờ viết <strong>hàm thật</strong>: <code>mean_squared_error(actual, predictions)</code> trả về trung bình các lỗi BÌNH PHƯƠNG — chạy cho mảng bất kỳ (numpy). Rồi dùng nó chấm 2 đường A và B. Hệ thống chấm thử mảng ẩn nhiều độ dài & dấu; nếu bạn lỡ dùng trị tuyệt đối (MAE) hay quên bình phương, tầng Risk sẽ bắt.',
+        context: {
+          scenario: 'Grader phân biệt MSE với 2 metric "trông giống": MAE (trung bình trị tuyệt đối) và trung bình lỗi có dấu. Với bộ thử bất đối xứng, mỗi cách cho một con số khác — chỉ đúng công thức bình-phương-rồi-trung-bình mới khớp. Nhớ: bình phương TRƯỚC khi lấy trung bình.',
+          real_world: 'MSE là hàm mất mát (loss) chuẩn của hồi quy: nó biến "đường tốt/tệ" thành một con số để MÁY tối ưu. Gần như mọi thuật toán học hồi quy đều đi tìm tham số làm MSE (hoặc họ hàng của nó) nhỏ nhất — bạn sắp thấy điều đó ở Bài 10 (gradient descent).',
+          steps: [
+            'Định nghĩa hàm <code>mean_squared_error(actual, predictions)</code> — đúng 2 tham số.',
+            'Tính lỗi có dấu, BÌNH PHƯƠNG để diệt dấu, rồi lấy TRUNG BÌNH.',
+            'Nạp dữ liệu demo, in MSE của đường A và đường B để so · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Gõ <code>from ml_lab import load_mse_demo</code>, <code>actual, pa, pb = load_mse_demo()</code> rồi in thử — kỳ vọng MSE(A) ≈ 20.9, MSE(B) ≈ 127.6.',
+          expected: 'Console in MSE(A) ≈ <code>20.9</code> &lt; MSE(B) ≈ <code>127.6</code>. Đủ 4 tầng xanh. Thử dùng <code>abs()</code> thay bình phương? Code chạy nhưng ra MAE — tầng Risk sẽ giải thích đó là metric khác.'
+        },
+        hints: [
+          { level: 1, text: 'Một hàm ngắn: nhận (actual, predictions), trả về trung bình các lỗi bình phương. Đừng dùng abs (đó là MAE).' },
+          { level: 2, text: 'Khung: <code>def mean_squared_error(actual, predictions):</code> rồi bên trong tính lỗi = predictions − actual (numpy tự chạy trên cả mảng).' },
+          { level: 3, text: 'Bình phương lỗi rồi lấy mean: <code>errors = predictions - actual</code> → <code>return (errors ** 2).mean()</code>. KHÔNG dùng abs(); KHÔNG quên ** 2.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>import numpy as np<br>from ml_lab import load_mse_demo<br>def mean_squared_error(actual, predictions):<br>&nbsp;&nbsp;&nbsp;&nbsp;errors = predictions - actual<br>&nbsp;&nbsp;&nbsp;&nbsp;return (errors ** 2).mean()<br>actual, pa, pb = load_mse_demo()<br>print(mean_squared_error(actual, pa))<br>print(mean_squared_error(actual, pb))</code>' }
+        ],
+        grader_fn: 'grade_lesson9',
+        success_message: 'Chuẩn — mean_squared_error bình phương rồi trung bình, khớp cả mảng ẩn. MSE(A) 20.9 < MSE(B) 127.6 → A rẻ hơn. Bạn vừa có "cây thước chi phí" cho hồi quy. Bài 10: để MÁY tự dò w,b sao cho MSE nhỏ dần — gradient descent.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l10', index: 10, title: 'Gradient Descent — model tự chỉnh đường',      module: 12, module_title: 'M3 — Hồi quy tuyến tính',      xp_reward: 50 },
     { id: 'c1_l11', index: 11, title: 'Vì sao Linear Regression không phân loại được', module: 13, module_title: 'M4 — Phân loại Logistic',     xp_reward: 50 },
     { id: 'c1_l12', index: 12, title: 'Sigmoid — biến score thành xác suất',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
