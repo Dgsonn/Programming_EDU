@@ -286,6 +286,22 @@
       }
       return '<div class="mlf-chips"><span class="mlf-chip x">' + pr.length + ' dòng · x·z·p</span></div>';
     }
+    /* Bài 13 — ranh giới 2D: node theo mode score/sign/boundary */
+    if (k === 'boundary_2d') {
+      const bd = st.bnd || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">z → phía ?</span></div>';
+      const zs = table.dataRows.map(function (r) { return bd.w1 * parseFloat(r[0]) + bd.w2 * parseFloat(r[1]) + bd.bias; });
+      if (bd.mode === 'score') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">z ' + Math.min.apply(null, zs).toFixed(2) + ' → ' + Math.max.apply(null, zs).toFixed(2) + '</span></div>';
+      }
+      const neg = zs.filter(function (v) { return v < 0; }).length, pos = zs.length - neg;
+      if (bd.mode === 'sign') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">' + neg + ' Rớt</span>' +
+          '<span class="mlf-chip clu clu-1">' + pos + ' Đậu</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip x">đường z = 0</span>' +
+        '<span class="mlf-chip clu clu-1">' + neg + '·' + pos + '</span></div>';
+    }
     return '';
   }
 
@@ -838,6 +854,81 @@
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
           '<text x="10" y="11" font-size="10" fill="#94A3B8">' + (isScore ? 'z (score)' : 'p (xác suất)') + '</text></svg>' +
         (sg.note ? '<div class="mlf-qc-note">' + sg.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 13 — canvas 2D: SCORE (tô theo z) → DẤU (2 màu + phía) → RANH GIỚI (đường z=0 + tô nửa mặt phẳng) */
+    if (k === 'boundary_2d') {
+      const bd = st.bnd || {};
+      const w1 = bd.w1, w2 = bd.w2, bias = bd.bias, mode = bd.mode || 'score';
+      const xMin = 0, xMax = 10, yMin = 0, yMax = 10;
+      const W = 460, H = 210, padL = 30, padR = 14, padT = 22, padB = 24;
+      const PX = function (v) { return (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR)); };
+      const PY = function (v) { return ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB)); };
+      const zOf = function (a, b) { return w1 * a + w2 * b + bias; };
+      const rows = table.dataRows.map(function (r) { return [parseFloat(r[0]), parseFloat(r[1])]; });
+      const zs = rows.map(function (p) { return zOf(p[0], p[1]); });
+      const zLo = Math.min.apply(null, zs), zHi = Math.max.apply(null, zs);
+      const neg = zs.filter(function (v) { return v < 0; }).length, pos = zs.length - neg;
+
+      // tô nửa mặt phẳng z>=0 (clip 1 cạnh) — chỉ ở mode boundary
+      function halfPlane() {
+        const rect = [[xMin, yMin], [xMax, yMin], [xMax, yMax], [xMin, yMax]];
+        const out = [];
+        for (let i = 0; i < rect.length; i++) {
+          const cur = rect[i], prev = rect[(i + 3) % 4];
+          const zc = zOf(cur[0], cur[1]), zp = zOf(prev[0], prev[1]);
+          if (zc >= 0) {
+            if (zp < 0) { const t = zp / (zp - zc); out.push([prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])]); }
+            out.push(cur);
+          } else if (zp >= 0) { const t = zp / (zp - zc); out.push([prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])]); }
+        }
+        return out;
+      }
+      function lineSeg() {
+        const edges = [[[xMin, yMin], [xMax, yMin]], [[xMax, yMin], [xMax, yMax]], [[xMax, yMax], [xMin, yMax]], [[xMin, yMax], [xMin, yMin]]];
+        const hits = [];
+        edges.forEach(function (e) {
+          const za = zOf(e[0][0], e[0][1]), zb = zOf(e[1][0], e[1][1]);
+          if ((za >= 0) !== (zb >= 0)) { const t = za / (za - zb); hits.push([e[0][0] + t * (e[1][0] - e[0][0]), e[0][1] + t * (e[1][1] - e[0][1])]); }
+        });
+        return hits.length >= 2 ? [hits[0], hits[1]] : null;
+      }
+
+      let fill = '', line = '', lbl = '';
+      if (mode === 'boundary') {
+        const hp = halfPlane();
+        if (hp.length >= 3) fill = '<polygon points="' + hp.map(function (p) { return PX(p[0]).toFixed(1) + ',' + PY(p[1]).toFixed(1); }).join(' ') + '" fill="rgba(52,211,153,0.12)"/>';
+        const seg = lineSeg();
+        if (seg) {
+          line = '<line x1="' + PX(seg[0][0]).toFixed(1) + '" y1="' + PY(seg[0][1]).toFixed(1) + '" x2="' + PX(seg[1][0]).toFixed(1) + '" y2="' + PY(seg[1][1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>';
+          // nhãn Đậu ĐẶT ở góc thực sự có z>0 (chọn giữa trên-phải và dưới-phải theo dấu)
+          const yD = zOf(xMax, yMax) >= 0 ? (padT + 10) : (H - padB - 6);
+          lbl = '<text x="' + (W - padR - 2) + '" y="' + yD + '" text-anchor="end" font-size="8" fill="#6EE7B7">Đậu</text>';
+        }
+      }
+      let pts = '';
+      rows.forEach(function (p, i) {
+        let col;
+        if (mode === 'score') {
+          const t = Math.max(0, Math.min(1, (zs[i] - zLo) / (zHi - zLo || 1)));  // nhạt→đậm theo z
+          col = 'rgba(' + Math.round(248 - t * 196) + ',' + Math.round(113 + t * 98) + ',' + Math.round(113 + t * 40) + ',0.9)';
+        } else {
+          col = zs[i] >= 0 ? '#34D399' : '#F87171';
+        }
+        pts += '<circle cx="' + PX(p[0]).toFixed(1) + '" cy="' + PY(p[1]).toFixed(1) + '" r="3.4" fill="' + col + '" stroke="#0B1220" stroke-width="1"/>';
+      });
+      const head = mode === 'score'
+        ? '<span class="mlf-reg-eq">z = X @ w + b</span><span class="mlf-reg-err">z <b>' + zLo.toFixed(2) + '</b> … <b>' + zHi.toFixed(2) + '</b> · chưa cắt nhãn</span>'
+        : mode === 'sign'
+          ? '<span class="mlf-reg-eq">sides = (z ≥ 0)</span><span class="mlf-reg-err"><b>' + neg + '</b> Rớt · <b>' + pos + '</b> Đậu · ngưỡng z = 0</span>'
+          : '<span class="mlf-reg-eq">đường z = 0</span><span class="mlf-reg-err">tách <b>' + neg + '</b> Rớt khỏi <b>' + pos + '</b> Đậu</span>';
+      return '<div class="mlf-scene mlf-reg-scene">' +
+        '<div class="mlf-reg-head">' + head + '</div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="ranh giới quyết định 2 feature">' +
+          fill + line + lbl + pts +
+          '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">study_hours →</text>' +
+          '<text x="10" y="11" font-size="9.5" fill="#94A3B8">↑ quiz_score</text></svg>' +
+        (bd.note ? '<div class="mlf-qc-note">' + bd.note + '</div>' : '') +
       '</div>';
     }
     return '';

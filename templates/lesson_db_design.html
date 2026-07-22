@@ -23,7 +23,7 @@
   <!-- Canvas Confetti for Duolingo-style celebrations -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=27" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=28" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body class="lesson-focus-mode" data-course="{{ course_id or 'db_design' }}">
@@ -636,14 +636,14 @@
   {% if course_id == 'ml' %}
   <!-- ML (USTH StudyLab) — data riêng theo schema shell + engine Pyodide ngầm
        + map DÒNG CHẢY PIPELINE ML (skin riêng, 2026-07-18c) -->
-  <script src="{{ url_for('static', filename='js/lesson_content_ml.js') }}?v=22"></script>
+  <script src="{{ url_for('static', filename='js/lesson_content_ml.js') }}?v=23"></script>
   <script src="{{ url_for('static', filename='js/ml_engine.js') }}?v=2"></script>
-  <script src="{{ url_for('static', filename='js/ml_flow_map.js') }}?v=16"></script>
+  <script src="{{ url_for('static', filename='js/ml_flow_map.js') }}?v=18"></script>
   {% endif %}
   <script src="{{ url_for('static', filename='js/table_explorer.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=3"></script>
   <script src="{{ url_for('static', filename='js/decomp_game.js') }}?v=1"></script>
-  <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=30"></script>
+  <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=32"></script>
 
   <!-- B7 Mobile: Step 3 drag-drop fallback notice (shown via JS only on mobile + step 3) -->
   <div id="mobile-step3-notice" class="mobile-step3-notice" role="alertdialog" aria-labelledby="mobile-step3-title">

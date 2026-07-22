@@ -4699,7 +4699,290 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l13', index: 13, title: 'Decision Boundary — luật tách 2 lớp',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
+    {
+      id: 'c1_l13',
+      index: 13,
+      title: 'Decision Boundary — luật tách 2 lớp',
+      subtitle: 'Ngưỡng 0.5 trên xác suất chính là một ĐƯỜNG trong không gian feature — w xoay nó, b dịch nó',
+      module: 13,
+      module_title: 'M4 — Phân loại Logistic',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎯 StudyLab · Ticket #13 · KHÉP CHƯƠNG M4',
+        hook: 'Ba ticket trước dựng xong bộ máy: Bài 11 chỉ ra đường thẳng <strong>không làm</strong> xác suất, Bài 12 gắn <strong>sigmoid</strong> để ép score về (0,1). Giờ tới bước cuối của suy luận phân loại: một xác suất <strong>chưa phải</strong> một quyết định. Phòng đào tạo cần câu trả lời dứt khoát <strong>Đậu / Rớt</strong>, không phải "72%". Cắt tại ngưỡng 0.5 nghe đơn giản — nhưng lần này có <strong>hai feature</strong> (giờ học × điểm quiz), nên cái ngưỡng ấy không còn là một điểm trên trục, mà là cả một <strong>ĐƯỜNG</strong> vẽ ngang mặt phẳng. Ticket #13: nhìn tận mắt đường ranh giới đó, và thấy <strong>w xoay nó, b dịch nó</strong>.'
+      },
+      achievement: { name: 'Decision Boundary — luật tách hai lớp', desc: 'đọc ranh giới tuyến tính 2D, nối ngưỡng 0.5 với z=0, phân loại theo dấu w·x+b, và viết predict_classes tổng quát' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Hiểu <strong>ngưỡng 0.5 trên xác suất</strong> chính là điều kiện <strong>z = 0</strong> — và trong 2 feature nó vẽ thành một <strong>đường thẳng</strong>.',
+            'Đọc hình học: <strong>vector w là pháp tuyến</strong> — đổi w thì đường <strong>XOAY</strong>, đổi bias thì đường <strong>TỊNH TIẾN</strong> song song.',
+            'Phân loại một điểm bằng <strong>dấu của z = w·x + b</strong>, và viết <code>predict_classes</code> trả về cả xác suất lẫn nhãn.'
+          ]
+        },
+        glossary: [
+          { term: 'DECISION BOUNDARY', vi: 'ranh giới quyết định', accent: '#38BDF8',
+            def: 'Nơi model <b>đổi nhãn</b> — đúng chỗ xác suất = ngưỡng. Với ngưỡng 0.5, đó là tập điểm có <b>z = 0</b>.',
+            ex: '2 feature → ranh giới là một <b>đường thẳng</b>; 3 feature → một mặt phẳng.',
+            out: 'một phía là lớp 1, phía kia là lớp 0' },
+          { term: 'THRESHOLD ↔ z = 0', vi: 'ngưỡng ↔ score 0', accent: '#FBBF24',
+            def: 'Vì <b>σ(0) = 0.5</b>, cắt xác suất tại 0.5 <b>tương đương</b> cắt score tại 0.',
+            ex: 'p ≥ 0.5 ⇔ z ≥ 0. Ngưỡng nằm bên XÁC SUẤT (0.5), KHÔNG phải bên score.',
+            out: 'so p với 0.5 — đừng so z với 0.5' },
+          { term: 'SCORE z', vi: 'điểm tuyến tính', accent: '#A78BFA',
+            def: '<b>z = w·x + b</b> — dấu của z cho biết điểm nằm <b>phía nào</b> của ranh giới.',
+            ex: 'z > 0 → phía lớp 1 (Đậu); z < 0 → phía lớp 0 (Rớt); z = 0 → nằm trên đường.',
+            out: 'độ lớn |z| = cách xa ranh giới bao nhiêu' },
+          { term: 'WEIGHT VECTOR w', vi: 'vector trọng số', accent: '#34D399',
+            def: 'w vuông góc với ranh giới (là <b>pháp tuyến</b>). Đổi w = <b>xoay</b> đường và chỉnh độ dốc.',
+            ex: 'w = [1.2, −1.0]: feature 1 kéo về Đậu, feature 2 kéo về Rớt.',
+            out: 'hướng của w = hướng "tăng khả năng lớp 1"' },
+          { term: 'BIAS b', vi: 'độ dời', accent: '#FB923C',
+            def: 'Số hạng tự do. Đổi b = <b>tịnh tiến</b> cả đường song song, không đổi độ nghiêng.',
+            ex: 'b càng âm → đường lùi xa gốc → cần feature cao hơn mới được lớp 1.',
+            out: 'dịch ranh giới mà giữ nguyên hướng' },
+          { term: 'LINEAR SEPARABILITY', vi: 'tách được bằng đường thẳng', accent: '#F472B6',
+            def: 'Hai lớp <b>tách được</b> nếu có một đường thẳng (mặt phẳng) chia trọn chúng.',
+            ex: 'logistic vẽ ranh giới THẲNG — dữ liệu xoắn vào nhau thì một đường là chưa đủ.',
+            out: 'giới hạn của model tuyến tính · mở đường cho model cong hơn' }
+        ],
+        primer: {
+          goal: [
+            'Ngưỡng 0.5 ⇔ z = 0 → một ĐƯỜNG trong 2 feature',
+            'w xoay đường · bias tịnh tiến đường',
+            'Dấu của z = phía · |z| = khoảng cách'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong ống kính bên dưới:</strong> mặt phẳng 2 chiều — trục ngang là giờ học, trục dọc là điểm quiz. 20 học viên tô màu theo lớp; đường sáng là <strong>ranh giới quyết định</strong>. Kéo <strong>w1, w2</strong> để thấy đường <strong>XOAY</strong>, kéo <strong>bias</strong> để thấy nó <strong>TỊNH TIẾN</strong> — và các điểm đổi màu theo, vì chính đường này định nghĩa nhãn. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Xác suất là một con số mượt trong (0,1); quyết định là một lựa chọn dứt khoát 0 hay 1. Chiếc cầu giữa hai bên là <strong>ngưỡng</strong>. Điều tinh tế: khi có nhiều feature, đặt ngưỡng lên xác suất không chỉ cắt một con số — nó vẽ ra một <strong>ranh giới hình học</strong> trong không gian feature. Với logistic, ranh giới ấy luôn <strong>thẳng</strong>: mọi điểm cùng một phía nhận cùng một nhãn. Hiểu ranh giới đó xoay/dịch thế nào theo w và b là hiểu model đang "nghĩ" gì khi nó phân loại.',
+        concept_cards: [
+          {
+            icon: 'fa-grip-lines',
+            title: 'Ngưỡng 0.5 là một ĐƯỜNG, không phải một điểm',
+            body: 'Cắt xác suất tại 0.5 nghĩa là hỏi "p ≥ 0.5?". Vì <strong>σ(0) = 0.5</strong>, câu đó <strong>tương đương</strong> "z ≥ 0?". Trong 2 feature, tập điểm có <code>z = w₁x₁ + w₂x₂ + b = 0</code> là một <strong>đường thẳng</strong>. Một phía z > 0 (Đậu), phía kia z < 0 (Rớt). Ngưỡng không cắt trục — nó vẽ đường.'
+          },
+          {
+            icon: 'fa-arrows-rotate',
+            title: 'w XOAY đường · b TỊNH TIẾN đường',
+            body: 'Vector <code>w</code> vuông góc với ranh giới — nó là <strong>pháp tuyến</strong>. Đổi w1 hay w2 làm đường <strong>xoay</strong> và đổi độ dốc; đổi dấu một trọng số thì <strong>lật phía</strong>. Còn <code>bias</code> chỉ <strong>đẩy cả đường song song</strong> tới/lui, giữ nguyên hướng. Hai núm điều khiển, hai chuyển động khác hẳn nhau — đó là toàn bộ hình học của một model tuyến tính.'
+          },
+          {
+            icon: 'fa-plus-minus',
+            title: 'Dấu của z = phía · và cái bẫy so với 0.5',
+            body: 'Muốn phân loại một điểm: tính <code>z = w·x + b</code>, xem <strong>dấu</strong>. z dương → Đậu, âm → Rớt, càng xa 0 càng chắc. ⚠ Bẫy kinh điển: so <strong>score</strong> với 0.5. Ngưỡng 0.5 sống bên <strong>xác suất</strong>; đổi sang score nó là <strong>0</strong>, không phải 0.5. Một điểm z = 0.2 cho p = 0.55 — phải là lớp 1; ai so z ≥ 0.5 sẽ gán nhầm lớp 0.'
+          }
+        ],
+        /* Hero = BÀN XOAY RANH GIỚI 2D (user chốt 2026-07-22) */
+        boundary_lens: {
+          title: 'BÀN XOAY RANH GIỚI 2D — w XOAY · b TỊNH TIẾN',
+          intro: 'Mặt phẳng 2 feature: trục ngang <b>study_hours</b>, dọc <b>quiz_score</b>. 20 điểm tô theo lớp (đường ranh giới <b>tự</b> định nghĩa nhãn). Kéo <b>w1/w2</b> thấy đường XOAY, kéo <b>bias</b> thấy nó TỊNH TIẾN; điểm mới ◆ đọc z & p realtime. Trả lời câu chốt để mở Bước 2.',
+          x_label: 'study_hours', y_label: 'quiz_score',
+          x_min: 0, x_max: 10, y_min: 0, y_max: 10,
+          w1: 1.2, w2: -1.0, bias: -2.0,
+          w1_range: [-3, 3], w2_range: [-3, 3], bias_range: [-8, 8],
+          probe: [5, 3],
+          pts_x1: [3.9,5.6,6.9,3.3,7.6,3.3,3.6,8.7,2.1,6.7,7.5,9.5,1.6,4.3,1.4,1.6,6.5,5.0,9.2,5.9],
+          pts_x2: [7.9,7.7,0.9,0.8,5.7,4.5,5.4,4.1,0.8,7.4,5.8,5.3,6.4,3.9,1.5,1.4,3.7,8.7,3.0,3.6],
+          riddle: {
+            prompt: 'Một điểm nằm <b>đúng trên</b> đường ranh giới. Ở đó score <code>z = 0</code>. Vậy sigmoid cho xác suất <b>p</b> bằng bao nhiêu — và model gán nhãn gì?',
+            options: ['p = 0.5 — đúng ngưỡng, model lưỡng lự (thường gán lớp 1 khi p ≥ 0.5)', 'p = 0 — vì z = 0', 'p = 1 — vì điểm nằm trên đường', 'Không xác định được nếu chưa biết w'],
+            answer: 'p = 0.5 — đúng ngưỡng, model lưỡng lự (thường gán lớp 1 khi p ≥ 0.5)',
+            wrong: {
+              'p = 0 — vì z = 0': 'Nhầm z với p. σ(0) = 1/(1+e⁰) = 1/2 = <b>0.5</b>, không phải 0. Đó chính là lý do ranh giới ở p = 0.5 trùng khít với z = 0 — hai cách nói về cùng một đường.',
+              'p = 1 — vì điểm nằm trên đường': 'Nằm trên đường nghĩa là <b>cân bằng</b>, không nghiêng về lớp nào — nên p phải là 0.5, không phải 1. p tiến tới 1 khi điểm ở sâu phía Đậu (z rất dương).',
+              'Không xác định được nếu chưa biết w': 'w quyết định đường ranh giới nằm ĐÂU, nhưng hễ một điểm đã nằm ĐÚNG TRÊN đường thì theo định nghĩa z = 0 — và σ(0) = 0.5 với mọi w. Không cần biết w cụ thể.'
+            },
+            done: '✅ Đúng — <b>trên ranh giới, z = 0 nên p = 0.5</b>: đó là hai tên gọi của cùng một đường. Ngưỡng 0.5 (bên xác suất) và z = 0 (bên score) luôn khớp nhau vì σ(0) = 0.5. Ghi nhớ ba điều: (1) ranh giới là nơi <b>đổi nhãn</b>; (2) <b>w xoay</b> nó, <b>b tịnh tiến</b> nó; (3) phân loại bằng <b>dấu của z</b> — so p với 0.5, tuyệt đối đừng so z với 0.5. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'boundary_demo (20 học viên · 2 feature)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT · 0–10', key: 'x1', icon: '📏',
+                note: '<strong>Feature 1</strong> — trọng số w₁ = +1.2 (dương): học nhiều <strong>kéo về phía Đậu</strong>.' },
+              { name: 'quiz_score', type: 'FLOAT · 0–10', key: 'x2', icon: '📝',
+                note: '<strong>Feature 2</strong> — trọng số w₂ = −1.0 (âm): trong bộ demo này điểm quiz cao lại <strong>kéo về phía Rớt</strong> (dữ liệu giả lập để thấy w âm xoay đường ngược lại).' },
+              { name: 'pass_fail', type: 'INT 0/1', key: 'TARGET', icon: '🎯',
+                note: '<strong>Nhãn</strong> — do <strong>dấu của z = 1.2·x₁ − 1.0·x₂ − 2</strong> quyết định: 11 Rớt (0) · 9 Đậu (1).' }
+            ]
+          },
+          data_preview: [
+            ['3.9', '7.9', '0'], ['6.9', '0.9', '1'], ['7.6', '5.7', '1'], ['3.3', '4.5', '0'],
+            ['8.7', '4.1', '1'], ['2.1', '0.8', '0'], ['6.7', '7.4', '0'], ['9.2', '3.0', '1'],
+            ['1.6', '6.4', '0'], ['6.5', '3.7', '1'], ['5.0', '8.7', '0'], ['5.9', '3.6', '1']
+          ]
+        },
+        mission: 'Dựng <code class="code">LUẬT TÁCH 2 LỚP</code>: tính <code class="code">score z = X @ w + b</code> → lấy <code class="code">DẤU (phía)</code> → vẽ <code class="code">đường ranh giới z = 0</code> — kho có <code class="code">mồi bẫy 🪤</code> (so score với 0.5 · nhân sai ma trận) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (boundary condition · geometry rotate/translate · trap so score) + mini-game phía của z ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Với sigmoid và ngưỡng 0.5, ranh giới quyết định nằm ở <strong>p</strong> bằng bao nhiêu và <strong>z</strong> bằng bao nhiêu?',
+            options: [
+              { id: 'a', text: 'p = 0.5 và z = 0 — vì σ(0) = 0.5, hai điều kiện là một', correct: true, explanation: 'Đúng — cắt xác suất tại 0.5 tương đương cắt score tại 0, bởi sigmoid biến z = 0 thành p = 0.5. Đó là lý do "ranh giới p = 0.5" và "đường z = 0" luôn là cùng một đường.' },
+              { id: 'b', text: 'p = 0 và z = 0', correct: false, explanation: 'p = 0 chỉ đạt khi z = −∞ (rất sâu phía Rớt), không phải trên ranh giới. Trên ranh giới p = 0.5.' },
+              { id: 'c', text: 'p = 0.5 và z = 0.5', correct: false, explanation: 'Nhầm hai thang đo. Ngưỡng 0.5 sống bên xác suất; quy đổi sang score nó là z = 0 (vì σ(0) = 0.5), không phải z = 0.5.' },
+              { id: 'd', text: 'Tùy dữ liệu, phải fit mới biết', correct: false, explanation: 'w và b (do dữ liệu quyết định) chỉ đặt đường ranh giới ở ĐÂU. Nhưng điều kiện "p = 0.5 ⇔ z = 0" là hằng, đúng với mọi bài toán.' }
+            ]
+          },
+          {
+            question: 'Bạn tăng <strong>w1</strong> rồi sau đó tăng <strong>bias</strong>. Mỗi thay đổi làm đường ranh giới chuyển động thế nào?',
+            options: [
+              { id: 'a', text: 'Đổi w1 → đường XOAY (đổi độ nghiêng); đổi bias → đường TỊNH TIẾN song song', correct: true, explanation: 'Chuẩn — w là pháp tuyến của đường nên chỉnh w xoay đường và đổi độ dốc; bias là số hạng tự do nên chỉ đẩy cả đường tới/lui mà giữ nguyên hướng.' },
+              { id: 'b', text: 'Cả hai đều chỉ tịnh tiến đường', correct: false, explanation: 'Chỉ bias tịnh tiến. Đổi w làm đường xoay — thử kéo w1 trong ống kính ở Bước 1, độ nghiêng thay đổi rõ.' },
+              { id: 'c', text: 'Cả hai đều chỉ xoay đường', correct: false, explanation: 'Chỉ w xoay. Bias không đụng tới hướng — nó đẩy đường song song với chính nó.' },
+              { id: 'd', text: 'w1 phóng to điểm, bias đổi màu điểm', correct: false, explanation: 'Cả hai đều tác động lên ĐƯỜNG ranh giới, không lên điểm. Điểm đổi màu chỉ vì đường mới phân loại lại chúng.' }
+            ]
+          },
+          {
+            question: 'Một điểm có <code>z = 0.2</code>, nên <code>p = σ(0.2) ≈ 0.55</code>. Với ngưỡng 0.5, model gán lớp nào — và cái bẫy ở đây là gì?',
+            options: [
+              { id: 'a', text: 'Lớp 1 (vì p = 0.55 ≥ 0.5). Bẫy: so SCORE z với 0.5 sẽ ra nhầm lớp 0', correct: true, explanation: 'Đúng — ngưỡng 0.5 áp lên XÁC SUẤT: p = 0.55 ≥ 0.5 → lớp 1. Nếu lỡ so z ≥ 0.5 thì 0.2 < 0.5 → gán lớp 0, sai. Bên score, ranh giới đúng là z = 0, không phải 0.5.' },
+              { id: 'b', text: 'Lớp 0, vì z = 0.2 < 0.5', correct: false, explanation: 'Đó chính là cái bẫy. Ngưỡng 0.5 không áp lên z — nó áp lên p. Ở đây p = 0.55 ≥ 0.5 nên phải là lớp 1.' },
+              { id: 'c', text: 'Không phân loại được vì p quá gần 0.5', correct: false, explanation: 'Vẫn phân loại được: quy ước p ≥ 0.5 → lớp 1. Gần ranh giới nghĩa là model ít chắc chắn, nhưng luật vẫn cho ra nhãn.' },
+              { id: 'd', text: 'Lớp 1, và so z với 0.5 cũng ra kết quả đó', correct: false, explanation: 'Nhãn đúng là lớp 1, nhưng so z với 0.5 sẽ cho 0.2 < 0.5 → lớp 0 (SAI). Hai cách KHÔNG cho cùng kết quả — đó là lý do phải so đúng thang.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Điểm rơi về phía nào của ranh giới?',
+          instruction: 'Ranh giới là <code>z = 1.2·x₁ − 1.0·x₂ − 2</code>. Tính z rồi kéo mỗi điểm vào đúng ngăn: <strong>◀ z &lt; 0 (Rớt)</strong> · <strong>⏺ z = 0 (trên ranh giới)</strong> · <strong>z &gt; 0 (Đậu) ▶</strong>.',
+          chips: [
+            { id: 'pt-53',  label: '(5, 3) → z = 6 − 3 − 2 = 1.0' },
+            { id: 'pt-82',  label: '(8, 2) → z = 9.6 − 2 − 2 = 5.6' },
+            { id: 'pt-36',  label: '(3, 6) → z = 3.6 − 6 − 2 = −4.4' },
+            { id: 'pt-25',  label: '(2, 5) → z = 2.4 − 5 − 2 = −4.6' },
+            { id: 'pt-54',  label: '(5, 4) → z = 6 − 4 − 2 = 0' }
+          ],
+          bins: [
+            { id: 'neg', label: '◀ z < 0 (Rớt)',        correct: 'true' },
+            { id: 'zero', label: '⏺ z = 0 (ranh giới)', correct: 'true' },
+            { id: 'pos', label: 'z > 0 (Đậu) ▶',        correct: 'true' }
+          ],
+          solution: { 'pt-53': 'pos', 'pt-82': 'pos', 'pt-36': 'neg', 'pt-25': 'neg', 'pt-54': 'zero' },
+          success: 'Chuẩn — dấu của z quyết định phía: z dương → Đậu, âm → Rớt, đúng 0 → nằm trên ranh giới. Để ý (5,4) cho z = 0: đó là một điểm của chính đường ranh giới. Và |z| lớn (như 5.6) nghĩa là điểm nằm SÂU trong phía đó — model rất chắc. Bước 3: lắp đúng đường ống score → dấu → ranh giới.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — score → dấu (phía) → ranh giới. 2 mồi bẫy: so score với 0.5 / nhân sai ma trận ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'z = X @ weights + bias', slot: 'b1' },
+          { type: 'py', token: 'sides = (z >= 0).astype(int)', slot: 'b2' },
+          { type: 'py', token: 'boundary_x2 = (-bias - weights[0] * x1_line) / weights[1]', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'sides = (z >= 0.5).astype(int)', slot: 't1' },
+          { type: 'py', token: 'z = X * weights + bias', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l13-score', accepts: ['py'], multi: false },
+          { id: 'l13-sign', accepts: ['py'], multi: false },
+          { id: 'l13-line', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'LUẬT TÁCH 2 LỚP — 3 TRẠM · SCORE → DẤU → RANH GIỚI',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'boundary_demo · 20 học viên · w = [1.2, −1.0] · b = −2.0' },
+          done_note: 'Đường ống hình học: score z = X @ w + b (phép nhân ma trận cho cả 20 điểm một lượt), DẤU của z cho phía (z ≥ 0 → Đậu, 11 Rớt · 9 Đậu), và tập z = 0 vẽ thành ĐƯỜNG ranh giới. Hai mồi bẫy: so score với 0.5 (dịch sai ranh giới — đúng ra so z với 0) và nhân từng phần tử X * w (thiếu phép nhân ma trận @, sai hình dạng). Nhớ: so DẤU z với 0 ở đây chính là so p với 0.5 — Bước 4 viết tường minh qua sigmoid để threshold thành tham số sống.',
+          stations: [
+            {
+              zones: ['l13-score'],
+              icon: '📐', label: 'TRẠM 1 — SCORE', sub: 'z = X @ w + b (ma trận)', result_kind: 'boundary_2d',
+              bnd: {
+                mode: 'score', w1: 1.2, w2: -1.0, bias: -2.0,
+                note: '<code>z = X @ weights + bias</code> — một phép nhân ma trận cho cả 20 điểm cùng lúc. Mỗi điểm ra một score z chạy từ <b>−6.48</b> tới <b>6.04</b>. Màu điểm nhạt/đậm theo z: chưa cắt nhãn, chỉ mới "chấm điểm" mỗi học viên.'
+              },
+              narration: 'X @ weights là trái tim của mọi model tuyến tính: gộp nhiều feature thành một score duy nhất cho mỗi mẫu. Trạm sau đọc DẤU của score đó.'
+            },
+            {
+              zones: ['l13-sign'],
+              icon: '➕', label: 'TRẠM 2 — DẤU (PHÍA)', sub: 'z ≥ 0 → Đậu · z < 0 → Rớt', result_kind: 'boundary_2d',
+              bnd: {
+                mode: 'sign', w1: 1.2, w2: -1.0, bias: -2.0,
+                note: '<code>sides = (z >= 0).astype(int)</code> — lấy DẤU của score. z ≥ 0 → phía Đậu (lớp 1), z < 0 → phía Rớt (lớp 0). Kết quả: <b>11 Rớt · 9 Đậu</b>. Chú ý: ngưỡng ở đây là <b>0</b> (bên score), tương đương p ≥ 0.5 bên xác suất — KHÔNG phải z ≥ 0.5.'
+              },
+              narration: 'Dấu của z chia mặt phẳng làm hai. Đây đúng là chỗ dễ sai nhất: ngưỡng 0.5 là của XÁC SUẤT; quy sang score nó thành 0, không phải 0.5.'
+            },
+            {
+              zones: ['l13-line'],
+              icon: '📏', label: 'TRẠM 3 — RANH GIỚI', sub: 'tập z = 0 → một ĐƯỜNG', result_kind: 'boundary_2d',
+              bnd: {
+                mode: 'boundary', w1: 1.2, w2: -1.0, bias: -2.0,
+                note: '<code>boundary_x2 = (-bias - weights[0] * x1_line) / weights[1]</code> — giải z = 0 theo x₂ để vẽ đường. Với bộ này: <b>x₂ = 1.2·x₁ − 2</b>. Đường này tách trọn 11 Rớt khỏi 9 Đậu; w quyết định độ nghiêng, b quyết định vị trí.'
+              },
+              narration: 'Tập tất cả điểm có z = 0 chính là ĐƯỜNG ranh giới. Ngưỡng 0.5 trên xác suất, nhìn trong không gian feature, hiện nguyên hình là một đường thẳng.'
+            }
+          ]
+        },
+        expected_sql: 'z = X @ weights + bias sides = (z >= 0).astype(int) boundary_x2 = (-bias - weights[0] * x1_line) / weights[1]',
+        expected_zones: {
+          'l13-score': 'z = X @ weights + bias',
+          'l13-sign': 'sides = (z >= 0).astype(int)',
+          'l13-line': 'boundary_x2 = (-bias - weights[0] * x1_line) / weights[1]'
+        },
+        reveal_hints: {
+          'l13-score': 'Trạm 1: score cho cả ma trận — <strong>z = X @ weights + bias</strong> (nhân ma trận @, không phải *).',
+          'l13-sign': 'Trạm 2: dấu của z, cắt tại 0 chứ không phải 0.5 — <strong>sides = (z >= 0).astype(int)</strong>.',
+          'l13-line': 'Trạm 3: giải z = 0 theo x₂ để vẽ đường — <strong>boundary_x2 = (-bias - weights[0] * x1_line) / weights[1]</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'LUẬT TÁCH 2 LỚP — 3 TRẠM · SCORE → DẤU → RANH GIỚI',
+        table_sub: 'boundary_demo · 20 học viên · 2 feature',
+        idle_sub: '20 học viên · ▶ chạy để chấm score, lấy dấu và vẽ ranh giới',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'boundary_demo',
+          columns: ['study_hours', 'quiz_score'],
+          dataRows: [
+            ['3.9', '7.9'], ['5.6', '7.7'], ['6.9', '0.9'], ['3.3', '0.8'], ['7.6', '5.7'],
+            ['3.3', '4.5'], ['3.6', '5.4'], ['8.7', '4.1'], ['2.1', '0.8'], ['6.7', '7.4'],
+            ['7.5', '5.8'], ['9.5', '5.3'], ['1.6', '6.4'], ['4.3', '3.9'], ['1.4', '1.5'],
+            ['1.6', '1.4'], ['6.5', '3.7'], ['5.0', '8.7'], ['9.2', '3.0'], ['5.9', '3.6']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: tự viết sigmoid + predict_classes. Grader: grade_lesson13
+         (cần predict_classes(X, w, b, threshold=0.5) + X @ w; return (p, preds); Risk bắt so score với 0.5
+         và threshold hard-code; Behavior 3 feature + threshold 0.3/0.7 ẩn). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp đường ống hình học. Giờ viết <strong>hàm suy luận đầy đủ</strong>: <code>predict_classes(X, weights, bias, threshold=0.5)</code> tính score bằng <strong>nhân ma trận</strong>, ép qua <strong>sigmoid</strong> ra xác suất, rồi cắt <strong>ngưỡng</strong> ra nhãn — trả về <strong>cả</strong> xác suất lẫn nhãn. Hệ thống chấm dùng cả bộ dữ liệu khác và <strong>ngưỡng ẩn</strong> 0.3 / 0.7, nên threshold phải là tham số sống, không hard-code.',
+        context: {
+          scenario: 'Hợp đồng của hàm: (1) score qua <strong>phép nhân ma trận</strong> <code>X @ weights + bias</code> để chạy cho mọi số feature; (2) đổi score sang xác suất bằng <strong>sigmoid</strong>; (3) cắt tại <strong>threshold trên xác suất</strong> ra nhãn 0/1; (4) return <strong>(probabilities, predictions)</strong> — đủ cả hai. Cái bẫy chí mạng: cắt ngưỡng 0.5 ngay trên <strong>score</strong>. Ngưỡng 0.5 là của xác suất; bên score nó tương đương 0. So <code>z ≥ 0.5</code> sẽ dịch cả ranh giới đi sai chỗ.',
+          real_world: '<code>predict_classes</code> chính là bước inference của mọi bộ phân loại nhị phân đã huấn luyện: nạp trọng số, nhân ma trận, sigmoid, ngưỡng. Để threshold thành tham số (mặc định 0.5) là điều bắt buộc trong thực tế — bài toán gian lận hay y tế thường chỉnh ngưỡng để đánh đổi giữa bỏ sót và báo nhầm.',
+          steps: [
+            'Nạp <code>X, weights, bias</code> bằng <code>load_boundary_data()</code>.',
+            'Viết <code>sigmoid(z)</code> (hàm mũ) và <code>predict_classes(X, weights, bias, threshold=0.5)</code>.',
+            'Trong hàm: <code>X @ weights + bias</code> → sigmoid → so <strong>xác suất</strong> với threshold; return cả hai.',
+            'Gọi trên dữ liệu bài, in số học viên được xếp lớp 1 · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Sau khi gọi hàm, gõ <code>print(probabilities.round(2))</code> để thấy 20 xác suất — điểm nào gần 0.5 là gần ranh giới.',
+          expected: 'Console in <code>class 1: 9</code> (9 học viên phía Đậu). Đủ 4 tầng xanh. Thử cắt ngưỡng ngay trên score (<code>z >= 0.5</code>)? Code chạy nhưng tầng Risk sẽ chỉ ra ranh giới đã bị dịch sai.'
+        },
+        hints: [
+          { level: 1, text: 'Bốn việc: nạp dữ liệu → viết sigmoid + predict_classes → nhân ma trận rồi sigmoid rồi cắt ngưỡng trên XÁC SUẤT → return (p, nhãn). threshold là tham số, mặc định 0.5.' },
+          { level: 2, text: 'Đầu bài: <code>import numpy as np</code>, <code>from ml_lab import load_boundary_data</code>, rồi <code>X, weights, bias = load_boundary_data()</code>. Nhớ <code>@</code> là nhân ma trận, khác <code>*</code> (nhân từng phần tử).' },
+          { level: 3, text: 'Hàm suy luận:<br><code>def predict_classes(X, weights, bias, threshold=0.5):<br>&nbsp;&nbsp;&nbsp;&nbsp;p = sigmoid(X @ weights + bias)<br>&nbsp;&nbsp;&nbsp;&nbsp;return p, (p >= threshold).astype(int)</code><br>Chú ý: so <code>p</code> (xác suất) với threshold, KHÔNG so score.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>import numpy as np<br>from ml_lab import load_boundary_data<br>X, weights, bias = load_boundary_data()<br><br>def sigmoid(z):<br>&nbsp;&nbsp;&nbsp;&nbsp;return 1 / (1 + np.exp(-z))<br><br>def predict_classes(X, weights, bias, threshold=0.5):<br>&nbsp;&nbsp;&nbsp;&nbsp;p = sigmoid(X @ weights + bias)<br>&nbsp;&nbsp;&nbsp;&nbsp;return p, (p >= threshold).astype(int)<br><br>probabilities, predictions = predict_classes(X, weights, bias)<br>print("class 1:", int(predictions.sum()))</code>' }
+        ],
+        grader_fn: 'grade_lesson13',
+        success_message: 'Luật tách hai lớp hoàn tất — 9 học viên phía Đậu, ranh giới đúng chỗ, và threshold là tham số sống (bộ ẩn 0.3/0.7 vẫn khớp). Bạn vừa khép trọn suy luận logistic: linear cho score → sigmoid cho xác suất → ngưỡng cho nhãn, và cái ngưỡng ấy hiện thành một ĐƯỜNG trong không gian feature. Chương M4 xong. Bài 14 mở chương M5 — khi ranh giới thẳng là chưa đủ: underfit, good fit và overfit.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l14', index: 14, title: 'Underfit, Good Fit và Overfit',                module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 },
     { id: 'c1_l15', index: 15, title: 'Chia Train / Validation / Test',               module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 }
   ]

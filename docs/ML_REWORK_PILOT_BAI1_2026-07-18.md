@@ -510,3 +510,35 @@ Suite 42/42 xanh vẫn giấu 3 lỗi. Cả 3 chỉ lộ ra khi **mở ảnh ch�
 **Bài học lặp lại lần 2**: sửa một lỗi trực quan ở một chỗ thì phải **tìm hết các bản sao của cùng đoạn vẽ** (map có, hero cũng có), và khi nới khung phải tính **toàn bộ nội dung trong khung** chứ không riêng phần tử vừa sửa.
 
 ### Trạng thái khóa: Course 1 cơ bản 12/15 bài xong (M1-M2-M3 trọn + M4 2/3). Versions: css v27 · content v22 · shell v30 · flowmap v16.
+
+---
+
+## ĐỢT 22 (2026-07-22) — BÀI 13 "Decision Boundary — luật tách 2 lớp" (spec C1-L13, KHÉP CHƯƠNG M4)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = BÀN XOAY RANH GIỚI 2D** (`renderBoundaryLens` mới): canvas 2 feature (study_hours × quiz_score), 20 điểm **tô màu theo dấu z hiện tại** (đường tự định nghĩa nhãn), đường ranh giới z=0, **tô nửa mặt phẳng lớp 1** (clip Sutherland–Hodgman 1 cạnh). 3 thanh **w1 / w2 / bias**: kéo w → đường XOAY, kéo bias → TỊNH TIẾN. Điểm mới ◆ (5,3) đọc **z & p realtime** + phía; nút ↺ về gốc. Câu đố = MS-2: trên ranh giới z=0 nên **p=0.5** (4 lựa chọn).
+- **Nhấn hình học** (user chốt): concept card + glossary xoáy vào w là PHÁP TUYẾN (đổi w = xoay), bias = tịnh tiến song song; MCQ 2 hỏi thẳng xoay vs tịnh tiến.
+- **Step 3 = map 3 TRẠM** (user chốt): SCORE (`boundary_2d` mode score — 20 điểm tô gradient theo z, **−6.48 … 6.04**, chưa cắt nhãn) → DẤU (mode sign — 2 màu, **11 Rớt · 9 Đậu**, ngưỡng z=0 chứ không 0.5) → RANH GIỚI (mode boundary — đường z=0 + tô nửa mặt phẳng, **x₂ = 1.2·x₁ − 2**). Bẫy: `(z >= 0.5)` so score với 0.5 · `X * weights` nhân từng phần tử thiếu @.
+
+### Số thật (w = [1.2, −1.0] · b = −2.0)
+20 điểm → z chạy −6.48 … 6.04, chia **11 Rớt / 9 Đậu**; ranh giới x₂ = 1.2·x₁ − 2. Điểm mới (5,3): z=1.0, p=0.731 → Đậu. Risk demo: z=0.2 → p=0.55 (phải lớp 1; ai so z≥0.5 ra nhầm lớp 0).
+
+### Grader (test server-side trước)
+`grade_lesson13` 4 tiêu chí: cần `predict_classes(X,w,b,threshold=0.5)` + phép nhân ma trận `X @ w`; return (p, preds); Risk bắt so score với 0.5 + threshold hard-code; Behavior 3 feature + threshold 0.3/0.7 ẩn. Kết quả: CORRECT → **4/4** (`class 1: 9`); `(z >= 0.5)` → 2/4 (Risk+Behavior fail); hard-code threshold → 2/4; `X * weights` → **0/4 chặn tầng code** (đúng bẫy step-3).
+
+### Verify — verify_b13.js: 43/43 pass · 0 pageerror (2 lượt sạch, lượt 2 sau khi vá nhãn ĐỢT 23)
+Step 1: title + Ticket #13; glossary 6; hero svg + 20 điểm + đường + 3 thanh + điểm mới, riddle ẩn; điểm (5,3) z=1.00/p=0.731/Đậu; 9 xanh · 11 đỏ; kéo bias=−8 → lật Rớt + riddle mở; nút reset → z=1.00; sai "p=0" → feedback; đúng "p=0.5" → done + khóa; explorer 3 cột. Step 2: 3 MCQ + minigame 3 ngăn. Step 3: 4 node + 3 zone + 5 khối; 3 trạm đúng số; note trọn trong thân; bẫy so score → chấm bắt. Step 4: không lộ code, trap so score fail + Risk, bản đúng 4/4, console class 1: 9, modal nhắc Bài 14/M5/overfit. Regression B1-B12 + hero B11/B12 còn nguyên + Basic B1 + NC. Multi-viewport 1920/1536/1024/768 OK (svg 20 điểm + 3 thanh + readout + 4 lựa chọn trong màn, 0 h-scroll, map fit).
+
+### Component mới tái dùng được
+- `renderBoundaryLens` (hero): canvas 2 feature + half-plane fill (Sutherland–Hodgman) + đường ranh giới clip biên + điểm-tô-theo-lớp-động + probe đọc z/p + câu đố.
+- `boundary_2d` (ml_flow_map result_kind) 3 mode score/sign/boundary; dùng lại `.mlf-reg-head`/`.mlf-reg-svg` + half-plane clip.
+
+---
+
+## ĐỢT 23 (2026-07-22) — VÁ nhãn phía đặt SAI BÊN (tự soi ảnh)
+
+- **Triệu chứng**: trong cả hero (`renderBoundaryLens`) và cảnh map (`boundary_2d` mode boundary), nhãn "phía Đậu" đặt cứng ở góc trên-phải và "phía Rớt" ở góc dưới-trái. Nhưng với w=[1.2,−1.0], vùng Đậu (z>0) là tam giác **dưới-phải**, còn Rớt là **trên-trái** → **cả hai nhãn nằm sai bên** (nhãn Đậu chỉ vào vùng Rớt và ngược lại). Suite 43/43 vẫn xanh vì không assert vị trí nhãn.
+- **Vá**: chọn TEXT của nhãn **theo dấu z tại chính góc đó** — hero neo 2 nhãn ở góc trên-trái + dưới-phải, mỗi nhãn hiển thị "Đậu/Rớt" theo `zOf(góc)`; map neo nhãn "Đậu" ở góc thực sự có z>0. Bền cả khi người học xoay w (w2 dương → vùng Đậu đảo sang trên-phải, nhãn tự theo).
+- **Bài học lặp lần 3**: nhãn/chú thích tĩnh trên đồ thị tương tác là bẫy — phải suy ra từ dữ liệu, không hard-code vị trí.
+
+### Trạng thái khóa: Course 1 cơ bản 13/15 bài xong (M1-M2-M3 trọn + M4 TRỌN). Versions: css v28 · content v23 · shell v32 · flowmap v18.

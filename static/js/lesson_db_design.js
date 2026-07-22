@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -5223,6 +5223,191 @@
     });
   }
 
+  /* ═══ Bài 13 ML — BÀN XOAY RANH GIỚI 2D ═══
+     Canvas 2 feature: 20 điểm tô theo lớp (do đường tự định nghĩa), đường ranh giới z=0,
+     tô nửa mặt phẳng lớp 1 (clip Sutherland–Hodgman); 3 thanh w1/w2/bias xoay+dịch;
+     điểm mới ◆ đọc z/p/phía; câu đố z=0 ⇔ p=0.5. */
+  function renderBoundaryLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const xMin = cfg.x_min, xMax = cfg.x_max, yMin = cfg.y_min, yMax = cfg.y_max;
+    const px1 = cfg.pts_x1 || [], px2 = cfg.pts_x2 || [];
+    const rid = cfg.riddle || {};
+    const w1r = cfg.w1_range || [-3, 3], w2r = cfg.w2_range || [-3, 3], br = cfg.bias_range || [-8, 8];
+    let w1 = cfg.w1, w2 = cfg.w2, bias = cfg.bias;
+    const probe = (cfg.probe || [5, 3]).slice();
+    let interacted = false;
+
+    const W = 560, H = 340, padL = 40, padR = 16, padT = 14, padB = 30;
+    const PX = v => (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR));
+    const PY = v => ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB));
+    const zOf = (a, b) => w1 * a + w2 * b + bias;
+    const sig = z => 1 / (1 + Math.exp(-z));
+
+    // clip hình chữ nhật vùng vẽ theo nửa mặt phẳng z >= 0 (Sutherland–Hodgman, 1 cạnh)
+    function halfPlane() {
+      const rect = [[xMin, yMin], [xMax, yMin], [xMax, yMax], [xMin, yMax]];
+      const out = [];
+      for (let i = 0; i < rect.length; i++) {
+        const cur = rect[i], prev = rect[(i + rect.length - 1) % rect.length];
+        const zc = zOf(cur[0], cur[1]), zp = zOf(prev[0], prev[1]);
+        const curIn = zc >= 0, prevIn = zp >= 0;
+        if (curIn) {
+          if (!prevIn) { const t = zp / (zp - zc); out.push([prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])]); }
+          out.push(cur);
+        } else if (prevIn) {
+          const t = zp / (zp - zc); out.push([prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])]);
+        }
+      }
+      return out;
+    }
+    // 2 giao điểm của đường z=0 với biên khung (để vẽ đoạn ranh giới)
+    function lineSeg() {
+      const edges = [[[xMin, yMin], [xMax, yMin]], [[xMax, yMin], [xMax, yMax]], [[xMax, yMax], [xMin, yMax]], [[xMin, yMax], [xMin, yMin]]];
+      const hits = [];
+      edges.forEach(function (e) {
+        const za = zOf(e[0][0], e[0][1]), zb = zOf(e[1][0], e[1][1]);
+        if ((za >= 0) !== (zb >= 0)) {
+          const t = za / (za - zb);
+          hits.push([e[0][0] + t * (e[1][0] - e[0][0]), e[0][1] + t * (e[1][1] - e[0][1])]);
+        }
+      });
+      return hits.length >= 2 ? [hits[0], hits[1]] : null;
+    }
+
+    function svg() {
+      // tô nửa mặt phẳng lớp 1 (z >= 0)
+      const hp = halfPlane();
+      let fill = '';
+      if (hp.length >= 3) {
+        fill = '<polygon points="' + hp.map(p => PX(p[0]).toFixed(1) + ',' + PY(p[1]).toFixed(1)).join(' ') +
+          '" fill="rgba(52,211,153,0.10)" stroke="none"/>';
+      }
+      // lưới nhạt + nhãn trục
+      let grid = '';
+      for (let g = 2; g <= 8; g += 2) {
+        grid += '<line x1="' + PX(g).toFixed(1) + '" y1="' + PY(yMin).toFixed(1) + '" x2="' + PX(g).toFixed(1) + '" y2="' + PY(yMax).toFixed(1) + '" stroke="rgba(148,163,184,0.08)"/>' +
+          '<line x1="' + PX(xMin).toFixed(1) + '" y1="' + PY(g).toFixed(1) + '" x2="' + PX(xMax).toFixed(1) + '" y2="' + PY(g).toFixed(1) + '" stroke="rgba(148,163,184,0.08)"/>' +
+          '<text x="' + PX(g).toFixed(1) + '" y="' + (H - padB + 12) + '" text-anchor="middle" font-size="8" fill="#64748B">' + g + '</text>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="8" fill="#64748B">' + g + '</text>';
+      }
+      // đường ranh giới
+      const seg = lineSeg();
+      let line = '', lbl = '';
+      if (seg) {
+        line = '<line x1="' + PX(seg[0][0]).toFixed(1) + '" y1="' + PY(seg[0][1]).toFixed(1) + '" x2="' + PX(seg[1][0]).toFixed(1) + '" y2="' + PY(seg[1][1]).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>';
+        // nhãn phía CHỌN THEO DẤU z tại chính góc đó → luôn đúng dù xoay w
+        const zTL = zOf(xMin, yMax), zBR = zOf(xMax, yMin);
+        const tag = z => z >= 0 ? { t: 'phía Đậu (z &gt; 0)', c: '#6EE7B7' } : { t: 'phía Rớt (z &lt; 0)', c: '#FCA5A5' };
+        const tl = tag(zTL), bMk = tag(zBR);
+        lbl = '<text x="' + (padL + 4) + '" y="' + (padT + 12) + '" font-size="8.5" fill="' + tl.c + '">' + tl.t + '</text>' +
+          '<text x="' + (W - padR - 2) + '" y="' + (H - padB - 6) + '" text-anchor="end" font-size="8.5" fill="' + bMk.c + '">' + bMk.t + '</text>';
+      }
+      // 20 điểm — màu theo dấu z hiện tại (đường tự định nghĩa nhãn)
+      let pts = '';
+      for (let i = 0; i < Math.min(px1.length, px2.length); i++) {
+        const cls = zOf(px1[i], px2[i]) >= 0;
+        pts += '<circle cx="' + PX(px1[i]).toFixed(1) + '" cy="' + PY(px2[i]).toFixed(1) + '" r="4" fill="' + (cls ? '#34D399' : '#F87171') + '" stroke="#0B1220" stroke-width="1.1" opacity="0.92"/>';
+      }
+      // điểm mới ◆
+      const zp = zOf(probe[0], probe[1]);
+      const pcls = zp >= 0;
+      const mk = '<path d="M ' + PX(probe[0]).toFixed(1) + ' ' + (PY(probe[1]) - 7).toFixed(1) +
+        ' L ' + (PX(probe[0]) + 7).toFixed(1) + ' ' + PY(probe[1]).toFixed(1) +
+        ' L ' + PX(probe[0]).toFixed(1) + ' ' + (PY(probe[1]) + 7).toFixed(1) +
+        ' L ' + (PX(probe[0]) - 7).toFixed(1) + ' ' + PY(probe[1]).toFixed(1) + ' Z" fill="' + (pcls ? '#6EE7B7' : '#FCA5A5') + '" stroke="#FCD34D" stroke-width="2"/>';
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="bnd-svg" role="img" aria-label="ranh giới quyết định 2 feature">' +
+        fill + grid + line + lbl + pts + mk +
+        '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x1') + ' →</text>' +
+        '<text x="8" y="11" font-size="9.5" fill="#94A3B8">↑ ' + escapeHtml(cfg.y_label || 'x2') + '</text></svg>';
+    }
+
+    function sliderRow(key, lab, val, rng, hint) {
+      return '<div class="bnd-row"><label class="bnd-lab">' + lab + ' = <output data-bnd-out="' + key + '">' + val.toFixed(1) + '</output> <span class="bnd-hint">' + hint + '</span></label>' +
+        '<input type="range" class="bnd-slider" data-bnd="' + key + '" min="' + rng[0] + '" max="' + rng[1] + '" step="0.1" value="' + val + '"/></div>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens bnd" aria-label="Bàn xoay ranh giới 2D">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'BÀN XOAY RANH GIỚI 2D') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="bnd-plot" data-bnd-plot>' + svg() + '</div>' +
+        '<div class="bnd-ctrl">' +
+          sliderRow('w1', 'w₁', w1, w1r, '↺ xoay') +
+          sliderRow('w2', 'w₂', w2, w2r, '↺ xoay') +
+          sliderRow('bias', 'bias', bias, br, '↔ tịnh tiến') +
+          '<div class="bnd-readout">' +
+            '<span class="bnd-node">điểm mới ◆ (' + probe[0] + ', ' + probe[1] + ')</span>' +
+            '<span class="bnd-node is-z">z = <b data-bnd-z></b></span>' +
+            '<span class="bnd-node is-p">p = <b data-bnd-p></b></span>' +
+            '<span class="bnd-side" data-bnd-side></span>' +
+            '<button type="button" class="bnd-reset" data-bnd-reset>↺ về gốc</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-bnd-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-bnd-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-bnd-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-bnd-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-bnd-plot]');
+    const zEl = mount.querySelector('[data-bnd-z]');
+    const pEl = mount.querySelector('[data-bnd-p]');
+    const sideEl = mount.querySelector('[data-bnd-side]');
+    const riddleEl = mount.querySelector('[data-bnd-riddle]');
+
+    function paint() {
+      if (plot) plot.innerHTML = svg();
+      const zv = zOf(probe[0], probe[1]), pv = sig(zv);
+      if (zEl) zEl.textContent = zv.toFixed(2);
+      if (pEl) pEl.textContent = pv.toFixed(3);
+      if (sideEl) sideEl.innerHTML = zv >= 0 ? '✅ phía <b>Đậu</b> (z ≥ 0)' : '❌ phía <b>Rớt</b> (z &lt; 0)';
+      ['w1', 'w2', 'bias'].forEach(function (k) {
+        const o = mount.querySelector('[data-bnd-out="' + k + '"]');
+        if (o) o.textContent = (k === 'w1' ? w1 : k === 'w2' ? w2 : bias).toFixed(1);
+      });
+    }
+    function openRiddle() { if (interacted) return; interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+    paint();
+    mount.querySelectorAll('.bnd-slider').forEach(function (sl) {
+      sl.addEventListener('input', function () {
+        const v = parseFloat(sl.value), k = sl.getAttribute('data-bnd');
+        if (k === 'w1') w1 = v; else if (k === 'w2') w2 = v; else bias = v;
+        paint(); openRiddle();
+      });
+    });
+    const rst = mount.querySelector('[data-bnd-reset]');
+    if (rst) rst.addEventListener('click', function () {
+      w1 = cfg.w1; w2 = cfg.w2; bias = cfg.bias;
+      mount.querySelectorAll('.bnd-slider').forEach(function (sl) {
+        const k = sl.getAttribute('data-bnd'); sl.value = (k === 'w1' ? w1 : k === 'w2' ? w2 : bias);
+      });
+      paint();
+    });
+
+    const fb = mount.querySelector('[data-bnd-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-bnd-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-bnd-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — nhớ σ(0) = 0.5.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -5602,6 +5787,13 @@
         const heroMountSg = document.getElementById('lesson-hero');
         renderSigmoidLens(heroMountSg || pvMount, s1.sigmoid_lens);
         if (heroMountSg) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.boundary_lens) {
+        // ML Bài 13 (user chốt 2026-07-22): BÀN XOAY RANH GIỚI 2D — canvas 2 feature, đường z=0,
+        // 3 thanh w1/w2/bias xoay+dịch, điểm mới đọc z/p/phía (spec C1-L13).
+        const heroMountBn = document.getElementById('lesson-hero');
+        renderBoundaryLens(heroMountBn || pvMount, s1.boundary_lens);
+        if (heroMountBn) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
