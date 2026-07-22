@@ -542,3 +542,29 @@ Step 1: title + Ticket #13; glossary 6; hero svg + 20 điểm + đường + 3 th
 - **Bài học lặp lần 3**: nhãn/chú thích tĩnh trên đồ thị tương tác là bẫy — phải suy ra từ dữ liệu, không hard-code vị trí.
 
 ### Trạng thái khóa: Course 1 cơ bản 13/15 bài xong (M1-M2-M3 trọn + M4 TRỌN). Versions: css v28 · content v23 · shell v32 · flowmap v18.
+
+---
+
+## ĐỢT 25 (2026-07-22) — BÀI 14 "Underfit, Good Fit và Overfit" (spec C1-L14, MỞ MÀN M5)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH ĐỘ PHỨC TẠP** (`renderComplexityLens` mới): scatter 24 điểm train (đặc) + 20 held-out (rỗng, toggle "hiện điểm ẩn"); thanh **ĐỘ PHỨC TẠP** 6 nấc [1,2,3,5,8,12] morph đường đa thức (Horner từ coeffs thật, clamp y để răng cưa vẫn hiện); **2 đồng hồ** train MSE / check MSE (thang log, đổi màu + 🔴 khi check nổ). Câu đố = micro-check spec: bậc 12 train nhỏ nhất nhưng check 248,525 → **OVERFIT** (4 lựa chọn).
+- **Đủ 4 MS + chốt "train~0 nhưng check cao = overfit"** (user chốt): MS1 gọi tên 3 trạng thái · MS2 đọc CẶP lỗi · MS3 chọn bậc trung bình · MS4 fit-chọn theo check. 3 MCQ (chẩn overfit · ghép cặp cao/cao=underfit · A vs B chọn theo held-out) + mini-game 3 ngăn.
+- **Step 3 = map 3 TRẠM** (user chốt): FIT (`complexity_fit` mode fit — 3 đường bậc 1/3/12 trên scatter) → MEASURE (mode measure — bảng train/check, check hình chữ U, bậc 12 🔴, ✓ CHỈ ở bậc 3 đáy U) → SELECT (mode select — chỉ đường bậc 3 + "best = bậc 3"). Bẫy: chọn theo train MSE · fit trên train+check gộp (leakage).
+
+### Số thật (engine load_complexity_demo, đường thật bậc 3 + nhiễu)
+24 train + 20 held-out. train/check MSE: bậc 1 **21.49/25.21** (underfit) · bậc 3 **11.13/8.23** (good, đáy chữ U) · bậc 12 **5.44/248,525** (overfit — train nhỏ nhất mà check nổ tung). variant 777 (đường thật tuyến tính) → best đổi thành bậc 1 (bắt hard-code).
+
+### Grader (test server-side trước)
+`grade_lesson14` 4 tiêu chí: cần load_complexity_demo + fit_polynomial_model + VÒNG LẶP; results 3 bậc train/check đúng + best theo CHECK; Risk gián-điệp-fit bắt leakage + bắt chọn theo train MSE; Behavior dataset ẩn tuyến tính → best tự đổi. CORRECT → **4/4** (best_degree = 3); chọn-theo-train → 1/4 (Risk "thưởng học thuộc lòng" + Output + Behavior fail); fit-trên-all (leakage) → 1/4 (Risk "chạm dữ liệu CHECK").
+
+### Verify — verify_b14.js: 35/35 pass · 0 pageerror (2 lượt sạch, lượt 2 sau vá dấu ✓ measure)
+Hero: title + Ticket #14; glossary 6; svg + polyline + 24 chấm + slider + toggle, riddle ẩn; mặc định bậc 1 gauge 21.49/25.21; toggle → +20 chấm rỗng (44 tổng); kéo bậc 12 → check 248,526 🔴 + riddle mở; sai "model tốt nhất" → feedback; đúng OVERFIT → done + khóa; explorer 3 cột x/y/split. 3 MCQ + minigame 3 ngăn. Map 3 trạm: fit 3 polyline · measure bảng 3 hàng (chữ U, 🔴, ✓ bậc 3) · select 1 đường "best=bậc 3"; note trọn trong thân; bẫy chọn-train → chấm bắt. Step 4: trap train-MSE fail + Risk, bản đúng 4/4, best_degree=3, modal nhắc Bài 15. Regression B1/B8/B11/B12/B13 + hero B12/B13 còn nguyên + Basic + NC. Multi-viewport 1920/1536/1024/768 OK (svg + slider + 2 gauge + 4 lựa chọn trong màn, nhãn trục không đè, 0 h-scroll, map fit).
+
+### Component mới tái dùng được
+- `renderComplexityLens` (hero): scatter train/held-out + đường đa thức morph (Horner + clamp) + 2 đồng hồ log-scale + toggle điểm ẩn + câu đố.
+- `complexity_fit` (ml_flow_map result_kind) 3 mode fit/measure/select — mode measure dùng **bảng số** (train/check) thay đồ thị; ✓ CHỈ đánh dấu check nhỏ nhất (không đánh underfit).
+
+### Fix nhỏ trong đợt: bảng measure ban đầu ✓ mọi bậc có check<30 (bậc 1 underfit cũng ✓ → dễ hiểu nhầm "ổn"). Sửa: ✓ CHỈ cho bậc check nhỏ nhất (đáy U), 🔴 cho check>30, còn lại xám không dấu.
+
+### Trạng thái khóa: Course 1 cơ bản 14/15 bài xong. Versions: css v29 · content v24 · shell v33 · flowmap v20. Còn Bài 15 (chốt khóa).

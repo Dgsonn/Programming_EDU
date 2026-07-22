@@ -302,6 +302,18 @@
       return '<div class="mlf-chips"><span class="mlf-chip x">đường z = 0</span>' +
         '<span class="mlf-chip clu clu-1">' + neg + '·' + pos + '</span></div>';
     }
+    /* Bài 14 — so độ phức tạp: node theo mode fit/measure/select */
+    if (k === 'complexity_fit') {
+      const cx = st.cx || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">bậc [1,3,12] ?</span></div>';
+      if (cx.mode === 'fit') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">fit 3 bậc</span><span class="mlf-chip warn">1 · 3 · 12</span></div>';
+      }
+      if (cx.mode === 'measure') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">train ↓</span><span class="mlf-chip clu clu-1">check chữ U</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">best = bậc 3</span></div>';
+    }
     return '';
   }
 
@@ -929,6 +941,69 @@
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">study_hours →</text>' +
           '<text x="10" y="11" font-size="9.5" fill="#94A3B8">↑ quiz_score</text></svg>' +
         (bd.note ? '<div class="mlf-qc-note">' + bd.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 14 — so độ phức tạp: FIT (3 đường) → MEASURE (bảng train/check) → SELECT (chọn bậc 3) */
+    if (k === 'complexity_fit') {
+      const cx = st.cx || {};
+      const mode = cx.mode || 'fit';
+      const models = cfg.models || [];
+      const yMin = cfg.y_min != null ? cfg.y_min : 15, yMax = cfg.y_max != null ? cfg.y_max : 65;
+      const xMin = 0, xMax = 10;
+      const W = 460, H = 200, padL = 34, padR = 12, padT = 20, padB = 24;
+      const PX = function (v) { return (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR)); };
+      const PY = function (v) { return ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB)); };
+      const clampY = function (v) { return Math.max(yMin - 2, Math.min(yMax + 2, v)); };
+      const polyval = function (c, x) { return c.reduce(function (a, k) { return a * x + k; }, 0); };
+      const colOf = function (s) { return s === 'over' ? '#F87171' : s === 'good' ? '#34D399' : '#FBBF24'; };
+
+      /* MEASURE — bảng train/check thay vì đồ thị (số là chính) */
+      if (mode === 'measure') {
+        const bestCk = Math.min.apply(null, models.map(function (m) { return m.check_mse; }));
+        const rows = models.map(function (m) {
+          const bad = m.check_mse > 30;
+          const best = m.check_mse === bestCk;
+          const ck = m.check_mse >= 1000 ? Math.round(m.check_mse).toLocaleString('en-US') : m.check_mse.toFixed(2);
+          const mark = bad ? ' 🔴' : (best ? ' ✓ đáy U' : '');   // ✓ CHỈ cho check nhỏ nhất
+          return '<div class="mlf-cxm-row"><span class="mlf-cxm-d" style="color:' + colOf(m.state) + '">bậc ' + m.d + '</span>' +
+            '<span class="mlf-cxm-tr">train ' + m.train_mse.toFixed(2) + '</span>' +
+            '<span class="mlf-cxm-ck" style="color:' + (bad ? '#F87171' : best ? '#6EE7B7' : '#94A3B8') + '">check ' + ck + mark + '</span></div>';
+        }).join('');
+        return '<div class="mlf-scene mlf-cxm-scene">' +
+          '<div class="mlf-reg-head"><span class="mlf-reg-eq">train ↓ · check hình chữ U</span></div>' +
+          '<div class="mlf-cxm-tbl">' + rows + '</div>' +
+          (cx.note ? '<div class="mlf-qc-note">' + cx.note + '</div>' : '') +
+        '</div>';
+      }
+
+      // FIT + SELECT — vẽ scatter (subset) + đường
+      let grid = '';
+      [20, 40, 60].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + PY(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(g).toFixed(1) + '" stroke="rgba(148,163,184,0.09)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="8" fill="#64748B">' + g + '</text>';
+      });
+      let pts = '';
+      table.dataRows.forEach(function (r) {
+        pts += '<circle cx="' + PX(parseFloat(r[0])).toFixed(1) + '" cy="' + PY(parseFloat(r[1])).toFixed(1) + '" r="2.8" fill="#94A3B8" stroke="#0B1220" stroke-width="0.7"/>';
+      });
+      let curves = '';
+      const shown = mode === 'select' ? models.filter(function (m) { return m.state === 'good'; }) : models;
+      shown.forEach(function (m) {
+        const pp = [];
+        for (let i = 0; i <= 160; i++) { const xv = xMin + (xMax - xMin) * (i / 160); pp.push(PX(xv).toFixed(1) + ',' + PY(clampY(polyval(m.coeffs, xv))).toFixed(1)); }
+        const em = (mode === 'select');
+        curves += '<polyline points="' + pp.join(' ') + '" fill="none" stroke="' + colOf(m.state) + '" stroke-width="' + (em ? 3 : 2) + '" stroke-linecap="round" stroke-linejoin="round" opacity="' + (em ? 1 : 0.9) + '"/>';
+      });
+      const head = mode === 'select'
+        ? '<span class="mlf-reg-eq">best = bậc 3</span><span class="mlf-reg-err">check <b>8.23</b> — đáy chữ U</span>'
+        : '<span class="mlf-reg-eq">3 bậc cùng 1 dữ liệu</span><span class="mlf-reg-err">bậc 1 thẳng · 3 mượt · 12 răng cưa</span>';
+      return '<div class="mlf-scene mlf-reg-scene">' +
+        '<div class="mlf-reg-head">' + head + '</div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="đường fit theo độ phức tạp">' +
+          grid + pts + curves +
+          '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">x →</text>' +
+          '<text x="10" y="11" font-size="9.5" fill="#94A3B8">↑ y</text></svg>' +
+        (cx.note ? '<div class="mlf-qc-note">' + cx.note + '</div>' : '') +
       '</div>';
     }
     return '';

@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens || s1cur.complexity_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -5408,6 +5408,141 @@
     });
   }
 
+  /* ═══ Bài 14 ML — ỐNG KÍNH ĐỘ PHỨC TẠP (underfit → good → overfit) ═══
+     Scatter train (đặc) + held-out (rỗng, toggle); thanh bậc morph đường đa thức (Horner,
+     clamp y); 2 đồng hồ train/check MSE; câu đố chẩn đoán overfit. */
+  function renderComplexityLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const xMin = cfg.x_min, xMax = cfg.x_max, yMin = cfg.y_min, yMax = cfg.y_max;
+    const xtr = cfg.x_train || [], ytr = cfg.y_train || [];
+    const xck = cfg.x_check || [], yck = cfg.y_check || [];
+    const degs = cfg.degrees || [];
+    const rid = cfg.riddle || {};
+    let idx = cfg.default_index != null ? cfg.default_index : 0;
+    let showCheck = false;
+    let interacted = false;
+
+    const W = 560, H = 300, padL = 42, padR = 14, padT = 14, padB = 26;
+    const PX = v => (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR));
+    const PY = v => ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB));
+    const clampY = v => Math.max(yMin - 2, Math.min(yMax + 2, v));
+    const polyval = (coeffs, x) => coeffs.reduce((acc, c) => acc * x + c, 0);   // Horner, coeffs bậc cao trước
+
+    function curvePath(coeffs) {
+      const pts = [];
+      const N = 180;
+      for (let i = 0; i <= N; i++) {
+        const xv = xMin + (xMax - xMin) * (i / N);
+        pts.push(PX(xv).toFixed(1) + ',' + PY(clampY(polyval(coeffs, xv))).toFixed(1));
+      }
+      return pts.join(' ');
+    }
+
+    function svg() {
+      const cur = degs[idx] || {};
+      const col = cur.state === 'over' ? '#F87171' : cur.state === 'good' ? '#34D399' : '#FBBF24';
+      let grid = '';
+      [20, 30, 40, 50, 60].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + PY(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(g).toFixed(1) + '" stroke="rgba(148,163,184,0.09)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="8" fill="#64748B">' + g + '</text>';
+      });
+      // held-out (rỗng) — vẽ trước để nằm dưới
+      let checkPts = '';
+      if (showCheck) {
+        for (let i = 0; i < Math.min(xck.length, yck.length); i++) {
+          checkPts += '<circle cx="' + PX(xck[i]).toFixed(1) + '" cy="' + PY(yck[i]).toFixed(1) + '" r="3.4" fill="none" stroke="#38BDF8" stroke-width="1.6"/>';
+        }
+      }
+      // train (đặc)
+      let trainPts = '';
+      for (let i = 0; i < Math.min(xtr.length, ytr.length); i++) {
+        trainPts += '<circle cx="' + PX(xtr[i]).toFixed(1) + '" cy="' + PY(ytr[i]).toFixed(1) + '" r="3.2" fill="#94A3B8" stroke="#0B1220" stroke-width="0.8"/>';
+      }
+      const curve = '<polyline points="' + curvePath(cur.coeffs || []) + '" fill="none" stroke="' + col + '" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>';
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="cxl-svg" role="img" aria-label="đường fit theo độ phức tạp">' +
+        grid + checkPts + trainPts + curve +
+        '<text x="' + (W / 2) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
+        '<text x="8" y="11" font-size="9.5" fill="#94A3B8">↑ ' + escapeHtml(cfg.y_label || 'y') + '</text></svg>';
+    }
+
+    // đồng hồ MSE: thanh log-scale (train & check chênh nhau cực lớn)
+    function gauge(label, val, kind) {
+      const logMax = Math.log10(300000);
+      const frac = Math.max(0.02, Math.min(1, Math.log10(Math.max(1, val)) / logMax));
+      const bad = kind === 'check' && val > 30;
+      const col = bad ? '#F87171' : (kind === 'check' ? '#34D399' : '#7DD3FC');
+      const disp = val >= 1000 ? Math.round(val).toLocaleString('en-US') : val.toFixed(2);
+      return '<div class="cxl-gauge"><div class="cxl-gauge-top"><span class="cxl-gauge-lab">' + label + '</span>' +
+        '<span class="cxl-gauge-val" style="color:' + col + '">' + disp + (bad ? ' 🔴' : '') + '</span></div>' +
+        '<div class="cxl-gauge-track"><div class="cxl-gauge-fill" style="width:' + (frac * 100).toFixed(1) + '%;background:' + col + '"></div></div></div>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens cxl" aria-label="Ống kính độ phức tạp">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH ĐỘ PHỨC TẠP') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="cxl-plot" data-cxl-plot>' + svg() + '</div>' +
+        '<div class="cxl-ctrl">' +
+          '<div class="cxl-row"><label class="cxl-lab">ĐỘ PHỨC TẠP: <b data-cxl-deg></b></label>' +
+            '<input type="range" class="cxl-slider" data-cxl-x min="0" max="' + (degs.length - 1) + '" step="1" value="' + idx + '"/>' +
+            '<button type="button" class="cxl-check" data-cxl-check aria-pressed="false">◌ hiện điểm ẩn</button></div>' +
+          '<div class="cxl-gauges">' + gauge('train MSE', (degs[idx] || {}).train_mse || 0, 'train') + gauge('check MSE (held-out)', (degs[idx] || {}).check_mse || 0, 'check') + '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-cxl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-cxl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-cxl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-cxl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-cxl-plot]');
+    const gaugesEl = mount.querySelector('.cxl-gauges');
+    const degEl = mount.querySelector('[data-cxl-deg]');
+    const riddleEl = mount.querySelector('[data-cxl-riddle]');
+
+    function paint() {
+      const cur = degs[idx] || {};
+      if (plot) plot.innerHTML = svg();
+      if (gaugesEl) gaugesEl.innerHTML = gauge('train MSE', cur.train_mse || 0, 'train') + gauge('check MSE (held-out)', cur.check_mse || 0, 'check');
+      if (degEl) degEl.textContent = cur.label || ('bậc ' + cur.d);
+    }
+    function openRiddle() { if (interacted) return; interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+    paint();
+    const sl = mount.querySelector('[data-cxl-x]');
+    if (sl) sl.addEventListener('input', function () { idx = parseInt(sl.value, 10); paint(); openRiddle(); });
+    const ckBtn = mount.querySelector('[data-cxl-check]');
+    if (ckBtn) ckBtn.addEventListener('click', function () {
+      showCheck = !showCheck;
+      ckBtn.classList.toggle('is-on', showCheck);
+      ckBtn.setAttribute('aria-pressed', showCheck ? 'true' : 'false');
+      ckBtn.textContent = (showCheck ? '⬤ ẩn điểm held-out' : '◌ hiện điểm ẩn');
+      if (plot) plot.innerHTML = svg();
+      openRiddle();
+    });
+
+    const fb = mount.querySelector('[data-cxl-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-cxl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-cxl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — đọc cặp (train, check).');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -5794,6 +5929,13 @@
         const heroMountBn = document.getElementById('lesson-hero');
         renderBoundaryLens(heroMountBn || pvMount, s1.boundary_lens);
         if (heroMountBn) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.complexity_lens) {
+        // ML Bài 14 (user chốt 2026-07-22): ỐNG KÍNH ĐỘ PHỨC TẠP — scatter + thanh bậc morph
+        // đường + 2 đồng hồ train/check MSE + toggle held-out (spec C1-L14).
+        const heroMountCx = document.getElementById('lesson-hero');
+        renderComplexityLens(heroMountCx || pvMount, s1.complexity_lens);
+        if (heroMountCx) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

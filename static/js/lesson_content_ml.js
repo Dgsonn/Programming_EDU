@@ -4983,7 +4983,312 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l14', index: 14, title: 'Underfit, Good Fit và Overfit',                module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 },
+    {
+      id: 'c1_l14',
+      index: 14,
+      title: 'Underfit, Good Fit và Overfit',
+      subtitle: 'Train MSE nhỏ nhất KHÔNG phải model tốt nhất — bậc 12 nhớ thuộc 24 điểm rồi trượt xa dữ liệu mới',
+      module: 14,
+      module_title: 'M5 — Tổng quát hóa',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎯 StudyLab · Ticket #14 · MỞ MÀN M5',
+        hook: 'Bốn chương đầu dạy cách <strong>dựng</strong> model và <strong>fit</strong> nó lên dữ liệu. Nhưng fit giỏi trên dữ liệu đã thấy chưa chắc là điều ta muốn. Ticket #14 đặt lên bàn ba model cùng nhìn <strong>một</strong> bộ 24 điểm: một đường thẳng <strong>đơ cứng</strong> (bậc 1), một đường cong <strong>vừa phải</strong> (bậc 3), và một đường <strong>răng cưa</strong> luồn qua gần như mọi điểm (bậc 12). Cái bẫy: đường răng cưa có <strong>train MSE nhỏ nhất</strong> (5.4) — trông "giỏi nhất". Rồi ta lật 20 điểm <strong>chưa từng cho nó thấy</strong> lên: check MSE của nó là <strong>248,525</strong>. Nó không hiểu quy luật — nó chỉ <strong>học thuộc lòng</strong>.'
+      },
+      achievement: { name: 'Generalization — chẩn đoán overfit', desc: 'phân biệt underfit/good/overfit bằng cặp train–held-out MSE, và chọn độ phức tạp theo dữ liệu chưa thấy chứ không theo train MSE' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Gọi tên <strong>underfit</strong> (đơ), <strong>good fit</strong> (vừa), <strong>overfit</strong> (răng cưa) qua hình dạng đường và cặp lỗi.',
+            'Dùng <strong>train MSE và held-out MSE cùng lúc</strong> — và hiểu vì sao train MSE thấp một mình là <strong>tín hiệu lừa</strong>.',
+            'Chọn <strong>độ phức tạp trung bình</strong> bằng cách fit nhiều bậc rồi so trên <strong>dữ liệu chưa thấy</strong>.'
+          ]
+        },
+        glossary: [
+          { term: 'UNDERFIT', vi: 'học chưa tới', accent: '#FBBF24',
+            def: 'Model <b>quá đơn giản</b>, bỏ sót quy luật — <b>train cao, held-out cũng cao</b>.',
+            ex: 'đường thẳng bậc 1 trên dữ liệu cong: train 21.5 · check 25.2.',
+            out: 'chữa bằng cách tăng độ phức tạp' },
+          { term: 'GOOD FIT', vi: 'vừa vặn', accent: '#34D399',
+            def: 'Model bắt đúng quy luật, bỏ qua nhiễu — <b>train thấp, held-out cũng thấp</b>.',
+            ex: 'đường bậc 3: train 11.1 · check <b>8.2</b> (thấp nhất họ check).',
+            out: 'đây là mục tiêu — điểm ngọt độ phức tạp' },
+          { term: 'OVERFIT', vi: 'học thuộc lòng', accent: '#F87171',
+            def: 'Model <b>quá phức tạp</b>, học cả nhiễu — <b>train rất thấp nhưng held-out nổ tung</b>.',
+            ex: 'đường bậc 12: train 5.4 (nhỏ nhất!) nhưng check <b>248,525</b>.',
+            out: 'train thấp mà check cao = dấu hiệu overfit' },
+          { term: 'HELD-OUT', vi: 'để dành ra', accent: '#38BDF8',
+            def: 'Dữ liệu <b>không dùng để fit</b>, giữ lại để đo model xử lý cái <b>chưa thấy</b> ra sao.',
+            ex: '20 điểm check ở đây — model không được nhìn khi học.',
+            out: 'thước đo generalization thật sự' },
+          { term: 'GENERALIZATION', vi: 'tổng quát hóa', accent: '#A78BFA',
+            def: 'Khả năng làm <b>đúng trên dữ liệu mới</b>, không chỉ dữ liệu đã fit.',
+            ex: 'model tốt = tổng quát tốt, không phải thuộc bài giỏi.',
+            out: 'mục tiêu tối hậu của mọi model ML' },
+          { term: 'MODEL COMPLEXITY', vi: 'độ phức tạp', accent: '#F472B6',
+            def: 'Model có <b>bao nhiêu tự do</b> để uốn theo dữ liệu (bậc đa thức, số tham số…).',
+            ex: 'bậc càng cao càng uốn dữ dội; đánh đổi: underfit ↔ overfit.',
+            out: 'chọn vừa đủ — không đơ, không răng cưa' }
+        ],
+        primer: {
+          goal: [
+            'train MSE thấp một mình = tín hiệu LỪA',
+            'overfit: train rất thấp · held-out nổ tung',
+            'chọn độ phức tạp theo dữ liệu CHƯA THẤY'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong ống kính bên dưới:</strong> kéo thanh <strong>ĐỘ PHỨC TẠP</strong> để đường fit biến hình từ thẳng (bậc 1) → mượt (bậc 3) → răng cưa (bậc 12). Hai đồng hồ bên dưới là <strong>train MSE</strong> và <strong>check MSE</strong>: để ý train luôn tụt khi bậc tăng, nhưng check tụt tới đáy ở bậc 3 rồi <strong>vọt lên</strong>. Bật <strong>hiện điểm ẩn</strong> để thấy đường răng cưa trượt khỏi 20 điểm nó chưa từng thấy. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Cho tới giờ ta luôn đo model bằng lỗi trên dữ liệu đã fit. Bài này lật tẩy điều đó: một model đủ phức tạp có thể <strong>ép train MSE xuống gần 0</strong> bằng cách uốn qua từng điểm — kể cả phần nhiễu ngẫu nhiên. Nó trông hoàn hảo, nhưng nó không học được <strong>quy luật</strong>, chỉ học thuộc <strong>đáp án</strong>. Bằng chứng lộ ra ngay khi ta cho nó dữ liệu mới. Vì thế câu hỏi đúng không phải "fit đẹp cỡ nào?" mà là "<strong>tổng quát tốt cỡ nào?</strong>" — và chỉ dữ liệu để dành ra mới trả lời được.',
+        concept_cards: [
+          {
+            icon: 'fa-ruler',
+            title: 'Ba trạng thái, đọc bằng CẶP lỗi',
+            body: 'Đừng nhìn train MSE một mình — luôn đọc <strong>cặp (train, held-out)</strong>. <strong>Underfit</strong>: cả hai đều cao (21.5 / 25.2) — model quá đơ. <strong>Good fit</strong>: cả hai đều thấp (11.1 / 8.2) — bắt đúng quy luật. <strong>Overfit</strong>: train rất thấp mà held-out cao vọt (5.4 / <strong>248,525</strong>) — học thuộc nhiễu. Khoảng cách (gap) giữa hai lỗi càng lớn càng đáng ngờ.'
+          },
+          {
+            icon: 'fa-heart-crack',
+            title: 'Train MSE thấp là tín hiệu LỪA',
+            body: 'Nếu chọn model theo train MSE nhỏ nhất, bạn sẽ <strong>luôn</strong> chọn cái phức tạp nhất — vì nó uốn qua nhiều điểm nhất. Ở đây bậc 12 thắng train (5.4) nhưng là model <strong>tệ nhất</strong> thực tế. Train MSE đo "thuộc bài", không đo "hiểu bài". Đây là một trong những sai lầm tốn kém nhất trong ML: khoe điểm trên chính đề đã ôn.'
+          },
+          {
+            icon: 'fa-scale-balanced',
+            title: 'Điểm ngọt: chọn theo dữ liệu chưa thấy',
+            body: 'Cách đúng: fit vài mức độ phức tạp trên train, rồi <strong>so trên held-out</strong> và chọn cái check MSE nhỏ nhất. Check MSE có hình <strong>chữ U</strong> theo độ phức tạp: giảm khi model đủ mạnh để bắt quy luật (bậc 1→3), rồi tăng khi nó bắt đầu học nhiễu (bậc 3→12). Đáy chữ U — ở đây là <strong>bậc 3</strong> — là độ phức tạp vừa vặn.'
+          }
+        ],
+        /* Hero = ỐNG KÍNH ĐỘ PHỨC TẠP (user chốt 2026-07-22) */
+        complexity_lens: {
+          title: 'ỐNG KÍNH ĐỘ PHỨC TẠP — THẲNG → MƯỢT → RĂNG CƯA',
+          intro: 'Chấm đặc = 24 điểm <b>train</b>; chấm rỗng = 20 điểm <b>held-out</b> (bật để hiện). Kéo thanh <b>ĐỘ PHỨC TẠP</b> để đường fit biến hình. Đọc hai đồng hồ: train luôn tụt, nhưng check tụt tới đáy ở bậc 3 rồi vọt lên. Trả lời câu chốt để mở Bước 2.',
+          x_label: 'x', y_label: 'y',
+          x_min: 0, x_max: 10, y_min: 15, y_max: 65,
+          x_train: [0.43,0.61,1.24,1.3,1.35,1.71,1.91,2.49,2.74,3.15,3.3,3.36,3.53,3.78,4.53,4.66,4.68,4.7,4.82,5.45,6.34,7.41,9.5,9.57],
+          y_train: [29.0,27.8,36.7,38.4,44.2,42.3,38.2,38.8,40.3,46.1,45.4,42.1,41.5,42.1,35.5,37.0,42.5,49.8,46.3,40.0,39.9,37.6,41.0,41.5],
+          x_check: [0.01,0.6,1.83,1.94,2.23,2.33,3.2,3.41,3.49,4.12,4.15,4.72,4.86,4.89,5.37,6.02,6.33,7.22,7.81,8.8],
+          y_check: [26.7,34.7,42.0,47.6,43.3,43.4,42.0,44.4,44.3,42.3,42.1,43.1,42.8,47.5,42.8,35.1,43.8,37.7,36.0,37.4],
+          default_index: 0,
+          degrees: [
+            { d: 1, label: 'bậc 1 · THẲNG (underfit)', state: 'underfit', train_mse: 21.49, check_mse: 25.21,
+              coeffs: [0.6029867248435571, 37.84114786452001] },
+            { d: 2, label: 'bậc 2', state: 'underfit', train_mse: 16.42, check_mse: 16.96,
+              coeffs: [-0.30934201349871654, 3.6052570716660823, 32.71785445670399] },
+            { d: 3, label: 'bậc 3 · MƯỢT (good fit) ✓', state: 'good', train_mse: 11.13, check_mse: 8.23,
+              coeffs: [0.15295143103984774, -2.5760454489655, 12.378254894544847, 24.97734076609765] },
+            { d: 5, label: 'bậc 5', state: 'good', train_mse: 10.19, check_mse: 11.88,
+              coeffs: [0.012737447597919336, -0.31660950084974643, 2.9794946157235684, -13.513219039916448, 29.68272728376541, 17.03847104912199] },
+            { d: 8, label: 'bậc 8', state: 'over', train_mse: 10.09, check_mse: 14.86,
+              coeffs: [0.00011677959845802748, -0.004003478406765348, 0.052526747457274, -0.3060318968215347, 0.44747105513729823, 3.5372496264880344, -19.15415019943142, 37.50173898893522, 14.278574316070504] },
+            { d: 12, label: 'bậc 12 · RĂNG CƯA (overfit)', state: 'over', train_mse: 5.44, check_mse: 248525.50,
+              coeffs: [-0.0007257573068618459, 0.038656422040067175, -0.9011051785397823, 12.100506871822752, -103.69351447205102, 593.5175329776715, -2308.302459034843, 6086.292173385976, -10667.424171874802, 11942.017854620066, -7970.372945037153, 2813.2534618891036, -368.1124044126267] }
+          ],
+          riddle: {
+            prompt: 'Đường bậc 12 có <b>train MSE nhỏ nhất</b> (5.4) trong cả họ, nhưng khi gặp 20 điểm chưa thấy thì <b>check MSE = 248,525</b>. Chẩn đoán?',
+            options: ['OVERFIT — học thuộc nhiễu của train, không tổng quát được', 'Model tốt nhất — vì train MSE nhỏ nhất', 'UNDERFIT — vì check MSE quá cao', 'Good fit — chỉ cần thêm dữ liệu là hết'],
+            answer: 'OVERFIT — học thuộc nhiễu của train, không tổng quát được',
+            wrong: {
+              'Model tốt nhất — vì train MSE nhỏ nhất': 'Đây đúng là cái bẫy của bài. Train MSE nhỏ chỉ nói model "thuộc" 24 điểm train — kể cả phần nhiễu. Thước đo thật là <b>held-out</b>: 248,525 nghĩa là trên dữ liệu mới nó sai kinh khủng.',
+              'UNDERFIT — vì check MSE quá cao': 'Underfit là khi model quá ĐƠN GIẢN — cả train lẫn check đều cao. Ở đây train rất THẤP (5.4), chỉ check cao. Train thấp + check cao = overfit, ngược hẳn underfit.',
+              'Good fit — chỉ cần thêm dữ liệu là hết': 'Good fit phải có check MSE thấp; 248,525 thì không thể gọi là tốt. Thêm dữ liệu có thể giúp, nhưng gốc rễ là model <b>quá phức tạp</b> cho lượng dữ liệu này — cần giảm bậc, không chỉ thêm điểm.'
+            },
+            done: '✅ Đúng — <b>train thấp + held-out cao = overfit</b>. Bậc 12 uốn qua gần hết 24 điểm train (kể cả nhiễu) nên train MSE nhỏ, nhưng chính vì bám nhiễu mà nó trượt xa 20 điểm mới. Ba điều khép bài: (1) đọc <b>cặp</b> (train, held-out), không phải train một mình; (2) check MSE có hình <b>chữ U</b> theo độ phức tạp, đáy ở bậc 3; (3) chọn model theo <b>dữ liệu chưa thấy</b>. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'complexity_demo (24 train + 20 held-out)',
+            columns: [
+              { name: 'x', type: 'FLOAT · 0–10', key: 'x', icon: '📏',
+                note: '<strong>Feature</strong> — dữ liệu sinh từ một đường cong thật bậc 3 cộng nhiễu ngẫu nhiên.' },
+              { name: 'y', type: 'FLOAT', key: 'TARGET', icon: '🎯',
+                note: '<strong>Giá trị</strong> — model bậc 12 có thể uốn qua gần hết 24 điểm train, nhưng phần nó bám là <strong>nhiễu</strong>, không phải quy luật.' },
+              { name: 'split', type: 'train / held-out', key: 'ROLE', icon: '🔒',
+                note: '<strong>Vai trò</strong> — 24 điểm train để fit; 20 điểm held-out <strong>giữ kín</strong> khỏi mọi lần fit, chỉ dùng để đo tổng quát hóa.' }
+            ]
+          },
+          data_preview: [
+            ['bậc 1', 'train 21.49', 'check 25.21 · underfit'],
+            ['bậc 3', 'train 11.13', 'check 8.23 · GOOD ✓'],
+            ['bậc 5', 'train 10.19', 'check 11.88'],
+            ['bậc 8', 'train 10.09', 'check 14.86'],
+            ['bậc 12', 'train 5.44', 'check 248525 · overfit']
+          ]
+        },
+        mission: 'Dựng <code class="code">SO ĐỘ PHỨC TẠP</code>: <code class="code">fit từng bậc [1,3,12]</code> trên train → <code class="code">đo CẢ train &amp; check MSE</code> → <code class="code">chọn best theo CHECK</code> — kho có <code class="code">mồi bẫy 🪤</code> (chọn theo train MSE · fit lẫn held-out) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (chẩn đoán overfit · ghép cặp lỗi · gap) + mini-game xếp 3 model ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Một model có <strong>train MSE gần 0</strong> nhưng <strong>held-out MSE rất cao</strong>. Chẩn đoán là gì?',
+            options: [
+              { id: 'a', text: 'Overfit — model học thuộc chi tiết/nhiễu của train, không tổng quát', correct: true, explanation: 'Đúng — train gần 0 nghĩa là nó khớp hoàn hảo dữ liệu đã thấy, nhưng held-out cao nghĩa là nó thất bại trên dữ liệu mới. Đó là định nghĩa overfit: thuộc bài mà không hiểu bài.' },
+              { id: 'b', text: 'Underfit — vì lỗi held-out cao', correct: false, explanation: 'Underfit thì CẢ train lẫn held-out đều cao (model quá đơn giản). Ở đây train gần 0 — model quá phức tạp, không phải quá đơn giản.' },
+              { id: 'c', text: 'Good fit — train thấp là đủ', correct: false, explanation: 'Good fit đòi held-out cũng thấp. Chỉ train thấp mà held-out cao là dấu hiệu overfit rõ ràng nhất.' },
+              { id: 'd', text: 'Model hoàn hảo, nên deploy ngay', correct: false, explanation: 'Đây là cái bẫy chết người. "Hoàn hảo trên train" thường có nghĩa "sẽ hỏng trên thực tế". Chỉ held-out mới nói sự thật.' }
+            ]
+          },
+          {
+            question: 'Ghép trạng thái với cặp lỗi. Cặp <strong>train cao / held-out cao</strong> là trạng thái nào?',
+            options: [
+              { id: 'a', text: 'Underfit — model quá đơn giản, bỏ sót cả quy luật lẫn trên dữ liệu mới', correct: true, explanation: 'Chuẩn — khi model quá đơn giản (như đường thẳng cho dữ liệu cong), nó sai ở cả train lẫn held-out. Nâng độ phức tạp sẽ giúp.' },
+              { id: 'b', text: 'Overfit', correct: false, explanation: 'Overfit là train RẤT THẤP nhưng held-out cao. Ở đây train cũng cao → model chưa học nổi cả train → underfit.' },
+              { id: 'c', text: 'Good fit', correct: false, explanation: 'Good fit là cả hai đều thấp. Cả hai đều cao nghĩa là model còn chưa bắt được quy luật.' },
+              { id: 'd', text: 'Không đủ thông tin để kết luận', correct: false, explanation: 'Đủ thông tin: cặp (cao, cao) là chữ ký kinh điển của underfit.' }
+            ]
+          },
+          {
+            question: 'Model A: train 12 / held-out 13. Model B: train 5 / held-out 40. Nên chọn cái nào để dùng thật?',
+            options: [
+              { id: 'a', text: 'A — held-out của A thấp hơn nhiều (13 vs 40); gap của B tố cáo overfit', correct: true, explanation: 'Đúng — chọn theo HELD-OUT vì đó là ước lượng cho dữ liệu thật. A tổng quát tốt (13, sát train). B có train đẹp (5) nhưng held-out 40 và gap lớn (35) → học thuộc, sẽ hỏng khi triển khai.' },
+              { id: 'b', text: 'B — vì train MSE nhỏ hơn (5 < 12)', correct: false, explanation: 'Đây chính là bẫy train-MSE. B thuộc bài giỏi hơn nhưng hiểu bài kém hơn (held-out 40 >> 13). Không bao giờ chọn model chỉ vì train thấp.' },
+              { id: 'c', text: 'B — vì nó phức tạp hơn nên mạnh hơn', correct: false, explanation: 'Phức tạp hơn không phải mạnh hơn. B phức tạp tới mức học cả nhiễu — đó là điểm yếu, không phải sức mạnh.' },
+              { id: 'd', text: 'Cần thêm dữ liệu mới quyết định được', correct: false, explanation: 'Đã có đủ: held-out của cả hai đã cho biết A tổng quát tốt hơn hẳn. Quyết định được ngay.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Ghép mỗi model với chẩn đoán qua cặp (train, check)',
+          instruction: 'Kéo mỗi model vào đúng ngăn dựa trên <strong>cặp lỗi</strong>: <strong>UNDERFIT</strong> (cao/cao) · <strong>GOOD FIT</strong> (thấp/thấp) · <strong>OVERFIT</strong> (rất thấp/cao).',
+          chips: [
+            { id: 'm-d1',  label: 'bậc 1 → train 21.5 · check 25.2' },
+            { id: 'm-d2',  label: 'bậc 2 → train 16.4 · check 17.0' },
+            { id: 'm-d3',  label: 'bậc 3 → train 11.1 · check 8.2' },
+            { id: 'm-d8',  label: 'bậc 8 → train 10.1 · check 14.9' },
+            { id: 'm-d12', label: 'bậc 12 → train 5.4 · check 248525' }
+          ],
+          bins: [
+            { id: 'under', label: 'UNDERFIT (cao/cao)',       correct: 'true' },
+            { id: 'good',  label: 'GOOD FIT (thấp/thấp)',      correct: 'true' },
+            { id: 'over',  label: 'OVERFIT (rất thấp/cao)',    correct: 'true' }
+          ],
+          solution: { 'm-d1': 'under', 'm-d2': 'under', 'm-d3': 'good', 'm-d8': 'over', 'm-d12': 'over' },
+          success: 'Chuẩn — bậc 1 & 2 chưa bắt nổi quy luật (cả hai lỗi đều cao → underfit); bậc 3 vừa vặn (cả hai thấp → good fit); bậc 8 & 12 học thuộc dần (train tụt nhưng check trèo lên → overfit). Để ý bậc 8: train chỉ nhỉnh hơn bậc 3 chút xíu mà check đã tệ gần gấp đôi — dấu hiệu overfit sớm. Bước 3: lắp đúng đường ống fit → đo → chọn theo check.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — fit nhiều bậc → đo train+check → chọn theo check. 2 mồi bẫy ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'models = [fit_polynomial_model(X_train, y_train, d) for d in [1, 3, 12]]', slot: 'b1' },
+          { type: 'py', token: 'errors = [(compute_mse(y_train, m.predict(X_train)), compute_mse(y_check, m.predict(X_check))) for m in models]', slot: 'b2' },
+          { type: 'py', token: 'best_degree = [1, 3, 12][min(range(3), key=lambda i: errors[i][1])]', slot: 'b3' },
+          /* 2 mồi bẫy */
+          { type: 'py', token: 'best_degree = [1, 3, 12][min(range(3), key=lambda i: errors[i][0])]', slot: 't1' },
+          { type: 'py', token: 'models = [fit_polynomial_model(X_all, y_all, d) for d in [1, 3, 12]]', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l14-fit', accepts: ['py'], multi: false },
+          { id: 'l14-measure', accepts: ['py'], multi: false },
+          { id: 'l14-select', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'SO ĐỘ PHỨC TẠP — 3 TRẠM · FIT → ĐO → CHỌN THEO CHECK',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'complexity_demo · 24 train + 20 held-out · so bậc [1, 3, 12]' },
+          /* 3 đường + MSE thật (dùng chung cho scene complexity_fit) */
+          y_min: 15, y_max: 65,
+          models: [
+            { d: 1, state: 'underfit', train_mse: 21.49, check_mse: 25.21, coeffs: [0.6029867248435571, 37.84114786452001] },
+            { d: 3, state: 'good', train_mse: 11.13, check_mse: 8.23, coeffs: [0.15295143103984774, -2.5760454489655, 12.378254894544847, 24.97734076609765] },
+            { d: 12, state: 'over', train_mse: 5.44, check_mse: 248525.50, coeffs: [-0.0007257573068618459, 0.038656422040067175, -0.9011051785397823, 12.100506871822752, -103.69351447205102, 593.5175329776715, -2308.302459034843, 6086.292173385976, -10667.424171874802, 11942.017854620066, -7970.372945037153, 2813.2534618891036, -368.1124044126267] }
+          ],
+          done_note: 'Đường ống tổng quát hóa: fit [1,3,12] CHỈ trên train → đo CẢ train và check MSE cho mỗi bậc → chọn best_degree theo CHECK MSE nhỏ nhất (bậc 3). Hai mồi bẫy: chọn theo train MSE (→ bậc 12 overfit, vì train luôn tụt khi bậc tăng) và fit trên train+check gộp (leakage — held-out phải giữ kín khỏi fit). Bước 4 tự viết vòng lặp so bậc.',
+          stations: [
+            {
+              zones: ['l14-fit'],
+              icon: '📈', label: 'TRẠM 1 — FIT NHIỀU BẬC', sub: 'polyfit [1,3,12] trên TRAIN', result_kind: 'complexity_fit',
+              cx: {
+                mode: 'fit',
+                note: '<code>models = [fit_polynomial_model(X_train, y_train, d) for d in [1, 3, 12]]</code> — fit ba mức độ phức tạp, <b>chỉ</b> trên 24 điểm train. Bậc 1 gần thẳng, bậc 3 cong vừa, bậc 12 răng cưa luồn qua gần hết điểm.'
+              },
+              narration: 'Cùng một dữ liệu, ba độ phức tạp. Chú ý: 20 điểm held-out chưa xuất hiện — chúng phải được giữ kín khỏi mọi lần fit.'
+            },
+            {
+              zones: ['l14-measure'],
+              icon: '📊', label: 'TRẠM 2 — ĐO train & check', sub: 'MSE trên CẢ hai tập', result_kind: 'complexity_fit',
+              cx: {
+                mode: 'measure',
+                note: '<code>errors = [(train_mse, check_mse) for m in models]</code> — đo mỗi model trên train (đã thấy) VÀ check (chưa thấy). Kết quả: bậc 1 (21.5/25.2), bậc 3 (11.1/<b>8.2</b>), bậc 12 (<b>5.4</b>/248525). Train luôn tụt; check hình chữ U.'
+              },
+              narration: 'Đây là chỗ sự thật lộ ra. Train MSE tụt đều theo bậc — nếu chỉ nhìn nó, bậc 12 "thắng". Nhưng check MSE kể câu chuyện ngược lại.'
+            },
+            {
+              zones: ['l14-select'],
+              icon: '🎯', label: 'TRẠM 3 — CHỌN THEO CHECK', sub: 'best = min check MSE', result_kind: 'complexity_fit',
+              cx: {
+                mode: 'select',
+                note: '<code>best_degree = min theo check_mse</code> — chọn model có <b>check MSE</b> nhỏ nhất, không phải train. Đáy chữ U ở <b>bậc 3</b> (check 8.2). Bậc 12 tuy train nhỏ nhất nhưng check nổ tung, bị loại.'
+              },
+              narration: 'Luật chọn đúng: theo dữ liệu CHƯA THẤY. Bậc 3 tổng quát tốt nhất — đó là điểm ngọt giữa đơ và răng cưa.'
+            }
+          ]
+        },
+        expected_sql: 'models = [fit_polynomial_model(X_train, y_train, d) for d in [1, 3, 12]] errors = [(compute_mse(y_train, m.predict(X_train)), compute_mse(y_check, m.predict(X_check))) for m in models] best_degree = [1, 3, 12][min(range(3), key=lambda i: errors[i][1])]',
+        expected_zones: {
+          'l14-fit': 'models = [fit_polynomial_model(X_train, y_train, d) for d in [1, 3, 12]]',
+          'l14-measure': 'errors = [(compute_mse(y_train, m.predict(X_train)), compute_mse(y_check, m.predict(X_check))) for m in models]',
+          'l14-select': 'best_degree = [1, 3, 12][min(range(3), key=lambda i: errors[i][1])]'
+        },
+        reveal_hints: {
+          'l14-fit': 'Trạm 1: fit [1,3,12] chỉ trên TRAIN — <strong>models = [fit_polynomial_model(X_train, y_train, d) for d in [1, 3, 12]]</strong>.',
+          'l14-measure': 'Trạm 2: đo CẢ train và check MSE — <strong>errors = [(compute_mse(y_train, ...), compute_mse(y_check, ...)) ...]</strong>.',
+          'l14-select': 'Trạm 3: chọn theo CHECK MSE (chỉ số [1], không phải [0]) — <strong>best_degree = [1, 3, 12][min(range(3), key=lambda i: errors[i][1])]</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'SO ĐỘ PHỨC TẠP — 3 TRẠM · FIT → ĐO → CHỌN THEO CHECK',
+        table_sub: 'complexity_demo · 24 train + 20 held-out',
+        idle_sub: '24 train + 20 held-out · ▶ chạy để fit [1,3,12], đo và chọn theo check',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'complexity_demo',
+          columns: ['x', 'y'],
+          dataRows: [
+            ['0.43', '29.0'], ['1.24', '36.7'], ['1.35', '44.2'], ['1.91', '38.2'], ['2.74', '40.3'],
+            ['3.30', '45.4'], ['3.53', '41.5'], ['4.53', '35.5'], ['4.68', '42.5'], ['4.82', '46.3'],
+            ['5.45', '40.0'], ['6.34', '39.9'], ['7.41', '37.6'], ['9.50', '41.0'], ['9.57', '41.5']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: tự viết vòng lặp so bậc. Grader: grade_lesson14
+         (cần load_complexity_demo + fit_polynomial_model + vòng lặp; results 3 bậc train/check đúng;
+         best_degree theo CHECK; Risk bắt leakage/chọn theo train; Behavior dataset ẩn tuyến tính → best đổi). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp đường ống. Giờ tự viết nó bằng <strong>vòng lặp</strong>: với mỗi bậc trong <code>[1, 3, 12]</code>, fit model <strong>chỉ trên train</strong>, đo <strong>cả</strong> train MSE và check MSE, lưu vào <code>results</code>, rồi chọn <code>best_degree</code> theo <strong>check MSE</strong> nhỏ nhất. Hệ thống chấm còn thử một <strong>dataset ẩn</strong> (đường thật tuyến tính) — luật chọn của bạn phải tự đổi theo, không hard-code.',
+        context: {
+          scenario: 'Hai nguyên tắc bất di bất dịch: (1) <strong>held-out là bất khả xâm phạm</strong> — 20 điểm check chỉ để ĐO, tuyệt đối không đưa vào <code>fit</code>; đưa vào là <strong>leakage</strong>, điểm đẹp mà vô nghĩa. (2) <strong>Chọn theo check, không theo train</strong> — train MSE luôn giảm khi tăng bậc nên chọn theo nó sẽ luôn ra model phức tạp nhất (overfit). Điểm ngọt nằm ở đáy chữ U của check MSE.',
+          real_world: 'Đây là vòng lặp chọn model (model selection) cốt lõi của mọi dự án ML: thử vài mức độ phức tạp, đánh giá trên dữ liệu để dành ra, chọn cái tổng quát tốt nhất. Cùng khuôn mẫu này áp cho việc chọn số tầng mạng nơ-ron, độ sâu cây, hay hệ số điều chuẩn — chỉ đổi "bậc đa thức" thành siêu tham số khác.',
+          steps: [
+            'Nạp <code>X_train, y_train, X_check, y_check</code> bằng <code>load_complexity_demo()</code>.',
+            'Lặp qua <code>[1, 3, 12]</code>: fit trên train, đo <code>compute_mse</code> trên cả train và check.',
+            'Lưu mỗi bậc vào <code>results</code> (degree, train_mse, check_mse) — không đụng check khi fit.',
+            'Chọn <code>best_degree</code> theo check MSE nhỏ nhất · in ra · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? In <code>results</code> để thấy cả 3 cặp — train tụt đều nhưng check hình chữ U, đáy ở bậc 3.',
+          expected: 'Console cho thấy bậc 3 có check MSE nhỏ nhất (8.2) → <code>best_degree = 3</code>. Đủ 4 tầng xanh. Thử chọn theo train MSE? Ra bậc 12 — nhưng tầng Risk sẽ chỉ ra đó là phần thưởng cho học thuộc lòng.'
+        },
+        hints: [
+          { level: 1, text: 'Bốn việc: nạp dữ liệu → lặp [1,3,12] fit trên train → đo train & check MSE → chọn best theo CHECK. Không đưa check vào fit.' },
+          { level: 2, text: 'Đầu bài: <code>from ml_lab import load_complexity_demo, fit_polynomial_model, compute_mse</code>, rồi <code>X_train, y_train, X_check, y_check = load_complexity_demo()</code>. Dùng vòng <code>for d in [1, 3, 12]:</code>.' },
+          { level: 3, text: 'Trong vòng lặp:<br><code>m = fit_polynomial_model(X_train, y_train, d)</code><br><code>tr = compute_mse(y_train, m.predict(X_train))</code><br><code>ck = compute_mse(y_check, m.predict(X_check))</code><br><code>results.append({"degree": d, "train_mse": tr, "check_mse": ck})</code><br>Chọn: <code>best_degree = min(results, key=lambda r: r["check_mse"])["degree"]</code>.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_complexity_demo, fit_polynomial_model, compute_mse<br>X_train, y_train, X_check, y_check = load_complexity_demo()<br>results = []<br>for d in [1, 3, 12]:<br>&nbsp;&nbsp;&nbsp;&nbsp;m = fit_polynomial_model(X_train, y_train, d)<br>&nbsp;&nbsp;&nbsp;&nbsp;tr = compute_mse(y_train, m.predict(X_train))<br>&nbsp;&nbsp;&nbsp;&nbsp;ck = compute_mse(y_check, m.predict(X_check))<br>&nbsp;&nbsp;&nbsp;&nbsp;results.append({"degree": d, "train_mse": tr, "check_mse": ck})<br>best_degree = min(results, key=lambda r: r["check_mse"])["degree"]<br>print("best_degree =", best_degree)</code>' }
+        ],
+        grader_fn: 'grade_lesson14',
+        success_message: 'Chọn model đúng cách — best_degree = 3 theo CHECK MSE, không mắc bẫy bậc 12. Bạn vừa nắm nguyên tắc nền của generalization: đo trên dữ liệu chưa thấy, chọn độ phức tạp vừa vặn, giữ held-out sạch khỏi fit. Bài 15 — bài cuối khóa cơ bản — dựng đúng cái "dữ liệu chưa thấy" đó: chia Train / Validation / Test cho tử tế, và bịt mọi lỗ rò rỉ.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l15', index: 15, title: 'Chia Train / Validation / Test',               module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 }
   ]
 };
