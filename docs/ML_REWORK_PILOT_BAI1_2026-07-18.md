@@ -435,3 +435,40 @@ Hero: 2 svg + lr slider + 3 preset + Train; Train (reduced-motion sync) → loss
 - `gd_curve` (ml_flow_map result_kind) + helper `gdRun(lr,steps)` chạy GD từ table.dataRows → loss curve; dùng lại .mlf-reg-head/.mlf-reg-svg.
 
 ### Trạng thái khóa: Course 1 cơ bản 10/15 bài xong (M1-M2-M3 trọn). Versions: css v23 · content v20 · shell v26 · flowmap v11.
+
+---
+
+## ĐỢT 16 (2026-07-22) — BÀI 11 "Vì sao Linear Regression không phân loại được" (spec C1-L11, MỞ MÀN M4)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH XÁC SUẤT VÔ LÝ** (`renderLinregAudit` mới): scatter 60 nhãn 0/1 (32 Rớt hàng y=0 · 28 Đậu hàng y=1), dải xanh **[0,1] = xác suất hợp lệ**, hai vùng đỏ ngoài dải, đường fit ŷ = 0.1386·x − 0.1861 **thò khỏi dải ở cả hai đầu**, 12 marker probe (đỏ khi ngoài dải) + **thanh trượt x** với phán quyết realtime. Mặc định x=14 → 1.75 → "❌ KHÔNG phải xác suất — 175% ?!"; kéo vào vùng hợp lệ mới **mở câu đố** (3 lựa chọn: BỊ CHẶN đúng · "rất chắc chắn đậu" · "làm tròn về 1.0"). Chọn "làm tròn" → phản hồi *clip = giấu triệu chứng*; chọn đúng → done-banner mở sang sigmoid Bài 12.
+- **Đủ cả 3 kênh dạy** (user chốt): MCQ + concept card + câu đố hero cùng đánh vào một ý — output không bị chặn thì không thể là xác suất.
+- **Step 3 = map 3 TRẠM** (user chốt): FIT (`linaudit` mode fit — đường trên nhãn 0/1, "fit không lỗi") → OUTPUT THÔ (mode probe — 12 marker, đếm **3 điểm < 0 · 3 điểm > 1**) → THRESHOLD (mode threshold — ngưỡng 0.5, ranh giới x≈4.95, note *có nhãn dùng được nhưng không có xác suất tin được*). Bẫy: `np.clip(...)` (giấu triệu chứng) và `LogisticRegression` (né bài — bài này phải fit đúng model "sai" đó).
+
+### Số thật từ engine (không có số bịa)
+60 dòng train → `ŷ = 0.1386·x − 0.1861`; 12 probe → `[−0.46, −0.26, −0.12, 0.02, 0.23, 0.44, 0.58, 0.78, 0.99, 1.27, 1.48, 1.75]` = **3 dưới 0, 3 trên 1**; ranh giới quyết định x ≈ 4.95. Demo outlier (thêm x=30, y=1): hệ số 0.139 → 0.075, ranh giới 4.95 → 5.45, sai lớp 5 → 7.
+
+### Grader
+`grade_lesson11` 4 tiêu chí. Test server-side: CORRECT → 4/4; TRAP `np.clip` → **Risk fail** ("giấu triệu chứng"); TRAP `LogisticRegression` → **code fail** ("phải fit đúng model 'sai' đó").
+
+### Verify — verify_b11.js: 35/35 pass · 0 pageerror (2 lượt sạch, lượt 2 sau khi vá shell ĐỢT 17)
+Step 1: title + Ticket #11 + 1.75/−0.46; glossary 6; hero svg + 60 điểm + 12 marker + slider, riddle ẩn; x=14 → verdict ❌ + đếm 3/3; kéo x=5 → ✅ + riddle mở; sai "làm tròn" → feedback clip; đúng "BỊ CHẶN" → done sigmoid + khóa lựa chọn; explorer 2 cột. Step 2: 3 MCQ + minigame 2 ngăn. Step 3: 4 node branch + 3 zone + 5 khối, 3 trạm đúng số, bẫy clip → chấm bắt sai. Step 4: CÁC BƯỚC không lộ code, trap clip fail, bản đúng 4/4, modal nhắc Bài 12. Regression B1-B10 ML + Basic B1 + NC nc_01 sạch. Multi-viewport 1920/1536/1024/768: hero svg + slider trong màn, riddle mở đủ 3 lựa chọn, 0 h-scroll, map fit + Run trong màn.
+
+### Component mới tái dùng được
+- `renderLinregAudit` (hero): dải hợp lệ + vùng ngoài dải + scatter nhị phân + đường + marker probe + slider phán quyết + câu đố có mồi bẫy.
+- `linaudit` (ml_flow_map result_kind) 3 mode fit/probe/threshold, dùng lại `.mlf-reg-head`/`.mlf-reg-svg`.
+
+---
+
+## ĐỢT 17 (2026-07-22) — VÁ SHELL: cảnh biểu đồ trong map bị cắt đáy (B8/B9/B10/B11)
+
+**Phát hiện bằng cách tự soi ảnh chụp của chính mình** (không phải suite bắt được — suite chỉ kiểm sự tồn tại trong DOM).
+
+- **Triệu chứng**: `.mlf-stage-body { max-height: 200px }` (chỉnh cho BẢNG NGUỒN lúc idle) trong khi SVG cảnh render ~277px → **~28% đáy rơi vào vùng cuộn**: mất trục x, mất các điểm y thấp, và ở Bài 11 **mất luôn nửa bằng chứng "3 điểm < 0"** — chip nói có 3 điểm dưới 0 nhưng người học không nhìn thấy điểm nào.
+- **Chẩn sai lần 1**: nới thân lên 300px → vẫn cắt, và cắt NHIỀU HƠN ở màn rộng (112px @1920 vs 29px @1024). Lý do: chiều cao SVG = bề rộng cột × tỉ lệ viewBox, nên chặn theo pixel trên THÂN không bao giờ đủ.
+- **Vá đúng**: chặn thẳng trên SVG — `.mlf-reg-svg { max-height: 276px }` + thân 320px cho cảnh biểu đồ (`:has(.mlf-reg-svg)`, giữ nguyên 200px cho bảng nguồn). `preserveAspectRatio` mặc định (meet) thu nhỏ TRỌN nội dung vào khung: không méo, không cắt, đúng ở mọi bề rộng cột.
+- **Vá kèm**: nhãn trục y trên cùng đè tiêu đề trục (số `90` chồng chữ `final_score` ở B8/B9) — nới `padT` và đưa tiêu đề lên hàng riêng (`y=11`) ở cả 4 họ cảnh regline/mse/gd_curve/linaudit.
+- **Verify**: cảnh hiện TRỌN (kiểm nhãn trục x nằm trong thân) **12/12** = B8/B9/B10/B11 × 1920/1536/1024, cột map vẫn fit, nút Run vẫn trong màn, 0 h-scroll, 0 pageerror. Suite B11 chạy lại sau vá: 35/35.
+- **Bài học**: verify bằng suite DOM là chưa đủ cho component trực quan — phải **tự mở ảnh chụp ra nhìn**, và nhìn đúng cái phần tử đang dạy (ở đây là nửa dưới của biểu đồ).
+
+### Trạng thái khóa: Course 1 cơ bản 11/15 bài xong (M1-M2-M3 trọn + M4 mở màn). Versions: css v25 · content v21 · shell v27 · flowmap v13.

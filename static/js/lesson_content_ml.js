@@ -4122,7 +4122,291 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l11', index: 11, title: 'Vì sao Linear Regression không phân loại được', module: 13, module_title: 'M4 — Phân loại Logistic',     xp_reward: 50 },
+    {
+      id: 'c1_l11',
+      index: 11,
+      title: 'Vì sao Linear Regression không phân loại được',
+      subtitle: 'Đường thẳng không có trần/sàn — nó đoán "xác suất" −46% và 175%',
+      module: 13,
+      module_title: 'M4 — Phân loại Logistic',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎯 StudyLab · Ticket #11 · MỞ MÀN M4',
+        hook: 'Chương mới, bài toán mới: <strong>PHÂN LOẠI</strong>. Phòng đào tạo muốn biết <strong>khả năng một bạn qua môn</strong> — không phải điểm số, mà một <strong>xác suất</strong> (0% đến 100%). Ta đã có sẵn cái búa quen tay từ chương trước: hồi quy tuyến tính. Vậy cứ gán Rớt = 0, Đậu = 1 rồi fit một đường thẳng lên nhãn 0/1 — <strong>code chạy trơn tru</strong>, không lỗi gì cả. Nhưng thử đưa vào vài giá trị nằm ngoài dải quen thuộc mà xem: đường trả về <strong>−0.46</strong> và <strong>1.75</strong>. Một "xác suất" <strong>âm 46%</strong>? Một "xác suất" <strong>175%</strong>? Nhiệm vụ Ticket #11: <strong>khám nghiệm tận mắt cái sai</strong> trước khi học lời giải (sigmoid, Bài 12).'
+      },
+      achievement: { name: 'Logistic Foundations — khám nghiệm mô hình sai', desc: 'audit LinearRegression trên nhãn 0/1, phát hiện output ngoài [0,1], hiểu vì sao clip/threshold không chữa gốc' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Nhận ra <strong>đường thẳng không bị chặn</strong>: output chạy ra ngoài [0,1] nên KHÔNG thể là xác suất.',
+            'Phân biệt <strong>quyết định lớp</strong> (threshold) với <strong>ước lượng xác suất</strong> — và thấy 1 <strong>outlier</strong> kéo lệch cả đường lẫn ranh giới.',
+            'Hiểu vì sao <strong>clip về [0,1] là giấu bệnh</strong>, và vì sao ta cần một <strong>hàm BỊ CHẶN</strong> (sigmoid — Bài 12).'
+          ]
+        },
+        glossary: [
+          { term: 'XÁC SUẤT', vi: 'khả năng xảy ra', accent: '#34D399',
+            def: 'Một số <b>trong [0, 1]</b>: 0 = chắc chắn không, 1 = chắc chắn có. Ngoài khoảng này là <b>vô nghĩa</b>.',
+            ex: '0.72 = 72% khả năng qua môn. Còn −0.46 hay 1.75 thì không tồn tại.',
+            out: 'mọi model xác suất PHẢI trả về [0,1]' },
+          { term: 'UNBOUNDED', vi: 'không bị chặn', accent: '#F87171',
+            def: 'Đường thẳng <b>w·x + b</b> chạy từ −∞ tới +∞ — không có trần, không có sàn.',
+            ex: 'x càng lớn ŷ càng lớn mãi: x=14 → 1.75; x=−2 → −0.46.',
+            out: 'gốc rễ của lỗi: dùng hàm vô hạn để tả xác suất hữu hạn' },
+          { term: 'THRESHOLD', vi: 'ngưỡng cắt', accent: '#FBBF24',
+            def: 'Cắt tại một mốc (thường 0.5) để đổi số thành <b>NHÃN 0/1</b>.',
+            ex: 'ŷ ≥ 0.5 → Đậu, ngược lại Rớt. Đổi ngưỡng 0.5→0.7 chỉ dịch quyết định.',
+            out: 'cho nhãn hợp lệ · KHÔNG sửa được range output' },
+          { term: 'CLIP', vi: 'ép về khoảng', accent: '#FB923C',
+            def: 'Cắt cụt output về [0,1] cho "đẹp": −0.46 → 0, 1.75 → 1.',
+            ex: 'np.clip(outputs, 0, 1) — nhìn hợp lệ nhưng model bên dưới vẫn tối ưu sai.',
+            out: '⚠ GIẤU triệu chứng, không chữa bệnh' },
+          { term: 'OUTLIER SENSITIVITY', vi: 'nhạy điểm cực đoan', accent: '#A78BFA',
+            def: 'Một điểm cực đoan <b>kéo lệch cả đường</b> — và kéo theo cả ranh giới quyết định.',
+            ex: 'thêm 1 SV học 30 giờ: dốc 0.139 → 0.075, ranh giới 4.95 → 5.45, lỗi 5 → 7.',
+            out: 'hồi quy bình phương rất nhạy outlier' },
+          { term: 'BOUNDED FUNCTION', vi: 'hàm bị chặn', accent: '#38BDF8',
+            def: 'Hàm <b>tự nhốt</b> mọi đầu vào vào (0, 1) dù x lớn/nhỏ cỡ nào — đây mới là lời giải.',
+            ex: 'sigmoid: z = −100 → p ≈ 0; z = +100 → p ≈ 1; không bao giờ vượt.',
+            out: 'Bài 12: sigmoid biến score thành xác suất' }
+        ],
+        primer: {
+          goal: [
+            'Đường thẳng vô hạn → output ngoài [0,1]',
+            'Threshold vá nhãn, KHÔNG vá xác suất',
+            'Clip = giấu bệnh → cần hàm bị chặn'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong ống kính bên dưới:</strong> dải xanh là vùng xác suất hợp lệ [0, 1]. Kéo thanh <strong>x (giờ học)</strong> và nhìn đường thẳng: ở x nhỏ nó <strong>chui xuống dưới 0</strong>, ở x lớn nó <strong>vọt lên trên 1</strong>. Cả hai đều là "xác suất" không tồn tại. Đây là bài <strong>khám nghiệm</strong> — nhìn tận mắt cái sai trước khi học lời giải. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Máy tính không báo lỗi khi ta fit đường thẳng lên nhãn 0/1 — <strong>code chạy được không có nghĩa là công thức hóa đúng</strong>. Vấn đề nằm ở bản chất: xác suất bị nhốt trong [0, 1], còn đường thẳng thì chạy vô tận. Hệ quả: model cho ra "xác suất" âm và trên 100%; ta có thể <em>che</em> bằng clip hay <em>lách</em> bằng threshold, nhưng cả hai đều không chạm tới gốc. Lời giải thật là đổi sang một <strong>hàm bị chặn</strong> — đó là Bài 12.',
+        concept_cards: [
+          {
+            icon: 'fa-arrows-up-down',
+            title: 'Đường thẳng không có trần/sàn',
+            body: 'Xác suất phải nằm trong <strong>[0, 1]</strong>. Nhưng <code>ŷ = w·x + b</code> chạy từ −∞ tới +∞: với dữ liệu này, x = −2 cho <strong>−0.46</strong> (âm 46%!) và x = 14 cho <strong>1.75</strong> (175%!). Trong 12 điểm thử, <strong>3 điểm dưới 0</strong> và <strong>3 điểm trên 1</strong>. Sai từ dạng hàm, không phải sai code.'
+          },
+          {
+            icon: 'fa-scissors',
+            title: 'Threshold vá NHÃN, không vá XÁC SUẤT',
+            body: 'Cắt tại 0.5 cho ra nhãn 0/1 hợp lệ — nhưng nó KHÔNG sửa hai chuyện: (1) output thô vẫn ngoài [0,1]; (2) model vẫn tối ưu <strong>sai mục tiêu</strong> (bình phương sai số, hợp cho số liên tục chứ không hợp cho lớp). Đổi ngưỡng chỉ <strong>dịch quyết định</strong>, không đổi bản chất. ⚠ Và 1 <strong>outlier</strong> đủ kéo lệch đường + ranh giới (4.95 → 5.45, lỗi 5 → 7).'
+          },
+          {
+            icon: 'fa-bandage',
+            title: 'Clip = giấu bệnh · cần hàm BỊ CHẶN',
+            body: '<code>np.clip(outputs, 0, 1)</code> ép −0.46 thành 0, 1.75 thành 1 — nhìn thì hợp lệ, nhưng model bên dưới <strong>không hề đổi</strong>: vẫn là đường thẳng, vẫn tối ưu sai. Giấu triệu chứng ≠ chữa bệnh. Lời giải thật: dùng hàm <strong>tự nhốt</strong> output trong (0,1) — <strong>sigmoid</strong>, Bài 12.'
+          }
+        ],
+        /* Hero = ỐNG KÍNH XÁC SUẤT VÔ LÝ (user chốt 2026-07-22) */
+        linreg_audit: {
+          title: 'ỐNG KÍNH XÁC SUẤT VÔ LÝ — ĐƯỜNG THẲNG THÒ KHỎI [0,1]',
+          intro: 'Dải xanh = vùng xác suất hợp lệ <b>[0, 1]</b>. Chấm dưới = Rớt (0), chấm trên = Đậu (1); đường xanh là LinearRegression fit lên nhãn 0/1. Kéo thanh <b>x</b> để soi output — ra ngoài dải là <b>không thể là xác suất</b>. Trả lời câu chốt để mở Bước 2.',
+          x_label: 'study_hours (giờ học)', y_label: 'output',
+          x_min: -3, x_max: 15, y_min: -0.75, y_max: 1.95,
+          w: 0.1386, b: -0.1861, threshold: 0.5, boundary: 4.95,
+          probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+          x0: 14,
+          train_x: [8.0,8.2,3.5,1.2,6.6,5.2,3.3,6.4,1.1,7.4,5.9,0.5,0.7,6.3,8.5,2.2,2.0,9.2,5.1,4.2,6.1,8.2,8.4,1.2,9.4,9.1,3.1,9.3,1.7,2.5,0.6,0.8,3.7,2.3,9.1,7.3,6.8,6.6,8.7,4.4,6.0,1.2,9.3,6.5,0.9,3.1,5.8,8.7,1.5,1.3,8.1,7.0,1.7,4.9,0.9,2.9,4.1,2.3,1.0,0.6],
+          train_y: [1,1,1,0,1,1,0,1,0,1,1,0,0,1,1,0,0,1,1,0,1,1,1,0,1,1,0,1,0,0,0,0,0,0,1,1,1,0,1,1,0,0,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0,0,0,0],
+          riddle: {
+            prompt: 'Với <code>x = 14</code> giờ học, đường thẳng trả về <b>1.75</b>. Đây có thể là một xác suất không?',
+            options: ['KHÔNG — xác suất phải trong [0,1]; cần một hàm BỊ CHẶN', 'Có — 1.75 nghĩa là "rất chắc chắn đậu"', 'Có — chỉ cần làm tròn 1.75 về 1.0 là xong'],
+            answer: 'KHÔNG — xác suất phải trong [0,1]; cần một hàm BỊ CHẶN',
+            wrong: {
+              'Có — 1.75 nghĩa là "rất chắc chắn đậu"': 'Không có mức "chắc chắn hơn 100%". Xác suất lớn nhất là 1 (100%). Con số 1.75 chỉ chứng tỏ dạng hàm SAI — đường thẳng không biết dừng ở đâu.',
+              'Có — chỉ cần làm tròn 1.75 về 1.0 là xong': 'Đó chính là <b>clip</b> — giấu triệu chứng. Model bên dưới vẫn là đường thẳng vô hạn, vẫn tối ưu sai mục tiêu; lần sau gặp x lớn hơn nó lại vọt ra. Phải đổi DẠNG HÀM, không phải cắt cụt kết quả.'
+            },
+            done: '✅ Đúng — 1.75 không phải xác suất, và đó là lỗi <b>dạng hàm</b> chứ không phải lỗi code. Đường thẳng chạy vô tận nên chắc chắn có lúc thò khỏi [0,1] (ở đây: 3 điểm dưới 0, 3 điểm trên 1). Threshold chỉ vá được NHÃN, clip chỉ che được con số. Lời giải thật: một hàm <b>tự nhốt</b> mọi score vào (0,1) — <b>sigmoid</b>, Bài 12. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'binary_regression_demo (60 train + 12 probe)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: 'x', icon: '📏',
+                note: '<strong>Feature (x)</strong> — train nằm trong 0.5–9.5, nhưng bộ <strong>probe</strong> cố tình trải rộng −2 → 14 để lộ chỗ đường thẳng thò khỏi [0,1].' },
+              { name: 'pass_fail', type: 'INT 0/1', key: 'TARGET', icon: '🎯',
+                note: '<strong>Nhãn nhị phân</strong> — 32 Rớt (0) · 28 Đậu (1). Gán 0/1 rồi fit hồi quy tuyến tính là công thức hóa SAI: ta cần xác suất, không phải số liên tục.' }
+            ]
+          },
+          data_preview: [
+            ['-2.0', '−0.46'], ['-0.5', '−0.26'], ['0.5', '−0.12'], ['1.5', '0.02'],
+            ['3.0', '0.23'], ['4.5', '0.44'], ['5.5', '0.58'], ['7.0', '0.78'],
+            ['8.5', '0.99'], ['10.5', '1.27'], ['12.0', '1.48'], ['14.0', '1.75']
+          ]
+        },
+        mission: 'Dựng <code class="code">BÀI KHÁM NGHIỆM</code>: FIT <code class="code">LinearRegression</code> lên nhãn 0/1 → lấy <code class="code">output THÔ</code> trên probe rộng (đếm điểm ngoài [0,1]) → <code class="code">THRESHOLD</code> 0.5 ra nhãn — kho có <code class="code">mồi bẫy 🪤</code> (clip giấu bệnh · nhảy LogisticRegression né bài) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (range · threshold · outlier) + mini-game vá tạm vs chữa gốc ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Model trả về <code>−0.46</code> cho một học viên. Vấn đề thật sự là gì?',
+            options: [
+              { id: 'a', text: 'Xác suất không thể ÂM — đường thẳng không bị chặn nên sai DẠNG HÀM', correct: true, explanation: 'Đúng — xác suất bị nhốt trong [0,1], còn w·x+b chạy vô tận. Đây là lỗi công thức hóa (dùng sai loại hàm), không phải lỗi cú pháp hay dữ liệu.' },
+              { id: 'b', text: 'Code bị lỗi, cần sửa bug', correct: false, explanation: 'Code chạy hoàn toàn bình thường — đó mới là cái bẫy. "Chạy được" không đồng nghĩa "công thức hóa đúng".' },
+              { id: 'c', text: 'Dữ liệu bẩn, cần làm sạch lại', correct: false, explanation: 'Dữ liệu ổn (nhãn 0/1 hợp lệ). Kể cả dữ liệu sạch tuyệt đối, một đường thẳng vẫn sẽ thò ra ngoài [0,1] ở hai đầu.' },
+              { id: 'd', text: 'Chỉ cần thêm dữ liệu là hết', correct: false, explanation: 'Thêm bao nhiêu dữ liệu thì đường thẳng vẫn là đường thẳng — vẫn vô hạn ở hai đầu. Phải đổi sang hàm bị chặn.' }
+            ]
+          },
+          {
+            question: 'Có người đề xuất: "đổi ngưỡng từ 0.5 sang 0.7 là xong". Đổi ngưỡng thay đổi được điều gì?',
+            options: [
+              { id: 'a', text: 'Chỉ đổi QUYẾT ĐỊNH lớp; output thô vẫn ngoài [0,1] và mục tiêu tối ưu vẫn sai', correct: true, explanation: 'Chuẩn — ngưỡng chỉ là chỗ ta cắt để gán nhãn. Nó không kéo output về [0,1], cũng không đổi việc model đang tối ưu bình phương sai số (mục tiêu của hồi quy, không hợp phân loại).' },
+              { id: 'b', text: 'Kéo được toàn bộ output về trong [0,1]', correct: false, explanation: 'Ngưỡng không đụng gì tới giá trị output — 1.75 vẫn là 1.75, chỉ là ta so nó với 0.7 thay vì 0.5.' },
+              { id: 'c', text: 'Biến model thành model xác suất hợp lệ', correct: false, explanation: 'Vẫn không có xác suất nào ở đây — chỉ có một con số không bị chặn và một lát cắt. Muốn xác suất phải có hàm bị chặn.' },
+              { id: 'd', text: 'Không đổi gì cả', correct: false, explanation: 'Có đổi chứ — đổi ngưỡng làm một số mẫu đổi nhãn (quyết định dịch). Chỉ là nó không chữa được cái gốc.' }
+            ]
+          },
+          {
+            question: 'Thêm <strong>một</strong> học viên cực đoan (học 30 giờ, Đậu) rồi fit lại. Chuyện gì xảy ra với đường và ranh giới?',
+            options: [
+              { id: 'a', text: 'Đường THOẢI ra (dốc 0.139 → 0.075), ranh giới dịch 4.95 → 5.45, lỗi phân lớp tăng 5 → 7', correct: true, explanation: 'Đúng — hồi quy bình phương rất nhạy với điểm cực đoan: chỉ 1 điểm đã kéo cả đường thoải xuống, đẩy ranh giới sang phải và làm SAI thêm 2 mẫu. Một model phân loại tốt không nên mong manh như vậy.' },
+              { id: 'b', text: 'Không đổi gì — 1 điểm trên 60 quá nhỏ', correct: false, explanation: 'Vì x=30 nằm rất xa cụm dữ liệu (0.5–9.5) nên nó có đòn bẩy lớn: đủ để kéo dốc từ 0.139 xuống 0.075.' },
+              { id: 'c', text: 'Đường DỐC hơn và ranh giới dịch sang trái', correct: false, explanation: 'Ngược lại — điểm ở x rất lớn với y=1 kéo đuôi phải lên, làm đường THOẢI ra, ranh giới dịch sang PHẢI (4.95 → 5.45).' },
+              { id: 'd', text: 'Output tự động được kéo về trong [0,1]', correct: false, explanation: 'Không — đường vẫn là đường thẳng vô hạn. Thêm outlier chỉ đổi độ dốc/vị trí, không tạo ra trần hay sàn.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Cách nào CHỮA GỐC, cách nào chỉ VÁ TẠM?',
+          instruction: 'Kéo mỗi đề xuất vào đúng ngăn: <strong>🩹 VÁ TẠM</strong> (giấu triệu chứng, model vẫn sai) · <strong>✅ CHỮA GỐC</strong> (đổi đúng chỗ hỏng).',
+          chips: [
+            { id: 'p-clip',  label: 'np.clip output về [0,1]' },
+            { id: 'p-round', label: 'làm tròn 1.75 thành 1.0' },
+            { id: 'p-thr',   label: 'đổi ngưỡng 0.5 → 0.7' },
+            { id: 'c-sig',   label: 'thay đường thẳng bằng hàm BỊ CHẶN (sigmoid)' },
+            { id: 'c-obj',   label: 'đổi mục tiêu tối ưu cho hợp bài phân loại' },
+            { id: 'c-prob',  label: 'mô hình hóa XÁC SUẤT thay vì số liên tục' }
+          ],
+          bins: [
+            { id: 'patch', label: '🩹 VÁ TẠM',  correct: 'true' },
+            { id: 'cure',  label: '✅ CHỮA GỐC', correct: 'true' }
+          ],
+          solution: {
+            'p-clip': 'patch', 'p-round': 'patch', 'p-thr': 'patch',
+            'c-sig': 'cure', 'c-obj': 'cure', 'c-prob': 'cure'
+          },
+          success: 'Chuẩn — clip / làm tròn / đổi ngưỡng đều chỉ động vào KẾT QUẢ, model bên dưới vẫn là đường thẳng tối ưu sai mục tiêu. Chữa gốc là đổi DẠNG HÀM (bị chặn) và đổi MỤC TIÊU cho hợp phân loại. Đó là recipe Bước 3 sắp dựng — và là nội dung Bài 12.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — fit → output thô → threshold. 2 mồi bẫy: clip / LogisticRegression ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'model = LinearRegression().fit(X_train, y_train)', slot: 'b1' },
+          { type: 'py', token: 'linear_outputs = model.predict(X_probe)', slot: 'b2' },
+          { type: 'py', token: 'classes = (linear_outputs >= 0.5).astype(int)', slot: 'b3' },
+          /* 2 mồi bẫy — khớp đúng 2 Risk của grader */
+          { type: 'py', token: 'linear_outputs = np.clip(model.predict(X_probe), 0, 1)', slot: 't1' },
+          { type: 'py', token: 'model = LogisticRegression().fit(X_train, y_train)', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l11-fit', accepts: ['py'], multi: false },
+          { id: 'l11-raw', accepts: ['py'], multi: false },
+          { id: 'l11-thr', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'BÀI KHÁM NGHIỆM — 3 TRẠM · ĐƯỜNG THẲNG LÀM XÁC SUẤT?',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'binary_regression_demo · 60 dòng train (32 Rớt · 28 Đậu) + 12 probe trải rộng −2 → 14' },
+          done_note: 'Kết luận khám nghiệm: đường thẳng fit được nhãn 0/1 và chạy không lỗi, NHƯNG 3 output < 0 và 3 output > 1 — không thể là xác suất. Threshold cho nhãn hợp lệ mà không sửa được range; clip chỉ giấu. Cần hàm BỊ CHẶN → Bài 12 (sigmoid). Bước 4 tự chạy audit bằng scikit-learn thật.',
+          stations: [
+            {
+              zones: ['l11-fit'],
+              icon: '📐', label: 'TRẠM 1 — FIT ĐƯỜNG THẲNG', sub: 'LinearRegression trên nhãn 0/1', result_kind: 'linaudit',
+              lin: {
+                mode: 'fit', w: 0.1386, b: -0.1861,
+                note: '<code>LinearRegression().fit(X_train, y_train)</code> — 60 nhãn 0/1, chạy trơn tru, không một lỗi nào. Đường thu được: <b>ŷ = 0.139·x − 0.186</b>. Dải xanh là vùng xác suất hợp lệ [0,1] — hãy để ý đường không hề dừng ở mép dải.'
+              },
+              narration: 'Máy KHÔNG báo lỗi khi ta fit đường thẳng lên nhãn 0/1 — đó là cái bẫy: chạy được không có nghĩa công thức hóa đúng. Trạm sau sẽ soi output ở vùng rộng hơn.'
+            },
+            {
+              zones: ['l11-raw'],
+              icon: '🔬', label: 'TRẠM 2 — OUTPUT THÔ', sub: 'probe rộng: đếm ngoài [0,1]', result_kind: 'linaudit',
+              lin: {
+                mode: 'probe', w: 0.1386, b: -0.1861, probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+                note: '<code>linear_outputs = model.predict(X_probe)</code> trên 12 điểm trải rộng −2 → 14 (cố tình vượt dải train). Kết quả: <b>3 điểm < 0</b> (x=−2 → <b>−0.46</b>) và <b>3 điểm > 1</b> (x=14 → <b>1.75</b>). Xác suất âm 46% và 175% — vô nghĩa.'
+              },
+              narration: 'Giữ output THÔ, không clip: đây chính là bằng chứng. Đường thẳng vô hạn nên luôn có vùng x làm nó thò khỏi [0,1] — không phải lỗi ngẫu nhiên mà là hệ quả tất yếu của dạng hàm.'
+            },
+            {
+              zones: ['l11-thr'],
+              icon: '✂️', label: 'TRẠM 3 — THRESHOLD 0.5', sub: 'ra nhãn, range vẫn hỏng', result_kind: 'linaudit',
+              lin: {
+                mode: 'threshold', w: 0.1386, b: -0.1861, threshold: 0.5, probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+                note: '<code>classes = (linear_outputs >= 0.5).astype(int)</code> — cắt tại 0.5 (ranh giới x ≈ <b>4.95</b>) cho ra nhãn 0/1 hợp lệ. Nhưng output thô <b>vẫn</b> ngoài [0,1] và model <b>vẫn</b> tối ưu sai mục tiêu. Threshold vá NHÃN, không vá XÁC SUẤT.'
+              },
+              narration: 'Ta có nhãn dùng được, nhưng không có xác suất tin được. Muốn xác suất thật thì phải đổi dạng hàm — hàm tự nhốt output trong (0,1). Đó là sigmoid, Bài 12.'
+            }
+          ]
+        },
+        expected_sql: 'model = LinearRegression().fit(X_train, y_train) linear_outputs = model.predict(X_probe) classes = (linear_outputs >= 0.5).astype(int)',
+        expected_zones: {
+          'l11-fit': 'model = LinearRegression().fit(X_train, y_train)',
+          'l11-raw': 'linear_outputs = model.predict(X_probe)',
+          'l11-thr': 'classes = (linear_outputs >= 0.5).astype(int)'
+        },
+        reveal_hints: {
+          'l11-fit': 'Trạm 1: fit đúng model "sai" để khám nghiệm — <strong>model = LinearRegression().fit(X_train, y_train)</strong>.',
+          'l11-raw': 'Trạm 2: giữ output THÔ (không clip) — <strong>linear_outputs = model.predict(X_probe)</strong>.',
+          'l11-thr': 'Trạm 3: cắt ngưỡng ra nhãn — <strong>classes = (linear_outputs >= 0.5).astype(int)</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'BÀI KHÁM NGHIỆM — 3 TRẠM · ĐƯỜNG THẲNG LÀM XÁC SUẤT?',
+        table_sub: 'binary_regression_demo · 60 train (0/1) + 12 probe',
+        idle_sub: '60 nhãn 0/1 · ▶ chạy để fit, soi output thô và cắt ngưỡng',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'binary_regression_demo',
+          columns: ['study_hours', 'pass_fail'],
+          dataRows: [
+            ['8.0', '1'], ['8.2', '1'], ['3.5', '1'], ['1.2', '0'], ['6.6', '1'],
+            ['5.2', '1'], ['3.3', '0'], ['6.4', '1'], ['1.1', '0'], ['7.4', '1'],
+            ['5.9', '1'], ['0.5', '0'], ['0.7', '0'], ['6.3', '1'], ['8.5', '1'],
+            ['2.2', '0'], ['2.0', '0'], ['9.2', '1'], ['5.1', '1'], ['4.2', '0'],
+            ['6.1', '1'], ['1.2', '0'], ['9.4', '1'], ['3.1', '0'], ['1.7', '0'],
+            ['0.6', '0'], ['3.7', '0'], ['2.3', '0'], ['9.1', '1'], ['4.4', '1']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: audit LinearRegression bằng scikit-learn thật. Grader: grade_lesson11
+         (linear_outputs THÔ khớp ref + classes 0/1; Risk bắt clip / LogisticRegression; Behavior probe ẩn). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp bài khám nghiệm. Giờ chạy <strong>scikit-learn thật</strong>: nạp dữ liệu, fit <code>LinearRegression</code> lên nhãn 0/1, dự đoán trên <code>X_probe</code> giữ <strong>output THÔ</strong> (<code>linear_outputs</code>), cắt ngưỡng 0.5 ra <code>classes</code>, rồi <strong>đếm</strong> bao nhiêu output dưới 0 và trên 1. Hệ thống chấm dùng <strong>bộ probe ẩn</strong> — số đếm phải tính từ model thật, không gõ tay.',
+          context: {
+          scenario: 'Đây là bài AUDIT: mục tiêu là nhìn tận mắt cái sai, nên phải fit đúng cái model "sai" đó. Hai đường tắt đều bị chặn: <code>np.clip</code> ép output về [0,1] là <strong>giấu triệu chứng</strong> (tầng Risk bắt), và nhảy thẳng sang <code>LogisticRegression</code> là <strong>né mất bài khám nghiệm</strong>. Giữ nguyên giá trị thô mới là audit trung thực.',
+          real_world: 'Bài học nghề: một pipeline có thể chạy sạch, không warning, vẫn cho ra kết quả vô nghĩa vì <strong>công thức hóa sai</strong>. Người làm ML giỏi luôn kiểm miền giá trị đầu ra (output có nằm trong khoảng hợp lệ không?) trước khi tin vào con số — nhất là khi con số đó sắp được gọi là "xác suất".',
+          steps: [
+            'Nạp <code>X_train, y_train, X_probe</code> từ bộ demo nhị phân.',
+            'Fit <code>LinearRegression</code> lên nhãn 0/1 (đúng model cần khám nghiệm).',
+            'Dự đoán trên <code>X_probe</code> và <strong>giữ nguyên</strong> giá trị thô vào <code>linear_outputs</code> — không clip.',
+            'Cắt ngưỡng 0.5 ra <code>classes</code>; in số output dưới 0 và trên 1 · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Sau khi predict, gõ <code>print(linear_outputs.round(2))</code> để thấy cả 12 giá trị — chú ý hai đầu.',
+          expected: 'Console in <code>Below 0: 3</code> và <code>Above 1: 3</code>. Đủ 4 tầng xanh. Thử <code>np.clip</code> cho "đẹp"? Code vẫn chạy — nhưng tầng Risk sẽ giải thích vì sao đó là giấu bệnh.'
+        },
+        hints: [
+          { level: 1, text: 'Bốn việc: nạp dữ liệu → fit LinearRegression → predict giữ thô → cắt ngưỡng + đếm. Không clip, không đổi sang LogisticRegression.' },
+          { level: 2, text: 'Đầu bài: <code>import numpy as np</code>, <code>from sklearn.linear_model import LinearRegression</code>, <code>from ml_lab import load_binary_regression_demo</code>, rồi <code>X_train, y_train, X_probe = load_binary_regression_demo()</code>.' },
+          { level: 3, text: 'Fit + predict: <code>model = LinearRegression().fit(X_train, y_train)</code> rồi <code>linear_outputs = model.predict(X_probe)</code> (GIỮ THÔ). Nhãn: <code>classes = (linear_outputs >= 0.5).astype(int)</code>. Đếm: <code>np.sum(linear_outputs < 0)</code> và <code>np.sum(linear_outputs > 1)</code>.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>import numpy as np<br>from sklearn.linear_model import LinearRegression<br>from ml_lab import load_binary_regression_demo<br>X_train, y_train, X_probe = load_binary_regression_demo()<br>model = LinearRegression().fit(X_train, y_train)<br>linear_outputs = model.predict(X_probe)<br>classes = (linear_outputs >= 0.5).astype(int)<br>print("Below 0:", np.sum(linear_outputs &lt; 0))<br>print("Above 1:", np.sum(linear_outputs &gt; 1))</code>' }
+        ],
+        grader_fn: 'grade_lesson11',
+        success_message: 'Khám nghiệm hoàn tất — 3 output < 0 và 3 output > 1, giữ nguyên thô không che đậy. Bạn đã chứng minh bằng số: đường thẳng KHÔNG thể làm model xác suất, và clip/threshold chỉ vá bề mặt. Bài 12: sigmoid — hàm tự nhốt mọi score vào (0,1), biến điểm số thành xác suất thật.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l12', index: 12, title: 'Sigmoid — biến score thành xác suất',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
     { id: 'c1_l13', index: 13, title: 'Decision Boundary — luật tách 2 lớp',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
     { id: 'c1_l14', index: 14, title: 'Underfit, Good Fit và Overfit',                module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 },

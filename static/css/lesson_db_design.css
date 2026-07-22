@@ -12259,3 +12259,36 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 
 /* 2) MAP — loss curve scene (dùng lại .mlf-reg-head/.mlf-reg-svg) */
 .mlf-gdc-scene { display: flex; flex-direction: column; gap: 8px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ML ĐỢT 16 (2026-07-22) — BÀI 11 "Vì sao Linear Regression không phân loại được"
+ * ỐNG KÍNH XÁC SUẤT VÔ LÝ (hero) + linaudit (map, dùng lại .mlf-reg-*)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+.lra-plot { border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 12px; background: rgba(11, 18, 32, 0.5); padding: 10px 12px; }
+.lra-svg { width: 100%; height: auto; display: block; }
+.lra-ctrl { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.lra-row { display: grid; grid-template-columns: 210px 1fr; align-items: center; gap: 12px; }
+.lra-lab { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-300); }
+.lra-lab b { color: var(--text-50); }
+.lra-lab output { color: #FCD34D; font-weight: 700; }
+.lra-slider { width: 100%; accent-color: #FCD34D; cursor: pointer; }
+.lra-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 8px; border-top: 1px dashed rgba(148, 163, 184, 0.16); }
+.lra-stat { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-400); }
+.lra-stat b { color: var(--text-50); font-size: 14px; }
+.lra-verdict { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #6EE7B7; }
+.lra.is-bad .lra-verdict { color: #FCA5A5; }
+.lra-count { margin-left: auto; font-size: 11.5px; color: var(--text-400); }
+.lra-count b { color: #FCA5A5; font-family: 'JetBrains Mono', monospace; }
+.lra-slider:focus-visible { outline: 2px solid #7DD3FC; outline-offset: 2px; }
+@media (max-width: 720px) { .lra-row { grid-template-columns: 1fr; gap: 4px; } .lra-count { margin-left: 0; } }
+
+/* ═══ ĐỢT 17 (2026-07-22) — SÂN KHẤU MAP: cảnh biểu đồ không được cắt trục dưới ═══
+   .mlf-stage-body max-height:200px được chỉnh cho BẢNG NGUỒN lúc idle, nhưng cảnh
+   biểu đồ (.mlf-reg-svg dùng chung cho regline B8 / mse B9 / gd_curve B10 / linaudit B11)
+   render ~277px → ~28% đáy rơi vào vùng cuộn: mất trục x, mất điểm y thấp, và ở Bài 11
+   mất luôn nửa bằng chứng "3 điểm < 0". Nới riêng khi thân đang chứa cảnh biểu đồ. */
+.mlf-stage-body:has(.mlf-reg-svg) { max-height: 320px; }
+/* Chiều cao SVG = bề rộng cột × tỉ lệ viewBox → nới thân thôi không đủ ở màn rộng.
+   Chặn thẳng trên SVG: preserveAspectRatio mặc định (meet) thu nhỏ TRỌN nội dung
+   vào khung, không méo, không cắt — đúng ở mọi bề rộng cột. */
+.mlf-reg-svg { max-height: 276px; }

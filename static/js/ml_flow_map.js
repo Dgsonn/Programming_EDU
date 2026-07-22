@@ -249,6 +249,24 @@
       const r = gdRun(gd.lr || 0.01, gd.steps || 200);
       return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">MSE ' + Math.round(r.hist[0]) + ' → ' + Math.round(r.hist[r.hist.length - 1]) + '</span></div>';
     }
+    /* Bài 11 — AUDIT LinearRegression trên nhãn 0/1: node theo mode */
+    if (k === 'linaudit') {
+      const la = st.lin || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">audit → ?</span></div>';
+      if (la.mode === 'fit') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">ŷ = ' + esc(la.w) + '·x + ' + esc(la.b) + '</span></div>';
+      }
+      const pr = la.probe || [];
+      const lo = pr.map(function (v) { return la.w * v + la.b; });
+      const bel = lo.filter(function (v) { return v < 0; }).length;
+      const abv = lo.filter(function (v) { return v > 1; }).length;
+      if (la.mode === 'probe') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">' + bel + ' &lt; 0</span>' +
+          '<span class="mlf-chip warn">' + abv + ' &gt; 1</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip x">' + pr.length + ' nhãn 0/1</span>' +
+        '<span class="mlf-chip warn">range vẫn hỏng</span></div>';
+    }
     return '';
   }
 
@@ -546,7 +564,7 @@
       const nn = xs.length;
       const xmax = Math.ceil(Math.max.apply(null, xs)) + 1;
       const ymax = Math.ceil(Math.max.apply(null, ys) / 10) * 10 + 10;
-      const W = 480, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+      const W = 480, H = 250, padL = 34, padR = 12, padT = 22, padB = 26;
       const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)); };
       const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)); };
       let grid = '';
@@ -572,7 +590,7 @@
       const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="đường dự đoán">' +
         grid + res + line + preds + pts +
         '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
-        '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">final_score</text></svg>';
+        '<text x="10" y="11" font-size="10" fill="#94A3B8">final_score</text></svg>';
       return '<div class="mlf-scene mlf-reg-scene">' +
         '<div class="mlf-reg-head"><span class="mlf-reg-eq">ŷ = ' + esc(w) + '·x + ' + esc(b) + '</span>' +
           (mode === 'residual' ? '<span class="mlf-reg-err">TỔNG LỖI ≈ <b>' + Math.round(sse).toLocaleString('vi-VN') + '</b></span>' : '') + '</div>' +
@@ -604,7 +622,7 @@
       const w = ms.w || 0, b = ms.b || 0;
       const xmax = Math.ceil(Math.max.apply(null, xs)) + 1;
       const ymax = Math.ceil(Math.max.apply(null, ys) / 10) * 10 + 20;
-      const W = 480, H = 250, padL = 34, padR = 12, padT = 10, padB = 26;
+      const W = 480, H = 250, padL = 34, padR = 12, padT = 22, padB = 26;
       const px = function (v) { return (padL + (v / xmax) * (W - padL - padR)); };
       const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)); };
       let grid = '';
@@ -634,7 +652,7 @@
         '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="MSE ' + esc(ms.mode) + '">' +
           grid + extra + seg + line + pts +
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
-          '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">final_score</text></svg>' +
+          '<text x="10" y="11" font-size="10" fill="#94A3B8">final_score</text></svg>' +
         (ms.note ? '<div class="mlf-qc-note">' + ms.note + '</div>' : '') +
       '</div>';
     }
@@ -644,7 +662,7 @@
       const steps = gd.steps || 200, lr = gd.lr || 0.01;
       const r = gdRun(lr, steps);
       const hist = r.hist;
-      const W = 480, H = 250, padL = 46, padR = 14, padT = 14, padB = 26;
+      const W = 480, H = 250, padL = 46, padR = 14, padT = 24, padB = 26;
       const yMax = Math.max.apply(null, hist);
       const px = function (i) { return (padL + (i / Math.max(1, steps - 1)) * (W - padL - padR)); };
       const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(yMax, v)) / yMax) * (H - padT - padB)); };
@@ -661,8 +679,59 @@
         '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="loss curve MSE theo bước">' +
           grid + '<polyline points="' + poly.trim() + '" fill="none" stroke="#34D399" stroke-width="2.4"/>' +
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">bước →</text>' +
-          '<text x="10" y="' + (padT + 4) + '" font-size="10" fill="#94A3B8">MSE</text></svg>' +
+          '<text x="10" y="11" font-size="10" fill="#94A3B8">MSE</text></svg>' +
         (gd.note ? '<div class="mlf-qc-note">' + gd.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 11 — AUDIT: scatter nhãn 0/1 + đường thẳng thò khỏi dải [0,1] */
+    if (k === 'linaudit') {
+      const la = st.lin || {};
+      const w = la.w, b = la.b, mode = la.mode || 'fit';
+      const pr = la.probe || [];
+      const thr = la.threshold != null ? la.threshold : 0.5;
+      const xMin = -3, xMax = 15, yMin = -0.75, yMax = 1.95;
+      const W = 500, H = 260, padL = 40, padR = 14, padT = 22, padB = 26;
+      const PX = function (v) { return (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR)); };
+      const PY = function (v) { return ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB)); };
+      const yh = function (v) { return w * v + b; };
+      let zones =
+        '<rect x="' + padL + '" y="' + PY(yMax).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(1) - PY(yMax)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(0).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(yMin) - PY(0)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(1).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(0) - PY(1)).toFixed(1) + '" fill="rgba(52,211,153,0.08)"/>';
+      let grid = '';
+      [0, 1].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + PY(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(g).toFixed(1) + '" stroke="rgba(52,211,153,0.45)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + g + '</text>';
+      });
+      if (mode === 'threshold') {
+        grid += '<line x1="' + padL + '" y1="' + PY(thr).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(thr).toFixed(1) + '" stroke="rgba(251,191,36,0.6)" stroke-dasharray="4 3"/>' +
+          '<text x="' + (W - padR - 2) + '" y="' + (PY(thr) - 4).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#FCD34D">ngưỡng ' + thr + '</text>';
+      }
+      let pts = '';
+      table.dataRows.forEach(function (r) {
+        const xv = parseFloat(r[0]), yv = parseFloat(r[1]);
+        pts += '<circle cx="' + PX(xv).toFixed(1) + '" cy="' + PY(yv).toFixed(1) + '" r="2.8" fill="' + (yv ? '#7DD3FC' : '#94A3B8') + '" opacity="0.6"/>';
+      });
+      const line = '<line x1="' + PX(xMin).toFixed(1) + '" y1="' + PY(yh(xMin)).toFixed(1) + '" x2="' + PX(xMax).toFixed(1) + '" y2="' + PY(yh(xMax)).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>';
+      let pm = '';
+      if (mode !== 'fit') {
+        pr.forEach(function (v) {
+          const yv = yh(v), bad = (yv < 0 || yv > 1);
+          const fill = (mode === 'threshold' && !bad) ? (yv >= thr ? '#34D399' : '#94A3B8') : (bad ? '#F87171' : '#34D399');
+          pm += '<circle cx="' + PX(v).toFixed(1) + '" cy="' + PY(yv).toFixed(1) + '" r="' + (bad ? 4.2 : 3.2) + '" fill="' + fill + '" stroke="#0B1220" stroke-width="1"/>';
+        });
+      }
+      const lo = pr.map(yh);
+      const bel = lo.filter(function (v) { return v < 0; }).length;
+      const abv = lo.filter(function (v) { return v > 1; }).length;
+      return '<div class="mlf-scene mlf-reg-scene">' +
+        '<div class="mlf-reg-head"><span class="mlf-reg-eq">ŷ = ' + esc(w) + '·x + ' + esc(b) + '</span>' +
+          (mode !== 'fit' ? '<span class="mlf-reg-err"><b>' + bel + '</b> điểm &lt; 0 · <b>' + abv + '</b> điểm &gt; 1</span>' : '<span class="mlf-reg-err">60 nhãn 0/1 · fit không lỗi</span>') + '</div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="audit đường thẳng trên nhãn nhị phân">' +
+          zones + grid + pts + line + pm +
+          '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
+          '<text x="10" y="11" font-size="10" fill="#94A3B8">output</text></svg>' +
+        (la.note ? '<div class="mlf-qc-note">' + la.note + '</div>' : '') +
       '</div>';
     }
     return '';

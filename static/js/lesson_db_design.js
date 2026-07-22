@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4934,6 +4934,135 @@
     });
   }
 
+  /* ═══ renderLinregAudit — ML Bài 11 (user chốt 2026-07-22): ỐNG KÍNH XÁC SUẤT VÔ LÝ.
+     cfg = { title,intro, w,b, x_min,x_max,y_min,y_max, train_x,train_y, probe:[..], threshold,
+             boundary, x0, x_label,y_label, riddle }
+     Scatter nhãn 0/1 + đường LinearRegression kéo dài; dải [0,1] tô xanh "xác suất hợp lệ",
+     đường thò ra vùng ĐỎ; kéo probe x → ŷ + verdict ❌ khi ngoài [0,1]; đếm điểm vi phạm. ═══ */
+  function renderLinregAudit(mount, cfg) {
+    if (!mount || !cfg) return;
+    const w = cfg.w, b = cfg.b;
+    const xMin = cfg.x_min, xMax = cfg.x_max, yMin = cfg.y_min, yMax = cfg.y_max;
+    const probe = cfg.probe || [];
+    const tx = cfg.train_x || [], ty = cfg.train_y || [];
+    const thr = cfg.threshold != null ? cfg.threshold : 0.5;
+    const rid = cfg.riddle || {};
+    let px0 = cfg.x0 != null ? cfg.x0 : xMax;   // vị trí probe đang soi
+    let interacted = false;
+    const yhat = v => w * v + b;
+    const below = probe.filter(v => yhat(v) < 0).length;
+    const above = probe.filter(v => yhat(v) > 1).length;
+
+    const W = 560, H = 280, padL = 42, padR = 14, padT = 12, padB = 26;
+    const PX = v => (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR));
+    const PY = v => ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB));
+
+    function svg() {
+      // vùng đỏ trên/dưới + dải xanh [0,1]
+      let zones =
+        '<rect x="' + padL + '" y="' + PY(yMax).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(1) - PY(yMax)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(0).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(yMin) - PY(0)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(1).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(0) - PY(1)).toFixed(1) + '" fill="rgba(52,211,153,0.08)"/>';
+      let grid = '';
+      [yMin, 0, thr, 1, yMax].forEach(function (g) {
+        const dash = (g === thr) ? ' stroke-dasharray="4 3"' : '';
+        const col = (g === 0 || g === 1) ? 'rgba(52,211,153,0.45)' : (g === thr ? 'rgba(251,191,36,0.5)' : 'rgba(148,163,184,0.12)');
+        grid += '<line x1="' + padL + '" y1="' + PY(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(g).toFixed(1) + '" stroke="' + col + '"' + dash + '/>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + g + '</text>';
+      });
+      grid += '<text x="' + (W - padR - 2) + '" y="' + (PY(thr) - 4).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#FCD34D">ngưỡng ' + thr + '</text>' +
+        '<text x="' + (padL + 4) + '" y="' + (PY(1) - 4).toFixed(1) + '" font-size="8.5" fill="#6EE7B7">xác suất hợp lệ [0,1]</text>';
+      // điểm train 0/1
+      let pts = '';
+      for (let i = 0; i < Math.min(tx.length, ty.length); i++) {
+        pts += '<circle cx="' + PX(tx[i]).toFixed(1) + '" cy="' + PY(ty[i]).toFixed(1) + '" r="2.6" fill="' + (ty[i] ? '#7DD3FC' : '#94A3B8') + '" opacity="0.55"/>';
+      }
+      // đường thẳng
+      const line = '<line x1="' + PX(xMin).toFixed(1) + '" y1="' + PY(yhat(xMin)).toFixed(1) + '" x2="' + PX(xMax).toFixed(1) + '" y2="' + PY(yhat(xMax)).toFixed(1) + '" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>';
+      // 12 probe marker — đỏ nếu ngoài [0,1]
+      let pm = '';
+      probe.forEach(function (v) {
+        const yv = yhat(v), bad = (yv < 0 || yv > 1);
+        pm += '<circle cx="' + PX(v).toFixed(1) + '" cy="' + PY(yv).toFixed(1) + '" r="' + (bad ? 4.2 : 3.2) + '" fill="' + (bad ? '#F87171' : '#34D399') + '" stroke="#0B1220" stroke-width="1"/>';
+      });
+      // probe đang soi
+      const yv0 = yhat(px0), bad0 = (yv0 < 0 || yv0 > 1);
+      const cur = '<line x1="' + PX(px0).toFixed(1) + '" y1="' + PY(yv0).toFixed(1) + '" x2="' + PX(px0).toFixed(1) + '" y2="' + (H - padB) + '" stroke="' + (bad0 ? '#F87171' : '#FCD34D') + '" stroke-width="1.4" stroke-dasharray="3 3"/>' +
+        '<circle cx="' + PX(px0).toFixed(1) + '" cy="' + PY(yv0).toFixed(1) + '" r="6" fill="none" stroke="' + (bad0 ? '#F87171' : '#FCD34D') + '" stroke-width="2.2"/>';
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="lra-svg" role="img" aria-label="đường thẳng vượt khỏi dải xác suất">' +
+        zones + grid + pts + line + pm + cur +
+        '<text x="' + (W / 2) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
+        '<text x="8" y="' + (padT + 3) + '" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'output') + '</text></svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens lra" aria-label="Ống kính xác suất vô lý">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH XÁC SUẤT VÔ LÝ') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="lra-plot" data-lra-plot>' + svg() + '</div>' +
+        '<div class="lra-ctrl">' +
+          '<div class="lra-row"><label class="lra-lab">🔍 soi tại <b>x</b> = <output data-lra-xout>' + px0 + '</output> giờ</label>' +
+            '<input type="range" class="lra-slider" data-lra-x min="' + xMin + '" max="' + xMax + '" step="0.5" value="' + px0 + '"/></div>' +
+          '<div class="lra-readout">' +
+            '<span class="lra-stat">đường trả về <b data-lra-yhat></b></span>' +
+            '<span class="lra-verdict" data-lra-verdict></span>' +
+            '<span class="lra-count">trong 12 điểm thử: <b>' + below + '</b> điểm &lt; 0 · <b>' + above + '</b> điểm &gt; 1</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-lra-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-lra-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-lra-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-lra-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-lra-plot]');
+    const xOut = mount.querySelector('[data-lra-xout]');
+    const yEl = mount.querySelector('[data-lra-yhat]');
+    const vEl = mount.querySelector('[data-lra-verdict]');
+    const sl = mount.querySelector('[data-lra-x]');
+    const riddleEl = mount.querySelector('[data-lra-riddle]');
+    const sec = mount.querySelector('.lra');
+
+    function paint() {
+      if (plot) plot.innerHTML = svg();
+      const yv = yhat(px0), bad = (yv < 0 || yv > 1);
+      if (xOut) xOut.textContent = px0;
+      if (yEl) yEl.textContent = yv.toFixed(2);
+      if (vEl) vEl.innerHTML = bad
+        ? '❌ <b>KHÔNG</b> phải xác suất' + (yv > 1 ? ' — ' + Math.round(yv * 100) + '% ?!' : ' — số ÂM ?!')
+        : '✅ nằm trong [0,1]';
+      if (sec) sec.classList.toggle('is-bad', bad);
+    }
+    paint();
+    if (sl) sl.addEventListener('input', function () {
+      px0 = parseFloat(sl.value); paint();
+      if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+    });
+
+    const fb = mount.querySelector('[data-lra-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-lra-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-lra-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — xác suất phải trong [0,1].');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   function renderPlanVisual(mount, cfg) {
     if (!mount || !cfg || !Array.isArray(cfg.trees)) return;
     /* v2 (nc_02, user chốt 2026-07-05): bảng giá I/O + tổng 💸 mỗi cây + slider RAM.
@@ -5299,6 +5428,13 @@
         const heroMountGd = document.getElementById('lesson-hero');
         renderGdLens(heroMountGd || pvMount, s1.gd_lens);
         if (heroMountGd) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.linreg_audit) {
+        // ML Bài 11 (user chốt 2026-07-22): ỐNG KÍNH XÁC SUẤT VÔ LÝ — scatter 0/1 + đường thẳng
+        // thò khỏi dải [0,1]; kéo probe x → ŷ + cảnh báo; câu đố 1.75 (spec C1-L11). Vào hero.
+        const heroMountLa = document.getElementById('lesson-hero');
+        renderLinregAudit(heroMountLa || pvMount, s1.linreg_audit);
+        if (heroMountLa) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
