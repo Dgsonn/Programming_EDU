@@ -4407,7 +4407,298 @@ window.LESSON_CONTENT['ml'] = {
         xp_reward: 50
       }
     },
-    { id: 'c1_l12', index: 12, title: 'Sigmoid — biến score thành xác suất',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
+    {
+      id: 'c1_l12',
+      index: 12,
+      title: 'Sigmoid — biến score thành xác suất',
+      subtitle: 'Một hàm tự nhốt mọi score vào (0,1) — tâm ở z = 0, không bao giờ chạm 0 hay 1',
+      module: 13,
+      module_title: 'M4 — Phân loại Logistic',
+      estimated_minutes: 19,
+      xp_reward: 50,
+      drag_type: 'chip',
+      challenge_type: 'full_ide',
+      story: {
+        tag: '🎯 StudyLab · Ticket #12 · LỜI GIẢI CHO #11',
+        hook: 'Ticket #11 khép lại bằng một kết luận khó chịu: đường thẳng <strong>không thể</strong> làm model xác suất — nó trả về <strong>−0.46</strong> và <strong>1.75</strong>. Phòng đào tạo vẫn cần con số "khả năng qua môn". Ticket #12 lắp <strong>bộ phận còn thiếu</strong>: giữ nguyên phần tuyến tính (nó vẫn giỏi việc xếp hạng ai cao ai thấp), nhưng gắn thêm một <strong>máy ép</strong> ở cuối đường ống. Máy này nhận bất kỳ số nào — âm triệu hay dương triệu — và luôn nhả ra một số <strong>nằm gọn trong (0, 1)</strong>. Tên nó là <strong>sigmoid</strong>. Cùng 12 điểm thử của bài trước: đường thẳng cho −0.46…1.75, sigmoid cho <strong>0.015…0.996</strong>.'
+      },
+      achievement: { name: 'Sigmoid — máy ép xác suất', desc: 'phân biệt score z với xác suất p, đọc được đơn điệu + bão hòa, tự cài sigmoid vectorized thay vì clip' },
+
+      step_1: {
+        you_will_learn: {
+          lead: 'Xong bài này, bạn sẽ:',
+          outcomes: [
+            'Phân biệt <strong>score z</strong> (không bị chặn, chỉ để xếp hạng) với <strong>xác suất p</strong> (luôn trong (0,1)).',
+            'Đọc được <strong>đơn điệu</strong> và <strong>bão hòa</strong>: z tăng thì p tăng; z rất lớn thì p tiến sát 1 nhưng <strong>không bao giờ chạm</strong>.',
+            'Tự cài <code>sigmoid(z)</code> <strong>vectorized</strong> bằng hàm mũ — và biết vì sao <code>np.clip</code> không phải sigmoid.'
+          ]
+        },
+        glossary: [
+          { term: 'SCORE (z)', vi: 'điểm tuyến tính', accent: '#FBBF24',
+            def: 'Kết quả phần tuyến tính <b>z = w·x + b</b>. Chạy từ −∞ tới +∞ — <b>không phải xác suất</b>.',
+            ex: 'x = 14 giờ → z = 0.6·14 − 2.97 = 5.43. Số 5.43 chỉ nói "cao", không nói "543%".',
+            out: 'z dùng để XẾP HẠNG · chưa dùng để đọc như khả năng' },
+          { term: 'SIGMOID', vi: 'hàm chữ S', accent: '#38BDF8',
+            def: '<b>σ(z) = 1 / (1 + e^(−z))</b> — nhận mọi số thực, trả về một số trong <b>(0, 1)</b>.',
+            ex: 'σ(−4) = 0.018 · σ(0) = 0.5 · σ(4) = 0.982. Đồ thị là một đường cong chữ S.',
+            out: 'chính là "máy ép" biến score thành xác suất' },
+          { term: 'XÁC SUẤT (p)', vi: 'khả năng ước lượng', accent: '#34D399',
+            def: 'Output của sigmoid: <b>0 &lt; p &lt; 1</b>. Là <b>ước lượng</b> khả năng, không phải lời bảo đảm.',
+            ex: 'p = 0.99 nghĩa là "rất có khả năng đậu" — vẫn có ~1 trên 100 trường hợp không đậu.',
+            out: 'p cao ≠ chắc chắn đúng' },
+          { term: 'ĐƠN ĐIỆU', vi: 'monotonic', accent: '#A78BFA',
+            def: 'z tăng thì p <b>luôn tăng</b>, không bao giờ quay đầu.',
+            ex: 'thứ tự xếp hạng theo z và theo p là <b>y hệt nhau</b> — sigmoid không đảo ai lên ai xuống.',
+            out: 'ép về (0,1) mà KHÔNG làm hỏng thứ tự' },
+          { term: 'BÃO HÒA', vi: 'saturation', accent: '#FB923C',
+            def: 'Ở hai đầu, đường cong <b>nằm ngang</b>: z đổi nhiều mà p gần như không đổi.',
+            ex: 'σ(6) = 0.9975 · σ(10) = 0.999955 · σ(20) = 0.999999998 — tiến sát 1, <b>không chạm</b> 1.',
+            out: 'p = 1.0 tuyệt đối là điều sigmoid không bao giờ nói' },
+          { term: 'VECTORIZED', vi: 'chạy cả mảng', accent: '#7DD3FC',
+            def: 'Viết công thức một lần cho <b>cả mảng</b> — <code>np.exp</code> tự áp lên từng phần tử.',
+            ex: 'một dòng <code>1 / (1 + np.exp(-z))</code> xử lý cả scalar lẫn mảng 41 phần tử.',
+            out: 'không cần vòng lặp · đúng cho mọi hình dạng đầu vào' }
+        ],
+        primer: {
+          goal: [
+            'z = w·x + b là SCORE, chưa phải xác suất',
+            'sigmoid ép mọi z vào (0,1), tâm z=0 → p=0.5',
+            'Đơn điệu + bão hòa · clip KHÔNG phải sigmoid'
+          ],
+          intro: '',
+          example: '🔍 <strong>Trong ống kính bên dưới:</strong> đường ống có hai đoạn — phần tuyến tính cho ra <strong>score z</strong>, rồi <strong>máy ép sigmoid</strong> biến z thành <strong>xác suất p</strong>. Kéo thanh <strong>x</strong> và đọc cả chuỗi <code>x → z → p</code>. Bấm nút để chồng <strong>đường thẳng Bài 11</strong> lên cùng khung: nó thò khỏi dải, còn đường cong thì không — dù bạn kéo x đi tới đâu. Giữ ý này sang Bước 2 👇'
+        },
+        intro: 'Bài trước ta kết luận: cần một <strong>hàm bị chặn</strong>. Sigmoid chính là hàm đó — nhưng nó không thay thế phần tuyến tính, mà <strong>nối tiếp</strong> sau phần tuyến tính. Phần tuyến tính vẫn làm việc cũ (tổng hợp các feature thành một điểm số), sigmoid làm việc mới (đổi thang đo điểm số đó sang thang xác suất). Đây là lý do người ta gọi model kết quả là <em>logistic regression</em>: vẫn là hồi quy tuyến tính bên trong, chỉ khác cái đuôi.',
+        concept_cards: [
+          {
+            icon: 'fa-ruler-horizontal',
+            title: 'z là SCORE, không phải xác suất',
+            body: '<code>z = w·x + b</code> vẫn chạy vô tận như bài trước — và điều đó <strong>không sao cả</strong>, miễn ta đừng đọc z như xác suất. Với 12 điểm thử: z chạy từ <strong>−4.17</strong> tới <strong>5.43</strong>. Việc của z là <strong>xếp hạng</strong>: ai z cao hơn thì khả năng đậu cao hơn. Việc đổi z sang thang 0–1 là của bộ phận khác.'
+          },
+          {
+            icon: 'fa-wave-square',
+            title: 'Sigmoid: tâm ở z = 0, luôn trong (0,1)',
+            body: '<code>σ(z) = 1 / (1 + e^(−z))</code>. Ba mốc phải nhớ: <strong>σ(0) = 0.5</strong> (tâm chữ S), z <strong>âm</strong> → p dưới 0.5, z <strong>dương</strong> → p trên 0.5. Trên 12 điểm thử, p chạy <strong>0.015 → 0.996</strong> — không một điểm nào ra ngoài. Và sigmoid <strong>đơn điệu</strong>: nó ép thang đo lại nhưng giữ nguyên thứ tự xếp hạng của z.'
+          },
+          {
+            icon: 'fa-arrow-right-to-bracket',
+            title: 'Bão hòa · và vì sao clip KHÔNG phải sigmoid',
+            body: 'Hai đầu đường cong nằm ngang dần: σ(6) = 0.9975, σ(20) = 0.999999998 — <strong>tiến sát 1 mà không chạm 1</strong>. Còn <code>np.clip(z, 0, 1)</code> cũng cho số trong [0,1] nhưng là một đường <strong>gãy khúc</strong>: mọi z ≤ 0 bị dồn thành đúng 0, mọi z ≥ 1 thành đúng 1, và ở giữa nó bê nguyên z. Thử z = −3 và z = −0.5: clip cho <strong>0 và 0</strong> (mất hết phân biệt), sigmoid cho <strong>0.047 và 0.378</strong>.'
+          }
+        ],
+        /* Hero = ỐNG KÍNH MÁY ÉP XÁC SUẤT (user chốt 2026-07-22) */
+        sigmoid_lens: {
+          title: 'ỐNG KÍNH MÁY ÉP XÁC SUẤT — x → z → p',
+          intro: 'Dải xanh = vùng xác suất hợp lệ <b>(0, 1)</b>. Đường cong xanh là <b>sigmoid</b>; 12 chấm là bộ điểm thử của Bài 11. Kéo thanh <b>x</b> để đọc cả chuỗi <b>x → z → p</b>, và bấm <b>so với Bài 11</b> để chồng đường thẳng cũ lên. Trả lời câu chốt để mở Bước 2.',
+          x_label: 'study_hours (giờ học)', y_label: 'output',
+          x_min: -3, x_max: 15, y_min: -0.75, y_max: 1.95,
+          w: 0.6, b: -2.97, boundary: 4.95,
+          lin_w: 0.1386, lin_b: -0.1861,
+          probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+          x0: 14,
+          compare_label: 'so với đường thẳng Bài 11',
+          reveal_label: 'Bảng ép chuẩn (bộ score của bài):',
+          reveal: [
+            { z: -4, p: 0.018 }, { z: -1.6, p: 0.168 }, { z: 0, p: 0.5 },
+            { z: 1.6, p: 0.832 }, { z: 4, p: 0.982 }
+          ],
+          riddle: {
+            prompt: 'Máy ép nhận <code>z = 0</code> — đúng chính giữa, không nghiêng về bên nào. Nó nhả ra <b>p</b> bằng bao nhiêu?',
+            options: ['p = 0.5 — đó là tâm của đường cong chữ S', 'p = 0 — vì z bằng 0', 'p = 1 — vì không có gì kéo xuống', 'Tùy dữ liệu — phải fit mới biết'],
+            answer: 'p = 0.5 — đó là tâm của đường cong chữ S',
+            wrong: {
+              'p = 0 — vì z bằng 0': 'Nhầm z với p. Máy ép <b>không</b> giữ nguyên con số — nó đổi thang đo. Thay z = 0 vào <b>1/(1 + e^(−0))</b>: e⁰ = 1, nên p = 1/(1+1) = <b>0.5</b>. Giá trị p = 0 chỉ đạt được khi z = −∞.',
+              'p = 1 — vì không có gì kéo xuống': 'z = 0 là điểm <b>cân bằng</b>, không nghiêng về Đậu cũng không nghiêng về Rớt — nên xác suất phải là 50/50, tức <b>0.5</b>. Muốn p tiến sát 1 thì z phải rất DƯƠNG (σ(6) = 0.9975).',
+              'Tùy dữ liệu — phải fit mới biết': 'Dữ liệu quyết định <b>w và b</b> (tức z bằng bao nhiêu), nhưng sigmoid là một hàm toán <b>cố định</b>: hễ z = 0 thì p = 0.5, ở mọi bài toán, mọi bộ dữ liệu.'
+            },
+            done: '✅ Đúng — <b>σ(0) = 0.5</b> là tâm của chữ S: z âm nằm dưới 0.5, z dương nằm trên 0.5. Ba tính chất khép lại bài: (1) <b>bị chặn</b> — mọi output nằm trong (0,1); (2) <b>đơn điệu</b> — z tăng thì p tăng, thứ tự xếp hạng giữ nguyên; (3) <b>bão hòa</b> — hai đầu nằm ngang, p tiến sát 0 và 1 nhưng không bao giờ chạm. Đó là lý do sigmoid làm được cái mà clip và threshold không làm được. Xuống Bước 2 👇'
+          }
+        },
+        visual: {
+          schema: {
+            table_name: 'sigmoid_demo (12 điểm thử · cùng bộ với Bài 11)',
+            columns: [
+              { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: 'x', icon: '📏',
+                note: '<strong>Feature (x)</strong> — vẫn bộ probe trải rộng −2 → 14 của Bài 11, để so hai model trên <strong>đúng cùng một dữ liệu</strong>.' },
+              { name: 'z_score', type: 'FLOAT · không chặn', key: 'z', icon: '📈',
+                note: '<strong>Score tuyến tính</strong> z = 0.6·x − 2.97, chạy <strong>−4.17 → 5.43</strong>. Ra ngoài [0,1] là bình thường — z không phải xác suất.' },
+              { name: 'probability', type: 'FLOAT ∈ (0,1)', key: 'TARGET', icon: '🎯',
+                note: '<strong>Xác suất</strong> p = σ(z), chạy <strong>0.015 → 0.996</strong>. Không một điểm nào ra ngoài dải — đó là điều đường thẳng Bài 11 không làm được.' }
+            ]
+          },
+          data_preview: [
+            ['-2.0', '−4.17', '0.015'], ['-0.5', '−3.27', '0.037'], ['0.5', '−2.67', '0.065'],
+            ['1.5', '−2.07', '0.112'], ['3.0', '−1.17', '0.237'], ['4.5', '−0.27', '0.433'],
+            ['5.5', '0.33', '0.582'], ['7.0', '1.23', '0.774'], ['8.5', '2.13', '0.894'],
+            ['10.5', '3.33', '0.965'], ['12.0', '4.23', '0.986'], ['14.0', '5.43', '0.996']
+          ]
+        },
+        mission: 'Dựng <code class="code">ĐƯỜNG ỐNG XÁC SUẤT</code>: tính <code class="code">score z</code> tuyến tính → <code class="code">ép qua SIGMOID</code> → đọc <code class="code">bảng xác suất</code> — kho có <code class="code">mồi bẫy 🪤</code> (clip gãy khúc · trả z thô) ↓'
+      },
+
+      /* ----- STEP 2: 3 MCQ (z vs p · bão hòa/đơn điệu · p cao ≠ chắc chắn) + mini-game xếp z theo phía ----- */
+      step_2: {
+        mcq: [
+          {
+            question: 'Một học viên có <code>z = 5.43</code>. Đọc con số này thế nào cho đúng?',
+            options: [
+              { id: 'a', text: 'z là SCORE — chỉ nói bạn này xếp cao; muốn ra xác suất phải ép qua sigmoid (p = 0.996)', correct: true, explanation: 'Chuẩn — z sống trên thang không giới hạn, chỉ có ý nghĩa so sánh (ai cao hơn ai). Sang thang xác suất phải qua máy ép: σ(5.43) = 0.996.' },
+              { id: 'b', text: '543% khả năng đậu', correct: false, explanation: 'Đây đúng là cái bẫy của Bài 11: đọc một số không bị chặn như thể nó là phần trăm. Không tồn tại 543%.' },
+              { id: 'c', text: 'z = 5.43 nghĩa là chắc chắn đậu', correct: false, explanation: 'z lớn chỉ nói "khả năng cao". Sau khi ép: p = 0.996 — rất cao, nhưng vẫn không phải 1.' },
+              { id: 'd', text: 'Phải chia z cho giá trị lớn nhất để ra xác suất', correct: false, explanation: 'Chia cho max cho ra số trong [0,1] nhưng phụ thuộc vào lô dữ liệu đang xét — thêm một mẫu là mọi "xác suất" đổi hết. Sigmoid thì cố định, không phụ thuộc lô.' }
+            ]
+          },
+          {
+            question: 'Tăng z từ 6 lên 20 thì p đổi thế nào?',
+            options: [
+              { id: 'a', text: 'Tăng rất ít — 0.9975 → 0.999999998, tiến sát 1 mà không bao giờ chạm 1 (bão hòa)', correct: true, explanation: 'Đúng — đó là bão hòa: ở hai đầu đường cong gần như nằm ngang, z đổi rất nhiều mà p gần như đứng yên. Và vì mẫu số 1 + e^(−z) luôn lớn hơn 1 nên p luôn nhỏ hơn 1 tuyệt đối.' },
+              { id: 'b', text: 'p vượt qua 1 vì z quá lớn', correct: false, explanation: 'Không bao giờ — đó chính là điểm khác biệt với đường thẳng Bài 11. e^(−z) luôn dương nên mẫu số luôn > 1, do đó p < 1 với mọi z.' },
+              { id: 'c', text: 'p tăng gấp hơn 3 lần vì z tăng hơn 3 lần', correct: false, explanation: 'Quan hệ z → p không tuyến tính. Ở vùng giữa (quanh z = 0) đường cong dốc nhất; ra hai đầu nó thoải dần rồi gần như phẳng.' },
+              { id: 'd', text: 'p giảm vì bão hòa', correct: false, explanation: 'Sigmoid đơn điệu tăng — p không bao giờ giảm khi z tăng. Bão hòa nghĩa là tăng rất chậm, không phải quay đầu.' }
+            ]
+          },
+          {
+            question: 'Model trả về <code>p = 0.99</code> cho một bạn. Phát biểu nào ĐÚNG?',
+            options: [
+              { id: 'a', text: '0.99 là ƯỚC LƯỢNG khả năng — không bảo đảm bạn đó đậu', correct: true, explanation: 'Đúng — xác suất là một ước lượng do model đưa ra dựa trên dữ liệu nó đã thấy. Trong 100 bạn được chấm 0.99, kỳ vọng vẫn có khoảng 1 bạn không đậu. Và nếu model được fit tệ thì con số 0.99 còn có thể sai lệch hơn thế.' },
+              { id: 'b', text: 'Bạn đó chắc chắn đậu, không cần lo', correct: false, explanation: 'Xác suất cao không phải lời bảo đảm. Nhầm "khả năng lớn" thành "chắc chắn" là một trong những sai lầm tốn kém nhất khi dùng model.' },
+              { id: 'c', text: 'Model bị lỗi vì xác suất không được vượt 0.9', correct: false, explanation: 'Không có luật nào chặn ở 0.9 cả. 0.99 hoàn toàn hợp lệ — sigmoid chỉ không cho phép chạm đúng 1.' },
+              { id: 'd', text: 'p = 0.99 nghĩa là 99 bạn trong lớp sẽ đậu', correct: false, explanation: 'Nhầm đối tượng: 0.99 là ước lượng cho <em>riêng bạn này</em>, không phải đếm số bạn trong lớp.' }
+            ]
+          }
+        ],
+        mini_game: {
+          title: 'Score z rơi về phía nào của 0.5?',
+          instruction: 'Mỗi thẻ là một <strong>score z</strong> kèm xác suất sau khi ép. Kéo vào đúng phía: <strong>◀ p &lt; 0.5</strong> (z âm) · <strong>⏺ p = 0.5</strong> (z = 0) · <strong>p &gt; 0.5 ▶</strong> (z dương).',
+          chips: [
+            { id: 'zn5', label: 'z = −5 → p = 0.007' },
+            { id: 'zn1', label: 'z = −1 → p = 0.269' },
+            { id: 'z0',  label: 'z = 0 → p = 0.5' },
+            { id: 'zp1', label: 'z = 1 → p = 0.731' },
+            { id: 'zp5', label: 'z = 5 → p = 0.993' }
+          ],
+          bins: [
+            { id: 'low',  label: '◀ p < 0.5 (z âm)',   correct: 'true' },
+            { id: 'mid',  label: '⏺ p = 0.5 (z = 0)',  correct: 'true' },
+            { id: 'high', label: 'p > 0.5 ▶ (z dương)', correct: 'true' }
+          ],
+          solution: { 'zn5': 'low', 'zn1': 'low', 'z0': 'mid', 'zp1': 'high', 'zp5': 'high' },
+          success: 'Chuẩn — dấu của z quyết định phía: z âm → p dưới 0.5, z = 0 → đúng 0.5, z dương → p trên 0.5. Để ý thêm <strong>độ lớn</strong>: z = −5 và z = −1 cùng nằm dưới 0.5 nhưng cách nhau xa (0.007 vs 0.269) — vì gần tâm thì đường cong dốc, ra xa thì thoải dần. Bước 3: lắp đúng đường ống z → p.'
+        }
+      },
+
+      /* ----- STEP 3: map 3 TRẠM — score z → sigmoid → bảng xác suất. 2 mồi bẫy: clip / z thô ----- */
+      step_3: {
+        ml_pipeline: true,
+        blocks: [
+          { type: 'py', token: 'z = weight * x_probe + bias', slot: 'b1' },
+          { type: 'py', token: 'p = 1 / (1 + np.exp(-z))', slot: 'b2' },
+          { type: 'py', token: 'table = np.column_stack([x_probe, z.round(2), p.round(3)])', slot: 'b3' },
+          /* 2 mồi bẫy — khớp đúng 2 Risk của grader */
+          { type: 'py', token: 'p = np.clip(z, 0, 1)', slot: 't1' },
+          { type: 'py', token: 'p = z', slot: 't2' }
+        ],
+        drop_zones: [
+          { id: 'l12-score', accepts: ['py'], multi: false },
+          { id: 'l12-squash', accepts: ['py'], multi: false },
+          { id: 'l12-table', accepts: ['py'], multi: false }
+        ],
+        ml_flow: {
+          brand: 'ĐƯỜNG ỐNG XÁC SUẤT — 3 TRẠM · SCORE → SIGMOID → p',
+          layout: 'branch',
+          run_label: '▶ Chạy 3 trạm',
+          source: { sub: 'sigmoid_demo · 12 điểm thử (cùng bộ Bài 11) · w = 0.6 · b = −2.97' },
+          done_note: 'Đường ống hoàn chỉnh: phần tuyến tính cho SCORE z (−4.17 → 5.43, không bị chặn — và không sao cả), sigmoid ép z thành XÁC SUẤT p (0.015 → 0.996, không một điểm nào ra ngoài). Hai mồi bẫy đều cho số "trông hợp lệ" nhưng sai bản chất: clip gãy khúc làm mất phân biệt ở hai đầu, còn trả z thô là đọc score như xác suất — đúng lỗi của Bài 11. Bước 4 tự viết hàm sigmoid.',
+          stations: [
+            {
+              zones: ['l12-score'],
+              icon: '📈', label: 'TRẠM 1 — SCORE THÔ', sub: 'z = w·x + b, không bị chặn', result_kind: 'sigmoid_pipe',
+              sig: {
+                mode: 'score', w: 0.6, b: -2.97,
+                probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+                note: '<code>z = weight * x_probe + bias</code> — phần tuyến tính giữ nguyên như mọi bài trước. Trên 12 điểm thử, z chạy từ <b>−4.17</b> tới <b>5.43</b>. Vượt khỏi [0,1] rất nhiều — nhưng ở đây điều đó <b>hoàn toàn bình thường</b>: z là SCORE để xếp hạng, chưa ai gọi nó là xác suất.'
+              },
+              narration: 'Đừng vội sửa z. Bài trước sai không phải vì tính ra số lớn, mà vì ĐỌC số đó như xác suất. Trạm sau mới là chỗ đổi thang đo.'
+            },
+            {
+              zones: ['l12-squash'],
+              icon: '🌊', label: 'TRẠM 2 — ÉP QUA SIGMOID', sub: 'p = 1/(1+e^(−z)) → (0,1)', result_kind: 'sigmoid_pipe',
+              sig: {
+                mode: 'squash', w: 0.6, b: -2.97,
+                probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+                note: '<code>p = 1 / (1 + np.exp(-z))</code> — một dòng, chạy cả mảng. Cùng 12 điểm đó, p giờ nằm trong <b>0.015 → 0.996</b>: <b>0 điểm</b> ra ngoài dải. Tâm chữ S ở z = 0 (ứng với x ≈ <b>4.95</b> — đúng chỗ ranh giới của Bài 11) cho p = 0.5.'
+              },
+              narration: 'Đường thẳng biến thành đường cong chữ S: hai đầu bị bẻ nằm ngang nên không thể vọt ra ngoài, còn thứ tự xếp hạng thì giữ nguyên vì sigmoid đơn điệu tăng.'
+            },
+            {
+              zones: ['l12-table'],
+              icon: '🧾', label: 'TRẠM 3 — BẢNG XÁC SUẤT', sub: '12 dòng x · z · p', result_kind: 'sigmoid_pipe',
+              sig: {
+                mode: 'table', w: 0.6, b: -2.97,
+                probe: [-2, -0.5, 0.5, 1.5, 3, 4.5, 5.5, 7, 8.5, 10.5, 12, 14],
+                note: '<code>table = np.column_stack([x_probe, z.round(2), p.round(3)])</code> — xếp cạnh nhau cả ba cột để đọc một lượt. Nhìn theo chiều tăng của x: z tăng đều (tuyến tính), còn p tăng <b>nhanh ở giữa, chậm dần ở hai đầu</b> — đó chính là bão hòa.'
+              },
+              narration: 'Ba cột cạnh nhau là bức tranh đầy đủ của bài: cùng một dữ liệu, z nói thứ hạng, p nói khả năng. Bước 4 bạn tự viết cái máy ép này.'
+            }
+          ]
+        },
+        expected_sql: 'z = weight * x_probe + bias p = 1 / (1 + np.exp(-z)) table = np.column_stack([x_probe, z.round(2), p.round(3)])',
+        expected_zones: {
+          'l12-score': 'z = weight * x_probe + bias',
+          'l12-squash': 'p = 1 / (1 + np.exp(-z))',
+          'l12-table': 'table = np.column_stack([x_probe, z.round(2), p.round(3)])'
+        },
+        reveal_hints: {
+          'l12-score': 'Trạm 1: phần tuyến tính cho score thô — <strong>z = weight * x_probe + bias</strong>.',
+          'l12-squash': 'Trạm 2: máy ép sigmoid, dùng hàm mũ chứ không cắt cụt — <strong>p = 1 / (1 + np.exp(-z))</strong>.',
+          'l12-table': 'Trạm 3: ghép 3 cột để đọc — <strong>table = np.column_stack([x_probe, z.round(2), p.round(3)])</strong>.'
+        }
+      },
+
+      drag_map: {
+        brand: 'ĐƯỜNG ỐNG XÁC SUẤT — 3 TRẠM · SCORE → SIGMOID → p',
+        table_sub: 'sigmoid_demo · 12 điểm thử · w = 0.6 · b = −2.97',
+        idle_sub: '12 điểm thử · ▶ chạy để tính score, ép sigmoid và đọc bảng',
+        run_label: '▶ Chạy 3 trạm',
+        table: {
+          name: 'sigmoid_demo',
+          columns: ['study_hours', 'pass_fail'],
+          dataRows: [
+            ['-2.0', '0'], ['-0.5', '0'], ['0.5', '0'], ['1.5', '0'],
+            ['3.0', '0'], ['4.5', '0'], ['5.5', '1'], ['7.0', '1'],
+            ['8.5', '1'], ['10.5', '1'], ['12.0', '1'], ['14.0', '1']
+          ]
+        }
+      },
+
+      /* ----- STEP 4: tự viết sigmoid vectorized. Grader: grade_lesson12
+         (cần def sigmoid(z) 1 tham số + dùng exp; output σ(0)=0.5 & khớp ref; Risk bắt clip / trả z thô;
+         Behavior mảng ẩn 41 score trong −30..30 phải đơn điệu + trong (0,1) + khớp công thức). ----- */
+      step_4: {
+        prompt: 'Bước 3 bạn lắp đường ống. Giờ tự tay dựng <strong>cái máy ép</strong>: viết hàm <code>sigmoid(z)</code> nhận <strong>một</strong> tham số, chạy được cho cả <strong>số lẻ</strong> lẫn <strong>mảng NumPy</strong>, rồi ép bộ score của bài và in kết quả. Hệ thống chấm dùng <strong>bộ score ẩn</strong> trải từ −30 tới 30 — hàm phải đúng trên toàn dải đó, không chỉ trên vài số đẹp.',
+        context: {
+          scenario: 'Yêu cầu nghiệm thu của máy ép: (1) nhận mọi số thực, âm hay dương lớn cỡ nào cũng nuốt được; (2) output <strong>luôn nằm trong (0, 1)</strong>, không bao giờ chạm hai mép; (3) <strong>đơn điệu tăng</strong> — score cao hơn thì xác suất cao hơn, không đảo thứ tự; (4) điểm cân bằng <code>z = 0</code> phải cho đúng <strong>0.5</strong>. Hai đường tắt bị chặn: cắt cụt output về [0,1] cho ra một đường <strong>gãy khúc</strong> (mất phân biệt ở hai đầu), và trả thẳng score chưa đổi thang đo thì <strong>chưa ép gì cả</strong>.',
+          real_world: 'Sigmoid là cái đuôi tiêu chuẩn của mọi model phân loại nhị phân — từ logistic regression tới lớp output của mạng nơ-ron. Viết được nó bằng NumPy vectorized (một dòng chạy cho cả mảng, không vòng lặp) là kỹ năng nền: cùng một dòng code chạy cho 5 mẫu hay 5 triệu mẫu.',
+          steps: [
+            'Nạp bộ score của bài bằng <code>load_sigmoid_scores()</code> từ <code>ml_lab</code>.',
+            'Định nghĩa <code>def sigmoid(z):</code> — đúng <strong>một</strong> tham số, dùng hàm mũ của NumPy để đổi thang đo.',
+            'Gọi hàm trên cả mảng score (không viết vòng lặp) và lưu vào <code>probabilities</code>.',
+            'In <code>sigmoid(0)</code> và mảng xác suất đã làm tròn · Run · Submit chấm 4 tầng.'
+          ],
+          hint_explore: 'Muốn soi trước? Gõ <code>print(sigmoid(0))</code> — con số hiện ra phải là mốc bạn đã chốt ở Bước 1.',
+          expected: 'Console in <code>sigmoid(0) = 0.5</code> và mảng <code>[0.018 0.168 0.5 0.832 0.982]</code> cho bộ score của bài. Đủ 4 tầng xanh. Thử cắt cụt bằng <code>np.clip</code> cho nhanh? Code vẫn chạy trong console, nhưng bài chấm chặn ngay từ tầng đầu: sigmoid phải dựng bằng <strong>hàm mũ</strong>, không phải cắt cụt.'
+        },
+        hints: [
+          { level: 1, text: 'Bốn việc: nạp score → định nghĩa hàm 1 tham số → gọi trên cả mảng → in. Không vòng lặp, không clip.' },
+          { level: 2, text: 'Đầu bài: <code>import numpy as np</code> và <code>from ml_lab import load_sigmoid_scores</code>, rồi <code>scores = load_sigmoid_scores()</code>. Công thức toán: <code>σ(z) = 1 / (1 + e^(−z))</code> — trong NumPy, e^(−z) viết là <code>np.exp(-z)</code>.' },
+          { level: 3, text: 'Khung hàm:<br><code>def sigmoid(z):<br>&nbsp;&nbsp;&nbsp;&nbsp;return 1 / (1 + np.exp(-z))</code><br>Vì <code>np.exp</code> tự áp lên từng phần tử nên đúng một dòng này chạy được cho cả số lẻ lẫn mảng. Rồi <code>probabilities = sigmoid(scores)</code>.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>import numpy as np<br>from ml_lab import load_sigmoid_scores<br>scores = load_sigmoid_scores()<br><br>def sigmoid(z):<br>&nbsp;&nbsp;&nbsp;&nbsp;return 1 / (1 + np.exp(-z))<br><br>probabilities = sigmoid(scores)<br>print("sigmoid(0) =", sigmoid(0))<br>print(probabilities.round(3))</code>' }
+        ],
+        grader_fn: 'grade_lesson12',
+        success_message: 'Máy ép hoạt động — σ(0) = 0.5 đúng tâm, cả bộ score ra [0.018, 0.168, 0.5, 0.832, 0.982], và trên bộ ẩn −30…30 hàm vẫn đơn điệu và không bao giờ ra khỏi (0,1). Bạn vừa đóng xong cái đuôi còn thiếu của Bài 11: linear cho score, sigmoid cho xác suất — cộng lại chính là logistic regression. Bài 13: cắt xác suất đó tại một ngưỡng để vẽ ra RANH GIỚI tách hai lớp.',
+        xp_reward: 50
+      }
+    },
     { id: 'c1_l13', index: 13, title: 'Decision Boundary — luật tách 2 lớp',          module: 13, module_title: 'M4 — Phân loại Logistic',      xp_reward: 50 },
     { id: 'c1_l14', index: 14, title: 'Underfit, Good Fit và Overfit',                module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 },
     { id: 'c1_l15', index: 15, title: 'Chia Train / Validation / Test',               module: 14, module_title: 'M5 — Tổng quát hóa',            xp_reward: 50 }

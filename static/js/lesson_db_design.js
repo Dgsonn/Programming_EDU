@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -4953,7 +4953,7 @@
     const below = probe.filter(v => yhat(v) < 0).length;
     const above = probe.filter(v => yhat(v) > 1).length;
 
-    const W = 560, H = 280, padL = 42, padR = 14, padT = 12, padB = 26;
+    const W = 560, H = 280, padL = 42, padR = 14, padT = 24, padB = 26;
     const PX = v => (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR));
     const PY = v => ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB));
 
@@ -4992,7 +4992,7 @@
       return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="lra-svg" role="img" aria-label="đường thẳng vượt khỏi dải xác suất">' +
         zones + grid + pts + line + pm + cur +
         '<text x="' + (W / 2) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
-        '<text x="8" y="' + (padT + 3) + '" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'output') + '</text></svg>';
+        '<text x="8" y="11" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'output') + '</text></svg>';
     }
 
     mount.innerHTML =
@@ -5057,6 +5057,166 @@
         } else {
           btn.classList.add('is-wrong');
           if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — xác suất phải trong [0,1].');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ Bài 12 ML — ỐNG KÍNH MÁY ÉP XÁC SUẤT (x → z → p) ═══
+     Đường cong sigmoid trong dải (0,1) + lớp phủ đường thẳng Bài 11 để so; thanh x đọc
+     cả chuỗi x → z → p; dải "bảng ép chuẩn" của engine; câu đố σ(0). */
+  function renderSigmoidLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const w = cfg.w, b = cfg.b;
+    const lw = cfg.lin_w, lb = cfg.lin_b;
+    const xMin = cfg.x_min, xMax = cfg.x_max, yMin = cfg.y_min, yMax = cfg.y_max;
+    const probe = cfg.probe || [];
+    const rid = cfg.riddle || {};
+    let px0 = cfg.x0 != null ? cfg.x0 : xMax;
+    let cmp = false;              // đang chồng đường thẳng Bài 11?
+    let interacted = false;
+    const zOf = v => w * v + b;
+    const sig = z => 1 / (1 + Math.exp(-z));
+    const pOf = v => sig(zOf(v));
+    const linOf = v => lw * v + lb;
+    const linBad = probe.filter(v => linOf(v) < 0 || linOf(v) > 1).length;
+
+    const W = 560, H = 280, padL = 42, padR = 14, padT = 24, padB = 26;
+    const PX = v => (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR));
+    const PY = v => ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB));
+
+    function svg() {
+      let zones =
+        '<rect x="' + padL + '" y="' + PY(yMax).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(1) - PY(yMax)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(0).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(yMin) - PY(0)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(1).toFixed(1) + '" width="' + (W - padL - padR) + '" height="' + (PY(0) - PY(1)).toFixed(1) + '" fill="rgba(52,211,153,0.08)"/>';
+      let grid = '';
+      [yMin, 0, 0.5, 1, yMax].forEach(function (g) {
+        const mid = (g === 0.5);
+        const col = (g === 0 || g === 1) ? 'rgba(52,211,153,0.45)' : (mid ? 'rgba(56,189,248,0.45)' : 'rgba(148,163,184,0.12)');
+        grid += '<line x1="' + padL + '" y1="' + PY(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(g).toFixed(1) + '" stroke="' + col + '"' + (mid ? ' stroke-dasharray="4 3"' : '') + '/>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + g + '</text>';
+      });
+      grid += '<text x="' + (padL + 4) + '" y="' + (PY(1) - 4).toFixed(1) + '" font-size="8.5" fill="#6EE7B7">xác suất hợp lệ (0,1)</text>';
+      // tâm chữ S: z = 0 ⇔ x = −b/w
+      const xc = -b / w;
+      const center = '<line x1="' + PX(xc).toFixed(1) + '" y1="' + PY(0.5).toFixed(1) + '" x2="' + PX(xc).toFixed(1) + '" y2="' + (H - padB) + '" stroke="rgba(56,189,248,0.35)" stroke-width="1" stroke-dasharray="2 3"/>' +
+        '<circle cx="' + PX(xc).toFixed(1) + '" cy="' + PY(0.5).toFixed(1) + '" r="3.4" fill="#38BDF8"/>' +
+        '<text x="' + (PX(xc) - 9).toFixed(1) + '" y="' + (PY(0.5) - 7).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#7DD3FC">z = 0 → p = 0.5</text>';
+      // đường cong sigmoid
+      let pts = [];
+      for (let i = 0; i <= 160; i++) {
+        const xv = xMin + (xMax - xMin) * (i / 160);
+        pts.push(PX(xv).toFixed(1) + ',' + PY(pOf(xv)).toFixed(1));
+      }
+      const curve = '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
+      // lớp phủ đường thẳng Bài 11
+      let lin = '';
+      if (cmp) {
+        lin = '<line x1="' + PX(xMin).toFixed(1) + '" y1="' + PY(linOf(xMin)).toFixed(1) + '" x2="' + PX(xMax).toFixed(1) + '" y2="' + PY(linOf(xMax)).toFixed(1) + '" stroke="#F87171" stroke-width="2" stroke-dasharray="6 4" opacity="0.9"/>';
+        probe.forEach(function (v) {
+          const yv = linOf(v), bad = (yv < 0 || yv > 1);
+          lin += '<circle cx="' + PX(v).toFixed(1) + '" cy="' + PY(yv).toFixed(1) + '" r="' + (bad ? 3.8 : 2.6) + '" fill="' + (bad ? '#F87171' : 'rgba(248,113,113,0.45)') + '" stroke="#0B1220" stroke-width="1"/>';
+        });
+        lin += '<text x="' + (W - padR - 2) + '" y="' + (PY(linOf(xMax)) - 6).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#FCA5A5">đường thẳng Bài 11 — ' + linBad + ' điểm ngoài dải</text>';
+      }
+      // 12 chấm probe trên đường cong
+      let pm = '';
+      probe.forEach(function (v) {
+        pm += '<circle cx="' + PX(v).toFixed(1) + '" cy="' + PY(pOf(v)).toFixed(1) + '" r="3.2" fill="#34D399" stroke="#0B1220" stroke-width="1"/>';
+      });
+      // điểm đang soi
+      const p0 = pOf(px0);
+      const cur = '<line x1="' + PX(px0).toFixed(1) + '" y1="' + PY(p0).toFixed(1) + '" x2="' + PX(px0).toFixed(1) + '" y2="' + (H - padB) + '" stroke="#FCD34D" stroke-width="1.4" stroke-dasharray="3 3"/>' +
+        '<line x1="' + padL + '" y1="' + PY(p0).toFixed(1) + '" x2="' + PX(px0).toFixed(1) + '" y2="' + PY(p0).toFixed(1) + '" stroke="#FCD34D" stroke-width="1.1" stroke-dasharray="3 3" opacity="0.7"/>' +
+        '<circle cx="' + PX(px0).toFixed(1) + '" cy="' + PY(p0).toFixed(1) + '" r="6" fill="none" stroke="#FCD34D" stroke-width="2.2"/>';
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="sgl-svg" role="img" aria-label="đường cong sigmoid nằm trọn trong dải xác suất">' +
+        zones + grid + center + lin + curve + pm + cur +
+        '<text x="' + (W / 2) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.x_label || 'x') + ' →</text>' +
+        '<text x="8" y="11" font-size="9.5" fill="#94A3B8">' + escapeHtml(cfg.y_label || 'output') + '</text></svg>';
+    }
+
+    const revealHTML = (cfg.reveal || []).map(function (r) {
+      return '<span class="sgl-rv"><b>z=' + r.z + '</b> → <i>' + r.p + '</i></span>';
+    }).join('');
+
+    mount.innerHTML =
+      '<section class="tlens sgl" aria-label="Ống kính máy ép xác suất">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH MÁY ÉP XÁC SUẤT') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="sgl-plot" data-sgl-plot>' + svg() + '</div>' +
+        '<div class="sgl-ctrl">' +
+          '<div class="sgl-row"><label class="sgl-lab">🔍 soi tại <b>x</b> = <output data-sgl-xout>' + px0 + '</output> giờ</label>' +
+            '<input type="range" class="sgl-slider" data-sgl-x min="' + xMin + '" max="' + xMax + '" step="0.5" value="' + px0 + '"/>' +
+            '<button type="button" class="sgl-cmp" data-sgl-cmp aria-pressed="false">⚖ ' + escapeHtml(cfg.compare_label || 'so với đường thẳng Bài 11') + '</button></div>' +
+          '<div class="sgl-chain">' +
+            '<span class="sgl-node">x = <b data-sgl-x1></b></span><span class="sgl-arrow">→</span>' +
+            '<span class="sgl-node is-z">z = w·x + b = <b data-sgl-z></b></span><span class="sgl-arrow">→</span>' +
+            '<span class="sgl-node is-p">p = σ(z) = <b data-sgl-p></b></span>' +
+            '<span class="sgl-verdict" data-sgl-verdict></span>' +
+          '</div>' +
+          (revealHTML ? '<div class="sgl-reveal"><span class="sgl-rv-lab">' + escapeHtml(cfg.reveal_label || 'Bảng ép chuẩn:') + '</span>' + revealHTML + '</div>' : '') +
+        '</div>' +
+        '<div class="dlens-riddle" data-sgl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-sgl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-sgl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-sgl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-sgl-plot]');
+    const xOut = mount.querySelector('[data-sgl-xout]');
+    const x1El = mount.querySelector('[data-sgl-x1]');
+    const zEl = mount.querySelector('[data-sgl-z]');
+    const pEl = mount.querySelector('[data-sgl-p]');
+    const vEl = mount.querySelector('[data-sgl-verdict]');
+    const sl = mount.querySelector('[data-sgl-x]');
+    const cmpBtn = mount.querySelector('[data-sgl-cmp]');
+    const riddleEl = mount.querySelector('[data-sgl-riddle]');
+
+    function paint() {
+      if (plot) plot.innerHTML = svg();
+      const zv = zOf(px0), pv = sig(zv);
+      if (xOut) xOut.textContent = px0;
+      if (x1El) x1El.textContent = px0;
+      if (zEl) zEl.textContent = zv.toFixed(2);
+      if (pEl) pEl.textContent = pv.toFixed(3);
+      if (vEl) vEl.innerHTML = cmp
+        ? '⚖ đường thẳng tại đây: <b>' + linOf(px0).toFixed(2) + '</b>'
+        : '✅ luôn trong (0, 1)';
+    }
+    function openRiddle() {
+      if (interacted) return;
+      interacted = true;
+      if (riddleEl && riddleEl.hidden) riddleEl.hidden = false;
+    }
+    paint();
+    if (sl) sl.addEventListener('input', function () { px0 = parseFloat(sl.value); paint(); openRiddle(); });
+    if (cmpBtn) cmpBtn.addEventListener('click', function () {
+      cmp = !cmp;
+      cmpBtn.classList.toggle('is-on', cmp);
+      cmpBtn.setAttribute('aria-pressed', cmp ? 'true' : 'false');
+      paint(); openRiddle();
+    });
+
+    const fb = mount.querySelector('[data-sgl-fb]');
+    mount.querySelectorAll('.dlens-opt').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-sgl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('.dlens-opt').forEach(function (o) { o.disabled = true; if (o !== btn) o.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-sgl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — thử thay z = 0 vào công thức.');
           setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
         }
       });
@@ -5435,6 +5595,13 @@
         const heroMountLa = document.getElementById('lesson-hero');
         renderLinregAudit(heroMountLa || pvMount, s1.linreg_audit);
         if (heroMountLa) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.sigmoid_lens) {
+        // ML Bài 12 (user chốt 2026-07-22): ỐNG KÍNH MÁY ÉP XÁC SUẤT — đường cong sigmoid
+        // trong dải (0,1) + lớp phủ đường thẳng Bài 11; kéo x đọc chuỗi x → z → p (spec C1-L12).
+        const heroMountSg = document.getElementById('lesson-hero');
+        renderSigmoidLens(heroMountSg || pvMount, s1.sigmoid_lens);
+        if (heroMountSg) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';

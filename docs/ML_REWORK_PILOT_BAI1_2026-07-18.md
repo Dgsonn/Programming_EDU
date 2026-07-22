@@ -472,3 +472,41 @@ Step 1: title + Ticket #11 + 1.75/−0.46; glossary 6; hero svg + 60 điểm + 1
 - **Bài học**: verify bằng suite DOM là chưa đủ cho component trực quan — phải **tự mở ảnh chụp ra nhìn**, và nhìn đúng cái phần tử đang dạy (ở đây là nửa dưới của biểu đồ).
 
 ### Trạng thái khóa: Course 1 cơ bản 11/15 bài xong (M1-M2-M3 trọn + M4 mở màn). Versions: css v25 · content v21 · shell v27 · flowmap v13.
+
+---
+
+## ĐỢT 19 (2026-07-22) — BÀI 12 "Sigmoid — biến score thành xác suất" (spec C1-L12, M4)
+
+### Spec → shell (user chốt 3 quyết định)
+- **Hero = ỐNG KÍNH MÁY ÉP XÁC SUẤT** (`renderSigmoidLens` mới): đường cong S nằm trọn trong dải xanh **(0,1)**, 12 chấm probe (đúng bộ của Bài 11), mốc tâm **z = 0 → p = 0.5** đánh dấu ngay trên đường cong (ứng với x ≈ 4.95 — đúng chỗ ranh giới Bài 11). Thanh **x** đọc cả chuỗi **x → z → p** (`x = 14 → z = 5.43 → p = 0.996`). Nút **⚖ so với đường thẳng Bài 11** chồng đường cũ (nét đứt đỏ) + 12 marker của nó, đếm **6 điểm ngoài dải**, và readout đổi sang giá trị đường thẳng tại điểm đang soi. Dải **"bảng ép chuẩn"** = bộ score engine `[-4, -1.6, 0, 1.6, 4] → [0.018, 0.168, 0.5, 0.832, 0.982]` (spec Screen-3 reveal). Câu đố = micro-check của spec: **σ(0) = ?** → 0.5; done-banner chốt 3 tính chất (bị chặn · đơn điệu · bão hòa).
+- **Đủ 4 micro-skill + misconception** (user chốt): MS-1 z vs p (MCQ 1) · MS-2 số hoá (mini-game xếp 5 score theo phía của 0.5, kèm p chính xác) · MS-3 đơn điệu + bão hòa (MCQ 2: z 6 → 20 cho p 0.9975 → 0.999999998) · MS-4 cài vectorized (Bước 3 + 4). Misconception spec nêu: **p = 0.99 KHÔNG bảo đảm nhãn đúng** (MCQ 3).
+- **Step 3 = map 3 TRẠM** (user chốt): SCORE THÔ (`sigmoid_pipe` mode score — đường thẳng z, dải **−4.17 → 5.43**, chip "không bị chặn") → ÉP QUA SIGMOID (mode squash — đường cong S, **0.015 → 0.996**, chip "0 điểm ngoài dải") → BẢNG XÁC SUẤT (mode table — **lưới 12 ô x·z·p**, nền ngả xanh theo p). Bẫy: `p = np.clip(z, 0, 1)` và `p = z` — đúng 2 Risk mà grader chặn.
+
+### Số thật (w = 0.6 · b = −2.97, tâm đúng ranh giới 4.95 của Bài 11)
+Cùng 12 điểm probe của Bài 11: đường thẳng cho **−0.46 … 1.75** (3 dưới 0, 3 trên 1), sigmoid cho **0.015 … 0.996** (0 điểm ngoài dải). Bão hòa: σ(6) = 0.9975 · σ(10) = 0.999955 · σ(20) = 0.999999998. Clip vs sigmoid trên z = [−3, −0.5, 0.25, 0.8, 3]: clip cho `0, 0, 0.25, 0.8, 1` (mất phân biệt hai đầu), sigmoid cho `0.047, 0.378, 0.562, 0.690, 0.953`.
+
+### Grader (test server-side trước khi dựng)
+`grade_lesson12` 4 tiêu chí: cần `def sigmoid(z)` đúng 1 tham số + có gọi `exp`; output σ(0)=0.5 & khớp ref; Risk bắt clip/z thô; Behavior mảng ẩn 41 score trong −30…30 phải đơn điệu + trong (0,1) + khớp công thức. Kết quả: CORRECT → **4/4**, stdout `sigmoid(0) = 0.5` + `[0.018 0.168 0.5 0.832 0.982]`; `np.clip` và `return z` → **0/4, chặn ngay tầng code** ("sigmoid chuẩn dùng hàm mũ"). ⚠ Đã sửa câu mô tả trong `step_4.expected` cho khớp sự thật — bản nháp ghi nhầm là "tầng Risk sẽ bắt".
+
+### Verify — verify_b12.js: 42/42 pass · 0 pageerror (2 lượt sạch, lượt 2 sau khi vá ĐỢT 20)
+Step 1: title + Ticket #12 + nối B11; glossary 6; hero svg + polyline + ≥13 chấm + slider + nút so sánh, riddle ẩn; dải bảng ép chuẩn 5 mốc; mặc định x=14 → z=5.43 → p=0.996; kéo x=5 → p≈0.5 + riddle mở; rìa trái x=−2 → p=0.015; bật so sánh → nét đứt + 6 điểm ngoài dải + đọc −0.46; sai "p=0" → feedback nhầm z với p; đúng "p=0.5" → done 3 tính chất; explorer 3 cột. Step 2: 3 MCQ + minigame 3 ngăn. Step 3: 4 node branch + 3 zone + 5 khối; 3 trạm đúng số; **lưới 12 ô hiện trọn trong thân**; bẫy clip → chấm bắt. Step 4: không lộ code, trap clip fail + báo "hàm mũ", bản đúng 4/4, console đúng số, modal nhắc Bài 13. Regression B1-B11 + **B11 hero không bị hero mới ghi đè** + Basic B1 + NC. Multi-viewport 1920/1536/1024/768 OK (svg + nút so sánh + chuỗi x→z→p + 4 lựa chọn đều trong màn, 0 h-scroll, map fit); chạy lại vp_b11 sau khi sửa hero dùng chung: 4/4 OK.
+
+### Component mới tái dùng được
+- `renderSigmoidLens` (hero): đường cong + dải hợp lệ + lớp phủ model cũ để đối chiếu + chuỗi readout nhiều tầng + dải reveal + câu đố.
+- `sigmoid_pipe` (ml_flow_map result_kind) 3 mode score/squash/table; mode table dùng **lưới ô** thay bảng dài — cách tránh cuộn trong sân khấu, tái dùng được cho mọi bài cần "đọc N dòng kết quả".
+
+---
+
+## ĐỢT 20 (2026-07-22) — VÁ SHELL đợt 2: 3 lỗi trực quan tự soi ảnh mới thấy
+
+Suite 42/42 xanh vẫn giấu 3 lỗi. Cả 3 chỉ lộ ra khi **mở ảnh chụp element ra nhìn**.
+
+1. **Nhãn trục y trên cùng đè tiêu đề trục — trong HERO** (`1.95` chồng chữ `output`). ĐỢT 17 đã vá đúng lỗi này trong `ml_flow_map.js`, nhưng 2 hero (`renderLinregAudit` B11 + `renderSigmoidLens` B12) có bản vẽ SVG **riêng** nên còn sót. Vá: `padT` 12 → 24, tiêu đề trục xuống hàng riêng `y = 11` — giống hệt cách đã làm ở map.
+2. **Vùng đỏ "trên 1" vẽ sai chỗ** trong cảnh `sigmoid_pipe`: tôi kẹp toạ độ bằng `PY(Math.min(yMax, Math.max(1, yMin)))` nên rect bắt đầu từ đường y=1 rồi **đổ xuống**, phủ mất phần trên của dải hợp lệ (nhìn ra ngay: dải [0.5, 1] bị xám thay vì xanh). Vá: dùng thẳng `PY(yMax)` như bản `linaudit` gốc.
+3. **Note của trạm (`.mlf-qc-note`) bị cắt khỏi thân sân khấu ở TẤT CẢ B8–B12** — đo được thiếu 20–38px ở mọi viewport. ĐỢT 17 mới chỉ lo cho SVG, quên rằng thân còn phải chứa note (3-4 dòng ≈ 55-75px) — tức là **phần chữ giải thích từng trạm đang vô hình**. Vá: `.mlf-reg-svg` max-height 276 → **210**, và mở rộng selector `:has(.mlf-reg-svg, .mlf-sgt-grid)` để cảnh lưới (không có SVG) cũng được nới thân.
+   Đo lại: **30/30 tổ hợp OK** (5 bài × 3 trạm × 2 viewport), `colFit` vẫn true vì không đổi chiều cao layout.
+4. Nhãn `z = 0 → p = 0.5` neo sang TRÁI tâm (`text-anchor="end"`) — bên phải tâm là chỗ đường cong đi lên nên chữ bị đè.
+
+**Bài học lặp lại lần 2**: sửa một lỗi trực quan ở một chỗ thì phải **tìm hết các bản sao của cùng đoạn vẽ** (map có, hero cũng có), và khi nới khung phải tính **toàn bộ nội dung trong khung** chứ không riêng phần tử vừa sửa.
+
+### Trạng thái khóa: Course 1 cơ bản 12/15 bài xong (M1-M2-M3 trọn + M4 2/3). Versions: css v27 · content v22 · shell v30 · flowmap v16.

@@ -267,6 +267,25 @@
       return '<div class="mlf-chips"><span class="mlf-chip x">' + pr.length + ' nhãn 0/1</span>' +
         '<span class="mlf-chip warn">range vẫn hỏng</span></div>';
     }
+    /* Bài 12 — đường ống score → sigmoid → bảng: node theo mode */
+    if (k === 'sigmoid_pipe') {
+      const sg = st.sig || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">z → p ?</span></div>';
+      const pr = sg.probe || [];
+      const zs = pr.map(function (v) { return sg.w * v + sg.b; });
+      const ps = zs.map(function (z) { return 1 / (1 + Math.exp(-z)); });
+      const lo = Math.min.apply(null, zs), hi = Math.max.apply(null, zs);
+      if (sg.mode === 'score') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">z ' + lo.toFixed(2) + ' → ' + hi.toFixed(2) + '</span>' +
+          '<span class="mlf-chip warn">không bị chặn</span></div>';
+      }
+      const pLo = Math.min.apply(null, ps), pHi = Math.max.apply(null, ps);
+      if (sg.mode === 'squash') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">p ' + pLo.toFixed(3) + ' → ' + pHi.toFixed(3) + '</span>' +
+          '<span class="mlf-chip clu clu-1">0 điểm ngoài dải</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip x">' + pr.length + ' dòng · x·z·p</span></div>';
+    }
     return '';
   }
 
@@ -732,6 +751,93 @@
           '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
           '<text x="10" y="11" font-size="10" fill="#94A3B8">output</text></svg>' +
         (la.note ? '<div class="mlf-qc-note">' + la.note + '</div>' : '') +
+      '</div>';
+    }
+    /* Bài 12 — SCORE z (không chặn) → SIGMOID (0,1) → BẢNG x·z·p */
+    if (k === 'sigmoid_pipe') {
+      const sg = st.sig || {};
+      const w = sg.w, b = sg.b, mode = sg.mode || 'score';
+      const pr = sg.probe || [];
+      const zOf = function (v) { return w * v + b; };
+      const sig = function (z) { return 1 / (1 + Math.exp(-z)); };
+      const zs = pr.map(zOf), ps = zs.map(sig);
+
+      /* TRẠM 3 — lưới 12 ô x·z·p (không dùng bảng dài để cảnh không phải cuộn) */
+      if (mode === 'table') {
+        const cells = pr.map(function (v, i) {
+          const t = ps[i];                       // 0..1 → độ đậm màu
+          return '<div class="mlf-sgt-cell" style="--t:' + t.toFixed(3) + '">' +
+            '<span class="mlf-sgt-x">x ' + v + '</span>' +
+            '<span class="mlf-sgt-z">z ' + zs[i].toFixed(2) + '</span>' +
+            '<span class="mlf-sgt-p">p ' + ps[i].toFixed(3) + '</span></div>';
+        }).join('');
+        return '<div class="mlf-scene mlf-sgt-scene">' +
+          '<div class="mlf-reg-head"><span class="mlf-reg-eq">x → z → p</span>' +
+            '<span class="mlf-reg-err">z ' + zs[0].toFixed(2) + ' … ' + zs[zs.length - 1].toFixed(2) +
+            ' · p ' + ps[0].toFixed(3) + ' … ' + ps[ps.length - 1].toFixed(3) + '</span></div>' +
+          '<div class="mlf-sgt-grid">' + cells + '</div>' +
+          (sg.note ? '<div class="mlf-qc-note">' + sg.note + '</div>' : '') +
+        '</div>';
+      }
+
+      const isScore = (mode === 'score');
+      const yMin = isScore ? Math.min(-5, Math.min.apply(null, zs) - 0.6) : -0.35;
+      const yMax = isScore ? Math.max(6, Math.max.apply(null, zs) + 0.6) : 1.35;
+      const xMin = -3, xMax = 15;
+      const W = 500, H = 190, padL = 40, padR = 14, padT = 22, padB = 26;
+      const PX = function (v) { return (padL + ((v - xMin) / (xMax - xMin)) * (W - padL - padR)); };
+      const PY = function (v) { return ((H - padB) - ((v - yMin) / (yMax - yMin)) * (H - padT - padB)); };
+
+      // dải hợp lệ (0,1) + vùng ngoài
+      let zones =
+        '<rect x="' + padL + '" y="' + PY(yMax).toFixed(1) + '" width="' + (W - padL - padR) +
+          '" height="' + Math.max(0, PY(1) - PY(yMax)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(0).toFixed(1) + '" width="' + (W - padL - padR) +
+          '" height="' + Math.max(0, PY(yMin) - PY(0)).toFixed(1) + '" fill="rgba(248,113,113,0.09)"/>' +
+        '<rect x="' + padL + '" y="' + PY(1).toFixed(1) + '" width="' + (W - padL - padR) +
+          '" height="' + Math.max(0, PY(0) - PY(1)).toFixed(1) + '" fill="rgba(52,211,153,0.08)"/>';
+      let grid = '';
+      [0, 1].forEach(function (g) {
+        grid += '<line x1="' + padL + '" y1="' + PY(g).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(g).toFixed(1) + '" stroke="rgba(52,211,153,0.45)"/>' +
+          '<text x="' + (padL - 5) + '" y="' + (PY(g) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#64748B">' + g + '</text>';
+      });
+      let curve = '', pm = '';
+      if (isScore) {
+        // đường thẳng score: vẽ hết khung, marker đỏ vì nằm ngoài (0,1)
+        curve = '<line x1="' + PX(xMin).toFixed(1) + '" y1="' + PY(zOf(xMin)).toFixed(1) + '" x2="' + PX(xMax).toFixed(1) +
+          '" y2="' + PY(zOf(xMax)).toFixed(1) + '" stroke="#FBBF24" stroke-width="2.6" stroke-linecap="round"/>';
+        pr.forEach(function (v, i) {
+          const out = (zs[i] < 0 || zs[i] > 1);
+          pm += '<circle cx="' + PX(v).toFixed(1) + '" cy="' + PY(zs[i]).toFixed(1) + '" r="3.2" fill="' + (out ? '#FBBF24' : '#34D399') + '" stroke="#0B1220" stroke-width="1"/>';
+        });
+        grid += '<text x="' + (padL + 4) + '" y="' + (PY(1) - 4).toFixed(1) + '" font-size="8.5" fill="#6EE7B7">dải (0,1)</text>';
+      } else {
+        const pts = [];
+        for (let i = 0; i <= 140; i++) {
+          const xv = xMin + (xMax - xMin) * (i / 140);
+          pts.push(PX(xv).toFixed(1) + ',' + PY(sig(zOf(xv))).toFixed(1));
+        }
+        curve = '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
+        const xc = -b / w;
+        grid += '<line x1="' + padL + '" y1="' + PY(0.5).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + PY(0.5).toFixed(1) + '" stroke="rgba(56,189,248,0.45)" stroke-dasharray="4 3"/>' +
+          '<circle cx="' + PX(xc).toFixed(1) + '" cy="' + PY(0.5).toFixed(1) + '" r="3.4" fill="#38BDF8"/>' +
+          '<text x="' + (PX(xc) - 9).toFixed(1) + '" y="' + (PY(0.5) - 6).toFixed(1) + '" text-anchor="end" font-size="8.5" fill="#7DD3FC">z = 0 → p = 0.5</text>';
+        pr.forEach(function (v, i) {
+          pm += '<circle cx="' + PX(v).toFixed(1) + '" cy="' + PY(ps[i]).toFixed(1) + '" r="3.2" fill="#34D399" stroke="#0B1220" stroke-width="1"/>';
+        });
+      }
+      const head = isScore
+        ? '<span class="mlf-reg-eq">z = ' + esc(w) + '·x + ' + esc(b) + '</span><span class="mlf-reg-err">z <b>' +
+            zs[0].toFixed(2) + '</b> … <b>' + zs[zs.length - 1].toFixed(2) + '</b> · ngoài (0,1) — score, chưa phải p</span>'
+        : '<span class="mlf-reg-eq">p = 1/(1+e^(−z))</span><span class="mlf-reg-err">p <b>' +
+            Math.min.apply(null, ps).toFixed(3) + '</b> … <b>' + Math.max.apply(null, ps).toFixed(3) + '</b> · <b>0</b> điểm ngoài dải</span>';
+      return '<div class="mlf-scene mlf-reg-scene">' +
+        '<div class="mlf-reg-head">' + head + '</div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="' + (isScore ? 'score tuyến tính không bị chặn' : 'đường cong sigmoid trong dải xác suất') + '">' +
+          zones + grid + curve + pm +
+          '<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="10" fill="#94A3B8">study_hours →</text>' +
+          '<text x="10" y="11" font-size="10" fill="#94A3B8">' + (isScore ? 'z (score)' : 'p (xác suất)') + '</text></svg>' +
+        (sg.note ? '<div class="mlf-qc-note">' + sg.note + '</div>' : '') +
       '</div>';
     }
     return '';
