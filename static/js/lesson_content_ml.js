@@ -2378,7 +2378,7 @@ window.LESSON_CONTENT['ml'] = {
                 note: '<strong>Identifier</strong> — có 4 dòng trùng 100% (mã + mọi cột y hệt) do gộp file. drop_duplicates bỏ 4 dòng: 204 → 200.' },
               { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: '', icon: '',
                 note: '<strong>Feature</strong> — vài ô trống (NaN) + 2 outlier 60 & 45 giờ/tuần. NaN → điền median (6.0); outlier → CẮM CỜ, giữ nguyên.' },
-              { name: 'attendance', type: 'FLOAT · /10', key: '', icon: '',
+              { name: 'attendance', type: 'FLOAT · %', key: '', icon: '',
                 note: '<strong>Chuyên cần hệ 10</strong> — hợp lệ 0–10. Có ô ghi 12 (nhập nhầm, sai phạm vi) + vài ô trống. 12 → NaN → median (6.4).' },
               { name: 'quiz_score', type: 'FLOAT · /10', key: '', icon: '',
                 note: '<strong>Điểm quiz hệ 10</strong> — hợp lệ 0–10. Có ô ghi 15 (sai phạm vi) + vài ô trống. 15 → NaN → median (4.9).' },
@@ -2619,7 +2619,7 @@ window.LESSON_CONTENT['ml'] = {
       challenge_type: 'full_ide',
       story: {
         tag: '🎓 StudyLab · Ticket #06',
-        hook: 'Bảng đã sạch, nhưng Ticket #06 mở ra một cái bẫy tinh vi: 3 cột số <strong>chênh THANG khủng khiếp</strong>. <code>study_hours</code> chạy 0–10, <code>attendance_rate</code> 0–100, còn <code>activity_count</code> (số lượt bấm LMS) lên tới <strong>~2000</strong>. Bạn <strong>Nam</strong> chăm bấm LMS (1 971 lượt) nhưng chỉ tự học 3.1 giờ/tuần — và đã <strong>RỚT</strong>. Bạn <strong>Linh</strong> tự học 10 giờ/tuần, bấm LMS ít (152 lượt) — <strong>ĐẬU</strong>. Trớ trêu: model đo <strong>khoảng cách</strong> sẽ thấy Nam và Linh khác nhau gần như HOÀN TOÀN chỉ vì <code>activity_count</code> lệch 1 819 lượt — còn cái gap ~7 giờ học (thứ THẬT SỰ phân định Đậu/Rớt) thì bị <strong>át tiếng</strong>. Nhiệm vụ: SCALE 3 cột số về cùng âm lượng để không đơn vị nào lấn át.'
+        hook: 'Bảng đã sạch, nhưng Ticket #06 mở ra một cái bẫy tinh vi: 3 cột số <strong>chênh THANG khủng khiếp</strong>. <code>study_hours</code> chạy 0–10, <code>attendance</code> 0–100, còn <code>activity_count</code> (số lượt bấm LMS) lên tới <strong>~2000</strong>. Bạn <strong>Nam</strong> chăm bấm LMS (1 971 lượt) nhưng chỉ tự học 3.1 giờ/tuần — và đã <strong>RỚT</strong>. Bạn <strong>Linh</strong> tự học 10 giờ/tuần, bấm LMS ít (152 lượt) — <strong>ĐẬU</strong>. Trớ trêu: model đo <strong>khoảng cách</strong> sẽ thấy Nam và Linh khác nhau gần như HOÀN TOÀN chỉ vì <code>activity_count</code> lệch 1 819 lượt — còn cái gap ~7 giờ học (thứ THẬT SỰ phân định Đậu/Rớt) thì bị <strong>át tiếng</strong>. Nhiệm vụ: SCALE 3 cột số về cùng âm lượng để không đơn vị nào lấn át.'
       },
       achievement: { name: 'Feature Scaling Engineer — cân âm lượng', desc: 'đưa 3 feature chênh 204× về mean 0/std 1, loại ID/category/target khỏi scaler' },
 
@@ -2692,7 +2692,7 @@ window.LESSON_CONTENT['ml'] = {
           features: [
             { name: 'study_hours', unit: 'giờ/tuần', std: 2.72, mean: 5.2, range: '0.5 – 10',
               note: 'Giờ tự học/tuần. Dải hẹp (0–10) → σ chỉ <b>2.7</b>. Đây là tín hiệu MẠNH của Đậu/Rớt nhưng con số nhỏ nên dễ bị át.' },
-            { name: 'attendance_rate', unit: '%', std: 17.69, mean: 68.5, range: '40 – 100',
+            { name: 'attendance', unit: '%', std: 17.69, mean: 68.5, range: '40 – 100',
               note: 'Tỉ lệ chuyên cần (%). Dải 0–100 → σ ≈ <b>17.7</b>, to hơn giờ học ~6 lần.' },
             { name: 'activity_count', unit: 'lượt LMS', std: 556, mean: 949, range: '3 – 1 982',
               note: 'Số lượt bấm LMS. Dải tới ~2000 → σ ≈ <b>556</b> — TO gấp <b>204×</b> giờ học. Chính nó "hét" át 2 cột kia.' }
@@ -2725,7 +2725,7 @@ window.LESSON_CONTENT['ml'] = {
                 note: '<strong>Identifier</strong> — số thứ tự, KHÔNG mang thông tin đo lường. Đưa vào scaler chỉ tạo z vô nghĩa. ĐỨNG NGOÀI.' },
               { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: '', icon: '',
                 note: '<strong>Feature số</strong> — dải 0.5–10, σ ≈ 2.7. Tín hiệu mạnh của Đậu/Rớt nhưng con số nhỏ → dễ bị át. <strong>SCALE.</strong>' },
-              { name: 'attendance_rate', type: 'FLOAT · %', key: '', icon: '',
+              { name: 'attendance', type: 'FLOAT · %', key: '', icon: '',
                 note: '<strong>Feature số</strong> — dải 40–100, σ ≈ 17.7 (to hơn giờ học ~6×). <strong>SCALE.</strong>' },
               { name: 'activity_count', type: 'INT · lượt LMS', key: '⚠', icon: '📢',
                 note: '<strong>Feature số — KẺ LẤN ÁT</strong>: dải 3–1 982, σ ≈ 556 (gấp 204× giờ học). Chính nó "át tiếng" khi chưa scale. <strong>SCALE.</strong>' },
@@ -2771,9 +2771,9 @@ window.LESSON_CONTENT['ml'] = {
             ]
           },
           {
-            question: 'Bảng có <code>student_id</code>, <code>study_hours</code>, <code>attendance_rate</code>, <code>activity_count</code>, <code>major</code>, <code>pass_fail</code>. Đưa cột nào vào <strong>StandardScaler</strong>?',
+            question: 'Bảng có <code>student_id</code>, <code>study_hours</code>, <code>attendance</code>, <code>activity_count</code>, <code>major</code>, <code>pass_fail</code>. Đưa cột nào vào <strong>StandardScaler</strong>?',
             options: [
-              { id: 'a', text: 'Đúng 3 feature số: study_hours, attendance_rate, activity_count', correct: true, explanation: 'Chuẩn — chỉ scale feature SỐ có nghĩa. ID là định danh, major là chữ (cần encode), pass_fail là target — cả 3 đứng ngoài scaler.' },
+              { id: 'a', text: 'Đúng 3 feature số: study_hours, attendance, activity_count', correct: true, explanation: 'Chuẩn — chỉ scale feature SỐ có nghĩa. ID là định danh, major là chữ (cần encode), pass_fail là target — cả 3 đứng ngoài scaler.' },
               { id: 'b', text: 'Mọi cột số, kể cả student_id và pass_fail', correct: false, explanation: 'student_id chỉ là số thứ tự — scale ra z vô nghĩa; pass_fail là target — không đem chuẩn hóa. "Số" không có nghĩa là "feature để scale".' },
               { id: 'c', text: 'Chỉ activity_count vì nó to nhất', correct: false, explanation: 'Scale phải áp cho CẢ 3 feature số cùng lúc thì chúng mới về chung thang. Scale mỗi activity_count thì study_hours/attendance vẫn lệch nhau.' },
               { id: 'd', text: 'Cả major nữa cho đủ bộ', correct: false, explanation: 'major là chữ (ICT/DS/Space) — StandardScaler chỉ nhận số. Category cần ENCODE (bài sau) rồi mới xử, không nhét vào scaler.' }
@@ -2785,7 +2785,7 @@ window.LESSON_CONTENT['ml'] = {
           instruction: 'Không phải cứ là số thì scale. Kéo mỗi cột vào đúng ngăn: <strong>🎚️ SCALE ngay</strong> (feature số) · <strong>🔤 ENCODE trước</strong> (cột chữ) · <strong>🚫 ĐỨNG NGOÀI</strong> (ID & target).',
           chips: [
             { id: 's-study', label: 'study_hours (0–10)' },
-            { id: 's-att',   label: 'attendance_rate (0–100)' },
+            { id: 's-att',   label: 'attendance (0–100)' },
             { id: 's-act',   label: 'activity_count (0–2000)' },
             { id: 's-major', label: 'major (ICT/DS/Space)' },
             { id: 's-id',    label: 'student_id (định danh)' },
@@ -2812,11 +2812,11 @@ window.LESSON_CONTENT['ml'] = {
       step_3: {
         ml_pipeline: true,
         blocks: [
-          { type: 'py', token: 'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]', slot: 'b1' },
+          { type: 'py', token: 'numeric_cols = ["study_hours", "attendance", "activity_count"]', slot: 'b1' },
           { type: 'py', token: 'X_scaled = StandardScaler().fit_transform(df[numeric_cols])', slot: 'b2' },
           { type: 'py', token: 'means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)', slot: 'b3' },
           /* 2 mồi bẫy — Risk của grader: scale ID / scale target */
-          { type: 'py', token: 'numeric_cols = ["student_id", "study_hours", "attendance_rate", "activity_count"]', slot: 't1' },
+          { type: 'py', token: 'numeric_cols = ["student_id", "study_hours", "attendance", "activity_count"]', slot: 't1' },
           { type: 'py', token: 'X_scaled = StandardScaler().fit_transform(df[numeric_cols + ["pass_fail"]])', slot: 't2' }
         ],
         drop_zones: [
@@ -2837,7 +2837,7 @@ window.LESSON_CONTENT['ml'] = {
               scale_select: {
                 pick: [
                   { col: 'study_hours', std: 2.7 },
-                  { col: 'attendance_rate', std: 17.7 },
+                  { col: 'attendance', std: 17.7 },
                   { col: 'activity_count', std: 556 }
                 ],
                 exclude: [
@@ -2855,7 +2855,7 @@ window.LESSON_CONTENT['ml'] = {
                 mode: 'transform',
                 rows: [
                   { col: 'study_hours', before_std: 2.72, before_mean: 5.2, after_std: 1, after_mean: 0 },
-                  { col: 'attendance_rate', before_std: 17.69, before_mean: 68.5, after_std: 1, after_mean: 0 },
+                  { col: 'attendance', before_std: 17.69, before_mean: 68.5, after_std: 1, after_mean: 0 },
                   { col: 'activity_count', before_std: 556, before_mean: 949, after_std: 1, after_mean: 0 }
                 ],
                 note: 'StandardScaler <b>fit</b> học μ, σ mỗi cột rồi <b>transform</b> đổi z=(x−μ)/σ. Độ lệch chuẩn từ 2.7 / 17.7 / 556 (chênh 204×) <b>đều về 1</b> — cả 3 cột giờ cùng âm lượng.'
@@ -2869,7 +2869,7 @@ window.LESSON_CONTENT['ml'] = {
                 mode: 'verify',
                 rows: [
                   { col: 'study_hours', after_std: 1, after_mean: 0 },
-                  { col: 'attendance_rate', after_std: 1, after_mean: 0 },
+                  { col: 'attendance', after_std: 1, after_mean: 0 },
                   { col: 'activity_count', after_std: 1, after_mean: 0 }
                 ],
                 note: 'Tính <code>means = X_scaled.mean(axis=0)</code> ≈ [0, 0, 0] và <code>stds = X_scaled.std(axis=0)</code> ≈ [1, 1, 1] — bằng chứng scale đúng. Shape vẫn (200, 3): không mất dòng nào, chỉ đổi thang.'
@@ -2878,14 +2878,14 @@ window.LESSON_CONTENT['ml'] = {
             }
           ]
         },
-        expected_sql: 'numeric_cols = ["study_hours", "attendance_rate", "activity_count"] X_scaled = StandardScaler().fit_transform(df[numeric_cols]) means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)',
+        expected_sql: 'numeric_cols = ["study_hours", "attendance", "activity_count"] X_scaled = StandardScaler().fit_transform(df[numeric_cols]) means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)',
         expected_zones: {
-          'l6-cols':  'numeric_cols = ["study_hours", "attendance_rate", "activity_count"]',
+          'l6-cols':  'numeric_cols = ["study_hours", "attendance", "activity_count"]',
           'l6-scale': 'X_scaled = StandardScaler().fit_transform(df[numeric_cols])',
           'l6-check': 'means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)'
         },
         reveal_hints: {
-          'l6-cols':  'Trạm 1: chỉ 3 feature số — <strong>numeric_cols = ["study_hours", "attendance_rate", "activity_count"]</strong> (KHÔNG có student_id/pass_fail).',
+          'l6-cols':  'Trạm 1: chỉ 3 feature số — <strong>numeric_cols = ["study_hours", "attendance", "activity_count"]</strong> (KHÔNG có student_id/pass_fail).',
           'l6-scale': 'Trạm 2: fit rồi transform — <strong>X_scaled = StandardScaler().fit_transform(df[numeric_cols])</strong>.',
           'l6-check': 'Trạm 3: kiểm chứng — <strong>means, stds = X_scaled.mean(axis=0).round(2), X_scaled.std(axis=0).round(2)</strong> ≈ [0,0,0] &amp; [1,1,1].'
         }
@@ -2898,7 +2898,7 @@ window.LESSON_CONTENT['ml'] = {
         run_label: '▶ Chạy 3 trạm',
         table: {
           name: 'student_scaling',
-          columns: ['student_id', 'study_hours', 'attendance_rate', 'activity_count', 'major', 'pass_fail'],
+          columns: ['student_id', 'study_hours', 'attendance', 'activity_count', 'major', 'pass_fail'],
           dataRows: [
             ['20520001', '3.0', '57', '1925', 'ICT', '0'],
             ['20520002', '0.8', '55', '978', 'Space', '0'],
@@ -2931,8 +2931,8 @@ window.LESSON_CONTENT['ml'] = {
         hints: [
           { level: 1, text: 'Đúng recipe Bước 3, thêm import + in kiểm chứng: chọn 3 cột số → StandardScaler fit_transform → in shape + mean/std.' },
           { level: 2, text: 'Đầu bài: <code>from ml_lab import load_scaling_dataset</code>, <code>from sklearn.preprocessing import StandardScaler</code>, <code>df = load_scaling_dataset()</code>.' },
-          { level: 3, text: 'Chọn cột: <code>numeric_cols = ["study_hours", "attendance_rate", "activity_count"]</code> (KHÔNG có student_id/pass_fail). Scale: <code>X_scaled = StandardScaler().fit_transform(df[numeric_cols])</code>. Giữ biến <code>numeric_cols</code> để tầng Risk soi được cột nào bị scale.' },
-          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_scaling_dataset<br>from sklearn.preprocessing import StandardScaler<br>df = load_scaling_dataset()<br>numeric_cols = ["study_hours", "attendance_rate", "activity_count"]<br>scaler = StandardScaler()<br>X_scaled = scaler.fit_transform(df[numeric_cols])<br>print(X_scaled.shape)<br>print(X_scaled.mean(axis=0).round(2))<br>print(X_scaled.std(axis=0).round(2))</code>' }
+          { level: 3, text: 'Chọn cột: <code>numeric_cols = ["study_hours", "attendance", "activity_count"]</code> (KHÔNG có student_id/pass_fail). Scale: <code>X_scaled = StandardScaler().fit_transform(df[numeric_cols])</code>. Giữ biến <code>numeric_cols</code> để tầng Risk soi được cột nào bị scale.' },
+          { level: 4, text: 'Đáp án đầy đủ:<br><code>from ml_lab import load_scaling_dataset<br>from sklearn.preprocessing import StandardScaler<br>df = load_scaling_dataset()<br>numeric_cols = ["study_hours", "attendance", "activity_count"]<br>scaler = StandardScaler()<br>X_scaled = scaler.fit_transform(df[numeric_cols])<br>print(X_scaled.shape)<br>print(X_scaled.mean(axis=0).round(2))<br>print(X_scaled.std(axis=0).round(2))</code>' }
         ],
         grader_fn: 'grade_lesson6',
         success_message: 'Chuẩn — X_scaled (200, 3): mean ≈ 0 · std ≈ 1 mỗi cột, 3 feature cùng âm lượng, còn student_id/major/pass_fail đứng ngoài scaler. Bạn vừa gỡ cái bẫy "đơn vị to át tiếng". Bài 7: đọc dữ liệu bằng thống kê cơ bản — trung bình, độ lệch, tương quan.',
@@ -3041,14 +3041,14 @@ window.LESSON_CONTENT['ml'] = {
             done: '✅ Đúng — r = 0.95 nói study_hours và final_score đi cùng nhau rất chặt, nhưng KHÔNG nói cái nào gây ra cái nào. Ví dụ đời: mùa hè kem bán chạy VÀ số vụ đuối nước tăng — cả hai do trời NÓNG, chứ kem không gây đuối nước. Tương quan gợi ý "chỗ nào đáng đào sâu"; nhân quả cần thí nghiệm. Xuống Bước 2 luyện đọc r 👇'
           },
           /* 200 điểm THẬT (seed 1701) — chia sẻ trục y = final_score */
-          y: [2.4,2.9,6.4,8.1,8.8,9.3,3.5,3.3,10.0,7.7,5.4,2.1,3.3,4.9,10.0,0.0,8.1,2.6,6.8,10.0,10.0,7.7,7.8,4.7,2.6,9.3,6.1,5.4,9.7,7.9,9.7,3.0,4.9,4.2,5.4,9.6,2.3,4.3,10.0,6.1,8.0,10.0,4.2,7.7,2.3,8.2,2.8,6.8,4.8,3.9,2.2,5.3,0.5,2.9,3.0,9.5,7.0,9.5,6.9,9.7,9.4,6.4,3.1,6.5,2.4,9.6,2.7,7.2,9.8,5.1,8.8,1.7,8.5,6.0,5.5,7.3,3.6,10.0,9.5,7.3,5.8,8.3,10.0,2.7,3.1,4.9,5.3,8.7,5.5,5.4,5.2,7.6,4.8,8.8,5.2,9.6,8.9,6.5,8.0,6.1,9.6,8.1,2.1,1.0,7.7,2.0,1.9,2.0,6.3,4.4,3.2,6.5,4.2,6.2,10.0,4.8,3.2,9.0,3.7,10.0,8.9,5.7,7.1,5.8,6.1,9.3,9.9,6.7,2.1,2.3,4.9,7.4,6.1,4.0,7.1,5.0,6.5,3.9,6.1,1.5,3.4,3.7,4.4,9.2,7.9,4.5,4.8,10.0,7.5,10.0,3.2,4.7,6.9,10.0,9.8,4.7,8.6,4.4,3.4,3.4,8.1,8.2,6.6,7.3,2.7,7.2,9.1,5.4,5.8,10.0,3.1,6.3,10.0,7.1,10.0,4.7,4.8,10.0,8.8,1.9,6.8,8.1,7.7,9.7,4.1,7.1,7.8,10.0,1.6,9.7,1.5,5.8,4.1,9.0,10.0,7.6,1.6,4.6,3.5,4.4],
+          y: [24,29,64,81,88,93,35,33,100,77,54,21,33,49,100,0,81,26,68,100,100,77,78,47,26,93,61,54,97,79,97,30,49,42,54,96,23,43,100,61,80,100,42,77,23,82,28,68,48,39,22,53,5,29,30,95,70,95,69,97,94,64,31,65,24,96,27,72,98,51,88,17,85,60,55,73,36,100,95,73,58,83,100,27,31,49,53,87,55,54,52,76,48,88,52,96,89,65,80,61,96,81,21,10,77,20,19,20,63,44,32,65,42,62,100,48,32,90,37,100,89,57,71,58,61,93,99,67,21,23,49,74,61,40,71,50,65,39,61,15,34,37,44,92,79,45,48,100,75,100,32,47,69,100,98,47,86,44,34,34,81,82,66,73,27,72,91,54,58,100,31,63,100,71,100,47,48,100,88,19,68,81,77,97,41,71,78,100,16,97,15,58,41,90,100,76,16,46,35,44],
           x: {
             study_hours: [1.3,1.6,5.4,5.1,8.9,8.4,2.5,1.3,9.7,7.0,3.6,2.1,3.6,4.1,9.4,0.6,7.3,1.8,6.3,9.6,8.3,6.8,6.2,2.6,1.7,7.7,5.8,4.7,9.4,5.1,9.0,1.0,4.0,3.6,5.0,9.2,0.8,4.0,9.7,6.4,6.7,8.8,2.6,7.5,1.0,7.6,2.5,6.5,4.5,2.3,1.0,2.6,1.3,1.1,1.3,8.6,8.9,9.9,7.0,9.5,8.7,6.7,1.4,5.3,2.0,9.9,1.0,5.3,10.0,3.5,8.4,0.9,8.7,5.7,2.8,6.1,2.0,8.8,8.1,6.3,5.6,7.7,9.9,2.3,2.9,5.2,5.9,8.2,2.8,3.5,4.2,6.8,4.1,7.6,3.1,7.9,8.4,5.2,7.7,5.5,9.0,8.0,2.3,0.9,6.8,0.8,1.9,1.1,6.0,2.8,1.4,8.2,3.8,7.0,9.4,4.1,3.9,7.8,1.5,9.6,9.9,5.2,5.6,5.2,3.8,7.5,8.9,7.1,1.7,2.2,3.5,6.2,7.0,3.5,6.2,6.0,6.7,2.9,6.9,0.9,3.8,1.1,3.0,8.1,7.8,3.3,3.5,9.9,8.8,10.0,2.4,2.4,6.4,9.4,7.6,3.1,9.9,3.7,1.8,3.8,9.0,6.6,6.7,7.6,1.6,7.2,9.5,3.2,5.6,9.9,1.0,6.7,8.4,6.3,8.3,3.7,5.2,9.5,8.2,2.3,6.0,7.0,7.0,8.5,3.7,9.0,7.9,9.9,1.0,9.8,0.7,4.5,4.0,7.4,9.0,6.8,2.3,3.2,3.7,3.7],
             quiz_score: [3.2,3.7,5.3,5.7,8.7,7.6,3.9,2.4,10.0,6.5,2.5,3.0,4.1,4.2,9.9,0.3,9.2,2.7,7.1,8.3,8.6,7.2,7.6,3.8,3.7,8.7,6.8,4.9,9.6,4.4,9.3,2.8,3.1,2.7,4.4,8.9,0.6,5.0,10.0,6.3,7.1,9.1,5.1,6.6,2.2,8.7,2.5,8.0,6.0,3.2,1.5,4.9,0.3,2.6,3.2,8.9,9.0,7.8,5.1,8.2,9.2,5.2,3.8,3.8,1.6,7.7,1.8,6.9,8.0,4.3,9.5,1.8,7.2,5.3,4.9,7.1,3.4,9.4,7.2,6.0,4.7,6.3,8.5,2.0,3.6,6.2,4.6,8.1,4.7,5.3,5.0,6.6,6.7,7.3,3.0,7.7,8.9,6.3,7.4,5.4,10.0,8.6,1.6,1.7,7.9,2.9,1.7,1.5,5.9,3.6,2.6,6.5,6.0,7.2,9.6,4.6,2.7,8.2,3.0,10.0,9.0,7.9,5.9,5.1,5.2,7.8,9.7,6.2,3.2,2.1,4.2,6.7,6.2,4.1,7.6,6.2,6.1,3.6,7.0,1.5,4.3,2.7,3.6,8.4,7.7,4.1,4.9,9.3,8.6,9.3,4.0,5.6,7.5,9.7,8.9,4.9,8.1,3.9,2.8,3.0,6.6,7.0,6.8,7.6,3.3,7.0,9.7,4.2,5.9,9.2,1.2,5.3,8.3,7.7,9.1,4.5,5.8,9.9,8.3,2.3,6.9,6.2,8.1,8.0,4.2,8.2,7.9,8.5,2.9,9.1,0.4,5.1,3.1,8.5,8.6,7.6,2.7,3.3,4.1,3.1],
             missed_classes: [6,7,6,4,4,2,7,9,2,3,7,10,10,5,3,8,5,6,3,2,3,8,5,5,8,3,8,6,1,4,2,11,5,6,4,2,9,8,1,5,5,4,8,2,11,1,5,4,5,9,11,10,9,8,7,2,3,7,5,3,3,1,10,4,8,0,8,4,5,7,3,7,5,2,8,2,5,3,3,2,7,3,1,8,7,5,5,2,8,6,9,5,6,4,9,3,5,3,4,6,2,5,7,7,5,7,6,7,5,8,7,4,5,6,1,8,5,4,6,3,3,7,7,9,5,2,0,6,5,9,5,4,5,9,6,6,5,6,6,8,6,11,7,4,5,6,4,2,2,2,8,6,5,2,3,9,3,5,7,6,3,3,5,0,9,4,2,8,6,0,6,7,3,5,4,6,6,3,3,6,8,2,2,5,5,5,6,0,7,4,6,7,4,3,3,4,9,6,6,6],
-            attendance: [2.7,4.0,8.2,5.4,4.8,5.8,1.8,6.8,8.0,6.8,6.7,4.0,3.7,4.3,7.0,3.3,4.3,5.0,4.1,9.9,8.6,9.0,7.9,6.6,2.9,9.1,6.9,6.1,8.7,5.9,6.5,7.2,6.1,5.7,4.2,8.3,2.6,6.2,7.4,6.5,7.2,8.4,3.4,8.5,2.5,4.2,6.7,3.3,2.7,6.4,5.1,5.3,3.1,5.3,5.6,8.5,5.6,8.3,7.0,10.0,7.6,5.6,3.6,8.7,4.8,7.3,5.7,8.0,6.9,8.1,5.5,5.9,7.9,6.2,6.3,7.0,5.5,8.9,6.4,9.1,5.7,8.9,5.8,4.5,7.4,2.8,9.8,5.0,7.1,5.2,6.5,8.7,5.1,7.9,6.5,8.0,5.6,8.1,6.7,7.6,7.0,5.5,3.3,3.2,7.3,5.9,6.1,6.5,5.3,6.3,6.1,7.2,2.8,6.0,10.0,3.3,2.5,8.3,6.2,7.2,3.0,5.9,5.2,5.3,4.1,6.2,4.1,8.1,4.2,5.6,5.1,5.7,4.8,5.2,7.5,3.7,6.0,6.9,3.1,4.1,3.6,4.6,7.5,10.0,8.9,5.3,7.0,10.0,4.1,7.1,4.4,5.3,6.8,9.0,8.9,6.5,8.0,5.7,2.8,2.7,6.6,5.5,7.3,4.9,3.2,3.1,6.1,6.8,6.5,7.4,4.5,6.2,9.5,4.5,7.6,7.0,4.0,8.6,9.6,3.8,7.0,5.6,5.0,8.1,2.6,0.7,7.8,10.0,4.0,8.7,3.5,2.2,6.1,9.2,7.5,7.1,1.5,7.6,6.0,5.4]
+            attendance: [27,40,82,54,48,58,18,68,80,68,67,40,37,43,70,33,43,50,41,99,86,90,79,66,29,91,69,61,87,59,65,72,61,57,42,83,26,62,74,65,72,84,34,85,25,42,67,33,27,64,51,53,31,53,56,85,56,83,70,100,76,56,36,87,48,73,57,80,69,81,55,59,79,62,63,70,55,89,64,91,57,89,58,45,74,28,98,50,71,52,65,87,51,79,65,80,56,81,67,76,70,55,33,32,73,59,61,65,53,63,61,72,28,60,100,33,25,83,62,72,30,59,52,53,41,62,41,81,42,56,51,57,48,52,75,37,60,69,31,41,36,46,75,100,89,53,70,100,41,71,44,53,68,90,89,65,80,57,28,27,66,55,73,49,32,31,61,68,65,74,45,62,95,45,76,70,40,86,96,38,70,56,50,81,26,7,78,100,40,87,35,22,61,92,75,71,15,76,60,54]
           },
-          x_max: { study_hours: 10, quiz_score: 10, missed_classes: 12, attendance: 10, student_id: 200 }
+          x_max: { study_hours: 10, quiz_score: 10, missed_classes: 12, attendance: 100, student_id: 200 }
         },
         visual: {
           schema: {
@@ -3058,13 +3058,13 @@ window.LESSON_CONTENT['ml'] = {
                 note: '<strong>Identifier</strong> — mã số, KHÔNG mang thông tin. r với điểm ≈ 0 (nhiễu). Loại khỏi ma trận phân tích.' },
               { name: 'study_hours', type: 'FLOAT · giờ/tuần', key: '⭐', icon: '',
                 note: '<strong>Feature</strong> — <strong>r = 0.95</strong> với final_score, CAO NHẤT. Học nhiều đi cùng điểm cao (chưa chắc gây ra).' },
-              { name: 'attendance', type: 'FLOAT · /10', key: '', icon: '',
+              { name: 'attendance', type: 'FLOAT · %', key: '', icon: '',
                 note: '<strong>Feature</strong> — r = 0.60, dương VỪA. Quan hệ có nhưng lỏng hơn study/quiz.' },
               { name: 'missed_classes', type: 'INT · buổi', key: '', icon: '',
                 note: '<strong>Feature</strong> — <strong>r = −0.75</strong>, tương quan ÂM: nghỉ càng nhiều điểm càng thấp.' },
               { name: 'quiz_score', type: 'FLOAT · /10', key: '', icon: '',
                 note: '<strong>Feature</strong> — r = 0.93, dương mạnh. Nhưng quiz & final cùng cao có thể do biến ẩn "chăm học".' },
-              { name: 'final_score', type: 'FLOAT · /10', key: 'MỤC TIÊU', icon: '🎯',
+              { name: 'final_score', type: 'FLOAT · /100', key: 'MỤC TIÊU', icon: '🎯',
                 note: '<strong>Điểm cuối kỳ</strong> — cột ta muốn hiểu. Đọc CỘT này trong ma trận để xếp hạng feature.' }
             ]
           },

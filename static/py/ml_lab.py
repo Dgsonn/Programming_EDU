@@ -388,19 +388,19 @@ def load_dirty_student_profile(variant=None):
 # ── Bài 6 — Scale mismatch ───────────────────────────────────────────────────
 def load_scaling_dataset(variant=None):
     """DataFrame 200 dòng: 3 feature số với range chênh nhau hàng trăm lần
-    (study_hours 0-10, attendance_rate 0-100, activity_count 0-2000) + ID,
+    (study_hours 0-10, attendance 0-100, activity_count 0-2000) + ID,
     category và target — để bài học 'đơn vị to át tiếng' và StandardScaler."""
     rng = np.random.RandomState(variant if variant is not None else 1601)
     n = 200
     study_hours = np.round(rng.uniform(0.5, 10.0, n), 1)
-    attendance_rate = np.round(rng.uniform(40, 100, n), 0)
+    attendance = np.round(rng.uniform(40, 100, n), 0)
     activity_count = np.round(rng.uniform(0, 2000, n), 0)
     major = np.array(['ICT', 'DS', 'Space'])[rng.randint(0, 3, n)]
-    pass_fail = ((5.0 * study_hours + 0.3 * attendance_rate + rng.normal(0, 8, n)) >= 55).astype(int)
+    pass_fail = ((5.0 * study_hours + 0.3 * attendance + rng.normal(0, 8, n)) >= 55).astype(int)
     return pd.DataFrame({
         'student_id': np.arange(20520001, 20520001 + n),
         'study_hours': study_hours,
-        'attendance_rate': attendance_rate,
+        'attendance': attendance,
         'activity_count': activity_count,
         'major': major,
         'pass_fail': pass_fail,
@@ -421,6 +421,10 @@ def load_statistics_dataset(shuffle_seed=None):
     final_score = np.round(np.clip(
         0.8 + 0.42 * study_hours + 0.18 * attendance + 0.45 * quiz_score
         - 0.12 * missed_classes + rng.normal(0, 0.7, n), 0, 10), 1)
+    # Chuẩn hóa thang cho khớp toàn khóa (đổi tuyến tính ×10 → MỌI tương quan BẤT BIẾN):
+    #   attendance → % (0-100) như B1-3/B6 · final_score → /100 như B2-3/B8-10.
+    attendance = np.round(attendance * 10.0, 1)
+    final_score = np.round(final_score * 10.0, 1)
     df = pd.DataFrame({
         'student_id': np.arange(20520001, 20520001 + n),
         'study_hours': study_hours,

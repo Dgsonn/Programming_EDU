@@ -521,7 +521,7 @@ def grade_lesson6(user_code):
     if tree is None:
         return result
 
-    WANT = {'study_hours', 'attendance_rate', 'activity_count'}
+    WANT = {'study_hours', 'attendance', 'activity_count'}
 
     if not _uses_call(tree, 'load_scaling_dataset'):
         result['code_msg'] = 'Chưa thấy load_scaling_dataset().'

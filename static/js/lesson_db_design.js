@@ -4402,7 +4402,8 @@
       const xs = xarr(s.name);
       const n = Math.min(xs.length, y.length);
       const xmax = xmaxmap[s.name] || Math.max.apply(null, xs.slice(0, n)) || 1;
-      const ymax = 10;
+      // trục y auto-scale theo thang thật của target (final_score /100 hay /10) — làm tròn lên bội 10
+      const ymax = cfg.y_max || (Math.ceil((Math.max.apply(null, y.slice(0, n)) || 10) / 10) * 10) || 100;
       let sx = 0, sy = 0;
       for (let i = 0; i < n; i++) { sx += xs[i]; sy += y[i]; }
       const mx = sx / n, my = sy / n;
@@ -4414,9 +4415,9 @@
       const py = function (v) { return ((H - padB) - (Math.max(0, Math.min(ymax, v)) / ymax) * (H - padT - padB)).toFixed(1); };
       const col = colorOf(s.r);
       let grid = '';
-      [0, 5, 10].forEach(function (g) {
+      [0, ymax / 2, ymax].forEach(function (g) {
         grid += '<line x1="' + padL + '" y1="' + py(g) + '" x2="' + (W - padR) + '" y2="' + py(g) + '" stroke="rgba(148,163,184,0.14)" stroke-width="1"/>' +
-          '<text x="' + (padL - 5) + '" y="' + (parseFloat(py(g)) + 3) + '" text-anchor="end" font-size="9" fill="#64748B">' + g + '</text>';
+          '<text x="' + (padL - 5) + '" y="' + (parseFloat(py(g)) + 3) + '" text-anchor="end" font-size="9" fill="#64748B">' + Math.round(g) + '</text>';
       });
       let pts = '';
       for (let i = 0; i < n; i++) pts += '<circle cx="' + px(xs[i]) + '" cy="' + py(y[i]) + '" r="2.6" fill="' + col + '" opacity="0.5"/>';
