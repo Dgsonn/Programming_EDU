@@ -38,7 +38,7 @@ window.LESSON_CONTENT['ml'] = {
       drag_type: 'chip',
       challenge_type: 'full_ide',
       story: {
-        tag: '🎓 StudyLab · Ticket #01',
+        tag: '🎓 StudyLab · Ticket #01 · MỞ MÀN M1',
         hook: 'Bạn là <strong>người dựng mô hình ML đầu tiên</strong> của <strong>USTH StudyLab</strong>. Môn học kéo dài <strong>15 tuần</strong>: hệ thống ghi <em>giờ tự học, điểm danh</em> mỗi tuần; <strong>tuần 7</strong> thi giữa kỳ sinh ra <em>điểm giữa kỳ</em>; nhưng phải đến <strong>tuần 15</strong> thi cuối mới sinh ra <code>final_score</code> — và luật <code>final_score >= 50</code> chấm Đậu/Rớt. Đang <strong>TUẦN 8</strong>, điểm giữa kỳ vừa chấm xong, Ticket #01 hỏi một câu luật KHÔNG trả lời nổi: <em>"ai đang trên đà rớt, để còn 7 tuần kịp cứu?"</em> — vì final_score <strong>chưa tồn tại</strong>. Hồ sơ đầu tiên trên bàn: <strong>Lan — học viên khóa này</strong>, <code>7h/tuần · điểm danh 90% · giữa kỳ 82</code>. May thay, kho còn nguyên <strong>12 hồ sơ khóa trước</strong>: cũng đo đúng 3 con số ấy ở tuần 8, và nay đã biết kết cục Đậu/Rớt. Nhiệm vụ: để máy <strong>tự học pattern</strong> từ 12 hồ sơ đó rồi dự đoán cho Lan và các bạn cùng khóa.'
       },
       achievement: { name: 'ML Problem Framer — Khởi đầu', desc: 'bài đầu về định khung bài toán ML' },
@@ -75,7 +75,11 @@ window.LESSON_CONTENT['ml'] = {
           { term: 'TASK · EXPERIENCE · PERFORMANCE', vi: '3 mảnh bài toán ML', accent: '#F87171',
             def: 'Việc cần làm (<b>T</b>) · dữ liệu để học (<b>E</b>) · thước đo làm tốt không (<b>P</b>). Thiếu 1 trong 3 → chưa thành bài toán ML.',
             ex: 'T = đoán Đậu/Rớt tuần 8 · E = 12 hồ sơ khóa trước · P = %  đoán đúng trên học viên mới.',
-            out: 'một bài toán ML được định khung đủ' }
+            out: 'một bài toán ML được định khung đủ' },
+          { term: 'PATTERN', vi: 'quy luật', accent: '#F472B6',
+            def: 'Mối liên hệ <b>lặp lại</b> giữa feature và kết quả mà model rút ra từ dữ liệu — thay cho luật do người viết.',
+            ex: 'giờ học cao + chuyên cần cao thường Đậu — model tự "thấy" mà không ai gõ luật đó.',
+            out: 'thứ ML học được, khác luật lập trình cứng' }
         ],
         primer: {
           goal: [
@@ -371,7 +375,7 @@ window.LESSON_CONTENT['ml'] = {
 
     /* ═══════════ BÀI 2 — Bài toán ML này thuộc loại nào? (spec C1-L2 tr.13-17) ═══════════
        SỐ THẬT từ ml_lab.load_study_data_full (24 hv) — verify 2026-07-19:
-       REG w=[5.476, 0.297, 0.257, −12.05] → X_new [6.5, 85, 74]: 35.6+25.2+19.0−12.0 = 67.7
+       REG w=[5.476, 0.297, 0.257, −12.05] → X_new [6.5, 85, 74]: 5.476·6.5+0.297·85+0.257·74−12.05 = 67.749 → 67.7 (thành phần làm tròn 35.6/25.2/19.0/−12.0 KHÔNG cộng đúng 67.7 do tích lũy — dùng ≈)
        CLF centroid ĐẬU [7.42, 90.5, 81.5] RỚT [2.55, 59.8, 48.4]; Δ 9.3 vs 36.2 → 1·ĐẬU
        CLUSTER k=3: C0=9hv [2.2, 57.3, 46] · C1=5hv [5.1, 76.4, 65] · C2=10hv [8.0, 93.7, 85.2] */
     {
@@ -419,7 +423,15 @@ window.LESSON_CONTENT['ml'] = {
           { term: 'CLUSTERING', vi: 'gom cụm', accent: '#FBBF24',
             def: '<b>KHÔNG có đáp án</b> để học (unsupervised) — model tự gom các dòng GIỐNG NHAU thành nhóm.',
             ex: 'siêu thị chia khách hàng thành các nhóm mua sắm dù chưa ai đặt tên nhóm.',
-            out: 'ID cụm 0/1/2 — tên TÙY Ý, không có thứ tự' }
+            out: 'ID cụm 0/1/2 — tên TÙY Ý, không có thứ tự' },
+          { term: 'UNSUPERVISED', vi: 'học không giám sát', accent: '#FB923C',
+            def: 'Dữ liệu <b>không có nhãn/target</b> — model chỉ tìm cấu trúc tự thân (nhóm, mẫu), không có "đáp án đúng" để đối chiếu.',
+            ex: 'clustering là ví dụ điển hình: không ai nói trước cụm nào là gì.',
+            out: 'đối lập với supervised — không có y để học' },
+          { term: 'TARGET (y)', vi: 'biến mục tiêu', accent: '#F87171',
+            def: 'Cột ta muốn <b>dự đoán</b>. Chính <b>Ý NGHĨA</b> của nó — số liên tục hay tên lớp — quyết định loại bài toán, không phải kiểu lưu trữ.',
+            ex: 'final_score (số) → regression; pass_fail (lớp 0/1) → classification — dù cả hai đều lưu là số.',
+            out: 'chọn target = chọn loại bài toán ML' }
         ],
         primer: {
           goal: [
@@ -657,7 +669,7 @@ window.LESSON_CONTENT['ml'] = {
                 ],
                 total: '≈ 67.7 điểm'
               },
-              narration: '<code>regressor.fit(X, y_score)</code> khớp một ĐƯỜNG THẲNG qua 24 hồ sơ: mỗi feature nhận một trọng số. Dự đoán = cộng các đóng góp: 35.6 + 25.2 + 19.0 − 12.0 = <b>67.7 điểm</b>. Output là SỐ THỰC — lệch 2 hay 20 điểm đều có thể.'
+              narration: '<code>regressor.fit(X, y_score)</code> khớp một ĐƯỜNG THẲNG qua 24 hồ sơ: mỗi feature nhận một trọng số. Dự đoán = cộng đóng góp từng feature: <b>5.476·6.5 + 0.297·85 + 0.257·74 − 12.05 ≈ 67.7 điểm</b>. Output là SỐ THỰC — lệch 2 hay 20 điểm đều có thể.'
             },
             {
               zones: ['ml2-clffit', 'ml2-clfpred'],
@@ -784,7 +796,7 @@ window.LESSON_CONTENT['ml'] = {
       drag_type: 'chip',
       challenge_type: 'full_ide',
       story: {
-        tag: '🎓 StudyLab · Ticket #03',
+        tag: '🎓 StudyLab · Ticket #03 · KHÉP CHƯƠNG M1',
         hook: 'Hai ticket đầu chạy trên 12 rồi 24 hồ sơ demo. Giờ phòng đào tạo mở <strong>kho thật</strong>: <code>student_history</code> — <strong>200 học viên</strong> nhiều khóa trước, 5 cột kèm đơn vị rõ ràng. Ticket #03 không hỏi dự đoán gì mới — nó đòi thứ nền móng hơn: <em>"trước khi build thêm model nào, hãy chốt <strong>HỢP ĐỒNG DỮ LIỆU</strong>: cột nào vào <code>X</code> cho model nhìn, cột nào là đáp án <code>y</code>, cột nào phải BỎ — cho từng nhiệm vụ."</em> Chọn sai 1 cột thôi: model "chính xác 99%" trong phòng thí nghiệm nhưng vô dụng ngoài đời — vì nó <strong>cầm sẵn đáp án</strong> hoặc <strong>nhìn trộm tương lai</strong>.'
       },
       achievement: { name: 'ML Problem Framer — Hợp đồng X/y', desc: 'tách X/y đúng nhiệm vụ, không leakage' },
@@ -1491,7 +1503,7 @@ window.LESSON_CONTENT['ml'] = {
       drag_type: 'chip',
       challenge_type: 'full_ide',
       story: {
-        tag: '🎓 StudyLab · Ticket #04',
+        tag: '🎓 StudyLab · Ticket #04 · MỞ MÀN M2',
         hook: 'Model cảnh báo sớm chạy tốt đến mức phòng đào tạo muốn bản <strong>thế hệ 2</strong> — và gửi kèm <strong>Ticket #04</strong> một file mới toanh: <code>student_profile</code> — hồ sơ hành chính của <strong>200 học viên khóa trước</strong>, 6 cột. Mở file ra: <em>toàn số</em>. Nhưng khoan — <code>student_id</code> là số, <code>missed_classes</code> là số, <code>scholarship</code> cũng 0/1… mà nghĩa khác nhau <strong>một trời một vực</strong>: một cái là MÃ GỌI TÊN, một cái ĐẾM được thật, một cái là TÊN 2 NHÓM đội lốt số. Cho cả 6 cột vào model là nó "học" từ cả… mã số sinh viên. Nhiệm vụ Ticket #04: dựng <strong>SCHEMA NGỮ NGHĨA</strong> — phân loại từng cột theo NGHĨA và loại đúng cột trước khi ai đó bấm train.'
       },
       achievement: { name: 'Data Preparation Scout — Schema ngữ nghĩa', desc: 'phân biệt dtype vs nghĩa thật, dựng schema an toàn' },
@@ -2655,7 +2667,7 @@ window.LESSON_CONTENT['ml'] = {
           intro: '',
           example: '🔍 <strong>Bấm cột <code>activity_count</code> trong SCHEMA EXPLORER bên dưới:</strong> dải của nó tới ~2000, độ lệch chuẩn ≈556. Rồi bấm <code>study_hours</code>: dải chỉ 0–10, σ≈2.7 — nhỏ hơn <strong>204 lần</strong>. Trong phép tính khoảng cách, con số to của activity_count sẽ nuốt trọn tín hiệu của study_hours. Đó là lý do phải SCALE. Giữ ý này khi sang Bước 2 👇'
         },
-        intro: 'Ba cột số đo ba thứ khác nhau bằng ba <strong>thang khác nhau</strong>. Model theo khoảng cách (như k-NN ở Bài 2) hay gradient chỉ nhìn <em>con số</em>, không hiểu "đơn vị": cột nào số lớn thì lấn át. Chuẩn hóa (scale) kéo mọi cột về cùng âm lượng — <strong>mean 0, std 1</strong> — để chúng đóng góp công bằng. Nhưng cẩn thận: chỉ scale <strong>feature số có nghĩa</strong>; đừng đụng vào ID, nhãn (target) hay cột chữ.',
+        intro: 'Ba cột số đo ba thứ khác nhau bằng ba <strong>thang khác nhau</strong>. Model theo khoảng cách (như SimpleClassifier so "chân dung trung bình" ở Bài 1–2) hay gradient chỉ nhìn <em>con số</em>, không hiểu "đơn vị": cột nào số lớn thì lấn át. Chuẩn hóa (scale) kéo mọi cột về cùng âm lượng — <strong>mean 0, std 1</strong> — để chúng đóng góp công bằng. Nhưng cẩn thận: chỉ scale <strong>feature số có nghĩa</strong>; đừng đụng vào ID, nhãn (target) hay cột chữ.',
         concept_cards: [
           {
             icon: 'fa-volume-high',
@@ -2741,7 +2753,7 @@ window.LESSON_CONTENT['ml'] = {
       step_2: {
         mcq: [
           {
-            question: 'Model k-NN đo <strong>khoảng cách</strong> giữa 2 học viên. <code>activity_count</code> (0–2000) chi phối gần như toàn bộ khoảng cách, còn <code>study_hours</code> (0–10) gần như vô hình. Vì sao?',
+            question: 'Model theo <strong>khoảng cách</strong> (như SimpleClassifier ở Bài 1–2) đo độ gần giữa 2 học viên. <code>activity_count</code> (0–2000) chi phối gần như toàn bộ khoảng cách, còn <code>study_hours</code> (0–10) gần như vô hình. Vì sao?',
             options: [
               { id: 'a', text: 'Vì con số activity_count TO hơn (thang lớn) nên lấn át — không phải vì nó quan trọng hơn', correct: true, explanation: 'Đúng — khoảng cách cộng bình phương hiệu từng cột; hiệu của activity_count (hàng trăm–nghìn) áp đảo hiệu của study_hours (vài đơn vị). Đó thuần túy do THANG, không phải mức quan trọng. Scale để cân lại.' },
               { id: 'b', text: 'Vì activity_count thật sự quan trọng hơn study_hours', correct: false, explanation: 'Không — thực tế study_hours mới là tín hiệu mạnh của Đậu/Rớt (Nam bấm LMS nhiều vẫn Rớt). activity_count chi phối chỉ vì con số to, đây là bẫy "TO ≠ quan trọng".' },
@@ -2939,7 +2951,7 @@ window.LESSON_CONTENT['ml'] = {
       drag_type: 'chip',
       challenge_type: 'full_ide',
       story: {
-        tag: '🎓 StudyLab · Ticket #07',
+        tag: '🎓 StudyLab · Ticket #07 · KHÉP CHƯƠNG M2',
         hook: 'Phòng đào tạo gửi Ticket #07: <strong>"Yếu tố nào LIÊN QUAN nhất tới điểm cuối kỳ?"</strong> — họ có bảng <strong>200 học viên</strong> với giờ tự học, chuyên cần, số buổi nghỉ, điểm quiz và <code>final_score</code>. Trước khi dựng model, việc đầu tiên là <strong>ĐỌC dữ liệu bằng thống kê</strong>: trung bình mỗi cột bao nhiêu, và cột nào <strong>tương quan</strong> mạnh với điểm cuối. Nhưng có một cái bẫy chết người: nếu thấy <code>study_hours</code> tương quan <strong>0.95</strong> với điểm rồi kết luận "học nhiều GÂY RA điểm cao" để ra chính sách — bạn có thể sai. <strong>Tương quan ≠ nhân quả.</strong> Nhiệm vụ: tính ma trận tương quan, đọc đúng, và biết dừng đúng chỗ.'
       },
       achievement: { name: 'Data Analyst — đọc số tỉnh táo', desc: 'đọc ma trận tương quan, phân biệt tương quan với nhân quả, loại ID khỏi phân tích' },
@@ -3276,7 +3288,7 @@ window.LESSON_CONTENT['ml'] = {
       drag_type: 'chip',
       challenge_type: 'full_ide',
       story: {
-        tag: '📈 StudyLab · Ticket #08',
+        tag: '📈 StudyLab · Ticket #08 · MỞ MÀN M3',
         hook: 'Sang chương mới! Phòng đào tạo muốn <strong>DỰ ĐOÁN điểm cuối kỳ từ giờ tự học</strong> — cho một bạn học <code>x</code> giờ, đoán điểm <code>ŷ</code>. Đây là bộ demo nhỏ: <strong>12 học viên</strong> đã biết cả giờ học lẫn điểm (thang 100). Cách đơn giản nhất để dự đoán: <strong>vẽ một ĐƯỜNG THẲNG</strong> xuyên qua đám điểm — <code>ŷ = w·x + b</code>. Kéo <strong>độ dốc w</strong> và <strong>điểm cắt b</strong> cho đường bám sát dữ liệu nhất. Đây mới là đường <strong>ĐẦU TIÊN</strong> — chọn bằng tay, chưa chắc tốt nhất. Nhưng làm sao MÁY tự tìm đường tốt nhất? Đó là chuyện Bài 9-10.'
       },
       achievement: { name: 'Line Drawer — đường dự đoán đầu tiên', desc: 'hiểu ŷ = w·x + b, chỉnh độ dốc & điểm cắt cho khớp, viết hàm dự đoán vectorized' },
@@ -4961,12 +4973,12 @@ window.LESSON_CONTENT['ml'] = {
       step_4: {
         prompt: 'Bước 3 bạn lắp đường ống hình học. Giờ viết <strong>hàm suy luận đầy đủ</strong>: <code>predict_classes(X, weights, bias, threshold=0.5)</code> tính score bằng <strong>nhân ma trận</strong>, ép qua <strong>sigmoid</strong> ra xác suất, rồi cắt <strong>ngưỡng</strong> ra nhãn — trả về <strong>cả</strong> xác suất lẫn nhãn. Hệ thống chấm dùng cả bộ dữ liệu khác và <strong>ngưỡng ẩn</strong> 0.3 / 0.7, nên threshold phải là tham số sống, không hard-code.',
         context: {
-          scenario: 'Hợp đồng của hàm: (1) score qua <strong>phép nhân ma trận</strong> <code>X @ weights + bias</code> để chạy cho mọi số feature; (2) đổi score sang xác suất bằng <strong>sigmoid</strong>; (3) cắt tại <strong>threshold trên xác suất</strong> ra nhãn 0/1; (4) return <strong>(probabilities, predictions)</strong> — đủ cả hai. Cái bẫy chí mạng: cắt ngưỡng 0.5 ngay trên <strong>score</strong>. Ngưỡng 0.5 là của xác suất; bên score nó tương đương 0. So <code>z ≥ 0.5</code> sẽ dịch cả ranh giới đi sai chỗ.',
+          scenario: 'Hợp đồng của hàm gồm bốn phần: (1) gộp các feature thành một <strong>score</strong> bằng phép nhân ma trận (chạy được cho mọi số feature); (2) đổi score sang <strong>xác suất</strong> bằng sigmoid; (3) cắt tại <strong>ngưỡng trên xác suất</strong> ra nhãn 0/1; (4) trả về <strong>cả xác suất lẫn nhãn</strong>. Cái bẫy chí mạng: cắt ngưỡng 0.5 ngay trên <strong>score</strong>. Ngưỡng 0.5 là của xác suất; bên score nó tương đương 0. So score với 0.5 sẽ dịch cả ranh giới đi sai chỗ.',
           real_world: '<code>predict_classes</code> chính là bước inference của mọi bộ phân loại nhị phân đã huấn luyện: nạp trọng số, nhân ma trận, sigmoid, ngưỡng. Để threshold thành tham số (mặc định 0.5) là điều bắt buộc trong thực tế — bài toán gian lận hay y tế thường chỉnh ngưỡng để đánh đổi giữa bỏ sót và báo nhầm.',
           steps: [
             'Nạp <code>X, weights, bias</code> bằng <code>load_boundary_data()</code>.',
             'Viết <code>sigmoid(z)</code> (hàm mũ) và <code>predict_classes(X, weights, bias, threshold=0.5)</code>.',
-            'Trong hàm: <code>X @ weights + bias</code> → sigmoid → so <strong>xác suất</strong> với threshold; return cả hai.',
+            'Trong hàm: gộp feature thành score bằng nhân ma trận → ép qua sigmoid → so <strong>xác suất</strong> (không phải score) với threshold; trả về cả xác suất lẫn nhãn.',
             'Gọi trên dữ liệu bài, in số học viên được xếp lớp 1 · Run · Submit chấm 4 tầng.'
           ],
           hint_explore: 'Muốn soi trước? Sau khi gọi hàm, gõ <code>print(probabilities.round(2))</code> để thấy 20 xác suất — điểm nào gần 0.5 là gần ranh giới.',
@@ -5023,9 +5035,9 @@ window.LESSON_CONTENT['ml'] = {
             ex: 'đường bậc 12: train 5.4 (nhỏ nhất!) nhưng check <b>248,525</b>.',
             out: 'train thấp mà check cao = dấu hiệu overfit' },
           { term: 'HELD-OUT', vi: 'để dành ra', accent: '#38BDF8',
-            def: 'Dữ liệu <b>không dùng để fit</b>, giữ lại để đo model xử lý cái <b>chưa thấy</b> ra sao.',
+            def: 'Dữ liệu <b>không dùng để fit</b>, giữ lại để đo model xử lý cái <b>chưa thấy</b> ra sao. Ở đây tập check đóng vai <b>validation</b> — dùng để CHỌN độ phức tạp.',
             ex: '20 điểm check ở đây — model không được nhìn khi học.',
-            out: 'thước đo generalization thật sự' },
+            out: 'chính là "validation" — Bài 15 sẽ tách thêm "test" niêm phong riêng' },
           { term: 'GENERALIZATION', vi: 'tổng quát hóa', accent: '#A78BFA',
             def: 'Khả năng làm <b>đúng trên dữ liệu mới</b>, không chỉ dữ liệu đã fit.',
             ex: 'model tốt = tổng quát tốt, không phải thuộc bài giỏi.',
@@ -5560,8 +5572,8 @@ window.LESSON_CONTENT['ml'] = {
           real_world: 'Đây là bước đầu tiên của gần như mọi pipeline ML nghiêm túc — trước cả khi chọn model. Một split rò rỉ khiến toàn bộ đánh giá về sau trở nên vô nghĩa: bạn tưởng model đạt 95% nhưng thực tế 80%, và chỉ phát hiện khi đã triển khai. Chia dữ liệu sạch là hợp đồng trung thực giữa bạn và con số cuối cùng.',
           steps: [
             'Nạp <code>X, y</code> bằng <code>load_split_dataset()</code> (1000 dòng, Đậu 70%).',
-            'Lần 1: tách <code>X_temp, X_test, y_temp, y_test</code> với <code>test_size=0.20, stratify=y, random_state=…</code>.',
-            'Lần 2: tách <code>X_train, X_val, y_train, y_val</code> từ <code>X_temp, y_temp</code> với <code>test_size=0.25, stratify=y_temp, random_state=…</code>.',
+            'Lần 1: tách <strong>20% làm test</strong> (niêm phong ngay), giữ 80% còn lại làm tập tạm — nhớ kèm <code>stratify</code> và <code>random_state</code>.',
+            'Lần 2: từ <strong>tập tạm</strong>, tách validation sao cho bằng <strong>20% của 1000 gốc</strong> — tỉ lệ phải tính lại trên tập tạm (đã nhỏ đi), vẫn <code>stratify</code> + <code>random_state</code>.',
             'In <code>len(X_train), len(X_val), len(X_test)</code> · Run · Submit chấm 4 tầng.'
           ],
           hint_explore: 'Muốn soi trước? In <code>len(X_train), len(X_val), len(X_test)</code> — phải là 600 200 200. Nếu ra 640 160 200 thì lần hai đang dùng 0.20 thay vì 0.25.',
