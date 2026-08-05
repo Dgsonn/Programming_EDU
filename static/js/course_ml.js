@@ -1,34 +1,101 @@
-/* course_ml.js — trang chi tiết khóa Machine Learning Cơ bản (Course 1 — ML Foundations).
- * Bố cục + cơ chế giống course_db_design.js (roadmap snake node path, tiến độ
- * localStorage pe_progress_ml + /api/courses-enrolled), nhưng file RIÊNG —
- * không đụng 3 trang DB Design đã audit sạch. Roadmap 5 module (DB chỉ có 3). */
+﻿/* course_ml.js — trang chi tiết khóa Machine Learning.
+ * Hỗ trợ Course 1 (ml), Course 2 (ml_intermediate) và Course 3 (ml_advanced) qua body[data-course].
+ * Course 1: 15 bài / 5 module, màu M1..M5 từ course_ml.css.
+ * Course 2: 14 bài / 4 module, cùng roadmap.
+ * Course 3: 14 bài / 5 module, cùng roadmap — Bài 14 dùng remote CPU sandbox (PyTorch). */
 
-/* ── Giáo trình Course 1 — 15 bài · 5 module ── */
-var ML_MODULE_NAMES = {
-  1: 'ML Problem Framing',
-  2: 'Data Readiness',
-  3: 'Linear Regression Foundations',
-  4: 'Logistic Classification Foundations',
-  5: 'Generalization & Honest Evaluation'
+var ML_MODULE_NAMES_BY_COURSE = {
+  'ml': {
+    1: 'ML Problem Framing',
+    2: 'Data Readiness',
+    3: 'Linear Regression Foundations',
+    4: 'Logistic Classification Foundations',
+    5: 'Generalization & Honest Evaluation'
+  },
+  'ml_intermediate': {
+    1: 'Linear Models in Practice',
+    2: 'Logistic Regression & Regularization',
+    3: 'Model Evaluation & Diagnosis',
+    4: 'Instance & Tree-Based Models'
+  },
+  'ml_advanced': {
+    1: 'High-Dimensional Representation',
+    2: 'Margin-Based Classification',
+    3: 'Clustering & Structure Discovery',
+    4: 'Neural Computation',
+    5: 'Backpropagation & Experiment Defense'
+  }
 };
 
-var ML_LESSONS = [
-  { n: 1,  m: 1, t: 'ML vs Lập trình truyền thống',                min: 18 },
-  { n: 2,  m: 1, t: 'Bài toán ML này thuộc loại nào?',             min: 19 },
-  { n: 3,  m: 1, t: 'Dataset trong mắt model — X và y',            min: 19 },
-  { n: 4,  m: 2, t: 'Hiểu kiểu dữ liệu trước khi train',           min: 19 },
-  { n: 5,  m: 2, t: 'Làm sạch dữ liệu bẩn',                        min: 19 },
-  { n: 6,  m: 2, t: 'Scale feature — không để 1 đơn vị lấn át',    min: 19 },
-  { n: 7,  m: 2, t: 'Đọc dữ liệu bằng thống kê cơ bản',            min: 19 },
-  { n: 8,  m: 3, t: 'Vẽ đường dự đoán đầu tiên',                   min: 19 },
-  { n: 9,  m: 3, t: 'Đo lỗi model bằng MSE',                       min: 19 },
-  { n: 10, m: 3, t: 'Gradient Descent — model tự chỉnh đường',     min: 20 },
-  { n: 11, m: 4, t: 'Vì sao Linear Regression không phân loại được', min: 19 },
-  { n: 12, m: 4, t: 'Sigmoid — biến score thành xác suất',         min: 19 },
-  { n: 13, m: 4, t: 'Decision Boundary — luật tách 2 lớp',         min: 19 },
-  { n: 14, m: 5, t: 'Underfit, Good Fit và Overfit',               min: 20 },
-  { n: 15, m: 5, t: 'Chia Train / Validation / Test',              min: 20 }
-];
+var ML_LESSONS_BY_COURSE = {
+  'ml': [
+    { n: 1,  m: 1, t: 'ML vs Lập trình truyền thống',                min: 18 },
+    { n: 2,  m: 1, t: 'Bài toán ML này thuộc loại nào?',             min: 19 },
+    { n: 3,  m: 1, t: 'Dataset trong mắt model — X và y',            min: 19 },
+    { n: 4,  m: 2, t: 'Hiểu kiểu dữ liệu trước khi train',           min: 19 },
+    { n: 5,  m: 2, t: 'Làm sạch dữ liệu bẩn',                        min: 19 },
+    { n: 6,  m: 2, t: 'Scale feature — không để 1 đơn vị lấn át',    min: 19 },
+    { n: 7,  m: 2, t: 'Đọc dữ liệu bằng thống kê cơ bản',            min: 19 },
+    { n: 8,  m: 3, t: 'Vẽ đường dự đoán đầu tiên',                   min: 19 },
+    { n: 9,  m: 3, t: 'Đo lỗi model bằng MSE',                       min: 19 },
+    { n: 10, m: 3, t: 'Gradient Descent — model tự chỉnh đường',     min: 20 },
+    { n: 11, m: 4, t: 'Vì sao Linear Regression không phân loại được', min: 19 },
+    { n: 12, m: 4, t: 'Sigmoid — biến score thành xác suất',         min: 19 },
+    { n: 13, m: 4, t: 'Decision Boundary — luật tách 2 lớp',         min: 19 },
+    { n: 14, m: 5, t: 'Underfit, Good Fit và Overfit',               min: 20 },
+    { n: 15, m: 5, t: 'Chia Train / Validation / Test',              min: 20 }
+  ],
+  'ml_intermediate': [
+    { n: 1,  m: 1, t: 'Multiple Linear Regression trong một pipeline thực tế', min: 22 },
+    { n: 2,  m: 1, t: 'Feature Scaling và Convergence',               min: 22 },
+    { n: 3,  m: 2, t: 'Logistic Loss và những prediction sai đầy tự tin', min: 22 },
+    { n: 4,  m: 2, t: 'Train Logistic Regression bằng Gradient Descent', min: 23 },
+    { n: 5,  m: 2, t: 'Regularization: kiểm soát độ phức tạp của model', min: 23 },
+    { n: 6,  m: 2, t: 'Chọn regularization strength bằng Validation', min: 23 },
+    { n: 7,  m: 3, t: 'Bias-Variance: chẩn đoán việc học ổn định và không ổn định', min: 24 },
+    { n: 8,  m: 3, t: 'Chọn regression metric: MAE, MSE và R-squared', min: 22 },
+    { n: 9,  m: 3, t: 'Confusion Matrix và class imbalance',          min: 23 },
+    { n: 10, m: 3, t: 'Accuracy, Precision, Recall và F1',            min: 23 },
+    { n: 11, m: 4, t: 'K-Nearest Neighbors',                          min: 22 },
+    { n: 12, m: 4, t: 'KNN và Feature Scaling',                       min: 22 },
+    { n: 13, m: 4, t: 'Decision Tree',                                min: 24 },
+    { n: 14, m: 4, t: 'Random Forest',                                min: 25 }
+  ],
+  'ml_advanced': [
+    { n: 1,  m: 1, t: 'Dữ liệu nhiều chiều và curse of dimensionality', min: 23 },
+    { n: 2,  m: 1, t: 'PCA và principal components',                  min: 23 },
+    { n: 3,  m: 1, t: 'Explained variance — chọn số chiều',           min: 23 },
+    { n: 4,  m: 1, t: 'Trực quan hóa và audit dữ liệu sau PCA',       min: 23 },
+    { n: 5,  m: 2, t: 'Support Vector Machine và margin',             min: 26 },
+    { n: 6,  m: 3, t: 'Clustering không phải là classification',      min: 23 },
+    { n: 7,  m: 3, t: 'K-means: assign, update và repeat',            min: 24 },
+    { n: 8,  m: 3, t: 'Chọn k và đánh giá một clustering',            min: 26 },
+    { n: 9,  m: 3, t: 'DBSCAN và hierarchical clustering',            min: 26 },
+    { n: 10, m: 4, t: 'Perceptron — neuron có thể học đầu tiên',      min: 24 },
+    { n: 11, m: 4, t: 'Activation function và gradient flow',         min: 24 },
+    { n: 12, m: 4, t: 'Feedforward qua một neural network',           min: 25 },
+    { n: 13, m: 5, t: 'Backpropagation và gradient checking',         min: 27 },
+    { n: 14, m: 5, t: 'Train, đánh giá và bảo vệ một thí nghiệm neural network', min: 30 }
+  ]
+};
+
+// _cid() / _lessonUrl() / _currentLessonIdx() đã được set lên window.* bởi template
+// course_ml.html (xem `<script>` block trước file này). KHÔNG re-declare bằng `var` ở đây
+// (sẽ throw SyntaxError và toàn bộ file fail silent, làm hỏng goLesson/enroll/roadmap).
+function _cid() {
+  return (typeof window !== 'undefined' && window.COURSE_ID)
+      || (document.body && document.body.dataset && document.body.dataset.course)
+      || 'ml';
+}
+function _lessonUrl() {
+  return (typeof window !== 'undefined' && window.LESSON_URL) || ('/lesson/' + _cid());
+}
+function _currentLessonIdx() {
+  return (typeof window !== 'undefined' && typeof window.CURRENT_LESSON_IDX === 'number')
+    ? window.CURRENT_LESSON_IDX : 0;
+}
+var ML_MODULE_NAMES = ML_MODULE_NAMES_BY_COURSE[_cid()] || ML_MODULE_NAMES_BY_COURSE['ml'];
+var ML_LESSONS = ML_LESSONS_BY_COURSE[_cid()] || ML_LESSONS_BY_COURSE['ml'];
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, function (c) {
@@ -91,19 +158,25 @@ function applyPrereqStatus(enrolledList) {
   }
 }
 
-/* ── Tiến độ: API → localStorage pe_progress_ml → CURRENT_LESSON_IDX ── */
+/* ── Tiến độ: API → localStorage pe_progress_{course_id} → CURRENT_LESSON_IDX ──
+ * Course 1 (ml) dùng key rút gọn 'pe_progress_ml' (lịch sử); các khóa sau
+ * dùng đúng course_id để KHÔNG lẫn tiến độ giữa các khóa. */
+function progressKey() {
+  return _cid() === 'ml' ? 'pe_progress_ml' : ('pe_progress_' + _cid());
+}
+
 function resolveUserProgress() {
   return new Promise(function (resolve) {
     fetch('/api/courses-enrolled', { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
         var enrolled = (data && data.enrolled) || [];
-        var me = enrolled.find(function (e) { return e.id === 'ml'; });
+        var me = enrolled.find(function (e) { return e.id === _cid(); });
         var apiCompletedCount = me ? (me.completedLessons || 0) : 0;
-        var serverCurrent = (typeof CURRENT_LESSON_IDX === 'number') ? (CURRENT_LESSON_IDX + 1) : 1;
+        var serverCurrent = (typeof _currentLessonIdx() === 'number') ? (_currentLessonIdx() + 1) : 1;
 
         var stored = [];
-        try { stored = JSON.parse(localStorage.getItem('pe_progress_ml') || '[]'); } catch (e) {}
+        try { stored = JSON.parse(localStorage.getItem(progressKey()) || '[]'); } catch (e) {}
         var completedSet = new Set();
         if (Array.isArray(stored)) {
           stored.forEach(function (n) { if (typeof n === 'number') completedSet.add(n); });
@@ -118,12 +191,12 @@ function resolveUserProgress() {
       })
       .catch(function () {
         var stored = [];
-        try { stored = JSON.parse(localStorage.getItem('pe_progress_ml') || '[]'); } catch (e) {}
+        try { stored = JSON.parse(localStorage.getItem(progressKey()) || '[]'); } catch (e) {}
         var completedSet = new Set(stored.filter(function (n) { return typeof n === 'number'; }));
         var lsMax = 0;
         completedSet.forEach(function (n) { if (n > lsMax) lsMax = n; });
-        var currentIdx = (typeof CURRENT_LESSON_IDX === 'number')
-          ? Math.max(CURRENT_LESSON_IDX + 1, lsMax + 1)
+        var currentIdx = (typeof _currentLessonIdx() === 'number')
+          ? Math.max(_currentLessonIdx() + 1, lsMax + 1)
           : Math.max(1, lsMax + 1);
         resolve({ completedSet: completedSet, currentIdx: currentIdx, enrolledList: [] });
       });
@@ -146,6 +219,7 @@ function resolveUserProgress() {
   }
 
   var html = '';
+  var lessonBase = _lessonUrl();  // dynamic: /lesson/ml hoặc /lesson/ml_intermediate theo course
   moduleIds.forEach(function (mIdx) {
     var lessonsM = byModule[mIdx];
     html += '<div class="cd-roadmap-module" data-module="' + mIdx + '">';
@@ -158,7 +232,7 @@ function resolveUserProgress() {
       var reverse = (rowIdx % 2 === 1) ? ' reverse' : '';
       html += '<div class="cd-roadmap-row' + reverse + '">';
       row.forEach(function (lesson) {
-        html += '<a href="/lesson/ml?lesson=' + lesson.n + '" class="cd-roadmap-node js-roadmap-node" data-lesson="' + lesson.n + '" data-module="' + lesson.m + '" data-boss="0">';
+        html += '<a href="' + lessonBase + '?lesson=' + lesson.n + '" class="cd-roadmap-node js-roadmap-node" data-lesson="' + lesson.n + '" data-module="' + lesson.m + '" data-boss="0">';
         html += '<div class="cd-roadmap-node-circle">';
         html += '<span class="cd-roadmap-node-num">' + lesson.n + '</span>';
         html += '</div>';
@@ -200,7 +274,7 @@ function resolveUserProgress() {
 function goLesson() {
   var el = document.getElementById('current-lesson');
   if (el && el.getAttribute('href')) { window.location = el.getAttribute('href'); return; }
-  window.location = LESSON_URL + '?lesson=' + (CURRENT_LESSON_IDX + 1);
+  window.location = _lessonUrl() + '?lesson=' + (_currentLessonIdx() + 1);
 }
 
 /* ── Enroll / Unenroll ── */
@@ -208,7 +282,7 @@ function enroll() {
   var btn = document.getElementById('enroll-btn');
   btn.disabled = true;
   btn.textContent = 'Đang xử lý...';
-  fetch('/api/courses/' + COURSE_ID + '/enroll', {
+  fetch('/api/courses/' + _cid() + '/enroll', {
     method: 'POST',
     headers: { 'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content }
   })
@@ -232,7 +306,7 @@ function unenroll() {
   var btn = document.getElementById('unenroll-btn');
   btn.disabled = true;
   btn.textContent = 'Đang xử lý...';
-  fetch('/api/courses/' + COURSE_ID + '/enroll', {
+  fetch('/api/courses/' + _cid() + '/enroll', {
     method: 'DELETE',
     headers: { 'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content }
   })
@@ -397,3 +471,4 @@ function markAllBellRead() {
 
   paintStars(0);
 })();
+

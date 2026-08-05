@@ -2,6 +2,7 @@
 Nạp vào Pyodide virtual FS lúc worker khởi tạo; học viên `from ml_lab import ...`
 đúng như trong spec. Mỗi bài mở rộng file này bằng dataset + wrapper riêng.
 """
+import copy
 import numpy as np
 import pandas as pd
 
@@ -436,3 +437,824 @@ def load_statistics_dataset(shuffle_seed=None):
     if shuffle_seed is not None:
         df = df.sample(frac=1.0, random_state=shuffle_seed).reset_index(drop=True)
     return df
+
+
+# ══════════════════════════════════════════════════════════════════════
+# COURSE 2 — MACHINE LEARNING TRUNG CẤP (APPLIED ML)
+# 14 lessons · 4 modules. Mỗi bài có load_* trả về đúng shape/dtype;
+# grader gọi qua ml_grader.grade_lesson_c2_*.
+# ══════════════════════════════════════════════════════════════════════
+
+# ── Bài C2-1 — Multiple Linear Regression trong pipeline thực tế ────────
+def load_multi_regression_splits(seed=0):
+    """300 học viên × 3 feature (study_hours, attendance, sleep_h) →
+    final_score liên tục. 70/30 split. Bài yêu cầu fit LinearRegression
+    TRÊN TRAIN, đánh giá trên VAL (không leak val vào fit)."""
+    rng = np.random.RandomState(1601 + seed)
+    n = 300
+    study_hours = rng.uniform(0.5, 10.0, n)
+    attendance = rng.uniform(40, 100, n)
+    sleep_h = rng.uniform(4.0, 9.5, n)
+    noise = rng.normal(0, 5.0, n)
+    final_score = np.clip(
+        4.2 * study_hours + 0.35 * attendance + 1.8 * sleep_h - 10.0 + noise, 0, 100
+    )
+    X = np.column_stack([study_hours, attendance, sleep_h])
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], final_score[:n_tr], final_score[n_tr:]
+
+
+# ── Bài C2-2 — Feature Scaling và Convergence ────────────────────────────
+def load_scaling_convergence_data(seed=0):
+    """200 mẫu × 2 feature LỆCH THANG ĐO RẤT XA: study_hours (0.5-10) vs
+    family_income (15,000-90,000). Target readiness_score phụ thuộc CẢ 2
+    cột. Nếu không scale, gradient descent hội tụ rất chậm/không ổn định
+    vì income lấn át hoàn toàn gradient của study_hours."""
+    rng = np.random.RandomState(1602 + seed)
+    n = 200
+    study_hours = rng.uniform(0.5, 10.0, n)
+    family_income = rng.uniform(15000, 90000, n)
+    noise = rng.normal(0, 1.5, n)
+    readiness = 3.0 * study_hours + 0.00035 * family_income + noise
+    X = np.column_stack([study_hours, family_income])
+    return X, readiness
+
+
+def run_gd_linear(X, y, lr=0.01, n_iter=200):
+    """GD tối giản cho Linear Regression 2-feature (không bias riêng —
+    X phải có cột bias nếu cần). Trả về (weights, loss_history).
+    Dùng để SO SÁNH hội tụ scaled vs unscaled — KHÔNG phải lời giải bài,
+    học viên tự viết vòng lặp GD của mình trong Step 4."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    n, d = X.shape
+    w = np.zeros(d)
+    b = 0.0
+    loss_history = []
+    for _ in range(int(n_iter)):
+        pred = X @ w + b
+        err = pred - y
+        loss_history.append(float((err ** 2).mean()))
+        grad_w = (2.0 / n) * (X.T @ err)
+        grad_b = (2.0 / n) * err.sum()
+        w -= lr * grad_w
+        b -= lr * grad_b
+    return w, b, loss_history
+
+
+# ── Bài C2-3 — Logistic Loss và những prediction sai đầy tự tin ─────────
+def load_logloss_demo():
+    """6 nhãn thật + 2 bộ xác suất dự đoán CÙNG SỐ LƯỢNG dự đoán sai
+    (2/6 theo ngưỡng 0.5) nhưng ĐỘ TỰ TIN khác hẳn nhau — 'cautious' sai
+    nhưng không chắc chắn, 'overconfident' sai mà rất chắc chắn.
+    Log loss của overconfident phải LỚN HƠN NHIỀU dù accuracy bằng nhau."""
+    y_true = np.array([1, 1, 0, 0, 1, 0])
+    probs_cautious = np.array([0.60, 0.55, 0.40, 0.45, 0.40, 0.55])
+    probs_overconfident = np.array([0.60, 0.55, 0.40, 0.45, 0.05, 0.97])
+    return y_true, probs_cautious, probs_overconfident
+
+
+# ── Bài C2-4 — Train Logistic Regression bằng Gradient Descent ──────────
+def load_logistic_gd_data(seed=0):
+    """300 mẫu × 2 feature, ranh giới gần-tuyến tính (noise vừa phải) —
+    đủ để LogisticRegression học tốt nhưng không tách 100% hoàn hảo.
+    70/30 split."""
+    rng = np.random.RandomState(1604 + seed)
+    n = 300
+    X = rng.normal(0, 1.5, size=(n, 2))
+    z = 1.4 * X[:, 0] - 1.1 * X[:, 1] + 0.3
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+# ── Bài C2-5 — Regularization: kiểm soát độ phức tạp của model ──────────
+def load_regularization_data(seed=0):
+    """400 mẫu × 30 feature — CHỈ 5 cột đầu (0-4) thật sự quyết định nhãn,
+    25 cột còn lại (5-29) là nhiễu thuần. L1 mạnh nên đẩy hệ số 25 cột
+    nhiễu về gần 0; L2 chỉ co nhỏ đều, không triệt tiêu. 70/30 split."""
+    rng = np.random.RandomState(1605 + seed)
+    n, d = 400, 30
+    X = rng.normal(0, 1, size=(n, d))
+    true_w = np.array([1.5, -1.2, 1.0, 0.8, -0.9])
+    z = X[:, :5] @ true_w
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+# ── Bài C2-6 — Chọn regularization strength bằng Validation ─────────────
+def load_reg_strength_splits(seed=0):
+    """500 mẫu × 20 feature — 4 cột đầu (0-3) thật sự quyết định nhãn,
+    16 cột còn lại là nhiễu. C quá lớn (regularization yếu) → overfit
+    nhiễu; C quá nhỏ (regularization mạnh) → underfit. C tối ưu nằm
+    ở khoảng giữa, CHỈ tìm được bằng validation F1, không đoán mù."""
+    rng = np.random.RandomState(1606 + seed)
+    n, d = 500, 20
+    X = rng.normal(0, 1, size=(n, d))
+    true_w = np.array([1.2, -1.0, 0.9, -0.8])
+    z = X[:, :4] @ true_w
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+# ── Bài C2-7 — Bias-Variance: chẩn đoán học ổn định/không ổn định ───────
+def load_bias_variance_data(seed=0):
+    """X_train THƯA (25 điểm — dễ overfit bậc cao), X_val DÀY (200 điểm)
+    trên cùng khoảng. Đường thật là bậc 3 — model bậc 1 underfit (bias
+    cao), bậc 15 overfit (variance cao trên 25 điểm thưa), bậc 3 vừa."""
+    rng = np.random.RandomState(1607 + seed)
+    truth = lambda x: 0.12 * (x - 2) * (x - 5) * (x - 8) + 35
+    X_train = np.sort(rng.uniform(0, 10, 25))
+    y_train = truth(X_train) + rng.normal(0, 3.0, 25)
+    X_val = np.sort(rng.uniform(0, 10, 200))
+    y_val = truth(X_val) + rng.normal(0, 3.0, 200)
+    return X_train, y_train, X_val, y_val
+
+
+# ── Bài C2-8 — Chọn regression metric: MAE, MSE và R-squared ────────────
+def load_regression_metrics_data():
+    """10 cặp (actual, prediction) SÁT NHAU, TRỪ 1 OUTLIER (index 7) lệch
+    rất xa. MSE bị outlier đó kéo lên mạnh hơn hẳn MAE — minh hoạ trực
+    tiếp vì sao chọn metric ảnh hưởng đến cách 'model tốt' được định nghĩa."""
+    actual = np.array([50.0, 62.0, 71.0, 45.0, 80.0, 55.0, 68.0, 90.0, 73.0, 58.0])
+    predictions = np.array([52.0, 60.0, 69.0, 47.0, 78.0, 57.0, 66.0, 40.0, 75.0, 56.0])
+    return actual, predictions
+
+
+# ── Bài C2-9 — Confusion Matrix và class imbalance ───────────────────────
+def load_imbalanced_data(seed=0):
+    """1000 mẫu, mất cân bằng NẶNG: 950 lớp 0, 50 lớp 1. y_pred_naive =
+    LUÔN đoán 0 → accuracy = 0.950 nhưng VÔ DỤNG (recall = 0). y_pred_model
+    = classifier thật, bắt đúng 40/50 positive (10 false negative) + 45
+    false positive trong 950 negative → accuracy = 0.945, THẤP HƠN naive,
+    nhưng recall = 0.8 — hữu ích hơn nhiều. Đây chính là cái bẫy: accuracy
+    một mình có thể xếp hạng SAI classifier nào thật sự tốt hơn."""
+    rng = np.random.RandomState(1609 + seed)
+    n_neg, n_pos = 950, 50
+    n = n_neg + n_pos
+    y_true = np.array([0] * n_neg + [1] * n_pos)
+    y_pred_naive = np.zeros(n, dtype=int)
+
+    # Model thật: bắt đúng 40/50 positive (10 false negative), 45 false positive trong negative.
+    y_pred_model = np.zeros(n, dtype=int)
+    pos_idx = np.arange(n_neg, n)
+    caught_pos = rng.choice(pos_idx, size=40, replace=False)
+    y_pred_model[caught_pos] = 1
+    neg_idx = np.arange(0, n_neg)
+    false_pos = rng.choice(neg_idx, size=45, replace=False)
+    y_pred_model[false_pos] = 1
+    return y_true, y_pred_naive, y_pred_model
+
+
+# ── Bài C2-10 — Accuracy, Precision, Recall và F1 ────────────────────────
+def load_prf_data(seed=0):
+    """100 mẫu (30 positive, 70 negative) + 2 classifier trade-off ngược
+    nhau: 'conservative' đoán positive RẤT ÍT nhưng gần như luôn đúng khi
+    đoán (precision cao, recall thấp); 'liberal' đoán positive RẤT NHIỀU,
+    bắt gần hết positive thật nhưng lẫn nhiều false positive (recall cao,
+    precision thấp)."""
+    rng = np.random.RandomState(1610 + seed)
+    n_pos, n_neg = 30, 70
+    y_true = np.array([1] * n_pos + [0] * n_neg)
+    pos_idx = np.arange(0, n_pos)
+    neg_idx = np.arange(n_pos, n_pos + n_neg)
+
+    y_pred_conservative = np.zeros(n_pos + n_neg, dtype=int)
+    caught = rng.choice(pos_idx, size=10, replace=False)
+    y_pred_conservative[caught] = 1
+    fp = rng.choice(neg_idx, size=1, replace=False)
+    y_pred_conservative[fp] = 1
+
+    y_pred_liberal = np.zeros(n_pos + n_neg, dtype=int)
+    caught2 = rng.choice(pos_idx, size=28, replace=False)
+    y_pred_liberal[caught2] = 1
+    fp2 = rng.choice(neg_idx, size=35, replace=False)
+    y_pred_liberal[fp2] = 1
+
+    return y_true, y_pred_conservative, y_pred_liberal
+
+
+# ── Bài C2-11 — K-Nearest Neighbors ───────────────────────────────────────
+def load_knn_data(seed=0):
+    """300 mẫu × 2 feature, 2 cụm GẦN NHAU với overlap thật (std=1.6, tâm
+    cách nhau ~3.1) — đủ nhiễu để accuracy THAY ĐỔI THEO k thật sự (k=1
+    bắt nhiễu biên, k rất lớn có thể oversmooth) thay vì mọi k đều
+    perfect. 70/30 split."""
+    rng = np.random.RandomState(1611 + seed)
+    n = 300
+    n0, n1 = n // 2, n - n // 2
+    X0 = rng.normal(loc=[3.0, 3.0], scale=1.6, size=(n0, 2))
+    X1 = rng.normal(loc=[5.2, 5.2], scale=1.6, size=(n1, 2))
+    X = np.vstack([X0, X1])
+    y = np.array([0] * n0 + [1] * n1)
+    idx = rng.permutation(n)
+    X, y = X[idx], y[idx]
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+# ── Bài C2-12 — KNN và Feature Scaling ───────────────────────────────────
+def load_knn_scaling_data(seed=0):
+    """300 mẫu × 2 feature LỆCH THANG ĐO: study_hours (0.5-10, TÍN HIỆU
+    MẠNH cho nhãn) và family_income (15,000-90,000, tín hiệu YẾU). Không
+    scale → khoảng cách Euclidean bị income (thang hàng chục nghìn) ÁP
+    ĐẢO hoàn toàn study_hours, dù income chỉ đóng góp NHỎ vào nhãn thật
+    → KNN unscaled gần như đoán ngẫu nhiên. Scale đúng cách → accuracy
+    tăng rõ rệt. Trả UNSCALED, học viên tự scale."""
+    rng = np.random.RandomState(1612 + seed)
+    n = 300
+    study_hours = rng.uniform(0.5, 10.0, n)
+    family_income = rng.uniform(15000, 90000, n)
+    z = 1.4 * (study_hours - 5.0) / 3.0 + 0.15 * (family_income - 52000.0) / 22000.0
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    X = np.column_stack([study_hours, family_income])
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+# ── Bài C2-13 — Decision Tree ──────────────────────────────────────────
+def load_tree_data(seed=0):
+    """500 mẫu × 5 feature (study_hours, attendance, quiz_score, sleep_h,
+    screen_time_h). Nhãn có TƯƠNG TÁC phi tuyến (kiểu XOR nhẹ giữa 2
+    feature) — Decision Tree không giới hạn depth sẽ overfit rõ (train
+    acc ~100%, val acc thấp hơn hẳn); max_depth vừa phải thu hẹp gap."""
+    rng = np.random.RandomState(1613 + seed)
+    n = 500
+    study_hours = rng.uniform(0.5, 10.0, n)
+    attendance = rng.uniform(40, 100, n)
+    quiz_score = rng.uniform(0, 10, n)
+    sleep_h = rng.uniform(4.0, 9.5, n)
+    screen_time_h = rng.uniform(0.5, 8.0, n)
+    high_effort = (study_hours > 5.5).astype(int)
+    high_attend = (attendance > 75).astype(int)
+    interaction = (high_effort != high_attend).astype(int)  # XOR-ish
+    z = 1.1 * interaction + 0.4 * (quiz_score - 5) - 0.15 * (screen_time_h - 4)
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    X = np.column_stack([study_hours, attendance, quiz_score, sleep_h, screen_time_h])
+    names = ['study_hours', 'attendance', 'quiz_score', 'sleep_h', 'screen_time_h']
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:], names
+
+
+# ── Bài C2-14 — Random Forest ──────────────────────────────────────────
+def load_forest_data(seed=0):
+    """600 mẫu × 8 feature — CHỈ 3 cột đầu thật sự quyết định nhãn, 5 cột
+    còn lại là nhiễu (nhiều nhiễu hơn Bài 13 để lộ rõ variance cao của
+    1 cây đơn). Random Forest (nhiều cây, bootstrap + feature subsampling)
+    phải cho val accuracy ỔN ĐỊNH HƠN và thường CAO HƠN 1 Decision Tree
+    đơn không giới hạn depth."""
+    rng = np.random.RandomState(1614 + seed)
+    n, d = 600, 8
+    X = rng.normal(0, 1, size=(n, d))
+    true_w = np.array([1.3, -1.1, 0.95])
+    z = X[:, :3] @ true_w
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    names = ['f%d' % i for i in range(d)]
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:], names
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# COURSE 3 — ADVANCED MODELING & NEURAL NETWORKS
+# Spec: docs/ML_Curriculum_Course_1_2_3_Revised_with_Coverage_Audit.pdf (trang 137-208)
+#     + docs/ML_Exercise_Bank_Courses_1_2_3_Full.pdf (trang 120-188).
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Bài C3-1 — High-dimensional data và curse of dimensionality ────────────
+def load_dimension_experiment(seed=0, dims=(2, 20, 100), n_samples=320):
+    """StudyLab Dimension Stress Test — 3 thí nghiệm KHỚP NHAU (dims 2/20/100):
+    CÙNG n_samples, CÙNG 2 feature tín hiệu (focus_score, practice_score) và CÙNG
+    quy luật nhãn logistic — chỉ số chiều NHIỄU thêm vào là khác nhau (kiểm soát
+    đúng 1 biến, đúng tinh thần MS-4 'controlled comparison'). Nhiễu lấy từ 1 pool
+    chung theo thứ tự cột → dims=20 và dims=100 LỒNG đúng cùng noise base, không
+    phải random riêng biệt mỗi lần.
+
+    Trả list dict theo dims: X_train, y_train, X_val, y_val (70/30 split) và
+    X_probe (70 mẫu đầu, CHƯA scale — dùng đo distance-contrast thô, đúng hiện
+    tượng concentration: min/max pairwise distance tiến về 1 khi chiều tăng).
+    `seed` đổi → mẫu khác nhưng pattern (contrast tăng, KNN val-acc giảm dần)
+    vẫn giữ nguyên → grader dùng seed ẩn để chặn hard-code (behavior tier)."""
+    rng = np.random.RandomState(2601 + seed)
+    n = n_samples
+    X_informative = rng.normal(0, 1, size=(n, 2))
+    true_w = np.array([1.4, -1.1])
+    z = X_informative @ true_w
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    n_tr = int(n * 0.7)
+    max_dim = max(dims)
+    noise_pool = rng.normal(0, 1, size=(n, max_dim - 2))
+    items = []
+    for d in dims:
+        X = X_informative[:, :d] if d <= 2 else np.hstack([X_informative, noise_pool[:, :d - 2]])
+        items.append({
+            'dimensions': d,
+            'X_train': X[:n_tr], 'y_train': y[:n_tr],
+            'X_val': X[n_tr:], 'y_val': y[n_tr:],
+            'X_probe': X[:70],
+        })
+    return items
+
+
+# ── Bài C3-2 — PCA và principal components ──────────────────────────────
+def load_pca_splits(seed=0):
+    """StudyLab behavior dataset — 300 học sinh × 15 feature hành vi học tập, sinh từ
+    2 NHÂN TỐ ẨN (engagement, consistency) + nhiễu, mỗi feature 1 thang đo KHÁC NHAU
+    (đơn vị lệch nhau — cố ý, để bài yêu cầu quyết định có standardize hay không).
+    KHÔNG có target — PCA không cần (và không được dùng) nhãn.
+
+    2 nhân tố ẩn tạo ra đúng 2 "cụm" feature tương quan mạnh:
+    - engagement: login_freq, video_watch_min, resource_downloads, session_len_min…
+    - consistency: ontime_submit_rate, streak_days, quiz_attempts…
+    → PC1 (~61-62% variance) tải mạnh nhất lên login_freq; PC2 (~18-19%) tải mạnh nhất
+    lên ontime_submit_rate — ổn định qua nhiều seed (grader dùng để chặn hard-code)."""
+    rng = np.random.RandomState(3101 + seed)
+    n = 300
+    engagement = rng.normal(0, 1, n)
+    consistency = rng.normal(0, 1, n)
+    feature_names = [
+        'login_freq', 'video_watch_min', 'forum_posts', 'quiz_attempts', 'resource_downloads',
+        'session_len_min', 'streak_days', 'ontime_submit_rate', 'revisit_rate', 'note_taking_freq',
+        'help_requests', 'peer_replies', 'bookmark_count', 'search_queries', 'practice_reruns',
+    ]
+    loadings_engagement = np.array([1.2, 1.1, 0.9, 0.3, 0.8, 1.0, 0.2, 0.1, 0.4, 0.7, 0.3, 0.6, 0.5, 0.6, 0.4])
+    loadings_consistency = np.array([0.2, 0.1, 0.1, 0.9, 0.2, 0.1, 1.3, 1.2, 0.3, 0.2, 0.1, 0.1, 0.2, 0.1, 0.9])
+    noise = rng.normal(0, 0.4, size=(n, 15))
+    scale = np.array([3, 5, 2, 1, 4, 10, 1, 0.1, 0.3, 2, 1, 2, 3, 2, 1])
+    X = (engagement[:, None] * loadings_engagement[None, :] +
+         consistency[:, None] * loadings_consistency[None, :] + noise) * scale
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], feature_names
+
+
+# ── Bài C3-3 — Explained variance và chọn số chiều ──────────────────────
+def load_pca_selection_data(seed=0):
+    """400 học sinh × 40 feature, sinh từ 6 NHÂN TỐ ẨN với phương sai GIẢM DẦN
+    (3.0, 2.2, 1.6, 1.1, 0.8, 0.5) — mô phỏng đúng "phổ phương sai" thật của PCA.
+    QUAN TRỌNG: nhãn pass_fail chỉ phụ thuộc nhân tố ẩn #4 và #5 — hai nhân tố
+    PHƯƠNG SAI THẤP NHẤT. Đây là cốt lõi misconception của bài: giữ được nhiều
+    phương sai (nhân tố #1-3) không đồng nghĩa giữ được tín hiệu dự đoán nhãn."""
+    rng = np.random.RandomState(4201 + seed)
+    n, d, n_factors = 400, 40, 6
+    factor_std = np.array([3.0, 2.2, 1.6, 1.1, 0.8, 0.5])
+    factors = rng.normal(0, 1, size=(n, n_factors)) * factor_std
+    loadings = rng.normal(0, 1, size=(n_factors, d))
+    noise = rng.normal(0, 0.6, size=(n, d))
+    X = factors @ loadings + noise
+    z = 1.3 * factors[:, 3] - 1.1 * factors[:, 4]
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+def validate_pca_representation(Z_train, Z_val, y_train, y_val):
+    """Probe downstream CỐ ĐỊNH (LogisticRegression) — dùng để đánh giá 1 biểu diễn
+    PCA (Z_train/Z_val) có còn hữu ích cho nhãn hay không, tách biệt với việc nó
+    giữ được bao nhiêu % phương sai. Trả dict {val_accuracy, val_f1}."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score, f1_score
+    clf = LogisticRegression(max_iter=1000).fit(Z_train, y_train)
+    pred = clf.predict(Z_val)
+    return {
+        'val_accuracy': float(accuracy_score(y_val, pred)),
+        'val_f1': float(f1_score(y_val, pred)),
+    }
+
+
+# ── Bài C3-4 — Trực quan hóa và audit dữ liệu sau PCA ───────────────────
+def load_pca_visual_audit(seed=0):
+    """300 học sinh × 20 feature hành vi học tập, sinh từ 4 nhân tố ẩn (phương sai
+    2.5/1.6/1.0/0.6). Nhãn pass_fail phụ thuộc CHỦ YẾU nhân tố ẩn #1 (phương sai CAO
+    NHẤT) → PC1/PC2 "trông sạch": biểu đồ 2D cho thấy tách lớp khá rõ, và
+    accuracy downstream trên PCA(2) gần bằng trên feature gốc.
+
+    CỐ Ý để bài học: dù biểu đồ đẹp và accuracy hợp lý, PC1 tải lên NHIỀU feature
+    hành vi khác nhau (không phải 1 feature "engagement" duy nhất) — gán nhãn
+    nguyên nhân ("PC1 = mức độ tương tác gây ra thành công") vẫn là suy diễn quá đà,
+    PCA chỉ cho biết TƯƠNG QUAN qua tổ hợp tuyến tính, không phải quan hệ nhân quả."""
+    rng = np.random.RandomState(5301 + seed)
+    n, d, n_factors = 300, 20, 4
+    factor_std = np.array([2.5, 1.6, 1.0, 0.6])
+    factors = rng.normal(0, 1, size=(n, n_factors)) * factor_std
+    loadings = rng.normal(0, 1, size=(n_factors, d))
+    noise = rng.normal(0, 0.5, size=(n, d))
+    X = factors @ loadings + noise
+    z = 1.1 * factors[:, 0]
+    p = 1.0 / (1.0 + np.exp(-z))
+    y = (rng.uniform(0, 1, n) < p).astype(int)
+    names = [
+        'login_freq', 'video_watch_min', 'forum_posts', 'quiz_attempts', 'resource_downloads',
+        'session_len_min', 'streak_days', 'ontime_submit_rate', 'revisit_rate', 'note_taking_freq',
+        'help_requests', 'peer_replies', 'bookmark_count', 'search_queries', 'practice_reruns',
+        'chat_messages', 'doc_edits', 'poll_votes', 'group_joins', 'error_retries',
+    ]
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:], names
+
+
+def compare_raw_and_pca(A_train, A_val, Z_train, Z_val, y_train, y_val):
+    """Đầu dò downstream CỐ ĐỊNH (LogisticRegression), so sánh accuracy khi dùng
+    FEATURE GỐC (đã chuẩn hoá) so với PCA(2) — bằng chứng CÓ hay KHÔNG PCA làm
+    mất khả năng dự đoán, tách biệt hoàn toàn khỏi việc biểu đồ có "đẹp" hay không."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score
+    clf_raw = LogisticRegression(max_iter=1000).fit(A_train, y_train)
+    clf_pca = LogisticRegression(max_iter=1000).fit(Z_train, y_train)
+    return {
+        'raw_accuracy': float(accuracy_score(y_val, clf_raw.predict(A_val))),
+        'pca_accuracy': float(accuracy_score(y_val, clf_pca.predict(Z_val))),
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# MODULE 2 — MARGIN-BASED CLASSIFICATION
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Bài C3-5 — Support Vector Machines và margin ────────────────────────
+def load_svm_splits(seed=0):
+    """300 mẫu, 2 chiều (đủ để "lát cắt 2D" CHÍNH LÀ toàn bộ feature — không cần
+    chọn 2 trong nhiều chiều). Seed CHẴN → 2 vòng tròn đồng tâm (phi tuyến, linear
+    SVC thất bại rõ — F1 ~0.4, RBF đạt F1=1.0 với ÍT support vector hơn hẳn).
+    Seed LẺ → 2 cụm Gauss tách biệt tuyến tính (linear SVC đã đủ, F1~1.0 với ÍT
+    support vector hơn RBF — chọn linear vì đơn giản hơn mà không thua metric).
+    Cố ý luân phiên theo seed để grader kiểm tra 'lựa chọn chính đáng thay đổi
+    theo cấu trúc dữ liệu ẩn' (Model behavior của spec), không hard-code theo 1 kernel."""
+    rng = np.random.RandomState(6401 + seed)
+    n = 300
+    nonlinear = (seed % 2 == 0)
+    n0 = n // 2
+    n1 = n - n0
+    if nonlinear:
+        r0 = rng.normal(1.5, 0.3, n0)
+        th0 = rng.uniform(0, 2 * np.pi, n0)
+        X0 = np.stack([r0 * np.cos(th0), r0 * np.sin(th0)], axis=1)
+        r1 = rng.normal(3.5, 0.3, n1)
+        th1 = rng.uniform(0, 2 * np.pi, n1)
+        X1 = np.stack([r1 * np.cos(th1), r1 * np.sin(th1)], axis=1)
+    else:
+        X0 = rng.normal([-2, -2], 1.0, size=(n0, 2))
+        X1 = rng.normal([2, 2], 1.0, size=(n1, 2))
+    X = np.vstack([X0, X1])
+    y = np.array([0] * n0 + [1] * n1)
+    idx = rng.permutation(n)
+    X, y = X[idx], y[idx]
+    n_tr = int(n * 0.7)
+    return X[:n_tr], X[n_tr:], y[:n_tr], y[n_tr:]
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# MODULE 3 — CLUSTERING & STRUCTURE DISCOVERY
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Bài C3-6 — Clustering không phải classification ─────────────────────
+def load_unsupervised_contract_data(seed=0):
+    """240 học sinh × 2 feature hành vi (activity_score, consistency_score), 3 cụm
+    Gauss tách khá rõ. Trả (X, external_labels) — external_labels là nhãn "niêm
+    phong" chỉ dùng để AUDIT SAU KHI fit, TUYỆT ĐỐI không được đưa vào KMeans.fit().
+
+    QUAN TRỌNG: thứ tự cluster_id mà KMeans trả về là NGẪU NHIÊN/tuỳ khởi tạo —
+    không có gì đảm bảo cluster_id=0 khớp external_labels=0. Đây chính là cơ sở
+    thật cho misconception của bài: ID là nhãn triển khai, hoán vị được."""
+    rng = np.random.RandomState(7201 + seed)
+    n = 240
+    n_each = n // 3
+    c0 = rng.normal([-3, -2], 0.8, size=(n_each, 2))
+    c1 = rng.normal([0, 1], 0.8, size=(n_each, 2))
+    c2 = rng.normal([3, -1], 0.8, size=(n - 2 * n_each, 2))
+    X = np.vstack([c0, c1, c2])
+    external_labels = np.array([0] * n_each + [1] * n_each + [2] * (n - 2 * n_each))
+    idx = rng.permutation(len(X))
+    return X[idx], external_labels[idx]
+
+
+# ── Bài C3-7 — K-means: assign, update và repeat ─────────────────────────
+def load_kmeans_lab(seed=0):
+    """300 học sinh × 2 feature (activity_score, engagement_minutes) — 3 cụm Gauss
+    tách khá rõ (globular — đúng giả định hình cầu của K-means). CỐ Ý để feature
+    thứ 2 lệch thang đo ×20 lần so với feature thứ 1 — chưa scale sẽ cho inertia
+    một con số KHỔNG LỒ, không đọc được, và có thể lệch centroid nếu chỉ chạy
+    n_init=1 (dễ kẹt local minimum)."""
+    rng = np.random.RandomState(8401 + seed)
+    n = 300
+    n_each = n // 3
+    c0 = rng.normal([-3, -2], 0.9, size=(n_each, 2))
+    c1 = rng.normal([0, 2], 0.9, size=(n_each, 2))
+    c2 = rng.normal([3, -2], 0.9, size=(n - 2 * n_each, 2))
+    X = np.vstack([c0, c1, c2])
+    X[:, 1] = X[:, 1] * 20  # feature 2 lệch thang đo — buộc phải StandardScaler trước khi fit
+    idx = rng.permutation(len(X))
+    return X[idx]
+
+
+def load_kmeans_crescent():
+    """200 điểm hình 2 lưỡi liềm lồng nhau (non-globular) — K-means (giả định cụm
+    hình cầu/lồi) THẤT BẠI rõ trên hình dạng này dù vẫn chạy ra số hợp lệ. Trả
+    (X, true_shape_labels) — true_shape_labels chỉ dùng để MINH HOẠ thất bại,
+    không phải nhãn để fit."""
+    rng = np.random.RandomState(8501)
+    n = 200
+    n0 = n // 2
+    t0 = rng.uniform(0, np.pi, n0)
+    x0 = np.stack([np.cos(t0), np.sin(t0)], axis=1) + rng.normal(0, 0.08, (n0, 2))
+    n1 = n - n0
+    t1 = rng.uniform(0, np.pi, n1)
+    x1 = np.stack([1 - np.cos(t1), 1 - np.sin(t1) - 0.5], axis=1) + rng.normal(0, 0.08, (n1, 2))
+    X = np.vstack([x0, x1])
+    true_shape_labels = np.array([0] * n0 + [1] * n1)
+    return X, true_shape_labels
+
+
+# ── Bài C3-8 — Chọn k và đánh giá một clustering ─────────────────────────
+def load_k_selection_data(seed=0):
+    """320 mẫu, 2 chiều. Seed CHẴN → 4 cụm Gauss tách RÕ (elbow + silhouette đồng
+    thuận rõ ràng ở k=4). Seed LẺ → toạ độ NGẪU NHIÊN ĐỀU (không có cấu trúc cụm
+    thật) — silhouette THẤP và GẦN NHƯ PHẲNG ở mọi k, trong khi stability (ARI
+    giữa các seed) vẫn có thể cao giả tạo (KMeans luôn tìm ra 1 cách chia nào đó).
+    Đây chính là minh hoạ THẬT cho misconception của bài: thuật toán có thể "tìm
+    thấy" cụm ngay cả trên dữ liệu ngẫu nhiên — 1 k được chọn không chứng minh
+    cụm tự nhiên tồn tại."""
+    rng = np.random.RandomState(9101 + seed)
+    n = 320
+    if seed % 2 == 0:
+        n_each = n // 4
+        centers = [[-3, -3], [-3, 3], [3, 3], [3, -3]]
+        parts = [rng.normal(c, 0.7, size=(n_each, 2)) for c in centers]
+        X = np.vstack(parts)
+    else:
+        X = rng.uniform(-4, 4, size=(n, 2))
+    idx = rng.permutation(len(X))
+    return X[idx]
+
+
+# ── Bài C3-9 — DBSCAN và hierarchical clustering ─────────────────────────
+def load_shape_clustering_data(seed=0):
+    """240 mẫu, 2 chiều. Seed CHẴN → 2 lưỡi liềm lồng nhau (non-globular — DBSCAN
+    theo mật độ nhận diện ĐÚNG hình dạng, KMeans/complete-link cắt SAI qua 2 đầu
+    lưỡi liềm dù silhouette của chúng lại CAO HƠN — đúng "metric guardrail" của
+    bài: silhouette thiên vị cụm lồi/gọn, không phản ánh đúng hình dạng thật).
+    Seed LẺ → 2 cụm Gauss tách rõ (globular — cả 3 thuật toán đều đồng thuận,
+    dùng để kiểm tra 'lựa chọn thuật toán thích ứng theo cấu trúc dữ liệu ẩn')."""
+    rng = np.random.RandomState(9301 + seed)
+    n = 240
+    if seed % 2 == 0:
+        n0 = n // 2
+        t0 = rng.uniform(0, np.pi, n0)
+        x0 = np.stack([np.cos(t0), np.sin(t0)], axis=1) + rng.normal(0, 0.08, (n0, 2))
+        n1 = n - n0
+        t1 = rng.uniform(0, np.pi, n1)
+        x1 = np.stack([1 - np.cos(t1), 1 - np.sin(t1) - 0.5], axis=1) + rng.normal(0, 0.08, (n1, 2))
+        X = np.vstack([x0, x1])
+    else:
+        n0 = n // 2
+        c0 = rng.normal([-2.5, -2.5], 0.6, size=(n0, 2))
+        c1 = rng.normal([2.5, 2.5], 0.6, size=(n - n0, 2))
+        X = np.vstack([c0, c1])
+    idx = rng.permutation(len(X))
+    return X[idx]
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# MODULE 4 — NEURAL COMPUTATION
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Bài C3-10 — Perceptron: neuron có thể học đầu tiên ───────────────────
+def load_perceptron_cases(seed=0):
+    """Trả list 4 case (name, X, y) — KHÔNG dùng sklearn, chỉ NumPy thuần (đúng
+    tinh thần Module 4: tự lập trình cơ chế neuron, không gọi thư viện model có
+    sẵn). AND/OR: 4 điểm nhị phân {0,1}² — TÁCH ĐƯỢC tuyến tính, perceptron hội
+    tụ. XOR: cũng 4 điểm nhị phân nhưng KHÔNG tách được tuyến tính — perceptron
+    KHÔNG BAO GIỜ hội tụ (giới hạn năng lực model, không phải lỗi code).
+    'separable': 2 cụm Gauss tách rõ trong không gian liên tục — hội tụ rất nhanh."""
+    rng = np.random.RandomState(1001 + seed)
+    X_and = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+    y_and = np.array([0, 0, 0, 1])
+    X_or = X_and.copy()
+    y_or = np.array([0, 1, 1, 1])
+    X_xor = X_and.copy()
+    y_xor = np.array([0, 1, 1, 0])
+    n = 30
+    c0 = rng.normal([-1.5, -1.5], 0.5, size=(n, 2))
+    c1 = rng.normal([1.5, 1.5], 0.5, size=(n, 2))
+    X_sep = np.vstack([c0, c1])
+    y_sep = np.array([0] * n + [1] * n)
+    idx = rng.permutation(len(X_sep))
+    X_sep, y_sep = X_sep[idx], y_sep[idx]
+    return [
+        ('AND', X_and, y_and),
+        ('OR', X_or, y_or),
+        ('separable', X_sep, y_sep),
+        ('XOR', X_xor, y_xor),
+    ]
+
+
+# ── Bài C3-11 — Activation functions and gradient flow ───────────────────
+def load_activation_chain(seed=0):
+    """Trả list 10 mảng preactivation (mỗi mảng shape (200,16)) — mô phỏng tín
+    hiệu đi qua 10 lớp Dense KHÔNG chuẩn hoá (scale=1.6, không Xavier), sigmoid
+    feed-forward giữa các lớp. KHÔNG cố tình ép sigmoid bão hoà cực trị — vanishing
+    gradient hiện ra một cách THẬT qua việc TÍCH DỒN nhiều số <1 (mỗi sigmoid_grad
+    mean ~0.18-0.23/lớp, nhân dồn 10 lớp → ~2e-7), trong khi ReLU (mỗi lớp ~50%
+    'chết' vì không có bias) tích dồn chậm hơn nhiều (~0.5^10 ≈ 6e-4) — KHÁC BIỆT
+    THẬT ~3000 lần ở depth=10, không phải số dựng sẵn."""
+    rng = np.random.RandomState(2001 + seed)
+    n, width, scale, n_layers = 200, 16, 1.6, 10
+    a = rng.normal(0, 1.0, size=(n, width))
+    chain = []
+    for _ in range(n_layers):
+        W = rng.normal(0, scale / np.sqrt(width), size=(width, width))
+        z = a @ W
+        chain.append(z)
+        a = 1.0 / (1.0 + np.exp(-z))
+    return chain
+
+
+# ── Bài C3-12 — Feedforward through a neural network ─────────────────────
+def load_forward_pass_case(seed=0):
+    """Trả (X, params) — batch THẬT m=5 mẫu, n_in=3 feature, n_hidden=4. params =
+    {W1(3,4), b1(4,), W2(4,1), b2(1,)} — kích thước TƯƠNG THÍCH đúng contract
+    forward_two_layer chuẩn spec (Z1=X@W1+b1, A1=relu(Z1), Z2=A1@W2+b2,
+    P=sigmoid(Z2)). Trọng số scale nhỏ (0.6/0.1) để A1 có cả zero (dead-ReLU thật,
+    không giả lập) lẫn dương — khớp chủ đề Bài 11."""
+    rng = np.random.RandomState(3001 + seed)
+    m, n_in, n_hidden = 5, 3, 4
+    X = rng.normal(0, 1.0, size=(m, n_in))
+    W1 = rng.normal(0, 0.6, size=(n_in, n_hidden))
+    b1 = rng.normal(0, 0.1, size=(n_hidden,))
+    W2 = rng.normal(0, 0.6, size=(n_hidden, 1))
+    b2 = rng.normal(0, 0.1, size=(1,))
+    return X, {'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}
+
+
+# ── Bài C3-13 — Backpropagation and gradient checking ─────────────────────
+def load_backprop_case(seed=0):
+    """Trả (y, probabilities, params, cache) — batch THẬT m=5, n_in=3, n_hidden=4
+    (CÙNG kiến trúc Bài 12). probabilities/cache đến từ 1 forward pass THẬT
+    (ReLU ẩn, sigmoid output) trên params/X đã sinh — cache hợp lệ, khớp đúng
+    contract backward_two_layer chuẩn spec."""
+    rng = np.random.RandomState(4001 + seed)
+    m, n_in, n_hidden = 5, 3, 4
+    X = rng.normal(0, 1.0, size=(m, n_in))
+    W1 = rng.normal(0, 0.6, size=(n_in, n_hidden))
+    b1 = rng.normal(0, 0.1, size=(n_hidden,))
+    W2 = rng.normal(0, 0.6, size=(n_hidden, 1))
+    b2 = rng.normal(0, 0.1, size=(1,))
+    y = rng.randint(0, 2, size=(m,)).astype(float)
+    Z1 = X @ W1 + b1
+    A1 = np.maximum(0.0, Z1)
+    Z2 = A1 @ W2 + b2
+    P = (1.0 / (1.0 + np.exp(-Z2))).reshape(-1)
+    params = {'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}
+    cache = {'X': X, 'Z1': Z1, 'A1': A1, 'Z2': Z2}
+    return y, P, params, cache
+
+
+def _c3l13_forward_loss(params, X, y):
+    Z1 = X @ params['W1'] + params['b1']
+    A1 = np.maximum(0.0, Z1)
+    Z2 = A1 @ params['W2'] + params['b2']
+    P = (1.0 / (1.0 + np.exp(-Z2))).reshape(-1)
+    eps = 1e-12
+    return float(-np.mean(y * np.log(P + eps) + (1 - y) * np.log(1 - P + eps)))
+
+
+def gradient_check(params, grads, y, X, epsilon=1e-5, n_check=3, seed=0):
+    """Finite-difference gradient checking — với MỖI tham số (W1/b1/W2/b2),
+    chọn ngẫu nhiên (seed cố định, tái lập được) n_check phần tử, nhiễu ±epsilon,
+    tính lại loss BCE bằng forward pass THẬT, so central-difference numerical
+    gradient với grads[tên] analytical — trả relative error LỚN NHẤT mỗi tham số."""
+    rng = np.random.RandomState(5001 + seed)
+    rel_errors = {}
+    for name in params:
+        arr = params[name]
+        n_pick = min(n_check, arr.size)
+        flat_idx = rng.choice(arr.size, size=n_pick, replace=False)
+        errs = []
+        for idx in flat_idx:
+            orig = arr.flat[idx]
+            arr.flat[idx] = orig + epsilon
+            loss_plus = _c3l13_forward_loss(params, X, y)
+            arr.flat[idx] = orig - epsilon
+            loss_minus = _c3l13_forward_loss(params, X, y)
+            arr.flat[idx] = orig
+            numgrad = (loss_plus - loss_minus) / (2 * epsilon)
+            anagrad = float(np.asarray(grads[name]).flat[idx])
+            denom = max(abs(numgrad), abs(anagrad), 1e-8)
+            errs.append(abs(numgrad - anagrad) / denom)
+        rel_errors[name] = float(max(errs))
+    return rel_errors
+
+
+# ── Bài C3-14 — Train, evaluate and defend a neural network experiment ────
+# QUYẾT ĐỊNH KIẾN TRÚC (user chốt 2026-08-02): Pyodide/WASM KHÔNG có PyTorch build
+# sẵn, và app này KHÔNG có backend remote-sandbox để chạy code tuỳ ý phía server
+# (rủi ro bảo mật + hạ tầng mới, ngoài phạm vi). Thay vì build sandbox mới, bài
+# này dùng đường cong train/val THẬT từ 1 lần train PyTorch THẬT được chạy NGOÀI
+# app (offline, venv scratch — KHÔNG phải giả lập/số dựng sẵn) — học viên tự lắp
+# lại ĐÚNG thuật toán chọn checkpoint (early stopping) + tính metric trên số liệu
+# THẬT này, thay vì tự chạy lại toàn bộ vòng lặp train (đòi hỏi torch).
+# MLP nhị phân: nn.Sequential(Linear(8,hidden), ReLU, Linear(hidden,1)), Adam,
+# BCEWithLogitsLoss, weight_decay theo từng candidate — dataset tabular nhị phân
+# (sklearn make_classification, 260 mẫu, seed cố định), early stopping patience-based.
+_C3L14_RUNS = {
+    'A_underfit': {
+        'hidden': 2, 'n_params': 21, 'patience': 8,
+        'train_curve': [
+            0.77, 0.7647, 0.7591, 0.755, 0.7501, 0.7463, 0.7421, 0.7383, 0.7349, 0.7323,
+            0.7289, 0.7262, 0.7237, 0.7207, 0.7178, 0.716, 0.7135, 0.7114, 0.7098, 0.7077,
+            0.706, 0.7039, 0.7019, 0.7005, 0.6984, 0.6968, 0.6948, 0.6931, 0.6912, 0.6901,
+            0.6879, 0.6861, 0.6844, 0.6824, 0.6804, 0.6786, 0.6767, 0.6745, 0.6724, 0.6698,
+            0.6676, 0.6652, 0.6626, 0.6599, 0.6569, 0.6545, 0.6518, 0.6487, 0.6462, 0.6428,
+            0.6401, 0.6367, 0.6339, 0.6305, 0.6268, 0.6236, 0.62, 0.6165, 0.6129, 0.6097,
+            0.6051, 0.6014, 0.5976, 0.5938, 0.5899, 0.5862, 0.5819, 0.5777, 0.5747, 0.5701,
+            0.5659, 0.5624, 0.558, 0.5552, 0.5507, 0.5465, 0.5439, 0.5397, 0.5365, 0.5323,
+        ],
+        'val_curve': [
+            0.7951, 0.789, 0.7828, 0.7775, 0.7721, 0.767, 0.7623, 0.7581, 0.7538, 0.7503,
+            0.7468, 0.7431, 0.7399, 0.7367, 0.7335, 0.7305, 0.7277, 0.7252, 0.7224, 0.7201,
+            0.7174, 0.7148, 0.7124, 0.7102, 0.7078, 0.7049, 0.7025, 0.6997, 0.6973, 0.6945,
+            0.6917, 0.6889, 0.6857, 0.6834, 0.6801, 0.6769, 0.6738, 0.6709, 0.6674, 0.664,
+            0.6608, 0.6575, 0.6543, 0.6508, 0.6471, 0.6434, 0.6395, 0.6356, 0.632, 0.6282,
+            0.6242, 0.6198, 0.6155, 0.6116, 0.6073, 0.6034, 0.5988, 0.5949, 0.5908, 0.5866,
+            0.5821, 0.578, 0.5738, 0.5694, 0.5658, 0.5614, 0.5571, 0.5528, 0.5486, 0.5446,
+            0.541, 0.5369, 0.5333, 0.5294, 0.5259, 0.5219, 0.5181, 0.5143, 0.5109, 0.5073,
+        ],
+        'confusion': {'tp': 11, 'tn': 32, 'fp': 2, 'fn': 20},
+    },
+    'B_reference': {
+        'hidden': 16, 'n_params': 161, 'patience': 8,
+        'train_curve': [
+            0.7134, 0.6882, 0.6672, 0.6454, 0.6279, 0.6094, 0.5927, 0.5779, 0.5634, 0.5499,
+            0.5361, 0.5242, 0.5133, 0.5032, 0.4921, 0.4816, 0.4718, 0.4628, 0.454, 0.4455,
+            0.4388, 0.4307, 0.4229, 0.4165, 0.4113, 0.4055, 0.3997, 0.3957, 0.3911, 0.3855,
+            0.3826, 0.3789, 0.3763, 0.3715, 0.369, 0.3671, 0.3632, 0.3613, 0.3583, 0.3566,
+            0.3551, 0.3517, 0.3507, 0.3492, 0.346, 0.344, 0.3431, 0.3414, 0.3407, 0.3385,
+            0.3376, 0.337, 0.3329, 0.3334, 0.3304, 0.3297, 0.3293, 0.327, 0.3248, 0.3255,
+            0.3231, 0.3218, 0.3191, 0.3185, 0.3182, 0.3159, 0.3156, 0.3135, 0.314, 0.3112,
+            0.3119,
+        ],
+        'val_curve': [
+            0.6675, 0.6513, 0.6355, 0.6218, 0.6088, 0.5967, 0.5856, 0.5743, 0.5636, 0.5531,
+            0.5432, 0.5329, 0.5231, 0.5131, 0.5035, 0.4937, 0.4845, 0.4757, 0.4665, 0.4585,
+            0.4507, 0.4432, 0.4362, 0.43, 0.4236, 0.4179, 0.4125, 0.4071, 0.4027, 0.3982,
+            0.3939, 0.3901, 0.3865, 0.3834, 0.38, 0.3774, 0.375, 0.3725, 0.3703, 0.3684,
+            0.366, 0.3645, 0.3628, 0.3618, 0.3606, 0.3594, 0.3586, 0.3574, 0.3566, 0.3559,
+            0.3546, 0.3546, 0.3538, 0.3531, 0.3528, 0.3526, 0.3523, 0.3522, 0.3515, 0.351,
+            0.3511, 0.3509, 0.3506, 0.3507, 0.351, 0.3512, 0.3508, 0.3513, 0.3513, 0.3522,
+            0.3524,
+        ],
+        'confusion': {'tp': 24, 'tn': 29, 'fp': 5, 'fn': 7},
+    },
+    'C_overfit': {
+        'hidden': 256, 'n_params': 2561, 'patience': 6,
+        'train_curve': [
+            0.6386, 0.4801, 0.4154, 0.3835, 0.3573, 0.3412, 0.3304, 0.3161, 0.303, 0.2919,
+            0.2878, 0.2715, 0.2669, 0.2543, 0.2487, 0.2376,
+        ],
+        'val_curve': [
+            0.5546, 0.4776, 0.4167, 0.3866, 0.3651, 0.3569, 0.3523, 0.3512, 0.3489, 0.3488,
+            0.351, 0.3494, 0.3568, 0.3591, 0.3659, 0.3638,
+        ],
+        'confusion': {'tp': 24, 'tn': 29, 'fp': 5, 'fn': 7},
+    },
+    'C_no_earlystop': {
+        'hidden': 256, 'n_params': 2561, 'patience': 9999,
+        'train_curve': [
+            0.6386, 0.4801, 0.4154, 0.3835, 0.3573, 0.3412, 0.3304, 0.3161, 0.303, 0.2919,
+            0.2878, 0.2715, 0.2669, 0.2543, 0.2487, 0.2376, 0.2295, 0.2241, 0.2172, 0.2094,
+            0.2064, 0.1958, 0.1897, 0.1848, 0.1793, 0.1737, 0.1697, 0.1643, 0.1607, 0.1558,
+            0.1521, 0.1478, 0.146, 0.1416, 0.1372, 0.1325, 0.1314, 0.1268, 0.1239, 0.1199,
+            0.1187, 0.1158, 0.1122, 0.1109, 0.1082, 0.1038, 0.1025, 0.1, 0.0982, 0.0963,
+            0.0931, 0.0928, 0.0885, 0.0887, 0.0859, 0.0845, 0.0831, 0.081, 0.0779, 0.0783,
+        ],
+        'val_curve': [
+            0.5546, 0.4776, 0.4167, 0.3866, 0.3651, 0.3569, 0.3523, 0.3512, 0.3489, 0.3488,
+            0.351, 0.3494, 0.3568, 0.3591, 0.3659, 0.3638, 0.3659, 0.3709, 0.3736, 0.378,
+            0.3881, 0.3895, 0.3915, 0.3967, 0.4027, 0.4025, 0.4067, 0.4082, 0.416, 0.4218,
+            0.4201, 0.4227, 0.4239, 0.4237, 0.4328, 0.4373, 0.4357, 0.4279, 0.4375, 0.4443,
+            0.4335, 0.4358, 0.4455, 0.4495, 0.4414, 0.4461, 0.4545, 0.4492, 0.4473, 0.4534,
+            0.4454, 0.4539, 0.4475, 0.4451, 0.4523, 0.4644, 0.4614, 0.463, 0.4617, 0.4614,
+        ],
+        'confusion': {'tp': 24, 'tn': 29, 'fp': 5, 'fn': 7},
+    },
+}
+
+
+def load_experiment_run(name='B_reference'):
+    """Trả dict {train_curve, val_curve, patience, confusion, n_params, hidden} —
+    số THẬT từ 1 lần train PyTorch THẬT (MLP nhị phân, Adam, BCEWithLogitsLoss)
+    chạy NGOÀI app (offline). 4 candidate: A_underfit (hidden=2, quá ít tham số),
+    B_reference (hidden=16, cấu hình chuẩn spec, early-stop đúng lúc), C_overfit
+    (hidden=256, không weight_decay, early-stop CỨU được nhờ patience thấp),
+    C_no_earlystop (CÙNG C_overfit nhưng patience=9999 — train_loss tụt xuống
+    0.078 trong khi val_loss BẬT NGƯỢC từ 0.349 lên 0.461 — overfit thật)."""
+    return copy.deepcopy(_C3L14_RUNS[name])
+

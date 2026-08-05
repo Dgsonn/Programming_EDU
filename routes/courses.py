@@ -94,7 +94,8 @@ def get_courses():
 @api_login_required
 def get_enrolled():
     uid   = current_user_id()
-    icons = {'cpp': '📘', 'htmlcss': '📗', 'python': '📙', 'java': '📕'}
+    icons = {'cpp': '📘', 'htmlcss': '📗', 'python': '📙', 'java': '📕',
+             'ml': '🧠', 'ml_intermediate': '📊', 'ml_advanced': '🧬'}
     conn  = get_db()
     rows  = conn.execute('''
         SELECT c.id, c.title, c.subtitle, c.color, c.accent_color,
@@ -125,7 +126,8 @@ def get_enrolled():
 def get_courses_and_enrolled():
     """Trả về courses + enrolled detail trong 1 query, 1 request."""
     uid   = current_user_id()
-    icons = {'cpp': '📘', 'htmlcss': '📗', 'python': '📙', 'java': '📕'}
+    icons = {'cpp': '📘', 'htmlcss': '📗', 'python': '📙', 'java': '📕',
+             'ml': '🧠', 'ml_intermediate': '📊', 'ml_advanced': '🧬'}
     conn  = get_db()
 
     rows = conn.execute('''

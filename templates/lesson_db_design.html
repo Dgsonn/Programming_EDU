@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>{% if course_id == 'ml' %}Machine Learning — Bài {{ (lesson_idx or 0) + 1 }}{% else %}Database Design — Bài {{ (lesson_idx or 0) + 1 }}{% endif %}</title>
+  <title>{% if course_id == 'ml' %}Machine Learning — Bài {{ (lesson_idx or 0) + 1 }}{% elif course_id == 'ml_intermediate' %}Machine Learning Trung Cấp — Bài {{ (lesson_idx or 0) + 1 }}{% elif course_id == 'ml_advanced' %}Machine Learning Nâng Cao — Bài {{ (lesson_idx or 0) + 1 }}{% else %}Database Design — Bài {{ (lesson_idx or 0) + 1 }}{% endif %}</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/theme/material-darker.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/sql/sql.min.js"></script>
-  {% if course_id == 'ml' %}
+  {% if course_id in ('ml', 'ml_intermediate', 'ml_advanced') %}
   <!-- ML: Python mode cho editor Step 4 (cùng CodeMirror của shell — nhất quán visual) -->
   <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/python/python.min.js"></script>
   {% endif %}
@@ -23,7 +23,7 @@
   <!-- Canvas Confetti for Duolingo-style celebrations -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=30" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_db_design.css') }}?v=44" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body class="lesson-focus-mode" data-course="{{ course_id or 'db_design' }}">
@@ -97,7 +97,7 @@
         </div>
       </div>
 
-      {% if course_id == 'ml' %}
+      {% if course_id in ('ml', 'ml_intermediate', 'ml_advanced') %}
       <!-- ML: trạng thái Python runtime (Pyodide nạp numpy/pandas/sklearn ~40s lần đầu) -->
       <div class="ml-runtime-pill" id="ml-runtime-pill" title="Trạng thái Python runtime">
         <span class="ml-runtime-dot" id="ml-runtime-dot"></span>
@@ -637,13 +637,26 @@
   <!-- ML (USTH StudyLab) — data riêng theo schema shell + engine Pyodide ngầm
        + map DÒNG CHẢY PIPELINE ML (skin riêng, 2026-07-18c) -->
   <script src="{{ url_for('static', filename='js/lesson_content_ml.js') }}?v=27"></script>
-  <script src="{{ url_for('static', filename='js/ml_engine.js') }}?v=2"></script>
-  <script src="{{ url_for('static', filename='js/ml_flow_map.js') }}?v=21"></script>
+  {% endif %}
+  {% if course_id == 'ml_intermediate' %}
+  <!-- ML Intermediate (Course 2 — Applied ML, 2026-07-26): cùng shell db_design,
+       cùng data schema với course 'ml'. -->
+  <script src="{{ url_for('static', filename='js/lesson_content_ml_intermediate.js') }}?v=2"></script>
+  {% endif %}
+  {% if course_id == 'ml_advanced' %}
+  <!-- ML Advanced (Course 3 — Advanced Modeling & Neural Networks, 2026-07-31): cùng shell
+       db_design, cùng data schema với course 'ml'/'ml_intermediate'. Bài 14 dùng remote CPU
+       sandbox (PyTorch) — renderer riêng cho step_4 bài đó sẽ thêm khi build tới bài 14. -->
+  <script src="{{ url_for('static', filename='js/lesson_content_ml_advanced.js') }}?v=14"></script>
+  {% endif %}
+  {% if course_id in ('ml', 'ml_intermediate', 'ml_advanced') %}
+  <script src="{{ url_for('static', filename='js/ml_engine.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='js/ml_flow_map.js') }}?v=35"></script>
   {% endif %}
   <script src="{{ url_for('static', filename='js/table_explorer.js') }}?v=2"></script>
   <script src="{{ url_for('static', filename='js/drag_game.js') }}?v=3"></script>
   <script src="{{ url_for('static', filename='js/decomp_game.js') }}?v=1"></script>
-  <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=35"></script>
+  <script src="{{ url_for('static', filename='js/lesson_db_design.js') }}?v=49"></script>
 
   <!-- B7 Mobile: Step 3 drag-drop fallback notice (shown via JS only on mobile + step 3) -->
   <div id="mobile-step3-notice" class="mobile-step3-notice" role="alertdialog" aria-labelledby="mobile-step3-title">

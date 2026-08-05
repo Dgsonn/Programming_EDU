@@ -510,6 +510,45 @@ def init_db():
                 'static/images/ml.svg', 'Cơ bản', '~5 giờ', '0', 4.9, 15,
                 '#4C1D95', '#A78BFA', 'AI & DATA SCIENCE'))
 
+        # Migration 2026-07-26b: khóa Machine Learning TRUNG CẤP (Course 2 — Applied ML).
+        # Tiếp nối Course 1, dựng trên cùng runtime Pyodide + ml_lab + ml_grader production.
+        # 14 bài / 4 module: Linear Models in Practice, Logistic Regression & Regularization,
+        # Model Evaluation & Diagnosis, Instance & Tree-Based Models.
+        c.execute('SELECT 1 FROM courses WHERE id = %s', ('ml_intermediate',))
+        if not c.fetchone():
+            c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (
+                'ml_intermediate',
+                'Machine Learning Trung Cấp',
+                'ML Ứng dụng — dự án USTH StudyLab (Course 2)',
+                'Tiếp nối ML Foundations: Multiple Regression trong pipeline thực tế, feature '
+                'scaling & convergence, Logistic Regression bằng Gradient Descent, Regularization '
+                'L1/L2 chọn bằng validation, chẩn đoán bias-variance, các metric đánh giá trung '
+                'thực (MAE/MSE/R², Confusion Matrix, Precision/Recall/F1), KNN, Decision Tree, '
+                'Random Forest. Cùng runtime Pyodide + ml_lab production — Python thật trong '
+                'trình duyệt, chấm 4 tầng.',
+                'static/images/ml.svg', 'Trung cấp', '~6 giờ', '0', 4.9, 14,
+                '#1E3A8A', '#60A5FA', 'AI & DATA SCIENCE'))
+
+        # Migration 2026-07-31: khóa Machine Learning NÂNG CAO (Course 3 — Advanced Modeling
+        # & Neural Networks). Độc lập ghi danh (không bắt buộc mua Course 1/2), dựng theo spec
+        # sản xuất docs/ML_Curriculum_Course_1_2_3_Revised_with_Coverage_Audit.pdf (trang 137-208)
+        # + docs/ML_Exercise_Bank_Courses_1_2_3_Full.pdf (trang 120-188).
+        # 14 bài / 5 module: High-Dimensional Representation (PCA), Margin-Based Classification
+        # (SVM), Clustering & Structure Discovery, Neural Computation, Backpropagation &
+        # Experiment Defense. Bài 14 dùng remote CPU sandbox cho PyTorch (không phải Pyodide).
+        c.execute('SELECT 1 FROM courses WHERE id = %s', ('ml_advanced',))
+        if not c.fetchone():
+            c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (
+                'ml_advanced',
+                'Machine Learning Nâng Cao',
+                'Advanced Modeling & Neural Networks — dự án USTH StudyLab (Course 3)',
+                'Chẩn đoán không gian nhiều chiều, dùng PCA và SVM, thiết kế và đánh giá thí '
+                'nghiệm clustering, tự tay lập trình cơ chế bên trong neural network (perceptron, '
+                'activation, feedforward, backpropagation) và bảo vệ một thí nghiệm mạng nơ-ron '
+                'nhỏ có thể tái lập — đóng bằng bài lab PyTorch chạy trên remote CPU sandbox.',
+                'static/images/ml.svg', 'Nâng cao', '~7 giờ', '0', 4.9, 14,
+                '#164E63', '#22D3EE', 'AI & DATA SCIENCE'))
+
         # Sync 2026-07-04b (user chốt): tiêu đề ỨNG DỤNG (badge đã nói cấp độ, title không lặp)
         # + duration TRÒN GIỜ đồng bộ với tổng phút giáo trình (1 nguồn chân lý).
         # Idempotent: set cùng giá trị mỗi lần start.

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Machine Learning Cơ bản – Programming EDU</title>
+  <title>{{ course.title if course else 'Machine Learning' }} – Programming EDU</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=9" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}?v=9" />
@@ -12,13 +12,13 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=9" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/course_db_design.css') }}?v=1" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_ml.css') }}?v=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_ml.css') }}?v=3" />
 </head>
 <body class="dark" data-course="{{ course_id or 'ml' }}">
 
 <div id="main">
 
-  <!-- Topbar -->
+  <!-- ════════════════════ Topbar ════════════════════ -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="brand brand-always">
@@ -91,80 +91,71 @@
     </div>
   </div>
 
-  <!-- Page content -->
+  <!-- ════════════════════ Page content ════════════════════ -->
   <div class="page active" style="padding:0;">
 
-    <!-- ── Hero ── -->
+    {# ── Hero ── render thuần từ content dict + course row (DB) #}
     <div class="cd-hero">
       <div class="cd-hero-content">
-        <span class="cd-tag">MACHINE LEARNING</span>
-        <h1 class="cd-hero-title">Machine Learning Cơ bản — ML Foundations</h1>
-        <p class="cd-hero-subtitle">USTH StudyLab — dự đoán sớm nguy cơ rớt môn · Python thật chạy trong trình duyệt · numpy, pandas, scikit-learn</p>
+        {% if content.ribbon_text %}
+          <div class="cd-ribbon">{{ content.ribbon_text }}</div>
+        {% endif %}
+        <span class="cd-tag">{{ content.tagline }}</span>
+        <h1 class="cd-hero-title">{{ course.title if course else 'Machine Learning' }}</h1>
+        <p class="cd-hero-subtitle">{{ course.subtitle if course else '' }}</p>
         <div class="cd-meta">
-          <div class="cd-meta-item">🕐 <span class="val" id="cd-hero-time">~5 giờ</span></div>
-          <div class="cd-meta-item">📖 <span class="val">15</span> bài học</div>
-          <div class="cd-meta-item">🎯 <span class="val">Cơ bản</span></div>
+          <div class="cd-meta-item">🕐 <span class="val" id="cd-hero-time">{{ course.duration if course else '~5 giờ' }}</span></div>
+          <div class="cd-meta-item">📖 <span class="val">{{ course.lessons if course else 15 }}</span> bài học</div>
+          <div class="cd-meta-item">🎯 <span class="val">{{ course.level if course else 'Cơ bản' }}</span></div>
         </div>
       </div>
-      <div class="cd-hero-visual">🤖</div>
+      <div class="cd-hero-visual">{{ content.tag_emoji }}</div>
     </div>
 
-    <!-- ── Body ── -->
     <div class="cd-body">
 
-      <!-- ── Cột trái ── -->
+      <!-- ════════════════════ Cột trái ════════════════════ -->
       <div class="cd-main-col">
 
-        <!-- Block 1: Tổng quan -->
+        {# ── Block 1: Tổng quan khóa học — loop content #}
         <div class="cd-block">
           <div class="cd-block-hd">
             <div class="cd-block-icon">📋</div>
             <h3>Tổng quan khóa học</h3>
           </div>
           <div class="cd-block-body">
-            <p class="cd-desc">
-              Tuần 3 của học kỳ. Hệ thống <strong>USTH StudyLab</strong> muốn trả lời một câu hỏi mà không luật if/else nào viết nổi:
-              <em>"học viên nào đang trên đà rớt môn — khi điểm cuối kỳ còn CHƯA tồn tại?"</em>
-              Bạn là người dựng mô hình Machine Learning đầu tiên cho StudyLab.
-              <br><br>
-              Qua <strong>15 bài</strong> (5 module), bạn đi từ <em>chưa biết ML là gì</em> đến <em>tự tay huấn luyện và đánh giá model trung thực</em>:
-              định nghĩa đúng bài toán, chuẩn bị dữ liệu sạch, hồi quy tuyến tính + gradient descent, phân loại logistic,
-              và nghệ thuật không tự dối mình khi đánh giá (train/validation/test).
-              <br><br>
-              Điểm đặc biệt: <strong>Python THẬT (numpy, pandas, scikit-learn) chạy ngay trong trình duyệt</strong> — không cần cài đặt gì.
-              Mỗi bài kết thúc bằng IDE thật, và bài nộp được chấm <strong>4 tầng như code review thật</strong>:
-              Output đúng chưa — Code đúng thứ tự chưa — Model có thật sự học không — và có "chạy được nhưng SAI về nghĩa" không.
-            </p>
-            <p class="cd-desc" style="margin-top: 14px;"><strong>Sau khóa học, bạn sẽ làm được:</strong></p>
+            <p class="cd-desc">{{ content.description|safe }}</p>
+            <p class="cd-desc" style="margin-top:14px;">{{ content.what_you_learn|safe }}</p>
+            <p class="cd-desc" style="margin-top:14px;">{{ content.highlight|safe }}</p>
+
+            <p class="cd-desc" style="margin-top:14px;"><strong>Sau khóa học, bạn sẽ làm được:</strong></p>
             <ul class="cd-outcomes">
-              <li>🎯 <strong>Nhận diện đúng loại bài toán ML</strong> (regression / classification / clustering) từ câu hỏi + target — không nhìn nhầm theo kiểu dữ liệu lưu trữ</li>
-              <li>🧹 <strong>Chuẩn bị dữ liệu sạch</strong>: kiểu dữ liệu ngữ nghĩa, làm sạch, scale — và không bao giờ để lộ target vào X (leakage)</li>
-              <li>📈 <strong>Tự tay huấn luyện Linear Regression</strong>, đo lỗi bằng MSE và hiểu gradient descent tự chỉnh đường thẳng thế nào</li>
-              <li>🎲 <strong>Biến điểm số thành xác suất</strong> bằng sigmoid và vẽ decision boundary tách 2 lớp</li>
-              <li>🔬 <strong>Chẩn đoán underfit / overfit</strong> và chia Train / Validation / Test để đánh giá không tự dối mình</li>
-              <li>🐍 <strong>Viết code ML bằng Python thật</strong> — pandas chọn cột theo nghĩa, fit/predict đúng quy trình, qua được cả 4 tầng chấm</li>
+              {% for emoji, text in content.outcomes %}
+                <li>{{ emoji }} {{ text|safe }}</li>
+              {% endfor %}
             </ul>
-            <p class="cd-desc" style="margin-top: 14px; font-size: 13px; color: #9CA3AF;">
-              💡 <strong>Cách học:</strong> Mỗi bài 4 bước — Model Story (xem hiện tượng) → Concept Check (kéo thả, phân loại) →
-              Experiment Builder (tự dựng thí nghiệm, xem code sinh ra) → Full Python IDE (tự code, chấm 4 tầng thật).
+
+            <p class="cd-desc" style="margin-top:14px;font-size:13px;color:#9CA3AF;">
+              {{ content.learning_note|safe }}
             </p>
           </div>
         </div>
 
-        <!-- Block 2: Giáo trình -->
+        {# ── Block 2: Giáo trình — Roadmap render client-side #}
         <div class="cd-block">
           <div class="cd-block-hd">
             <div class="cd-block-icon">📚</div>
             <h3>Giáo trình</h3>
-            <span style="margin-left:auto;font-size:12px;color:#9CA3AF;">Khóa Cơ bản: 15 bài · 5 module</span>
+            <span style="margin-left:auto;font-size:12px;color:#9CA3AF;">
+              Khóa {{ course.level if course else content.tag_color }}: {{ course.lessons if course else 15 }} bài · {{ content.modules_breakdown }}
+            </span>
           </div>
           <div style="padding:0;">
-            <!-- Course Roadmap Visual (Brilliant-style node path) — rendered by JS -->
             <div class="cd-roadmap" id="cd-roadmap" aria-label="Lộ trình khóa học"></div>
           </div>
         </div>
 
-        <!-- Block 3: Yêu cầu -->
+        {# ── Block 3: Yêu cầu — loop requirements #}
         <div class="cd-block">
           <div class="cd-block-hd">
             <div class="cd-block-icon">📌</div>
@@ -172,23 +163,19 @@
           </div>
           <div class="cd-block-body">
             <ul class="cd-req-list">
-              <li data-prereq="python">
-                <span class="cd-req-text">Python cơ bản: biến, hàm, list (tương đương phần đầu khóa Python)</span>
-                <span class="cd-req-status" aria-label="Trạng thái"><i class="fas fa-lock"></i></span>
-              </li>
-              <li data-prereq="static">
-                <span class="cd-req-text">Toán phổ thông: hàm số, trung bình cộng — mọi công thức đều được giải thích lại bằng hình</span>
-                <span class="cd-req-status is-info" aria-label="Khuyến nghị"><i class="fas fa-lightbulb"></i></span>
-              </li>
-              <li data-prereq="static">
-                <span class="cd-req-text">Trình duyệt hiện đại — Python chạy NGAY TRONG trình duyệt (Pyodide), không cần cài đặt gì</span>
-                <span class="cd-req-status is-info" aria-label="Khuyến nghị"><i class="fas fa-lightbulb"></i></span>
-              </li>
+              {% for kind, status, text in content.requirements %}
+                <li data-prereq="{{ kind }}">
+                  <span class="cd-req-text">{{ text }}</span>
+                  <span class="cd-req-status {% if status == 'info' %}is-info{% endif %}" aria-label="{{ 'Khuyến nghị' if status == 'info' else 'Bắt buộc' }}">
+                    <i class="fas {{ 'fa-lightbulb' if status == 'info' else 'fa-lock' }}"></i>
+                  </span>
+                </li>
+              {% endfor %}
             </ul>
           </div>
         </div>
 
-        <!-- Block 4: Thành tựu -->
+        {# ── Block 4: Thành tựu — loop skills #}
         <div class="cd-block">
           <div class="cd-block-hd">
             <div class="cd-block-icon">🏅</div>
@@ -196,81 +183,20 @@
           </div>
           <div class="cd-block-body">
             <div class="cd-skills">
-              <div class="cd-skill-item" data-module="1">
-                <div class="cd-skill-icon"><i class="fas fa-compass"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">ML Problem Framer</div>
-                  <div class="cd-skill-desc">Nhận diện đúng loại bài toán, target và hợp đồng dữ liệu</div>
+              {% for module_num, icon, title, desc in content.skills %}
+                <div class="cd-skill-item" data-module="{{ module_num }}">
+                  <div class="cd-skill-icon"><i class="fas {{ icon }}"></i></div>
+                  <div class="cd-skill-body">
+                    <div class="cd-skill-title">{{ title }}</div>
+                    <div class="cd-skill-desc">{{ desc }}</div>
+                  </div>
                 </div>
-              </div>
-              <div class="cd-skill-item" data-module="1">
-                <div class="cd-skill-icon"><i class="fas fa-table"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Người đọc Dataset</div>
-                  <div class="cd-skill-desc">Dòng = sample, cột = attribute, X/y không leakage</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="2">
-                <div class="cd-skill-icon"><i class="fas fa-broom"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Data Preparation Scout</div>
-                  <div class="cd-skill-desc">Kiểu dữ liệu ngữ nghĩa, làm sạch bảo thủ, scale đúng cột</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="2">
-                <div class="cd-skill-icon"><i class="fas fa-chart-simple"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Người đọc Thống kê</div>
-                  <div class="cd-skill-desc">Mean / median / std — đọc dữ liệu trước khi train</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="3">
-                <div class="cd-skill-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Kỹ sư Hồi quy</div>
-                  <div class="cd-skill-desc">Đường dự đoán đầu tiên + đo lỗi bằng MSE</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="3">
-                <div class="cd-skill-icon"><i class="fas fa-arrow-trend-down"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Người thuần Gradient</div>
-                  <div class="cd-skill-desc">Gradient descent — model tự chỉnh đường thẳng</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="4">
-                <div class="cd-skill-icon"><i class="fas fa-wave-square"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Sigmoid &amp; Xác suất</div>
-                  <div class="cd-skill-desc">Từ score sang xác suất — logistic regression</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="4">
-                <div class="cd-skill-icon"><i class="fas fa-draw-polygon"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Người vẽ Ranh giới</div>
-                  <div class="cd-skill-desc">Decision boundary — luật tách 2 lớp học được</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="5">
-                <div class="cd-skill-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Thợ săn Overfit</div>
-                  <div class="cd-skill-desc">Chẩn đoán under/good/overfit từ đường cong học</div>
-                </div>
-              </div>
-              <div class="cd-skill-item" data-module="5">
-                <div class="cd-skill-icon"><i class="fas fa-scale-balanced"></i></div>
-                <div class="cd-skill-body">
-                  <div class="cd-skill-title">Người đánh giá Trung thực</div>
-                  <div class="cd-skill-desc">Train / Validation / Test — không tự dối mình</div>
-                </div>
-              </div>
+              {% endfor %}
             </div>
           </div>
         </div>
 
-        <!-- Block 5: Đánh giá -->
+        {# ── Block 5: Đánh giá của học viên #}
         <div class="cd-block">
           <div class="cd-block-hd">
             <div class="cd-block-icon">⭐</div>
@@ -290,7 +216,7 @@
                 <div class="user-rate-label">Đánh giá của bạn:</div>
                 <div class="star-interactive" id="starInteractive">
                   {% for i in [1,2,3,4,5] %}
-                  <div class="si-star" data-star="{{ i }}">★</div>
+                    <div class="si-star" data-star="{{ i }}">★</div>
                   {% endfor %}
                 </div>
                 <div class="user-rate-val" id="userRateVal">—</div>
@@ -302,17 +228,18 @@
 
       </div><!-- /cd-main-col -->
 
-      <!-- ── Sidebar ── -->
+      <!-- ════════════════════ Sidebar ════════════════════ -->
       <div class="cd-side-col">
         <div class="cd-card">
-          <div class="cd-card-image">🤖</div>
+          <div class="cd-card-image">{{ content.tag_emoji }}</div>
           <div class="cd-card-body">
             <div class="cd-card-price">Miễn phí</div>
             <div class="cd-card-free">🎉 Hoàn toàn không mất phí</div>
 
+            {% set total_lessons = course.lessons if course and course.lessons else 15 %}
             {% if enrollment %}
-              {% set done = [enrollment.completed_lessons, 15] | min %}
-              {% set pct = (done * 100 / 15) | round(1) if done > 0 else 0 %}
+              {% set done = [enrollment.completed_lessons, total_lessons] | min %}
+              {% set pct = (done * 100 / total_lessons) | round(1) if done > 0 else 0 %}
               <div class="cd-progress-row" style="margin-top:14px;">
                 <div class="cd-progress-label">
                   <span>Tiến độ</span>
@@ -325,11 +252,11 @@
 
               <div class="cd-card-stats">
                 <div class="cd-cs">
-                  <div class="v">{{ [enrollment.completed_lessons, 15] | min }}</div>
+                  <div class="v">{{ done }}</div>
                   <div class="l">Bài đã học</div>
                 </div>
                 <div class="cd-cs">
-                  <div class="v">{{ [15 - enrollment.completed_lessons, 0] | max }}</div>
+                  <div class="v">{{ [total_lessons - enrollment.completed_lessons, 0] | max }}</div>
                   <div class="l">Còn lại</div>
                 </div>
                 <div class="cd-cs">
@@ -353,13 +280,11 @@
 
             <div class="cd-includes">
               <div class="cd-includes-title">KHÓA HỌC BAO GỒM</div>
-              <div class="cd-inc-item"><i class="fas fa-book-open"></i> 15 bài học (dự án USTH StudyLab)</div>
-              <div class="cd-inc-item"><i class="fas fa-project-diagram"></i> 5 module (Framing / Data / Regression / Classification / Evaluation)</div>
-              <div class="cd-inc-item"><i class="fas fa-clock"></i> ~5 giờ học</div>
-              <div class="cd-inc-item"><i class="fab fa-python"></i> Python thật trong trình duyệt (numpy, pandas, sklearn)</div>
-              <div class="cd-inc-item"><i class="fas fa-infinity"></i> Truy cập vĩnh viễn</div>
-              <div class="cd-inc-item"><i class="fas fa-certificate"></i> Chứng chỉ hoàn thành</div>
-              <div class="cd-inc-item"><i class="fas fa-mobile-alt"></i> Học trên mọi thiết bị</div>
+              {% for icon, text in content.includes %}
+                <div class="cd-inc-item">
+                  <i class="{{ icon }}"></i> {{ text }}
+                </div>
+              {% endfor %}
             </div>
           </div>
         </div>
@@ -370,13 +295,16 @@
 </div><!-- /main -->
 
 <script>
-  const COURSE_ID = '{{ course_id or 'ml' }}';
-  const CURRENT_LESSON_IDX = {{ enrollment.completed_lessons if enrollment else 0 }};
-  const LESSON_URL = '/lesson/' + COURSE_ID;
+  // 2026-07-26: expose lên window (object property, không bị scope/hoisting xung đột)
+  // + giữ const ở outer scope để template dùng nếu cần. course_ml.js sẽ ĐỌC từ window.*
+  // để tránh redeclaration SyntaxError.
+  window.COURSE_ID = '{{ course_id or 'ml' }}';
+  window.CURRENT_LESSON_IDX = {{ enrollment.completed_lessons if enrollment else 0 }};
+  window.LESSON_URL = '/lesson/' + window.COURSE_ID;
   const progFill = document.getElementById('prog-fill');
   if (progFill) progFill.style.width = '{{ pct if enrollment else 0 }}%';
 </script>
-<script src="{{ url_for('static', filename='js/course_ml.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='js/course_ml.js') }}?v=4"></script>
 <script>
   if (!document.body.classList.contains('light')) {
     document.body.classList.add('dark');

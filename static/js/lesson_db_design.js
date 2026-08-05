@@ -2008,7 +2008,7 @@
     // ML Bài 1 (gộp 2026-07-18): bài khai paradigm_visual/table_lens → slot hero thuộc
     // về sim (đã/sẽ render vào đây) — không được xóa/ghi đè.
     const s1cur = state.currentLesson && state.currentLesson.step_1;
-    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens || s1cur.complexity_lens || s1cur.split_lens)) return;
+    if (s1cur && (s1cur.paradigm_visual || s1cur.table_lens || s1cur.dtype_lens || s1cur.quality_lens || s1cur.scale_lens || s1cur.corr_lens || s1cur.line_lens || s1cur.cost_lens || s1cur.gd_lens || s1cur.linreg_audit || s1cur.sigmoid_lens || s1cur.boundary_lens || s1cur.complexity_lens || s1cur.split_lens || s1cur.dimension_lens || s1cur.pca_lens || s1cur.variance_lens || s1cur.pca_audit_lens || s1cur.margin_lens || s1cur.contract_lens || s1cur.kmeans_lens || s1cur.kselect_lens || s1cur.shape_lens || s1cur.perceptron_lens || s1cur.nonlinear_lens || s1cur.shape_chain_lens || s1cur.backprop_lens || s1cur.vault_lens)) return;
     if (!lessonId) { mount.innerHTML = ''; mount.removeAttribute('aria-label'); return; }
     // REVIEW-FIX 2026-07-04: thử EXACT id trước (tc_01, nc_01…). Normalize digit chỉ áp
     // cho id họ db_ ('db_NN','BN','bNN') — trước đây 'tc_01' bị ép thành 'db_01' → bài TC
@@ -2333,7 +2333,7 @@
 
     // ML SHELL 2026-07-18: template success-modal hardcode nhãn XP "Kéo thả SQL"/"Viết code"
     // — khóa ML đổi cho đúng ngôn ngữ pipeline/Python (không đụng khóa DB).
-    if (courseId === 'ml') {
+    if (courseId === 'ml' || courseId === 'ml_intermediate' || courseId === 'ml_advanced') {
       const xpLabels = document.querySelectorAll('#success-xp-breakdown .success-xp-row span:first-child');
       if (xpLabels[2]) xpLabels[2].textContent = 'Lắp pipeline ML';
       if (xpLabels[3]) xpLabels[3].textContent = 'Viết Python';
@@ -4498,6 +4498,1404 @@
     });
   }
 
+  /* ═══ renderDimensionLens — ML C3-Bài 1 (user chốt 2026-07-31, mở màn Course 3):
+     ỐNG KÍNH SỐ CHIỀU. cfg = { title, intro, n_samples, query_name, checkpoints:[8 dims],
+     contrast:[8 số THẬT từ load_dimension_experiment(seed=0)], riddle:{prompt,options,answer,wrong,done} }
+     Kéo slider (8 nấc = checkpoints) → thanh GẦN NHẤT dài dần, đuổi kịp thanh XA NHẤT (luôn
+     100%) — trực quan hoá "distance concentration": nearest/farthest tiến về 1 khi chiều tăng.
+     Đám mây 12 chấm học sinh, 1 chấm highlight (query) — chú thích đổi theo mức chiều hiện tại. ═══ */
+  function renderDimensionLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const checkpoints = cfg.checkpoints || [2, 5, 10, 20, 35, 50, 70, 100];
+    const contrast = cfg.contrast || checkpoints.map(function () { return 0; });
+    const nSamples = cfg.n_samples || 320;
+    const queryName = cfg.query_name || 'Minh';
+    const rid = cfg.riddle || {};
+    const nDots = 12;
+    let idx = 0;
+    let interacted = false;
+
+    // Đám mây 12 chấm cố định (layout trang trí, không phải toạ độ thật — số liệu thật
+    // nằm ở 2 thanh gần/xa) — 1 chấm (queryIdx) là học sinh được hỏi.
+    const queryIdx = 5;
+    const dotPos = [
+      [30, 40], [70, 25], [110, 55], [150, 20], [190, 60], [55, 90],
+      [95, 100], [135, 85], [175, 95], [40, 130], [120, 135], [165, 130],
+    ];
+
+    function cloudSVG() {
+      let dots = '';
+      for (let i = 0; i < nDots; i++) {
+        const p = dotPos[i % dotPos.length];
+        const isQuery = i === queryIdx;
+        dots += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (isQuery ? 8 : 6) + '" ' +
+          'fill="' + (isQuery ? '#22D3EE' : '#67E8F9') + '" opacity="' + (isQuery ? '1' : '0.55') + '" ' +
+          (isQuery ? 'stroke="#083344" stroke-width="2"' : '') + '/>';
+      }
+      return '<svg viewBox="0 0 210 160" class="dimlens-svg" role="img" aria-label="đám mây học sinh, ' +
+        escapeHtml(queryName) + ' được highlight">' + dots +
+        '<text x="' + dotPos[queryIdx][0] + '" y="' + (dotPos[queryIdx][1] - 13) + '" text-anchor="middle" font-size="10" fill="#67E8F9">' +
+        escapeHtml(queryName) + '</text></svg>';
+    }
+
+    function captionFor(i) {
+      const d = checkpoints[i];
+      const c = contrast[i];
+      if (c < 0.05) return escapeHtml(queryName) + ' nổi bật — bạn gần nhất và bạn xa nhất KHÁC NHAU rõ (' + d + ' chiều).';
+      if (c < 0.3) return 'Bắt đầu mờ dần — khoảng cách gần/xa với ' + escapeHtml(queryName) + ' bớt tương phản (' + d + ' chiều).';
+      if (c < 0.5) return 'Nhoè hẳn — ' + escapeHtml(queryName) + ' cách đa số bạn một khoảng GẦN NHƯ NHAU (' + d + ' chiều).';
+      return escapeHtml(queryName) + ' trông XA ĐỀU với mọi bạn — "gần nhất" và "xa nhất" gần như không còn khác biệt (' + d + ' chiều).';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens dimlens" aria-label="Ống kính số chiều — khi ai cũng trông xa như nhau">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH SỐ CHIỀU') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="dimlens-body">' +
+          '<div class="dimlens-cloud" data-dm-cloud>' + cloudSVG() + '</div>' +
+          '<div class="dimlens-meter">' +
+            '<div class="dimlens-bar-row"><span class="dimlens-bar-label">XA NHẤT</span>' +
+              '<span class="dimlens-bar-track"><span class="dimlens-bar-fill dimlens-far" style="width:100%"></span></span></div>' +
+            '<div class="dimlens-bar-row"><span class="dimlens-bar-label">GẦN NHẤT</span>' +
+              '<span class="dimlens-bar-track"><span class="dimlens-bar-fill dimlens-near" data-dm-near></span></span></div>' +
+            '<div class="dimlens-readout">' +
+              '<b data-dm-dims></b> chiều · <b>' + nSamples + '</b> học sinh · tỉ lệ mẫu:chiều = <b data-dm-ratio></b> · ' +
+              'tương phản gần/xa = <b data-dm-contrast></b>' +
+            '</div>' +
+          '</div>' +
+          '<input type="range" class="dimlens-slider" data-dm-slider min="0" max="' + (checkpoints.length - 1) + '" step="1" value="0" ' +
+            'aria-label="Số chiều (kéo để tăng dần)"/>' +
+          '<div class="dimlens-caption" data-dm-caption></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-dm-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-dm-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-dm-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-dm-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const nearEl = mount.querySelector('[data-dm-near]');
+    const dimsEl = mount.querySelector('[data-dm-dims]');
+    const ratioEl = mount.querySelector('[data-dm-ratio]');
+    const contrastEl = mount.querySelector('[data-dm-contrast]');
+    const captionEl = mount.querySelector('[data-dm-caption]');
+    const riddleEl = mount.querySelector('[data-dm-riddle]');
+
+    function update(i) {
+      idx = i;
+      const d = checkpoints[i], c = contrast[i];
+      if (nearEl) nearEl.style.width = Math.max(2, Math.round(c * 100)) + '%';
+      if (dimsEl) dimsEl.textContent = String(d);
+      if (ratioEl) ratioEl.textContent = (nSamples / d).toFixed(1);
+      if (contrastEl) contrastEl.textContent = c.toFixed(3);
+      if (captionEl) captionEl.textContent = captionFor(i);
+    }
+    update(0);
+
+    const slider = mount.querySelector('[data-dm-slider]');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        update(parseInt(slider.value, 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    }
+
+    const fb = mount.querySelector('[data-dm-fb]');
+    mount.querySelectorAll('[data-dm-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-dm-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-dm-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-dm-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — kéo slider để quan sát lại.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderPcaLens — ML C3-Bài 2 (user chốt 2026-07-31): ỐNG KÍNH XOAY TRỤC.
+     cfg = { title, intro, points:[[x,y]×60 CHUẨN HOÁ], angles:[13 mốc 0→180],
+     variance_ratio:[13 số THẬT ứng mỗi góc], best_angle, riddle:{...} }
+     Kéo slider góc θ → trục sống xoay qua gốc toạ độ, mỗi điểm có 1 đường chiếu
+     (shadow) vuông góc xuống trục, thanh "phương sai bắt được" cập nhật theo mốc gần
+     nhất — đỉnh THẬT tại best_angle (không hardcode, tính từ PCA trên cùng dữ liệu). ═══ */
+  function renderPcaLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const pts = cfg.points || [];
+    const angles = cfg.angles || [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180];
+    const varRatio = cfg.variance_ratio || angles.map(function () { return 0; });
+    const bestAngle = cfg.best_angle != null ? cfg.best_angle : 45;
+    const rid = cfg.riddle || {};
+    let idx = angles.indexOf(0) >= 0 ? 0 : 0;
+    let interacted = false;
+
+    const W = 240, H = 240, cx = W / 2, cy = H / 2, R = 100;
+    const scale = 32; // px trên mỗi 1 đơn vị chuẩn hoá
+    function toPx(p) { return [cx + p[0] * scale, cy - p[1] * scale]; }
+
+    function svg(angleDeg) {
+      const rad = (angleDeg * Math.PI) / 180;
+      const dx = Math.cos(rad), dy = Math.sin(rad);
+      const x1 = cx - dx * R, y1 = cy + dy * R, x2 = cx + dx * R, y2 = cy - dy * R;
+      let shadows = '', dots = '';
+      pts.forEach(function (p) {
+        const [px, py] = toPx(p);
+        const t = (p[0] * dx + p[1] * dy); // toạ độ chiếu lên trục (đơn vị chuẩn hoá)
+        const sx = cx + t * dx * scale, sy = cy - t * dy * scale;
+        shadows += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + sx.toFixed(1) + '" y2="' + sy.toFixed(1) + '" stroke="#67E8F9" stroke-width="0.6" opacity="0.35"/>';
+        dots += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="2.6" fill="#22D3EE" opacity="0.7"/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="pcalens-svg" role="img" aria-label="scatter 2 feature và trục xoay">' +
+        '<line x1="4" y1="' + cy + '" x2="' + (W - 4) + '" y2="' + cy + '" stroke="rgba(148,163,184,0.14)"/>' +
+        '<line x1="' + cx + '" y1="4" x2="' + cx + '" y2="' + (H - 4) + '" stroke="rgba(148,163,184,0.14)"/>' +
+        shadows +
+        '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/>' +
+        dots +
+        '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens pcalens" aria-label="Ống kính xoay trục — tìm hướng phương sai lớn nhất">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH XOAY TRỤC') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="pcalens-body">' +
+          '<div class="pcalens-plot" data-pl-plot></div>' +
+          '<div class="pcalens-ctrl">' +
+            '<label class="pcalens-lab">GÓC TRỤC θ = <output data-pl-theta></output>°</label>' +
+            '<input type="range" class="pcalens-slider" data-pl-slider min="0" max="' + (angles.length - 1) + '" step="1" value="0" aria-label="Góc xoay trục"/>' +
+            '<div class="pcalens-readout">Phương sai bắt được: <b data-pl-var></b></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-pl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-pl-opt="' + escapeHtml(String(o)) + '">' + escapeHtml(String(o)) + '°</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-pl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-pl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-pl-plot]');
+    const thetaOut = mount.querySelector('[data-pl-theta]');
+    const varOut = mount.querySelector('[data-pl-var]');
+    const riddleEl = mount.querySelector('[data-pl-riddle]');
+
+    function update(i) {
+      idx = i;
+      const a = angles[i];
+      if (plot) plot.innerHTML = svg(a);
+      if (thetaOut) thetaOut.textContent = String(a);
+      if (varOut) varOut.textContent = Math.round(varRatio[i] * 100) + '%';
+    }
+    update(0);
+
+    const slider = mount.querySelector('[data-pl-slider]');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        update(parseInt(slider.value, 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    }
+
+    const fb = mount.querySelector('[data-pl-fb]');
+    mount.querySelectorAll('[data-pl-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-pl-opt');
+        if (parseInt(pick, 10) === bestAngle) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-pl-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-pl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — kéo slider để so sánh phương sai bắt được ở từng góc.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderVarianceLens — ML C3-Bài 3 (user chốt 2026-07-31): BA LÔ TÍCH LUỸ PHƯƠNG SAI.
+     cfg = { title, intro, cumulative:[15 số THẬT], targets:[0.80,0.90,0.95], riddle:{...} }
+     Stepper 1→15 component → thanh tích luỹ phương sai đầy dần tới cumulative[n-1], đồng hồ
+     "chi phí lưu trữ" = n toạ độ/mẫu tăng theo, 3 vạch mốc 80/90/95% cố định trên thanh. ═══ */
+  function renderVarianceLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const cumulative = cfg.cumulative || [];
+    const targets = cfg.targets || [0.80, 0.90, 0.95];
+    const rid = cfg.riddle || {};
+    let interacted = false;
+
+    function firstCrossing(target) {
+      for (let i = 0; i < cumulative.length; i++) if (cumulative[i] >= target) return i + 1;
+      return cumulative.length;
+    }
+
+    mount.innerHTML =
+      '<section class="tlens varlens" aria-label="Ba lô tích luỹ phương sai — thêm dần component">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'BA LÔ TÍCH LUỸ PHƯƠNG SAI') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="varlens-body">' +
+          '<div class="varlens-meter">' +
+            '<div class="varlens-track" data-vl-track>' +
+              targets.map(function (t) { return '<span class="varlens-mark" style="left:' + (t * 100) + '%" data-target="' + Math.round(t * 100) + '%"></span>'; }).join('') +
+              '<span class="varlens-fill" data-vl-fill></span>' +
+            '</div>' +
+          '</div>' +
+          '<input type="range" class="varlens-slider" data-vl-slider min="1" max="' + cumulative.length + '" step="1" value="1" aria-label="Số component"/>' +
+          '<div class="varlens-readout">' +
+            '<b data-vl-n></b> component · phương sai tích luỹ <b data-vl-cum></b> · "ba lô" mang <b data-vl-cost></b> toạ độ/mẫu' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-vl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-vl-opt="' + escapeHtml(String(o)) + '">' + escapeHtml(String(o)) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-vl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-vl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const fillEl = mount.querySelector('[data-vl-fill]');
+    const nEl = mount.querySelector('[data-vl-n]');
+    const cumEl = mount.querySelector('[data-vl-cum]');
+    const costEl = mount.querySelector('[data-vl-cost]');
+    const riddleEl = mount.querySelector('[data-vl-riddle]');
+
+    function update(n) {
+      const c = cumulative[n - 1] != null ? cumulative[n - 1] : 0;
+      if (fillEl) fillEl.style.width = Math.round(c * 100) + '%';
+      if (nEl) nEl.textContent = String(n);
+      if (cumEl) cumEl.textContent = Math.round(c * 1000) / 10 + '%';
+      if (costEl) costEl.textContent = String(n);
+    }
+    update(1);
+
+    const slider = mount.querySelector('[data-vl-slider]');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        update(parseInt(slider.value, 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    }
+
+    const fb = mount.querySelector('[data-vl-fb]');
+    mount.querySelectorAll('[data-vl-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-vl-opt');
+        const answerN = rid.answer != null ? rid.answer : firstCrossing(0.90);
+        if (parseInt(pick, 10) === answerN) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-vl-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-vl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — kéo slider để so từng mốc.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderShapeChainLens — ML C3-Bài 12 (user chốt 2026-08-02, M4 3/3):
+     MA TRẬN CHỈ NHÂN ĐƯỢC KHI SỐ CỘT KHỚP SỐ HÀNG. cfg = { title, intro,
+     sample:{x,z1,a1,z2,p — 1 mẫu THẬT từ load_forward_pass_case}, shapes:{...},
+     bad_w2_shape, riddle:{...} } — toggle KHỚP (chain X→Z1→A1→Z2→P chạy trọn,
+     số THẬT từng bước) vs LỆCH (W2 sai shape (5,1) thay vì (4,1) — dừng đúng tại
+     bước A1@W2 vì 4≠5, không chạy tiếp). ═══ */
+  /* ═══ renderVaultLens — ML C3-Bài 14 (user chốt 2026-08-02, khép khóa):
+     LOSS TRAIN THẤP KHÔNG PHẢI VẠCH ĐÍCH. cfg = { title, intro, epochs (số lớp
+     đường cong), train_curve[], val_curve[] — số THẬT từ 1 lần train PyTorch
+     thật (256 hidden unit, KHÔNG early-stop, 60 epoch: train 0.64→0.078 nhưng
+     val bật ngược 0.349→0.461 sau epoch 10), best_epoch, best_val, riddle:{...}
+     } — toggle CHỈ NHÌN TRAIN LOSS (chỉ vẽ đường train, trông như thắng lợi) vs
+     NHÌN CẢ VAL + KHÓA VAULT (vẽ cả 2 đường + mốc khoá tại best_epoch — val bật
+     ngược lên sau đó, vault ĐÚNG khi khoá lại đây, không chạy tiếp theo train). ═══ */
+  function renderVaultLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const trainC = cfg.train_curve || [];
+    const valC = cfg.val_curve || [];
+    const rid = cfg.riddle || {};
+    let state = 'train_only';
+    let interacted = false;
+
+    const W = 240, H = 140, pad = 22;
+    const n = trainC.length;
+    const allVals = trainC.concat(valC);
+    const ymin = Math.min.apply(null, allVals), ymax = Math.max.apply(null, allVals);
+    const px = function (i) { return pad + (i / (n - 1)) * (W - 2 * pad); };
+    const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin || 1)) * (H - 2 * pad); };
+
+    function lineSvg(arr, cls) {
+      const pts = arr.map(function (v, i) { return px(i).toFixed(1) + ',' + py(v).toFixed(1); }).join(' ');
+      return '<polyline points="' + pts + '" class="vaultlens-line ' + cls + '" fill="none"/>';
+    }
+
+    function svg() {
+      let inner = lineSvg(trainC, 'is-train');
+      if (state === 'lock') {
+        inner += lineSvg(valC, 'is-val');
+        const bx = px(cfg.best_epoch - 1);
+        inner += '<line x1="' + bx.toFixed(1) + '" y1="' + pad + '" x2="' + bx.toFixed(1) + '" y2="' + (H - pad) + '" class="vaultlens-lockline"/>';
+        inner += '<circle cx="' + bx.toFixed(1) + '" cy="' + py(cfg.best_val).toFixed(1) + '" r="4" class="vaultlens-lockdot"/>';
+      }
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="vaultlens-svg" role="img" aria-label="đường cong train/val ' + state + '">' + inner + '</svg>';
+    }
+
+    function render() {
+      const plot = mount.querySelector('[data-vl-plot]');
+      if (plot) plot.innerHTML = svg();
+      mount.querySelectorAll('[data-vl-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-vl-tab') === state); });
+      const readout = mount.querySelector('[data-vl-readout]');
+      if (readout) {
+        readout.innerHTML = state === 'train_only'
+          ? 'Train loss: ' + trainC[0].toFixed(3) + ' → <b>' + trainC[n - 1].toFixed(3) + '</b> — nhìn CÓ VẺ như mô hình càng lúc càng tốt.'
+          : 'Val loss chạm đáy <b>' + cfg.best_val.toFixed(3) + '</b> ở epoch <b>' + cfg.best_epoch + '</b>, rồi BẬT NGƯỢC lên <b>' + valC[n - 1].toFixed(3) + '</b> — vault khoá ĐÚNG epoch ' + cfg.best_epoch + ', bỏ qua toàn bộ ' + (n - cfg.best_epoch) + ' epoch sau đó dù train loss vẫn giảm.';
+      }
+    }
+
+    mount.innerHTML =
+      '<section class="tlens vaultlens" aria-label="Loss train thấp không phải vạch đích">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'LOSS TRAIN THẤP KHÔNG PHẢI VẠCH ĐÍCH') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="vaultlens-tabs">' +
+          '<button type="button" class="vaultlens-tab" data-vl-tab="train_only">CHỈ NHÌN TRAIN LOSS</button>' +
+          '<button type="button" class="vaultlens-tab" data-vl-tab="lock">NHÌN CẢ VAL + KHOÁ VAULT</button>' +
+        '</div>' +
+        '<div class="vaultlens-plot" data-vl-plot></div>' +
+        '<div class="vaultlens-readout" data-vl-readout></div>' +
+        '<div class="dlens-riddle" data-vl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-vl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-vl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-vl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    render();
+
+    mount.querySelectorAll('[data-vl-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state = btn.getAttribute('data-vl-tab');
+        render();
+        if (!interacted) { interacted = true; const riddleEl = mount.querySelector('[data-vl-riddle]'); if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-vl-fb]');
+    mount.querySelectorAll('[data-vl-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-vl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-vl-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-vl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm 2 tab để so TRAIN/VAL.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderBackpropLens — ML C3-Bài 13 (user chốt 2026-08-02, mở màn M5):
+     TÍN HIỆU LỖI ĐI NGƯỢC VÀ TÁCH RA CHO TỪNG TRỌNG SỐ. cfg = { title, intro,
+     forward:{z1,a1,z2,p — shape}, backward:{dz2_shape,dz2_val,dw2_shape,
+     db2_shape,db2_val,da1_shape,dz1_shape,dw1_shape,dw1_val,db1_shape — số
+     THẬT từ backward_two_layer chuẩn spec}, riddle:{...} } — toggle FORWARD
+     (cache đóng băng, không gradient) vs BACKWARD (tín hiệu lỗi chảy NGƯỢC,
+     tách thành dW2/db2 VÀ tiếp tục ngược qua dA1→dZ1 thành dW1/db1). ═══ */
+  function renderBackpropLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const fwd = cfg.forward || {};
+    const bwd = cfg.backward || {};
+    const rid = cfg.riddle || {};
+    let state = 'forward';
+    let interacted = false;
+
+    function chip(label, shapeTxt, cls) {
+      return '<span class="bplens-chip' + (cls ? ' ' + cls : '') + '">' + label + ' <b>' + shapeTxt + '</b></span>';
+    }
+
+    function render() {
+      const row1 = mount.querySelector('[data-bp-row1]');
+      const row2 = mount.querySelector('[data-bp-row2]');
+      const note = mount.querySelector('[data-bp-note]');
+      mount.querySelectorAll('[data-bp-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-bp-tab') === state); });
+      if (state === 'forward') {
+        if (row1) row1.innerHTML = chip('Z1', fwd.z1, 'is-dim') + '<span class="bplens-arrow is-dim">→</span>' + chip('A1', fwd.a1, 'is-dim') + '<span class="bplens-arrow is-dim">→</span>' + chip('Z2', fwd.z2, 'is-dim') + '<span class="bplens-arrow is-dim">→</span>' + chip('P', fwd.p, 'is-dim');
+        if (row2) row2.innerHTML = '';
+        if (note) note.innerHTML = 'Cache ĐÓNG BĂNG sau forward pass — X, Z1, A1, Z2 đã lưu sẵn, chưa có gradient nào được tính.';
+      } else {
+        if (row1) row1.innerHTML = chip('Loss', '', 'is-hot') + '<span class="bplens-arrow is-hot">←</span>' +
+          chip('dZ2', bwd.dz2_shape, 'is-hot') + '<span class="bplens-arrow is-hot">←split→</span>' +
+          chip('dW2', bwd.dw2_shape, 'is-good') + chip('db2', bwd.db2_shape + '=' + bwd.db2_val, 'is-good');
+        if (row2) row2.innerHTML = chip('dZ2', bwd.dz2_shape, 'is-hot') + '<span class="bplens-arrow is-hot">←</span>' +
+          chip('dA1', bwd.da1_shape, 'is-hot') + '<span class="bplens-arrow is-hot">←ReLU mask←</span>' +
+          chip('dZ1', bwd.dz1_shape, 'is-hot') + '<span class="bplens-arrow is-hot">←split→</span>' +
+          chip('dW1', bwd.dw1_shape + '≈' + bwd.dw1_val, 'is-good') + chip('db1', bwd.db1_shape, 'is-good');
+        if (note) note.innerHTML = 'Tín hiệu lỗi CHẢY NGƯỢC: dZ2 tách trực tiếp thành dW2/db2, VÀ tiếp tục ngược qua dA1→dZ1 (bị "che" bởi ReLU mask, chỉ đơn vị z1>0 mới nhận gradient) để tách thành dW1/db1.';
+      }
+    }
+
+    mount.innerHTML =
+      '<section class="tlens bplens" aria-label="Tín hiệu lỗi đi ngược và tách ra cho từng trọng số">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'TÍN HIỆU LỖI ĐI NGƯỢC VÀ TÁCH RA CHO TỪNG TRỌNG SỐ') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="bplens-tabs">' +
+          '<button type="button" class="bplens-tab" data-bp-tab="forward">FORWARD (đóng băng)</button>' +
+          '<button type="button" class="bplens-tab" data-bp-tab="backward">BACKWARD (chảy ngược)</button>' +
+        '</div>' +
+        '<div class="bplens-row" data-bp-row1></div>' +
+        '<div class="bplens-row" data-bp-row2></div>' +
+        '<div class="bplens-note" data-bp-note></div>' +
+        '<div class="dlens-riddle" data-bp-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-bp-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-bp-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-bp-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    render();
+
+    mount.querySelectorAll('[data-bp-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state = btn.getAttribute('data-bp-tab');
+        render();
+        if (!interacted) { interacted = true; const riddleEl = mount.querySelector('[data-bp-riddle]'); if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-bp-fb]');
+    mount.querySelectorAll('[data-bp-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-bp-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-bp-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-bp-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm 2 tab để so FORWARD/BACKWARD.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  function renderShapeChainLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const s = cfg.sample || {};
+    const sh = cfg.shapes || {};
+    const rid = cfg.riddle || {};
+    let state = 'aligned';
+    let interacted = false;
+
+    function fmtVec(arr) { return '[' + (arr || []).map(function (v) { return v.toFixed(3); }).join(', ') + ']'; }
+
+    function chip(label, shapeTxt, ok) {
+      return '<span class="shchainlens-chip' + (ok === false ? ' is-bad' : ok === true ? ' is-good' : '') + '">' + label + ' <b>' + shapeTxt + '</b></span>';
+    }
+
+    function render() {
+      const row = mount.querySelector('[data-sc-row]');
+      const trace = mount.querySelector('[data-sc-trace]');
+      mount.querySelectorAll('[data-sc-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-sc-tab') === state); });
+      if (state === 'aligned') {
+        if (row) {
+          row.innerHTML = chip('X', sh.x, true) + '<span class="shchainlens-arrow">→</span>' +
+            chip('W1', sh.w1, true) + '<span class="shchainlens-arrow">→</span>' +
+            chip('Z1', sh.z1, true) + '<span class="shchainlens-arrow">(ReLU)→</span>' +
+            chip('A1', sh.a1, true) + '<span class="shchainlens-arrow">→</span>' +
+            chip('W2', sh.w2, true) + '<span class="shchainlens-arrow">→</span>' +
+            chip('Z2', sh.z2, true) + '<span class="shchainlens-arrow">(σ)→</span>' +
+            chip('P', sh.p, true);
+        }
+        if (trace) {
+          trace.innerHTML = '<div class="shchainlens-line">x = ' + fmtVec(s.x) + '</div>' +
+            '<div class="shchainlens-line">Z1 = x·W1+b1 = ' + fmtVec(s.z1) + '</div>' +
+            '<div class="shchainlens-line">A1 = ReLU(Z1) = ' + fmtVec(s.a1) + '</div>' +
+            '<div class="shchainlens-line">Z2 = A1·W2+b2 = ' + fmtVec(s.z2) + '</div>' +
+            '<div class="shchainlens-line">P = σ(Z2) = <b>' + (s.p != null ? s.p.toFixed(4) : '') + '</b></div>';
+        }
+      } else {
+        if (row) {
+          row.innerHTML = chip('X', sh.x, true) + '<span class="shchainlens-arrow">→</span>' +
+            chip('W1', sh.w1, true) + '<span class="shchainlens-arrow">→</span>' +
+            chip('Z1', sh.z1, true) + '<span class="shchainlens-arrow">(ReLU)→</span>' +
+            chip('A1', sh.a1, true) + '<span class="shchainlens-arrow is-bad">✗</span>' +
+            chip('W2', cfg.bad_w2_shape, false);
+        }
+        if (trace) {
+          trace.innerHTML = '<div class="shchainlens-line is-bad">A1' + sh.a1 + ' @ W2' + cfg.bad_w2_shape + ' — KHÔNG THỰC HIỆN ĐƯỢC.</div>' +
+            '<div class="shchainlens-line is-bad">Số CỘT của A1 (' + (cfg.a1_cols || '4') + ') phải khớp số HÀNG của W2 (' + (cfg.bad_w2_rows || '5') + ') — 4≠5.</div>';
+        }
+      }
+    }
+
+    mount.innerHTML =
+      '<section class="tlens shchainlens" aria-label="Ma trận chỉ nhân được khi số cột khớp số hàng">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'MA TRẬN CHỈ NHÂN ĐƯỢC KHI SỐ CỘT KHỚP SỐ HÀNG') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="shchainlens-tabs">' +
+          '<button type="button" class="shchainlens-tab" data-sc-tab="aligned">SHAPE KHỚP</button>' +
+          '<button type="button" class="shchainlens-tab" data-sc-tab="mismatch">SHAPE LỆCH</button>' +
+        '</div>' +
+        '<div class="shchainlens-row" data-sc-row></div>' +
+        '<div class="shchainlens-trace" data-sc-trace></div>' +
+        '<div class="dlens-riddle" data-sc-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-sc-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-sc-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-sc-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    render();
+
+    mount.querySelectorAll('[data-sc-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state = btn.getAttribute('data-sc-tab');
+        render();
+        if (!interacted) { interacted = true; const riddleEl = mount.querySelector('[data-sc-riddle]'); if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-sc-fb]');
+    mount.querySelectorAll('[data-sc-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-sc-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-sc-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-sc-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm 2 tab để so KHỚP/LỆCH.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderNonlinearLens — ML C3-Bài 11 (user chốt 2026-08-01, M4 2/3):
+     LINEAR CHỒNG LINEAR VẪN LÀ 1 ĐƯỜNG THẲNG. cfg = { title, intro,
+     points:[{x1,x2,label,out_linear,out_relu}×4], riddle:{...} } — toggle
+     LINEAR+LINEAR (collapse đại số thành 1 phép biến đổi tuyến tính duy nhất,
+     ra out=[2,1,1,0] — không ngưỡng nào tách đúng cả 4 điểm XOR) vs
+     LINEAR+ReLU+LINEAR (cùng trọng số, chèn ReLU giữa 2 lớp, ra out=[0,1,1,0]
+     khớp CHÍNH XÁC nhãn XOR thật — số THẬT từ h1=ReLU(x1+x2), h2=ReLU(x1+x2-1),
+     out=h1-2h2). ═══ */
+  function renderNonlinearLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const pts = cfg.points || [];
+    const rid = cfg.riddle || {};
+    let state = 'linear';
+    let interacted = false;
+
+    function cardHTML(p) {
+      const out = state === 'linear' ? p.out_linear : p.out_relu;
+      const pred = out >= 1 ? 1 : 0;
+      const correct = pred === p.label;
+      return '<div class="nlinlens-card' + (correct ? ' is-correct' : ' is-wrong') + '" style="grid-column:' + (p.x1 === 0 ? '1' : '2') + ';grid-row:' + (p.x2 === 0 ? '2' : '1') + '">' +
+        '<span class="nlinlens-coord">(' + p.x1 + ',' + p.x2 + ')</span>' +
+        '<span class="nlinlens-out">out=' + out.toFixed(1) + '</span>' +
+        '<span class="nlinlens-verdict">' + (correct ? '✓' : '✗') + ' nhãn thật=' + p.label + '</span>' +
+      '</div>';
+    }
+
+    function render() {
+      const grid = mount.querySelector('[data-nl-grid]');
+      if (grid) grid.innerHTML = pts.map(cardHTML).join('');
+      mount.querySelectorAll('[data-nl-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-nl-tab') === state); });
+      const readout = mount.querySelector('[data-nl-readout]');
+      if (readout) {
+        const nCorrect = pts.filter(function (p) { const out = state === 'linear' ? p.out_linear : p.out_relu; return (out >= 1 ? 1 : 0) === p.label; }).length;
+        readout.innerHTML = state === 'linear'
+          ? '2 lớp LINEAR chồng nhau collapse thành <b>1 phép biến đổi tuyến tính duy nhất</b> — chỉ <b>' + nCorrect + '/4</b> điểm đúng, không ngưỡng nào cứu được.'
+          : 'Chèn <b>ReLU</b> giữa 2 lớp (CÙNG trọng số) — output bị bẻ cong (piecewise) — <b>' + nCorrect + '/4</b> điểm đúng, khớp CHÍNH XÁC nhãn XOR thật.';
+      }
+    }
+
+    mount.innerHTML =
+      '<section class="tlens nlinlens" aria-label="Linear chồng linear vẫn là 1 đường thẳng">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'LINEAR CHỒNG LINEAR VẪN LÀ 1 ĐƯỜNG THẲNG') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="nlinlens-tabs">' +
+          '<button type="button" class="nlinlens-tab" data-nl-tab="linear">LINEAR + LINEAR</button>' +
+          '<button type="button" class="nlinlens-tab" data-nl-tab="relu">LINEAR + ReLU + LINEAR</button>' +
+        '</div>' +
+        '<div class="nlinlens-grid" data-nl-grid></div>' +
+        '<div class="nlinlens-readout" data-nl-readout></div>' +
+        '<div class="dlens-riddle" data-nl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-nl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-nl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-nl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    render();
+
+    mount.querySelectorAll('[data-nl-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state = btn.getAttribute('data-nl-tab');
+        render();
+        if (!interacted) { interacted = true; const riddleEl = mount.querySelector('[data-nl-riddle]'); if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-nl-fb]');
+    mount.querySelectorAll('[data-nl-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-nl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-nl-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-nl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm 2 tab để so LINEAR/ReLU.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderPerceptronLens — ML C3-Bài 10 (user chốt 2026-07-31, mở màn M4):
+     MỘT NEURON DI CHUYỂN ĐƯỜNG SAU 1 LỖI. cfg = { title, intro, points:[[x,y,label]×4],
+     mistake_point:[x,y], before:{w:[w1,w2],b,score,pred,error}, after:{w:[w1,w2],b},
+     riddle:{...} } — toggle TRƯỚC/SAU 1 update mistake-driven THẬT (thuật toán chuẩn
+     spec) — đường biên quyết định xoay từ ngang sang chéo sau đúng 1 lần cập nhật. ═══ */
+  function renderPerceptronLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const pts = cfg.points || [];
+    const mp = cfg.mistake_point || [0, 0];
+    const rid = cfg.riddle || {};
+    let state = 'before';
+    let interacted = false;
+
+    const W = 220, H = 200, pad = 24;
+    const xmin = -0.4, xmax = 1.4, ymin = -0.4, ymax = 1.4;
+    const px = function (v) { return pad + ((v - xmin) / (xmax - xmin)) * (W - 2 * pad); };
+    const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin)) * (H - 2 * pad); };
+
+    function lineSeg(w, b) {
+      const cands = [];
+      [xmin, xmax].forEach(function (xv) {
+        if (Math.abs(w[1]) > 1e-9) { const yv = (-b - w[0] * xv) / w[1]; if (yv >= ymin - 1e-6 && yv <= ymax + 1e-6) cands.push([xv, yv]); }
+      });
+      [ymin, ymax].forEach(function (yv) {
+        if (Math.abs(w[0]) > 1e-9) { const xv = (-b - w[1] * yv) / w[0]; if (xv >= xmin - 1e-6 && xv <= xmax + 1e-6) cands.push([xv, yv]); }
+      });
+      if (cands.length < 2) return null;
+      return [cands[0], cands[cands.length - 1]];
+    }
+
+    function svg() {
+      const cfgState = state === 'before' ? cfg.before : cfg.after;
+      const seg = lineSeg(cfgState.w, cfgState.b);
+      let line = '';
+      if (seg) line = '<line x1="' + px(seg[0][0]).toFixed(1) + '" y1="' + py(seg[0][1]).toFixed(1) + '" x2="' + px(seg[1][0]).toFixed(1) + '" y2="' + py(seg[1][1]).toFixed(1) + '" stroke="#FCD34D" stroke-width="2.4" stroke-linecap="round"/>';
+      let dots = '';
+      pts.forEach(function (p) {
+        const isMistake = Math.abs(p[0] - mp[0]) < 1e-6 && Math.abs(p[1] - mp[1]) < 1e-6;
+        const col = p[2] === 1 ? '#34D399' : '#F87171';
+        dots += '<circle cx="' + px(p[0]).toFixed(1) + '" cy="' + py(p[1]).toFixed(1) + '" r="' + (isMistake ? 8 : 6) + '" fill="' + col + '" ' +
+          (isMistake ? 'stroke="#FCD34D" stroke-width="2.4"' : '') + '/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="pctlens-svg" role="img" aria-label="đường biên quyết định ' + state + '">' +
+        '<line x1="' + px(xmin) + '" y1="' + py(0) + '" x2="' + px(xmax) + '" y2="' + py(0) + '" stroke="rgba(148,163,184,0.14)"/>' +
+        '<line x1="' + px(0) + '" y1="' + py(ymin) + '" x2="' + px(0) + '" y2="' + py(ymax) + '" stroke="rgba(148,163,184,0.14)"/>' +
+        line + dots + '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens pctlens" aria-label="Một neuron di chuyển đường sau 1 lỗi">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'MỘT NEURON DI CHUYỂN ĐƯỜNG SAU 1 LỖI') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="pctlens-body">' +
+          '<div class="pctlens-plot" data-pt-plot></div>' +
+          '<div class="pctlens-tabs">' +
+            '<button type="button" class="pctlens-tab" data-pt-tab="before">TRƯỚC update</button>' +
+            '<button type="button" class="pctlens-tab" data-pt-tab="after">SAU update</button>' +
+          '</div>' +
+          '<div class="pctlens-readout" data-pt-readout></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-pt-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-pt-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-pt-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-pt-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-pt-plot]');
+    const readout = mount.querySelector('[data-pt-readout]');
+    const riddleEl = mount.querySelector('[data-pt-riddle]');
+
+    function render() {
+      if (plot) plot.innerHTML = svg();
+      mount.querySelectorAll('[data-pt-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-pt-tab') === state); });
+      if (readout) {
+        if (state === 'before') {
+          readout.innerHTML = 'Điểm viền vàng (' + mp[0] + ',' + mp[1] + '): score=<b>' + cfg.before.score.toFixed(2) + '</b> · pred=<b>' + cfg.before.pred + '</b> · nhãn thật=0 → error=<b>' + cfg.before.error + '</b> (SAI)';
+        } else {
+          readout.innerHTML = 'Sau update: w: [' + cfg.before.w.join(',') + '] → [' + cfg.after.w.join(',') + '] · b: ' + cfg.before.b + ' → <b>' + cfg.after.b + '</b>';
+        }
+      }
+    }
+    render();
+
+    mount.querySelectorAll('[data-pt-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state = btn.getAttribute('data-pt-tab');
+        render();
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-pt-fb]');
+    mount.querySelectorAll('[data-pt-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-pt-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-pt-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-pt-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm 2 tab để so TRƯỚC/SAU update.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderShapeCompareLens — ML C3-Bài 9 (user chốt 2026-07-31, khép M3):
+     CRESCENT KHÔNG PHẢI HÌNH CẦU. cfg = { title, intro, panels:[{key,label,ari,
+     points:[[x,y,cluster_id]×60]}×3 — số THẬT: KMeans/DBSCAN/Complete-link trên
+     CÙNG 60 điểm 2 lưỡi liềm], riddle:{...} } — 3 tab, mỗi tab tô màu theo cluster
+     assignment THẬT của thuật toán đó + badge ARI so với hình dạng thật. ═══ */
+  function renderShapeCompareLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const panels = cfg.panels || [];
+    const rid = cfg.riddle || {};
+    let tab = panels[0] ? panels[0].key : '';
+    let interacted = false;
+
+    const W = 220, H = 180, pad = 12;
+    const allPts = panels.length ? panels[0].points : [];
+    const xs = allPts.map(function (p) { return p[0]; }), ys = allPts.map(function (p) { return p[1]; });
+    const xmin = Math.min.apply(null, xs), xmax = Math.max.apply(null, xs);
+    const ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
+    const px = function (v) { return pad + ((v - xmin) / (xmax - xmin || 1)) * (W - 2 * pad); };
+    const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin || 1)) * (H - 2 * pad); };
+    const COLORS = ['#818CF8', '#F472B6', '#94A3B8'];
+
+    function svg(panel) {
+      let dots = '';
+      (panel.points || []).forEach(function (p) {
+        const cid = p[2];
+        const col = cid < 0 ? '#475569' : COLORS[cid % 2];
+        dots += '<circle cx="' + px(p[0]).toFixed(1) + '" cy="' + py(p[1]).toFixed(1) + '" r="4" fill="' + col + '" opacity="' + (cid < 0 ? '0.4' : '0.85') + '"/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="shapecmp-svg" role="img" aria-label="phân cụm theo ' + escapeHtml(panel.label || '') + '">' + dots + '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens shapecmplens" aria-label="Crescent không phải hình cầu — so 3 thuật toán">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'CRESCENT KHÔNG PHẢI HÌNH CẦU') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="shapecmplens-body">' +
+          '<div class="shapecmplens-tabs">' + panels.map(function (p) {
+            return '<button type="button" class="shapecmplens-tab" data-sc-tab="' + escapeHtml(p.key) + '">' + escapeHtml(p.label) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="shapecmplens-plot" data-sc-plot></div>' +
+          '<div class="shapecmplens-cap">ARI so với hình dạng thật: <b data-sc-ari></b></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-sc-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-sc-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-sc-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-sc-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-sc-plot]');
+    const ariOut = mount.querySelector('[data-sc-ari]');
+    const riddleEl = mount.querySelector('[data-sc-riddle]');
+
+    function render() {
+      const panel = panels.filter(function (p) { return p.key === tab; })[0] || panels[0];
+      if (plot) plot.innerHTML = svg(panel);
+      if (ariOut) ariOut.textContent = panel.ari.toFixed(2);
+      mount.querySelectorAll('[data-sc-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-sc-tab') === tab); });
+    }
+    render();
+
+    mount.querySelectorAll('[data-sc-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        tab = btn.getAttribute('data-sc-tab');
+        render();
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-sc-fb]');
+    mount.querySelectorAll('[data-sc-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-sc-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-sc-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-sc-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm qua 3 tab để so hình dạng.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderKSelectLens — ML C3-Bài 8 (user chốt 2026-07-31): BA BIỂU ĐỒ BẤT ĐỒNG.
+     cfg = { title, intro, ks:[5 giá trị k], inertia:[5 số], silhouette:[5 số],
+     stability:[5 số] — TẤT CẢ số THẬT từ 1 dữ liệu lồng nhau (2 siêu nhóm × 2 cụm
+     con) khiến 3 chỉ số THỰC SỰ gợi ý k khác nhau, riddle:{...} } — slider k, 3
+     đồng hồ cập nhật cùng lúc + badge "gợi ý" của từng chỉ số (có thể LỆCH nhau). ═══ */
+  function renderKSelectLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const ks = cfg.ks || [2, 3, 4, 5, 6];
+    const inertia = cfg.inertia || [];
+    const silhouette = cfg.silhouette || [];
+    const stability = cfg.stability || [];
+    const rid = cfg.riddle || {};
+    const bestSilIdx = silhouette.indexOf(Math.max.apply(null, silhouette));
+    let idx = 0;
+    let interacted = false;
+
+    mount.innerHTML =
+      '<section class="tlens kselectlens" aria-label="Ba biểu đồ bất đồng — chọn k cần nhiều bằng chứng">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'BA BIỂU ĐỒ BẤT ĐỒNG') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="kselectlens-body">' +
+          '<input type="range" class="kselectlens-slider" data-ks-slider min="0" max="' + (ks.length - 1) + '" step="1" value="0" aria-label="Số cụm k"/>' +
+          '<div class="kselectlens-klabel">k = <b data-ks-k></b></div>' +
+          '<div class="kselectlens-meters">' +
+            '<div class="kselectlens-meter"><span class="kselectlens-mlab">📉 INERTIA</span><span class="kselectlens-mval" data-ks-inertia></span></div>' +
+            '<div class="kselectlens-meter"><span class="kselectlens-mlab">📐 SILHOUETTE</span><span class="kselectlens-mval" data-ks-sil></span><span class="kselectlens-mflag" data-ks-silflag></span></div>' +
+            '<div class="kselectlens-meter"><span class="kselectlens-mlab">🔁 STABILITY</span><span class="kselectlens-mval" data-ks-stab></span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-ks-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-ks-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-ks-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-ks-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const kOut = mount.querySelector('[data-ks-k]');
+    const inertiaOut = mount.querySelector('[data-ks-inertia]');
+    const silOut = mount.querySelector('[data-ks-sil]');
+    const silFlag = mount.querySelector('[data-ks-silflag]');
+    const stabOut = mount.querySelector('[data-ks-stab]');
+    const riddleEl = mount.querySelector('[data-ks-riddle]');
+
+    function update(i) {
+      idx = i;
+      if (kOut) kOut.textContent = String(ks[i]);
+      if (inertiaOut) inertiaOut.textContent = inertia[i].toFixed(1);
+      if (silOut) silOut.textContent = silhouette[i].toFixed(3);
+      if (silFlag) silFlag.textContent = i === bestSilIdx ? '★ đỉnh' : '';
+      if (stabOut) stabOut.textContent = stability[i].toFixed(3);
+    }
+    update(0);
+
+    const slider = mount.querySelector('[data-ks-slider]');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        update(parseInt(slider.value, 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    }
+
+    const fb = mount.querySelector('[data-ks-fb]');
+    mount.querySelectorAll('[data-ks-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-ks-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-ks-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-ks-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — kéo slider qua từng k để so 3 chỉ số.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderKmeansLens — ML C3-Bài 7 (user chốt 2026-07-31): CENTROID DI CHUYỂN
+     THEO HỌC SINH. cfg = { title, intro, points:[[x,y]×15], iterations:[{centroids:
+     [[cx,cy]×3], labels:[15 int 0-2], inertia}×4 — Lloyd's algorithm tính tay, số
+     THẬT], riddle:{...} } — stepper 0→3: mỗi bước hiện centroid + gán màu theo
+     assignment hiện tại + inertia giảm dần tới hội tụ (iter 2=3 giống hệt nhau). ═══ */
+  function renderKmeansLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const pts = cfg.points || [];
+    const iters = cfg.iterations || [];
+    const rid = cfg.riddle || {};
+    let idx = 0;
+    let interacted = false;
+
+    const W = 240, H = 200, pad = 18;
+    const xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+    const xmin = Math.min.apply(null, xs) - 0.4, xmax = Math.max.apply(null, xs) + 0.4;
+    const ymin = Math.min.apply(null, ys) - 0.4, ymax = Math.max.apply(null, ys) + 0.4;
+    const px = function (v) { return pad + ((v - xmin) / (xmax - xmin)) * (W - 2 * pad); };
+    const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin)) * (H - 2 * pad); };
+    const COLORS = ['#818CF8', '#F472B6', '#22D3EE'];
+
+    function svg(it) {
+      let dots = '', crosses = '';
+      pts.forEach(function (p, i) {
+        const col = COLORS[it.labels[i] % 3];
+        dots += '<circle cx="' + px(p[0]).toFixed(1) + '" cy="' + py(p[1]).toFixed(1) + '" r="4" fill="' + col + '" opacity="0.85"/>';
+      });
+      it.centroids.forEach(function (c, i) {
+        const cx = px(c[0]).toFixed(1), cy = py(c[1]).toFixed(1);
+        crosses += '<line x1="' + (cx - 6) + '" y1="' + cy + '" x2="' + (Number(cx) + 6) + '" y2="' + cy + '" stroke="' + COLORS[i % 3] + '" stroke-width="2.6"/>' +
+          '<line x1="' + cx + '" y1="' + (cy - 6) + '" x2="' + cx + '" y2="' + (Number(cy) + 6) + '" stroke="' + COLORS[i % 3] + '" stroke-width="2.6"/>' +
+          '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="none" stroke="' + COLORS[i % 3] + '" stroke-width="1.4" opacity="0.6"/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="kmeanslens-svg" role="img" aria-label="K-means iteration ' + idx + '">' + dots + crosses + '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens kmeanslens" aria-label="Centroid di chuyển theo học sinh">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'CENTROID DI CHUYỂN THEO HỌC SINH') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="kmeanslens-body">' +
+          '<div class="kmeanslens-plot" data-km-plot></div>' +
+          '<input type="range" class="kmeanslens-slider" data-km-slider min="0" max="' + (iters.length - 1) + '" step="1" value="0" aria-label="Vòng lặp"/>' +
+          '<div class="kmeanslens-readout">Vòng lặp <b data-km-it></b>/' + (iters.length - 1) + ' · inertia = <b data-km-inertia></b></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-km-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-km-opt="' + escapeHtml(String(o)) + '">' + escapeHtml(String(o)) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-km-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-km-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-km-plot]');
+    const itOut = mount.querySelector('[data-km-it]');
+    const inertiaOut = mount.querySelector('[data-km-inertia]');
+    const riddleEl = mount.querySelector('[data-km-riddle]');
+
+    function update(i) {
+      idx = i;
+      const it = iters[i];
+      if (plot) plot.innerHTML = svg(it);
+      if (itOut) itOut.textContent = String(i);
+      if (inertiaOut) inertiaOut.textContent = it.inertia.toFixed(2);
+    }
+    update(0);
+
+    const slider = mount.querySelector('[data-km-slider]');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        update(parseInt(slider.value, 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    }
+
+    const fb = mount.querySelector('[data-km-fb]');
+    mount.querySelectorAll('[data-km-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-km-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-km-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-km-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — kéo slider qua từng vòng lặp để so inertia.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderContractLens — ML C3-Bài 6 (user chốt 2026-07-31, mở màn M3): CÙNG
+     ĐIỂM, CÂU HỎI KHÁC NHAU. cfg = { title, intro, points:[[x,y,label,cluster_id]×40],
+     riddle:{...} } — toggle 2 góc nhìn trên CÙNG toạ độ: "PHÂN LOẠI" (tô theo nhãn
+     thật, model.fit(X,y)) vs "PHÂN CỤM" (tô theo cluster_id — TÊN TRUNG TÍNH A/B/C,
+     badge 🔒 niêm phong, model.fit(X) không nhìn nhãn). cluster_id là 1 HOÁN VỊ của
+     label thật — chống ngộ nhận "cluster 0 = học sinh yếu". ═══ */
+  function renderContractLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const pts = cfg.points || [];
+    const rid = cfg.riddle || {};
+    let mode = 'supervised'; // 'supervised' | 'unsupervised'
+    let interacted = false;
+
+    const W = 240, H = 200, pad = 14;
+    const xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+    const xmin = Math.min.apply(null, xs), xmax = Math.max.apply(null, xs);
+    const ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
+    const px = function (v) { return pad + ((v - xmin) / (xmax - xmin || 1)) * (W - 2 * pad); };
+    const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin || 1)) * (H - 2 * pad); };
+    const LABEL_COLORS = ['#F87171', '#FCD34D', '#34D399'];
+    const CLUSTER_COLORS = ['#818CF8', '#F472B6', '#22D3EE'];
+
+    function svg() {
+      const isSup = mode === 'supervised';
+      let dots = '';
+      pts.forEach(function (p) {
+        const idx = isSup ? p[2] : p[3];
+        const col = (isSup ? LABEL_COLORS : CLUSTER_COLORS)[idx % 3];
+        dots += '<circle cx="' + px(p[0]).toFixed(1) + '" cy="' + py(p[1]).toFixed(1) + '" r="4" fill="' + col + '" opacity="0.85"/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="contractlens-svg" role="img" aria-label="' + (isSup ? 'góc nhìn phân loại' : 'góc nhìn phân cụm') + '">' + dots + '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens contractlens" aria-label="Cùng điểm, câu hỏi khác nhau">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'CÙNG ĐIỂM, CÂU HỎI KHÁC NHAU') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="contractlens-body">' +
+          '<div class="contractlens-tabs">' +
+            '<button type="button" class="contractlens-tab" data-cl-tab="supervised">🎯 PHÂN LOẠI</button>' +
+            '<button type="button" class="contractlens-tab" data-cl-tab="unsupervised">🔍 PHÂN CỤM</button>' +
+          '</div>' +
+          '<div class="contractlens-plot" data-cl-plot></div>' +
+          '<div class="contractlens-cap" data-cl-cap></div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-cl-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-cl-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-cl-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-cl-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-cl-plot]');
+    const cap = mount.querySelector('[data-cl-cap]');
+    const riddleEl = mount.querySelector('[data-cl-riddle]');
+
+    function render() {
+      if (plot) plot.innerHTML = svg();
+      if (cap) cap.innerHTML = mode === 'supervised'
+        ? '<code>model.fit(X, y)</code> — nhãn CÓ SẴN, model học ranh giới theo Yếu/Trung bình/Giỏi.'
+        : '🔒 <code>KMeans().fit(X)</code> — nhãn NIÊM PHONG. Cụm A/B/C chỉ là số hiệu triển khai, KHÔNG mặc định "yếu/giỏi".';
+      mount.querySelectorAll('[data-cl-tab]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-cl-tab') === mode); });
+    }
+    render();
+
+    mount.querySelectorAll('[data-cl-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        mode = btn.getAttribute('data-cl-tab');
+        render();
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-cl-fb]');
+    mount.querySelectorAll('[data-cl-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-cl-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-cl-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-cl-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm qua 2 tab để so 2 góc nhìn.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderMarginLens — ML C3-Bài 5 (user chốt 2026-07-31, mở màn M2): HÀNH LANG
+     AN TOÀN RỘNG NHẤT. cfg = { title, intro, points:[[x,y,label]×16], candidates:
+     [{label,w:[w1,w2],b,margin}×5 — margin THẬT tính từ khoảng cách điểm gần nhất],
+     riddle:{...} } — click qua từng đường phân chia HỢP LỆ (đều tách đúng 2 lớp),
+     xem hành lang margin (2 đường biên song song) + support vectors (điểm chạm biên)
+     đổi theo — đường 1 (tối ưu, margin lớn nhất) là đáp án của riddle. ═══ */
+  function renderMarginLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const pts = cfg.points || [];
+    const candidates = cfg.candidates || [];
+    const rid = cfg.riddle || {};
+    let idx = 0;
+    let interacted = false;
+
+    const W = 260, H = 220, pad = 20;
+    const xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+    const xmin = Math.min.apply(null, xs) - 0.5, xmax = Math.max.apply(null, xs) + 0.5;
+    const ymin = Math.min.apply(null, ys) - 0.5, ymax = Math.max.apply(null, ys) + 0.5;
+    const px = function (v) { return pad + ((v - xmin) / (xmax - xmin)) * (W - 2 * pad); };
+    const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin)) * (H - 2 * pad); };
+
+    // cắt đoạn thẳng w·(x,y)+b=off trong khung [xmin,xmax]×[ymin,ymax]
+    function lineSeg(w, b, off) {
+      const cands = [];
+      [xmin, xmax].forEach(function (xv) {
+        if (Math.abs(w[1]) > 1e-9) { const yv = (-off - b - w[0] * xv) / w[1]; if (yv >= ymin - 1e-6 && yv <= ymax + 1e-6) cands.push([xv, yv]); }
+      });
+      [ymin, ymax].forEach(function (yv) {
+        if (Math.abs(w[0]) > 1e-9) { const xv = (-off - b - w[1] * yv) / w[0]; if (xv >= xmin - 1e-6 && xv <= xmax + 1e-6) cands.push([xv, yv]); }
+      });
+      if (cands.length < 2) return null;
+      return [cands[0], cands[cands.length - 1]];
+    }
+
+    function svg(cand) {
+      const w = cand.w, b = cand.b, m = cand.margin, norm = Math.sqrt(w[0] * w[0] + w[1] * w[1]);
+      const segMain = lineSeg(w, b, 0);
+      const segLo = lineSeg(w, b, -m * norm);
+      const segHi = lineSeg(w, b, m * norm);
+      function segPath(seg, cls) {
+        if (!seg) return '';
+        return '<line x1="' + px(seg[0][0]).toFixed(1) + '" y1="' + py(seg[0][1]).toFixed(1) + '" x2="' + px(seg[1][0]).toFixed(1) + '" y2="' + py(seg[1][1]).toFixed(1) + '" class="' + cls + '"/>';
+      }
+      let dots = '';
+      pts.forEach(function (p) {
+        const dist = Math.abs(w[0] * p[0] + w[1] * p[1] + b) / norm;
+        const isSV = dist <= m * 1.08;
+        const col = p[2] === 1 ? '#34D399' : '#F87171';
+        dots += '<circle cx="' + px(p[0]).toFixed(1) + '" cy="' + py(p[1]).toFixed(1) + '" r="' + (isSV ? 6 : 4) + '" fill="' + col + '" ' +
+          (isSV ? 'stroke="#FCD34D" stroke-width="2"' : 'opacity="0.75"') + '/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="marginlens-svg" role="img" aria-label="hành lang margin ' + escapeHtml(cand.label || '') + '">' +
+        segPath(segLo, 'mgl-band') + segPath(segHi, 'mgl-band') + segPath(segMain, 'mgl-line') + dots +
+        '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens marginlens" aria-label="Hành lang an toàn rộng nhất — chọn đường phân chia">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'HÀNH LANG AN TOÀN RỘNG NHẤT') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="marginlens-body">' +
+          '<div class="marginlens-plot" data-mg-plot></div>' +
+          '<div class="marginlens-picks">' + candidates.map(function (c, i) {
+            return '<button type="button" class="marginlens-pick" data-mg-pick="' + i + '">' + escapeHtml(c.label) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="marginlens-readout">Bề rộng hành lang: <b data-mg-margin></b> · điểm viền vàng = support vectors</div>' +
+        '</div>' +
+        '<div class="dlens-riddle" data-mg-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-mg-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-mg-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-mg-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    const plot = mount.querySelector('[data-mg-plot]');
+    const marginOut = mount.querySelector('[data-mg-margin]');
+    const riddleEl = mount.querySelector('[data-mg-riddle]');
+
+    function select(i) {
+      idx = i;
+      const c = candidates[i];
+      if (plot) plot.innerHTML = svg(c);
+      if (marginOut) marginOut.textContent = c.margin.toFixed(2);
+      mount.querySelectorAll('[data-mg-pick]').forEach(function (b) { b.classList.remove('is-active'); });
+      const btn = mount.querySelector('[data-mg-pick="' + i + '"]');
+      if (btn) btn.classList.add('is-active');
+    }
+    select(0);
+
+    mount.querySelectorAll('[data-mg-pick]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        select(parseInt(btn.getAttribute('data-mg-pick'), 10));
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    });
+
+    const fb = mount.querySelector('[data-mg-fb]');
+    mount.querySelectorAll('[data-mg-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-mg-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-mg-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-mg-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm qua từng đường để so bề rộng hành lang.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
+  /* ═══ renderPcaAuditLens — ML C3-Bài 4 (user chốt 2026-07-31, khép M1): ỐNG KÍNH
+     KIỂM TOÁN. cfg = { title, intro, datasets:[{label,evr_pct,points:[[x,y,label]×60]}×2],
+     riddle:{...} } — 2 scatter PCA(2) cạnh nhau, CÙNG % phương sai giữ được nhưng 1 bên
+     tách lớp rõ, 1 bên chồng lấn hoàn toàn. Toggle hiện/ẩn nhãn — ban đầu ẩn (xám), bấm
+     mới tô màu — chống kết luận vội "biểu đồ đẹp = model tốt". ═══ */
+  function renderPcaAuditLens(mount, cfg) {
+    if (!mount || !cfg) return;
+    const datasets = cfg.datasets || [];
+    const rid = cfg.riddle || {};
+    let labelsShown = false;
+    let interacted = false;
+
+    const W = 180, H = 150, pad = 10;
+    function bounds(pts) {
+      const xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+      return { xmin: Math.min.apply(null, xs), xmax: Math.max.apply(null, xs), ymin: Math.min.apply(null, ys), ymax: Math.max.apply(null, ys) };
+    }
+    function panelSVG(ds, showLabels) {
+      const pts = ds.points || [];
+      const b = bounds(pts);
+      const sx = function (v) { return pad + ((v - b.xmin) / (b.xmax - b.xmin || 1)) * (W - 2 * pad); };
+      const sy = function (v) { return (H - pad) - ((v - b.ymin) / (b.ymax - b.ymin || 1)) * (H - 2 * pad); };
+      let dots = '';
+      pts.forEach(function (p) {
+        const col = showLabels ? (p[2] === 1 ? '#34D399' : '#F87171') : '#67E8F9';
+        dots += '<circle cx="' + sx(p[0]).toFixed(1) + '" cy="' + sy(p[1]).toFixed(1) + '" r="3" fill="' + col + '" opacity="' + (showLabels ? '0.85' : '0.55') + '"/>';
+      });
+      return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="pcaudit-svg" role="img" aria-label="scatter PC1/PC2 ' + escapeHtml(ds.label || '') + '">' + dots + '</svg>';
+    }
+
+    mount.innerHTML =
+      '<section class="tlens pcauditlens" aria-label="Ống kính kiểm toán — biểu đồ đẹp có chứng minh model tốt?">' +
+        '<div class="tlens-head"><span class="tlens-title">' + escapeHtml(cfg.title || 'ỐNG KÍNH KIỂM TOÁN') + '</span>' +
+          '<span class="tlens-intro">' + (cfg.intro || '') + '</span></div>' +
+        '<div class="pcauditlens-body">' +
+          datasets.map(function (ds, i) {
+            return '<div class="pcauditlens-panel">' +
+              '<div class="pcauditlens-plot" data-pa-plot="' + i + '"></div>' +
+              '<div class="pcauditlens-cap">' + escapeHtml(ds.label || '') + ' · giữ ' + Math.round((ds.evr_pct || 0) * 100) + '% phương sai</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+        '<button type="button" class="pcauditlens-toggle" data-pa-toggle>👁 Hiện nhãn thật</button>' +
+        '<div class="dlens-riddle" data-pa-riddle hidden>' +
+          '<div class="dlens-riddle-q">🧩 ' + (rid.prompt || '') + '</div>' +
+          '<div class="dlens-riddle-opts">' + (rid.options || []).map(function (o) {
+            return '<button type="button" class="dlens-opt" data-pa-opt="' + escapeHtml(o) + '">' + escapeHtml(o) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="dlens-riddle-fb" data-pa-fb></div>' +
+        '</div>' +
+        '<div class="tlens-done" data-pa-done hidden>' + (rid.done || '') + '</div>' +
+      '</section>';
+
+    function renderPanels() {
+      datasets.forEach(function (ds, i) {
+        const el = mount.querySelector('[data-pa-plot="' + i + '"]');
+        if (el) el.innerHTML = panelSVG(ds, labelsShown);
+      });
+    }
+    renderPanels();
+
+    const toggleBtn = mount.querySelector('[data-pa-toggle]');
+    const riddleEl = mount.querySelector('[data-pa-riddle]');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function () {
+        labelsShown = !labelsShown;
+        toggleBtn.textContent = labelsShown ? '🙈 Ẩn nhãn' : '👁 Hiện nhãn thật';
+        renderPanels();
+        if (!interacted) { interacted = true; if (riddleEl && riddleEl.hidden) riddleEl.hidden = false; }
+      });
+    }
+
+    const fb = mount.querySelector('[data-pa-fb]');
+    mount.querySelectorAll('[data-pa-opt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        const pick = btn.getAttribute('data-pa-opt');
+        if (pick === rid.answer) {
+          btn.classList.add('is-right');
+          mount.querySelectorAll('[data-pa-opt]').forEach(function (b) { b.disabled = true; if (b !== btn) b.classList.add('is-dim'); });
+          if (fb) fb.innerHTML = '';
+          const d = mount.querySelector('[data-pa-done]');
+          if (d) d.hidden = false;
+        } else {
+          btn.classList.add('is-wrong');
+          if (fb) fb.innerHTML = '❌ ' + ((rid.wrong || {})[pick] || 'Chưa đúng — bấm "Hiện nhãn thật" để so sánh cả 2 biểu đồ.');
+          setTimeout(function () { btn.classList.remove('is-wrong'); }, 900);
+        }
+      });
+    });
+  }
+
   /* ═══ renderLineLens — ML Bài 8 (user chốt 2026-07-21): ỐNG KÍNH ĐƯỜNG.
      cfg = { title,intro, x:[..],y:[..], x_label,y_label, x_max,y_max,
              w0,b0, w_min,w_max,w_step, b_min,b_max,b_step, best:{w,b},
@@ -6064,6 +7462,107 @@
         const heroMountSp = document.getElementById('lesson-hero');
         renderSplitLens(heroMountSp || pvMount, s1.split_lens);
         if (heroMountSp) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.dimension_lens) {
+        // ML Bài C3-1 (user chốt 2026-07-31, Course 3 mở màn): ỐNG KÍNH SỐ CHIỀU — đám mây
+        // học sinh + 2 thanh gần/xa co lại khi kéo slider số chiều 2→100 (spec C3-L1).
+        const heroMountDim = document.getElementById('lesson-hero');
+        renderDimensionLens(heroMountDim || pvMount, s1.dimension_lens);
+        if (heroMountDim) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.pca_lens) {
+        // ML Bài C3-2 (user chốt 2026-07-31): ỐNG KÍNH XOAY TRỤC — scatter 2 feature tương
+        // quan, kéo góc xoay 0→180°, trục sống + phương sai bắt được cập nhật live (spec C3-L2).
+        const heroMountPca = document.getElementById('lesson-hero');
+        renderPcaLens(heroMountPca || pvMount, s1.pca_lens);
+        if (heroMountPca) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.variance_lens) {
+        // ML Bài C3-3 (user chốt 2026-07-31): BA LÔ TÍCH LUỸ PHƯƠNG SAI — stepper thêm dần
+        // component, thanh tích luỹ phương sai đầy dần + vạch mốc 80/90/95% (spec C3-L3).
+        const heroMountVar = document.getElementById('lesson-hero');
+        renderVarianceLens(heroMountVar || pvMount, s1.variance_lens);
+        if (heroMountVar) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.pca_audit_lens) {
+        // ML Bài C3-4 (user chốt 2026-07-31, khép M1): ỐNG KÍNH KIỂM TOÁN — 2 biểu đồ
+        // PCA cạnh nhau CÙNG phương sai giữ được, toggle hiện/ẩn nhãn (spec C3-L4).
+        const heroMountAudit = document.getElementById('lesson-hero');
+        renderPcaAuditLens(heroMountAudit || pvMount, s1.pca_audit_lens);
+        if (heroMountAudit) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.margin_lens) {
+        // ML Bài C3-5 (user chốt 2026-07-31, mở màn M2): HÀNH LANG AN TOÀN RỘNG NHẤT —
+        // click qua nhiều đường phân chia hợp lệ, xem hành lang margin + support vectors (spec C3-L5).
+        const heroMountMargin = document.getElementById('lesson-hero');
+        renderMarginLens(heroMountMargin || pvMount, s1.margin_lens);
+        if (heroMountMargin) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.contract_lens) {
+        // ML Bài C3-6 (user chốt 2026-07-31, mở màn M3): CÙNG ĐIỂM, CÂU HỎI KHÁC NHAU —
+        // toggle góc nhìn PHÂN LOẠI (có nhãn) vs PHÂN CỤM (nhãn niêm phong) (spec C3-L6).
+        const heroMountContract = document.getElementById('lesson-hero');
+        renderContractLens(heroMountContract || pvMount, s1.contract_lens);
+        if (heroMountContract) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.kmeans_lens) {
+        // ML Bài C3-7 (user chốt 2026-07-31): CENTROID DI CHUYỂN THEO HỌC SINH —
+        // stepper qua 4 vòng lặp assign→update thật, inertia giảm dần tới hội tụ (spec C3-L7).
+        const heroMountKmeans = document.getElementById('lesson-hero');
+        renderKmeansLens(heroMountKmeans || pvMount, s1.kmeans_lens);
+        if (heroMountKmeans) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.kselect_lens) {
+        // ML Bài C3-8 (user chốt 2026-07-31): BA BIỂU ĐỒ BẤT ĐỒNG — slider k, 3 đồng hồ
+        // inertia/silhouette/stability cập nhật cùng lúc, có thể KHÔNG đồng thuận (spec C3-L8).
+        const heroMountKsel = document.getElementById('lesson-hero');
+        renderKSelectLens(heroMountKsel || pvMount, s1.kselect_lens);
+        if (heroMountKsel) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.shape_lens) {
+        // ML Bài C3-9 (user chốt 2026-07-31, khép M3): CRESCENT KHÔNG PHẢI HÌNH CẦU —
+        // 3 tab KMeans/DBSCAN/Complete-link trên CÙNG dữ liệu lưỡi liềm thật (spec C3-L9).
+        const heroMountShape = document.getElementById('lesson-hero');
+        renderShapeCompareLens(heroMountShape || pvMount, s1.shape_lens);
+        if (heroMountShape) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.perceptron_lens) {
+        // ML Bài C3-10 (user chốt 2026-07-31, mở màn M4): MỘT NEURON DI CHUYỂN ĐƯỜNG
+        // SAU 1 LỖI — toggle TRƯỚC/SAU 1 update mistake-driven thật (spec C3-L10).
+        const heroMountPct = document.getElementById('lesson-hero');
+        renderPerceptronLens(heroMountPct || pvMount, s1.perceptron_lens);
+        if (heroMountPct) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.nonlinear_lens) {
+        // ML Bài C3-11 (user chốt 2026-08-01, M4 2/3): LINEAR CHỒNG LINEAR VẪN LÀ 1
+        // ĐƯỜNG THẲNG — toggle LINEAR+LINEAR vs LINEAR+ReLU+LINEAR trên 4 điểm XOR thật (spec C3-L11).
+        const heroMountNlin = document.getElementById('lesson-hero');
+        renderNonlinearLens(heroMountNlin || pvMount, s1.nonlinear_lens);
+        if (heroMountNlin) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.shape_chain_lens) {
+        // ML Bài C3-12 (user chốt 2026-08-02, khép M4): MA TRẬN CHỈ NHÂN ĐƯỢC KHI SỐ
+        // CỘT KHỚP SỐ HÀNG — toggle SHAPE KHỚP (chain X→Z1→A1→Z2→P chạy trọn, số thật) vs
+        // SHAPE LỆCH (W2 sai shape, dừng đúng tại bước A1@W2) (spec C3-L12).
+        const heroMountSc = document.getElementById('lesson-hero');
+        renderShapeChainLens(heroMountSc || pvMount, s1.shape_chain_lens);
+        if (heroMountSc) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.backprop_lens) {
+        // ML Bài C3-13 (user chốt 2026-08-02, mở màn M5): TÍN HIỆU LỖI ĐI NGƯỢC VÀ
+        // TÁCH RA CHO TỪNG TRỌNG SỐ — toggle FORWARD (cache đóng băng) vs BACKWARD
+        // (dZ2 tách thành dW2/db2 VÀ ngược tiếp qua dA1→dZ1 thành dW1/db1) (spec C3-L13).
+        const heroMountBp = document.getElementById('lesson-hero');
+        renderBackpropLens(heroMountBp || pvMount, s1.backprop_lens);
+        if (heroMountBp) { pvMount.innerHTML = ''; pvMount.hidden = true; }
+        else pvMount.hidden = false;
+      } else if (s1.vault_lens) {
+        // ML Bài C3-14 (user chốt 2026-08-02, khép khóa): LOSS TRAIN THẤP KHÔNG PHẢI
+        // VẠCH ĐÍCH — toggle CHỈ NHÌN TRAIN LOSS (trông như thắng lợi) vs NHÌN CẢ VAL
+        // + KHOÁ VAULT (val bật ngược sau best_epoch, vault khoá đúng lúc) (spec C3-L14).
+        const heroMountVl = document.getElementById('lesson-hero');
+        renderVaultLens(heroMountVl || pvMount, s1.vault_lens);
+        if (heroMountVl) { pvMount.innerHTML = ''; pvMount.hidden = true; }
         else pvMount.hidden = false;
       } else {
         pvMount.innerHTML = '';
@@ -9133,7 +10632,7 @@
   function highlightSQL(sql) {
     if (!sql) {
       // ML SHELL: comment mồi đúng ngôn ngữ (Python '#', SQL '--')
-      return state.courseId === 'ml'
+      return (state.courseId === 'ml' || state.courseId === 'ml_intermediate' || state.courseId === 'ml_advanced')
         ? '<span class="t-comment"># Code Python của bạn sẽ hiện ở đây</span>'
         : '<span class="t-comment">-- Query của bạn sẽ hiện ở đây</span>';
     }
@@ -9195,7 +10694,7 @@
     let challengeType = l.challenge_type || s4.challenge_type || 'full_ide';
     // ML SHELL 2026-07-18: khóa ML → IDE Python (CodeMirror python-mode, chấm 4 tầng Pyodide).
     // Dùng CHUNG pane full_ide của shell — chỉ đổi mode editor + đường chấm.
-    if (state.courseId === 'ml') challengeType = 'ml_ide';
+    if (state.courseId === 'ml' || state.courseId === 'ml_intermediate' || state.courseId === 'ml_advanced') challengeType = 'ml_ide';
     state.challengeState = { type: challengeType, submitted: false };
 
     // Title + prompt

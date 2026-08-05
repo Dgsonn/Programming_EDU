@@ -11,7 +11,8 @@
  * ============================================================================ */
 (function () {
   'use strict';
-  if (!document.body || document.body.dataset.course !== 'ml') return;
+  var MLCourseId = document.body && document.body.dataset.course;
+  if (!MLCourseId || ['ml', 'ml_intermediate', 'ml_advanced'].indexOf(MLCourseId) === -1) return;
 
   /* ?v= bust cache script worker — B3 đổi fetchText(no-store) + ml_lab rename cột */
   var worker = new Worker('/static/js/ml_worker.js?v=2');

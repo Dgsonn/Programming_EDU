@@ -95,6 +95,11 @@ def lesson_view(course_id):
         'java': 'lesson_java.html',
         'htmlcss': 'lesson_htmlcss.html',
         'db_design': 'lesson_db_design.html',
+        'db_design_tc': 'lesson_db_design.html',
+        'db_design_nc': 'lesson_db_design.html',
+        'ml': 'lesson_db_design.html',
+        'ml_intermediate': 'lesson_db_design.html',
+        'ml_advanced': 'lesson_db_design.html',
     }
     template = templates.get(course_id)
     if not template:
@@ -102,6 +107,7 @@ def lesson_view(course_id):
 
     return render_template(template,
                            lesson_idx=lesson_idx,
+                           course_id=course_id,
                            **_inject_kwargs())
 
 

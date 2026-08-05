@@ -326,6 +326,184 @@
       }
       return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">600/200/200 ✓</span></div>';
     }
+    /* C3-Bài 1 — Dimension Stress Test: node theo mode baseline/noise/separate */
+    if (k === 'dim_stress') {
+      const dm = st.dim || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">chiều → ?</span></div>';
+      if (dm.mode === 'baseline') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">' + dm.dims + ' chiều</span>' +
+          '<span class="mlf-chip clu clu-1">acc ' + Math.round(dm.accuracy * 100) + '%</span></div>';
+      }
+      if (dm.mode === 'noise') {
+        const last = (dm.items || [])[(dm.items || []).length - 1] || {};
+        return '<div class="mlf-chips"><span class="mlf-chip warn">' + (dm.items || []).length + ' mức chiều</span>' +
+          '<span class="mlf-chip warn">tới ' + (last.contrast || 0).toFixed(2) + '</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">tách hiệu ứng ✓</span></div>';
+    }
+    /* C3-Bài 2 — PCA transformer: node theo mode units/fit/transform */
+    if (k === 'pca_transform') {
+      const pc = st.pca || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">PCA → ?</span></div>';
+      if (pc.mode === 'units') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">15 feature · thang lệch nhau</span></div>';
+      }
+      if (pc.mode === 'fit') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">PC1 ' + Math.round(pc.evr[0] * 100) + '%</span>' +
+          '<span class="mlf-chip x">PC2 ' + Math.round(pc.evr[1] * 100) + '%</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">' + pc.shapes[0].join('×') + ' + ' + pc.shapes[1].join('×') + '</span></div>';
+    }
+    /* C3-Bài 3 — Explained variance selection: node theo mode spectrum/targets/validate */
+    if (k === 'variance_selection') {
+      const vs = st.varsel || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">phổ → ?</span></div>';
+      if (vs.mode === 'spectrum') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">PC1 ' + Math.round(vs.evr[0] * 100) + '%</span>' +
+          '<span class="mlf-chip x">PC2 ' + Math.round(vs.evr[1] * 100) + '%</span></div>';
+      }
+      if (vs.mode === 'targets') {
+        return '<div class="mlf-chips">' + (vs.targets || []).map(function (t) {
+          return '<span class="mlf-chip warn">' + Math.round(t.target * 100) + '%→n=' + t.n + '</span>';
+        }).join('') + '</div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">n=' + vs.chosen_n + ' · acc ' + Math.round(vs.chosen_acc * 100) + '%</span></div>';
+    }
+    /* C3-Bài 4 — PCA visual audit: node theo mode project/label/compare */
+    if (k === 'pca_audit') {
+      const pa = st.audit || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">audit → ?</span></div>';
+      if (pa.mode === 'project') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">PC1/PC2 · ' + pa.n + ' điểm</span></div>';
+      }
+      if (pa.mode === 'label') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">tách lớp rõ</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip x">raw ' + Math.round(pa.raw_acc * 100) + '%</span>' +
+        '<span class="mlf-chip clu clu-1">pca ' + Math.round(pa.pca_acc * 100) + '%</span></div>';
+    }
+    /* C3-Bài 5 — SVM margin: node theo mode baseline/tune/rbf */
+    if (k === 'svm_margin') {
+      const sv = st.svm || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">SVC → ?</span></div>';
+      if (sv.mode === 'baseline') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">F1 ' + sv.f1.toFixed(2) + '</span><span class="mlf-chip warn">' + sv.n_sv + ' SV</span></div>';
+      }
+      if (sv.mode === 'tune') {
+        return '<div class="mlf-chips">' + (sv.rows || []).map(function (r) {
+          return '<span class="mlf-chip warn">C=' + r.c + ': ' + r.f1.toFixed(2) + '</span>';
+        }).join('') + '</div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">RBF F1 ' + sv.f1.toFixed(2) + '</span><span class="mlf-chip clu clu-1">' + sv.n_sv + ' SV</span></div>';
+    }
+    /* C3-Bài 6 — Unsupervised contract: node theo mode contract/fit/audit */
+    if (k === 'cluster_contract') {
+      const cc = st.cluster || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">contract → ?</span></div>';
+      if (cc.mode === 'contract') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">X only ✓</span><span class="mlf-chip clu clu-1">0 rò rỉ</span></div>';
+      }
+      if (cc.mode === 'fit') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">silhouette ' + cc.silhouette.toFixed(2) + '</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">ARI ' + cc.ari.toFixed(2) + '</span><span class="mlf-chip clu clu-1">bất biến ✓</span></div>';
+    }
+    /* C3-Bài 7 — K-means stability: node theo mode raw/scaled/crescent */
+    if (k === 'kmeans_stability') {
+      const ks = st.kstab || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">K-means → ?</span></div>';
+      if (ks.mode === 'raw') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">inertia ' + Math.round(ks.inertia) + '</span></div>';
+      }
+      if (ks.mode === 'scaled') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">inertia ' + ks.inertia.toFixed(1) + '</span><span class="mlf-chip clu clu-1">ARI ' + ks.stability_min.toFixed(1) + '</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip warn">ARI ' + ks.ari_shape.toFixed(2) + '</span><span class="mlf-chip warn">từ chối</span></div>';
+    }
+    /* C3-Bài 8 — Choose k: node theo mode sweep/stability/decide */
+    if (k === 'kselect') {
+      const kd = st.kselect || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">k → ?</span></div>';
+      if (kd.mode === 'sweep') {
+        return '<div class="mlf-chips"><span class="mlf-chip x">7 candidate k</span></div>';
+      }
+      if (kd.mode === 'stability') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">' + (kd.flagged || []).length + ' k không ổn định</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">k=' + kd.chosen_k + ' ✓</span></div>';
+    }
+    /* C3-Bài 9 — Shape-aware bench: node theo mode lock/tune/compare */
+    if (k === 'shape_bench') {
+      const sb = st.shape || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">bench → ?</span></div>';
+      if (sb.mode === 'lock') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">1 representation ✓</span></div>';
+      }
+      if (sb.mode === 'tune') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">eps=' + sb.best_eps + ' ✓</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">DBSCAN ARI ' + sb.dbscan_ari.toFixed(2) + '</span><span class="mlf-chip warn">KMeans ' + sb.kmeans_ari.toFixed(2) + '</span></div>';
+    }
+    /* C3-Bài 10 — Perceptron trace: node theo mode manual/converge/xor */
+    if (k === 'perceptron_trace') {
+      const pt = st.pct || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">perceptron → ?</span></div>';
+      if (pt.mode === 'manual') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">error ' + pt.error + '</span></div>';
+      }
+      if (pt.mode === 'converge') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">' + pt.epochs + ' epoch → 0 lỗi</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip warn">50 epoch, không hội tụ</span></div>';
+    }
+    /* C3-Bài 11 — Gradient flow console: node theo mode d1/d5/d10 */
+    if (k === 'gradient_flow_console') {
+      const gf = st.gf || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">gradient → ?</span></div>';
+      if (gf.mode === 'd1') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">cả 2 còn khoẻ</span></div>';
+      }
+      if (gf.mode === 'd5') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">sigmoid tụt ' + Math.round(gf.ratio) + '×</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip warn">sigmoid ≈0, ReLU ' + Math.round(gf.ratio) + '× lớn hơn</span></div>';
+    }
+    /* C3-Bài 12 — Network shape builder: node theo mode shapes/activation/run */
+    if (k === 'network_shape_builder') {
+      const nsb = st.nsb || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">network → ?</span></div>';
+      if (nsb.mode === 'shapes') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">4 tham số khớp shape</span></div>';
+      }
+      if (nsb.mode === 'activation') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">ReLU+Sigmoid ✓</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip warn">' + Math.round(nsb.dead_frac * 100) + '% A1 = 0</span></div>';
+    }
+    /* C3-Bài 13 — Gradient graph builder: node theo mode output/hidden/check */
+    if (k === 'gradient_graph_builder') {
+      const gg = st.gg || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">gradient → ?</span></div>';
+      if (gg.mode === 'output') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">dZ2 ' + gg.dz2_shape + '</span></div>';
+      }
+      if (gg.mode === 'hidden') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">dW1 ' + gg.dw1_shape + '</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">rel error ≈' + gg.max_rel.toExponential(1) + '</span></div>';
+    }
+    /* C3-Bài 14 — Neural experiment designer: node theo mode params/curves/lock */
+    if (k === 'neural_experiment_designer') {
+      const ned = st.ned || {};
+      if (!revealed) return '<div class="mlf-chips"><span class="mlf-chip ghost">experiment → ?</span></div>';
+      if (ned.mode === 'params') {
+        return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">3 kiến trúc</span></div>';
+      }
+      if (ned.mode === 'curves') {
+        return '<div class="mlf-chips"><span class="mlf-chip warn">A/C có vấn đề</span></div>';
+      }
+      return '<div class="mlf-chips"><span class="mlf-chip clu clu-1">F1=' + ned.metrics.f1.toFixed(2) + '</span></div>';
+    }
     return '';
   }
 
@@ -1053,6 +1231,475 @@
           card('test', 'Test', sr.n_test || 200, '🔒 ') +
         '</div>' +
         (sr.note ? '<div class="mlf-qc-note">' + sr.note + '</div>' : '') +
+      '</div>';
+    }
+    /* C3-Bài 1 — Dimension Stress Test: baseline (2ch) → thêm nhiễu (20→100ch, cùng
+       n_samples/seed) → tách hiệu ứng (thêm mẫu KHÔNG cứu được, bỏ nhiễu thì cứu được) */
+    if (k === 'dim_stress') {
+      const dm = st.dim || {};
+      if (dm.mode === 'baseline') {
+        const c = dm.contrast, a = dm.accuracy;
+        const wNear = Math.max(2, Math.round(c * 100));
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📐 Baseline<br><b>' + dm.dims + ' chiều tín hiệu · ' + dm.n_samples + ' học sinh</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>khoảng cách XA NHẤT</span><div class="mlf-dist-bar"><i class="cyan" style="width:100%"></i></div><b>chuẩn</b></div>' +
+            '<div class="mlf-dist"><span>khoảng cách GẦN NHẤT</span><div class="mlf-dist-bar"><i class="pass" style="width:' + wNear + '%"></i></div><b>' + c.toFixed(3) + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-verdict is-on big">✅ Rõ ràng — accuracy validation ' + Math.round(a * 100) + '%</div>' +
+        '</div>';
+      }
+      if (dm.mode === 'noise') {
+        const items = dm.items || [];
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🌫️ Thêm nhiễu<br><b>giữ ' + dm.n_samples + ' học sinh, cùng seed</b></div>' +
+          '<div class="mlf-dists">' +
+            items.map(function (it) {
+              const w = Math.max(2, Math.round(it.contrast * 100));
+              return '<div class="mlf-dist"><span>' + it.dims + ' chiều</span><div class="mlf-dist-bar"><i class="' +
+                (it.dims <= 2 ? 'pass' : 'warn') + '" style="width:' + w + '%"></i></div><b>' + it.contrast.toFixed(3) + '</b></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="mlf-dim-note">Tương phản gần/xa <b>tăng dần về 1</b> — accuracy KNN validation ' +
+            items.map(function (it) { return Math.round(it.accuracy * 100) + '%'; }).join(' → ') + '.</div>' +
+        '</div>';
+      }
+      const as_ = dm.add_samples || {}, rn = dm.remove_noise || {};
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🔍 Tách hiệu ứng<br><b>2 thí nghiệm — mỗi lần chỉ đổi 1 biến</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>+mẫu ' + as_.from_n + '→' + as_.to_n + ' (giữ ' + as_.dims + 'ch)</span>' +
+            '<div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(as_.contrast_to * 100) + '%"></i></div><b>' + as_.contrast_to.toFixed(3) + '</b></div>' +
+          '<div class="mlf-dist"><span>−nhiễu ' + rn.from_dims + '→' + rn.to_dims + 'ch (giữ ' + rn.n_samples + ' mẫu)</span>' +
+            '<div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(rn.contrast_to * 100) + '%"></i></div><b>' + rn.contrast_to.toFixed(3) + '</b></div>' +
+        '</div>' +
+        '<div class="mlf-dim-note">Thêm mẫu (giữ nguyên chiều) <b>hầu như không đổi</b> tương phản (' +
+          as_.contrast_from.toFixed(3) + ' → ' + as_.contrast_to.toFixed(3) + ', acc ' + Math.round(as_.acc_from * 100) + '% → ' + Math.round(as_.acc_to * 100) + '%) — ' +
+          'trong khi bỏ chiều nhiễu (giữ nguyên số mẫu) kéo tương phản gần về 0 và acc lên ' + Math.round(rn.acc_to * 100) + '%. ' +
+          '<b>Số chiều, không phải số mẫu</b>, mới là nguyên nhân co hẹp khoảng cách ở đây.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 2 — PCA transformer: units warning → fit (PC axes+loadings) → transform (leakage-safe) */
+    if (k === 'pca_transform') {
+      const pc = st.pca || {};
+      if (pc.mode === 'units') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📏 15 feature hành vi<br><b>thang đo lệch nhau rất xa</b></div>' +
+          '<div class="mlf-dists">' +
+            (pc.ranges || []).map(function (r) {
+              const w = Math.max(4, Math.round(r.pct));
+              return '<div class="mlf-dist"><span>' + r.name + '</span><div class="mlf-dist-bar"><i class="warn" style="width:' + w + '%"></i></div><b>' + r.range + '</b></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="mlf-dim-note">Đơn vị lệch nhau hàng chục đến hàng trăm lần — <b>phải StandardScaler trước khi fit PCA</b>, nếu không PCA sẽ chỉ "nhìn thấy" feature có thang đo lớn nhất.</div>' +
+        '</div>';
+      }
+      if (pc.mode === 'fit') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🧭 Fit PCA(2) trên TRAIN<br><b>' + (pc.n_train || 210) + ' học sinh, KHÔNG dùng validation</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>PC1 — tải mạnh nhất</span><div class="mlf-dist-bar"><i class="cyan" style="width:' + Math.round(pc.evr[0] * 100) + '%"></i></div><b>' + (pc.top1 && pc.top1[0]) + '</b></div>' +
+            '<div class="mlf-dist"><span>PC2 — tải mạnh nhất</span><div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(pc.evr[1] * 100) + '%"></i></div><b>' + (pc.top1 && pc.top1[1]) + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-pca-axes"><span class="mlf-pca-axis-chip">PC1 = ' + Math.round(pc.evr[0] * 100) + '% variance</span>' +
+            '<span class="mlf-pca-axis-chip">PC2 = ' + Math.round(pc.evr[1] * 100) + '% variance</span></div>' +
+          '<div class="mlf-dim-note">PC1 gom nhóm "mức độ tương tác" (login, video, tải tài nguyên); PC2 gom nhóm "tính đều đặn" (nộp đúng hạn, streak). PCA <b>không nhìn nhãn pass_fail</b> — đây thuần là hướng phương sai cao nhất.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🔒 Transform validation<br><b>KHÔNG refit — dùng lại scaler/PCA đã học từ train</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>Z_train</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>' + pc.shapes[0].join('×') + '</b></div>' +
+          '<div class="mlf-dist"><span>Z_val</span><div class="mlf-dist-bar"><i class="cyan" style="width:' + Math.round((pc.shapes[1][0] / pc.shapes[0][0]) * 100) + '%"></i></div><b>' + pc.shapes[1].join('×') + '</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ Cùng 1 hệ toạ độ học từ train — validation chỉ transform(), không refit</div>' +
+      '</div>';
+    }
+    /* C3-Bài 3 — Explained variance selection: spectrum → targets → validate */
+    if (k === 'variance_selection') {
+      const vs = st.varsel || {};
+      if (vs.mode === 'spectrum') {
+        const maxV = Math.max.apply(null, vs.evr);
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📊 Full PCA trên train<br><b>40 feature → phổ phương sai của từng thành phần</b></div>' +
+          '<div class="mlf-var-spectrum">' + vs.evr.map(function (v) {
+            return '<div class="mlf-var-bar" style="height:' + Math.max(3, Math.round((v / maxV) * 100)) + '%" title="' + Math.round(v * 100) + '%"></div>';
+          }).join('') + '</div>' +
+          '<div class="mlf-dim-note">6 thành phần đầu gánh gần hết phương sai (PC1 ' + Math.round(vs.evr[0] * 100) + '% → PC6 ' + Math.round(vs.evr[5] * 100) + '%), 9 thành phần còn lại gần như chỉ là nhiễu (&lt;1% mỗi thành phần).</div>' +
+        '</div>';
+      }
+      if (vs.mode === 'targets') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🎯 3 mốc phương sai tích luỹ<br><b>số component NHỎ NHẤT đạt mỗi mốc</b></div>' +
+          '<div class="mlf-dists">' +
+            (vs.targets || []).map(function (t) {
+              return '<div class="mlf-dist"><span>mốc ' + Math.round(t.target * 100) + '%</span><div class="mlf-dist-bar"><i class="cyan" style="width:' + Math.round(t.cum * 100) + '%"></i></div><b>n=' + t.n + '</b></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="mlf-dim-note">Mốc càng cao → cần càng nhiều component. Nhưng mốc "đẹp" (95%) chỉ là LỰA CHỌN THIẾT KẾ — không có quy luật nào bắt buộc phải chọn đúng con số này.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🔬 Kiểm tra downstream validation<br><b>1 classifier CỐ ĐỊNH, đổi n_components</b></div>' +
+        '<div class="mlf-dists">' +
+          (vs.rows || []).map(function (r) {
+            return '<div class="mlf-dist"><span>n=' + r.n + ' (' + Math.round(r.cum * 100) + '% var)</span><div class="mlf-dist-bar"><i class="' + (r.n === vs.chosen_n ? 'pass' : 'warn') + '" style="width:' + Math.round(r.acc * 100) + '%"></i></div><b>' + Math.round(r.acc * 100) + '%</b></div>';
+          }).join('') +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ n=' + vs.chosen_n + ' (mốc 90%) — accuracy nhảy vọt so với n=3 (mốc 80%): tín hiệu nhãn nằm ở thành phần phương sai THẤP, không phải PC1/PC2</div>' +
+      '</div>';
+    }
+    /* C3-Bài 4 — PCA visual audit: project (unlabeled) → label (tô màu) → compare (raw vs PCA) */
+    if (k === 'pca_audit') {
+      const pa = st.audit || {};
+      const pts = pa.points || [];
+      const xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+      const xmin = Math.min.apply(null, xs), xmax = Math.max.apply(null, xs);
+      const ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
+      const W = 320, H = 200, pad = 16;
+      const px = function (v) { return pad + ((v - xmin) / (xmax - xmin || 1)) * (W - 2 * pad); };
+      const py = function (v) { return (H - pad) - ((v - ymin) / (ymax - ymin || 1)) * (H - 2 * pad); };
+      if (pa.mode === 'project' || pa.mode === 'label') {
+        const showLabel = pa.mode === 'label';
+        let dots = '';
+        pts.forEach(function (p) {
+          const col = showLabel ? (p[2] === 1 ? '#34D399' : '#F87171') : '#67E8F9';
+          dots += '<circle cx="' + px(p[0]).toFixed(1) + '" cy="' + py(p[1]).toFixed(1) + '" r="4" fill="' + col + '" opacity="0.8"/>';
+        });
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<svg viewBox="0 0 ' + W + ' ' + H + '" class="mlf-reg-svg" role="img" aria-label="scatter PC1/PC2">' + dots +
+            '<text x="' + (W / 2) + '" y="' + (H - 3) + '" text-anchor="middle" font-size="9.5" fill="#94A3B8">PC1 →</text>' +
+            '<text x="6" y="11" font-size="9.5" fill="#94A3B8">↑ PC2</text></svg>' +
+          (showLabel
+            ? '<div class="mlf-audit-legend"><span><i class="mlf-audit-dot" style="background:#34D399"></i>Đậu</span><span><i class="mlf-audit-dot" style="background:#F87171"></i>Rớt</span></div>' +
+              '<div class="mlf-dim-note">Tách lớp khá rõ theo trục PC1 — nhưng đây MỚI CHỈ LÀ hình ảnh, chưa phải bằng chứng validation.</div>'
+            : '<div class="mlf-dim-note">' + pa.n + ' điểm CHƯA tô nhãn — PCA hoàn toàn không biết ai Đậu ai Rớt khi chiếu.</div>') +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🔬 Đầu dò cố định<br><b>so accuracy: feature gốc vs PCA(2)</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>Feature gốc (20 chiều)</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(pa.raw_acc * 100) + '%"></i></div><b>' + Math.round(pa.raw_acc * 100) + '%</b></div>' +
+          '<div class="mlf-dist"><span>PCA (2 chiều)</span><div class="mlf-dist-bar"><i class="cyan" style="width:' + Math.round(pa.pca_acc * 100) + '%"></i></div><b>' + Math.round(pa.pca_acc * 100) + '%</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ PCA(2) giữ gần như nguyên vẹn accuracy so với 20 feature gốc — bằng chứng THẬT, không chỉ dựa vào việc "biểu đồ trông đẹp"</div>' +
+      '</div>';
+    }
+    /* C3-Bài 5 — SVM margin: baseline linear → tune C → thử RBF */
+    if (k === 'svm_margin') {
+      const sv = st.svm || {};
+      if (sv.mode === 'baseline') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📐 Pipeline(StandardScaler, linear SVC)<br><b>C=1.0 · dữ liệu 2 vòng tròn đồng tâm</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>Validation F1</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(sv.f1 * 100) + '%"></i></div><b>' + sv.f1.toFixed(2) + '</b></div>' +
+            '<div class="mlf-dist"><span>Support vectors</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round((sv.n_sv / sv.n_train) * 100) + '%"></i></div><b>' + sv.n_sv + '/' + sv.n_train + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">F1 chỉ ' + sv.f1.toFixed(2) + ' — GẦN NHƯ MỌI điểm train trở thành support vector (' + sv.n_sv + '/' + sv.n_train + '): dấu hiệu đường thẳng KHÔNG đủ sức tách 2 vòng tròn lồng nhau.</div>' +
+        '</div>';
+      }
+      if (sv.mode === 'tune') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🎚️ Tune C trên validation<br><b>margin rộng/hẹp — vẫn CÙNG kernel linear</b></div>' +
+          '<div class="mlf-dists">' +
+            (sv.rows || []).map(function (r) {
+              return '<div class="mlf-dist"><span>C=' + r.c + ' (' + r.desc + ')</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(r.f1 * 100) + '%"></i></div><b>F1 ' + r.f1.toFixed(2) + '</b></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="mlf-dim-note">C nhỏ → hành lang rộng, chấp nhận nhiều điểm lấn margin. C lớn → hành lang hẹp, ép sát training. Nhưng CẢ HAI vẫn F1 thấp — đổi C không giải quyết được vấn đề kernel SAI hình dạng.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🌀 Thử kernel RBF<br><b>C=1.0, gamma="scale"</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>Validation F1</span><div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(sv.f1 * 100) + '%"></i></div><b>' + sv.f1.toFixed(2) + '</b></div>' +
+          '<div class="mlf-dist"><span>Support vectors</span><div class="mlf-dist-bar"><i class="cyan" style="width:' + Math.round((sv.n_sv / sv.n_train) * 100) + '%"></i></div><b>' + sv.n_sv + '/' + sv.n_train + '</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ RBF: F1 nhảy lên ' + sv.f1.toFixed(2) + ', support vectors giảm mạnh — bằng chứng CHÍNH ĐÁNG để chọn kernel phi tuyến ở đây, không phải chỉ vì "linear không hoạt động"</div>' +
+      '</div>';
+    }
+    /* C3-Bài 6 — Unsupervised contract: định nghĩa câu hỏi → fit KMeans+silhouette → audit ARI */
+    if (k === 'cluster_contract') {
+      const cc = st.cluster || {};
+      if (cc.mode === 'contract') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📋 ExperimentSpec<br><b>feature = X (activity, consistency) · nhãn NIÊM PHONG</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>Target vào fit?</span><div class="mlf-dist-bar"><i class="pass" style="width:5%"></i></div><b>KHÔNG</b></div>' +
+            '<div class="mlf-dist"><span>ID/nhãn vào feature?</span><div class="mlf-dist-bar"><i class="pass" style="width:5%"></i></div><b>KHÔNG</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">Trước khi fit bất cứ gì: khai báo rõ feature nào được dùng, thuật toán nào, metric NỘI BỘ nào — và xác nhận KHÔNG có target/ID nào lọt vào.</div>' +
+        '</div>';
+      }
+      if (cc.mode === 'fit') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🔍 KMeans(k=3).fit(X_scaled)<br><b>240 học sinh — KHÔNG dùng nhãn</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>Silhouette (nội bộ)</span><div class="mlf-dist-bar"><i class="cyan" style="width:' + Math.round(cc.silhouette * 100) + '%"></i></div><b>' + cc.silhouette.toFixed(2) + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">Silhouette đo ĐỘ TÁCH BIỆT nội tại giữa các cụm — hoàn toàn không cần nhãn ngoài. Đây là bằng chứng ĐẦU TIÊN, trước khi mở nhãn niêm phong.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🔓 Mở nhãn niêm phong — audit SAU fit<br><b>so cluster_id với external_labels</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>ARI (gốc)</span><div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(cc.ari * 100) + '%"></i></div><b>' + cc.ari.toFixed(3) + '</b></div>' +
+          '<div class="mlf-dist"><span>ARI (sau hoán vị ID)</span><div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(cc.ari * 100) + '%"></i></div><b>' + cc.ari.toFixed(3) + '</b></div>' +
+          '<div class="mlf-dist"><span>"Accuracy" thô trên ID gốc</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(cc.naive_acc * 100) + '%"></i></div><b>' + (cc.naive_acc * 100).toFixed(1) + '%</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ ARI KHÔNG đổi khi hoán vị cluster_id (permutation-invariant) — trong khi "accuracy" thô rơi gần 0%. Đây chính là vì sao ARI đúng, accuracy thô SAI cho bài toán clustering.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 7 — K-means stability: raw+n_init1 → scale+n_init20 → crescent (từ chối) */
+    if (k === 'kmeans_stability') {
+      const ks = st.kstab || {};
+      if (ks.mode === 'raw') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">⚠️ Feature THÔ, n_init=1<br><b>1 feature lệch thang đo ×20</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>Inertia</span><div class="mlf-dist-bar"><i class="warn" style="width:100%"></i></div><b>' + Math.round(ks.inertia).toLocaleString('vi-VN') + '</b></div>' +
+            '<div class="mlf-dist"><span>Silhouette</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(ks.silhouette * 100) + '%"></i></div><b>' + ks.silhouette.toFixed(2) + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">Inertia = ' + Math.round(ks.inertia).toLocaleString('vi-VN') + ' — con số KHỔNG LỒ, không đọc được, vì 1 feature bị lệch thang đo ×20 áp đảo khoảng cách. n_init=1 cũng dễ kẹt local minimum.</div>' +
+        '</div>';
+      }
+      if (ks.mode === 'scaled') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">✅ StandardScaler + n_init=20<br><b>4 seed [1, 7, 42, 99]</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>Inertia</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>' + ks.inertia.toFixed(1) + '</b></div>' +
+            '<div class="mlf-dist"><span>Silhouette</span><div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(ks.silhouette * 100) + '%"></i></div><b>' + ks.silhouette.toFixed(2) + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-kstab-row">' + (ks.stability || []).map(function (v) { return '<span class="mlf-kstab-chip">ARI ' + v.toFixed(1) + '</span>'; }).join('') + '</div>' +
+          '<div class="mlf-dim-note">Sau khi scale: inertia đọc được (' + ks.inertia.toFixed(1) + '), và ARI giữa 4 seed khác nhau đều = 1.0 — kết quả ỔN ĐỊNH, không phụ thuộc lần khởi tạo.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🌙 Dữ liệu hình lưỡi liềm (crescent)<br><b>K-means vẫn CHẠY — nhưng đúng không?</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>ARI vs cấu trúc thật</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(ks.ari_shape * 100) + '%"></i></div><b>' + ks.ari_shape.toFixed(2) + '</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">🚫 ARI chỉ ' + ks.ari_shape.toFixed(2) + ' so với hình dạng thật — K-means giả định cụm HÌNH CẦU, không phù hợp với 2 lưỡi liềm lồng nhau. Inertia/silhouette THẤP không cứu được giả định sai hình dạng.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 8 — Choose k: sweep candidate → stability flag → rationale/reject */
+    if (k === 'kselect') {
+      const kd = st.kselect || {};
+      if (kd.mode === 'sweep') {
+        const rows = kd.rows || [];
+        const maxSil = Math.max.apply(null, rows.map(function (r) { return r.sil; }));
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📊 Sweep k=2..8<br><b>inertia + silhouette mỗi k</b></div>' +
+          '<div class="mlf-kselect-row">' + rows.map(function (r) {
+            return '<span class="mlf-kselect-chip' + (r.sil === maxSil ? ' is-best' : '') + '">k=' + r.k + ': sil ' + r.sil.toFixed(2) + '</span>';
+          }).join('') + '</div>' +
+          '<div class="mlf-dim-note">Silhouette đạt ĐỈNH rõ ở k=' + kd.peak_k + ' (' + maxSil.toFixed(3) + ') — và inertia có 1 "khuỷu tay" (elbow) đúng ngay tại đó. 2 chỉ số ĐỒNG THUẬN ở dữ liệu này.</div>' +
+        '</div>';
+      }
+      if (kd.mode === 'stability') {
+        const rows = kd.rows || [];
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🔁 Stability qua 3 seed [1, 7, 42]<br><b>ARI trung bình mỗi k</b></div>' +
+          '<div class="mlf-kselect-row">' + rows.map(function (r) {
+            return '<span class="mlf-kselect-chip' + (r.flagged ? ' is-flag' : '') + '">k=' + r.k + ': ' + r.stability.toFixed(2) + (r.flagged ? ' ⚠️' : '') + '</span>';
+          }).join('') + '</div>' +
+          '<div class="mlf-dim-note">k=2..5 ổn định tuyệt đối (ARI=1.0). k=7 rớt xuống 0.806 — bị GẮN CỜ vì kết quả đổi khá nhiều giữa các lần khởi tạo khác nhau.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">✅ Áp ràng buộc, chốt rationale<br><b>k=' + kd.chosen_k + ' — hội tụ ĐỦ bằng chứng</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>Silhouette đỉnh</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>k=' + kd.chosen_k + '</b></div>' +
+          '<div class="mlf-dist"><span>Elbow rõ</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>k=' + kd.chosen_k + '</b></div>' +
+          '<div class="mlf-dist"><span>Ổn định (ARI)</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>1.0</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ k=' + kd.chosen_k + ' được CẢ 3 bằng chứng ủng hộ. Nếu dữ liệu là NGẪU NHIÊN (silhouette thấp-phẳng ở mọi k), rationale đúng phải là "TỪ CHỐI chọn k" — không ép ra 1 con số.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 9 — Shape-aware bench: khoá scale chung → tune DBSCAN → so giả định thuật toán */
+    if (k === 'shape_bench') {
+      const sb = st.shape || {};
+      if (sb.mode === 'lock') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🔒 1 StandardScaler DUY NHẤT<br><b>KMeans + DBSCAN + Complete-link CÙNG dùng 1 X</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>KMeans dùng X nào?</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>X chung</b></div>' +
+            '<div class="mlf-dist"><span>DBSCAN dùng X nào?</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>X chung</b></div>' +
+            '<div class="mlf-dist"><span>Complete-link dùng X nào?</span><div class="mlf-dist-bar"><i class="pass" style="width:100%"></i></div><b>X chung</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">Khoá 1 representation CHUNG cho cả 3 thuật toán — nếu mỗi model được tiền xử lý khác nhau, so sánh sau đó sẽ không còn công bằng.</div>' +
+        '</div>';
+      }
+      if (sb.mode === 'tune') {
+        const rows = sb.rows || [];
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🎛️ Tune eps (min_samples=6 cố định)<br><b>trạng thái 1-cụm/toàn nhiễu bị gắn cờ</b></div>' +
+          '<div class="mlf-shape-row">' + rows.map(function (r) {
+            return '<span class="mlf-shape-chip' + (r.flagged ? ' is-flag' : '') + '">eps=' + r.eps + ': ' + r.clusters + ' cụm, ' + r.noise + ' nhiễu' + (r.flagged ? ' ⚠️' : '') + '</span>';
+          }).join('') + '</div>' +
+          '<div class="mlf-dim-note">eps quá nhỏ (0.15-0.2) → vỡ vụn thành hàng chục cụm giả. eps quá lớn (0.4) → gộp thành 1 cụm DUY NHẤT (silhouette không tính được — None). eps=0.35 là điểm "vừa đủ".</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">⚖️ So giả định thuật toán (ARI vs hình thật)<br><b>không chỉ tin 1 con số silhouette</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>KMeans (giả định hình cầu)</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(sb.kmeans_ari * 100) + '%"></i></div><b>ARI ' + sb.kmeans_ari.toFixed(2) + '</b></div>' +
+          '<div class="mlf-dist"><span>DBSCAN (giả định mật độ)</span><div class="mlf-dist-bar"><i class="pass" style="width:' + Math.round(sb.dbscan_ari * 100) + '%"></i></div><b>ARI ' + sb.dbscan_ari.toFixed(2) + '</b></div>' +
+          '<div class="mlf-dist"><span>Complete-link (giả định compact)</span><div class="mlf-dist-bar"><i class="warn" style="width:' + Math.round(sb.agg_ari * 100) + '%"></i></div><b>ARI ' + sb.agg_ari.toFixed(2) + '</b></div>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ DBSCAN khớp ĐÚNG hình lưỡi liềm thật (ARI=1.0) dù silhouette của nó THẤP HƠN KMeans — vì silhouette thiên vị cụm lồi/gọn. Không thuật toán nào "luôn tốt nhất" — phải khớp GIẢ ĐỊNH với HÌNH DẠNG dữ liệu.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 10 — Perceptron trace: 1 update tay → train separable hội tụ → XOR không hội tụ */
+    if (k === 'perceptron_trace') {
+      const pt = st.pct || {};
+      if (pt.mode === 'manual') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">✋ 1 update tay trên điểm (' + pt.point.join(',') + ')<br><b>w: [' + pt.w_before.join(',') + '] → [' + pt.w_after.join(',') + ']</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>score = w·x+b</span><div class="mlf-dist-bar"><i class="warn" style="width:100%"></i></div><b>' + pt.score + '</b></div>' +
+            '<div class="mlf-dist"><span>pred vs nhãn thật</span><div class="mlf-dist-bar"><i class="warn" style="width:100%"></i></div><b>' + pt.pred + ' vs ' + pt.label + '</b></div>' +
+            '<div class="mlf-dist"><span>error = y - pred</span><div class="mlf-dist-bar"><i class="warn" style="width:100%"></i></div><b>' + pt.error + '</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">Update CHỈ xảy ra vì error ≠ 0: w += lr·error·x, b += lr·error — đúng 1 lần, không đụng vào điểm đã đúng.</div>' +
+        '</div>';
+      }
+      if (pt.mode === 'converge') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">✅ Train trên dữ liệu TÁCH TUYẾN TÍNH được (AND)<br><b>hội tụ sau ' + pt.epochs + ' epoch — 0 lỗi</b></div>' +
+          '<div class="mlf-pct-row">' + pt.mistakes.map(function (m, i) {
+            return '<span class="mlf-pct-chip' + (m === 0 ? ' is-converged' : '') + '">epoch ' + (i + 1) + ': ' + m + ' lỗi</span>';
+          }).join('') + '</div>' +
+          '<div class="mlf-dim-note">Số lỗi mỗi epoch GIẢM DẦN về 0 — đây chính là bằng chứng hội tụ khi dữ liệu tách tuyến tính được.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">⚠️ Chuyển sang XOR (KHÔNG tách tuyến tính được)<br><b>' + pt.epochs + ' epoch — KHÔNG hội tụ</b></div>' +
+        '<div class="mlf-pct-row">' + pt.sample_mistakes.map(function (m) {
+          return '<span class="mlf-pct-chip is-flag">' + m + '</span>';
+        }).join('') + '</div>' +
+        '<div class="mlf-verdict is-on big">🚫 Không hội tụ trên XOR KHÔNG có nghĩa code sai — đây là GIỚI HẠN NĂNG LỰC của 1 perceptron tuyến tính (không có epoch nào đủ để giải). Không được kết luận "trained successfully" chỉ vì code chạy xong.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 11 — Gradient flow console: cùng tín hiệu qua 1 → 5 → 10 lớp, so sigmoid vs ReLU */
+    if (k === 'gradient_flow_console') {
+      const gf = st.gf || {};
+      const logPct = function (v) { return Math.max(2, Math.min(100, (Math.log10(v) + 7) * (100 / 7))); };
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">🔬 Depth=' + gf.depth + ' — cùng tín hiệu, 2 activation khác nhau<br><b>gradient_product = tích dồn gradient qua ' + gf.depth + ' lớp</b></div>' +
+        '<div class="mlf-dists">' +
+          '<div class="mlf-dist"><span>sigmoid</span><div class="mlf-dist-bar"><i class="warn" style="width:' + logPct(gf.sigmoid_prod).toFixed(0) + '%"></i></div><b>' + gf.sigmoid_prod.toExponential(2) + '</b></div>' +
+          '<div class="mlf-dist"><span>ReLU</span><div class="mlf-dist-bar"><i class="pass" style="width:' + logPct(gf.relu_prod).toFixed(0) + '%"></i></div><b>' + gf.relu_prod.toExponential(2) + '</b></div>' +
+        '</div>' +
+        '<div class="mlf-gf-row">' +
+          '<span class="mlf-gf-chip is-sigmoid">sigmoid ' + gf.sigmoid_prod.toExponential(2) + '</span>' +
+          '<span class="mlf-gf-chip is-relu">ReLU lớn hơn ' + Math.round(gf.ratio) + '×</span>' +
+        '</div>' +
+        '<div class="mlf-dim-note">' + gf.note + '</div>' +
+      '</div>';
+    }
+    /* C3-Bài 12 — Network shape builder: bảng shape → activation compat → forward run thật */
+    if (k === 'network_shape_builder') {
+      const nsb = st.nsb || {};
+      if (nsb.mode === 'shapes') {
+        const sh = nsb.shapes || {};
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">📐 Đặt batch/input/hidden/output size<br><b>4 tham số được sinh ra tự động, khớp shape</b></div>' +
+          '<div class="mlf-nsb-row">' +
+            '<span class="mlf-nsb-chip is-ok">W1 ' + sh.W1 + '</span>' +
+            '<span class="mlf-nsb-chip is-ok">b1 ' + sh.b1 + '</span>' +
+            '<span class="mlf-nsb-chip is-ok">W2 ' + sh.W2 + '</span>' +
+            '<span class="mlf-nsb-chip is-ok">b2 ' + sh.b2 + '</span>' +
+          '</div>' +
+          '<div class="mlf-dim-note">n_in=3 → hidden=4 → output=1: W1 nối (n_in,hidden), W2 nối (hidden,output) — số cột lớp trước LUÔN khớp số hàng lớp sau.</div>' +
+        '</div>';
+      }
+      if (nsb.mode === 'activation') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">🎛️ Chọn activation ẩn/output<br><b>' + nsb.hidden + ' (ẩn) + ' + nsb.output + ' (output) — khớp bài toán nhị phân</b></div>' +
+          '<div class="mlf-nsb-row">' +
+            '<span class="mlf-nsb-chip is-ok">' + nsb.hidden + ' ẩn ✓</span>' +
+            '<span class="mlf-nsb-chip is-ok">' + nsb.output + ' output ✓</span>' +
+            '<span class="mlf-nsb-chip is-flag">' + nsb.bad_output + ' ✗</span>' +
+          '</div>' +
+          '<div class="mlf-dim-note">Nhị phân → Sigmoid (1 xác suất). ' + nsb.bad_output + ' SAI vì không khớp hợp đồng output nhị phân — dù code vẫn chạy được.</div>' +
+        '</div>';
+      }
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">▶ Chạy forward thật trên batch 5 mẫu<br><b>P trong [' + nsb.p_min.toFixed(3) + ', ' + nsb.p_max.toFixed(3) + ']</b></div>' +
+        '<div class="mlf-nsb-row">' + (nsb.p || []).map(function (v) {
+          return '<span class="mlf-nsb-chip is-ok">P=' + v.toFixed(3) + '</span>';
+        }).join('') + '</div>' +
+        '<div class="mlf-verdict is-on big">⚠️ A1 (hidden activation) có ' + Math.round(nsb.dead_frac * 100) + '% giá trị = 0 (ReLU "chết" ở vùng âm, đúng chủ đề Bài 11) — mỗi P vẫn là 1 xác suất hợp lệ trong (0,1), không phải nhãn cứng.</div>' +
+      '</div>';
+    }
+    /* C3-Bài 13 — Gradient graph builder: nối dZ2 output → dA1/dZ1 hidden → gradient_check thật */
+    if (k === 'gradient_graph_builder') {
+      const gg = st.gg || {};
+      if (gg.mode === 'output') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">1️⃣ Nối đạo hàm loss ở OUTPUT<br><b>dZ2 = (P − y) / m</b></div>' +
+          '<div class="mlf-gg-row">' +
+            '<span class="mlf-gg-chip is-ok">dZ2 shape ' + gg.dz2_shape + '</span>' +
+            '<span class="mlf-gg-chip is-ok">dW2 = A1ᵀ@dZ2</span>' +
+            '<span class="mlf-gg-chip is-ok">db2 = dZ2.sum(axis=0) = ' + gg.db2_val.toFixed(4) + '</span>' +
+          '</div>' +
+          '<div class="mlf-dim-note">dZ2 là ĐIỂM XUẤT PHÁT của mọi gradient — mọi dW/db khác đều suy ra từ đây qua chain rule, KHÔNG tính lại từ loss mỗi lần.</div>' +
+        '</div>';
+      }
+      if (gg.mode === 'hidden') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">2️⃣ Lan tiếp về lớp ẩn<br><b>dA1 = dZ2@W2ᵀ → dZ1 = dA1 · (Z1&gt;0)</b></div>' +
+          '<div class="mlf-gg-row">' +
+            '<span class="mlf-gg-chip is-ok">dA1 ' + gg.da1_shape + '</span>' +
+            '<span class="mlf-gg-chip is-ok">dZ1 ' + gg.dz1_shape + ' (ReLU mask)</span>' +
+            '<span class="mlf-gg-chip is-ok">dW1 ' + gg.dw1_shape + '</span>' +
+          '</div>' +
+          '<div class="mlf-dim-note">ReLU mask (Z1&gt;0) CHỈ cho gradient đi qua những unit đã "sống" ở forward pass — dùng lại ĐÚNG cache, không tính Z1 lại từ đầu.</div>' +
+        '</div>';
+      }
+      const re = gg.rel_errors || {};
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">3️⃣ Chạy gradient_check thật (finite-difference)<br><b>relative error lớn nhất ≈ ' + gg.max_rel.toExponential(1) + '</b></div>' +
+        '<div class="mlf-gg-row">' +
+          Object.keys(re).map(function (k2) {
+            return '<span class="mlf-gg-chip is-ok">' + k2 + ': ' + re[k2].toExponential(1) + '</span>';
+          }).join('') +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ Relative error ~1e-9 — analytical gradient KHỚP numerical gradient, đủ bằng chứng để tin backward_two_layer đúng, không chỉ "vì loss giảm trên dữ liệu thấy được".</div>' +
+      '</div>';
+    }
+    /* C3-Bài 14 — Neural experiment designer: param count → curves/instability → khoá checkpoint & test */
+    if (k === 'neural_experiment_designer') {
+      const ned = st.ned || {};
+      if (ned.mode === 'params') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">1️⃣ Lắp MLP + task contract<br><b>1 logit output + BCEWithLogitsLoss (nhị phân)</b></div>' +
+          '<div class="mlf-ned-row">' + (ned.candidates || []).map(function (c) {
+            return '<span class="mlf-ned-chip">' + c.name + ': ' + c.params + ' tham số</span>';
+          }).join('') + '</div>' +
+          '<div class="mlf-dim-note">Param count sinh ra TỰ ĐỘNG từ kiến trúc (input_dim→hidden→1) — càng nhiều hidden unit, càng nhiều tham số, càng dễ overfit trên dữ liệu nhỏ.</div>' +
+        '</div>';
+      }
+      if (ned.mode === 'curves') {
+        return '<div class="mlf-scene mlf-scene-reg">' +
+          '<div class="mlf-newcard">2️⃣ Train trong ngân sách epoch cố định<br><b>A thiếu năng lực · C dư năng lực (nếu không early-stop)</b></div>' +
+          '<div class="mlf-dists">' +
+            '<div class="mlf-dist"><span>A (hidden=2): train≈' + ned.a_train_final.toFixed(3) + ', val≈' + ned.a_val_final.toFixed(3) + '</span><div class="mlf-dist-bar"><i class="warn" style="width:100%"></i></div><b>UNDERFIT</b></div>' +
+            '<div class="mlf-dist"><span>C (hidden=256, không early-stop): train≈' + ned.c_train_final.toFixed(3) + ', val≈' + ned.c_val_final.toFixed(3) + '</span><div class="mlf-dist-bar"><i class="warn" style="width:100%"></i></div><b>OVERFIT</b></div>' +
+          '</div>' +
+          '<div class="mlf-dim-note">A: cả 2 đường cùng CAO và gần nhau (thiếu năng lực để học). C (nếu bỏ qua validation): train rất THẤP nhưng val lại CAO hơn hẳn mức đáy của nó — khoảng cách train-val ngày càng doãng ra.</div>' +
+        '</div>';
+      }
+      const m = ned.metrics;
+      return '<div class="mlf-scene mlf-scene-reg">' +
+        '<div class="mlf-newcard">3️⃣ Áp early stopping, mở test ĐÚNG 1 LẦN<br><b>B (hidden=16) — khoá checkpoint epoch ' + ned.best_epoch + '</b></div>' +
+        '<div class="mlf-ned-row">' +
+          '<span class="mlf-ned-chip is-ok">best_val ' + ned.best_val.toFixed(3) + '</span>' +
+          '<span class="mlf-ned-chip is-ok">accuracy ' + m.accuracy.toFixed(3) + '</span>' +
+          '<span class="mlf-ned-chip is-ok">F1 ' + m.f1.toFixed(3) + '</span>' +
+        '</div>' +
+        '<div class="mlf-verdict is-on big">✅ Checkpoint chọn bằng VALIDATION (không phải train loss thấp nhất), test chỉ mở SAU KHI đã chốt model — đây mới là quy trình đáng bảo vệ, không phải "thử đến khi test đẹp".</div>' +
       '</div>';
     }
     return '';

@@ -32,6 +32,11 @@ var COURSE_URLS = {
   java: "/lesson/java",
   htmlcss: "/lesson/htmlcss",
   db_design: "/lesson/db_design",
+  // 2026-07-26: thêm ml + ml_intermediate — trước đây thiếu nên nút "Tiếp tục học"
+  // trên dashboard có onclick = '#' (không đi đến đâu).
+  ml: "/lesson/ml?lesson=1",
+  ml_intermediate: "/lesson/ml_intermediate?lesson=1",
+  ml_advanced: "/lesson/ml_advanced?lesson=1",
 };
 
 var pageLabels = {

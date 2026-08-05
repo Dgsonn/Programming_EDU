@@ -12472,3 +12472,393 @@ td.tlens-idx { border-right: 1px dashed rgba(148, 163, 184, 0.2); }
 .mlf-spl-bar { height: 5px; border-radius: 3px; background: rgba(148, 163, 184, 0.2); overflow: hidden; }
 .mlf-spl-barpos { height: 100%; border-radius: 3px; }
 .mlf-spl-lab { font-size: 9px; color: var(--text-500); font-family: 'JetBrains Mono', monospace; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 1 "Dữ liệu nhiều chiều và curse of dimensionality" (2026-07-31)
+ * 1) ỐNG KÍNH SỐ CHIỀU (hero: đám mây 12 chấm + 2 thanh gần/xa + slider 8 nấc)
+ * 2) MAP 3 trạm: dim_stress (baseline → thêm nhiễu → tách hiệu ứng sample-size)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.dimlens-body { display: flex; flex-direction: column; gap: 12px; }
+.dimlens-cloud { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 8px; align-self: center; }
+.dimlens-svg { width: 100%; max-width: 240px; height: auto; display: block; }
+.dimlens-meter { display: flex; flex-direction: column; gap: 6px; }
+.dimlens-bar-row { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 10px; }
+.dimlens-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-400); }
+.dimlens-bar-track { height: 14px; background: rgba(148, 163, 184, 0.1); border-radius: 7px; overflow: hidden; }
+.dimlens-bar-fill { display: block; height: 100%; border-radius: 7px; transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.dimlens-bar-fill.dimlens-far { background: #67E8F9; }
+.dimlens-bar-fill.dimlens-near { background: #22D3EE; width: 2%; }
+@media (prefers-reduced-motion: reduce) { .dimlens-bar-fill { transition: none; } }
+.dimlens-readout { font-size: 12px; color: var(--text-300); line-height: 1.6; }
+.dimlens-readout b { color: #67E8F9; font-family: 'JetBrains Mono', monospace; }
+.dimlens-slider { width: 100%; accent-color: #22D3EE; cursor: pointer; }
+.dimlens-slider:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.dimlens-caption { font-size: 12.5px; color: var(--text-200); line-height: 1.55; min-height: 38px; border-top: 1px dashed rgba(148, 163, 184, 0.18); padding-top: 8px; }
+
+/* 2) MAP — 3 trạm dim_stress: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard (đã có),
+   chỉ thêm màu cyan cho thanh contrast/accuracy + note riêng. */
+.mlf-dist-bar i.cyan { background: #22D3EE; }
+.mlf-dim-note { font-size: 12px; color: var(--text-400); line-height: 1.55; margin-top: 6px; border-top: 1px dashed rgba(148, 163, 184, 0.16); padding-top: 8px; }
+.mlf-dim-note b { color: var(--text-100); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 2 "PCA and principal components" (2026-07-31)
+ * 1) ỐNG KÍNH XOAY TRỤC (hero: scatter 2 feature tương quan + trục sống xoay + shadow)
+ * 2) MAP 3 trạm: pca_transform (đơn vị → fit train → transform validation không refit)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.pcalens-body { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.pcalens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; }
+.pcalens-svg { width: 240px; height: 240px; display: block; }
+.pcalens-ctrl { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 6px; }
+.pcalens-lab { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-300); }
+.pcalens-lab b, .pcalens-lab output { color: #67E8F9; font-weight: 700; }
+.pcalens-slider { width: 100%; accent-color: #F59E0B; cursor: pointer; }
+.pcalens-slider:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.pcalens-readout { font-size: 12px; color: var(--text-300); text-align: center; }
+.pcalens-readout b { color: #FCD34D; font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+/* 2) MAP — 3 trạm pca_transform: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-pca-axes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.mlf-pca-axis-chip { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; padding: 4px 9px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #FCD34D; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 3 "Explained variance and choosing dimensionality" (2026-07-31)
+ * 1) BA LÔ TÍCH LUỸ PHƯƠNG SAI (hero: stepper + thanh tích luỹ + vạch mốc 80/90/95%)
+ * 2) MAP 3 trạm: variance_selection (phổ phương sai → mốc → validation)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.varlens-body { display: flex; flex-direction: column; gap: 10px; }
+.varlens-meter { padding: 4px 0; }
+.varlens-track { position: relative; height: 20px; background: rgba(148, 163, 184, 0.1); border-radius: 10px; overflow: visible; }
+.varlens-fill { display: block; height: 100%; border-radius: 10px; background: linear-gradient(90deg, #0891B2, #22D3EE); transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .varlens-fill { transition: none; } }
+.varlens-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: rgba(251, 191, 36, 0.6); }
+.varlens-mark::after { content: attr(data-target); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #FCD34D; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.varlens-slider { width: 100%; accent-color: #22D3EE; cursor: pointer; }
+.varlens-slider:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.varlens-readout { font-size: 12px; color: var(--text-300); text-align: center; }
+.varlens-readout b { color: #67E8F9; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) MAP — 3 trạm variance_selection: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-var-spectrum { display: flex; align-items: flex-end; gap: 3px; height: 60px; margin-top: 4px; }
+.mlf-var-bar { flex: 1; border-radius: 2px 2px 0 0; background: linear-gradient(180deg, #22D3EE, #0891B2); min-width: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 4 "Visualize and audit data after PCA" (2026-07-31, khép M1)
+ * 1) ỐNG KÍNH KIỂM TOÁN (hero: 2 scatter PCA cạnh nhau, cùng % phương sai, toggle nhãn)
+ * 2) MAP 3 trạm: pca_audit (chiếu unlabeled → tô nhãn → so raw/PCA validation)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.pcauditlens-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pcauditlens-panel { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.pcauditlens-plot { width: 100%; border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 10px; background: rgba(8, 51, 68, 0.4); padding: 4px; }
+.pcaudit-svg { width: 100%; height: auto; display: block; }
+.pcauditlens-cap { font-size: 10.5px; color: var(--text-400); text-align: center; }
+.pcauditlens-toggle {
+  margin-top: 10px; align-self: center; display: block; margin-left: auto; margin-right: auto;
+  border: 1px solid rgba(34, 211, 238, 0.35); background: rgba(34, 211, 238, 0.08); color: #67E8F9;
+  border-radius: 999px; padding: 7px 16px; font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.pcauditlens-toggle:hover { background: rgba(34, 211, 238, 0.16); border-color: rgba(34, 211, 238, 0.55); }
+.pcauditlens-toggle:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+@media (max-width: 640px) { .pcauditlens-body { grid-template-columns: 1fr; } }
+
+/* 2) MAP — 3 trạm pca_audit: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-audit-legend { display: flex; gap: 10px; font-size: 10.5px; color: var(--text-400); margin-top: 4px; }
+.mlf-audit-legend span { display: flex; align-items: center; gap: 4px; }
+.mlf-audit-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 5 "Support Vector Machines and the margin" (2026-07-31, mở màn M2)
+ * 1) HÀNH LANG AN TOÀN RỘNG NHẤT (hero: click qua 5 đường hợp lệ, xem margin+SV)
+ * 2) MAP 3 trạm: svm_margin (baseline → tune C → thử RBF)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.marginlens-body { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.marginlens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; }
+.marginlens-svg { width: 100%; max-width: 260px; height: auto; display: block; }
+.mgl-band { stroke: rgba(103, 232, 249, 0.5); stroke-width: 1.4; stroke-dasharray: 4 3; }
+.mgl-line { stroke: #FCD34D; stroke-width: 2.4; stroke-linecap: round; }
+.marginlens-picks { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.marginlens-pick {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.marginlens-pick:hover { border-color: #67E8F9; background: rgba(34, 211, 238, 0.08); }
+.marginlens-pick.is-active { border-color: #FCD34D; background: rgba(251, 191, 36, 0.14); color: #FCD34D; font-weight: 700; }
+.marginlens-pick:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.marginlens-readout { font-size: 12px; color: var(--text-300); text-align: center; }
+.marginlens-readout b { color: #FCD34D; font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+/* 2) MAP — 3 trạm svm_margin: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-svm-scene-svg { width: 100%; height: auto; display: block; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 6 "Clustering is not classification" (2026-07-31, mở màn M3)
+ * 1) CÙNG ĐIỂM, CÂU HỎI KHÁC NHAU (hero: toggle phân loại có nhãn vs phân cụm niêm phong)
+ * 2) MAP 3 trạm: cluster_contract (chọn feature → fit KMeans+silhouette → audit ARI)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.contractlens-body { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.contractlens-tabs { display: flex; gap: 6px; }
+.contractlens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 6px 14px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.contractlens-tab:hover { border-color: #67E8F9; }
+.contractlens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.contractlens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.contractlens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; }
+.contractlens-svg { width: 100%; max-width: 240px; height: auto; display: block; }
+.contractlens-cap { font-size: 12px; color: var(--text-300); text-align: center; max-width: 280px; line-height: 1.5; }
+.contractlens-cap code { color: #FCD34D; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+
+/* 2) MAP — 3 trạm cluster_contract: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-cluster-scene-svg { width: 100%; height: auto; display: block; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 7 "K-means: assign, update and repeat" (2026-07-31)
+ * 1) CENTROID DI CHUYỂN THEO HỌC SINH (hero: stepper 4 vòng lặp Lloyd's algorithm)
+ * 2) MAP 3 trạm: kmeans_stability (raw+n_init1 → scale+n_init20 → crescent)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.kmeanslens-body { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.kmeanslens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; }
+.kmeanslens-svg { width: 100%; max-width: 240px; height: auto; display: block; }
+.kmeanslens-slider { width: 100%; max-width: 260px; accent-color: #22D3EE; cursor: pointer; }
+.kmeanslens-slider:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.kmeanslens-readout { font-size: 12px; color: var(--text-300); text-align: center; }
+.kmeanslens-readout b { color: #67E8F9; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) MAP — 3 trạm kmeans_stability: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-kstab-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-kstab-chip { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; padding: 4px 9px; border-radius: 999px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); color: #6EE7B7; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 8 "Choose k and evaluate a clustering" (2026-07-31)
+ * 1) BA BIỂU ĐỒ BẤT ĐỒNG (hero: slider k + 3 đồng hồ inertia/silhouette/stability)
+ * 2) MAP 3 trạm: kselect (sweep k → stability → rationale/reject)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.kselectlens-body { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.kselectlens-slider { width: 100%; max-width: 260px; accent-color: #22D3EE; cursor: pointer; }
+.kselectlens-slider:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.kselectlens-klabel { font-size: 13px; color: var(--text-200); font-family: 'JetBrains Mono', monospace; }
+.kselectlens-klabel b { color: #67E8F9; font-size: 16px; }
+.kselectlens-meters { display: flex; flex-direction: column; gap: 5px; width: 100%; max-width: 260px; }
+.kselectlens-meter { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 6px; font-size: 11px; color: var(--text-400); }
+.kselectlens-mval { font-family: 'JetBrains Mono', monospace; color: var(--text-100); font-weight: 700; }
+.kselectlens-mflag { font-size: 10px; color: #FCD34D; font-weight: 700; }
+
+/* 2) MAP — 3 trạm kselect: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-kselect-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-kselect-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-kselect-chip.is-best { background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; font-weight: 700; }
+.mlf-kselect-chip.is-flag { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 9 "DBSCAN and hierarchical clustering" (2026-07-31, khép M3)
+ * 1) CRESCENT KHÔNG PHẢI HÌNH CẦU (hero: 3 tab KMeans/DBSCAN/Complete-link)
+ * 2) MAP 3 trạm: shape_bench (khoá scale chung → tune DBSCAN → so giả định)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.shapecmplens-body { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.shapecmplens-tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.shapecmplens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.shapecmplens-tab:hover { border-color: #67E8F9; }
+.shapecmplens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.shapecmplens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.shapecmplens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; }
+.shapecmp-svg { width: 100%; max-width: 220px; height: auto; display: block; }
+.shapecmplens-cap { font-size: 12px; color: var(--text-300); }
+.shapecmplens-cap b { color: #67E8F9; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) MAP — 3 trạm shape_bench: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-shape-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-shape-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-shape-chip.is-flag { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 10 "Perceptron: the first trainable neuron" (2026-07-31, mở màn M4)
+ * 1) MỘT NEURON DI CHUYỂN ĐƯỜNG SAU 1 LỖI (hero: toggle TRƯỚC/SAU update)
+ * 2) MAP 3 trạm: perceptron_trace (train → đếm mistake theo epoch → AND/OR hội tụ, XOR thì không)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.pctlens-body { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.pctlens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; }
+.pctlens-svg { width: 100%; max-width: 220px; height: auto; display: block; }
+.pctlens-tabs { display: flex; gap: 6px; }
+.pctlens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.pctlens-tab:hover { border-color: #67E8F9; }
+.pctlens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.pctlens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.pctlens-readout { font-size: 12px; color: var(--text-300); text-align: center; }
+.pctlens-readout b { color: #FCD34D; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) MAP — 3 trạm perceptron_trace: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-pct-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-pct-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-pct-chip.is-converged { background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; font-weight: 700; }
+.mlf-pct-chip.is-flag { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 11 "Activation functions and gradient flow" (2026-08-01, M4 2/3)
+ * 1) LINEAR CHỒNG LINEAR VẪN LÀ 1 ĐƯỜNG THẲNG (hero: toggle LINEAR vs LINEAR+ReLU+LINEAR)
+ * 2) MAP 3 trạm: gradient_flow_console (depth 1 → 5 → 10, sigmoid vs ReLU gradient product)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.nlinlens-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.nlinlens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.nlinlens-tab:hover { border-color: #67E8F9; }
+.nlinlens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.nlinlens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.nlinlens-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; max-width: 260px; margin: 8px auto 0; }
+.nlinlens-card {
+  border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 10px; background: rgba(8, 51, 68, 0.4);
+  padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+}
+.nlinlens-card.is-correct { border-color: rgba(52, 211, 153, 0.5); background: rgba(52, 211, 153, 0.1); }
+.nlinlens-card.is-wrong { border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.08); }
+.nlinlens-coord { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-300); }
+.nlinlens-out { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #67E8F9; }
+.nlinlens-verdict { font-size: 10px; color: var(--text-300); }
+.nlinlens-card.is-wrong .nlinlens-verdict { color: #FCA5A5; }
+.nlinlens-card.is-correct .nlinlens-verdict { color: #6EE7B7; }
+.nlinlens-readout { font-size: 12px; color: var(--text-300); text-align: center; margin-top: 6px; }
+.nlinlens-readout b { color: #FCD34D; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) MAP — 3 trạm gradient_flow_console: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-gf-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-gf-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-gf-chip.is-relu { background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; font-weight: 700; }
+.mlf-gf-chip.is-sigmoid { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 12 "Feedforward through a neural network" (2026-08-02, khép M4)
+ * 1) MA TRẬN CHỈ NHÂN ĐƯỢC KHI SỐ CỘT KHỚP SỐ HÀNG (hero: toggle SHAPE KHỚP vs SHAPE LỆCH)
+ * 2) MAP 3 trạm: network_shape_builder (bảng shape → activation compat → forward run thật)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.shchainlens-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.shchainlens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.shchainlens-tab:hover { border-color: #67E8F9; }
+.shchainlens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.shchainlens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.shchainlens-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; margin-top: 8px; }
+.shchainlens-chip { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.shchainlens-chip b { color: #67E8F9; }
+.shchainlens-chip.is-good { background: rgba(52, 211, 153, 0.14); border-color: rgba(52, 211, 153, 0.45); }
+.shchainlens-chip.is-good b { color: #6EE7B7; }
+.shchainlens-chip.is-bad { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.5); }
+.shchainlens-chip.is-bad b { color: #FCA5A5; }
+.shchainlens-arrow { color: var(--text-300); font-size: 12px; }
+.shchainlens-arrow.is-bad { color: #F87171; font-weight: 700; }
+.shchainlens-trace { margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-300); display: flex; flex-direction: column; gap: 2px; }
+.shchainlens-line b { color: #FCD34D; }
+.shchainlens-line.is-bad { color: #FCA5A5; }
+
+/* 2) MAP — 3 trạm network_shape_builder: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-nsb-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-nsb-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-nsb-chip.is-ok { background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; font-weight: 700; }
+.mlf-nsb-chip.is-flag { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 13 "Backpropagation and gradient checking" (2026-08-02, mở màn M5)
+ * 1) TÍN HIỆU LỖI ĐI NGƯỢC VÀ TÁCH RA CHO TỪNG TRỌNG SỐ (hero: toggle FORWARD vs BACKWARD)
+ * 2) MAP 3 trạm: gradient_graph_builder (dZ2/output → dA1-dZ1/hidden → gradient_check thật)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.bplens-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.bplens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.bplens-tab:hover { border-color: #67E8F9; }
+.bplens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.bplens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.bplens-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; margin-top: 8px; }
+.bplens-chip { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 8px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.bplens-chip b { color: #67E8F9; }
+.bplens-chip.is-dim { opacity: 0.5; }
+.bplens-chip.is-hot { background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+.bplens-chip.is-hot b { color: #FCA5A5; }
+.bplens-chip.is-good { background: rgba(52, 211, 153, 0.14); border-color: rgba(52, 211, 153, 0.45); }
+.bplens-chip.is-good b { color: #6EE7B7; }
+.bplens-arrow { color: var(--text-300); font-size: 11px; }
+.bplens-arrow.is-dim { opacity: 0.5; }
+.bplens-arrow.is-hot { color: #F87171; font-weight: 700; }
+.bplens-note { margin-top: 8px; font-size: 12px; color: var(--text-300); text-align: center; }
+
+/* 2) MAP — 3 trạm gradient_graph_builder: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-gg-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-gg-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-gg-chip.is-ok { background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; font-weight: 700; }
+.mlf-gg-chip.is-flag { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * COURSE 3 — BÀI 14 "Train, evaluate and defend a neural network experiment" (2026-08-02, khép khóa)
+ * 1) LOSS TRAIN THẤP KHÔNG PHẢI VẠCH ĐÍCH (hero: toggle CHỈ TRAIN vs TRAIN+VAL+VAULT)
+ * 2) MAP 3 trạm: neural_experiment_designer (param count → curves/instability → lock checkpoint)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) HERO — kế thừa .tlens */
+.vaultlens-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.vaultlens-tab {
+  border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(11, 18, 32, 0.7); color: var(--text-300);
+  border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--anim-fast), border-color var(--anim-fast);
+}
+.vaultlens-tab:hover { border-color: #67E8F9; }
+.vaultlens-tab.is-active { border-color: #22D3EE; background: rgba(34, 211, 238, 0.14); color: #67E8F9; }
+.vaultlens-tab:focus-visible { outline: 2px solid #67E8F9; outline-offset: 2px; }
+.vaultlens-plot { border: 1px solid rgba(34, 211, 238, 0.18); border-radius: 12px; background: rgba(8, 51, 68, 0.4); padding: 6px; margin-top: 8px; }
+.vaultlens-svg { width: 100%; max-width: 260px; height: auto; display: block; }
+.vaultlens-line { stroke-width: 2; }
+.vaultlens-line.is-train { stroke: #67E8F9; }
+.vaultlens-line.is-val { stroke: #FCD34D; }
+.vaultlens-lockline { stroke: #F87171; stroke-width: 1.5; stroke-dasharray: 3 3; }
+.vaultlens-lockdot { fill: #F87171; stroke: #0B1220; stroke-width: 1.5; }
+.vaultlens-readout { margin-top: 8px; font-size: 12px; color: var(--text-300); text-align: center; }
+.vaultlens-readout b { color: #FCD34D; font-family: 'JetBrains Mono', monospace; }
+
+/* 2) MAP — 3 trạm neural_experiment_designer: tái dùng .mlf-dist/.mlf-dists/.mlf-newcard */
+.mlf-ned-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.mlf-ned-chip { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.25); color: var(--text-300); }
+.mlf-ned-chip.is-ok { background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.5); color: #6EE7B7; font-weight: 700; }
+.mlf-ned-chip.is-flag { background: rgba(248, 113, 113, 0.14); border-color: rgba(248, 113, 113, 0.4); color: #FCA5A5; }

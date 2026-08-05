@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, request
 from utils import login_required, current_user_id
 from db import get_db
+from .course_content import get_content as get_course_content  # 2026-07-26
 
 main_bp = Blueprint('main', __name__)
 
@@ -419,6 +420,13 @@ _LESSON_TEMPLATES = {
     # ML REWORK 2026-07-18 (docs/ML_REWORK_PILOT_BAI1_2026-07-18.md): dùng CHUNG shell
     # lesson_db_design như TC/NC — engine Pyodide giữ ngầm, UI đúng anatomy DB Design.
     'ml': 'lesson_db_design.html',
+    # Course 2 — Applied ML (2026-07-26): dùng CHUNG shell lesson_db_design như course 'ml'
+    # — cùng giao diện (glossary, concept cards, mcq+mini_game, ml_flow pipeline, Pyodide
+    # 4-layer grader).
+    'ml_intermediate': 'lesson_db_design.html',
+    # Course 3 — Advanced Modeling & Neural Networks (2026-07-31): cùng shell; Bài 14 dùng
+    # remote CPU sandbox (PyTorch) thay vì Pyodide nhưng vẫn cùng UI 4-step.
+    'ml_advanced': 'lesson_db_design.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
@@ -429,6 +437,8 @@ _LESSON_URLS = {
     'cpp':      '/interface',
     'db_design': '/lesson/db_design',
     'ml':       '/lesson/ml',
+    'ml_intermediate': '/lesson/ml_intermediate',
+    'ml_advanced': '/lesson/ml_advanced',
 }
 
 @main_bp.route('/lesson/<course_id>')
@@ -464,15 +474,26 @@ def course_detail(course_id):
 
     # 2026-07-18: khóa Machine Learning — trang chi tiết RIÊNG (bố cục giống DB Design,
     # roadmap 5 module render client-side; tiến độ = localStorage pe_progress_ml + enrollments).
-    if course_id == 'ml':
+    # 2026-07-26: pass thêm row courses (title/subtitle/level/lessons) để template
+    #   render đúng theo từng khóa thay vì hardcode Course 1.
+    if course_id in ('ml', 'ml_intermediate', 'ml_advanced'):
         user = conn.execute('SELECT name, streak FROM users WHERE id=%s', (uid,)).fetchone()
         enrollment = conn.execute(
             'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, course_id)
         ).fetchone()
+        course_row = conn.execute(
+            'SELECT * FROM courses WHERE id = %s', (course_id,)
+        ).fetchone()
         conn.close()
         user = dict(user) if user else {}
+        course = dict(course_row) if course_row else None
+        # 2026-07-26: content dài (description/outcomes/requirements/includes) tách vào
+        # routes/course_content.py — template chỉ loop iterate, không {% if %} rải rác.
+        content = get_course_content(course_id)
         return render_template('course_ml.html',
-            course_id='ml',
+            course_id=course_id,
+            course=course,
+            content=content,
             user_name=user.get('name', ''),
             streak=user.get('streak', 0),
             enrollment=dict(enrollment) if enrollment else None)
