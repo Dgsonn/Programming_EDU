@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <title>ML cơ bản — Bài {{ (lesson_idx or 0) + 1 }}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- CodeMirror — editor code thật cho Bước 4 (cùng thư viện/CDN với khóa "ml" gốc) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/theme/material-darker.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@6.65.7/mode/javascript/javascript.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesson_ml_basic.css') }}?v=2" />
+</head>
+<body class="mlb-light mlb-lesson-body-root" data-course="ml_basic" data-lesson-idx="{{ lesson_idx or 0 }}">
+
+  <!-- ═══════ HEADER (đơn giản) ═══════ -->
+  <header class="mlb-lesson-header">
+    <a href="/courses/ml_basic" class="mlb-exit-btn" title="Thoát">
+      <i class="fa-solid fa-arrow-left"></i>
+      <span>Thoát</span>
+    </a>
+
+    <div class="mlb-step-progress" id="mlb-step-progress">
+      <div class="mlb-step" data-step="1"><span class="mlb-step-num">1</span><span class="mlb-step-label">Lý thuyết</span></div>
+      <div class="mlb-step-line"></div>
+      <div class="mlb-step" data-step="2"><span class="mlb-step-num">2</span><span class="mlb-step-label">Trắc nghiệm</span></div>
+      <div class="mlb-step-line"></div>
+      <div class="mlb-step" data-step="3"><span class="mlb-step-num">3</span><span class="mlb-step-label">Kéo thả</span></div>
+      <div class="mlb-step-line"></div>
+      <div class="mlb-step" data-step="4"><span class="mlb-step-num">4</span><span class="mlb-step-label">Tự code</span></div>
+    </div>
+
+    <button class="mlb-theme-toggle" onclick="toggleMlbLessonTheme()" title="Đổi giao diện">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+  </header>
+
+  <!-- ═══════ BÀI HỌC — render client-side từ LESSON_CONTENT['ml_basic'] ═══════ -->
+  <main class="mlb-lesson-stage" id="mlb-lesson-stage">
+    <div class="mlb-loading">Đang tải bài học…</div>
+  </main>
+
+  <!-- ═══════ FOOTER NAV (Prev / Next) ═══════ -->
+  <footer class="mlb-lesson-footer">
+    <button class="mlb-btn mlb-btn-ghost" id="mlb-prev-btn">
+      <i class="fa-solid fa-arrow-left"></i> Bước trước
+    </button>
+    <div class="mlb-footer-status" id="mlb-footer-status">Bước 1 / 4</div>
+    <button class="mlb-btn mlb-btn-primary" id="mlb-next-btn">
+      Tiếp theo <i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </footer>
+
+  <script>
+    function toggleMlbLessonTheme() {
+      document.body.classList.toggle('mlb-light');
+      document.body.classList.toggle('mlb-dark');
+      try { localStorage.setItem('mlb_theme', document.body.classList.contains('mlb-dark') ? 'dark' : 'light'); } catch (e) {}
+    }
+    try {
+      if (localStorage.getItem('mlb_theme') === 'dark') {
+        document.body.classList.remove('mlb-light');
+        document.body.classList.add('mlb-dark');
+      }
+    } catch (e) {}
+  </script>
+
+  <!-- Data + driver — load SAU cùng để DOM sẵn sàng -->
+  <script src="{{ url_for('static', filename='js/lesson_content_ml_basic.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='js/lesson_ml_basic.js') }}?v=1"></script>
+</body>
+</html>

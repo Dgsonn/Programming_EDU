@@ -427,6 +427,9 @@ _LESSON_TEMPLATES = {
     # Course 3 — Advanced Modeling & Neural Networks (2026-07-31): cùng shell; Bài 14 dùng
     # remote CPU sandbox (PyTorch) thay vì Pyodide nhưng vẫn cùng UI 4-step.
     'ml_advanced': 'lesson_db_design.html',
+    # ML cơ bản (2026-08-15) — phiên bản dịu mắt, đơn giản, 2 bài × 4 bước. UI HOÀN TOÀN RIÊNG
+    # (lesson_ml_basic.html), không dùng Pyodide, không gamification nặng.
+    'ml_basic': 'lesson_ml_basic.html',
 }
 
 # URL đích khi ấn "Tiếp tục học" — phải khớp với COURSE_URLS trong main.js
@@ -439,6 +442,7 @@ _LESSON_URLS = {
     'ml':       '/lesson/ml',
     'ml_intermediate': '/lesson/ml_intermediate',
     'ml_advanced': '/lesson/ml_advanced',
+    'ml_basic':    '/lesson/ml_basic',
 }
 
 @main_bp.route('/lesson/<course_id>')
@@ -491,6 +495,27 @@ def course_detail(course_id):
         # routes/course_content.py — template chỉ loop iterate, không {% if %} rải rác.
         content = get_course_content(course_id)
         return render_template('course_ml.html',
+            course_id=course_id,
+            course=course,
+            content=content,
+            user_name=user.get('name', ''),
+            streak=user.get('streak', 0),
+            enrollment=dict(enrollment) if enrollment else None)
+
+    # 2026-08-15: ML cơ bản (bản dịu mắt) — render template RIÊNG course_ml_basic.html, nhẹ hơn.
+    if course_id == 'ml_basic':
+        user = conn.execute('SELECT name, streak FROM users WHERE id=%s', (uid,)).fetchone()
+        enrollment = conn.execute(
+            'SELECT * FROM enrollments WHERE user_id=%s AND course_id=%s', (uid, course_id)
+        ).fetchone()
+        course_row = conn.execute(
+            'SELECT * FROM courses WHERE id = %s', (course_id,)
+        ).fetchone()
+        conn.close()
+        user = dict(user) if user else {}
+        course = dict(course_row) if course_row else None
+        content = get_course_content(course_id)
+        return render_template('course_ml_basic.html',
             course_id=course_id,
             course=course,
             content=content,

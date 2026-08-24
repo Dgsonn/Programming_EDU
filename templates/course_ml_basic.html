@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{{ course.title if course else 'ML cơ bản' }} — Programming EDU</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/course_ml_basic.css') }}?v=2" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="mlb-light" data-course="ml_basic">
+
+<div id="main">
+
+  <!-- ═══════ Topbar (đơn giản, không bell/dropdown phức tạp) ═══════ -->
+  <div class="mlb-topbar">
+    <div class="mlb-topbar-left">
+      <a href="/dashboard" class="mlb-brand">
+        <span class="mlb-brand-mark">🌸</span>
+        <span class="mlb-brand-text">ML cơ bản</span>
+      </a>
+    </div>
+    <nav class="mlb-topbar-nav">
+      <a href="/dashboard" class="mlb-nav-link">
+        <i class="fa-solid fa-house"></i> Trang chủ
+      </a>
+      <a href="/courses/ml_basic" class="mlb-nav-link is-active">
+        <i class="fa-solid fa-book-open"></i> Khóa học
+      </a>
+    </nav>
+    <div class="mlb-topbar-right">
+      <button class="mlb-theme-toggle" id="theme-toggle" onclick="toggleMlbTheme()" title="Đổi giao diện">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════ Hero — tone dịu, khoảng trắng nhiều ═══════ -->
+  <section class="mlb-hero">
+    <div class="mlb-hero-inner">
+      <div class="mlb-hero-text">
+        <span class="mlb-tag">{{ content.tagline }}</span>
+        <h1 class="mlb-title">{{ course.title if course else 'ML cơ bản' }}</h1>
+        <p class="mlb-subtitle">{{ course.subtitle if course else '' }}</p>
+        <p class="mlb-desc">{{ content.description|safe }}</p>
+
+        <div class="mlb-meta">
+          <div class="mlb-meta-item">
+            <i class="fa-regular fa-clock"></i>
+            <span>{{ course.duration if course else '~1 giờ' }}</span>
+          </div>
+          <div class="mlb-meta-item">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>{{ course.lessons if course else 2 }} bài</span>
+          </div>
+          <div class="mlb-meta-item">
+            <i class="fa-solid fa-leaf"></i>
+            <span>{{ course.level if course else 'Cơ bản' }}</span>
+          </div>
+        </div>
+
+        <div class="mlb-cta-row">
+          {% if enrollment %}
+            <a class="mlb-btn mlb-btn-primary" href="/lesson/ml_basic?lesson=1">
+              <i class="fa-solid fa-play"></i> Tiếp tục học
+            </a>
+          {% else %}
+            <button class="mlb-btn mlb-btn-primary" id="mlb-enroll-btn" onclick="enrollMlbCourse()">
+              <i class="fa-solid fa-play"></i> Bắt đầu học
+            </button>
+          {% endif %}
+        </div>
+      </div>
+      <div class="mlb-hero-art" aria-hidden="true">
+        <div class="mlb-art-circle"></div>
+        <div class="mlb-art-circle mlb-art-circle-2"></div>
+        <div class="mlb-art-emoji">🌸</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ Body — 1 cột, không sidebar ═══════ -->
+  <main class="mlb-body">
+
+    <!-- What you'll learn -->
+    <section class="mlb-section">
+      <header class="mlb-section-hd">
+        <h2><i class="fa-solid fa-seedling"></i> Bạn sẽ học được gì</h2>
+      </header>
+      <p class="mlb-section-lead">{{ content.what_you_learn|safe }}</p>
+      <p class="mlb-section-lead">{{ content.highlight|safe }}</p>
+
+      <ul class="mlb-outcomes">
+        {% for emoji, text in content.outcomes %}
+          <li>
+            <span class="mlb-outcomes-emoji">{{ emoji }}</span>
+            <span>{{ text|safe }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <p class="mlb-learning-note">{{ content.learning_note|safe }}</p>
+    </section>
+
+    <!-- Giáo trình — 2 bài -->
+    <section class="mlb-section">
+      <header class="mlb-section-hd">
+        <h2><i class="fa-solid fa-list-check"></i> Giáo trình</h2>
+        <span class="mlb-section-sub">2 bài · {{ content.modules_breakdown }}</span>
+      </header>
+
+      <ol class="mlb-lessons" id="mlb-lessons">
+        <!-- render client-side từ LESSON_CONTENT['ml_basic'] -->
+        <li class="mlb-lesson-item mlb-lesson-loading">Đang tải giáo trình…</li>
+      </ol>
+    </section>
+
+    <!-- Yêu cầu -->
+    <section class="mlb-section">
+      <header class="mlb-section-hd">
+        <h2><i class="fa-solid fa-circle-info"></i> Yêu cầu</h2>
+      </header>
+      <ul class="mlb-req">
+        {% for kind, status, text in content.requirements %}
+          <li>
+            <i class="fa-solid {{ 'fa-lightbulb' if status == 'info' else 'fa-lock' }}"></i>
+            <span>{{ text }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- Khóa học bao gồm -->
+    <section class="mlb-section">
+      <header class="mlb-section-hd">
+        <h2><i class="fa-solid fa-gift"></i> Khóa học bao gồm</h2>
+      </header>
+      <ul class="mlb-includes">
+        {% for icon, text in content.includes %}
+          <li>
+            <i class="{{ icon }}"></i>
+            <span>{{ text }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- Thành tựu -->
+    <section class="mlb-section">
+      <header class="mlb-section-hd">
+        <h2><i class="fa-solid fa-trophy"></i> Bạn sẽ đạt được</h2>
+      </header>
+      <ul class="mlb-skills">
+        {% for module_num, icon, title, desc in content.skills %}
+          <li class="mlb-skill-item">
+            <div class="mlb-skill-icon"><i class="fas {{ icon }}"></i></div>
+            <div class="mlb-skill-body">
+              <div class="mlb-skill-title">{{ title }}</div>
+              <div class="mlb-skill-desc">{{ desc }}</div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="mlb-footer">
+    <p>Học vui · Không vội · Dừng lại bất cứ lúc nào 🌸</p>
+  </footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/lesson_content_ml_basic.js') }}?v=1"></script>
+<script>
+  function toggleMlbTheme() {
+    document.body.classList.toggle('mlb-light');
+    document.body.classList.toggle('mlb-dark');
+    try { localStorage.setItem('mlb_theme', document.body.classList.contains('mlb-dark') ? 'dark' : 'light'); } catch (e) {}
+  }
+  try {
+    if (localStorage.getItem('mlb_theme') === 'dark') {
+      document.body.classList.remove('mlb-light');
+      document.body.classList.add('mlb-dark');
+    }
+  } catch (e) {}
+
+  async function enrollMlbCourse() {
+    const btn = document.getElementById('mlb-enroll-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang ghi danh…'; }
+    try {
+      const res = await fetch('/api/courses/ml_basic/enroll', { method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').content} });
+      const data = await res.json();
+      if (data.ok) { window.location.href = '/lesson/ml_basic?lesson=1'; }
+      else { alert('Không thể ghi danh. Vui lòng thử lại.'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-play"></i> Bắt đầu học'; } }
+    } catch (e) {
+      alert('Lỗi mạng. Vui lòng thử lại.');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-play"></i> Bắt đầu học'; }
+    }
+  }
+
+  /* Render danh sách bài client-side từ LESSON_CONTENT['ml_basic'] */
+  (function renderMlbLessons() {
+    const ol = document.getElementById('mlb-lessons');
+    if (!ol) return;
+    const lessons = (window.LESSON_CONTENT && window.LESSON_CONTENT.ml_basic && window.LESSON_CONTENT.ml_basic.lessons) || [];
+    if (!lessons.length) { ol.innerHTML = '<li class="mlb-lesson-item mlb-lesson-loading">Chưa có bài học.</li>'; return; }
+    let progress = {};
+    try { progress = JSON.parse(localStorage.getItem('mlb_progress') || '{}'); } catch (e) { progress = {}; }
+    ol.innerHTML = lessons.map((l, i) => {
+      const done = progress[l.id] && progress[l.id].completed;
+      const status = done ? 'done' : (i === 0 ? 'current' : 'locked');
+      const icon = status === 'done' ? 'fa-circle-check' : (status === 'current' ? 'fa-circle-play' : 'fa-circle');
+      return `<li class="mlb-lesson-item mlb-lesson-${status}">
+        <a href="/lesson/ml_basic?lesson=${i+1}" class="mlb-lesson-link">
+          <i class="fa-solid ${icon}"></i>
+          <div class="mlb-lesson-body">
+            <div class="mlb-lesson-title">Bài ${i+1}: ${l.title}</div>
+            <div class="mlb-lesson-sub">${l.subtitle || ''}</div>
+          </div>
+          <span class="mlb-lesson-eta">${l.estimated_minutes || 5} phút</span>
+        </a>
+      </li>`;
+    }).join('');
+  })();
+</script>
+
+</body>
+</html>

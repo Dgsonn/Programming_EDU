@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="ML cơ bản — bản dịu mắt">
+  <!-- Background: violet, đồng bộ với khóa "Machine Learning Cơ bản" gốc (#4C1D95/#A78BFA) -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C4B5FD"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="24" fill="url(#bg)"/>
+
+  <!-- Soft circles in background -->
+  <circle cx="80" cy="60" r="40" fill="#A78BFA" opacity="0.25"/>
+  <circle cx="320" cy="240" r="60" fill="#7C3AED" opacity="0.20"/>
+
+  <!-- Blossom shape (decorative) -->
+  <g transform="translate(200 130)">
+    <!-- Stem -->
+    <line x1="0" y1="50" x2="0" y2="90" stroke="#C4B5FD" stroke-width="3" stroke-linecap="round"/>
+    <!-- Left petal -->
+    <path d="M 0 30 Q -50 10 -55 -30 Q -25 -20 0 30 Z" fill="url(#leaf)" opacity="0.9"/>
+    <path d="M 0 30 Q -50 10 -55 -30" fill="none" stroke="#C4B5FD" stroke-width="1.5" opacity="0.6"/>
+    <!-- Right petal -->
+    <path d="M 0 30 Q 50 10 55 -30 Q 25 -20 0 30 Z" fill="url(#leaf)"/>
+    <path d="M 0 30 Q 50 10 55 -30" fill="none" stroke="#C4B5FD" stroke-width="1.5" opacity="0.6"/>
+    <!-- Top small petal -->
+    <path d="M 0 0 Q -15 -25 0 -40 Q 15 -25 0 0 Z" fill="url(#leaf)" opacity="0.95"/>
+  </g>
+
+  <!-- Subtle dots (like data points around the blossom) -->
+  <g fill="#C4B5FD" opacity="0.5">
+    <circle cx="80" cy="180" r="3"/>
+    <circle cx="120" cy="220" r="3"/>
+    <circle cx="160" cy="200" r="3"/>
+    <circle cx="240" cy="210" r="3"/>
+    <circle cx="280" cy="180" r="3"/>
+    <circle cx="320" cy="220" r="3"/>
+  </g>
+
+  <!-- Title text bottom-right -->
+  <text x="200" y="270" text-anchor="middle"
+        font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="700"
+        fill="#ffffff" letter-spacing="0.5">
+    ML cơ bản
+  </text>
+  <text x="200" y="288" text-anchor="middle"
+        font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="500"
+        fill="#C4B5FD">
+    phiên bản dịu mắt
+  </text>
+</svg>

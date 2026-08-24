@@ -252,6 +252,75 @@ COURSE_CONTENT = {
         ],
     },
 
+    'ml_basic': {
+        'tagline': 'MACHINE LEARNING · CƠ BẢN (DỊU MẮT)',
+        'tag_color': 'Cơ bản',
+        'tag_emoji': '🌸',
+        'tag_label': 'CƠ BẢN',
+        'theme': 'violet',              # cùng tông tím với khóa "Machine Learning Cơ bản" gốc
+        'accent_color': '#A78BFA',
+        'accent_rgb': '167, 139, 250',
+        'ribbon_text': '',             # phiên bản dịu — không ribbon
+        'description': (
+            'Bạn muốn bắt đầu Machine Learning mà không bị "choáng" bởi quá nhiều thuật ngữ? '
+            'Khóa <strong>ML cơ bản (phiên bản dịu mắt)</strong> sinh ra để bạn <em>thở được</em>: '
+            'chỉ 2 bài, mỗi bài đúng 4 bước — lý thuyết ngắn, một câu trắc nghiệm, một bài kéo-thả, '
+            'và một đoạn code bạn tự điền. Tone giọng chậm, nhiều khoảng trắng, màu pastel.'
+        ),
+        'what_you_learn': (
+            'Qua <strong>2 bài</strong> ngắn — bám đúng chủ đề Bài 1 &amp; Bài 2 của khóa '
+            '<em>Machine Learning Cơ bản</em> gốc — bạn sẽ: <em>hiểu ML khác lập trình truyền thống '
+            'ở chỗ nào</em> qua khung <strong>Task – Experience – Performance</strong>, tự tay lắp '
+            'pipeline "học rồi đoán" (fit → predict) đầu tiên, rồi phân biệt <strong>3 loại bài toán '
+            'ML</strong> (Regression / Classification / Clustering) và viết hàm hồi quy tuyến tính '
+            'đầu tiên — không cần thư viện ngoài, không cần cài đặt.'
+        ),
+        'highlight': (
+            'Điểm đặc biệt: <strong>không gamification nặng</strong>, không popup, không streak bắt buộc. '
+            'Chỉ có <strong>4 bước/bài × 2 bài = 8 hoạt động nhỏ</strong>, mỗi hoạt động dưới 5 phút. '
+            'Bạn có thể dừng bất cứ lúc nào — tiến độ tự lưu lại trong trình duyệt.'
+        ),
+        'outcomes': [
+            ('🌱', '<strong>Phân biệt được ML và lập trình truyền thống</strong> — câu hỏi nào có '
+                    'công thức sẵn, câu hỏi nào cần máy tự học pattern'),
+            ('🧩', '<strong>Định khung một bài toán ML</strong> bằng 3 mảnh Task – Experience – '
+                    'Performance, qua đúng câu chuyện "cảnh báo sớm tuần 8" của StudyLab'),
+            ('🔀', '<strong>Phân biệt 3 loại bài toán ML</strong>: Regression (dự đoán một con số), '
+                    'Classification (dự đoán một lớp), Clustering (gom nhóm không nhãn)'),
+            ('⌨️', '<strong>Viết 2 cặp hàm JavaScript ngắn</strong> — pipeline fit/predict theo '
+                    '"khoảng cách gần nhất", rồi hàm dự đoán y từ x bằng công thức y = a·x + b'),
+        ],
+        'learning_note': (
+            '💡 <strong>Cách học:</strong> mỗi bài 4 bước — '
+            '<em>1. Đọc hiểu</em> (lý thuyết ngắn, hình minh họa) → '
+            '<em>2. Trắc nghiệm</em> (1 câu chọn đáp án) → '
+            '<em>3. Kéo thả</em> (sắp xếp ví dụ / công thức) → '
+            '<em>4. Tự code</em> (viết 3-5 dòng Python).'
+        ),
+        'requirements': [
+            ('static', 'info',
+             'Biết Python cơ bản (biến, hàm, list) — hoặc đã xem qua phần đầu khóa Python'),
+            ('static', 'info',
+             'Một trình duyệt hiện đại (Chrome / Edge / Firefox bản mới)'),
+            ('static', 'info',
+             'Tâm thế thoải mái — không có streak bắt buộc, không có bài thi cuối kỳ'),
+        ],
+        'includes': [
+            ('fas fa-leaf', '2 bài học tinh gọn'),
+            ('fas fa-list-check', '4 bước / bài (lý thuyết · MCQ · kéo thả · tự code)'),
+            ('fas fa-clock', '~1 giờ tổng cộng (có thể làm nhiều phiên)'),
+            ('fas fa-laptop-code', 'Code chạy ngay trong trình duyệt (JavaScript, không cần cài đặt)'),
+            ('fas fa-infinity', 'Truy cập vĩnh viễn'),
+            ('fas fa-palette', 'Giao diện pastel dịu mắt'),
+            ('fas fa-mobile-alt', 'Học trên mọi thiết bị'),
+        ],
+        'modules_breakdown': '2 bài tự do (không chia module)',
+        'skills': [
+            (1, 'fa-puzzle-piece', 'Người định khung bài toán', 'Phân biệt lập trình truyền thống và ML, gọi tên khung Task – Experience – Performance'),
+            (2, 'fa-shapes', 'Người phân loại bài toán', 'Phân biệt Regression / Classification / Clustering, viết hàm hồi quy tuyến tính đầu tiên'),
+        ],
+    },
+
 }
 
 

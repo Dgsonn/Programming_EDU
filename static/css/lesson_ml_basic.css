@@ -1,0 +1,956 @@
+/* ============================================================================
+ * lesson_ml_basic.css — Giao diện bài học ML cơ bản (bản dịu mắt).
+ * Tông tím (violet), ĐỒNG BỘ với course_ml_basic.css và khóa "ml" gốc
+ * (course_ml.css: #4C1D95/#A78BFA), success/error/warn dùng đúng màu hệ thống
+ * chung của web (course_detail.css/lesson_db_design.css: #10B981/#EF4444/#F59E0B).
+ * 4 bước: 1) Lý thuyết · 2) Trắc nghiệm · 3) Kéo thả · 4) Tự code.
+ * Không Pyodide, không gamification nặng — chỉ progress + next/prev.
+ * ========================================================================== */
+
+body.mlb-lesson-body-root.mlb-light {
+  --mlb-bg:           #F9FAFB;
+  --mlb-bg-soft:      #F3F1FB;
+  --mlb-bg-card:      #FFFFFF;
+  --mlb-text:         #1F2937;
+  --mlb-text-soft:    #6B7280;
+  --mlb-text-muted:   #9CA3AF;
+  --mlb-border:       #F3F4F6;
+  --mlb-accent:       #7C3AED;
+  --mlb-accent-soft:  #A78BFA;
+  --mlb-accent-deep:  #4C1D95;
+  --mlb-accent-bg:    rgba(124, 58, 237, 0.10);
+  --mlb-success:      #10B981;
+  --mlb-success-bg:   rgba(16, 185, 129, 0.10);
+  --mlb-error:        #EF4444;
+  --mlb-error-bg:     rgba(239, 68, 68, 0.10);
+  --mlb-warn:         #F59E0B;
+  --mlb-warn-bg:      rgba(245, 158, 11, 0.10);
+  --mlb-shadow-sm:    0 1px 4px rgba(0, 0, 0, 0.04);
+  --mlb-shadow-md:    0 8px 24px rgba(76, 29, 149, 0.08);
+  --mlb-radius:       18px;
+  --mlb-radius-sm:    10px;
+  --mlb-font-h:       'Plus Jakarta Sans', system-ui, sans-serif;
+  --mlb-font-b:       'Inter', system-ui, sans-serif;
+  --mlb-font-m:       'JetBrains Mono', ui-monospace, monospace;
+}
+
+body.mlb-lesson-body-root.mlb-dark {
+  --mlb-bg:           #0F172A;
+  --mlb-bg-soft:      #1E2A45;
+  --mlb-bg-card:      #1A2138;
+  --mlb-text:         #F1F5F9;
+  --mlb-text-soft:    #CBD5E1;
+  --mlb-text-muted:   #94A3B8;
+  --mlb-border:       rgba(148, 163, 184, 0.16);
+  --mlb-accent:       #A78BFA;
+  --mlb-accent-soft:  #C4B5FD;
+  --mlb-accent-deep:  #C4B5FD;
+  --mlb-accent-bg:    rgba(167, 139, 250, 0.15);
+  --mlb-success:      #34D399;
+  --mlb-success-bg:   rgba(52, 211, 153, 0.12);
+  --mlb-error:        #F87171;
+  --mlb-error-bg:     rgba(248, 113, 113, 0.12);
+  --mlb-warn:         #FBBF24;
+  --mlb-warn-bg:      rgba(251, 191, 36, 0.12);
+  --mlb-shadow-sm:    0 2px 8px rgba(0, 0, 0, 0.20);
+  --mlb-shadow-md:    0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+body.mlb-lesson-body-root {
+  background: var(--mlb-bg);
+  color: var(--mlb-text);
+  font-family: var(--mlb-font-b);
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 0;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+.mlb-lesson-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+  background: var(--mlb-bg-soft);
+  border-bottom: 1px solid var(--mlb-border);
+  position: sticky; top: 0; z-index: 50;
+}
+.mlb-exit-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: var(--mlb-radius-sm);
+  background: transparent; border: 1px solid var(--mlb-border);
+  color: var(--mlb-text-soft); text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  transition: all 0.18s;
+}
+.mlb-exit-btn:hover { color: var(--mlb-accent); border-color: var(--mlb-accent-soft); }
+
+.mlb-step-progress {
+  display: flex; align-items: center; gap: 6px;
+  flex: 1; max-width: 560px; margin: 0 24px;
+}
+.mlb-step {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  font-size: 13px; font-weight: 600;
+  color: var(--mlb-text-muted);
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.mlb-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  background: var(--mlb-bg-soft);
+  border-radius: 50%;
+  font-size: 12px;
+  color: var(--mlb-text-soft);
+}
+.mlb-step.is-active {
+  background: var(--mlb-accent-bg);
+  border-color: var(--mlb-accent-soft);
+  color: var(--mlb-accent-deep);
+}
+body.mlb-dark .mlb-step.is-active { color: var(--mlb-accent); }
+.mlb-step.is-active .mlb-step-num { background: var(--mlb-accent); color: #fff; }
+.mlb-step.is-done .mlb-step-num { background: var(--mlb-success); color: #fff; }
+.mlb-step.is-done .mlb-step-num::before { content: '✓'; }
+.mlb-step.is-done .mlb-step-num > * { display: none; }
+.mlb-step-line {
+  flex: 0 1 32px; height: 2px;
+  background: var(--mlb-border);
+  border-radius: 2px;
+}
+
+.mlb-theme-toggle {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--mlb-border);
+  background: var(--mlb-bg-card);
+  color: var(--mlb-text-soft);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mlb-theme-toggle:hover { color: var(--mlb-accent); border-color: var(--mlb-accent-soft); }
+
+/* ─── Stage (main content) ──────────────────────────────────────────────── */
+.mlb-lesson-stage {
+  flex: 1;
+  max-width: 880px; margin: 0 auto;
+  width: 100%;
+  padding: 40px 24px 120px;
+}
+.mlb-loading {
+  text-align: center; padding: 80px 0;
+  color: var(--mlb-text-muted);
+  font-size: 15px;
+}
+
+/* ─── Step Pane (chung cho cả 4 step) ───────────────────────────────────── */
+.mlb-step-pane { display: none; }
+.mlb-step-pane.is-active { display: block; animation: mlb-fadein 0.35s ease; }
+@keyframes mlb-fadein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mlb-step-eyebrow {
+  display: inline-block;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--mlb-accent-bg);
+  color: var(--mlb-accent-deep);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+body.mlb-dark .mlb-step-eyebrow { color: var(--mlb-accent); }
+.mlb-step-title {
+  font-family: var(--mlb-font-h);
+  font-size: clamp(26px, 3.5vw, 34px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  color: var(--mlb-text);
+}
+.mlb-step-subtitle {
+  font-size: 17px; font-weight: 500;
+  color: var(--mlb-text-soft);
+  margin: 0 0 32px;
+}
+
+/* ─── Step 1: Lý thuyết ────────────────────────────────────────────────── */
+.mlb-theory-card {
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius);
+  padding: 32px;
+  margin-bottom: 20px;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-theory-block { margin-bottom: 24px; }
+.mlb-theory-block:last-child { margin-bottom: 0; }
+.mlb-theory-block h3 {
+  font-family: var(--mlb-font-h);
+  font-size: 18px; font-weight: 700;
+  color: var(--mlb-text);
+  margin: 0 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.mlb-theory-block h3 i { color: var(--mlb-accent); }
+.mlb-theory-block p {
+  font-size: 15px; line-height: 1.75;
+  color: var(--mlb-text-soft);
+  margin: 0 0 12px;
+}
+.mlb-theory-block p:last-child { margin-bottom: 0; }
+.mlb-theory-block code {
+  font-family: var(--mlb-font-m);
+  font-size: 14px;
+  background: var(--mlb-accent-bg);
+  color: var(--mlb-accent-deep);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+body.mlb-dark .mlb-theory-block code { color: var(--mlb-accent); }
+.mlb-theory-block ul, .mlb-theory-block ol {
+  margin: 0 0 12px; padding-left: 20px;
+  color: var(--mlb-text-soft);
+  font-size: 15px; line-height: 1.75;
+}
+.mlb-theory-block li { margin-bottom: 6px; }
+.mlb-theory-callout {
+  background: var(--mlb-accent-bg);
+  border-left: 3px solid var(--mlb-accent);
+  padding: 14px 18px;
+  border-radius: 0 var(--mlb-radius-sm) var(--mlb-radius-sm) 0;
+  font-size: 14px; line-height: 1.7;
+  color: var(--mlb-text);
+}
+
+/* Visual concept card (so sánh 2-3 khái niệm cạnh nhau) */
+.mlb-concept-compare {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin: 16px 0;
+}
+.mlb-concept-compare > div {
+  background: var(--mlb-bg);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  padding: 18px;
+}
+.mlb-concept-compare h4 {
+  font-family: var(--mlb-font-h);
+  font-size: 15px; font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--mlb-text);
+  display: flex; align-items: center; gap: 6px;
+}
+.mlb-concept-compare p {
+  font-size: 14px; line-height: 1.6;
+  color: var(--mlb-text-soft);
+  margin: 0;
+}
+
+/* Stat row — 2-4 con số nổi bật (thay cho mô tả trừu tượng) */
+.mlb-stat-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin: 16px 0;
+}
+.mlb-stat-tile {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 4px;
+  padding: 18px 12px;
+  background: var(--mlb-accent-bg);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+}
+.mlb-stat-icon { font-size: 22px; margin-bottom: 2px; }
+.mlb-stat-value {
+  font-family: var(--mlb-font-h);
+  font-size: 22px; font-weight: 800;
+  color: var(--mlb-accent-deep);
+}
+body.mlb-dark .mlb-stat-value { color: var(--mlb-accent); }
+.mlb-stat-label {
+  font-size: 12.5px; line-height: 1.4;
+  color: var(--mlb-text-soft);
+}
+
+/* Data table — dữ liệu mẫu thật để bài học "chân thực" hơn thay vì chỉ mô tả */
+.mlb-table-caption {
+  font-size: 13px; font-weight: 600;
+  color: var(--mlb-text-muted);
+  margin: 0 0 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.mlb-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  margin: 0 0 4px;
+}
+.mlb-data-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 460px;
+}
+.mlb-data-table th, .mlb-data-table td {
+  padding: 10px 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+.mlb-data-table thead th {
+  background: var(--mlb-bg-soft);
+  color: var(--mlb-text-soft);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--mlb-border);
+}
+.mlb-data-table tbody td {
+  color: var(--mlb-text);
+  border-bottom: 1px solid var(--mlb-border);
+}
+.mlb-data-table tbody tr:last-child td { border-bottom: none; }
+.mlb-data-table tbody tr:hover td { background: var(--mlb-accent-bg); }
+
+/* Quote — trích lời nhân vật trong câu chuyện StudyLab, tăng tính sinh động */
+.mlb-quote {
+  margin: 16px 0 0;
+  padding: 16px 20px;
+  background: var(--mlb-bg);
+  border-left: 3px solid var(--mlb-accent-soft);
+  border-radius: 0 var(--mlb-radius-sm) var(--mlb-radius-sm) 0;
+}
+.mlb-quote p {
+  font-family: var(--mlb-font-h);
+  font-size: 15.5px; font-style: italic; font-weight: 600;
+  line-height: 1.6;
+  color: var(--mlb-text);
+  margin: 0 0 8px;
+}
+.mlb-quote cite {
+  font-style: normal;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--mlb-text-muted);
+}
+
+/* ─── Step 2: Trắc nghiệm ──────────────────────────────────────────────── */
+.mlb-mcq-card {
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius);
+  padding: 32px;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-mcq-question {
+  font-family: var(--mlb-font-h);
+  font-size: 19px; font-weight: 600;
+  line-height: 1.45;
+  color: var(--mlb-text);
+  margin: 0 0 24px;
+}
+.mlb-mcq-options { display: grid; gap: 12px; margin-bottom: 20px; }
+.mlb-mcq-option {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 18px;
+  background: var(--mlb-bg);
+  border: 2px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--mlb-font-b);
+  font-size: 15px; line-height: 1.55;
+  color: var(--mlb-text);
+  transition: all 0.2s;
+}
+.mlb-mcq-option:hover:not(:disabled) {
+  border-color: var(--mlb-accent-soft);
+  background: var(--mlb-accent-bg);
+}
+.mlb-mcq-option:disabled { cursor: not-allowed; }
+.mlb-mcq-option .mlb-mcq-letter {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--mlb-bg-soft);
+  border-radius: 50%;
+  font-weight: 700; font-size: 14px;
+  color: var(--mlb-text-soft);
+}
+.mlb-mcq-option.is-correct {
+  border-color: var(--mlb-success);
+  background: var(--mlb-success-bg);
+}
+.mlb-mcq-option.is-correct .mlb-mcq-letter {
+  background: var(--mlb-success); color: #fff;
+}
+.mlb-mcq-option.is-wrong {
+  border-color: var(--mlb-error);
+  background: var(--mlb-error-bg);
+}
+.mlb-mcq-option.is-wrong .mlb-mcq-letter {
+  background: var(--mlb-error); color: #fff;
+}
+.mlb-mcq-feedback {
+  padding: 14px 18px;
+  border-radius: var(--mlb-radius-sm);
+  font-size: 14px; line-height: 1.65;
+  margin-top: 8px;
+  display: none;
+}
+.mlb-mcq-feedback.is-shown { display: block; animation: mlb-fadein 0.3s ease; }
+.mlb-mcq-feedback.is-correct {
+  background: var(--mlb-success-bg);
+  color: var(--mlb-success);
+  border-left: 3px solid var(--mlb-success);
+}
+.mlb-mcq-feedback.is-wrong {
+  background: var(--mlb-error-bg);
+  color: var(--mlb-error);
+  border-left: 3px solid var(--mlb-error);
+}
+body.mlb-dark .mlb-mcq-feedback.is-correct { color: var(--mlb-success); }
+body.mlb-dark .mlb-mcq-feedback.is-wrong { color: var(--mlb-error); }
+
+/* ─── Step 2 bonus: mini-game kéo thả (dưới MCQ) ──────────────────────── */
+.mlb-bonus-wrap {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--mlb-border);
+}
+.mlb-bonus-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px;
+  background: linear-gradient(120deg, rgba(245, 158, 11, 0.16), rgba(124, 58, 237, 0.10));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--mlb-warn);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+body.mlb-dark .mlb-bonus-badge { color: #FBBF24; }
+
+/* ─── Step 3: Pipeline builder — kéo khối lệnh JS thật để chạy ─────────── */
+.mlb-pipeline-scenario {
+  font-size: 14.5px; line-height: 1.65;
+  color: var(--mlb-text-soft);
+  margin: 0 0 18px;
+}
+.mlb-pipeline-given-label {
+  font-family: var(--mlb-font-h);
+  font-size: 13px; font-weight: 700;
+  color: var(--mlb-text-muted);
+  margin: 0 0 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.mlb-pipeline-given {
+  background: var(--mlb-bg);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  padding: 14px 18px;
+  font-family: var(--mlb-font-m);
+  font-size: 13px; line-height: 1.65;
+  color: var(--mlb-text-muted);
+  margin: 0 0 22px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.mlb-pipeline-pool-label, .mlb-pipeline-slots-label {
+  font-family: var(--mlb-font-h);
+  font-size: 14px; font-weight: 700;
+  color: var(--mlb-text-soft);
+  margin: 0 0 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.mlb-pipeline-pool {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  min-height: 56px;
+  padding: 14px;
+  background: var(--mlb-bg);
+  border: 1px dashed var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  margin-bottom: 24px;
+}
+.mlb-pipeline-block {
+  display: inline-flex; align-items: center;
+  padding: 8px 14px;
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  font-family: var(--mlb-font-m);
+  font-size: 13px;
+  color: var(--mlb-text);
+  cursor: grab;
+  user-select: none;
+  transition: all 0.18s;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-pipeline-block:hover { border-color: var(--mlb-accent-soft); transform: translateY(-1px); }
+.mlb-pipeline-block.is-dragging { opacity: 0.4; cursor: grabbing; }
+.mlb-pipeline-block.is-placed { cursor: pointer; width: 100%; justify-content: space-between; }
+.mlb-pipeline-slots {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 22px;
+}
+.mlb-pipeline-slot {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--mlb-bg);
+  border: 1px dashed var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  padding: 10px 14px;
+  min-height: 48px;
+  transition: all 0.2s;
+}
+.mlb-pipeline-slot-num {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--mlb-accent-bg);
+  color: var(--mlb-accent-deep);
+  border-radius: 50%;
+  font-size: 12px; font-weight: 700;
+  font-family: var(--mlb-font-h);
+}
+body.mlb-dark .mlb-pipeline-slot-num { color: var(--mlb-accent); }
+.mlb-pipeline-slot-body { flex: 1; min-width: 0; }
+.mlb-pipeline-slot-placeholder {
+  font-size: 13px; color: var(--mlb-text-muted); font-style: italic;
+}
+.mlb-pipeline-slot.is-drop-target { border-color: var(--mlb-accent); background: var(--mlb-accent-bg); }
+.mlb-pipeline-actions { display: flex; gap: 10px; margin-bottom: 16px; }
+.mlb-pipeline-output {
+  padding: 14px 18px;
+  border-radius: var(--mlb-radius-sm);
+  font-family: var(--mlb-font-m);
+  font-size: 13.5px;
+  line-height: 1.7;
+  display: none;
+  white-space: pre-wrap;
+}
+.mlb-pipeline-output.is-shown { display: block; animation: mlb-fadein 0.3s ease; }
+.mlb-pipeline-output.is-pass { background: var(--mlb-success-bg); color: var(--mlb-success); border-left: 3px solid var(--mlb-success); }
+.mlb-pipeline-output.is-fail { background: var(--mlb-error-bg); color: var(--mlb-error); border-left: 3px solid var(--mlb-error); }
+body.mlb-dark .mlb-pipeline-output.is-pass { color: var(--mlb-success); }
+body.mlb-dark .mlb-pipeline-output.is-fail { color: var(--mlb-error); }
+
+/* ─── Step 3 (cũ): Kéo thả chip — vẫn giữ style cho tương thích ─────────── */
+.mlb-drag-card {
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius);
+  padding: 32px;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-drag-help {
+  font-size: 14px; line-height: 1.6;
+  color: var(--mlb-text-muted);
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  background: var(--mlb-accent-bg);
+  border-radius: var(--mlb-radius-sm);
+}
+.mlb-drag-pool-label, .mlb-drag-zone-label {
+  font-family: var(--mlb-font-h);
+  font-size: 14px; font-weight: 700;
+  color: var(--mlb-text-soft);
+  margin: 0 0 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.mlb-drag-pool {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  min-height: 60px;
+  padding: 14px;
+  background: var(--mlb-bg);
+  border: 1px dashed var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  margin-bottom: 24px;
+}
+.mlb-drag-zones {
+  display: grid; gap: 14px;
+}
+.mlb-drag-zone {
+  background: var(--mlb-bg);
+  border: 1px dashed var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  padding: 14px;
+  min-height: 70px;
+  transition: all 0.2s;
+}
+.mlb-drag-zone.is-drop-target {
+  border-color: var(--mlb-accent);
+  background: var(--mlb-accent-bg);
+}
+.mlb-drag-zone.is-correct {
+  border-style: solid;
+  border-color: var(--mlb-success);
+  background: var(--mlb-success-bg);
+}
+.mlb-drag-zone.is-wrong {
+  border-style: solid;
+  border-color: var(--mlb-error);
+  background: var(--mlb-error-bg);
+}
+.mlb-drag-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: 999px;
+  font-size: 14px; font-weight: 500;
+  color: var(--mlb-text);
+  cursor: grab;
+  user-select: none;
+  transition: all 0.18s;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-drag-chip:hover {
+  border-color: var(--mlb-accent-soft);
+  transform: translateY(-1px);
+}
+.mlb-drag-chip.is-dragging { opacity: 0.4; cursor: grabbing; }
+.mlb-drag-chip.is-placed { cursor: pointer; }
+.mlb-drag-chip .mlb-drag-chip-x {
+  display: none;
+  margin-left: 4px;
+  color: var(--mlb-text-muted);
+  font-size: 12px;
+}
+.mlb-drag-chip.is-placed .mlb-drag-chip-x { display: inline; }
+.mlb-drag-chip.is-correct { border-color: var(--mlb-success); background: var(--mlb-success-bg); }
+.mlb-drag-chip.is-wrong { border-color: var(--mlb-error); background: var(--mlb-error-bg); }
+.mlb-drag-zone-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mlb-drag-feedback {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: var(--mlb-radius-sm);
+  font-size: 14px; line-height: 1.6;
+  display: none;
+}
+.mlb-drag-feedback.is-shown { display: block; animation: mlb-fadein 0.3s ease; }
+.mlb-drag-feedback.is-correct {
+  background: var(--mlb-success-bg);
+  color: var(--mlb-success);
+  border-left: 3px solid var(--mlb-success);
+}
+.mlb-drag-feedback.is-wrong {
+  background: var(--mlb-error-bg);
+  color: var(--mlb-error);
+  border-left: 3px solid var(--mlb-error);
+}
+body.mlb-dark .mlb-drag-feedback.is-correct { color: var(--mlb-success); }
+body.mlb-dark .mlb-drag-feedback.is-wrong { color: var(--mlb-error); }
+
+/* ─── Bước 4: bố cục 2 cột (trái = đề bài, phải = code + kết quả) ───────
+   Nới rộng khung trang riêng cho step này để 2 cột có đủ chỗ thở. ─────── */
+.mlb-lesson-stage.mlb-stage-wide { max-width: none; padding-left: 32px; padding-right: 32px; }
+.mlb-step4-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.mlb-step4-col-right {
+  position: sticky;
+  top: 84px;
+  /* Panel phải TỰ cuộn trong chiều cao còn lại của viewport — an toàn cho mọi
+     kích thước màn hình, không bao giờ đè lên footer nút Tiếp theo cố định. */
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+@media (max-width: 980px) {
+  .mlb-step4-split { grid-template-columns: 1fr; }
+  .mlb-step4-col-right { position: static; max-height: none; overflow-y: visible; }
+  .mlb-lesson-stage.mlb-stage-wide { padding-left: 24px; padding-right: 24px; }
+}
+@media (max-width: 768px) {
+  .mlb-lesson-stage.mlb-stage-wide { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ─── Step 4: Đề bài có cấu trúc rõ ràng (Bối cảnh / Trong thực tế / Các
+   bước / Kết quả mong đợi / Gợi ý gấp lại) — thay cho 1 đoạn văn dài ─────── */
+.mlb-problem-card {
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-problem-section { margin-bottom: 18px; }
+.mlb-problem-section:last-of-type { margin-bottom: 0; }
+.mlb-problem-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--mlb-accent-bg);
+  color: var(--mlb-accent-deep);
+  font-family: var(--mlb-font-h);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+body.mlb-dark .mlb-problem-badge { color: var(--mlb-accent); }
+.mlb-problem-badge.is-teal { background: rgba(20, 184, 166, 0.14); color: #0D9488; }
+body.mlb-dark .mlb-problem-badge.is-teal { color: #5EEAD4; }
+.mlb-problem-badge.is-purple { background: rgba(139, 92, 246, 0.14); color: #6D28D9; }
+body.mlb-dark .mlb-problem-badge.is-purple { color: #C4B5FD; }
+.mlb-problem-badge.is-green { background: var(--mlb-success-bg); color: var(--mlb-success); }
+.mlb-problem-section p {
+  font-size: 14.5px; line-height: 1.7;
+  color: var(--mlb-text-soft);
+  margin: 0;
+}
+.mlb-problem-section ol {
+  margin: 0; padding-left: 20px;
+  font-size: 14.5px; line-height: 1.75;
+  color: var(--mlb-text-soft);
+}
+.mlb-problem-section ol li { margin-bottom: 5px; }
+.mlb-problem-section ol li:last-child { margin-bottom: 0; }
+.mlb-problem-section code, .mlb-problem-card summary code {
+  font-family: var(--mlb-font-m);
+  font-size: 13px;
+  background: var(--mlb-bg);
+  color: var(--mlb-accent-deep);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+body.mlb-dark .mlb-problem-section code { color: var(--mlb-accent); }
+.mlb-problem-hint {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--mlb-border);
+}
+.mlb-problem-hint summary {
+  cursor: pointer;
+  font-family: var(--mlb-font-h);
+  font-size: 13px; font-weight: 700;
+  color: var(--mlb-warn);
+  list-style: none;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.mlb-problem-hint summary::-webkit-details-marker { display: none; }
+.mlb-problem-hint[open] summary { margin-bottom: 10px; }
+.mlb-problem-hint-body p {
+  font-size: 13.5px; line-height: 1.7;
+  color: var(--mlb-text-soft);
+  margin: 0 0 10px;
+}
+.mlb-problem-hint-body p:last-child { margin-bottom: 0; }
+.mlb-problem-hint-body pre {
+  background: var(--mlb-bg);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  padding: 14px 18px;
+  margin: 8px 0 0;
+  font-family: var(--mlb-font-m);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--mlb-text);
+  overflow-x: auto;
+  white-space: pre;
+}
+.mlb-problem-hint-answer-label {
+  display: inline-block;
+  font-family: var(--mlb-font-h);
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mlb-error);
+  background: var(--mlb-error-bg);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin: 10px 0 8px;
+}
+
+/* ─── Step 4: Tự code ──────────────────────────────────────────────────── */
+.mlb-code-card {
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius);
+  padding: 32px;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-code-instruction {
+  font-size: 15px; line-height: 1.7;
+  color: var(--mlb-text-soft);
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  background: var(--mlb-accent-bg);
+  border-radius: var(--mlb-radius-sm);
+  border-left: 3px solid var(--mlb-accent);
+}
+.mlb-code-instruction code {
+  font-family: var(--mlb-font-m);
+  background: var(--mlb-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--mlb-text);
+}
+.mlb-code-editor-wrap {
+  position: relative;
+  margin-bottom: 16px;
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  overflow: hidden;
+  box-shadow: var(--mlb-shadow-sm);
+}
+/* Editor code thật (CodeMirror, tô màu cú pháp + số dòng) — luôn nền tối bất kể
+   theme trang sáng/tối, giống chuẩn editor code thực tế (VSCode, CodeSandbox...). */
+.mlb-code-editor-cm .CodeMirror {
+  /* "Full màn": cao theo chiều cao còn lại của viewport (trừ header dính top,
+     hàng nút Chạy/Reset, khối Kết quả, footer nav) thay vì 1 con số cố định. */
+  height: calc(100vh - 460px);
+  min-height: 360px;
+  max-height: 800px;
+  font-family: var(--mlb-font-m);
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 6px 0;
+}
+@media (max-width: 980px) {
+  .mlb-code-editor-cm .CodeMirror { height: 420px; min-height: 0; }
+}
+.mlb-code-editor-cm .CodeMirror-gutters { border-right: 1px solid rgba(255,255,255,0.08); }
+.mlb-code-editor-wrap:focus-within { border-color: var(--mlb-accent); }
+.mlb-code-editor {
+  width: 100%;
+  min-height: 220px;
+  padding: 16px 18px;
+  background: var(--mlb-bg);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  font-family: var(--mlb-font-m);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--mlb-text);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  tab-size: 2;
+}
+.mlb-code-editor:focus { border-color: var(--mlb-accent); }
+.mlb-code-actions {
+  display: flex; gap: 12px; align-items: center;
+  margin-bottom: 16px;
+}
+.mlb-code-result-label {
+  font-family: var(--mlb-font-h);
+  font-size: 13px; font-weight: 700;
+  color: var(--mlb-text-muted);
+  margin: 0 0 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.mlb-code-result {
+  padding: 16px 18px;
+  border-radius: var(--mlb-radius-sm);
+  font-family: var(--mlb-font-m);
+  font-size: 14px;
+  line-height: 1.7;
+  min-height: 56px;
+  white-space: pre-wrap;
+  background: var(--mlb-bg);
+  border: 1px dashed var(--mlb-border);
+  color: var(--mlb-text-muted);
+}
+.mlb-code-result-idle { font-style: italic; }
+/* Console thật — giá trị tính ra từ chính hàm HS viết trên kịch bản mẫu,
+   tách rời phần tô màu pass/fail của thông báo chấm bên dưới. */
+.mlb-code-console {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.3);
+  color: var(--mlb-text);
+}
+.mlb-code-console-line { color: inherit; }
+.mlb-code-console-line:not(:last-child) { margin-bottom: 4px; }
+.mlb-code-result-msg { display: flex; align-items: flex-start; gap: 8px; }
+.mlb-code-result.is-shown { animation: mlb-fadein 0.3s ease; }
+.mlb-code-result.is-pass {
+  background: var(--mlb-success-bg);
+  color: var(--mlb-success);
+  border: 1px solid var(--mlb-success);
+  border-left-width: 3px;
+}
+.mlb-code-result.is-fail {
+  background: var(--mlb-error-bg);
+  color: var(--mlb-error);
+  border: 1px solid var(--mlb-error);
+  border-left-width: 3px;
+}
+body.mlb-dark .mlb-code-result.is-pass { color: var(--mlb-success); }
+body.mlb-dark .mlb-code-result.is-fail { color: var(--mlb-error); }
+.mlb-code-hint {
+  margin-top: 8px;
+  font-size: 13px; line-height: 1.6;
+  color: var(--mlb-text-muted);
+}
+.mlb-code-hint code {
+  font-family: var(--mlb-font-m);
+  background: var(--mlb-accent-bg);
+  color: var(--mlb-accent-deep);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+body.mlb-dark .mlb-code-hint code { color: var(--mlb-accent); }
+
+/* ─── Footer nav ────────────────────────────────────────────────────────── */
+.mlb-lesson-footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--mlb-bg-soft);
+  border-top: 1px solid var(--mlb-border);
+  z-index: 40;
+}
+.mlb-footer-status {
+  font-size: 14px; font-weight: 500;
+  color: var(--mlb-text-muted);
+}
+.mlb-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--mlb-radius-sm);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: var(--mlb-font-b);
+  transition: all 0.2s;
+}
+.mlb-btn-primary {
+  background: var(--mlb-accent);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+.mlb-btn-primary:hover { background: var(--mlb-accent-deep); }
+.mlb-btn-primary:disabled {
+  background: var(--mlb-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+.mlb-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--mlb-border);
+  color: var(--mlb-text-soft);
+}
+.mlb-btn-ghost:hover { color: var(--mlb-accent); border-color: var(--mlb-accent-soft); }
+.mlb-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+.mlb-btn-ghost:disabled:hover { color: var(--mlb-text-soft); border-color: var(--mlb-border); }
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mlb-lesson-header { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+  .mlb-step-progress { order: 3; width: 100%; margin: 0; }
+  .mlb-step-label { display: none; }
+  .mlb-step { padding: 6px 10px; }
+  .mlb-lesson-stage { padding: 24px 16px 120px; }
+  .mlb-theory-card, .mlb-mcq-card, .mlb-drag-card, .mlb-code-card { padding: 20px; }
+  .mlb-concept-compare { grid-template-columns: 1fr; }
+  .mlb-lesson-footer { padding: 12px 16px; }
+  .mlb-footer-status { font-size: 12px; }
+}

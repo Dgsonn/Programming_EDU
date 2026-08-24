@@ -1,0 +1,405 @@
+/* ============================================================================
+ * course_ml_basic.css — Phiên bản dịu mắt của trang chi tiết khóa ML cơ bản.
+ * Tông màu: tím (violet) — ĐỒNG BỘ với khóa "Machine Learning Cơ bản" gốc
+ * (course_ml.css: #4C1D95 / #A78BFA) — trên nền trắng/xám nhạt chuẩn của web
+ * (style.css: #F9FAFB, border #F3F4F6) thay vì bảng màu sage-cream tách biệt.
+ * Typography: Plus Jakarta Sans (tiêu đề) + Inter (nội dung).
+ * Light theme mặc định, có dark mode toggle.
+ * ========================================================================== */
+
+/* ─── Theme tokens (light — dịu mắt) ─────────────────────────────────────── */
+body.mlb-light {
+  --mlb-bg:           #F9FAFB;        /* nền chuẩn của web, không phải cream riêng */
+  --mlb-bg-soft:      #F3F1FB;        /* trắng ngả tím rất nhẹ */
+  --mlb-bg-card:      #FFFFFF;
+  --mlb-text:         #1F2937;        /* chuẩn text đậm của web */
+  --mlb-text-soft:    #6B7280;
+  --mlb-text-muted:   #9CA3AF;
+  --mlb-border:       #F3F4F6;
+  --mlb-accent:       #7C3AED;        /* violet-600, đủ tương phản trên nền trắng */
+  --mlb-accent-soft:  #A78BFA;
+  --mlb-accent-deep:  #4C1D95;
+  --mlb-accent-bg:    rgba(124, 58, 237, 0.10);
+  --mlb-shadow-sm:    0 1px 4px rgba(0, 0, 0, 0.04);
+  --mlb-shadow-md:    0 8px 24px rgba(76, 29, 149, 0.08);
+  --mlb-radius:       18px;
+  --mlb-radius-sm:    10px;
+  --mlb-font-h:       'Plus Jakarta Sans', system-ui, sans-serif;
+  --mlb-font-b:       'Inter', system-ui, sans-serif;
+}
+
+/* ─── Theme tokens (dark — cùng nền navy tối của web) ─────────────────────── */
+body.mlb-dark {
+  --mlb-bg:           #0F172A;        /* navy tối chuẩn hero/dark-mode của web */
+  --mlb-bg-soft:      #1E2A45;
+  --mlb-bg-card:      #1A2138;
+  --mlb-text:         #F1F5F9;
+  --mlb-text-soft:    #CBD5E1;
+  --mlb-text-muted:   #94A3B8;
+  --mlb-border:       rgba(148, 163, 184, 0.16);
+  --mlb-accent:       #A78BFA;
+  --mlb-accent-soft:  #C4B5FD;
+  --mlb-accent-deep:  #C4B5FD;
+  --mlb-accent-bg:    rgba(167, 139, 250, 0.15);
+  --mlb-shadow-sm:    0 2px 8px rgba(0, 0, 0, 0.20);
+  --mlb-shadow-md:    0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+body.mlb-light, body.mlb-dark {
+  background: var(--mlb-bg);
+  color: var(--mlb-text);
+  font-family: var(--mlb-font-b);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* ─── Topbar (tối giản) ─────────────────────────────────────────────────── */
+.mlb-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 40px;
+  background: var(--mlb-bg-soft);
+  border-bottom: 1px solid var(--mlb-border);
+}
+.mlb-topbar-left { display: flex; align-items: center; gap: 16px; }
+.mlb-brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: var(--mlb-text);
+  font-family: var(--mlb-font-h); font-weight: 700; font-size: 18px;
+}
+.mlb-brand-mark { font-size: 24px; }
+.mlb-topbar-nav { display: flex; gap: 8px; }
+.mlb-nav-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: var(--mlb-radius-sm);
+  color: var(--mlb-text-soft); text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  transition: background 0.18s, color 0.18s;
+}
+.mlb-nav-link:hover { background: var(--mlb-accent-bg); color: var(--mlb-accent); }
+.mlb-nav-link.is-active { background: var(--mlb-accent-bg); color: var(--mlb-accent-deep); }
+body.mlb-dark .mlb-nav-link.is-active { color: var(--mlb-accent); }
+.mlb-theme-toggle {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--mlb-border);
+  background: var(--mlb-bg-card);
+  color: var(--mlb-text-soft);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mlb-theme-toggle:hover { color: var(--mlb-accent); border-color: var(--mlb-accent-soft); }
+
+/* ─── Hero ── nền tối violet, ĐỒNG BỘ với hero khóa "ml" gốc (course_ml.css
+   body[data-course="ml"] .cd-hero: #1e1b4b → #4c1d95 → #6d28d9) ──────────── */
+.mlb-hero {
+  padding: 64px 40px 48px;
+  background: linear-gradient(120deg, #1e1b4b 0%, #4c1d95 55%, #6d28d9 100%);
+}
+.mlb-hero-inner {
+  max-width: 1080px; margin: 0 auto;
+  display: grid; grid-template-columns: 1.6fr 1fr; gap: 48px; align-items: center;
+}
+.mlb-tag {
+  display: inline-block;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(167, 139, 250, 0.18);
+  color: #C4B5FD;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 18px;
+}
+.mlb-title {
+  font-family: var(--mlb-font-h);
+  font-size: clamp(32px, 4.5vw, 48px);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 12px;
+  background: linear-gradient(120deg, #ffffff 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.mlb-subtitle {
+  font-size: 19px; font-weight: 500;
+  color: #C4B5FD;
+  margin: 0 0 24px;
+}
+.mlb-desc {
+  font-size: 16px; line-height: 1.75;
+  color: #E4DEFB;
+  margin: 0 0 28px;
+}
+.mlb-desc strong, .mlb-desc em { color: #FFFFFF; }
+.mlb-meta {
+  display: flex; flex-wrap: wrap; gap: 24px;
+  margin-bottom: 32px;
+}
+.mlb-meta-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 14px; color: #C4B5FD;
+  font-weight: 500;
+}
+.mlb-meta-item i { color: #A78BFA; }
+
+.mlb-cta-row { display: flex; gap: 12px; }
+.mlb-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px; border-radius: var(--mlb-radius-sm);
+  font-size: 15px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  font-family: var(--mlb-font-b);
+}
+.mlb-btn-primary {
+  /* Nút luôn nằm trên hero tối violet — dùng violet sáng cố định để đủ tương phản
+     bất kể light/dark toggle của phần thân trang. */
+  background: #8B5CF6;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+}
+.mlb-btn-primary:hover { background: #7C3AED; transform: translateY(-1px); }
+.mlb-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Hero art (decorative) */
+.mlb-hero-art {
+  position: relative; aspect-ratio: 1; max-width: 360px;
+  margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.mlb-art-circle {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 30%, #A78BFA 0%, transparent 60%);
+  border-radius: 50%;
+  animation: mlb-breathe 8s ease-in-out infinite;
+}
+.mlb-art-circle-2 {
+  inset: 15%;
+  background: radial-gradient(circle at 70% 70%, rgba(196, 181, 253, 0.6) 0%, transparent 70%);
+  animation-delay: -4s;
+}
+.mlb-art-emoji {
+  position: relative; z-index: 1;
+  font-size: 96px;
+  filter: drop-shadow(0 8px 16px rgba(76, 29, 149, 0.35));
+  animation: mlb-float 6s ease-in-out infinite;
+}
+@keyframes mlb-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50%      { transform: scale(1.06); opacity: 1; }
+}
+@keyframes mlb-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* ─── Body sections ─────────────────────────────────────────────────────── */
+.mlb-body {
+  max-width: 880px; margin: 0 auto;
+  padding: 32px 40px 80px;
+}
+.mlb-section {
+  background: var(--mlb-bg-card);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius);
+  padding: 36px 40px;
+  margin-bottom: 24px;
+  box-shadow: var(--mlb-shadow-sm);
+}
+.mlb-section-hd {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--mlb-border);
+  padding-bottom: 16px;
+}
+.mlb-section-hd h2 {
+  font-family: var(--mlb-font-h);
+  font-size: 22px; font-weight: 700;
+  margin: 0;
+  color: var(--mlb-text);
+  display: flex; align-items: center; gap: 10px;
+}
+.mlb-section-hd h2 i { color: var(--mlb-accent); font-size: 20px; }
+.mlb-section-sub {
+  font-size: 13px; color: var(--mlb-text-muted);
+}
+.mlb-section-lead {
+  font-size: 16px; line-height: 1.75;
+  color: var(--mlb-text-soft);
+  margin: 0 0 16px;
+}
+.mlb-learning-note {
+  font-size: 14px; line-height: 1.7;
+  color: var(--mlb-text-muted);
+  background: var(--mlb-accent-bg);
+  border-left: 3px solid var(--mlb-accent);
+  padding: 14px 18px;
+  border-radius: 0 var(--mlb-radius-sm) var(--mlb-radius-sm) 0;
+  margin: 20px 0 0;
+}
+
+/* Outcomes */
+.mlb-outcomes {
+  list-style: none; padding: 0; margin: 16px 0 0;
+  display: grid; gap: 12px;
+}
+.mlb-outcomes li {
+  display: flex; gap: 14px; align-items: flex-start;
+  font-size: 15px; line-height: 1.6;
+  color: var(--mlb-text);
+}
+.mlb-outcomes-emoji {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--mlb-accent-bg);
+  border-radius: 50%;
+  font-size: 16px;
+}
+
+/* Lessons list */
+.mlb-lessons {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 12px;
+}
+.mlb-lesson-item {
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+  transition: all 0.2s;
+  background: var(--mlb-bg);
+}
+.mlb-lesson-link {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px;
+  text-decoration: none; color: var(--mlb-text);
+}
+.mlb-lesson-link > i {
+  flex-shrink: 0;
+  font-size: 22px;
+  color: var(--mlb-text-muted);
+}
+.mlb-lesson-done > .mlb-lesson-link > i { color: var(--mlb-accent); }
+.mlb-lesson-current {
+  background: var(--mlb-accent-bg);
+  border-color: var(--mlb-accent-soft);
+}
+.mlb-lesson-current > .mlb-lesson-link > i { color: var(--mlb-accent); }
+.mlb-lesson-body { flex: 1; }
+.mlb-lesson-title {
+  font-family: var(--mlb-font-h);
+  font-size: 16px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.mlb-lesson-sub {
+  font-size: 13px; color: var(--mlb-text-soft);
+  line-height: 1.5;
+}
+.mlb-lesson-eta {
+  font-size: 12px; color: var(--mlb-text-muted);
+  background: var(--mlb-bg-soft);
+  padding: 4px 10px; border-radius: 999px;
+  white-space: nowrap;
+}
+.mlb-lesson-loading { padding: 16px; color: var(--mlb-text-muted); }
+
+/* Requirements */
+.mlb-req {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 14px;
+}
+.mlb-req li {
+  display: flex; gap: 12px; align-items: flex-start;
+  font-size: 15px; line-height: 1.6;
+  color: var(--mlb-text-soft);
+}
+.mlb-req li i {
+  color: var(--mlb-accent);
+  margin-top: 4px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Includes */
+.mlb-includes {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.mlb-includes li {
+  display: flex; gap: 10px; align-items: center;
+  font-size: 14px; line-height: 1.5;
+  color: var(--mlb-text);
+  padding: 10px 14px;
+  background: var(--mlb-bg);
+  border-radius: var(--mlb-radius-sm);
+}
+.mlb-includes li i {
+  color: var(--mlb-accent);
+  font-size: 16px;
+  width: 20px; text-align: center;
+  flex-shrink: 0;
+}
+
+/* Skills */
+.mlb-skills {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 12px;
+}
+.mlb-skill-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--mlb-bg);
+  border: 1px solid var(--mlb-border);
+  border-radius: var(--mlb-radius-sm);
+}
+.mlb-skill-icon {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--mlb-accent-bg);
+  color: var(--mlb-accent);
+  border-radius: 10px;
+  font-size: 18px;
+}
+.mlb-skill-body { flex: 1; }
+.mlb-skill-title {
+  font-family: var(--mlb-font-h);
+  font-size: 15px; font-weight: 700;
+  color: var(--mlb-text);
+  margin-bottom: 4px;
+}
+.mlb-skill-desc {
+  font-size: 13px; line-height: 1.55;
+  color: var(--mlb-text-soft);
+}
+
+/* Footer */
+.mlb-footer {
+  text-align: center;
+  padding: 32px 40px;
+  font-size: 14px;
+  color: var(--mlb-text-muted);
+  background: var(--mlb-bg-soft);
+  border-top: 1px solid var(--mlb-border);
+  margin-top: 32px;
+}
+.mlb-footer p { margin: 0; }
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mlb-topbar { padding: 14px 20px; flex-wrap: wrap; gap: 12px; }
+  .mlb-hero { padding: 40px 20px 32px; }
+  .mlb-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  .mlb-hero-art { max-width: 200px; margin: 0 auto; }
+  .mlb-art-emoji { font-size: 64px; }
+  .mlb-body { padding: 24px 20px 60px; }
+  .mlb-section { padding: 24px 20px; }
+  .mlb-meta { gap: 16px; }
+  .mlb-section-hd { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .mlb-includes { grid-template-columns: 1fr; }
+}

@@ -549,6 +549,25 @@ def init_db():
                 'static/images/ml.svg', 'Nâng cao', '~7 giờ', '0', 4.9, 14,
                 '#164E63', '#22D3EE', 'AI & DATA SCIENCE'))
 
+        # Migration 2026-08-15: khóa ML cơ bản (bản dịu mắt, đơn giản) — clone tinh thần
+        # "Machine Learning Cơ bản" nhưng tinh gọn còn 2 bài, mỗi bài 4 bước (lý thuyết /
+        # MCQ / kéo-thả / tự code), typography lớn, không cần Pyodide.
+        # 2026-08-16: retint tông tím (violet) đồng bộ với khóa "ml" gốc — trước đó dùng
+        # tông sage-green rời rạc với phần còn lại của web.
+        # Idempotent: chỉ INSERT khi chưa tồn tại.
+        c.execute('SELECT 1 FROM courses WHERE id = %s', ('ml_basic',))
+        if not c.fetchone():
+            c.execute('INSERT INTO courses VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', (
+                'ml_basic',
+                'ML cơ bản',
+                'Phiên bản dịu mắt — chỉ 2 bài, mỗi bài 4 bước',
+                'Khóa học Machine Learning cơ bản phiên bản tinh gọn: giao diện pastel dịu mắt, '
+                'typography lớn, tốc độ chậm và dễ chịu. Đi qua 2 bài — mỗi bài gồm 4 bước '
+                '(lý thuyết, trắc nghiệm, kéo thả, tự code) — để nắm ML là gì và làm quen hồi quy '
+                'tuyến tính đầu tiên. Không cần cài đặt gì, chạy ngay trong trình duyệt.',
+                'static/images/ml_basic.svg', 'Cơ bản', '~1 giờ', '0', 4.9, 2,
+                '#4C1D95', '#A78BFA', 'AI & DATA SCIENCE'))
+
         # Sync 2026-07-04b (user chốt): tiêu đề ỨNG DỤNG (badge đã nói cấp độ, title không lặp)
         # + duration TRÒN GIỜ đồng bộ với tổng phút giáo trình (1 nguồn chân lý).
         # Idempotent: set cùng giá trị mỗi lần start.

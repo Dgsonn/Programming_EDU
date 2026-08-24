@@ -80,6 +80,24 @@ def course_detail(course_id):
                                enrollment=MOCK_ENROLLMENT,
                                user_name=MOCK_USER['name'],
                                streak=MOCK_USER['streak'])
+    if course_id == 'ml_basic':
+        # 2026-08-15: bản dịu mắt — render template riêng với content từ COURSE_CONTENT
+        from routes.course_content import get_content
+        return render_template('course_ml_basic.html',
+                               course_id='ml_basic',
+                               course={
+                                   'id': 'ml_basic',
+                                   'title': 'ML cơ bản',
+                                   'subtitle': 'Phiên bản dịu mắt — chỉ 2 bài, mỗi bài 4 bước',
+                                   'duration': '~1 giờ',
+                                   'lessons': 2,
+                                   'level': 'Cơ bản',
+                                   'description': 'Phiên bản tinh gọn của khóa ML — dịu mắt, không áp lực.',
+                               },
+                               content=get_content('ml_basic'),
+                               enrollment=MOCK_ENROLLMENT,
+                               user_name=MOCK_USER['name'],
+                               streak=MOCK_USER['streak'])
     # Generic course detail (use existing course_detail.html)
     return render_template('course_detail.html', course_id=course_id,
                            **_inject_kwargs())
@@ -88,7 +106,11 @@ def course_detail(course_id):
 @app.route('/lesson/<course_id>')
 def lesson_view(course_id):
     from flask import request
-    lesson_idx = request.args.get('lesson', 0, type=int)
+    # Giống main.py: ?lesson=N là 1-based → lesson_idx 0-based
+    if 'lesson_idx' in request.args:
+        lesson_idx = request.args.get('lesson_idx', 0, type=int)
+    else:
+        lesson_idx = request.args.get('lesson', 1, type=int) - 1
 
     templates = {
         'python': 'lesson_python.html',
@@ -100,6 +122,7 @@ def lesson_view(course_id):
         'ml': 'lesson_db_design.html',
         'ml_intermediate': 'lesson_db_design.html',
         'ml_advanced': 'lesson_db_design.html',
+        'ml_basic': 'lesson_ml_basic.html',
     }
     template = templates.get(course_id)
     if not template:
